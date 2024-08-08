@@ -660,6 +660,10 @@ internal enum L10n {
   internal static var notificationRoomInviteBody: String { return L10n.tr("Localizable", "notification_room_invite_body") }
   /// Me
   internal static var notificationSenderMe: String { return L10n.tr("Localizable", "notification_sender_me") }
+  /// %1$@ mentioned or replied
+  internal static func notificationSenderMentionReply(_ p1: Any) -> String {
+    return L10n.tr("Localizable", "notification_sender_mention_reply", String(describing: p1))
+  }
   /// You are viewing the notification! Click me!
   internal static var notificationTestPushNotificationContent: String { return L10n.tr("Localizable", "notification_test_push_notification_content") }
   /// %1$@: %2$@
