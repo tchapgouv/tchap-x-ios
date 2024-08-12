@@ -41,7 +41,6 @@ enum A11yIdentifiers {
     static let roomMemberDetailsScreen = RoomMemberDetailsScreen()
     static let createRoomScreen = CreateRoomScreen()
     static let inviteUsersScreen = InviteUsersScreen()
-    static let migrationScreen = MigrationScreen()
     static let notificationSettingsScreen = NotificationSettingsScreen()
     static let notificationSettingsEditScreen = NotificationSettingsEditScreen()
     static let pollFormScreen = PollFormScreen()
@@ -247,10 +246,6 @@ enum A11yIdentifiers {
         func optionID(_ index: Int) -> String {
             "\(optionPrefix)-\(index)"
         }
-    }
-
-    struct MigrationScreen {
-        let message = "migration_screen-message"
     }
     
     struct NotificationSettingsScreen {

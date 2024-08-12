@@ -197,17 +197,11 @@ struct HomeScreen: View {
 // MARK: - Previews
 
 struct HomeScreen_Previews: PreviewProvider, TestablePreview {
-    static let migratingViewModel = viewModel(.migration)
     static let loadingViewModel = viewModel(.skeletons)
     static let emptyViewModel = viewModel(.empty)
     static let loadedViewModel = viewModel(.rooms)
     
     static var previews: some View {
-        NavigationStack {
-            HomeScreen(context: migratingViewModel.context)
-        }
-        .previewDisplayName("Migrating")
-        
         NavigationStack {
             HomeScreen(context: loadingViewModel.context)
         }
@@ -227,14 +221,9 @@ struct HomeScreen_Previews: PreviewProvider, TestablePreview {
     }
     
     static func viewModel(_ mode: HomeScreenRoomListMode) -> HomeScreenViewModel {
-        let userID = mode == .migration ? "@unmigrated_alice:example.com" : "@alice:example.com"
-        
-        let appSettings = AppSettings() // This uses shared storage under the hood
-        appSettings.migratedAccounts[userID] = mode != .migration
+        let userID = "@alice:example.com"
         
         let roomSummaryProviderState: RoomSummaryProviderMockConfigurationState = switch mode {
-        case .migration:
-            .loading
         case .skeletons:
             .loading
         case .empty:
@@ -250,7 +239,7 @@ struct HomeScreen_Previews: PreviewProvider, TestablePreview {
         
         return HomeScreenViewModel(userSession: userSession,
                                    analyticsService: ServiceLocator.shared.analytics,
-                                   appSettings: appSettings,
+                                   appSettings: ServiceLocator.shared.settings,
                                    selectedRoomPublisher: CurrentValueSubject<String?, Never>(nil).asCurrentValuePublisher(),
                                    userIndicatorController: ServiceLocator.shared.userIndicatorController)
     }

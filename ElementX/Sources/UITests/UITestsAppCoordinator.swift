@@ -518,7 +518,6 @@ class MockScreen: Identifiable {
             let navigationSplitCoordinator = NavigationSplitCoordinator(placeholderCoordinator: PlaceholderScreenCoordinator())
             
             let clientProxy = ClientProxyMock(.init(userID: "@mock:client.com", deviceID: "MOCKCLIENT", roomSummaryProvider: RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))))
-            ServiceLocator.shared.settings.migratedAccounts[clientProxy.userID] = true
             
             let appMediator = AppMediatorMock.default
             appMediator.underlyingWindowManager = windowManager
@@ -630,8 +629,6 @@ class MockScreen: Identifiable {
             let roomProxy = RoomProxyMock(.init(id: "whatever", name: "okay", shouldUseAutoUpdatingTimeline: true))
             
             clientProxy.roomForIdentifierReturnValue = roomProxy
-            
-            ServiceLocator.shared.settings.migratedAccounts[clientProxy.userID] = true
             
             let timelineController = RoomTimelineController(roomProxy: roomProxy,
                                                             timelineProxy: roomProxy.timeline,
