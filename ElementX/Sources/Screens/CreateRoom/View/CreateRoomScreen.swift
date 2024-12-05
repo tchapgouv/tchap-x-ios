@@ -37,6 +37,10 @@ struct CreateRoomScreen: View {
         Form {
             roomSection
             topicSection
+            // Tchap: set selected users list as a section
+            if !context.viewState.selectedUsers.isEmpty {
+                selectedUsersSection
+            }
             securitySection
             if context.viewState.isKnockingFeatureEnabled,
                !context.isRoomPrivate {
@@ -128,30 +132,37 @@ struct CreateRoomScreen: View {
         } header: {
             Text(L10n.screenCreateRoomTopicLabel)
                 .compoundListSectionHeader()
-        } footer: {
-            if !context.viewState.selectedUsers.isEmpty {
-                selectedUsersSection
-            }
         }
+        // Tchap: set selected users list in its own section
+//        footer: {
+//            if !context.viewState.selectedUsers.isEmpty {
+//                selectedUsersSection
+//            }
+//        }
     }
     
     @State private var frame: CGRect = .zero
     @ScaledMetric private var invitedUserCellWidth: CGFloat = 72
 
     private var selectedUsersSection: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 16) {
-                ForEach(context.viewState.selectedUsers, id: \.userID) { user in
-                    InviteUsersScreenSelectedItem(user: user, mediaProvider: context.mediaProvider) {
-                        context.send(viewAction: .deselectUser(user))
+        Section { // Tchap: put selected users list in section
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 16) {
+                    ForEach(context.viewState.selectedUsers, id: \.userID) { user in
+                        InviteUsersScreenSelectedItem(user: user, mediaProvider: context.mediaProvider) {
+                            context.send(viewAction: .deselectUser(user))
+                        }
+                        .frame(width: invitedUserCellWidth)
                     }
-                    .frame(width: invitedUserCellWidth)
                 }
+                .padding(.horizontal, ListRowPadding.horizontal)
+                .padding(.vertical, 22)
             }
-            .padding(.horizontal, ListRowPadding.horizontal)
-            .padding(.vertical, 22)
+//            .frame(width: frame.width) // Tchap: remove because in a Section now.
+        } header: { // Tchap: set selected users list section title
+            Text(TchapL10n.screenCreateRoomSelectedUsersLabel)
+                .compoundListSectionHeader()
         }
-        .frame(width: frame.width)
     }
     
     private var securitySection: some View {

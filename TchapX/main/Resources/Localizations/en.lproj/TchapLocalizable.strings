@@ -6,3 +6,4 @@
   Copyright © 2024 Tchap. All rights reserved.
 */
 
+screen_create_room_selected_users_label = "Members";
