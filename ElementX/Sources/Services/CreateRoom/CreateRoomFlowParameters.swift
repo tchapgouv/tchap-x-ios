@@ -12,6 +12,7 @@ struct CreateRoomFlowParameters {
     var name = ""
     var topic = ""
     var isRoomPrivate = true
+    var isRoomEncrypted = true // Tchap: add encrypted option to private
     var isKnockingOnly = false
     var avatarImageMedia: MediaInfo?
     var aliasLocalPart: String?

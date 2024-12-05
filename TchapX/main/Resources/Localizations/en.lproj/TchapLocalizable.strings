@@ -7,3 +7,9 @@
 */
 
 screen_create_room_selected_users_label = "Members";
+screen_create_room_private_encrypted_option_title = "Private secured room";
+screen_create_room_private_encrypted_option_description = "- End-to-end encrypted\n- Only people invited can access this room\n- Advised up to 500 members";
+screen_create_room_private_option_title = "Private room";
+screen_create_room_private_option_description = "- Not end-to-end encrypted\n- Only people invited can access this room";
+screen_create_room_public_option_title = "Public room";
+screen_create_room_public_option_description = "- Not end-to-end encrypted\n- Visible in the list of rooms\n- Not allwed to external guests";

@@ -50,6 +50,7 @@ struct CreateRoomViewState: BindableState {
 struct CreateRoomViewStateBindings {
     var roomTopic: String
     var isRoomPrivate: Bool
+    var isRoomEncrypted: Bool // Tchap: add encrypted option to private
     var isKnockingOnly: Bool
     var showAttachmentConfirmationDialog = false
     

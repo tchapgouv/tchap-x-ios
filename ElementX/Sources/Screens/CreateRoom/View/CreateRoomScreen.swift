@@ -167,13 +167,29 @@ struct CreateRoomScreen: View {
     
     private var securitySection: some View {
         Section {
-            ListRow(label: .default(title: L10n.screenCreateRoomPrivateOptionTitle,
-                                    description: L10n.screenCreateRoomPrivateOptionDescription,
+            // Tchap: use Tchap own room types list
+//            ListRow(label: .default(title: L10n.screenCreateRoomPrivateOptionTitle,
+//                                    description: L10n.screenCreateRoomPrivateOptionDescription,
+//                                    icon: \.lock,
+//                                    iconAlignment: .top),
+//                    kind: .selection(isSelected: context.isRoomPrivate) { context.isRoomPrivate = true })
+//            ListRow(label: .default(title: L10n.screenCreateRoomPublicOptionTitle,
+//                                    description: L10n.screenCreateRoomPublicOptionDescription,
+//                                    icon: \.public,
+//                                    iconAlignment: .top),
+//                    kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
+            ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateEncryptedOptionTitle,
+                                    description: TchapL10n.screenCreateRoomPrivateEncryptedOptionDescription,
                                     icon: \.lock,
                                     iconAlignment: .top),
-                    kind: .selection(isSelected: context.isRoomPrivate) { context.isRoomPrivate = true })
-            ListRow(label: .default(title: L10n.screenCreateRoomPublicOptionTitle,
-                                    description: L10n.screenCreateRoomPublicOptionDescription,
+                    kind: .selection(isSelected: context.isRoomPrivate && context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = true })
+            ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
+                                    description: TchapL10n.screenCreateRoomPrivateOptionDescription,
+                                    icon: \.lockOff,
+                                    iconAlignment: .top),
+                    kind: .selection(isSelected: context.isRoomPrivate && !context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = false })
+            ListRow(label: .default(title: TchapL10n.screenCreateRoomPublicOptionTitle,
+                                    description: TchapL10n.screenCreateRoomPublicOptionDescription,
                                     icon: \.public,
                                     iconAlignment: .top),
                     kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
@@ -286,7 +302,7 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
     
     static let publicRoomViewModel = {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
-        let parameters = CreateRoomFlowParameters(isRoomPrivate: false)
+        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, isRoomEncrypted: false) // Tchap: add `isRoomEncrypted` parameter
         let selectedUsers: [UserProfileProxy] = [.mockAlice, .mockBob, .mockCharlie]
         ServiceLocator.shared.settings.knockingEnabled = true
         return CreateRoomViewModel(userSession: userSession,
@@ -299,7 +315,7 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
     
     static let publicRoomInvalidAliasViewModel = {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
-        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, aliasLocalPart: "#:")
+        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, isRoomEncrypted: false, aliasLocalPart: "#:") // Tchap: add `isRoomEncrypted` parameter
         ServiceLocator.shared.settings.knockingEnabled = true
         return CreateRoomViewModel(userSession: userSession,
                                    createRoomParameters: .init(parameters),
@@ -313,7 +329,7 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
         let clientProxy = ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))
         clientProxy.isAliasAvailableReturnValue = .success(false)
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
-        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, aliasLocalPart: "existing")
+        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, isRoomEncrypted: false, aliasLocalPart: "existing") // Tchap: add `isRoomEncrypted` parameter
         ServiceLocator.shared.settings.knockingEnabled = true
         return CreateRoomViewModel(userSession: userSession,
                                    createRoomParameters: .init(parameters),

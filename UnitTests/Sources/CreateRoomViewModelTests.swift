@@ -63,7 +63,7 @@ class CreateRoomScreenViewModelTests: XCTestCase {
     }
     
     func testDefaulSecurity() {
-        XCTAssertTrue(context.viewState.bindings.isRoomPrivate)
+        XCTAssertTrue(context.viewState.bindings.isRoomPrivate && context.viewState.bindings.isRoomEncrypted) // Tchap: handle `isRoomEncrypted` additional property
     }
     
     func testCreateRoomRequirements() {
