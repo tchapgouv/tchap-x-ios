@@ -13,4 +13,6 @@ screen_create_room_private_option_title = "Salon privé";
 screen_create_room_private_option_description = "_ Non chiffré\n- Accessible uniquement sur invitation";
 screen_create_room_public_option_title = "Salon public";
 screen_create_room_public_option_description = "- Non chiffré\n- Accessible depuis la liste des salons\n- Non accessible aux invités externes";
+screen_create_room_public_option_unfederated_title = "Limité à mon domaine";
+screen_create_room_public_option_unfederated_description = "Visible uniquement aux membres de \"%1$@\"";
 

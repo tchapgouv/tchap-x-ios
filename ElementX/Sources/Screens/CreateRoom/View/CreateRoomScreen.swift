@@ -42,6 +42,10 @@ struct CreateRoomScreen: View {
                 selectedUsersSection
             }
             securitySection
+            // Tchap: allow to disable federated state on Public room.
+            if !context.isRoomPrivate {
+                tchapNonFederatedPublicRoomSection
+            }
             if context.viewState.isKnockingFeatureEnabled,
                !context.isRoomPrivate {
                 roomAccessSection
@@ -210,6 +214,15 @@ struct CreateRoomScreen: View {
         } header: {
             Text(L10n.screenCreateRoomRoomAccessSectionHeader)
                 .compoundListSectionHeader()
+        }
+    }
+    
+    // Tchap: Allow Public room to be non-federated
+    private var tchapNonFederatedPublicRoomSection: some View {
+        Section {
+            ListRow(label: .plain(title: TchapL10n.screenCreateRoomPublicOptionUnfederatedTitle,
+                                  description: TchapL10n.screenCreateRoomPublicOptionUnfederatedDescription(HomeServerName(context.viewState.serverName).displayName)),
+                    kind: .toggle($context.isRoomFederated.not))
         }
     }
     
