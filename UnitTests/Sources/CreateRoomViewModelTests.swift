@@ -63,7 +63,9 @@ class CreateRoomScreenViewModelTests: XCTestCase {
     }
     
     func testDefaulSecurity() {
-        XCTAssertTrue(context.viewState.bindings.isRoomPrivate && context.viewState.bindings.isRoomEncrypted) // Tchap: handle `isRoomEncrypted` additional property
+        // Tchap: handle `isRoomEncrypted` aand `isFederated` dditional properties
+//        XCTAssertTrue(context.viewState.bindings.isRoomPrivate)
+        XCTAssertTrue(context.viewState.bindings.isRoomPrivate && context.viewState.bindings.isRoomEncrypted && context.viewState.bindings.isRoomFederated)
     }
     
     func testCreateRoomRequirements() {
@@ -83,7 +85,9 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         XCTAssertTrue(context.viewState.canCreateRoom)
         
         let expectation = expectation(description: "Wait for the room to be created")
-        clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, isKnockingOnly, _, _, localAliasPart in
+        // Tchap: adapted test adding `isEncrypted`
+//        clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, isKnockingOnly, _, _, localAliasPart in
+        clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, isEncrypted, isKnockingOnly, _, _, localAliasPart in
             XCTAssertTrue(isKnockingOnly)
             XCTAssertFalse(isPrivate)
             XCTAssertEqual(localAliasPart, "a")
@@ -113,7 +117,9 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         // blocked it
         context.send(viewAction: .createRoom)
         await Task.yield()
-        XCTAssertFalse(clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
+        // Tchap: adapted test adding `isEncrypted`
+//        XCTAssertFalse(clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
+        XCTAssertFalse(clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
     }
     
     func testCreatePublicRoomFailsForExistingAlias() async throws {
@@ -144,7 +150,9 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         context.send(viewAction: .createRoom)
         await fulfillment(of: [expectation])
         XCTAssertEqual(clientProxy.isAliasAvailableCallsCount, 2)
-        XCTAssertFalse(clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
+        // Tchap: adapted test adding `isEncrypted`
+//        XCTAssertFalse(clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
+        XCTAssertFalse(clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
     }
     
     func testCreatePrivateRoomCantHaveKnockRule() async {
@@ -154,7 +162,9 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         context.isKnockingOnly = true
         context.send(viewAction: .createRoom)
         let expectation = expectation(description: "Wait for the room to be created")
-        clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, isKnockingOnly, _, _, _ in
+        // Tchap: adapted test adding `isEncrypted`
+//        clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, isKnockingOnly, _, _, _ in
+        clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, isEncrypted, isKnockingOnly, _, _, _ in
             XCTAssertFalse(isKnockingOnly)
             XCTAssertTrue(isPrivate)
             expectation.fulfill()
