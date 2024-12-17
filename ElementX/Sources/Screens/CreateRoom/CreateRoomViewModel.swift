@@ -41,6 +41,7 @@ class CreateRoomViewModel: CreateRoomViewModelType, CreateRoomViewModelProtocol 
         let bindings = CreateRoomViewStateBindings(roomTopic: parameters.topic,
                                                    isRoomPrivate: parameters.isRoomPrivate,
                                                    isRoomEncrypted: parameters.isRoomEncrypted, // Tchap: additional property
+                                                   isRoomFederated: parameters.isRoomFederated, // Tchap: additional property
                                                    isKnockingOnly: appSettings.knockingEnabled ? parameters.isKnockingOnly : false)
 
         super.init(initialViewState: CreateRoomViewState(roomName: parameters.name,
@@ -135,6 +136,7 @@ class CreateRoomViewModel: CreateRoomViewModelType, CreateRoomViewModelProtocol 
                     old.bindings.roomTopic == new.bindings.roomTopic &&
                     old.bindings.isRoomPrivate == new.bindings.isRoomPrivate &&
                     old.bindings.isRoomEncrypted == new.bindings.isRoomEncrypted && // Tchap: additional property
+                    old.bindings.isRoomFederated == new.bindings.isRoomFederated && // Tchap: additional property
                     old.bindings.isKnockingOnly == new.bindings.isKnockingOnly &&
                     old.aliasLocalPart == new.aliasLocalPart
             }
@@ -193,6 +195,7 @@ class CreateRoomViewModel: CreateRoomViewModelType, CreateRoomViewModelProtocol 
         createRoomParameters.topic = state.bindings.roomTopic
         createRoomParameters.isRoomPrivate = state.bindings.isRoomPrivate
         createRoomParameters.isRoomEncrypted = state.bindings.isRoomEncrypted // Tchap: additional property
+        createRoomParameters.isRoomFederated = state.bindings.isRoomFederated // Tchap: additional property
         createRoomParameters.isKnockingOnly = state.bindings.isKnockingOnly
         if state.isKnockingFeatureEnabled, !state.aliasLocalPart.isEmpty {
             createRoomParameters.aliasLocalPart = state.aliasLocalPart
@@ -260,6 +263,7 @@ class CreateRoomViewModel: CreateRoomViewModelType, CreateRoomViewModelProtocol 
                                                         topic: createRoomParameters.topic,
                                                         isRoomPrivate: createRoomParameters.isRoomPrivate,
                                                         isRoomEncrypted: createRoomParameters.isRoomEncrypted, // Tchap: additional property
+                                                        // TODO: add parameter                                                       isRoomFederated: createRoomParameters.isRoomFederated, // Tchap: additional property
                                                         // As of right now we don't want to make private rooms with the knock rule
                                                         isKnockingOnly: createRoomParameters.isRoomPrivate ? false : createRoomParameters.isKnockingOnly,
                                                         userIDs: state.selectedUsers.map(\.userID),
