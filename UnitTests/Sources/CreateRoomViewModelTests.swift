@@ -87,7 +87,7 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         let expectation = expectation(description: "Wait for the room to be created")
         // Tchap: adapted test adding `isEncrypted`
 //        clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, isKnockingOnly, _, _, localAliasPart in
-        clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, isEncrypted, isKnockingOnly, _, _, localAliasPart in
+        clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, _, isKnockingOnly, _, _, localAliasPart in
             XCTAssertTrue(isKnockingOnly)
             XCTAssertFalse(isPrivate)
             XCTAssertEqual(localAliasPart, "a")
@@ -164,7 +164,7 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         let expectation = expectation(description: "Wait for the room to be created")
         // Tchap: adapted test adding `isEncrypted`
 //        clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, isKnockingOnly, _, _, _ in
-        clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, isEncrypted, isKnockingOnly, _, _, _ in
+        clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, _, isKnockingOnly, _, _, _ in
             XCTAssertFalse(isKnockingOnly)
             XCTAssertTrue(isPrivate)
             expectation.fulfill()

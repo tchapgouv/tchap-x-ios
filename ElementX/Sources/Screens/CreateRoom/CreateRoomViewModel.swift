@@ -263,7 +263,7 @@ class CreateRoomViewModel: CreateRoomViewModelType, CreateRoomViewModelProtocol 
                                                         topic: createRoomParameters.topic,
                                                         isRoomPrivate: createRoomParameters.isRoomPrivate,
                                                         isRoomEncrypted: createRoomParameters.isRoomEncrypted, // Tchap: additional property
-                                                        // TODO: add parameter                                                       isRoomFederated: createRoomParameters.isRoomFederated, // Tchap: additional property
+                                                        // TODO: add parameter       isRoomFederated: createRoomParameters.isRoomPrivate || createRoomParameters. , // Tchap: additional property `isRoomFederated`. And Private room is always federated. Only Public room can be non-federated.
                                                         // As of right now we don't want to make private rooms with the knock rule
                                                         isKnockingOnly: createRoomParameters.isRoomPrivate ? false : createRoomParameters.isKnockingOnly,
                                                         userIDs: state.selectedUsers.map(\.userID),

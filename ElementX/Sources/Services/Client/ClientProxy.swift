@@ -404,7 +404,7 @@ class ClientProxy: ClientProxyProtocol {
         do {
             let parameters = CreateRoomParameters(name: name,
                                                   topic: topic,
-                                                  // Tchap: handle additional property
+                                                  // Tchap: handle correctly additional property
 //                                                  isEncrypted: isRoomPrivate,
                                                   isEncrypted: isRoomEncrypted,
                                                   isDirect: false,
