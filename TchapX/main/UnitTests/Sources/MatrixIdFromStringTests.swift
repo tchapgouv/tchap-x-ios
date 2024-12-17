@@ -42,3 +42,20 @@ final class Tchap_MatrixIdFromStringTests: XCTestCase {
         XCTAssertEqual(MatrixIdFromString("@jean-philippe.martin-other-domain.fr:agent.externe.gouv.fr").userDisplayName?.displayName, "jean-philippe.martin-other-domain.fr")
     }
 }
+
+final class Tchap_HomeServerNameTests: XCTestCase {
+    func testHomeServerDisplayName() {
+        XCTAssertEqual(HomeServerName("tchap.gouv.fr").displayName, "Tchap.gouv.fr")
+        XCTAssertEqual(HomeServerName("PREFIX.tchap.gouv.fr").displayName, "Prefix")
+        XCTAssertEqual(HomeServerName("PREFIX.post.suffix.tchap.gouv.fr").displayName, "Suffix")
+    }
+    
+    func testExternalTchapServer() {
+        XCTAssertTrue(HomeServerName("agent.externe.tchap.gouv.fr").isExternalTchapServer)
+        XCTAssertTrue(HomeServerName("e.dev01.tchap.gouv.fr").isExternalTchapServer)
+        
+        XCTAssertFalse(HomeServerName("agent-externe.tchap.gouv.fr").isExternalTchapServer)
+        XCTAssertFalse(HomeServerName("agent.externes.tchap.gouv.fr").isExternalTchapServer)
+        XCTAssertFalse(HomeServerName("e-dev01.tchap.gouv.fr").isExternalTchapServer)
+    }
+}
