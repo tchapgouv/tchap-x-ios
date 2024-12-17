@@ -35,7 +35,7 @@ import Foundation
 struct TchapFeatureFlag {
     let allowedInstances: [Instance]
     
-    func isActivated(for homeServer: String) -> Bool {
+    func isActivated(for homeServer: TchapFeatureFlag.Instance) -> Bool {
         // Return false if no instance suppports the feature.
         if allowedInstances.isEmpty {
             return false
@@ -50,7 +50,7 @@ struct TchapFeatureFlag {
         // Example of homeServer for authenticiation: `matrix.agent.dinum.tchap.gouv.fr`
         // We must remove the `matrix.` prefix.
         let homeServerPrefixes = ["matrix.", "https://matrix."]
-        var sanitizedHomeServer = Substring(homeServer)
+        var sanitizedHomeServer = Substring(homeServer.rawValue)
         homeServerPrefixes.forEach {
             if sanitizedHomeServer.hasPrefix($0) {
                 sanitizedHomeServer = sanitizedHomeServer.dropFirst($0.count)
