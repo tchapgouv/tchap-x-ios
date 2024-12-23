@@ -137,13 +137,21 @@ struct InfoPlistReader {
         return result
     }
     
+    var embeddedTransportSecurity: Any? {
+        bundle.object(forInfoDictionaryKey: "NSAppTransportSecurity")
+    }
+    
     var embeddedSpkiCertificates: [String] {
-        let transportSecurityData = infoPlistValue(forKey: "NSAppTransportSecurity") as [String: Any]
+        guard let transportSecurityData = embeddedTransportSecurity as? [String: Any] else {
+            return []
+        }
         return recursiveSearchCertificates(for: "SPKI-SHA256-BASE64", into: transportSecurityData)
     }
     
     var embeddedPemCertificates: [String] {
-        let transportSecurityData = infoPlistValue(forKey: "NSAppTransportSecurity") as [String: Any]
+        guard let transportSecurityData = embeddedTransportSecurity as? [String: Any] else {
+            return []
+        }
         return recursiveSearchCertificates(for: "PEM", into: transportSecurityData)
     }
     

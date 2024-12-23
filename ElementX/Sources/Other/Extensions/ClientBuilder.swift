@@ -55,23 +55,17 @@ extension ClientBuilder {
         if TchapFeatureFlag.Configuration.certificatePinning.isActivated(for: .all) {
             let pemCertificates = InfoPlistReader.app.embeddedPemCertificates
             if pemCertificates.count > 0 {
-                // `addRootCertificates(certificates: [Data])` awaits a list of Data as certificates parameter.
+                // `addRootCertificates(certificates: [Data])` awaits a list of Data as certificatesnly.
                 // It is defined in Rust as `certificates: Vec<CertificateBytes>`.
                 //
                 // And `CertificateBytes` is:
                 //   `pub type CertificateBytes = Vec<u8>;`
-                // A list of bytes containing a certificate in DER or PEM form.
-                //
-                // So, we must convert the PEM UTF8 string to a simple Data representation that should be the format accepted by Rust.
+                // A list of bytes containing a Reqwest.Certificate struct created from a DER or PEM format.
                 
                 // Try to convert String based PEM to Data and check if no Certificate conversion failed.
                 // If any failure occured, ignore all certificates.
                 let pemCertificatesAsData = pemCertificates.compactMap { $0.data(using: .utf8) }
-                
-                // Here, we should crate Reqwest:Certificate.from_pem(),
-                // But Certificate is not yet exposed through uniffi.
-                let t = pemCertificatesAsData.map { String(data: $0, encoding: .utf8) }
-                
+                              
                 if pemCertificatesAsData.count == pemCertificates.count {
                     builder = builder.disableBuiltInRootCertificates()
                         .addRootCertificates(certificates: pemCertificatesAsData)
