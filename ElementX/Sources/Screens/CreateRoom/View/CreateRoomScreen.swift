@@ -150,17 +150,23 @@ struct CreateRoomScreen: View {
 
     private var selectedUsersSection: some View {
         Section { // Tchap: put selected users list in section
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 16) {
-                    ForEach(context.viewState.selectedUsers, id: \.userID) { user in
-                        InviteUsersScreenSelectedItem(user: user, mediaProvider: context.mediaProvider) {
-                            context.send(viewAction: .deselectUser(user))
+            VStack(spacing: 0.0) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 16) {
+                        ForEach(context.viewState.selectedUsers, id: \.userID) { user in
+                            InviteUsersScreenSelectedItem(user: user, mediaProvider: context.mediaProvider) {
+                                context.send(viewAction: .deselectUser(user))
+                            }
+                            .frame(width: invitedUserCellWidth)
                         }
-                        .frame(width: invitedUserCellWidth)
                     }
+                    .padding(.horizontal, ListRowPadding.horizontal)
+                    .padding(.vertical, 22)
                 }
-                .padding(.horizontal, ListRowPadding.horizontal)
-                .padding(.vertical, 22)
+                // Tchap: add warning if some users are externals.
+                if context.viewState.selectedUsers.first(where: { MatrixIdFromString($0.userID).isExternalTchapUser }) != nil {
+                    Text("Ce salon contient des invités externes. En savoir +")
+                }
             }
 //            .frame(width: frame.width) // Tchap: remove because in a Section now.
         } header: { // Tchap: set selected users list section title
@@ -184,7 +190,7 @@ struct CreateRoomScreen: View {
 //                    kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateEncryptedOptionTitle,
                                     description: TchapL10n.screenCreateRoomPrivateEncryptedOptionDescription,
-                                    icon: \.lock,
+                                    icon: \.lockSolid,
                                     iconAlignment: .top),
                     kind: .selection(isSelected: context.isRoomPrivate && context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = true })
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
@@ -198,7 +204,7 @@ struct CreateRoomScreen: View {
                                     iconAlignment: .top),
                     kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
         } header: {
-            Text(L10n.screenCreateRoomRoomVisibilitySectionTitle)
+            Text(TchapL10n.screenCreateRoomRoomVisibilitySectionTitle)
                 .compoundListSectionHeader()
         }
     }

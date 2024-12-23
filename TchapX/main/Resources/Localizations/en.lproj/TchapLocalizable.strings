@@ -15,3 +15,4 @@ screen_create_room_public_option_title = "Public room";
 screen_create_room_public_option_description = "- Not end-to-end encrypted\n- Visible in the list of rooms\n- Not allwed to external guests";
 screen_create_room_public_option_unfederated_title = "Limited to my domain";
 screen_create_room_public_option_unfederated_description = "Visible only to members of \"%1$@\"";
+screen_create_room_room_visibility_section_title = "Room type";

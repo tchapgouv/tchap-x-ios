@@ -21,7 +21,14 @@ struct InviteUsersScreenSelectedItem: View {
             Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
                 .font(.compound.bodyMD)
                 .foregroundColor(.compound.textPrimary)
-                .lineLimit(1)
+                .lineLimit(2)
+            
+            // Tchap: display an additional badge if user is external.
+            if MatrixIdFromString(user.userID).isExternalTchapUser {
+                BadgeLabel(title: "Ext.",
+                           icon: \.warning,
+                           isHighlighted: true)
+            }
         }
     }
     

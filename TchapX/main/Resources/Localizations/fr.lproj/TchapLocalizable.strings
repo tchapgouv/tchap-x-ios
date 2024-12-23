@@ -10,9 +10,9 @@ screen_create_room_selected_users_label = "Membres";
 screen_create_room_private_encrypted_option_title = "Salon privé sécurisé";
 screen_create_room_private_encrypted_option_description = "- Chiffré de bout en bout\n- Accessible uniquement sur invitation\n- Conseillé jusqu'à 500 membres";
 screen_create_room_private_option_title = "Salon privé";
-screen_create_room_private_option_description = "_ Non chiffré\n- Accessible uniquement sur invitation";
+screen_create_room_private_option_description = "- Non chiffré\n- Accessible uniquement sur invitation";
 screen_create_room_public_option_title = "Salon public";
 screen_create_room_public_option_description = "- Non chiffré\n- Accessible depuis la liste des salons\n- Non accessible aux invités externes";
 screen_create_room_public_option_unfederated_title = "Limité à mon domaine";
 screen_create_room_public_option_unfederated_description = "Visible uniquement aux membres de \"%1$@\"";
-
+screen_create_room_room_visibility_section_title = "Type de salon";
