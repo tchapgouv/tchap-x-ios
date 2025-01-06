@@ -46,6 +46,9 @@ struct SettingsScreenViewState: BindableState {
     var showBlockedUsers = false
     
     var bindings = SettingsScreenViewStateBindings()
+    
+    // Tchap: FAQ URL
+    let tchapFaqURL: URL
 }
 
 struct SettingsScreenViewStateBindings {

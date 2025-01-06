@@ -17,11 +17,14 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
         actionsSubject.eraseToAnyPublisher()
     }
     
-    init(userSession: UserSessionProtocol) {
+    // Tchap: add appSettings access for FAQ URL
+//    init(userSession: UserSessionProtocol) {
+    init(userSession: UserSessionProtocol, appSettings: AppSettings) {
         super.init(initialViewState: .init(deviceID: userSession.clientProxy.deviceID,
                                            userID: userSession.clientProxy.userID,
                                            showAccountDeactivation: userSession.clientProxy.canDeactivateAccount,
-                                           showDeveloperOptions: AppSettings.isDevelopmentBuild),
+                                           showDeveloperOptions: AppSettings.isDevelopmentBuild,
+                                           tchapFaqURL: appSettings.tchapFaqURL),
                    mediaProvider: userSession.mediaProvider)
         
         userSession.clientProxy.userAvatarURLPublisher
