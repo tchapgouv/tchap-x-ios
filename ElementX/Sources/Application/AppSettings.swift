@@ -136,7 +136,7 @@ final class AppSettings {
     /// A URL that contains the app's Privacy Policy.
     let privacyURL: URL = "https://tchap.numerique.gouv.fr/politique-de-confidentialite/" // Tchap
     /// A URL that leads to Tchap FAQ page.
-    let tchapFaqURL: URL = "https://aide.tchap.beta.gouv.fr/fr//" // Tchap
+    let tchapFaqURL: URL = "https://www.tchap.gouv.fr/faq" // Tchap
     /// An email address that should be used for support requests.
     let supportEmailAddress = "support@element.io"
     /// A URL where users can go read more about encryption in general.
