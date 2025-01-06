@@ -142,7 +142,7 @@ struct SettingsScreen: View {
             ListRow(label: .default(title: TchapL10n.commonFaq,
                                     icon: \.info),
                     kind: .button {
-                        openURL("https://google.com")
+                        openURL(context.viewState.tchapFaqURL)
                     })
                     .accessibilityIdentifier(A11yIdentifiers.settingsScreen.about)
             // Tchap: Customize "About" menu into "Legal" menu
@@ -152,7 +152,7 @@ struct SettingsScreen: View {
                     kind: .navigationLink {
                         context.send(viewAction: .about)
                     })
-                    .accessibilityIdentifier(A11yIdentifiers.settingsScreen.about)
+                    .accessibilityIdentifier(TchapA11yIdentifiers.settingsScreen.faq)
             
             ListRow(label: .default(title: L10n.commonReportAProblem,
                                     icon: \.chatProblem),
@@ -247,7 +247,9 @@ struct SettingsScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModel = {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@userid:example.com",
                                                                                    deviceID: "AAAAAAAAAAA"))))
-        return SettingsScreenViewModel(userSession: userSession)
+        // Tchap: add `appSettings` parameter for FAQ URL.
+//        return SettingsScreenViewModel(userSession: userSession)
+        return SettingsScreenViewModel(userSession: userSession, appSettings: AppSettings())
     }()
     
     static var previews: some View {
