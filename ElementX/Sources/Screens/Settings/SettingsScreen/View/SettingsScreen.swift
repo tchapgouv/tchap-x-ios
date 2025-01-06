@@ -11,6 +11,8 @@ import SwiftUI
 
 struct SettingsScreen: View {
     @ObservedObject var context: SettingsScreenViewModel.Context
+    // Tchap: `openURL` needed to open FAQ page.
+    @Environment(\.openURL) private var openURL
     
     private var shouldHideManageAccountSection: Bool {
         context.viewState.accountProfileURL == nil &&
@@ -136,10 +138,17 @@ struct SettingsScreen: View {
     
     private var generalSection: some View {
         Section {
+            // Tchap: Add FAQ item
+            ListRow(label: .default(title: TchapL10n.commonFaq,
+                                    icon: \.info),
+                    kind: .button {
+                        openURL("https://google.com")
+                    })
+                    .accessibilityIdentifier(A11yIdentifiers.settingsScreen.about)
             // Tchap: Customize "About" menu into "Legal" menu
 //            ListRow(label: .default(title: L10n.commonAbout,
             ListRow(label: .default(title: TchapL10n.commonLegal,
-                                    icon: \.info),
+                                    icon: \.listBulleted),
                     kind: .navigationLink {
                         context.send(viewAction: .about)
                     })
