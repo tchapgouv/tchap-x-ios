@@ -7,6 +7,7 @@
 */
 
 common_legal = "Mentions légales";
+common_faq = "Foire Aux Questions";
 
 legal_terms_of_use = "Conditions Générales d'Utilisation";
 legal_privacy_policy = "Politique de confidentialité";
