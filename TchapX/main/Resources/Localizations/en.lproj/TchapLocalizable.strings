@@ -6,6 +6,12 @@
   Copyright © 2024 Tchap. All rights reserved.
 */
 
+common_legal = "Legals";
+common_faq = "Frequently Asked Questions";
+
+legal_terms_of_use = "Terms of use";
+legal_privacy_policy = "Privacy policy";
+
 screen_create_room_selected_users_label = "Members";
 screen_create_room_private_encrypted_option_title = "Private secured room";
 screen_create_room_private_encrypted_option_description = "- End-to-end encrypted\n- Only people invited can access this room\n- Advised up to 500 members";

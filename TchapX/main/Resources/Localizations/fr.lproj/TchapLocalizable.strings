@@ -6,6 +6,12 @@
   Copyright © 2024 Tchap. All rights reserved.
 */
 
+common_legal = "Mentions légales";
+common_faq = "Foire Aux Questions";
+
+legal_terms_of_use = "Conditions Générales d'Utilisation";
+legal_privacy_policy = "Politique de confidentialité";
+
 screen_create_room_selected_users_label = "Membres";
 screen_create_room_private_encrypted_option_title = "Salon privé sécurisé";
 screen_create_room_private_encrypted_option_description = "- Chiffré de bout en bout\n- Accessible uniquement sur invitation\n- Conseillé jusqu'à 500 membres";
