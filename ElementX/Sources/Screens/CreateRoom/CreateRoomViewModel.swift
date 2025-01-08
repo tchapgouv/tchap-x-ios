@@ -49,7 +49,8 @@ class CreateRoomViewModel: CreateRoomViewModelType, CreateRoomViewModelProtocol 
                                                          isKnockingFeatureEnabled: appSettings.knockingEnabled,
                                                          selectedUsers: selectedUsers.value,
                                                          aliasLocalPart: parameters.aliasLocalPart ?? roomAliasNameFromRoomDisplayName(roomName: parameters.name),
-                                                         bindings: bindings),
+                                                         bindings: bindings,
+                                                         tchapExternalMembersFaqLink: appSettings.tchapExternalFaqURL), // Tchap: add external members FAQ link
                    mediaProvider: userSession.mediaProvider)
         
         createRoomParameters

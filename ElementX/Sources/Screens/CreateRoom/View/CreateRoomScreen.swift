@@ -148,26 +148,45 @@ struct CreateRoomScreen: View {
     @State private var frame: CGRect = .zero
     @ScaledMetric private var invitedUserCellWidth: CGFloat = 72
 
+    // Tchap: "external are presents" warning
+    private var externalsWarning: AttributedString {
+        var externWarning = AttributedString("Ce salon contient des invités externes. ")
+        externWarning.font = .footnote
+        var externMoreLink = AttributedString("En savoir +")
+        externMoreLink.font = .footnote
+        externMoreLink.underlineStyle = .single
+        externMoreLink.foregroundColor = .primary
+        externMoreLink.link = context.viewState.tchapExternalMembersFaqLink
+        return externWarning + externMoreLink
+    }
+    
     private var selectedUsersSection: some View {
         Section { // Tchap: put selected users list in section
             VStack(spacing: 0.0) {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 16) {
+                    LazyHStack(spacing: 8) { // Tchap: reduce space between items.
                         ForEach(context.viewState.selectedUsers, id: \.userID) { user in
                             InviteUsersScreenSelectedItem(user: user, mediaProvider: context.mediaProvider) {
                                 context.send(viewAction: .deselectUser(user))
                             }
-                            .frame(width: invitedUserCellWidth)
+//                            .frame(width: invitedUserCellWidth) // Tchap: let the view takes its intrinsic size to be well-spaced.
                         }
                     }
-                    .padding(.horizontal, ListRowPadding.horizontal)
+//                    .padding(.horizontal, ListRowPadding.horizontal) // Tchap: remove horizontal padding to display more member in available space.
                     .padding(.vertical, 22)
                 }
                 // Tchap: add warning if some users are externals.
                 if context.viewState.selectedUsers.first(where: { MatrixIdFromString($0.userID).isExternalTchapUser }) != nil {
-                    Text("Ce salon contient des invités externes. En savoir +")
+                    HStack(spacing: 4.0) {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundColor(CompoundCoreColorTokens.orange700)
+                        Text(externalsWarning)
+                        Spacer()
+                    }
                 }
             }
+            // Tchap: reduce horizontal margins on members section.
+            .listRowInsets(EdgeInsets(top: 4.0, leading: 8.0, bottom: 4.0, trailing: 8.0))
 //            .frame(width: frame.width) // Tchap: remove because in a Section now.
         } header: { // Tchap: set selected users list section title
             Text(TchapL10n.screenCreateRoomSelectedUsersLabel)

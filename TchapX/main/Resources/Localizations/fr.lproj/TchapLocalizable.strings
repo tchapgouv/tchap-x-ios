@@ -8,6 +8,7 @@
 
 common_legal = "Mentions légales";
 common_faq = "Foire Aux Questions";
+common_user_is_external = "Externe";
 
 legal_terms_of_use = "Conditions Générales d'Utilisation";
 legal_privacy_policy = "Politique de confidentialité";
