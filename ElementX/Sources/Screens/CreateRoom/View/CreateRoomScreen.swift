@@ -60,6 +60,10 @@ struct CreateRoomScreen: View {
         .toolbar { toolbar }
         .readFrame($frame)
         .alert(item: $context.alertInfo)
+        // Tchap: check external guets and room type compatibility.
+        .task {
+            forceRoomSelectionIfExternalsArePresent()
+        }
     }
     
     private var roomSection: some View {
@@ -138,26 +142,43 @@ struct CreateRoomScreen: View {
                 .compoundListSectionHeader()
         }
         // Tchap: set selected users list in its own section
-//        footer: {
-//            if !context.viewState.selectedUsers.isEmpty {
-//                selectedUsersSection
-//            }
-//        }
+        //        footer: {
+        //            if !context.viewState.selectedUsers.isEmpty {
+        //                selectedUsersSection
+        //            }
+        //        }
     }
     
     @State private var frame: CGRect = .zero
     @ScaledMetric private var invitedUserCellWidth: CGFloat = 72
-
-    // Tchap: "external are presents" warning
+    
+    // Tchap: boolean representing the presence of external members in invited users
+    private var externalsArePresents: Bool {
+        context.viewState.selectedUsers.first(where: { MatrixIdFromString($0.userID).isExternalTchapUser }) != nil
+    }
+    
+    // Tchap: "external are present" warning
     private var externalsWarning: AttributedString {
-        var externWarning = AttributedString("Ce salon contient des invités externes. ")
+        var externWarning = AttributedString(TchapL10n.screenCreateRoomExternalsArePresentsWarning)
         externWarning.font = .footnote
-        var externMoreLink = AttributedString("En savoir +")
+        var externMoreLink = AttributedString(TchapL10n.screenCreateRoomExternalsArePresentsLink)
         externMoreLink.font = .footnote
         externMoreLink.underlineStyle = .single
         externMoreLink.foregroundColor = .primary
         externMoreLink.link = context.viewState.tchapExternalMembersFaqLink
         return externWarning + externMoreLink
+    }
+    
+    // Tchap: verifiy at view init that selected room type is not Public Room if external users are present.
+    // This can happen when we select Public Room (because no externals are present) and go back to previous screen
+    // to select external and continue to this screen (which remember then the previous selection).
+    private func forceRoomSelectionIfExternalsArePresent() {
+        if externalsArePresents,
+           !context.isRoomPrivate {
+            // Force revert to default configuration: private and encrypted room
+            context.isRoomPrivate = true
+            context.isRoomEncrypted = true
+        }
     }
     
     private var selectedUsersSection: some View {
@@ -176,7 +197,7 @@ struct CreateRoomScreen: View {
                     .padding(.vertical, 22)
                 }
                 // Tchap: add warning if some users are externals.
-                if context.viewState.selectedUsers.first(where: { MatrixIdFromString($0.userID).isExternalTchapUser }) != nil {
+                if externalsArePresents {
                     HStack(spacing: 4.0) {
                         Image(systemName: "info.circle.fill")
                             .foregroundColor(CompoundCoreColorTokens.orange700)
@@ -209,7 +230,7 @@ struct CreateRoomScreen: View {
 //                    kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateEncryptedOptionTitle,
                                     description: TchapL10n.screenCreateRoomPrivateEncryptedOptionDescription,
-                                    icon: \.lockSolid,
+                                    icon: \.lockSolid), // Tchap: Should modify `ListRowLabel.iconForegroundColor` to tint icon.
                                     iconAlignment: .top),
                     kind: .selection(isSelected: context.isRoomPrivate && context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = true })
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
@@ -222,6 +243,8 @@ struct CreateRoomScreen: View {
                                     icon: \.public,
                                     iconAlignment: .top),
                     kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
+                // Tchap: disabled Public forum if externals are present.
+                .disabled(externalsArePresents)
         } header: {
             Text(TchapL10n.screenCreateRoomRoomVisibilitySectionTitle)
                 .compoundListSectionHeader()

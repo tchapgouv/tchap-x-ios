@@ -49,7 +49,8 @@ struct UserProfileListRow: View {
                                    role: isUnknownProfile ? .error : nil),
                     kind: kind)
             if MatrixIdFromString(user.userID).isExternalTchapUser {
-                BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.warning, isHighlighted: true)
+                Text(TchapL10n.commonUserIsExternal)
+                    .tchapExternalDisplay()
                     .offset(x: 60.0, y: -16.0) // 60 is 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
             }
         }

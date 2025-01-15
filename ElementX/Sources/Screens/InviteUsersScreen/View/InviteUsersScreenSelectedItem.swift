@@ -16,19 +16,17 @@ struct InviteUsersScreenSelectedItem: View {
         VStack(spacing: 0) {
             avatar
             
-            // Tchap: calculate displayname from userId if necessary.
+            // Tchap: calculate displayname from userId if necessary and displays it in badge if user is external..
             //            Text(user.displayName ?? user.userID)
-            Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
-                .font(.compound.bodyMD)
-                .foregroundColor(.compound.textPrimary)
-                .lineLimit(1)
-            
-            // Tchap: display an additional badge if user is external.
             if MatrixIdFromString(user.userID).isExternalTchapUser {
-                BadgeLabel(title: TchapL10n.commonUserIsExternal,
-                           icon: \.warning,
-                           isHighlighted: true)
-                    .fixedSize() // Render full texte on 1 line.
+                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                    .lineLimit(1)
+                    .tchapExternalDisplay()
+            } else {
+                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                    .font(.compound.bodyMD)
+                    .foregroundColor(.compound.textPrimary)
+                    .lineLimit(1)
             }
         }
         .frame(maxWidth: 100.0)
