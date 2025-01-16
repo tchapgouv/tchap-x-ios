@@ -48,6 +48,11 @@ enum JoinedRoomProxyAction: Equatable {
     case roomInfoUpdate
 }
 
+enum KnockRequestsState {
+    case loading
+    case loaded([KnockRequestProxyProtocol])
+}
+
 // sourcery: AutoMockable
 protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     var isEncrypted: Bool { get }
@@ -60,6 +65,8 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     var identityStatusChangesPublisher: CurrentValuePublisher<[IdentityStatusChange], Never> { get }
     
+    var knockRequestsStatePublisher: CurrentValuePublisher<KnockRequestsState, Never> { get }
+    
     var timeline: TimelineProxyProtocol { get }
     
     var pinnedEventsTimeline: TimelineProxyProtocol? { get async }
@@ -69,6 +76,8 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func subscribeToRoomInfoUpdates()
     
     func timelineFocusedOnEvent(eventID: String, numberOfEvents: UInt16) async -> Result<TimelineProxyProtocol, RoomProxyError>
+    
+    func messageFilteredTimeline(allowedMessageTypes: [RoomMessageEventMessageType]) async -> Result<TimelineProxyProtocol, RoomProxyError>
     
     func redact(_ eventID: String) async -> Result<Void, RoomProxyError>
     
@@ -158,8 +167,8 @@ extension JoinedRoomProxyProtocol {
                     isPublic: infoPublisher.value.isPublic)
     }
     
-    var isEncryptedOneToOneRoom: Bool {
-        infoPublisher.value.isDirect && isEncrypted && infoPublisher.value.activeMembersCount <= 2
+    var isDirectOneToOneRoom: Bool {
+        infoPublisher.value.isDirect && infoPublisher.value.activeMembersCount <= 2
     }
 
     func members() async -> [RoomMemberProxyProtocol]? {

@@ -67,7 +67,6 @@ enum TimelineItemMenuAction: Identifiable, Hashable {
     case reply(isThread: Bool)
     case forward(itemID: TimelineItemIdentifier)
     case viewSource
-    case retryDecryption(sessionID: String)
     case report
     case react
     case toggleReaction(key: String)
@@ -82,9 +81,9 @@ enum TimelineItemMenuAction: Identifiable, Hashable {
     var switchToDefaultComposer: Bool {
         switch self {
         case .reply, .edit, .addCaption, .editCaption, .editPoll:
-            return false
+            false
         default:
-            return true
+            true
         }
     }
     
@@ -92,9 +91,9 @@ enum TimelineItemMenuAction: Identifiable, Hashable {
     var canAppearInFailedEcho: Bool {
         switch self {
         case .copy, .edit, .redact, .viewSource, .editPoll:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
     
@@ -102,9 +101,9 @@ enum TimelineItemMenuAction: Identifiable, Hashable {
     var canAppearInRedacted: Bool {
         switch self {
         case .viewSource, .unpin, .viewInRoomTimeline:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
     
@@ -112,18 +111,27 @@ enum TimelineItemMenuAction: Identifiable, Hashable {
     var isDestructive: Bool {
         switch self {
         case .redact, .report, .removeCaption:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
     
     var canAppearInPinnedEventsTimeline: Bool {
         switch self {
         case .viewInRoomTimeline, .pin, .unpin, .forward:
-            return true
+            true
         default:
-            return false
+            false
+        }
+    }
+    
+    var canAppearInMediaDetails: Bool {
+        switch self {
+        case .viewInRoomTimeline, .redact:
+            true
+        default:
+            false
         }
     }
     
@@ -155,8 +163,6 @@ enum TimelineItemMenuAction: Identifiable, Hashable {
             Label(L10n.actionRemoveMessage, icon: \.delete)
         case .viewSource:
             Label(L10n.actionViewSource, icon: \.code)
-        case .retryDecryption:
-            Label(L10n.actionRetryDecryption, systemImage: "arrow.down.message")
         case .report:
             Label(L10n.actionReportContent, icon: \.chatProblem)
         case .react:

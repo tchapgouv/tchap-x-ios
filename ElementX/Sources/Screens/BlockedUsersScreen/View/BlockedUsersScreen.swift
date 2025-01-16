@@ -38,7 +38,7 @@ struct BlockedUsersScreen: View {
 //                            kind: .button(action: { context.send(viewAction: .unblockUser(user)) }))
                     ListRow(label: .avatar(title: user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName ?? user.userID, icon: avatar(for: user)),
                             details: .isWaiting(context.viewState.processingUserID == user.userID),
-                            kind: .button(action: { context.send(viewAction: .unblockUser(user)) }))
+                            kind: .button { context.send(viewAction: .unblockUser(user)) })
                 }
             }
         }
