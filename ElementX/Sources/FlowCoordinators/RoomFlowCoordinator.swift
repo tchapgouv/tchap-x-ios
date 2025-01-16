@@ -353,7 +353,6 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
                 return .pinnedEventsTimeline(previousState: fromState)
             case (.pinnedEventsTimeline(let previousState), .dismissPinnedEventsTimeline):
                 return previousState
-                
             case (.roomDetails, .presentPollsHistory):
                 return .pollsHistory
             case (.pollsHistory, .dismissPollsHistory):
@@ -370,7 +369,6 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
                 return .resolveSendFailure
             case (.resolveSendFailure, .dismissResolveSendFailure):
                 return .room
-            
             case (_, .startChildFlow(let roomID, _, _)):
                 return .presentingChild(childRoomID: roomID, previousState: fromState)
             case (.presentingChild(_, let previousState), .dismissChildFlow):
@@ -379,17 +377,14 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
                 return .knockRequestsList(previousState: fromState)
             case (.knockRequestsList(let previousState), .dismissKnockRequestsListScreen):
                 return previousState
-                
             case (.roomDetails, .presentMediaEventsTimeline):
                 return .mediaEventsTimeline(previousState: fromState)
             case (.mediaEventsTimeline(let previousState), .dismissMediaEventsTimeline):
                 return previousState
-                
             case (.roomDetails, .presentSecurityAndPrivacyScreen):
                 return .securityAndPrivacy(previousState: fromState)
             case (.securityAndPrivacy(let previousState), .dismissSecurityAndPrivacyScreen):
                 return previousState
-            
             default:
                 return nil
             }
@@ -526,6 +521,7 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
                 
             case (.room, .presentPinnedEventsTimeline, .pinnedEventsTimeline):
                 startPinnedEventsTimelineFlow()
+
             case (.pinnedEventsTimeline, .dismissPinnedEventsTimeline, .room):
                 break
 
@@ -537,6 +533,7 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
                 
             case (.roomDetails, .presentPinnedEventsTimeline, .pinnedEventsTimeline):
                 startPinnedEventsTimelineFlow()
+
             case (.pinnedEventsTimeline, .dismissPinnedEventsTimeline, .roomDetails):
                 break
         
@@ -581,11 +578,13 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
             
             case (.roomDetails, .presentMediaEventsTimeline, .mediaEventsTimeline):
                 Task { await self.startMediaEventsTimelineFlow() }
+
             case (.mediaEventsTimeline, .dismissMediaEventsTimeline, .roomDetails):
                 break
                 
             case (.roomDetails, .presentSecurityAndPrivacyScreen, .securityAndPrivacy):
                 presentSecurityAndPrivacyScreen()
+
             case (.securityAndPrivacy, .dismissSecurityAndPrivacyScreen, .roomDetails):
                 break
             
