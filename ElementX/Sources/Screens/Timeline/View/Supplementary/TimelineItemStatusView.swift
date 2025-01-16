@@ -14,7 +14,7 @@ struct TimelineItemStatusView: View {
     @EnvironmentObject private var context: TimelineViewModel.Context
 
     private var isLastOutgoingMessage: Bool {
-        timelineItem.isOutgoing && context.viewState.timelineViewState.uniqueIDs.last == timelineItem.id.uniqueID
+        timelineItem.isOutgoing && context.viewState.timelineState.uniqueIDs.last == timelineItem.id.uniqueID
     }
 
     var body: some View {
@@ -23,7 +23,7 @@ struct TimelineItemStatusView: View {
 
     @ViewBuilder
     private var mainContent: some View {
-        if context.viewState.isPinnedEventsTimeline {
+        if context.viewState.timelineKind == .pinned {
             // Do not display any status when is a pinned events timeline
             EmptyView()
         } else if context.viewState.showReadReceipts, !timelineItem.properties.orderedReadReceipts.isEmpty {

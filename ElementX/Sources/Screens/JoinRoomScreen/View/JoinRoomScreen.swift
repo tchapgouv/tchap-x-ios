@@ -13,9 +13,14 @@ struct JoinRoomScreen: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     
     @ObservedObject var context: JoinRoomScreenViewModel.Context
+    @FocusState private var focus: Focus?
     
+    private enum Focus {
+        case knockMessage
+    }
+
     var body: some View {
-        FullscreenDialog(topPadding: context.viewState.mode == .knocked ? 151 : 35, background: .bloom) {
+        FullscreenDialog(topPadding: context.viewState.mode == .knocked ? 151 : 35) {
             if context.viewState.mode == .loading {
                 EmptyView()
             } else {
@@ -29,6 +34,7 @@ struct JoinRoomScreen: View {
         .backgroundStyle(.compound.bgCanvasDefault)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
+        .shouldScrollOnKeyboardDidShow(focus == .knockMessage, to: Focus.knockMessage)
     }
     
     @ViewBuilder
@@ -117,6 +123,7 @@ struct JoinRoomScreen: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 0) {
                 TextField("", text: $context.knockMessage, axis: .vertical)
+                    .focused($focus, equals: .knockMessage)
                     .onChange(of: context.knockMessage) { _, newValue in
                         context.knockMessage = String(newValue.prefix(maxKnockMessageLength))
                     }
@@ -124,6 +131,7 @@ struct JoinRoomScreen: View {
                     .font(.compound.bodyMD)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
+                    .id(Focus.knockMessage)
             }
             .background(.compound.bgCanvasDefault)
             .cornerRadius(8)
@@ -261,7 +269,7 @@ struct JoinRoomScreen_Previews: PreviewProvider, TestablePreview {
                                                                                 topic: "“Science and technology were the only keys to opening the door to the future, and people approached science with the faith and sincerity of elementary school students.”",
                                                                                 avatarURL: .mockMXCAvatar,
                                                                                 memberCount: UInt(100),
-                                                                                isHistoryWorldReadable: false,
+                                                                                isHistoryWorldReadable: nil,
                                                                                 isJoined: membership.isJoined,
                                                                                 isInvited: membership.isInvited,
                                                                                 isPublic: membership.isPublic,

@@ -9,18 +9,20 @@ import Foundation
 import SwiftUI
 
 struct AudioRoomTimelineView: View {
+    @Environment(\.timelineContext) private var context
     let timelineItem: AudioRoomTimelineItem
     
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {
-            MediaFileRoomTimelineContent(timelineItemID: timelineItem.id,
-                                         filename: timelineItem.content.filename,
+            MediaFileRoomTimelineContent(filename: timelineItem.content.filename,
                                          fileSize: timelineItem.content.fileSize,
                                          caption: timelineItem.content.caption,
                                          formattedCaption: timelineItem.content.formattedCaption,
                                          additionalWhitespaces: timelineItem.additionalWhitespaces(),
-                                         isAudioFile: true)
-                .accessibilityLabel(L10n.commonAudio)
+                                         isAudioFile: true) {
+                context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
+            }
+            .accessibilityLabel(L10n.commonAudio)
         }
     }
 }
@@ -42,7 +44,7 @@ struct AudioRoomTimelineView_Previews: PreviewProvider, TestablePreview {
     
     static func makeItem(filename: String, fileSize: UInt, caption: String? = nil) -> AudioRoomTimelineItem {
         .init(id: .randomEvent,
-              timestamp: "Now",
+              timestamp: .mock,
               isOutgoing: false,
               isEditable: false,
               canBeRepliedTo: true,

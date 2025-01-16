@@ -1047,7 +1047,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             .actionsPublisher
             .filter(\.isSyncUpdate)
             .collect(.byTimeOrCount(DispatchQueue.main, .seconds(10), 10))
-            .sink(receiveValue: { [weak self] _ in
+            .sink { [weak self] _ in
                 guard let self else { return }
                 MXLog.info("Background app refresh finished")
                 backgroundRefreshSyncObserver?.cancel()
@@ -1058,6 +1058,6 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                     MXLog.info("Marking Background app refresh task as complete.")
                     task.setTaskCompleted(success: true)
                 }
-            })
+            }
     }
 }
