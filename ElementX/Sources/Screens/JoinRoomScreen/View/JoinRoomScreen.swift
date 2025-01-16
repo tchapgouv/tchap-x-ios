@@ -183,6 +183,7 @@ struct JoinRoomScreen: View {
             ToolbarItem(placement: .principal) {
                 RoomHeaderView(roomName: context.viewState.title,
                                roomAvatar: context.viewState.avatar,
+                               roomPropertiesBadgesView: .sample, // Tchap addition
                                mediaProvider: context.mediaProvider)
             }
         }

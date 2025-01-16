@@ -9,19 +9,31 @@
 import Compound
 import SwiftUI
 
-struct TchapExternalViewModifier: ViewModifier {
+private struct TchapExternalViewModifier: ViewModifier {
+    let font: Font
+    let foregroundColor: Color
+    let backgroundColor: Color
+    
     func body(content: Content) -> some View {
         content
-            .font(.compound.bodySMSemibold)
-            .foregroundColor(CompoundCoreColorTokens.blue1000)
+            .font(font)
+            .foregroundColor(foregroundColor)
             .padding(EdgeInsets(top: 2.0, leading: 8.0, bottom: 3.0, trailing: 8.0))
-            .background(CompoundCoreColorTokens.blue400, in: Capsule())
+            .background(backgroundColor, in: Capsule())
     }
 }
 
 extension View {
     func tchapExternalDisplay() -> some View {
-        modifier(TchapExternalViewModifier())
+        modifier(TchapExternalViewModifier(font: .compound.bodySMSemibold,
+                                           foregroundColor: CompoundCoreColorTokens.blue1000,
+                                           backgroundColor: CompoundCoreColorTokens.blue400))
+    }
+    
+    func tchapRoomPropertiesDisplay() -> some View {
+        modifier(TchapExternalViewModifier(font: .system(size: 10.0).bold(),
+                                           foregroundColor: CompoundCoreColorTokens.red1000,
+                                           backgroundColor: CompoundCoreColorTokens.red400))
     }
 }
 

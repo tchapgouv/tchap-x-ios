@@ -67,7 +67,11 @@ struct RoomScreenViewState: BindableState {
     var bindings: RoomScreenViewStateBindings
 }
 
-struct RoomScreenViewStateBindings { }
+struct RoomScreenViewStateBindings {
+    // Tchap: display room properties badges. As they are queried async, make them Bindable.
+    var isEncrypted: Bool?
+    var isPublic: Bool?
+}
 
 enum RoomScreenFooterViewAction {
     case resolvePinViolation(userID: String)
