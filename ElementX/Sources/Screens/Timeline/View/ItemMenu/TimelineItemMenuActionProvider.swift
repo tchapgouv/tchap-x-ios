@@ -16,8 +16,7 @@ struct TimelineItemMenuActionProvider {
     let pinnedEventIDs: Set<String>
     let isDM: Bool
     let isViewSourceEnabled: Bool
-    let isCreateMediaCaptionsEnabled: Bool
-    let isPinnedEventsTimeline: Bool
+    let timelineKind: TimelineKind
     let emojiProvider: EmojiProviderProtocol
     
     // swiftlint:disable:next cyclomatic_complexity
@@ -38,6 +37,14 @@ struct TimelineItemMenuActionProvider {
         
         var actions: [TimelineItemMenuAction] = []
         var secondaryActions: [TimelineItemMenuAction] = []
+        
+        if timelineKind == .pinned || timelineKind == .media(.mediaFilesScreen) {
+            actions.append(.viewInRoomTimeline)
+        }
+        
+        if canRedactItem(item), let poll = item.pollIfAvailable, !poll.hasEnded, let eventID = item.id.eventID {
+            actions.append(.endPoll(pollStartID: eventID))
+        }
 
         if item.canBeRepliedTo {
             if let messageItem = item as? EventBasedMessageTimelineItemProtocol {
@@ -51,19 +58,11 @@ struct TimelineItemMenuActionProvider {
             actions.append(.forward(itemID: item.id))
         }
         
-        if canCurrentUserPin, let eventID = item.id.eventID {
-            actions.append(pinnedEventIDs.contains(eventID) ? .unpin : .pin)
-        }
-        
-        if item.isRemoteMessage {
-            actions.append(.copyPermalink)
-        }
-        
         if item.isEditable {
             if item.supportsMediaCaption {
                 if item.hasMediaCaption {
                     actions.append(.editCaption)
-                } else if isCreateMediaCaptionsEnabled {
+                } else {
                     actions.append(.addCaption)
                 }
             } else if item is PollRoomTimelineItem {
@@ -72,6 +71,14 @@ struct TimelineItemMenuActionProvider {
                 actions.append(.edit)
             }
         }
+        
+        if item.isRemoteMessage {
+            actions.append(.copyPermalink)
+        }
+        
+        if canCurrentUserPin, let eventID = item.id.eventID {
+            actions.append(pinnedEventIDs.contains(eventID) ? .unpin : .pin)
+        }
 
         if item.isCopyable {
             actions.append(.copy)
@@ -79,12 +86,8 @@ struct TimelineItemMenuActionProvider {
             actions.append(.copyCaption)
         }
         
-        if item.hasMediaCaption {
+        if item.isEditable, item.hasMediaCaption {
             actions.append(.removeCaption)
-        }
-        
-        if canRedactItem(item), let poll = item.pollIfAvailable, !poll.hasEnded, let eventID = item.id.eventID {
-            actions.append(.endPoll(pollStartID: eventID))
         }
         
         if isViewSourceEnabled {
@@ -99,10 +102,15 @@ struct TimelineItemMenuActionProvider {
             secondaryActions.append(.redact)
         }
         
-        if isPinnedEventsTimeline {
-            actions.insert(.viewInRoomTimeline, at: 0)
+        switch timelineKind {
+        case .pinned:
             actions = actions.filter(\.canAppearInPinnedEventsTimeline)
             secondaryActions = secondaryActions.filter(\.canAppearInPinnedEventsTimeline)
+        case .media:
+            actions = actions.filter(\.canAppearInMediaDetails)
+            secondaryActions = secondaryActions.filter(\.canAppearInMediaDetails)
+        case .live, .detached:
+            break // viewInRoomTimeline is the only non-room item and was added conditionally.
         }
         
         if item.hasFailedToSend {
@@ -114,31 +122,22 @@ struct TimelineItemMenuActionProvider {
             actions = actions.filter(\.canAppearInRedacted)
             secondaryActions = secondaryActions.filter(\.canAppearInRedacted)
         }
+        
+        let isReactable = timelineKind == .live || timelineKind == .detached ? item.isReactable : false
 
-        return .init(isReactable: isPinnedEventsTimeline ? false : item.isReactable,
-                     actions: actions,
-                     secondaryActions: secondaryActions,
-                     emojiProvider: emojiProvider)
+        return .init(isReactable: isReactable, actions: actions, secondaryActions: secondaryActions, emojiProvider: emojiProvider)
     }
     
     private func makeEncryptedItemActions(_ encryptedItem: EncryptedRoomTimelineItem) -> TimelineItemMenuActions? {
         var actions: [TimelineItemMenuAction] = [.copyPermalink]
-        var secondaryActions: [TimelineItemMenuAction] = []
-        
+
         if isViewSourceEnabled {
             actions.append(.viewSource)
         }
-        
-        switch encryptedItem.encryptionType {
-        case .megolmV1AesSha2(let sessionID, _):
-            secondaryActions.append(.retryDecryption(sessionID: sessionID))
-        default:
-            break
-        }
-        
+                
         return .init(isReactable: false,
                      actions: actions,
-                     secondaryActions: secondaryActions,
+                     secondaryActions: [],
                      emojiProvider: emojiProvider)
     }
     

@@ -31,7 +31,12 @@ protocol RoomTimelineControllerProtocol {
     var roomID: String { get }
     var timelineKind: TimelineKind { get }
     
+    /// The currently known items, use only for setting up the intial state.
     var timelineItems: [RoomTimelineItemProtocol] { get }
+    
+    /// The current pagination state, use only for setting up the intial state
+    var paginationState: PaginationState { get }
+    
     var callbacks: PassthroughSubject<RoomTimelineControllerCallback, Never> { get }
     
     func processItemAppearance(_ itemID: TimelineItemIdentifier) async
@@ -76,8 +81,6 @@ protocol RoomTimelineControllerProtocol {
     func debugInfo(for itemID: TimelineItemIdentifier) -> TimelineItemDebugInfo
     
     func sendHandle(for itemID: TimelineItemIdentifier) -> SendHandleProxy?
-    
-    func retryDecryption(for sessionID: String) async
     
     func eventTimestamp(for itemID: TimelineItemIdentifier) -> Date?
 }

@@ -32,4 +32,14 @@ extension Date {
             return formatted(.dateTime.year().day().month())
         }
     }
+    
+    /// The date formatted as just the time, for use in timeline items specifically.
+    func formattedTime() -> String {
+        formatted(date: .omitted, time: .shortened)
+    }
+    
+    /// A fixed date used for mocks, previews etc.
+    static var mock: Date {
+        DateComponents(calendar: .current, year: 2007, month: 1, day: 9, hour: 9, minute: 41).date ?? .now
+    }
 }

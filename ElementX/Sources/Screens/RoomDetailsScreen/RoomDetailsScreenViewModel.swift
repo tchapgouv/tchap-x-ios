@@ -125,11 +125,11 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             actionsSubject.send(.requestInvitePeoplePresentation)
         case .processTapLeave:
             guard state.joinedMembersCount > 1 else {
-                state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomProxy.id, isDM: roomProxy.isEncryptedOneToOneRoom, state: .empty)
+                state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomProxy.id, isDM: roomProxy.isDirectOneToOneRoom, state: .empty)
                 return
             }
             state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomProxy.id,
-                                                                   isDM: roomProxy.isEncryptedOneToOneRoom,
+                                                                   isDM: roomProxy.isDirectOneToOneRoom,
                                                                    state: roomProxy.infoPublisher.value.isPublic ? .public : .private)
         case .confirmLeave:
             Task { await leaveRoom() }
@@ -164,8 +164,12 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         case .processTapPinnedEvents:
             analyticsService.trackInteraction(name: .PinnedMessageRoomInfoButton)
             actionsSubject.send(.displayPinnedEventsTimeline)
+        case .processTapMediaEvents:
+            actionsSubject.send(.displayMediaEventsTimeline)
         case .processTapRequestsToJoin:
             actionsSubject.send(.displayKnockingRequests)
+        case .processTapSecurityAndPrivacy:
+            actionsSubject.send(.displaySecurityAndPrivacy)
         }
     }
     
@@ -178,6 +182,18 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 self?.updateRoomInfo(roomInfo)
                 Task { await self?.updatePowerLevelPermissions() }
             }
+            .store(in: &cancellables)
+        
+        roomProxy.knockRequestsStatePublisher
+            .map { requestsState in
+                guard case let .loaded(requests) = requestsState else {
+                    return 0
+                }
+                return requests.count
+            }
+            .removeDuplicates()
+            .throttle(for: .milliseconds(100), scheduler: DispatchQueue.main, latest: true)
+            .weakAssign(to: \.state.knockRequestsCount, on: self)
             .store(in: &cancellables)
     }
     
@@ -199,7 +215,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
     
     private func fetchMembersIfNeeded() async {
         // We need to fetch members just in 1-to-1 chat to get the member object for the other person
-        guard roomProxy.isEncryptedOneToOneRoom else {
+        guard roomProxy.isDirectOneToOneRoom else {
             return
         }
         
@@ -207,8 +223,8 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             .receive(on: DispatchQueue.main)
             .sink { [weak self, ownUserID = roomProxy.ownUserID] members in
                 guard let self else { return }
-                let accountOwner = members.first(where: { $0.userID == ownUserID })
-                let dmRecipient = members.first(where: { $0.userID != ownUserID })
+                let accountOwner = members.first { $0.userID == ownUserID }
+                let dmRecipient = members.first { $0.userID != ownUserID }
                 self.dmRecipient = dmRecipient
                 self.state.dmRecipient = dmRecipient.map(RoomMemberDetails.init(withProxy:))
                 self.state.accountOwner = accountOwner.map(RoomMemberDetails.init(withProxy:))

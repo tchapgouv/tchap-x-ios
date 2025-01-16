@@ -103,7 +103,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                     body: L10n.commonUnsupportedEvent,
                                     eventType: eventType,
                                     error: error,
-                                    timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                                    timestamp: eventItemProxy.timestamp,
                                     isOutgoing: isOutgoing,
                                     isEditable: eventItemProxy.isEditable,
                                     canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -116,11 +116,11 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                           _ info: MatrixRustSDK.ImageInfo,
                                           _ mediaSource: MediaSource,
                                           _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
-        let imageInfo = ImageInfoProxy(source: mediaSource, width: info.width, height: info.height, mimeType: info.mimetype)
+        let imageInfo = ImageInfoProxy(source: mediaSource, width: info.width, height: info.height, mimeType: info.mimetype, fileSize: info.size.map(UInt.init))
         
         return StickerRoomTimelineItem(id: eventItemProxy.id,
                                        body: body,
-                                       timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                                       timestamp: eventItemProxy.timestamp,
                                        isOutgoing: isOutgoing,
                                        isEditable: eventItemProxy.isEditable,
                                        canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -153,9 +153,18 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
             case .sentBeforeWeJoined:
                 encryptionType = .megolmV1AesSha2(sessionID: sessionID, cause: .sentBeforeWeJoined)
                 errorLabel = L10n.commonUnableToDecryptNoAccess
-            case .historicalMessage:
-                encryptionType = .megolmV1AesSha2(sessionID: sessionID, cause: .historicalMessage)
-                errorLabel = L10n.commonUnableToDecryptNoAccess
+            case .historicalMessageAndBackupIsDisabled:
+                encryptionType = .megolmV1AesSha2(sessionID: sessionID, cause: .historicalMessageAndBackupDisabled)
+                errorLabel = L10n.timelineDecryptionFailureHistoricalEventNoKeyBackup
+            case .historicalMessageAndDeviceIsUnverified:
+                encryptionType = .megolmV1AesSha2(sessionID: sessionID, cause: .historicalMessageAndDeviceIsUnverified)
+                errorLabel = L10n.timelineDecryptionFailureHistoricalEventUnverifiedDevice
+            case .withheldForUnverifiedOrInsecureDevice:
+                encryptionType = .megolmV1AesSha2(sessionID: sessionID, cause: .withheldForUnverifiedOrInsecureDevice)
+                errorLabel = L10n.timelineDecryptionFailureWithheldUnverified
+            case .withheldBySender:
+                encryptionType = .megolmV1AesSha2(sessionID: sessionID, cause: .witheldBySender)
+                errorLabel = L10n.timelineDecryptionFailureUnableToDecrypt
             }
         case .olmV1Curve25519AesSha2(let senderKey):
             encryptionType = .olmV1Curve25519AesSha2(senderKey: senderKey)
@@ -166,7 +175,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
         return EncryptedRoomTimelineItem(id: eventItemProxy.id,
                                          body: errorLabel,
                                          encryptionType: encryptionType,
-                                         timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                                         timestamp: eventItemProxy.timestamp,
                                          isOutgoing: isOutgoing,
                                          isEditable: eventItemProxy.isEditable,
                                          canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -178,7 +187,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                            _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
         RedactedRoomTimelineItem(id: eventItemProxy.id,
                                  body: L10n.commonMessageRemoved,
-                                 timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                                 timestamp: eventItemProxy.timestamp,
                                  isOutgoing: isOutgoing,
                                  isEditable: eventItemProxy.isEditable,
                                  canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -191,7 +200,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                        _ textMessageContent: TextMessageContent,
                                        _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
         TextRoomTimelineItem(id: eventItemProxy.id,
-                             timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                             timestamp: eventItemProxy.timestamp,
                              isOutgoing: isOutgoing,
                              isEditable: eventItemProxy.isEditable,
                              canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -211,7 +220,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                         _ imageMessageContent: ImageMessageContent,
                                         _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
         ImageRoomTimelineItem(id: eventItemProxy.id,
-                              timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                              timestamp: eventItemProxy.timestamp,
                               isOutgoing: isOutgoing,
                               isEditable: eventItemProxy.isEditable,
                               canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -231,7 +240,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                         _ videoMessageContent: VideoMessageContent,
                                         _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
         VideoRoomTimelineItem(id: eventItemProxy.id,
-                              timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                              timestamp: eventItemProxy.timestamp,
                               isOutgoing: isOutgoing,
                               isEditable: eventItemProxy.isEditable,
                               canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -251,7 +260,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                         _ audioMessageContent: AudioMessageContent,
                                         _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
         AudioRoomTimelineItem(id: eventItemProxy.id,
-                              timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                              timestamp: eventItemProxy.timestamp,
                               isOutgoing: isOutgoing,
                               isEditable: eventItemProxy.isEditable,
                               canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -271,7 +280,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                         _ audioMessageContent: AudioMessageContent,
                                         _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
         VoiceMessageRoomTimelineItem(id: eventItemProxy.id,
-                                     timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                                     timestamp: eventItemProxy.timestamp,
                                      isOutgoing: isOutgoing,
                                      isEditable: eventItemProxy.isEditable,
                                      canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -291,7 +300,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                        _ fileMessageContent: FileMessageContent,
                                        _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
         FileRoomTimelineItem(id: eventItemProxy.id,
-                             timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                             timestamp: eventItemProxy.timestamp,
                              isOutgoing: isOutgoing,
                              isEditable: eventItemProxy.isEditable,
                              canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -311,7 +320,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                          _ noticeMessageContent: NoticeMessageContent,
                                          _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
         NoticeRoomTimelineItem(id: eventItemProxy.id,
-                               timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                               timestamp: eventItemProxy.timestamp,
                                isOutgoing: isOutgoing,
                                isEditable: eventItemProxy.isEditable,
                                canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -331,7 +340,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                         _ emoteMessageContent: EmoteMessageContent,
                                         _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
         EmoteRoomTimelineItem(id: eventItemProxy.id,
-                              timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                              timestamp: eventItemProxy.timestamp,
                               isOutgoing: isOutgoing,
                               isEditable: eventItemProxy.isEditable,
                               canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -351,7 +360,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                            _ locationMessageContent: LocationContent,
                                            _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
         LocationRoomTimelineItem(id: eventItemProxy.id,
-                                 timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                                 timestamp: eventItemProxy.timestamp,
                                  isOutgoing: isOutgoing,
                                  isEditable: eventItemProxy.isEditable,
                                  canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -404,7 +413,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
         return PollRoomTimelineItem(id: eventItemProxy.id,
                                     poll: poll,
                                     body: poll.question,
-                                    timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                                    timestamp: eventItemProxy.timestamp,
                                     isOutgoing: isOutgoing,
                                     isEditable: eventItemProxy.isEditable,
                                     canBeRepliedTo: eventItemProxy.canBeRepliedTo,
@@ -418,7 +427,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
     
     private func buildCallInviteTimelineItem(for eventItemProxy: EventTimelineItemProxy) -> RoomTimelineItemProtocol {
         CallInviteRoomTimelineItem(id: eventItemProxy.id,
-                                   timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                                   timestamp: eventItemProxy.timestamp,
                                    isEditable: eventItemProxy.isEditable,
                                    canBeRepliedTo: eventItemProxy.canBeRepliedTo,
                                    sender: eventItemProxy.sender)
@@ -426,7 +435,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
     
     private func buildCallNotificationTimelineItem(for eventItemProxy: EventTimelineItemProxy) -> RoomTimelineItemProtocol {
         CallNotificationRoomTimelineItem(id: eventItemProxy.id,
-                                         timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                                         timestamp: eventItemProxy.timestamp,
                                          isEditable: eventItemProxy.isEditable,
                                          canBeRepliedTo: eventItemProxy.canBeRepliedTo,
                                          sender: eventItemProxy.sender)
@@ -512,12 +521,14 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
         let thumbnailInfo = ImageInfoProxy(source: messageContent.info?.thumbnailSource,
                                            width: messageContent.info?.thumbnailInfo?.width,
                                            height: messageContent.info?.thumbnailInfo?.height,
-                                           mimeType: messageContent.info?.thumbnailInfo?.mimetype)
+                                           mimeType: messageContent.info?.thumbnailInfo?.mimetype,
+                                           fileSize: messageContent.info?.size.map(UInt.init))
         
         let imageInfo = ImageInfoProxy(source: messageContent.source,
                                        width: messageContent.info?.width,
                                        height: messageContent.info?.height,
-                                       mimeType: messageContent.info?.mimetype)
+                                       mimeType: messageContent.info?.mimetype,
+                                       fileSize: messageContent.info?.size.map(UInt.init))
         
         return .init(filename: messageContent.filename,
                      caption: messageContent.caption,
@@ -536,13 +547,15 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
         let thumbnailInfo = ImageInfoProxy(source: messageContent.info?.thumbnailSource,
                                            width: messageContent.info?.thumbnailInfo?.width,
                                            height: messageContent.info?.thumbnailInfo?.height,
-                                           mimeType: messageContent.info?.thumbnailInfo?.mimetype)
+                                           mimeType: messageContent.info?.thumbnailInfo?.mimetype,
+                                           fileSize: messageContent.info?.size.map(UInt.init))
         
         let videoInfo = VideoInfoProxy(source: messageContent.source,
                                        duration: messageContent.info?.duration ?? 0,
                                        width: messageContent.info?.width,
                                        height: messageContent.info?.height,
-                                       mimeType: messageContent.info?.mimetype)
+                                       mimeType: messageContent.info?.mimetype,
+                                       fileSize: messageContent.info?.size.map(UInt.init))
         
         return .init(filename: messageContent.filename,
                      caption: messageContent.caption,
@@ -646,7 +659,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
     private func buildStateTimelineItem(for eventItemProxy: EventTimelineItemProxy, text: String, isOutgoing: Bool) -> RoomTimelineItemProtocol {
         StateRoomTimelineItem(id: eventItemProxy.id,
                               body: text,
-                              timestamp: eventItemProxy.timestamp.formatted(date: .omitted, time: .shortened),
+                              timestamp: eventItemProxy.timestamp,
                               isOutgoing: isOutgoing,
                               isEditable: false,
                               canBeRepliedTo: eventItemProxy.canBeRepliedTo,

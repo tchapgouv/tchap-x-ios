@@ -85,7 +85,7 @@ struct TimelineItemMenu: View {
                 
                 Spacer(minLength: 16.0)
                 
-                Text(item.timestamp)
+                Text(item.timestamp.formattedTime())
                     .font(.compound.bodyXS)
                     .foregroundColor(.compound.textSecondary)
             }
@@ -345,8 +345,7 @@ struct TimelineItemMenu_Previews: PreviewProvider, TestablePreview {
                                                       pinnedEventIDs: [],
                                                       isDM: true,
                                                       isViewSourceEnabled: true,
-                                                      isCreateMediaCaptionsEnabled: true,
-                                                      isPinnedEventsTimeline: false,
+                                                      timelineKind: .live,
                                                       emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings))
         guard let actions = provider.makeActions() else { return nil }
         
