@@ -1389,6 +1389,7 @@ internal enum L10n {
   /// The selected homeserver doesn't support password or OIDC login. Please contact your admin or choose another homeserver.
   internal static var screenLoginErrorUnsupportedAuthentication: String { return L10n.tr("Localizable", "screen_login_error_unsupported_authentication") }
   /// Enter your details
+  /// (using pattern paul-lagent-beta.gouv.fr)
   internal static var screenLoginFormHeader: String { return L10n.tr("Localizable", "screen_login_form_header") }
   /// Matrix is an open network for secure, decentralised communication.
   internal static var screenLoginSubtitle: String { return L10n.tr("Localizable", "screen_login_subtitle") }

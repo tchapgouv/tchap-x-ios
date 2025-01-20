@@ -22,7 +22,7 @@ struct RoomHeaderView: View {
             avatarImage
                 .accessibilityHidden(true)
             // Tchap: embedd in a VStack to add badges.
-            VStack(alignment: .leading, spacing: 2.0) {
+            VStack(alignment: .leading, spacing: 0.0) {
                 Text(roomName)
                     .lineLimit(1)
                     .font(.compound.bodyLGSemibold)

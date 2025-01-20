@@ -21,7 +21,7 @@ struct InviteUsersScreenSelectedItem: View {
             if MatrixIdFromString(user.userID).isExternalTchapUser {
                 Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
                     .lineLimit(1)
-                    .tchapExternalDisplay()
+                    .tchapExternalLabelView()
             } else {
                 Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
                     .font(.compound.bodyMD)

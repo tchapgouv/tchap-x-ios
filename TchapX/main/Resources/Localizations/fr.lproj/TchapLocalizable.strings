@@ -26,3 +26,7 @@ screen_create_room_room_visibility_section_title = "Type de salon";
 screen_create_room_externals_are_presents_warning = "Ce salon contient des invités externes. ";
 screen_create_room_externals_are_presents_link = "En savoir +";
 
+room_header_badge_encrypted = "SÉCURISÉ";
+room_header_badge_not_encrypted = "NON CHIFFRÉ";
+room_header_badge_public = "PUBLIC";
+room_header_badge_authorized_to_external = "EXTERNES";

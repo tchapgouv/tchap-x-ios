@@ -25,3 +25,9 @@ screen_create_room_public_option_unfederated_description = "Visible only to memb
 screen_create_room_room_visibility_section_title = "Room type";
 screen_create_room_externals_are_presents_warning = "This room contains external members.";
 screen_create_room_externals_are_presents_link = "More info";
+
+room_header_badge_encrypted = "ENCRYPTED";
+room_header_badge_not_encrypted = "NOT ENCRYPTED";
+room_header_badge_public = "PUBLIC";
+room_header_badge_authorized_to_external = "EXTERNALS";
+
