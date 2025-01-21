@@ -12,20 +12,29 @@ import SwiftUI
 struct TchapRoomHeaderViewRoomPropertiesBadgesView: View {
     @Binding var isEncrypted: Bool?
     @Binding var isPublic: Bool?
+    @Binding var externalCount: Int
 
     var body: some View {
         HStack(spacing: 6) {
             if let isEncrypted = isEncrypted,
                isEncrypted == true {
-                Label("SÉCURISÉ", systemSymbol: .lockFill)
+                Label(TchapL10n.roomHeaderBadgeEncrypted, systemSymbol: .lockFill)
                     .labelStyle(.titleAndIcon)
-                    .tchapRoomPropertiesDisplay()
+                    .tchapRoomLabelView(usage: .roomIsEncrypted)
+            } else {
+                Label(TchapL10n.roomHeaderBadgeNotEncrypted, systemSymbol: .lockSlashFill)
+                    .labelStyle(.titleAndIcon)
+                    .tchapRoomLabelView(usage: .roomIsNotEncrypted)
             }
             if let isPublic = isPublic,
                isPublic == true {
-                Label("PUBLIC", systemSymbol: .globe)
+                Label(TchapL10n.roomHeaderBadgePublic, systemSymbol: .globe)
                     .labelStyle(.titleAndIcon)
-                    .tchapRoomPropertiesDisplay()
+                    .tchapRoomLabelView(usage: .roomIsPublic)
+            } else if externalCount > 0 {
+                Label(TchapL10n.roomHeaderBadgeAuthorizedToExternal, systemSymbol: .globe)
+                    .labelStyle(.titleAndIcon)
+                    .tchapRoomLabelView(usage: .roomIsAccessibleToExternals)
             }
         }
     }
@@ -33,10 +42,17 @@ struct TchapRoomHeaderViewRoomPropertiesBadgesView: View {
 
 extension TchapRoomHeaderViewRoomPropertiesBadgesView {
     static var sample: TchapRoomHeaderViewRoomPropertiesBadgesView {
-        TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: .constant(true), isPublic: .constant(false))
+        TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: .constant(true), isPublic: .constant(false), externalCount: .constant(3))
     }
 }
 
-#Preview {
-    TchapRoomHeaderViewRoomPropertiesBadgesView.sample
+struct TchapRoomHeaderViewRoomPropertiesBadgesView_Previews: PreviewProvider, TestablePreview {
+    static var previews: some View {
+        TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: .constant(true), isPublic: .constant(true), externalCount: .constant(3))
+            .previewDisplayName("Some externals")
+        TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: .constant(true), isPublic: .constant(false), externalCount: .constant(1))
+            .previewDisplayName("1 external")
+        TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: .constant(false), isPublic: .constant(true), externalCount: .constant(0))
+            .previewDisplayName("No external")
+    }
 }

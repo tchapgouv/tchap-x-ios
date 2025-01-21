@@ -25,11 +25,19 @@ struct RoomMembersListScreenMemberCell: View {
                 
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(title)
-                            .font(.compound.bodyMDSemibold)
-                            .foregroundColor(.compound.textPrimary)
-                            .lineLimit(1)
-                        
+                        // Tchap: display user as external if needed
+                        if MatrixIdFromString(member.id).isExternalTchapUser {
+                            Text(title)
+                                .font(.compound.bodyMDSemibold)
+                                .foregroundColor(.compound.textPrimary)
+                                .lineLimit(1)
+                                .tchapExternalLabelView()
+                        } else {
+                            Text(title)
+                                .font(.compound.bodyMDSemibold)
+                                .foregroundColor(.compound.textPrimary)
+                                .lineLimit(1)
+                        }
                         // Tchap: only display matrixID in debug mode
                         #if DEBUG
                         if let subtitle {
