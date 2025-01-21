@@ -283,6 +283,12 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         state.canAcceptKnocks = await (try? roomProxy.canUserInvite(userID: ownUserID).get()) == true
         state.canDeclineKnocks = await (try? roomProxy.canUserKick(userID: ownUserID).get()) == true
         state.canBan = await (try? roomProxy.canUserBan(userID: ownUserID).get()) == true
+        
+        // Tchap: fill room properties
+        state.bindings.isEncrypted = roomProxy.isEncrypted
+        state.bindings.isPublic = roomProxy.infoPublisher.value.isPublic
+        // Tchap: Tchap should read the `external` valu in the `accessRules` of the room.
+        state.bindings.externalCount = roomProxy.membersPublisher.value.filter { MatrixIdFromString($0.userID).isExternalTchapUser }.count
     }
     
     private func setupPinnedEventsTimelineProviderIfNeeded() {

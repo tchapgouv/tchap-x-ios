@@ -34,9 +34,6 @@ import Foundation
 
 struct MatrixIdFromString {
     private static let MATRIXID_PARTS_SEPARATOR: Character = ":"
-    private static let HOMESERVER_SPECIAL_SUFFIX_TCHAP = "tchap.gouv.fr"
-    private static let HOMESERVER_PARTS_SEPARATOR: Character = "."
-    private static let HOMESERVER_EXTERN_PREFIX_LIST = ["e.", "agent.externe."]
 
     private var mxIdString: String
 
@@ -75,14 +72,7 @@ struct MatrixIdFromString {
     /// in case of "@jean-philippe.martin-modernisation.fr:agent.name2.tchap.gouv.fr", this will return "Name2".
     
     var homeServerDisplayName: Substring {
-        var homeserverName = homeServerName
-        if homeserverName.hasSuffix(Self.HOMESERVER_SPECIAL_SUFFIX_TCHAP) {
-            let homeserverNameComponents = homeserverName.split(separator: Self.HOMESERVER_PARTS_SEPARATOR)
-            if homeserverNameComponents.count >= 4 {
-                homeserverName = homeserverNameComponents[homeserverNameComponents.count - 4]
-            }
-        }
-        return homeserverName.prefix(1).localizedCapitalized + homeserverName.localizedLowercase.dropFirst()
+        HomeServerName(homeServerName).displayName
     }
     
     /// Tells whether a homeserver name corresponds to an external server or not.
@@ -90,8 +80,7 @@ struct MatrixIdFromString {
     /// - Returns: true if external.
     
     var isExternalTchapServer: Bool {
-        let homeServer = homeServerName
-        return homeServer.isEmpty || Self.HOMESERVER_EXTERN_PREFIX_LIST.contains { homeServer.hasPrefix($0) }
+        HomeServerName(homeServerName).isExternalTchapServer
     }
     
     /// Tells whether the provided tchap identifier corresponds to an extern user.
@@ -184,6 +173,61 @@ struct MatrixIdFromString {
     
     func createRoomAlias(sessionId: String, prefix: String) -> String {
         "\(createRoomAliasName(prefix: prefix))\(Self.MATRIXID_PARTS_SEPARATOR)\(MatrixIdFromString(sessionId).homeServerName)"
+    }
+}
+
+struct HomeServerName {
+    private static let HOMESERVER_SPECIAL_SUFFIX_TCHAP = "tchap.gouv.fr"
+    private static let HOMESERVER_PARTS_SEPARATOR: Character = "."
+    private static let HOMESERVER_EXTERN_PREFIX_LIST = ["e.", "agent.externe."]
+
+    private var serverName: any StringProtocol
+    
+    init(_ serverName: any StringProtocol) {
+        self.serverName = serverName
+    }
+
+    /// Get the Tchap display name of the homeserver mentioned in a matrix identifier.
+    ///
+    /// - Returns: the Tchap display name of the homeserver.
+    ///
+    /// The identifier type may be any matrix identifier type: user id, room id, ...
+    ///
+    /// The returned name is capitalized.
+    ///
+    /// The Tchap HS display name is the component mentioned before the suffix "tchap.gouv.fr"
+    ///
+    /// For example in case of "@jean-philippe.martin-modernisation.fr:name1.tchap.gouv.fr", this will return "Name1".
+    /// in case of "@jean-philippe.martin-modernisation.fr:agent.name2.tchap.gouv.fr", this will return "Name2".
+    
+    var displayName: Substring {
+        var homeserverName = Substring(serverName)
+        if homeserverName.hasSuffix(Self.HOMESERVER_SPECIAL_SUFFIX_TCHAP) {
+            let homeserverNameComponents = homeserverName.split(separator: Self.HOMESERVER_PARTS_SEPARATOR)
+            if homeserverNameComponents.count >= 4 {
+                homeserverName = homeserverNameComponents[homeserverNameComponents.count - 4]
+            }
+        }
+        return homeserverName.prefix(1).localizedCapitalized + homeserverName.localizedLowercase.dropFirst()
+    }
+    
+    /// Tells whether a homeserver name corresponds to an external server or not.
+    ///
+    /// - Returns: true if external.
+    
+    var isExternalTchapServer: Bool {
+        let homeServer = serverName
+        return homeServer.isEmpty || Self.HOMESERVER_EXTERN_PREFIX_LIST.contains { homeServer.hasPrefix($0) }
+    }
+    
+    /// Tells whether the provided tchap identifier corresponds to an extern user.
+    ///
+    /// Note: invalid tchap identifier will be considered as external.
+    ///
+    /// - Returns: true if external.
+    
+    var isExternalTchapUser: Bool {
+        isExternalTchapServer
     }
 }
 

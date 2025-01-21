@@ -38,7 +38,15 @@ struct CreateRoomScreen: View {
         Form {
             roomSection
             topicSection
+            // Tchap: set selected users list as a section
+            if !context.viewState.selectedUsers.isEmpty {
+                selectedUsersSection
+            }
             securitySection
+            // Tchap: allow to disable federated state on Public room.
+            if !context.isRoomPrivate {
+                tchapNonFederatedPublicRoomSection
+            }
             if context.viewState.isKnockingFeatureEnabled,
                !context.isRoomPrivate {
                 roomAccessSection
@@ -54,6 +62,10 @@ struct CreateRoomScreen: View {
         .readFrame($frame)
         .alert(item: $context.alertInfo)
         .shouldScrollOnKeyboardDidShow(focus == .alias, to: Focus.alias)
+        // Tchap: check external guets and room type compatibility.
+        .task {
+            forceRoomSelectionIfExternalsArePresent()
+        }
     }
     
     private var roomSection: some View {
@@ -130,46 +142,113 @@ struct CreateRoomScreen: View {
         } header: {
             Text(L10n.screenCreateRoomTopicLabel)
                 .compoundListSectionHeader()
-        } footer: {
-            if !context.viewState.selectedUsers.isEmpty {
-                selectedUsersSection
-            }
         }
+        // Tchap: set selected users list in its own section
+        //        footer: {
+        //            if !context.viewState.selectedUsers.isEmpty {
+        //                selectedUsersSection
+        //            }
+        //        }
     }
     
     @State private var frame: CGRect = .zero
     @ScaledMetric private var invitedUserCellWidth: CGFloat = 72
-
+    
+    // Tchap: boolean representing the presence of external members in invited users
+    private var externalsArePresents: Bool {
+        context.viewState.selectedUsers.first(where: { MatrixIdFromString($0.userID).isExternalTchapUser }) != nil
+    }
+    
+    // Tchap: "external are present" warning
+    private var externalsWarning: AttributedString {
+        var externWarning = AttributedString(TchapL10n.screenCreateRoomExternalsArePresentsWarning)
+        externWarning.font = .footnote
+        var externMoreLink = AttributedString(TchapL10n.screenCreateRoomExternalsArePresentsLink)
+        externMoreLink.font = .footnote
+        externMoreLink.underlineStyle = .single
+        externMoreLink.foregroundColor = .primary
+        externMoreLink.link = context.viewState.tchapExternalMembersFaqLink
+        return externWarning + externMoreLink
+    }
+    
+    // Tchap: verifiy at view init that selected room type is not Public Room if external users are present.
+    // This can happen when we select Public Room (because no externals are present) and go back to previous screen
+    // to select external and continue to this screen (which remember then the previous selection).
+    private func forceRoomSelectionIfExternalsArePresent() {
+        if externalsArePresents,
+           !context.isRoomPrivate {
+            // Force revert to default configuration: private and encrypted room
+            context.isRoomPrivate = true
+            context.isRoomEncrypted = true
+        }
+    }
+    
     private var selectedUsersSection: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 16) {
-                ForEach(context.viewState.selectedUsers, id: \.userID) { user in
-                    InviteUsersScreenSelectedItem(user: user, mediaProvider: context.mediaProvider) {
-                        context.send(viewAction: .deselectUser(user))
+        Section { // Tchap: put selected users list in section
+            VStack(spacing: 0.0) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 8) { // Tchap: reduce space between items.
+                        ForEach(context.viewState.selectedUsers, id: \.userID) { user in
+                            InviteUsersScreenSelectedItem(user: user, mediaProvider: context.mediaProvider) {
+                                context.send(viewAction: .deselectUser(user))
+                            }
+//                            .frame(width: invitedUserCellWidth) // Tchap: let the view takes its intrinsic size to be well-spaced.
+                        }
                     }
-                    .frame(width: invitedUserCellWidth)
+//                    .padding(.horizontal, ListRowPadding.horizontal) // Tchap: remove horizontal padding to display more member in available space.
+                    .padding(.vertical, 22)
+                }
+                // Tchap: add warning if some users are externals.
+                if externalsArePresents {
+                    HStack(spacing: 4.0) {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundColor(CompoundCoreColorTokens.orange700)
+                        Text(externalsWarning)
+                        Spacer()
+                    }
                 }
             }
-            .padding(.horizontal, ListRowPadding.horizontal)
-            .padding(.vertical, 22)
+            // Tchap: reduce horizontal margins on members section.
+            .listRowInsets(EdgeInsets(top: 4.0, leading: 8.0, bottom: 4.0, trailing: 8.0))
+//            .frame(width: frame.width) // Tchap: remove because in a Section now.
+        } header: { // Tchap: set selected users list section title
+            Text(TchapL10n.screenCreateRoomSelectedUsersLabel)
+                .compoundListSectionHeader()
         }
-        .frame(width: frame.width)
     }
     
     private var securitySection: some View {
         Section {
-            ListRow(label: .default(title: L10n.screenCreateRoomPrivateOptionTitle,
-                                    description: L10n.screenCreateRoomPrivateOptionDescription,
-                                    icon: \.lock,
+            // Tchap: use Tchap own room types list
+//            ListRow(label: .default(title: L10n.screenCreateRoomPrivateOptionTitle,
+//                                    description: L10n.screenCreateRoomPrivateOptionDescription,
+//                                    icon: \.lock,
+//                                    iconAlignment: .top),
+//                    kind: .selection(isSelected: context.isRoomPrivate) { context.isRoomPrivate = true })
+//            ListRow(label: .default(title: L10n.screenCreateRoomPublicOptionTitle,
+//                                    description: L10n.screenCreateRoomPublicOptionDescription,
+//                                    icon: \.public,
+//                                    iconAlignment: .top),
+//                    kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
+            ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateEncryptedOptionTitle,
+                                    description: TchapL10n.screenCreateRoomPrivateEncryptedOptionDescription,
+                                    icon: \.lockSolid, // Tchap: Should modify `ListRowLabel.iconForegroundColor` to tint icon.
                                     iconAlignment: .top),
-                    kind: .selection(isSelected: context.isRoomPrivate) { context.isRoomPrivate = true })
-            ListRow(label: .default(title: L10n.screenCreateRoomPublicOptionTitle,
-                                    description: L10n.screenCreateRoomPublicOptionDescription,
+                    kind: .selection(isSelected: context.isRoomPrivate && context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = true })
+            ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
+                                    description: TchapL10n.screenCreateRoomPrivateOptionDescription,
+                                    icon: \.lockOff,
+                                    iconAlignment: .top),
+                    kind: .selection(isSelected: context.isRoomPrivate && !context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = false })
+            ListRow(label: .default(title: TchapL10n.screenCreateRoomPublicOptionTitle,
+                                    description: TchapL10n.screenCreateRoomPublicOptionDescription,
                                     icon: \.public,
                                     iconAlignment: .top),
                     kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
+                // Tchap: disabled Public forum if externals are present.
+                .disabled(externalsArePresents)
         } header: {
-            Text(L10n.screenCreateRoomRoomVisibilitySectionTitle)
+            Text(TchapL10n.screenCreateRoomRoomVisibilitySectionTitle)
                 .compoundListSectionHeader()
         }
     }
@@ -185,6 +264,15 @@ struct CreateRoomScreen: View {
         } header: {
             Text(L10n.screenCreateRoomRoomAccessSectionHeader)
                 .compoundListSectionHeader()
+        }
+    }
+    
+    // Tchap: Allow Public room to be non-federated
+    private var tchapNonFederatedPublicRoomSection: some View {
+        Section {
+            ListRow(label: .plain(title: TchapL10n.screenCreateRoomPublicOptionUnfederatedTitle,
+                                  description: TchapL10n.screenCreateRoomPublicOptionUnfederatedDescription(HomeServerName(context.viewState.serverName).displayName)),
+                    kind: .toggle($context.isRoomFederated.not))
         }
     }
     
@@ -279,7 +367,7 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
     
     static let publicRoomViewModel = {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
-        let parameters = CreateRoomFlowParameters(isRoomPrivate: false)
+        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, isRoomEncrypted: false) // Tchap: add `isRoomEncrypted` parameter
         let selectedUsers: [UserProfileProxy] = [.mockAlice, .mockBob, .mockCharlie]
         ServiceLocator.shared.settings.knockingEnabled = true
         return CreateRoomViewModel(userSession: userSession,
@@ -292,7 +380,7 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
     
     static let publicRoomInvalidAliasViewModel = {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
-        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, aliasLocalPart: "#:")
+        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, isRoomEncrypted: false, aliasLocalPart: "#:") // Tchap: add `isRoomEncrypted` parameter
         ServiceLocator.shared.settings.knockingEnabled = true
         return CreateRoomViewModel(userSession: userSession,
                                    createRoomParameters: .init(parameters),
@@ -306,7 +394,7 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
         let clientProxy = ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))
         clientProxy.isAliasAvailableReturnValue = .success(false)
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
-        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, aliasLocalPart: "existing")
+        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, isRoomEncrypted: false, aliasLocalPart: "existing") // Tchap: add `isRoomEncrypted` parameter
         ServiceLocator.shared.settings.knockingEnabled = true
         return CreateRoomViewModel(userSession: userSession,
                                    createRoomParameters: .init(parameters),

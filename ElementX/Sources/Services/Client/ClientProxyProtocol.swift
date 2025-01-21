@@ -137,6 +137,8 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func createRoom(name: String,
                     topic: String?,
                     isRoomPrivate: Bool,
+                    isRoomEncrypted: Bool, // Tchap: additional property
+                    // TODO: add parameter                   isRoomFederated: Bool, // Tchap: additional property.
                     isKnockingOnly: Bool,
                     userIDs: [String],
                     avatarURL: URL?,

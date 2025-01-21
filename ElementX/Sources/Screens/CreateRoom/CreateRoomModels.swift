@@ -45,11 +45,16 @@ struct CreateRoomViewState: BindableState {
         }
         return nil
     }
+    
+    // Tchap: external member FAQ link
+    var tchapExternalMembersFaqLink: URL
 }
 
 struct CreateRoomViewStateBindings {
     var roomTopic: String
     var isRoomPrivate: Bool
+    var isRoomEncrypted: Bool // Tchap: add encrypted option to private
+    var isRoomFederated: Bool // Tchap: add possibility to not federate public room. True for private room.
     var isKnockingOnly: Bool
     var showAttachmentConfirmationDialog = false
     

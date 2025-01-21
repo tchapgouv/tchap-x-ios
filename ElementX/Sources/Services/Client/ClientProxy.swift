@@ -396,6 +396,7 @@ class ClientProxy: ClientProxyProtocol {
     func createRoom(name: String,
                     topic: String?,
                     isRoomPrivate: Bool,
+                    isRoomEncrypted: Bool, // Tchap: additional parameter
                     isKnockingOnly: Bool,
                     userIDs: [String],
                     avatarURL: URL?,
@@ -403,7 +404,9 @@ class ClientProxy: ClientProxyProtocol {
         do {
             let parameters = CreateRoomParameters(name: name,
                                                   topic: topic,
-                                                  isEncrypted: isRoomPrivate,
+                                                  // Tchap: handle correctly additional property
+//                                                  isEncrypted: isRoomPrivate,
+                                                  isEncrypted: isRoomEncrypted,
                                                   isDirect: false,
                                                   visibility: isRoomPrivate ? .private : .public,
                                                   preset: isRoomPrivate ? .privateChat : .publicChat,

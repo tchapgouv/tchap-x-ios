@@ -36,11 +36,24 @@ struct UserProfileListRow: View {
     }
     
     var body: some View {
-        ListRow(label: .avatar(title: user.displayName ?? user.userID,
-                               description: subtitle,
-                               icon: avatar,
-                               role: isUnknownProfile ? .error : nil),
-                kind: kind)
+        // Tchap: add external badge if necessary
+//        ListRow(label: .avatar(title: user.displayName ?? user.userID,
+//                               description: subtitle,
+//                               icon: avatar,
+//                               role: isUnknownProfile ? .error : nil),
+//                kind: kind)
+        VStack(alignment: .leading, spacing: 0.0) {
+            ListRow(label: .avatar(title: user.displayName ?? user.userID,
+                                   description: subtitle,
+                                   icon: avatar,
+                                   role: isUnknownProfile ? .error : nil),
+                    kind: kind)
+            if MatrixIdFromString(user.userID).isExternalTchapUser {
+                Text(TchapL10n.commonUserIsExternal)
+                    .tchapExternalLabelView()
+                    .offset(x: 60.0, y: -16.0) // 60 is 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
+            }
+        }
     }
     
     var avatar: LoadableAvatarImage {
