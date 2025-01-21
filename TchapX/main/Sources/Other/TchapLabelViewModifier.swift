@@ -22,7 +22,7 @@ public struct TchapLabelViewModifier: ViewModifier {
         
         var colors: (foregroundColor: Color, backgroundColor: Color) {
             switch self {
-            case .userIsExternal: (foregroundColor: CompoundCoreColorTokens.blue1200, backgroundColor: CompoundCoreColorTokens.blue400)
+            case .userIsExternal: (foregroundColor: CompoundCoreColorTokens.orange1200, backgroundColor: CompoundCoreColorTokens.orange400)
             case .roomIsEncrypted: (foregroundColor: CompoundCoreColorTokens.green1200, backgroundColor: CompoundCoreColorTokens.green400)
             case .roomIsNotEncrypted: (foregroundColor: CompoundCoreColorTokens.gray1200, backgroundColor: CompoundCoreColorTokens.gray400)
             case .roomIsPublic: (foregroundColor: CompoundCoreColorTokens.gray1200, backgroundColor: CompoundCoreColorTokens.gray400)
