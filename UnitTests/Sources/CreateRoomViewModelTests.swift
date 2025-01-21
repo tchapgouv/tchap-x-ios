@@ -63,7 +63,7 @@ class CreateRoomScreenViewModelTests: XCTestCase {
     }
     
     func testDefaulSecurity() {
-        // Tchap: handle `isRoomEncrypted` aand `isFederated` dditional properties
+        // Tchap: handle `isRoomEncrypted` and `isFederated` additional properties
 //        XCTAssertTrue(context.viewState.bindings.isRoomPrivate)
         XCTAssertTrue(context.viewState.bindings.isRoomPrivate && context.viewState.bindings.isRoomEncrypted && context.viewState.bindings.isRoomFederated)
     }
