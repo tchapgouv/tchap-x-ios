@@ -31,7 +31,12 @@ protocol RoomTimelineControllerProtocol {
     var roomID: String { get }
     var timelineKind: TimelineKind { get }
     
+    /// The currently known items, use only for setting up the intial state.
     var timelineItems: [RoomTimelineItemProtocol] { get }
+    
+    /// The current pagination state, use only for setting up the intial state
+    var paginationState: PaginationState { get }
+    
     var callbacks: PassthroughSubject<RoomTimelineControllerCallback, Never> { get }
     
     func processItemAppearance(_ itemID: TimelineItemIdentifier) async
@@ -56,6 +61,13 @@ protocol RoomTimelineControllerProtocol {
               html: String?,
               intentionalMentions: IntentionalMentions) async
     
+    func editCaption(_ eventOrTransactionID: EventOrTransactionId,
+                     message: String,
+                     html: String?,
+                     intentionalMentions: IntentionalMentions) async
+    
+    func removeCaption(_ eventOrTransactionID: EventOrTransactionId) async
+    
     func toggleReaction(_ reaction: String, to eventOrTransactionID: EventOrTransactionId) async
 
     func redact(_ eventOrTransactionID: EventOrTransactionId) async
@@ -68,7 +80,7 @@ protocol RoomTimelineControllerProtocol {
     
     func debugInfo(for itemID: TimelineItemIdentifier) -> TimelineItemDebugInfo
     
-    func retryDecryption(for sessionID: String) async
+    func sendHandle(for itemID: TimelineItemIdentifier) -> SendHandleProxy?
     
     func eventTimestamp(for itemID: TimelineItemIdentifier) -> Date?
 }

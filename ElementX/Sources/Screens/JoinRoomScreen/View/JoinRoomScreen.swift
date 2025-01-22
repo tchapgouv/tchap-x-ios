@@ -9,12 +9,18 @@ import Compound
 import SwiftUI
 
 struct JoinRoomScreen: View {
+    private let maxKnockMessageLength = 500
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     
     @ObservedObject var context: JoinRoomScreenViewModel.Context
+    @FocusState private var focus: Focus?
     
+    private enum Focus {
+        case knockMessage
+    }
+
     var body: some View {
-        FullscreenDialog(topPadding: context.viewState.mode == .knocked ? 151 : 35, background: .bloom) {
+        FullscreenDialog(topPadding: context.viewState.mode == .knocked ? 151 : 35) {
             if context.viewState.mode == .loading {
                 EmptyView()
             } else {
@@ -28,6 +34,7 @@ struct JoinRoomScreen: View {
         .backgroundStyle(.compound.bgCanvasDefault)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
+        .shouldScrollOnKeyboardDidShow(focus == .knockMessage, to: Focus.knockMessage)
     }
     
     @ViewBuilder
@@ -103,19 +110,28 @@ struct JoinRoomScreen: View {
             }
         }
     }
+    
+    private var knockMessageFooterString: String {
+        guard !context.knockMessage.isEmpty else {
+            return L10n.screenJoinRoomKnockMessageDescription
+        }
+        return "\(context.knockMessage.count)/\(maxKnockMessageLength)"
+    }
         
     @ViewBuilder
     private var knockMessage: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 0) {
                 TextField("", text: $context.knockMessage, axis: .vertical)
+                    .focused($focus, equals: .knockMessage)
                     .onChange(of: context.knockMessage) { _, newValue in
-                        context.knockMessage = String(newValue.prefix(1000))
+                        context.knockMessage = String(newValue.prefix(maxKnockMessageLength))
                     }
                     .lineLimit(4, reservesSpace: true)
                     .font(.compound.bodyMD)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
+                    .id(Focus.knockMessage)
             }
             .background(.compound.bgCanvasDefault)
             .cornerRadius(8)
@@ -125,8 +141,8 @@ struct JoinRoomScreen: View {
                     .stroke(.compound.borderInteractivePrimary)
             }
             
-            Text(L10n.screenJoinRoomKnockMessageDescription)
-                .font(.compound.bodyMD)
+            Text(knockMessageFooterString)
+                .font(.compound.bodySM)
                 .foregroundStyle(.compound.textSecondary)
         }
     }
@@ -167,6 +183,7 @@ struct JoinRoomScreen: View {
             ToolbarItem(placement: .principal) {
                 RoomHeaderView(roomName: context.viewState.title,
                                roomAvatar: context.viewState.avatar,
+                               roomPropertiesBadgesView: .sample, // Tchap addition
                                mediaProvider: context.mediaProvider)
             }
         }
@@ -237,11 +254,11 @@ struct JoinRoomScreen_Previews: PreviewProvider, TestablePreview {
             switch mode {
             case .knocked:
                 clientProxy.roomForIdentifierClosure = { _ in
-                    .knocked(KnockedRoomProxyMock(.init(avatarURL: URL.homeDirectory)))
+                    .knocked(KnockedRoomProxyMock(.init(avatarURL: .mockMXCAvatar)))
                 }
             case .invited:
                 clientProxy.roomForIdentifierClosure = { _ in
-                    .invited(InvitedRoomProxyMock(.init(avatarURL: URL.homeDirectory)))
+                    .invited(InvitedRoomProxyMock(.init(avatarURL: .mockMXCAvatar)))
                 }
             default:
                 break
@@ -251,9 +268,9 @@ struct JoinRoomScreen_Previews: PreviewProvider, TestablePreview {
                                                                                 canonicalAlias: "#3🌞problem:matrix.org",
                                                                                 // swiftlint:disable:next line_length
                                                                                 topic: "“Science and technology were the only keys to opening the door to the future, and people approached science with the faith and sincerity of elementary school students.”",
-                                                                                avatarURL: URL.homeDirectory,
+                                                                                avatarURL: .mockMXCAvatar,
                                                                                 memberCount: UInt(100),
-                                                                                isHistoryWorldReadable: false,
+                                                                                isHistoryWorldReadable: nil,
                                                                                 isJoined: membership.isJoined,
                                                                                 isInvited: membership.isInvited,
                                                                                 isPublic: membership.isPublic,

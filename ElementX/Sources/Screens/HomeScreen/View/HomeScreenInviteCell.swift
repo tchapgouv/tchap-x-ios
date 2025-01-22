@@ -73,7 +73,7 @@ struct HomeScreenInviteCell: View {
            !room.isDirect {
             RoomInviterLabel(inviter: inviter, mediaProvider: context.mediaProvider)
                 .font(.compound.bodyMD)
-                .foregroundStyle(.compound.textPlaceholder)
+                .foregroundStyle(.compound.textSecondary)
         }
     }
     
@@ -90,7 +90,7 @@ struct HomeScreenInviteCell: View {
             if let subtitle {
                 Text(subtitle)
                     .font(.compound.bodyMD)
-                    .foregroundColor(.compound.textPlaceholder)
+                    .foregroundColor(.compound.textSecondary)
             }
             #endif
         }
@@ -148,7 +148,7 @@ struct HomeScreenInviteCell_Previews: PreviewProvider, TestablePreview {
                 HomeScreenInviteCell(room: .roomInvite(),
                                      context: viewModel().context)
                 
-                HomeScreenInviteCell(room: .roomInvite(alias: "#footest:somewhere.org", avatarURL: .picturesDirectory),
+                HomeScreenInviteCell(room: .roomInvite(alias: "#footest:somewhere.org", avatarURL: .mockMXCAvatar),
                                      context: viewModel().context)
                 
                 HomeScreenInviteCell(room: .roomInvite(alias: "#footest:somewhere.org"),
@@ -181,7 +181,7 @@ private extension HomeScreenRoom {
         
         let summary = RoomSummary(roomListItem: RoomListItemSDKMock(),
                                   id: "@someone:somewhere.com",
-                                  joinRequestType: .invite(inviter: inviter),
+                                  knockRequestType: .invite(inviter: inviter),
                                   name: "Some Guy",
                                   isDirect: true,
                                   avatarURL: nil,
@@ -204,11 +204,11 @@ private extension HomeScreenRoom {
         let inviter = RoomMemberProxyMock()
         inviter.displayName = "Luca"
         inviter.userID = "@jack:somewhi.nl"
-        inviter.avatarURL = avatarURL
+        inviter.avatarURL = avatarURL.map { _ in .mockMXCUserAvatar }
         
         let summary = RoomSummary(roomListItem: RoomListItemSDKMock(),
                                   id: "@someone:somewhere.com",
-                                  joinRequestType: .invite(inviter: inviter),
+                                  knockRequestType: .invite(inviter: inviter),
                                   name: "Awesome Room",
                                   isDirect: false,
                                   avatarURL: avatarURL,

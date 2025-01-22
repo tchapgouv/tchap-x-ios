@@ -33,19 +33,24 @@ protocol RoomProxyProtocol {
 
 // sourcery: AutoMockable
 protocol InvitedRoomProxyProtocol: RoomProxyProtocol {
-    var info: RoomInfoProxy { get }
+    var info: BaseRoomInfoProxyProtocol { get }
+    var inviter: RoomMemberProxyProtocol? { get }
     func rejectInvitation() async -> Result<Void, RoomProxyError>
-    func acceptInvitation() async -> Result<Void, RoomProxyError>
 }
 
 // sourcery: AutoMockable
 protocol KnockedRoomProxyProtocol: RoomProxyProtocol {
-    var info: RoomInfoProxy { get }
+    var info: BaseRoomInfoProxyProtocol { get }
     func cancelKnock() async -> Result<Void, RoomProxyError>
 }
 
 enum JoinedRoomProxyAction: Equatable {
     case roomInfoUpdate
+}
+
+enum KnockRequestsState {
+    case loading
+    case loaded([KnockRequestProxyProtocol])
 }
 
 // sourcery: AutoMockable
@@ -60,6 +65,8 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     var identityStatusChangesPublisher: CurrentValuePublisher<[IdentityStatusChange], Never> { get }
     
+    var knockRequestsStatePublisher: CurrentValuePublisher<KnockRequestsState, Never> { get }
+    
     var timeline: TimelineProxyProtocol { get }
     
     var pinnedEventsTimeline: TimelineProxyProtocol? { get async }
@@ -69,6 +76,8 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func subscribeToRoomInfoUpdates()
     
     func timelineFocusedOnEvent(eventID: String, numberOfEvents: UInt16) async -> Result<TimelineProxyProtocol, RoomProxyError>
+    
+    func messageFilteredTimeline(allowedMessageTypes: [RoomMessageEventMessageType]) async -> Result<TimelineProxyProtocol, RoomProxyError>
     
     func redact(_ eventID: String) async -> Result<Void, RoomProxyError>
     
@@ -97,11 +106,9 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     /// https://spec.matrix.org/v1.9/client-server-api/#typing-notifications
     @discardableResult func sendTypingNotification(isTyping: Bool) async -> Result<Void, RoomProxyError>
     
-    func resend(itemID: TimelineItemIdentifier) async -> Result<Void, RoomProxyError>
+    func ignoreDeviceTrustAndResend(devices: [String: [String]], sendHandle: SendHandleProxy) async -> Result<Void, RoomProxyError>
     
-    func ignoreDeviceTrustAndResend(devices: [String: [String]], itemID: TimelineItemIdentifier) async -> Result<Void, RoomProxyError>
-    
-    func withdrawVerificationAndResend(userIDs: [String], itemID: TimelineItemIdentifier) async -> Result<Void, RoomProxyError>
+    func withdrawVerificationAndResend(userIDs: [String], sendHandle: SendHandleProxy) async -> Result<Void, RoomProxyError>
     
     // MARK: - Room Flags
     
@@ -160,8 +167,8 @@ extension JoinedRoomProxyProtocol {
                     isPublic: infoPublisher.value.isPublic)
     }
     
-    var isEncryptedOneToOneRoom: Bool {
-        infoPublisher.value.isDirect && isEncrypted && infoPublisher.value.activeMembersCount <= 2
+    var isDirectOneToOneRoom: Bool {
+        infoPublisher.value.isDirect && infoPublisher.value.activeMembersCount <= 2
     }
 
     func members() async -> [RoomMemberProxyProtocol]? {

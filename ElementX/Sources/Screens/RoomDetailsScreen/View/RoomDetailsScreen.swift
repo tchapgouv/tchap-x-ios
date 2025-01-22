@@ -26,6 +26,10 @@ struct RoomDetailsScreen: View {
             topicSection
             
             configurationSection
+            
+            if context.viewState.dmRecipient == nil {
+                peopleSection
+            }
 
             aboutSection
 
@@ -151,21 +155,25 @@ struct RoomDetailsScreen: View {
 
     private var aboutSection: some View {
         Section {
-            if context.viewState.dmRecipient == nil {
-                ListRow(label: .default(title: L10n.commonPeople,
-                                        icon: \.user),
-                        details: .title(String(context.viewState.joinedMembersCount)),
-                        kind: .navigationLink {
-                            context.send(viewAction: .processTapPeople)
-                        })
-                        .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.people)
-            }
+            ListRow(label: .default(title: L10n.screenRoomDetailsPinnedEventsRowTitle,
+                                    icon: \.pin),
+                    details: context.viewState.pinnedEventsActionState.isLoading ? .isWaiting(true) : .title(context.viewState.pinnedEventsActionState.count),
+                    kind: context.viewState.pinnedEventsActionState.isLoading ? .label : .navigationLink {
+                        context.send(viewAction: .processTapPinnedEvents)
+                    })
+                    .disabled(context.viewState.pinnedEventsActionState.isLoading)
+            
             ListRow(label: .default(title: L10n.screenPollsHistoryTitle,
                                     icon: \.polls),
                     kind: .navigationLink {
                         context.send(viewAction: .processTapPolls)
                     })
                     .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.pollsHistory)
+            
+            ListRow(label: .default(title: L10n.screenMediaBrowserTitle, icon: \.image),
+                    kind: .navigationLink {
+                        context.send(viewAction: .processTapMediaEvents)
+                    })
         }
     }
     
@@ -189,13 +197,34 @@ struct RoomDetailsScreen: View {
                     context.send(viewAction: .toggleFavourite(isFavourite: newValue))
                 }
             
-            ListRow(label: .default(title: L10n.screenRoomDetailsPinnedEventsRowTitle,
-                                    icon: \.pin),
-                    details: context.viewState.pinnedEventsActionState.isLoading ? .isWaiting(true) : .title(context.viewState.pinnedEventsActionState.count),
-                    kind: context.viewState.pinnedEventsActionState.isLoading ? .label : .navigationLink(action: {
-                        context.send(viewAction: .processTapPinnedEvents)
-                    }))
-                    .disabled(context.viewState.pinnedEventsActionState.isLoading)
+            if context.viewState.canSeeSecurityAndPrivacy {
+                ListRow(label: .default(title: L10n.screenRoomDetailsSecurityAndPrivacyTitle,
+                                        icon: \.lock),
+                        kind: .navigationLink {
+                            context.send(viewAction: .processTapSecurityAndPrivacy)
+                        })
+            }
+        }
+    }
+    
+    private var peopleSection: some View {
+        Section {
+            ListRow(label: .default(title: L10n.commonPeople,
+                                    icon: \.user),
+                    details: .title(String(context.viewState.joinedMembersCount)),
+                    kind: .navigationLink {
+                        context.send(viewAction: .processTapPeople)
+                    })
+                    .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.people)
+            
+            if context.viewState.canSeeKnockingRequests {
+                ListRow(label: .default(title: L10n.screenRoomDetailsRequestsToJoinTitle,
+                                        icon: \.askToJoin),
+                        details: context.viewState.knockRequestsCount > 0 ? .counter(context.viewState.knockRequestsCount) : nil,
+                        kind: .navigationLink {
+                            context.send(viewAction: .processTapRequestsToJoin)
+                        })
+            }
             
             if context.viewState.canEditRolesOrPermissions, context.viewState.dmRecipient == nil {
                 ListRow(label: .default(title: L10n.screenRoomDetailsRolesAndPermissions,
@@ -205,7 +234,6 @@ struct RoomDetailsScreen: View {
                         })
             }
         }
-        .disabled(context.viewState.notificationSettingsState.isLoading)
     }
     
     private var toggleMuteButton: some View {
@@ -294,6 +322,8 @@ struct RoomDetailsScreen: View {
 
 struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
     static let genericRoomViewModel = {
+        ServiceLocator.shared.settings.knockingEnabled = true
+        let knockRequests: [KnockRequestProxyMock] = [.init()]
         let members: [RoomMemberProxyMock] = [
             .mockMeAdmin,
             .mockAlice,
@@ -313,7 +343,9 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
                                                   isDirect: false,
                                                   isEncrypted: true,
                                                   canonicalAlias: "#alias:domain.com",
-                                                  members: members))
+                                                  members: members,
+                                                  knockRequestsState: .loaded(knockRequests),
+                                                  joinRule: .knock))
         
         var notificationSettingsProxyMockConfiguration = NotificationSettingsProxyMockConfiguration()
         notificationSettingsProxyMockConfiguration.roomMode.isDefault = false
@@ -357,6 +389,8 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
     }()
     
     static let simpleRoomViewModel = {
+        let knockRequests: [KnockRequestProxyMock] = [.init()]
+        ServiceLocator.shared.settings.knockingEnabled = true
         let members: [RoomMemberProxyMock] = [
             .mockMeAdmin,
             .mockAlice,
@@ -367,7 +401,9 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
                                                   name: "Room A",
                                                   isDirect: false,
                                                   isEncrypted: false,
-                                                  members: members))
+                                                  members: members,
+                                                  knockRequestsState: .loaded(knockRequests),
+                                                  joinRule: .knock))
         let notificationSettingsProxy = NotificationSettingsProxyMock(with: .init())
         
         return RoomDetailsScreenViewModel(roomProxy: roomProxy,

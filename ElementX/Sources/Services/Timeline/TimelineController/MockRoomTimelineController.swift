@@ -23,14 +23,34 @@ class MockRoomTimelineController: RoomTimelineControllerProtocol {
     
     let callbacks = PassthroughSubject<RoomTimelineControllerCallback, Never>()
     
+    var paginationState: PaginationState = .initial {
+        didSet {
+            callbacks.send(.paginationState(paginationState))
+        }
+    }
+    
     var timelineItems: [RoomTimelineItemProtocol] = RoomTimelineItemFixtures.default
     var timelineItemsTimestamp: [TimelineItemIdentifier: Date] = [:]
     
     private var client: UITestsSignalling.Client?
     
-    init(timelineKind: TimelineKind = .live, listenForSignals: Bool = false) {
+    static var mediaGallery: MockRoomTimelineController {
+        MockRoomTimelineController(timelineKind: .media(.mediaFilesScreen), timelineItems: (0..<5).reduce([]) { partialResult, _ in
+            partialResult + [RoomTimelineItemFixtures.separator] + RoomTimelineItemFixtures.mediaChunk
+        })
+    }
+    
+    static var emptyMediaGallery: MockRoomTimelineController {
+        let mock = MockRoomTimelineController(timelineKind: .media(.mediaFilesScreen))
+        mock.paginationState = PaginationState(backward: .timelineEndReached, forward: .timelineEndReached)
+        return mock
+    }
+    
+    init(timelineKind: TimelineKind = .live, listenForSignals: Bool = false, timelineItems: [RoomTimelineItemProtocol] = RoomTimelineItemFixtures.default) {
         self.timelineKind = timelineKind
-        callbacks.send(.paginationState(PaginationState(backward: .idle, forward: .timelineEndReached)))
+        self.timelineItems = timelineItems
+        
+        callbacks.send(.paginationState(paginationState))
         callbacks.send(.isLive(true))
         
         guard listenForSignals else { return }
@@ -56,7 +76,7 @@ class MockRoomTimelineController: RoomTimelineControllerProtocol {
     }
 
     func paginateBackwards(requestSize: UInt16) async -> Result<Void, RoomTimelineControllerError> {
-        callbacks.send(.paginationState(PaginationState(backward: .paginating, forward: .timelineEndReached)))
+        paginationState = PaginationState(backward: .paginating, forward: .timelineEndReached)
         
         if client == nil {
             try? await simulateBackPagination()
@@ -91,7 +111,17 @@ class MockRoomTimelineController: RoomTimelineControllerProtocol {
               html: String?,
               intentionalMentions: IntentionalMentions) async { }
     
-    func redact(_ eventOrTransactionID: EventOrTransactionId) async { }
+    func editCaption(_ eventOrTransactionID: EventOrTransactionId,
+                     message: String,
+                     html: String?,
+                     intentionalMentions: IntentionalMentions) async { }
+    
+    func removeCaption(_ eventOrTransactionID: EventOrTransactionId) async { }
+    
+    private(set) var redactCalled = false
+    func redact(_ eventOrTransactionID: EventOrTransactionId) async {
+        redactCalled = true
+    }
     
     func pin(eventID: String) async { }
     
@@ -104,8 +134,10 @@ class MockRoomTimelineController: RoomTimelineControllerProtocol {
     func debugInfo(for itemID: TimelineItemIdentifier) -> TimelineItemDebugInfo {
         .init(model: "Mock debug description", originalJSON: nil, latestEditJSON: nil)
     }
-        
-    func retryDecryption(for sessionID: String) async { }
+    
+    func sendHandle(for itemID: TimelineItemIdentifier) -> SendHandleProxy? {
+        nil
+    }
         
     func eventTimestamp(for itemID: TimelineItemIdentifier) -> Date? {
         timelineItemsTimestamp[itemID] ?? .now
@@ -159,8 +191,8 @@ class MockRoomTimelineController: RoomTimelineControllerProtocol {
     /// Prepends the next chunk of items to the `timelineItems` array.
     private func simulateBackPagination() async throws {
         defer {
-            callbacks.send(.paginationState(PaginationState(backward: backPaginationResponses.isEmpty ? .timelineEndReached : .idle,
-                                                            forward: .timelineEndReached)))
+            paginationState = PaginationState(backward: backPaginationResponses.isEmpty ? .timelineEndReached : .idle,
+                                              forward: .timelineEndReached)
         }
         
         guard !backPaginationResponses.isEmpty else { return }

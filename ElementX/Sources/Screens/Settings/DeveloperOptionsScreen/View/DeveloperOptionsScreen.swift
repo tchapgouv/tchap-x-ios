@@ -23,6 +23,15 @@ struct DeveloperOptionsScreen: View {
                 LogLevelConfigurationView(logLevel: $context.logLevel)
             }
             
+            Section("General") {
+                Toggle(isOn: $context.eventCacheEnabled) {
+                    Text("Event cache")
+                }
+                .onChange(of: context.eventCacheEnabled) {
+                    context.send(viewAction: .clearCache)
+                }
+            }
+            
             Section {
                 Picker("Discovery", selection: $context.slidingSyncDiscovery) {
                     Text("Proxy only").tag(AppSettings.SlidingSyncDiscovery.proxy)
@@ -36,6 +45,10 @@ struct DeveloperOptionsScreen: View {
             }
             
             Section("Room List") {
+                Toggle(isOn: $context.publicSearchEnabled) {
+                    Text("Public search")
+                }
+                
                 Toggle(isOn: $context.hideUnreadMessagesBadge) {
                     Text("Hide grey dots")
                 }
@@ -45,13 +58,9 @@ struct DeveloperOptionsScreen: View {
                 }
             }
             
-            Section("Timeline") {
+            Section("Room") {
                 Toggle(isOn: $context.hideTimelineMedia) {
                     Text("Hide image & video previews")
-                }
-                
-                Toggle(isOn: $context.frequentEmojisEnabled) {
-                    Text("Show frequently used emojis")
                 }
             }
             

@@ -55,16 +55,15 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             .sink { [weak self] securityState in
                 guard let self else { return }
                 
-                switch (securityState.verificationState, securityState.recoveryState) {
-                case (.verified, .disabled):
+                switch securityState.recoveryState {
+                case .disabled:
                     state.requiresExtraAccountSetup = true
-                    state.securityBannerMode = .show
-                case (.verified, .incomplete):
-                    state.requiresExtraAccountSetup = true
-                    
-                    if state.securityBannerMode != .dismissed {
-                        state.securityBannerMode = .show
+                    if !state.securityBannerMode.isDismissed {
+                        state.securityBannerMode = .show(.setUpRecovery)
                     }
+                case .incomplete:
+                    state.requiresExtraAccountSetup = true
+                    state.securityBannerMode = .show(.recoveryOutOfSync)
                 default:
                     state.securityBannerMode = .none
                     state.requiresExtraAccountSetup = false
@@ -327,11 +326,10 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 self.state.bindings.alertInfo = AlertInfo(id: UUID(),
                                                           title: L10n.bannerMigrateToNativeSlidingSyncForceLogoutTitle,
-                                                          primaryButton: .init(title: L10n.bannerMigrateToNativeSlidingSyncAction,
-                                                                               action: { [weak self] in
-                                                                                   self?.appSettings.slidingSyncDiscovery = .native
-                                                                                   self?.actionsSubject.send(.logoutWithoutConfirmation)
-                                                                               }))
+                                                          primaryButton: .init(title: L10n.bannerMigrateToNativeSlidingSyncAction) { [weak self] in
+                                                              self?.appSettings.slidingSyncDiscovery = .native
+                                                              self?.actionsSubject.send(.logoutWithoutConfirmation)
+                                                          })
             }
         }
     }
@@ -365,12 +363,12 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             }
             
             if roomProxy.infoPublisher.value.isPublic {
-                state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomID, isDM: roomProxy.isEncryptedOneToOneRoom, state: .public)
+                state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomID, isDM: roomProxy.isDirectOneToOneRoom, state: .public)
             } else {
                 state.bindings.leaveRoomAlertItem = if roomProxy.infoPublisher.value.joinedMembersCount > 1 {
-                    LeaveRoomAlertItem(roomID: roomID, isDM: roomProxy.isEncryptedOneToOneRoom, state: .private)
+                    LeaveRoomAlertItem(roomID: roomID, isDM: roomProxy.isDirectOneToOneRoom, state: .private)
                 } else {
-                    LeaveRoomAlertItem(roomID: roomID, isDM: roomProxy.isEncryptedOneToOneRoom, state: .empty)
+                    LeaveRoomAlertItem(roomID: roomID, isDM: roomProxy.isDirectOneToOneRoom, state: .empty)
                 }
             }
         }
@@ -409,7 +407,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             return
         }
         
-        switch await roomProxy.acceptInvitation() {
+        switch await userSession.clientProxy.joinRoom(roomID, via: []) {
         case .success:
             actionsSubject.send(.presentRoom(roomIdentifier: roomID))
             analyticsService.trackJoinedRoom(isDM: roomProxy.info.isDirect,
@@ -434,7 +432,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                                          title: title,
                                          message: message,
                                          primaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil),
-                                         secondaryButton: .init(title: L10n.actionDecline, role: .destructive, action: { Task { await self.declineInvite(roomID: room.id) } }))
+                                         secondaryButton: .init(title: L10n.actionDecline, role: .destructive) { Task { await self.declineInvite(roomID: room.id) } })
     }
     
     private func declineInvite(roomID: String) async {

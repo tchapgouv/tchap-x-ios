@@ -66,10 +66,28 @@ enum HomeScreenRoomListMode: CustomStringConvertible {
     }
 }
 
-enum HomeScreenBannerMode {
+enum HomeScreenSecurityBannerMode: Equatable {
     case none
     case dismissed
-    case show
+    case show(HomeScreenRecoveryKeyConfirmationBanner.State)
+    
+    var isDismissed: Bool {
+        switch self {
+        case .dismissed: true
+        default: false
+        }
+    }
+    
+    var isShown: Bool {
+        switch self {
+        case .show: true
+        default: false
+        }
+    }
+}
+
+enum HomeScreenMigrationBannerMode {
+    case none, show, dismissed
 }
 
 struct HomeScreenViewState: BindableState {
@@ -77,8 +95,8 @@ struct HomeScreenViewState: BindableState {
     var userDisplayName: String?
     var userAvatarURL: URL?
     
-    var securityBannerMode = HomeScreenBannerMode.none
-    var slidingSyncMigrationBannerMode = HomeScreenBannerMode.none
+    var securityBannerMode = HomeScreenSecurityBannerMode.none
+    var slidingSyncMigrationBannerMode = HomeScreenMigrationBannerMode.none
     
     var requiresExtraAccountSetup = false
         
@@ -201,13 +219,13 @@ extension HomeScreenRoom {
         
         let hasUnreadMessages = hideUnreadMessagesBadge ? false : summary.hasUnreadMessages
         
-        let isDotShown = hasUnreadMessages || summary.hasUnreadMentions || summary.hasUnreadNotifications || summary.isMarkedUnread || summary.joinRequestType?.isKnock == true
+        let isDotShown = hasUnreadMessages || summary.hasUnreadMentions || summary.hasUnreadNotifications || summary.isMarkedUnread || summary.knockRequestType?.isKnock == true
         let isMentionShown = summary.hasUnreadMentions && !summary.isMuted
         let isMuteShown = summary.isMuted
         let isCallShown = summary.hasOngoingCall
-        let isHighlighted = summary.isMarkedUnread || (!summary.isMuted && (summary.hasUnreadNotifications || summary.hasUnreadMentions)) || summary.joinRequestType?.isKnock == true
+        let isHighlighted = summary.isMarkedUnread || (!summary.isMuted && (summary.hasUnreadNotifications || summary.hasUnreadMentions)) || summary.knockRequestType?.isKnock == true
         
-        let type: HomeScreenRoom.RoomType = switch summary.joinRequestType {
+        let type: HomeScreenRoom.RoomType = switch summary.knockRequestType {
         case .invite(let inviter): .invite(inviterDetails: inviter.map(RoomInviterDetails.init))
         case .knock: .knock
         case .none: .room

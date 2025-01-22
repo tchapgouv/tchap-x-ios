@@ -43,8 +43,10 @@ final class SettingsScreenCoordinator: CoordinatorProtocol {
     // MARK: - Setup
     
     init(parameters: SettingsScreenCoordinatorParameters) {
-        viewModel = SettingsScreenViewModel(userSession: parameters.userSession)
-        
+        // Tchap: add `appSettings` parameter for FAQ URL.
+//        viewModel = SettingsScreenViewModel(userSession: parameters.userSession)
+        viewModel = SettingsScreenViewModel(userSession: parameters.userSession, appSettings: parameters.appSettings)
+
         viewModel.actions
             .sink { [weak self] action in
                 guard let self else { return }

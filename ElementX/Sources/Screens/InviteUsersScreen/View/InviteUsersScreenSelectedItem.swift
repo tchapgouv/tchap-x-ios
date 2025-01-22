@@ -16,13 +16,20 @@ struct InviteUsersScreenSelectedItem: View {
         VStack(spacing: 0) {
             avatar
             
-            // Tchap: calculate displayname from userId if necessary.
+            // Tchap: calculate displayname from userId if necessary and displays it in badge if user is external..
             //            Text(user.displayName ?? user.userID)
-            Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
-                .font(.compound.bodyMD)
-                .foregroundColor(.compound.textPrimary)
-                .lineLimit(1)
+            if MatrixIdFromString(user.userID).isExternalTchapUser {
+                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                    .lineLimit(1)
+                    .tchapExternalLabelView()
+            } else {
+                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                    .font(.compound.bodyMD)
+                    .foregroundColor(.compound.textPrimary)
+                    .lineLimit(1)
+            }
         }
+        .frame(maxWidth: 100.0)
     }
     
     // MARK: - Private
@@ -52,7 +59,7 @@ struct InviteUsersScreenSelectedItem_Previews: PreviewProvider, TestablePreview 
         ScrollView(.horizontal) {
             HStack(spacing: 28) {
                 ForEach(people, id: \.userID) { user in
-                    InviteUsersScreenSelectedItem(user: user, mediaProvider: MediaProviderMock(configuration: .init()), dismissAction: { })
+                    InviteUsersScreenSelectedItem(user: user, mediaProvider: MediaProviderMock(configuration: .init())) { }
                         .frame(width: 72)
                 }
             }

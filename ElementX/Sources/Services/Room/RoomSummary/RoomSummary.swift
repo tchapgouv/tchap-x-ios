@@ -9,7 +9,7 @@ import Foundation
 import MatrixRustSDK
 
 struct RoomSummary {
-    enum JoinRequestType {
+    enum KnockRequestType {
         case invite(inviter: RoomMemberProxyProtocol?)
         case knock
         
@@ -34,7 +34,7 @@ struct RoomSummary {
     
     let id: String
     
-    let joinRequestType: JoinRequestType?
+    let knockRequestType: KnockRequestType?
     
     let name: String
     let isDirect: Bool
@@ -69,6 +69,20 @@ extension RoomSummary: CustomStringConvertible {
     - notificationMode: \(notificationMode?.rawValue ?? "nil")
     """
     }
+    
+    /// Used where summaries are shown in a list e.g. message forwarding,
+    /// global search, share destination list etc.
+    var roomListDescription: String {
+        if isDirect {
+            return canonicalAlias ?? ""
+        }
+        
+        if let alias = canonicalAlias {
+            return alias
+        }
+        
+        return heroes.compactMap(\.displayName).formatted(.list(type: .and))
+    }
 }
 
 extension RoomSummary {
@@ -89,7 +103,7 @@ extension RoomSummary {
         canonicalAlias = nil
         hasOngoingCall = false
         
-        joinRequestType = nil
+        knockRequestType = nil
         isMarkedUnread = false
         isFavourite = false
     }

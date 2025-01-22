@@ -11,6 +11,8 @@ import SwiftUI
 
 struct SettingsScreen: View {
     @ObservedObject var context: SettingsScreenViewModel.Context
+    // Tchap: `openURL` needed to open FAQ page.
+    @Environment(\.openURL) private var openURL
     
     private var shouldHideManageAccountSection: Bool {
         context.viewState.accountProfileURL == nil &&
@@ -136,12 +138,21 @@ struct SettingsScreen: View {
     
     private var generalSection: some View {
         Section {
-            ListRow(label: .default(title: L10n.commonAbout,
+            // Tchap: Add FAQ item
+            ListRow(label: .default(title: TchapL10n.commonFaq,
                                     icon: \.info),
+                    kind: .button {
+                        openURL(context.viewState.tchapFaqURL)
+                    })
+                    .accessibilityIdentifier(A11yIdentifiers.settingsScreen.about)
+            // Tchap: Customize "About" menu into "Legal" menu
+//            ListRow(label: .default(title: L10n.commonAbout,
+            ListRow(label: .default(title: TchapL10n.commonLegal,
+                                    icon: \.listBulleted),
                     kind: .navigationLink {
                         context.send(viewAction: .about)
                     })
-                    .accessibilityIdentifier(A11yIdentifiers.settingsScreen.about)
+                    .accessibilityIdentifier(TchapA11yIdentifiers.settingsScreen.faq)
             
             ListRow(label: .default(title: L10n.commonReportAProblem,
                                     icon: \.chatProblem),
@@ -236,7 +247,9 @@ struct SettingsScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModel = {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@userid:example.com",
                                                                                    deviceID: "AAAAAAAAAAA"))))
-        return SettingsScreenViewModel(userSession: userSession)
+        // Tchap: add `appSettings` parameter for FAQ URL.
+//        return SettingsScreenViewModel(userSession: userSession)
+        return SettingsScreenViewModel(userSession: userSession, appSettings: AppSettings())
     }()
     
     static var previews: some View {

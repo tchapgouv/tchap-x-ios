@@ -7,7 +7,6 @@
 
 import Emojibase
 import Foundation
-import OrderedCollections
 
 class EmojiProvider: EmojiProviderProtocol {
     private let maxFrequentEmojis = 20
@@ -57,35 +56,31 @@ class EmojiProvider: EmojiProviderProtocol {
     }
     
     func frequentlyUsedSystemEmojis() -> [String] {
-        guard appSettings.frequentEmojisEnabled, !ProcessInfo.processInfo.isiOSAppOnMac else {
+        guard !ProcessInfo.processInfo.isiOSAppOnMac else {
             return []
         }
         
-        guard let preferences = UserDefaults(suiteName: "com.apple.EmojiPreferences"),
-              let defaults = preferences.dictionary(forKey: "EMFDefaultsKey"),
-              let recents = defaults["EMFRecentsKey"] as? [String]
-        else {
-            return []
-        }
-        
-        return recents
+        return appSettings.frequentlyUsedSystemEmojis.map(\.key)
     }
     
     func markEmojiAsFrequentlyUsed(_ emoji: String) {
-        guard appSettings.frequentEmojisEnabled else {
+        guard !ProcessInfo.processInfo.isiOSAppOnMac else {
             return
         }
         
-        guard let preferences = UserDefaults(suiteName: "com.apple.EmojiPreferences"),
-              let defaults = preferences.dictionary(forKey: "EMFDefaultsKey"),
-              let recents = defaults["EMFRecentsKey"] as? [String] else {
-            return
+        let frequentlyUsed = if !frequentlyUsedSystemEmojis().contains(emoji) {
+            appSettings.frequentlyUsedSystemEmojis + [.init(count: 0, key: emoji)]
+        } else {
+            appSettings.frequentlyUsedSystemEmojis.map { frequentlyUsedEmoji in
+                if frequentlyUsedEmoji.key == emoji {
+                    return FrequentlyUsedEmoji(count: frequentlyUsedEmoji.count + 1, key: emoji)
+                }
+                
+                return frequentlyUsedEmoji
+            }
         }
         
-        var uniqueOrderedRecents = OrderedSet(recents)
-        uniqueOrderedRecents.insert(emoji, at: 0)
-        
-        preferences.setValue(["EMFRecentsKey": Array(uniqueOrderedRecents)], forKey: "EMFDefaultsKey")
+        appSettings.frequentlyUsedSystemEmojis = frequentlyUsed.sorted { $0.count > $1.count }
     }
     
     // MARK: - Private

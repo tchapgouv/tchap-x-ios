@@ -80,7 +80,7 @@ class LoggingTests: XCTestCase {
         let heroName = "Pseudonym"
         let roomSummary = RoomSummary(roomListItem: .init(noPointer: .init()),
                                       id: "myroomid",
-                                      joinRequestType: nil,
+                                      knockRequestType: nil,
                                       name: roomName,
                                       isDirect: true,
                                       avatarURL: nil,
@@ -116,7 +116,7 @@ class LoggingTests: XCTestCase {
         // Given timeline items that contain text
         let textAttributedString = "TextAttributed"
         let textMessage = TextRoomTimelineItem(id: .randomEvent,
-                                               timestamp: "",
+                                               timestamp: .mock,
                                                isOutgoing: false,
                                                isEditable: false,
                                                canBeRepliedTo: true,
@@ -125,7 +125,7 @@ class LoggingTests: XCTestCase {
                                                content: .init(body: "TextString", formattedBody: AttributedString(textAttributedString)))
         let noticeAttributedString = "NoticeAttributed"
         let noticeMessage = NoticeRoomTimelineItem(id: .randomEvent,
-                                                   timestamp: "",
+                                                   timestamp: .mock,
                                                    isOutgoing: false,
                                                    isEditable: false,
                                                    canBeRepliedTo: true,
@@ -134,7 +134,7 @@ class LoggingTests: XCTestCase {
                                                    content: .init(body: "NoticeString", formattedBody: AttributedString(noticeAttributedString)))
         let emoteAttributedString = "EmoteAttributed"
         let emoteMessage = EmoteRoomTimelineItem(id: .randomEvent,
-                                                 timestamp: "",
+                                                 timestamp: .mock,
                                                  isOutgoing: false,
                                                  isEditable: false,
                                                  canBeRepliedTo: true,
@@ -142,7 +142,7 @@ class LoggingTests: XCTestCase {
                                                  sender: .init(id: "sender"),
                                                  content: .init(body: "EmoteString", formattedBody: AttributedString(emoteAttributedString)))
         let imageMessage = ImageRoomTimelineItem(id: .randomEvent,
-                                                 timestamp: "",
+                                                 timestamp: .mock,
                                                  isOutgoing: false,
                                                  isEditable: false,
                                                  canBeRepliedTo: true,
@@ -150,10 +150,10 @@ class LoggingTests: XCTestCase {
                                                  sender: .init(id: "sender"),
                                                  content: .init(filename: "ImageString",
                                                                 caption: "ImageString",
-                                                                source: MediaSourceProxy(url: .picturesDirectory, mimeType: "image/gif"),
-                                                                thumbnailSource: nil))
+                                                                imageInfo: .mockImage,
+                                                                thumbnailInfo: nil))
         let videoMessage = VideoRoomTimelineItem(id: .randomEvent,
-                                                 timestamp: "",
+                                                 timestamp: .mock,
                                                  isOutgoing: false,
                                                  isEditable: false,
                                                  canBeRepliedTo: true,
@@ -161,11 +161,10 @@ class LoggingTests: XCTestCase {
                                                  sender: .init(id: "sender"),
                                                  content: .init(filename: "VideoString",
                                                                 caption: "VideoString",
-                                                                duration: 0,
-                                                                source: nil,
-                                                                thumbnailSource: nil))
+                                                                videoInfo: .mockVideo,
+                                                                thumbnailInfo: nil))
         let fileMessage = FileRoomTimelineItem(id: .randomEvent,
-                                               timestamp: "",
+                                               timestamp: .mock,
                                                isOutgoing: false,
                                                isEditable: false,
                                                canBeRepliedTo: true,
@@ -174,6 +173,7 @@ class LoggingTests: XCTestCase {
                                                content: .init(filename: "FileString",
                                                               caption: "FileString",
                                                               source: nil,
+                                                              fileSize: nil,
                                                               thumbnailSource: nil,
                                                               contentType: nil))
         
@@ -228,28 +228,19 @@ class LoggingTests: XCTestCase {
         let rustEmoteMessage = EmoteMessageContent(body: emoteString,
                                                    formatted: FormattedBody(format: .html, body: "<b>\(emoteString)</b>"))
         
-        let rustImageMessage = ImageMessageContent(body: "ImageString",
-                                                   formatted: nil,
-                                                   rawFilename: "ImageString",
-                                                   filename: "ImageString",
+        let rustImageMessage = ImageMessageContent(filename: "ImageString",
                                                    caption: "ImageString",
                                                    formattedCaption: nil,
                                                    source: MediaSource(noPointer: .init()),
                                                    info: nil)
         
-        let rustVideoMessage = VideoMessageContent(body: "VideoString",
-                                                   formatted: nil,
-                                                   rawFilename: "VideoString",
-                                                   filename: "VideoString",
+        let rustVideoMessage = VideoMessageContent(filename: "VideoString",
                                                    caption: "VideoString",
                                                    formattedCaption: nil,
                                                    source: MediaSource(noPointer: .init()),
                                                    info: nil)
         
-        let rustFileMessage = FileMessageContent(body: "FileString",
-                                                 formatted: nil,
-                                                 rawFilename: "FileString",
-                                                 filename: "FileString",
+        let rustFileMessage = FileMessageContent(filename: "FileString",
                                                  caption: "FileString",
                                                  formattedCaption: nil,
                                                  source: MediaSource(noPointer: .init()),
@@ -280,13 +271,13 @@ class LoggingTests: XCTestCase {
         XCTAssertFalse(content.contains(emoteString))
         
         XCTAssertTrue(content.contains(String(describing: ImageMessageContent.self)))
-        XCTAssertFalse(content.contains(rustImageMessage.body))
+        XCTAssertFalse(content.contains(rustImageMessage.filename))
         
         XCTAssertTrue(content.contains(String(describing: VideoMessageContent.self)))
-        XCTAssertFalse(content.contains(rustVideoMessage.body))
+        XCTAssertFalse(content.contains(rustVideoMessage.filename))
         
         XCTAssertTrue(content.contains(String(describing: FileMessageContent.self)))
-        XCTAssertFalse(content.contains(rustFileMessage.body))
+        XCTAssertFalse(content.contains(rustFileMessage.filename))
     }
     
     func testLogFileSorting() async throws {

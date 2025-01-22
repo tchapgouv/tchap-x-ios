@@ -67,6 +67,22 @@ class ClientProxy: ClientProxyProtocol {
                   "org.matrix.msc3401.call.member": Int32(0)
               ])
     }
+    
+    private static var knockingRoomCreationPowerLevelOverrides: PowerLevels {
+        .init(usersDefault: nil,
+              eventsDefault: nil,
+              stateDefault: nil,
+              ban: nil,
+              kick: nil,
+              redact: nil,
+              invite: Int32(50),
+              notifications: nil,
+              users: [:],
+              events: [
+                  "m.call.member": Int32(0),
+                  "org.matrix.msc3401.call.member": Int32(0)
+              ])
+    }
 
     private var loadCachedAvatarURLTask: Task<Void, Never>?
     private let userAvatarURLSubject = CurrentValueSubject<URL?, Never>(nil)
@@ -289,7 +305,7 @@ class ClientProxy: ClientProxyProtocol {
         stopSync(completion: nil)
     }
     
-    private func stopSync(completion: (() -> Void)?) {
+    func stopSync(completion: (() -> Void)?) {
         MXLog.info("Stopping sync")
         
         if restartTask != nil {
@@ -377,18 +393,29 @@ class ClientProxy: ClientProxyProtocol {
     }
     
     // swiftlint:disable:next function_parameter_count
-    func createRoom(name: String, topic: String?, isRoomPrivate: Bool, isKnockingOnly: Bool, userIDs: [String], avatarURL: URL?) async -> Result<String, ClientProxyError> {
+    func createRoom(name: String,
+                    topic: String?,
+                    isRoomPrivate: Bool,
+                    isRoomEncrypted: Bool, // Tchap: additional parameter
+                    isKnockingOnly: Bool,
+                    userIDs: [String],
+                    avatarURL: URL?,
+                    aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
         do {
-            // TODO: Revisit once the SDK supports the knocking API
             let parameters = CreateRoomParameters(name: name,
                                                   topic: topic,
-                                                  isEncrypted: isRoomPrivate,
+                                                  // Tchap: handle correctly additional property
+//                                                  isEncrypted: isRoomPrivate,
+                                                  isEncrypted: isRoomEncrypted,
                                                   isDirect: false,
                                                   visibility: isRoomPrivate ? .private : .public,
                                                   preset: isRoomPrivate ? .privateChat : .publicChat,
                                                   invite: userIDs,
                                                   avatar: avatarURL?.absoluteString,
-                                                  powerLevelContentOverride: Self.roomCreationPowerLevelOverrides)
+                                                  powerLevelContentOverride: isKnockingOnly ? Self.knockingRoomCreationPowerLevelOverrides : Self.roomCreationPowerLevelOverrides,
+                                                  joinRuleOverride: isKnockingOnly ? .knock : nil,
+                                                  // This is an FFI naming mistake, what is required is the `aliasLocalPart` not the whole alias
+                                                  canonicalAlias: aliasLocalPart)
             let roomID = try await client.createRoom(request: parameters)
             
             await waitForRoomToSync(roomID: roomID)
@@ -482,7 +509,7 @@ class ClientProxy: ClientProxyProtocol {
         }
         
         if !roomSummaryProvider.statePublisher.value.isLoaded {
-            _ = await roomSummaryProvider.statePublisher.values.first(where: { $0.isLoaded })
+            _ = await roomSummaryProvider.statePublisher.values.first { $0.isLoaded }
         }
         
         if shouldAwait {
@@ -620,12 +647,13 @@ class ClientProxy: ClientProxyProtocol {
     }
     
     func roomDirectorySearchProxy() -> RoomDirectorySearchProxyProtocol {
-        RoomDirectorySearchProxy(roomDirectorySearch: client.roomDirectorySearch())
+        RoomDirectorySearchProxy(roomDirectorySearch: client.roomDirectorySearch(), appSettings: appSettings)
     }
     
     func resolveRoomAlias(_ alias: String) async -> Result<ResolvedRoomAlias, ClientProxyError> {
         do {
             guard let resolvedAlias = try await client.resolveRoomAlias(roomAlias: alias) else {
+                MXLog.error("Failed resolving room alias, is nil")
                 return .failure(.failedResolvingRoomAlias)
             }
             
@@ -637,6 +665,16 @@ class ClientProxy: ClientProxyProtocol {
             return .success(limitedAlias)
         } catch {
             MXLog.error("Failed resolving room alias: \(alias) with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func isAliasAvailable(_ alias: String) async -> Result<Bool, ClientProxyError> {
+        do {
+            let result = try await client.isRoomAliasAvailable(alias: alias)
+            return .success(result)
+        } catch {
+            MXLog.error("Failed checking if alias: \(alias) is available with error: \(error)")
             return .failure(.sdkError(error))
         }
     }
@@ -776,13 +814,14 @@ class ClientProxy: ClientProxyProtocol {
         do {
             let syncService = try await client
                 .syncService()
-                .withCrossProcessLock(appIdentifier: "MainApp")
+                .withCrossProcessLock()
                 .withUtdHook(delegate: ClientDecryptionErrorDelegate(actionsSubject: actionsSubject))
                 .finish()
+            
             let roomListService = syncService.roomListService()
             
             let roomMessageEventStringBuilder = RoomMessageEventStringBuilder(attributedStringBuilder: AttributedStringBuilder(cacheKey: "roomList",
-                                                                                                                               mentionBuilder: PlainMentionBuilder()), prefix: .senderName)
+                                                                                                                               mentionBuilder: PlainMentionBuilder()), destination: .roomList)
             let eventStringBuilder = RoomEventStringBuilder(stateEventStringBuilder: RoomStateEventStringBuilder(userID: userID, shouldDisambiguateDisplayNames: false),
                                                             messageEventStringBuilder: roomMessageEventStringBuilder,
                                                             shouldDisambiguateDisplayNames: false,
@@ -798,7 +837,7 @@ class ClientProxy: ClientProxyProtocol {
             
             alternateRoomSummaryProvider = RoomSummaryProvider(roomListService: roomListService,
                                                                eventStringBuilder: eventStringBuilder,
-                                                               name: "MessageForwarding",
+                                                               name: "AlternateAllRooms",
                                                                notificationSettings: notificationSettings,
                                                                appSettings: appSettings)
             try await alternateRoomSummaryProvider?.setRoomList(roomListService.allRooms())
@@ -894,15 +933,15 @@ class ClientProxy: ClientProxyProtocol {
             switch roomListItem.membership() {
             case .invited:
                 return try await .invited(InvitedRoomProxy(roomListItem: roomListItem,
-                                                           room: roomListItem.invitedRoom()))
+                                                           roomPreview: roomListItem.previewRoom(via: []),
+                                                           ownUserID: userID))
             case .knocked:
                 if appSettings.knockingEnabled {
                     return try await .knocked(KnockedRoomProxy(roomListItem: roomListItem,
-                                                               room: roomListItem.invitedRoom()))
-                } else {
-                    return try await .invited(InvitedRoomProxy(roomListItem: roomListItem,
-                                                               room: roomListItem.invitedRoom()))
+                                                               roomPreview: roomListItem.previewRoom(via: []),
+                                                               ownUserID: userID))
                 }
+                return nil
             case .joined:
                 if roomListItem.isTimelineInitialized() == false {
                     try await roomListItem.initTimeline(eventTypeFilter: eventFilters, internalIdPrefix: nil)
@@ -914,6 +953,9 @@ class ClientProxy: ClientProxyProtocol {
                 
                 return .joined(roomProxy)
             case .left:
+                return .left
+            case .banned:
+                // TODO: Implement a `bannedRoomProxy` and/or `.banned` case
                 return .left
             }
         } catch {
@@ -1110,10 +1152,31 @@ private extension RoomPreviewDetails {
                                   topic: roomPreviewInfo.topic,
                                   avatarURL: roomPreviewInfo.avatarUrl.flatMap(URL.init(string:)),
                                   memberCount: UInt(roomPreviewInfo.numJoinedMembers),
-                                  isHistoryWorldReadable: roomPreviewInfo.isHistoryWorldReadable,
+                                  isHistoryWorldReadable: roomPreviewInfo.isHistoryWorldReadable ?? false,
                                   isJoined: roomPreviewInfo.membership == .joined,
                                   isInvited: roomPreviewInfo.membership == .invited,
-                                  isPublic: roomPreviewInfo.joinRule == .public,
-                                  canKnock: roomPreviewInfo.joinRule == .knock)
+                                  isPublic: roomPreviewInfo.isPublic,
+                                  canKnock: roomPreviewInfo.canKnock)
+    }
+}
+
+private extension RoomPreviewInfo {
+    var canKnock: Bool {
+        switch joinRule {
+        case .knock, .knockRestricted:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var isPublic: Bool {
+        switch joinRule {
+        // for restricted rooms we want to show optimistically that the we may be able to join the room
+        case .public, .restricted:
+            return true
+        default:
+            return false
+        }
     }
 }

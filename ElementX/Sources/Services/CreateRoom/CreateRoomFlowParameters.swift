@@ -12,6 +12,9 @@ struct CreateRoomFlowParameters {
     var name = ""
     var topic = ""
     var isRoomPrivate = true
+    var isRoomEncrypted = true // Tchap: add encrypted option to private
+    var isRoomFederated = true // Tchap: add option to not federate public room. Always True for private room. Always starts at true for any type of room.
     var isKnockingOnly = false
     var avatarImageMedia: MediaInfo?
+    var aliasLocalPart: String?
 }

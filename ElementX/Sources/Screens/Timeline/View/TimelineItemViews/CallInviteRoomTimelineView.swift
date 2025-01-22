@@ -13,12 +13,15 @@ struct CallInviteRoomTimelineView: View {
     let timelineItem: CallInviteRoomTimelineItem
     
     var body: some View {
-        Label(title: { Text(L10n.commonCallInvite) },
-              icon: { CompoundIcon(\.voiceCall, size: .medium, relativeTo: .compound.bodyMD) })
-            .font(.compound.bodyMD)
-            .foregroundColor(.compound.textSecondary)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding()
+        Label {
+            Text(L10n.screenRoomTimelineLegacyCall)
+        } icon: {
+            CompoundIcon(\.voiceCallSolid, size: .medium, relativeTo: .compound.bodyMD)
+        }
+        .font(.compound.bodyMD)
+        .foregroundColor(.compound.textSecondary)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding()
     }
 }
 
@@ -31,7 +34,7 @@ struct CallInviteRoomTimelineView_Previews: PreviewProvider, TestablePreview {
     
     static var body: some View {
         CallInviteRoomTimelineView(timelineItem: .init(id: .randomEvent,
-                                                       timestamp: "Now",
+                                                       timestamp: .mock,
                                                        isEditable: false,
                                                        canBeRepliedTo: false,
                                                        sender: .init(id: "Bob")))

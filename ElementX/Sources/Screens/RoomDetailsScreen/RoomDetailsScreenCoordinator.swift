@@ -29,6 +29,9 @@ enum RoomDetailsScreenCoordinatorAction {
     case presentRolesAndPermissionsScreen
     case presentCall
     case presentPinnedEventsTimeline
+    case presentMediaEventsTimeline
+    case presentKnockingRequestsListScreen
+    case presentSecurityAndPrivacyScreen
 }
 
 final class RoomDetailsScreenCoordinator: CoordinatorProtocol {
@@ -79,6 +82,12 @@ final class RoomDetailsScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.presentCall)
                 case .displayPinnedEventsTimeline:
                     actionsSubject.send(.presentPinnedEventsTimeline)
+                case .displayMediaEventsTimeline:
+                    actionsSubject.send(.presentMediaEventsTimeline)
+                case .displayKnockingRequests:
+                    actionsSubject.send(.presentKnockingRequestsListScreen)
+                case .displaySecurityAndPrivacy:
+                    actionsSubject.send(.presentSecurityAndPrivacyScreen)
                 }
             }
             .store(in: &cancellables)

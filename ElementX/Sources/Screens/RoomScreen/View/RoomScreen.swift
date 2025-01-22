@@ -29,12 +29,11 @@ struct RoomScreen: View {
         timeline
             .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
             .overlay(alignment: .top) {
-                Group {
-                    if roomContext.viewState.shouldShowPinnedEventsBanner {
-                        pinnedItemsBanner
-                    }
-                }
-                .animation(.elementDefault, value: roomContext.viewState.shouldShowPinnedEventsBanner)
+                pinnedItemsBanner
+            }
+            // This can overlay on top of the pinnedItemsBanner
+            .overlay(alignment: .top) {
+                knockRequestsBanner
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 VStack(spacing: 0) {
@@ -76,7 +75,7 @@ struct RoomScreen: View {
                                                              pinnedEventIDs: timelineContext.viewState.pinnedEventIDs,
                                                              isDM: timelineContext.viewState.isEncryptedOneToOneRoom,
                                                              isViewSourceEnabled: timelineContext.viewState.isViewSourceEnabled,
-                                                             isPinnedEventsTimeline: timelineContext.viewState.isPinnedEventsTimeline,
+                                                             timelineKind: timelineContext.viewState.timelineKind,
                                                              emojiProvider: timelineContext.viewState.emojiProvider)
                     .makeActions()
                 if let actions {
@@ -113,17 +112,51 @@ struct RoomScreen: View {
         TimelineView()
             .id(timelineContext.viewState.roomID)
             .environmentObject(timelineContext)
-            .environment(\.focussedEventID, timelineContext.viewState.timelineViewState.focussedEvent?.eventID)
+            .environment(\.focussedEventID, timelineContext.viewState.timelineState.focussedEvent?.eventID)
             .overlay(alignment: .bottomTrailing) {
                 scrollToBottomButton
             }
     }
     
+    @ViewBuilder
     private var pinnedItemsBanner: some View {
-        PinnedItemsBannerView(state: roomContext.viewState.pinnedEventsBannerState,
-                              onMainButtonTap: { roomContext.send(viewAction: .tappedPinnedEventsBanner) },
-                              onViewAllButtonTap: { roomContext.send(viewAction: .viewAllPins) })
-            .transition(.move(edge: .top))
+        Group {
+            if roomContext.viewState.shouldShowPinnedEventsBanner {
+                PinnedItemsBannerView(state: roomContext.viewState.pinnedEventsBannerState,
+                                      onMainButtonTap: { roomContext.send(viewAction: .tappedPinnedEventsBanner) },
+                                      onViewAllButtonTap: { roomContext.send(viewAction: .viewAllPins) })
+                    .transition(.move(edge: .top))
+            }
+        }
+        .animation(.elementDefault, value: roomContext.viewState.shouldShowPinnedEventsBanner)
+    }
+    
+    @ViewBuilder
+    private var knockRequestsBanner: some View {
+        Group {
+            if roomContext.viewState.shouldSeeKnockRequests {
+                KnockRequestsBannerView(requests: roomContext.viewState.displayedKnockRequests,
+                                        onDismiss: dismissKnockRequestsBanner,
+                                        onAccept: roomContext.viewState.canAcceptKnocks ? acceptKnockRequest : nil,
+                                        onViewAll: onViewAllKnockRequests,
+                                        mediaProvider: roomContext.mediaProvider)
+                    .padding(.top, 16)
+                    .transition(.move(edge: .top))
+            }
+        }
+        .animation(.elementDefault, value: roomContext.viewState.shouldSeeKnockRequests)
+    }
+    
+    private func dismissKnockRequestsBanner() {
+        roomContext.send(viewAction: .dismissKnockRequests)
+    }
+    
+    private func acceptKnockRequest(eventID: String) {
+        roomContext.send(viewAction: .acceptKnock(eventID: eventID))
+    }
+    
+    private func onViewAllKnockRequests() {
+        roomContext.send(viewAction: .viewKnockRequests)
     }
     
     private var scrollToBottomButton: some View {
@@ -149,7 +182,7 @@ struct RoomScreen: View {
     }
     
     private var isAtBottomAndLive: Bool {
-        timelineContext.isScrolledToBottom && timelineContext.viewState.timelineViewState.isLive
+        timelineContext.isScrolledToBottom && timelineContext.viewState.timelineState.isLive
     }
     
     @ViewBuilder
@@ -171,6 +204,9 @@ struct RoomScreen: View {
         ToolbarItem(placement: .principal) {
             RoomHeaderView(roomName: roomContext.viewState.roomTitle,
                            roomAvatar: roomContext.viewState.roomAvatar,
+                           roomPropertiesBadgesView:
+                           // Tchap: add badges
+                           TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: $roomContext.isEncrypted, isPublic: $roomContext.isPublic, externalCount: $roomContext.externalCount),
                            mediaProvider: roomContext.mediaProvider)
                 // Using a button stops it from getting truncated in the navigation bar
                 .contentShape(.rect)

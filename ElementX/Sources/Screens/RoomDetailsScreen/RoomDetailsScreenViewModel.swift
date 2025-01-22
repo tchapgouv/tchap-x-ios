@@ -75,6 +75,10 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                                            bindings: .init()),
                    mediaProvider: mediaProvider)
         
+        appSettings.$knockingEnabled
+            .weakAssign(to: \.state.knockingEnabled, on: self)
+            .store(in: &cancellables)
+        
         appMediator.networkMonitor.reachabilityPublisher
             .filter { $0 == .reachable }
             .receive(on: DispatchQueue.main)
@@ -121,11 +125,11 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             actionsSubject.send(.requestInvitePeoplePresentation)
         case .processTapLeave:
             guard state.joinedMembersCount > 1 else {
-                state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomProxy.id, isDM: roomProxy.isEncryptedOneToOneRoom, state: .empty)
+                state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomProxy.id, isDM: roomProxy.isDirectOneToOneRoom, state: .empty)
                 return
             }
             state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomProxy.id,
-                                                                   isDM: roomProxy.isEncryptedOneToOneRoom,
+                                                                   isDM: roomProxy.isDirectOneToOneRoom,
                                                                    state: roomProxy.infoPublisher.value.isPublic ? .public : .private)
         case .confirmLeave:
             Task { await leaveRoom() }
@@ -160,6 +164,12 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         case .processTapPinnedEvents:
             analyticsService.trackInteraction(name: .PinnedMessageRoomInfoButton)
             actionsSubject.send(.displayPinnedEventsTimeline)
+        case .processTapMediaEvents:
+            actionsSubject.send(.displayMediaEventsTimeline)
+        case .processTapRequestsToJoin:
+            actionsSubject.send(.displayKnockingRequests)
+        case .processTapSecurityAndPrivacy:
+            actionsSubject.send(.displaySecurityAndPrivacy)
         }
     }
     
@@ -173,6 +183,18 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 Task { await self?.updatePowerLevelPermissions() }
             }
             .store(in: &cancellables)
+        
+        roomProxy.knockRequestsStatePublisher
+            .map { requestsState in
+                guard case let .loaded(requests) = requestsState else {
+                    return 0
+                }
+                return requests.count
+            }
+            .removeDuplicates()
+            .throttle(for: .milliseconds(100), scheduler: DispatchQueue.main, latest: true)
+            .weakAssign(to: \.state.knockRequestsCount, on: self)
+            .store(in: &cancellables)
     }
     
     private func updateRoomInfo(_ roomInfo: RoomInfoProxy) {
@@ -183,11 +205,17 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         state.topicSummary = topic?.unattributedStringByReplacingNewlinesWithSpaces()
         state.joinedMembersCount = roomInfo.joinedMembersCount
         state.bindings.isFavourite = roomInfo.isFavourite
+        switch roomInfo.joinRule {
+        case .knock, .knockRestricted:
+            state.isKnockableRoom = true
+        default:
+            state.isKnockableRoom = false
+        }
     }
     
     private func fetchMembersIfNeeded() async {
         // We need to fetch members just in 1-to-1 chat to get the member object for the other person
-        guard roomProxy.isEncryptedOneToOneRoom else {
+        guard roomProxy.isDirectOneToOneRoom else {
             return
         }
         
@@ -195,8 +223,8 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             .receive(on: DispatchQueue.main)
             .sink { [weak self, ownUserID = roomProxy.ownUserID] members in
                 guard let self else { return }
-                let accountOwner = members.first(where: { $0.userID == ownUserID })
-                let dmRecipient = members.first(where: { $0.userID != ownUserID })
+                let accountOwner = members.first { $0.userID == ownUserID }
+                let dmRecipient = members.first { $0.userID != ownUserID }
                 self.dmRecipient = dmRecipient
                 self.state.dmRecipient = dmRecipient.map(RoomMemberDetails.init(withProxy:))
                 self.state.accountOwner = accountOwner.map(RoomMemberDetails.init(withProxy:))
@@ -212,6 +240,8 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         state.canEditRoomAvatar = await (try? roomProxy.canUser(userID: roomProxy.ownUserID, sendStateEvent: .roomAvatar).get()) == true
         state.canEditRolesOrPermissions = await (try? roomProxy.suggestedRole(for: roomProxy.ownUserID).get()) == .administrator
         state.canInviteUsers = await (try? roomProxy.canUserInvite(userID: roomProxy.ownUserID).get()) == true
+        state.canKickUsers = await (try? roomProxy.canUserKick(userID: roomProxy.ownUserID).get()) == true
+        state.canBanUsers = await (try? roomProxy.canUserBan(userID: roomProxy.ownUserID).get()) == true
     }
     
     private func setupNotificationSettingsSubscription() {
@@ -349,7 +379,8 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             }
             
             // We don't actually know the mime type here, assume it's an image.
-            if case let .success(file) = await mediaProvider.loadFileFromSource(.init(url: url, mimeType: "image/jpeg")) {
+            if let mediaSource = try? MediaSourceProxy(url: url, mimeType: "image/jpeg"),
+               case let .success(file) = await mediaProvider.loadFileFromSource(mediaSource) {
                 state.bindings.mediaPreviewItem = MediaPreviewItem(file: file, title: roomProxy.infoPublisher.value.displayName)
             }
         }

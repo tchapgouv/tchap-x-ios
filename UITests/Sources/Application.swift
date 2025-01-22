@@ -47,17 +47,20 @@ enum Application {
         guard deviceModel == requirediPhoneSimulator || deviceModel == requirediPadSimulator else {
             fatalError("Running on \(deviceModel) but we only support \(requirediPhoneSimulator) and \(requirediPadSimulator).")
         }
+        guard UIDevice.current.snapshotName == "iPhone-18.1" || UIDevice.current.snapshotName == "iPad-18.1" else {
+            fatalError("Running on a simulator that hasn't been renamed to match the expected snapshot filenames.")
+        }
     }
 }
 
 extension XCUIApplication {
     static var recordMode: SnapshotTestingConfiguration.Record = .missing
     
-    @MainActor
     /// Assert screenshot for a screen with the given identifier. Does not fail if a screenshot is newly created.
     /// - Parameter identifier: Identifier of the UI test screen
     /// - Parameter step: An optional integer that can be used to take multiple snapshots per test identifier.
     /// - Parameter insets: Optional insets with which to crop the image by.
+    @MainActor
     func assertScreenshot(_ identifier: UITestsScreenIdentifier, step: Int? = nil, insets: UIEdgeInsets? = nil, delay: Duration = .seconds(1), precision: Float = 0.99) async throws {
         var snapshotName = identifier.rawValue
         if let step {
@@ -91,15 +94,7 @@ extension XCUIApplication {
     }
     
     private var deviceName: String {
-        var name = UIDevice.current.name
-        
-        // When running with parallel execution simulators are named "Clone 2 of iPhone 14" etc.
-        // Tidy this prefix out of the name to generate snapshots with the correct name.
-        if name.starts(with: "Clone "), let range = name.range(of: " of ") {
-            name = String(name[range.upperBound...])
-        }
-        
-        return name
+        UIDevice.current.snapshotName
     }
     
     private var localeCode: String {
@@ -115,6 +110,20 @@ extension XCUIApplication {
 
     private var regionCode: String {
         Locale.current.language.region?.identifier ?? ""
+    }
+}
+
+private extension UIDevice {
+    var snapshotName: String {
+        var name = name
+        
+        // When running with parallel execution simulators are named "Clone 2 of iPhone 14" etc.
+        // Tidy this prefix out of the name to generate snapshots with the correct name.
+        if name.starts(with: "Clone "), let range = name.range(of: " of ") {
+            name = String(name[range.upperBound...])
+        }
+        
+        return name
     }
 }
 

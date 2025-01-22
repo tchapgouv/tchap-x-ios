@@ -25,11 +25,19 @@ struct RoomMembersListScreenMemberCell: View {
                 
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(title)
-                            .font(.compound.bodyMDSemibold)
-                            .foregroundColor(.compound.textPrimary)
-                            .lineLimit(1)
-                        
+                        // Tchap: display user as external if needed
+                        if MatrixIdFromString(member.id).isExternalTchapUser {
+                            Text(title)
+                                .font(.compound.bodyMDSemibold)
+                                .foregroundColor(.compound.textPrimary)
+                                .lineLimit(1)
+                                .tchapExternalLabelView()
+                        } else {
+                            Text(title)
+                                .font(.compound.bodyMDSemibold)
+                                .foregroundColor(.compound.textPrimary)
+                                .lineLimit(1)
+                        }
                         // Tchap: only display matrixID in debug mode
                         #if DEBUG
                         if let subtitle {
@@ -91,13 +99,13 @@ struct RoomMembersListMemberCell_Previews: PreviewProvider, TestablePreview {
         .mockAdmin,
         .mockModerator,
         .init(with: .init(userID: "@nodisplayname:matrix.org", membership: .join)),
-        .init(with: .init(userID: "@avatar:matrix.org", displayName: "Avatar", avatarURL: .picturesDirectory, membership: .join))
+        .init(with: .init(userID: "@avatar:matrix.org", displayName: "Avatar", avatarURL: .mockMXCUserAvatar, membership: .join))
     ]
     
     static let bannedMembers: [RoomMemberProxyMock] = [
         .init(with: .init(userID: "@nodisplayname:matrix.org", membership: .ban)),
         .init(with: .init(userID: "@fake:matrix.org", displayName: "President", membership: .ban)),
-        .init(with: .init(userID: "@badavatar:matrix.org", avatarURL: .picturesDirectory, membership: .ban))
+        .init(with: .init(userID: "@badavatar:matrix.org", avatarURL: .mockMXCUserAvatar, membership: .ban))
     ]
     
     static let viewModel = RoomMembersListScreenViewModel(roomProxy: JoinedRoomProxyMock(.init(name: "Some room",

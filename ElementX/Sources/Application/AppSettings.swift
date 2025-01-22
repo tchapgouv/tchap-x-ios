@@ -13,6 +13,7 @@ protocol CommonSettingsProtocol {
     var logLevel: TracingConfiguration.LogLevel { get }
     var enableOnlySignedDeviceIsolationMode: Bool { get }
     var hideTimelineMedia: Bool { get }
+    var eventCacheEnabled: Bool { get }
 }
 
 /// Store Element specific app settings.
@@ -27,6 +28,8 @@ final class AppSettings {
         case hasRunNotificationPermissionsOnboarding
         case hasRunIdentityConfirmationOnboarding
         
+        case frequentlyUsedSystemEmojis
+        
         case enableNotifications
         case enableInAppNotifications
         case pusherProfileTag
@@ -39,7 +42,6 @@ final class AppSettings {
         case hideTimelineMedia
         
         case elementCallBaseURLOverride
-        case elementCallEncryptionEnabled
         
         // Feature flags
         case slidingSyncDiscovery
@@ -47,7 +49,7 @@ final class AppSettings {
         case fuzzyRoomListSearchEnabled
         case enableOnlySignedDeviceIsolationMode
         case knockingEnabled
-        case frequentEmojisEnabled
+        case eventCacheEnabled
     }
     
     private static var suiteName: String = InfoPlistReader.main.appGroupIdentifier
@@ -125,10 +127,22 @@ final class AppSettings {
     let logoURL: URL = "https://element.io/mobile-icon.png"
     /// A URL that contains that app's copyright notice.
     let copyrightURL: URL = "https://element.io/copyright"
+    // Tchap: replace Terms of Use and Privacy policy URLs.
+//    /// A URL that contains the app's Terms of use.
+//    let acceptableUseURL: URL = "https://element.io/acceptable-use-policy-terms"
+//    /// A URL that contains the app's Privacy Policy.
+//        let privacyURL: URL = "https://element.io/privacy"
+    // Tchap: Tchap Terms of Use and Privacy policy
     /// A URL that contains the app's Terms of use.
-    let acceptableUseURL: URL = "https://element.io/acceptable-use-policy-terms"
+    let acceptableUseURL: URL = "https://tchap.numerique.gouv.fr/cgu" // Tchap
     /// A URL that contains the app's Privacy Policy.
-    let privacyURL: URL = "https://element.io/privacy"
+    let privacyURL: URL = "https://tchap.numerique.gouv.fr/politique-de-confidentialite/" // Tchap
+    // Tchap: FAQ url.
+    /// A URL that leads to Tchap FAQ page.
+    let tchapFaqURL: URL = "https://aide.tchap.beta.gouv.fr/" // Tchap
+    // Tchap: external members FAQ url.
+    /// A URL that leads to Tchap FAQ page.
+    let tchapExternalFaqURL: URL = "https://aide.tchap.beta.gouv.fr/fr/article/comment-inviter-un-partenaire-externe-sur-tchap-iphone-110q735//" // Tchap
     /// An email address that should be used for support requests.
     let supportEmailAddress = "support@element.io"
     /// A URL where users can go read more about encryption in general.
@@ -237,6 +251,9 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.hasRunIdentityConfirmationOnboarding, defaultValue: false, storageType: .userDefaults(store))
     var hasRunIdentityConfirmationOnboarding
     
+    @UserPreference(key: UserDefaultsKeys.frequentlyUsedSystemEmojis, defaultValue: [FrequentlyUsedEmoji](), storageType: .userDefaults(store))
+    var frequentlyUsedSystemEmojis
+    
     // MARK: - Home Screen
     
     @UserPreference(key: UserDefaultsKeys.hideUnreadMessagesBadge, defaultValue: false, storageType: .userDefaults(store))
@@ -249,6 +266,10 @@ final class AppSettings {
     
     @UserPreference(key: UserDefaultsKeys.optimizeMediaUploads, defaultValue: true, storageType: .userDefaults(store))
     var optimizeMediaUploads
+    
+    /// Whether or not to show a warning on the media caption composer so the user knows
+    /// that captions might not be visible to users who are using other Matrix clients.
+    let shouldShowMediaCaptionWarning = true
 
     // MARK: - Element Call
     
@@ -277,7 +298,7 @@ final class AppSettings {
     
     // MARK: - Feature Flags
     
-    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: isDevelopmentBuild, storageType: .volatile)
+    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
     var publicSearchEnabled
     
     @UserPreference(key: UserDefaultsKeys.fuzzyRoomListSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
@@ -290,9 +311,6 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.knockingEnabled, defaultValue: false, storageType: .userDefaults(store))
     var knockingEnabled
     
-    @UserPreference(key: UserDefaultsKeys.frequentEmojisEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
-    var frequentEmojisEnabled
-
     #endif
     
     // MARK: - Shared
@@ -306,6 +324,9 @@ final class AppSettings {
     
     @UserPreference(key: UserDefaultsKeys.hideTimelineMedia, defaultValue: false, storageType: .userDefaults(store))
     var hideTimelineMedia
+    
+    @UserPreference(key: UserDefaultsKeys.eventCacheEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var eventCacheEnabled
 }
 
 extension AppSettings: CommonSettingsProtocol { }

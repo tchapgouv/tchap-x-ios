@@ -30,6 +30,7 @@ struct JoinedRoomProxyMockConfiguration {
     var timelineStartReached = false
     
     var members: [RoomMemberProxyMock] = .allMembers
+    var knockRequestsState: KnockRequestsState = .loaded([])
     var ownUserID = RoomMemberProxyMock.mockMe.userID
     var inviter: RoomMemberProxyProtocol?
     
@@ -39,6 +40,7 @@ struct JoinedRoomProxyMockConfiguration {
     var canUserPin = true
     
     var shouldUseAutoUpdatingTimeline = false
+    var joinRule: JoinRule?
 }
 
 extension JoinedRoomProxyMock {
@@ -49,27 +51,14 @@ extension JoinedRoomProxyMock {
         id = configuration.id
         isEncrypted = configuration.isEncrypted
         
-        let timeline = TimelineProxyMock()
-        timeline.sendMessageEventContentReturnValue = .success(())
-        timeline.paginateBackwardsRequestSizeReturnValue = .success(())
-        timeline.paginateForwardsRequestSizeReturnValue = .success(())
-        timeline.sendReadReceiptForTypeReturnValue = .success(())
-        
-        if configuration.shouldUseAutoUpdatingTimeline {
-            timeline.underlyingTimelineProvider = AutoUpdatingRoomTimelineProviderMock()
-        } else {
-            let timelineProvider = RoomTimelineProviderMock()
-            timelineProvider.paginationState = .init(backward: configuration.timelineStartReached ? .timelineEndReached : .idle, forward: .timelineEndReached)
-            timelineProvider.underlyingMembershipChangePublisher = PassthroughSubject().eraseToAnyPublisher()
-            timeline.underlyingTimelineProvider = timelineProvider
-        }
-        
-        self.timeline = timeline
+        timeline = TimelineProxyMock(.init(isAutoUpdating: configuration.shouldUseAutoUpdatingTimeline,
+                                           timelineStartReached: configuration.timelineStartReached))
 
         ownUserID = configuration.ownUserID
         
         infoPublisher = CurrentValueSubject(.init(roomInfo: .init(configuration))).asCurrentValuePublisher()
         membersPublisher = CurrentValueSubject(configuration.members).asCurrentValuePublisher()
+        knockRequestsStatePublisher = CurrentValueSubject(configuration.knockRequestsState).asCurrentValuePublisher()
         typingMembersPublisher = CurrentValueSubject([]).asCurrentValuePublisher()
         identityStatusChangesPublisher = CurrentValueSubject([]).asCurrentValuePublisher()
 
@@ -83,9 +72,8 @@ extension JoinedRoomProxyMock {
             return .success(member)
         }
         
-        resendItemIDReturnValue = .success(())
-        ignoreDeviceTrustAndResendDevicesItemIDReturnValue = .success(())
-        withdrawVerificationAndResendUserIDsItemIDReturnValue = .success(())
+        ignoreDeviceTrustAndResendDevicesSendHandleReturnValue = .success(())
+        withdrawVerificationAndResendUserIDsSendHandleReturnValue = .success(())
 
         flagAsUnreadReturnValue = .success(())
         markAsReadReceiptTypeReturnValue = .success(())
@@ -106,7 +94,7 @@ extension JoinedRoomProxyMock {
         }
         canUserInviteUserIDReturnValue = .success(configuration.canUserInvite)
         canUserRedactOtherUserIDReturnValue = .success(false)
-        canUserRedactOwnUserIDReturnValue = .success(false)
+        canUserRedactOwnUserIDReturnValue = .success(true)
         canUserKickUserIDClosure = { [weak self] userID in
             .success(self?.membersPublisher.value.first { $0.userID == userID }?.role ?? .user != .user)
         }
@@ -138,6 +126,7 @@ extension JoinedRoomProxyMock {
         matrixToEventPermalinkReturnValue = .success(.homeDirectory)
         loadDraftReturnValue = .success(nil)
         clearDraftReturnValue = .success(())
+        sendTypingNotificationIsTypingReturnValue = .success(())
     }
 }
 
@@ -180,6 +169,7 @@ extension RoomInfo {
                   numUnreadMessages: 0,
                   numUnreadNotifications: 0,
                   numUnreadMentions: 0,
-                  pinnedEventIds: Array(configuration.pinnedEventIDs))
+                  pinnedEventIds: Array(configuration.pinnedEventIDs),
+                  joinRule: configuration.joinRule)
     }
 }

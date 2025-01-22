@@ -37,7 +37,7 @@ struct PinnedEventsTimelineScreen: View {
                                                              pinnedEventIDs: timelineContext.viewState.pinnedEventIDs,
                                                              isDM: timelineContext.viewState.isEncryptedOneToOneRoom,
                                                              isViewSourceEnabled: timelineContext.viewState.isViewSourceEnabled,
-                                                             isPinnedEventsTimeline: timelineContext.viewState.isPinnedEventsTimeline,
+                                                             timelineKind: timelineContext.viewState.timelineKind,
                                                              emojiProvider: timelineContext.viewState.emojiProvider)
                     .makeActions()
                 if let actions {
@@ -68,7 +68,7 @@ struct PinnedEventsTimelineScreen: View {
             TimelineView()
                 .id(timelineContext.viewState.roomID)
                 .environmentObject(timelineContext)
-                .environment(\.focussedEventID, timelineContext.viewState.timelineViewState.focussedEvent?.eventID)
+                .environment(\.focussedEventID, timelineContext.viewState.timelineState.focussedEvent?.eventID)
         }
     }
     

@@ -118,6 +118,11 @@ class UserSessionStore: UserSessionStoreProtocol {
             MXLog.info("Restoring client with encrypted store.")
         }
         
+        guard credentials.restorationToken.sessionDirectories.isNonTransientUserDataValid() else {
+            MXLog.error("Failed restoring login, missing non-transient user data")
+            return .failure(.failedRestoringLogin)
+        }
+        
         let homeserverURL = credentials.restorationToken.session.homeserverUrl
         
         let builder = ClientBuilder
@@ -125,7 +130,8 @@ class UserSessionStore: UserSessionStoreProtocol {
                          slidingSync: .restored,
                          sessionDelegate: keychainController,
                          appHooks: appHooks,
-                         enableOnlySignedDeviceIsolationMode: appSettings.enableOnlySignedDeviceIsolationMode)
+                         enableOnlySignedDeviceIsolationMode: appSettings.enableOnlySignedDeviceIsolationMode,
+                         eventCacheEnabled: appSettings.eventCacheEnabled)
             .sessionPaths(dataPath: credentials.restorationToken.sessionDirectories.dataPath,
                           cachePath: credentials.restorationToken.sessionDirectories.cachePath)
             .username(username: credentials.userID)

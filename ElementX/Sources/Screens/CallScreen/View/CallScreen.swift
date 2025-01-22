@@ -26,7 +26,6 @@ struct CallScreen: View {
                             Image(systemSymbol: .chevronBackward)
                                 .fontWeight(.semibold)
                         }
-                        // .padding(.leading, -8) // Fixes the button alignment, but harder to tap.
                     }
                 }
         }
@@ -303,7 +302,8 @@ struct CallScreen_Previews: PreviewProvider {
                                                         clientID: "io.element.elementx",
                                                         elementCallBaseURL: "https://call.element.io",
                                                         elementCallBaseURLOverride: nil,
-                                                        colorScheme: .light),
+                                                        colorScheme: .light,
+                                                        notifyOtherParticipants: false),
                                    allowPictureInPicture: false,
                                    appHooks: AppHooks())
     }()

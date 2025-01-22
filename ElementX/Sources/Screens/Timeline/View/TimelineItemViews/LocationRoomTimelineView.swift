@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct LocationRoomTimelineView: View {
+    @Environment(\.timelineContext) private var context
     let timelineItem: LocationRoomTimelineItem
     
     var body: some View {
@@ -15,6 +16,9 @@ struct LocationRoomTimelineView: View {
             mainContent
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(accessibilityLabel)
+                .onTapGesture {
+                    context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
+                }
         }
     }
                                     
@@ -87,7 +91,7 @@ struct LocationRoomTimelineView_Previews: PreviewProvider, TestablePreview {
     @ViewBuilder
     static var states: some View {
         LocationRoomTimelineView(timelineItem: .init(id: .randomEvent,
-                                                     timestamp: "Now",
+                                                     timestamp: .mock,
                                                      isOutgoing: false,
                                                      isEditable: false,
                                                      canBeRepliedTo: true,
@@ -96,7 +100,7 @@ struct LocationRoomTimelineView_Previews: PreviewProvider, TestablePreview {
                                                      content: .init(body: "Fallback geo uri description")))
 
         LocationRoomTimelineView(timelineItem: .init(id: .randomEvent,
-                                                     timestamp: "Now",
+                                                     timestamp: .mock,
                                                      isOutgoing: false,
                                                      isEditable: false,
                                                      canBeRepliedTo: true,
@@ -105,7 +109,7 @@ struct LocationRoomTimelineView_Previews: PreviewProvider, TestablePreview {
                                                      content: .init(body: "Fallback geo uri description",
                                                                     geoURI: .init(latitude: 41.902782, longitude: 12.496366), description: "Location description description description description description description description description")))
         LocationRoomTimelineView(timelineItem: .init(id: .randomEvent,
-                                                     timestamp: "Now",
+                                                     timestamp: .mock,
                                                      isOutgoing: false,
                                                      isEditable: false,
                                                      canBeRepliedTo: true,

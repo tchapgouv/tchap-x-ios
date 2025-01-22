@@ -10,10 +10,10 @@ import Foundation
 enum RoomTimelineItemFixtures {
     /// The default timeline items used in Xcode previews etc.
     static var `default`: [RoomTimelineItemProtocol] = [
-        SeparatorRoomTimelineItem(id: .virtual(uniqueID: .init(id: "Yesterday")), text: "Yesterday"),
+        SeparatorRoomTimelineItem(id: .virtual(uniqueID: .init(id: "Yesterday")), timestamp: .mock),
         TextRoomTimelineItem(id: .event(uniqueID: .init(id: ".RoomTimelineItemFixtures.default.0"),
                                         eventOrTransactionID: .eventId(eventId: "RoomTimelineItemFixtures.default.0")),
-                             timestamp: "10:10 AM",
+                             timestamp: .mock,
                              isOutgoing: false,
                              isEditable: false,
                              canBeRepliedTo: true,
@@ -23,7 +23,7 @@ enum RoomTimelineItemFixtures {
                              properties: RoomTimelineItemProperties(isEdited: true)),
         TextRoomTimelineItem(id: .event(uniqueID: .init(id: "RoomTimelineItemFixtures.default.1"),
                                         eventOrTransactionID: .eventId(eventId: "RoomTimelineItemFixtures.default.1")),
-                             timestamp: "10:11 AM",
+                             timestamp: .mock,
                              isOutgoing: false,
                              isEditable: false,
                              canBeRepliedTo: true,
@@ -35,7 +35,7 @@ enum RoomTimelineItemFixtures {
                              ])),
         TextRoomTimelineItem(id: .event(uniqueID: .init(id: "RoomTimelineItemFixtures.default.2"),
                                         eventOrTransactionID: .eventId(eventId: "RoomTimelineItemFixtures.default.2")),
-                             timestamp: "10:11 AM",
+                             timestamp: .mock,
                              isOutgoing: false,
                              isEditable: false,
                              canBeRepliedTo: true,
@@ -52,10 +52,10 @@ enum RoomTimelineItemFixtures {
                                                         ReactionSender(id: "jacob", timestamp: Date())
                                                     ])
                              ])),
-        SeparatorRoomTimelineItem(id: .virtual(uniqueID: .init(id: "Today")), text: "Today"),
+        SeparatorRoomTimelineItem(id: .virtual(uniqueID: .init(id: "Today")), timestamp: .mock),
         TextRoomTimelineItem(id: .event(uniqueID: .init(id: "RoomTimelineItemFixtures.default.3"),
                                         eventOrTransactionID: .eventId(eventId: "RoomTimelineItemFixtures.default.3")),
-                             timestamp: "5 PM",
+                             timestamp: .mock,
                              isOutgoing: false,
                              isEditable: false,
                              canBeRepliedTo: true,
@@ -65,7 +65,7 @@ enum RoomTimelineItemFixtures {
                              properties: RoomTimelineItemProperties(orderedReadReceipts: [ReadReceipt(userID: "alice", formattedTimestamp: nil)])),
         TextRoomTimelineItem(id: .event(uniqueID: .init(id: "RoomTimelineItemFixtures.default.4"),
                                         eventOrTransactionID: .eventId(eventId: "RoomTimelineItemFixtures.default.4")),
-                             timestamp: "5 PM",
+                             timestamp: .mock,
                              isOutgoing: true,
                              isEditable: true,
                              canBeRepliedTo: true,
@@ -74,7 +74,7 @@ enum RoomTimelineItemFixtures {
                              content: .init(body: "And John's speech was amazing!")),
         TextRoomTimelineItem(id: .event(uniqueID: .init(id: "RoomTimelineItemFixtures.default.5"),
                                         eventOrTransactionID: .eventId(eventId: "RoomTimelineItemFixtures.default.5")),
-                             timestamp: "5 PM",
+                             timestamp: .mock,
                              isOutgoing: true,
                              isEditable: true,
                              canBeRepliedTo: true,
@@ -88,7 +88,7 @@ enum RoomTimelineItemFixtures {
                                                                                           ReadReceipt(userID: "dan", formattedTimestamp: nil)])),
         TextRoomTimelineItem(id: .event(uniqueID: .init(id: "RoomTimelineItemFixtures.default.6"),
                                         eventOrTransactionID: .eventId(eventId: "RoomTimelineItemFixtures.default.6")),
-                             timestamp: "5 PM",
+                             timestamp: .mock,
                              isOutgoing: false,
                              isEditable: false,
                              canBeRepliedTo: true,
@@ -250,43 +250,29 @@ enum RoomTimelineItemFixtures {
     
     static var mediaChunk: [RoomTimelineItemProtocol] {
         [
-            VideoRoomTimelineItem(id: .randomEvent,
-                                  timestamp: "10:47 am",
-                                  isOutgoing: false,
-                                  isEditable: false,
-                                  canBeRepliedTo: true,
-                                  isThreaded: false,
-                                  sender: .init(id: ""),
-                                  content: .init(filename: "video.mp4",
-                                                 duration: 100,
-                                                 source: .init(url: .picturesDirectory, mimeType: nil),
-                                                 thumbnailSource: .init(url: .picturesDirectory, mimeType: nil),
-                                                 width: 1920,
-                                                 height: 1080,
-                                                 aspectRatio: 1.78,
-                                                 blurhash: "KtI~70X5V?yss9oyrYs:t6")),
-            ImageRoomTimelineItem(id: .randomEvent,
-                                  timestamp: "10:47 am",
-                                  isOutgoing: false,
-                                  isEditable: false,
-                                  canBeRepliedTo: true,
-                                  isThreaded: false,
-                                  sender: .init(id: ""),
-                                  content: .init(filename: "image.jpg",
-                                                 source: .init(url: .picturesDirectory, mimeType: nil),
-                                                 thumbnailSource: nil,
-                                                 width: 5120,
-                                                 height: 3412,
-                                                 aspectRatio: 1.5,
-                                                 blurhash: "KpE4oyayR5|GbHb];3j@of"))
+            AudioRoomTimelineItem(isOutgoing: false, caption: "Listen to this!"),
+            AudioRoomTimelineItem(isOutgoing: true),
+            FileRoomTimelineItem(isOutgoing: false),
+            FileRoomTimelineItem(isOutgoing: true, caption: "Please check this ASAP!"),
+            ImageRoomTimelineItem(isOutgoing: false),
+            ImageRoomTimelineItem(isOutgoing: true, caption: "Isn't this pretty!"),
+            VideoRoomTimelineItem(isOutgoing: false, caption: "Woah, it was incredible!"),
+            VideoRoomTimelineItem(isOutgoing: true),
+            VoiceMessageRoomTimelineItem(isOutgoing: false),
+            VoiceMessageRoomTimelineItem(isOutgoing: true)
         ]
+    }
+    
+    static var separator: SeparatorRoomTimelineItem {
+        SeparatorRoomTimelineItem(id: .virtual(uniqueID: .init(id: UUID().uuidString)),
+                                  timestamp: .now)
     }
 }
 
 private extension TextRoomTimelineItem {
     init(id: TimelineItemIdentifier? = nil, text: String, senderDisplayName: String) {
         self.init(id: id ?? .randomEvent,
-                  timestamp: "10:47 am",
+                  timestamp: .mock,
                   isOutgoing: senderDisplayName == "Alice",
                   isEditable: false,
                   canBeRepliedTo: true,
@@ -299,5 +285,94 @@ private extension TextRoomTimelineItem {
         var newSelf = self
         newSelf.properties.orderedReadReceipts = receipts
         return newSelf
+    }
+}
+
+private extension AudioRoomTimelineItem {
+    init(isOutgoing: Bool, caption: String? = nil) {
+        self.init(id: .randomEvent,
+                  timestamp: .mock,
+                  isOutgoing: isOutgoing,
+                  isEditable: isOutgoing,
+                  canBeRepliedTo: true,
+                  isThreaded: false,
+                  sender: .init(id: isOutgoing ? "@alice:matrix.org" : "@bob:matrix.org"),
+                  content: .init(filename: "audio.mp3",
+                                 caption: caption,
+                                 duration: 60,
+                                 waveform: nil,
+                                 source: try? .init(url: .mockMXCAudio, mimeType: nil),
+                                 fileSize: nil,
+                                 contentType: .mp3))
+    }
+}
+
+private extension FileRoomTimelineItem {
+    init(isOutgoing: Bool, caption: String? = nil) {
+        self.init(id: .randomEvent,
+                  timestamp: .mock,
+                  isOutgoing: isOutgoing,
+                  isEditable: isOutgoing,
+                  canBeRepliedTo: true,
+                  isThreaded: false,
+                  sender: .init(id: isOutgoing ? "@alice:matrix.org" : "@bob:matrix.org"),
+                  content: .init(filename: "file.pdf",
+                                 caption: caption,
+                                 source: try? .init(url: .mockMXCFile, mimeType: nil),
+                                 fileSize: nil,
+                                 thumbnailSource: nil,
+                                 contentType: .pdf))
+    }
+}
+
+private extension ImageRoomTimelineItem {
+    init(isOutgoing: Bool, caption: String? = nil) {
+        self.init(id: .randomEvent,
+                  timestamp: .mock,
+                  isOutgoing: isOutgoing,
+                  isEditable: isOutgoing,
+                  canBeRepliedTo: true,
+                  isThreaded: false,
+                  sender: .init(id: isOutgoing ? "@alice:matrix.org" : "@bob:matrix.org"),
+                  content: .init(filename: "image.jpg",
+                                 caption: caption,
+                                 imageInfo: .mockImage,
+                                 thumbnailInfo: nil,
+                                 blurhash: "KpE4oyayR5|GbHb];3j@of"))
+    }
+}
+
+private extension VideoRoomTimelineItem {
+    init(isOutgoing: Bool, caption: String? = nil) {
+        self.init(id: .randomEvent,
+                  timestamp: .mock,
+                  isOutgoing: isOutgoing,
+                  isEditable: isOutgoing,
+                  canBeRepliedTo: true,
+                  isThreaded: false,
+                  sender: .init(id: isOutgoing ? "@alice:matrix.org" : "@bob:matrix.org"),
+                  content: .init(filename: "video.mp4",
+                                 caption: caption,
+                                 videoInfo: .mockVideo,
+                                 thumbnailInfo: .mockVideoThumbnail,
+                                 blurhash: "KtI~70X5V?yss9oyrYs:t6"))
+    }
+}
+
+private extension VoiceMessageRoomTimelineItem {
+    init(isOutgoing: Bool) {
+        self.init(id: .randomEvent,
+                  timestamp: .mock,
+                  isOutgoing: isOutgoing,
+                  isEditable: isOutgoing,
+                  canBeRepliedTo: true,
+                  isThreaded: false,
+                  sender: .init(id: isOutgoing ? "@alice:matrix.org" : "@bob:matrix.org"),
+                  content: .init(filename: "message.ogg",
+                                 duration: 10,
+                                 waveform: .mockWaveform,
+                                 source: try? .init(url: .mockMXCAudio, mimeType: nil),
+                                 fileSize: nil,
+                                 contentType: .audio))
     }
 }
