@@ -10,8 +10,13 @@ import Foundation
 
 enum TchapA11yIdentifiers {
     static let settingsScreen = SettingsScreen()
-    
+    static let startChatScreen = TchapA11yIdentifiers.StartChatScreen()
+
     struct SettingsScreen {
         let faq = "settings-faq"
+    }
+    
+    struct StartChatScreen {
+        let joinForum = "start_chat-join-forum"
     }
 }
