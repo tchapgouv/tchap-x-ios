@@ -179,8 +179,14 @@ struct MatrixIdFromString {
 struct HomeServerName {
     private static let HOMESERVER_SPECIAL_SUFFIX_TCHAP = "tchap.gouv.fr"
     private static let HOMESERVER_PARTS_SEPARATOR: Character = "."
-    private static let HOMESERVER_EXTERN_PREFIX_LIST = ["e.", "agent.externe."]
-
+    #if IS_TCHAP_DEVELOPMENT
+    private static let HOMESERVER_EXTERN_PREFIX_LIST = ["ext01."]
+    #elseif IS_TCHAP_STAGING
+    private static let HOMESERVER_EXTERN_PREFIX_LIST = ["e."]
+    #elseif IS_TCHAP_PRODUCTION
+    private static let HOMESERVER_EXTERN_PREFIX_LIST = ["agent.externe."]
+    #endif
+    
     private var serverName: any StringProtocol
     
     init(_ serverName: any StringProtocol) {

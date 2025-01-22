@@ -98,9 +98,16 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
                                bannedMembers: roomMembersDetails.bannedMembers,
                                bindings: state.bindings)
             
-            self.state.canInviteUsers = await (try? roomProxy.canUserInvite(userID: roomProxy.ownUserID).get()) == true
-            self.state.canKickUsers = await (try? roomProxy.canUserKick(userID: roomProxy.ownUserID).get()) == true
-            self.state.canBanUsers = await (try? roomProxy.canUserBan(userID: roomProxy.ownUserID).get()) == true
+            // Tchap: if user is external user, don't allow any modification power level.
+            if MatrixIdFromString(roomProxy.ownUserID).isExternalTchapUser {
+                self.state.canInviteUsers = false
+                self.state.canKickUsers = false
+                self.state.canBanUsers = false
+            } else {
+                self.state.canInviteUsers = await (try? roomProxy.canUserInvite(userID: roomProxy.ownUserID).get()) == true
+                self.state.canKickUsers = await (try? roomProxy.canUserKick(userID: roomProxy.ownUserID).get()) == true
+                self.state.canBanUsers = await (try? roomProxy.canUserBan(userID: roomProxy.ownUserID).get()) == true
+            }
             
             hideLoader()
         }
