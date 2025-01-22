@@ -147,8 +147,11 @@ struct HomeScreen: View {
             .accessibilityLabel(L10n.commonSettings)
         }
         
-        ToolbarItem(placement: .primaryAction) {
-            newRoomButton
+        // Tchap: display `new room` button only if user is NOT external.
+        if !MatrixIdFromString(context.viewState.userID).isExternalTchapUser {
+            ToolbarItem(placement: .primaryAction) {
+                newRoomButton
+            }
         }
     }
     
