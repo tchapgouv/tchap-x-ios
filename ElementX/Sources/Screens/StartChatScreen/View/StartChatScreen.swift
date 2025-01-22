@@ -78,7 +78,7 @@ struct StartChatScreen: View {
     // Tchap: Join a forum (add section without chevron)
     private var joinForumSection: some View {
         Section {
-            ListRow(label: .default(title: TchapL10n.joinForum,
+            ListRow(label: .default(title: TchapL10n.startChatActionJoinForum,
                                     icon: \.listBulleted),
                     kind: .button { context.send(viewAction: .joinForum) })
                 .accessibilityIdentifier(TchapA11yIdentifiers.startChatScreen.joinForum)

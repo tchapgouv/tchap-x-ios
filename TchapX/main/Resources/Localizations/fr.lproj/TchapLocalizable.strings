@@ -31,4 +31,6 @@ room_header_badge_not_encrypted = "NON CHIFFRÉ";
 room_header_badge_public = "PUBLIC";
 room_header_badge_authorized_to_external = "EXTERNES";
 
-"join_forum" = "Rejoindre un forum";
+start_chat_action_join_forum = "Rejoindre un salon public";
+
+screen_room_directory_search_title = "Rejoindre un salon public";

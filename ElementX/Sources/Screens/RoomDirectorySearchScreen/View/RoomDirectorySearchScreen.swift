@@ -47,7 +47,7 @@ struct RoomDirectorySearchScreen: View {
             .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
             .isSearching($context.isSearching)
             .searchable(text: $context.searchString, placement: .navigationBarDrawer(displayMode: .always))
-            .navigationTitle(L10n.screenRoomDirectorySearchTitle)
+            .navigationTitle(TchapL10n.screenRoomDirectorySearchTitle) // Tchap: use Tchap title
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
