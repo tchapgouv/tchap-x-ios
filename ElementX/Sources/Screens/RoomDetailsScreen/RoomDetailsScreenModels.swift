@@ -158,6 +158,9 @@ struct RoomDetailsScreenViewStateBindings {
     
     /// A media item that will be previewed with QuickLook.
     var mediaPreviewItem: MediaPreviewItem?
+    
+    // Tchap: get number of external users to display or hide `External` badge.
+    var externalCount = 0
 }
 
 struct LeaveRoomAlertItem: AlertProtocol {

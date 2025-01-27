@@ -215,19 +215,28 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
     
     private func fetchMembersIfNeeded() async {
         // We need to fetch members just in 1-to-1 chat to get the member object for the other person
-        guard roomProxy.isDirectOneToOneRoom else {
-            return
-        }
+        // Tchap: always fetch members because we need it to display `external` badge on RoomDetailScreen.
+//        guard roomProxy.isDirectOneToOneRoom else {
+//            return
+//        }
         
         roomProxy.membersPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self, ownUserID = roomProxy.ownUserID] members in
                 guard let self else { return }
-                let accountOwner = members.first { $0.userID == ownUserID }
-                let dmRecipient = members.first { $0.userID != ownUserID }
-                self.dmRecipient = dmRecipient
-                self.state.dmRecipient = dmRecipient.map(RoomMemberDetails.init(withProxy:))
-                self.state.accountOwner = accountOwner.map(RoomMemberDetails.init(withProxy:))
+                
+                // Tchap: add this condition since we don't bypass anymore the members fetching
+                // and the following properties must not be filled if we are not in a Direct 1-to-1 Room.
+                if roomProxy.isDirectOneToOneRoom {
+                    let accountOwner = members.first { $0.userID == ownUserID }
+                    let dmRecipient = members.first { $0.userID != ownUserID }
+                    self.dmRecipient = dmRecipient
+                    self.state.dmRecipient = dmRecipient.map(RoomMemberDetails.init(withProxy:))
+                    self.state.accountOwner = accountOwner.map(RoomMemberDetails.init(withProxy:))
+                }
+                
+                // Tchap: update `externalCount` to display `external` badge on RoomDetailsScreen if necessary.
+                self.state.bindings.externalCount = members.filter { MatrixIdFromString($0.userID).isExternalTchapUser }.count
             }
             .store(in: &cancellables)
         
