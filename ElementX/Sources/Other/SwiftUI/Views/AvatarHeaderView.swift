@@ -30,7 +30,11 @@ struct AvatarHeaderView<Footer: View>: View {
     private var onAvatarTap: ((URL) -> Void)?
     @ViewBuilder private var footer: () -> Footer
     
+    // Tchap: add `externalCount` property
+    var externalCount: Binding<Int>
+    
     init(room: RoomDetails,
+         externalCount: Binding<Int>, // Tchap: add `externalCount` parameter
          avatarSize: Avatars.Size,
          mediaProvider: MediaProviderProtocol? = nil,
          onAvatarTap: ((URL) -> Void)? = nil,
@@ -43,18 +47,20 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
+        // Tchap: store `externalCount` parameter
+        self.externalCount = externalCount
         
         var badges = [Badge]()
         badges.append(.encrypted(room.isEncrypted))
         if room.isPublic {
             badges.append(.public)
         }
-        // Tchap: TOTO add 'room accessible to user' configuration badge
         self.badges = badges
     }
     
     init(accountOwner: RoomMemberDetails,
          dmRecipient: RoomMemberDetails,
+         externalCount: Binding<Int>, // Tchap: add `externalCount` parameter
          mediaProvider: MediaProviderProtocol? = nil,
          onAvatarTap: ((URL) -> Void)? = nil,
          @ViewBuilder footer: @escaping () -> Footer) {
@@ -67,6 +73,9 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
+        // Tchap: store `externalCount` parameter
+        self.externalCount = externalCount
+        
         // In EL-X a DM is by definition always encrypted
         badges = [.encrypted(true)]
     }
@@ -101,6 +110,9 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
+        // Tchap: evaluate externalCount to 1 if displayed user is external.
+        externalCount = .constant(MatrixIdFromString(user.userID).isExternalTchapUser ? 1 : 0)
+        
         badges = isVerified ? [.verified] : []
     }
     
@@ -131,6 +143,11 @@ struct AvatarHeaderView<Footer: View>: View {
                                icon: \.verified,
                                isHighlighted: true)
                 }
+            }
+            
+            // Tchap: add `External` badge if necessary.
+            if externalCount.wrappedValue > 0 {
+                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, isHighlighted: false, tchapUsage: .userIsExternal)
             }
         }
     }
@@ -204,6 +221,7 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
                                          canonicalAlias: "#test:matrix.org",
                                          isEncrypted: true,
                                          isPublic: true),
+                             externalCount: .constant(1),
                              avatarSize: .room(on: .details),
                              mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {
@@ -218,7 +236,7 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
         .previewDisplayName("Room")
         
         Form {
-            AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice),
+            AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice), externalCount: .constant(1),
                              mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {
                     ShareLink(item: "test") {
