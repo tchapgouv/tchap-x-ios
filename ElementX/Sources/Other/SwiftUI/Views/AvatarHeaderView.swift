@@ -49,6 +49,7 @@ struct AvatarHeaderView<Footer: View>: View {
         if room.isPublic {
             badges.append(.public)
         }
+        // Tchap: TOTO add 'room accessible to user' configuration badge
         self.badges = badges
     }
     
@@ -108,15 +109,21 @@ struct AvatarHeaderView<Footer: View>: View {
             ForEach(badges, id: \.self) { badge in
                 switch badge {
                 case .encrypted(true):
-                    BadgeLabel(title: L10n.screenRoomDetailsBadgeEncrypted,
+                    // Tchap: use Tchap label
+//                    BadgeLabel(title: L10n.screenRoomDetailsBadgeEncrypted,
+                    BadgeLabel(title: TchapL10n.roomHeaderBadgeEncrypted,
                                icon: \.lockSolid,
                                isHighlighted: true)
                 case .encrypted(false):
-                    BadgeLabel(title: L10n.screenRoomDetailsBadgeNotEncrypted,
+                    // Tchap: use Tchap label
+//                    BadgeLabel(title: L10n.screenRoomDetailsBadgeNotEncrypted,
+                    BadgeLabel(title: TchapL10n.roomHeaderBadgeNotEncrypted,
                                icon: \.lockOff,
                                isHighlighted: false)
                 case .public:
-                    BadgeLabel(title: L10n.screenRoomDetailsBadgePublic,
+                    // Tchap: use Tchap label
+//                    BadgeLabel(title: L10n.screenRoomDetailsBadgePublic,
+                    BadgeLabel(title: TchapL10n.roomHeaderBadgePublic,
                                icon: \.public,
                                isHighlighted: false)
                 case .verified:

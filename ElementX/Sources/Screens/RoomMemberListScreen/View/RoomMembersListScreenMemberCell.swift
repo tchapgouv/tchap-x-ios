@@ -26,18 +26,10 @@ struct RoomMembersListScreenMemberCell: View {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     VStack(alignment: .leading, spacing: 0) {
                         // Tchap: display user as external if needed
-                        if MatrixIdFromString(member.id).isExternalTchapUser {
-                            Text(title)
-                                .font(.compound.bodyMDSemibold)
-                                .foregroundColor(.compound.textPrimary)
-                                .lineLimit(1)
-                                .tchapExternalLabelView()
-                        } else {
-                            Text(title)
-                                .font(.compound.bodyMDSemibold)
-                                .foregroundColor(.compound.textPrimary)
-                                .lineLimit(1)
-                        }
+                        Text(title)
+                            .font(.compound.bodyMDSemibold)
+                            .foregroundColor(.compound.textPrimary)
+                            .lineLimit(1)
                         // Tchap: only display matrixID in debug mode
                         #if DEBUG
                         if let subtitle {
@@ -47,6 +39,9 @@ struct RoomMembersListScreenMemberCell: View {
                                 .lineLimit(1)
                         }
                         #endif
+                        if MatrixIdFromString(member.id).isExternalTchapUser {
+                            BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, isHighlighted: false, tchapUsage: .userIsExternal)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     
