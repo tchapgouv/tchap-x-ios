@@ -116,6 +116,45 @@ struct InfoPlistReader {
         return utType
     }
     
+    // Tchap: add `pinnedCertificates` property
+    
+    // MARK: - Tchap Certificate Pinning
+    
+    private func recursiveSearchCertificates(for searchedKey: String, into: [String: Any]) -> [String] {
+        var result = [String]()
+        into.forEach { key, value in
+            if key == searchedKey,
+               let stringValue = value as? String {
+                result.append(stringValue)
+            } else if let subDict = value as? [String: Any] {
+                result.append(contentsOf: recursiveSearchCertificates(for: searchedKey, into: subDict))
+            } else if let subArray = value as? [[String: Any]] {
+                subArray.forEach {
+                    result.append(contentsOf: recursiveSearchCertificates(for: searchedKey, into: $0))
+                }
+            }
+        }
+        return result
+    }
+    
+    var embeddedTransportSecurity: Any? {
+        bundle.object(forInfoDictionaryKey: "NSAppTransportSecurity")
+    }
+    
+    var embeddedSpkiCertificates: [String] {
+        guard let transportSecurityData = embeddedTransportSecurity as? [String: Any] else {
+            return []
+        }
+        return recursiveSearchCertificates(for: "SPKI-SHA256-BASE64", into: transportSecurityData)
+    }
+    
+    var embeddedPemCertificates: [String] {
+        guard let transportSecurityData = embeddedTransportSecurity as? [String: Any] else {
+            return []
+        }
+        return recursiveSearchCertificates(for: "PEM", into: transportSecurityData)
+    }
+    
     // MARK: - Private
     
     private func infoPlistValue<T>(forKey key: String) -> T {

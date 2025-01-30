@@ -72,7 +72,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: TchapX-NSE/development/SupportingFiles/NSE.entitlements
         SWIFT_OBJC_INTERFACE_HEADER_NAME: GeneratedInterface-Swift.h
         OTHER_SWIFT_FLAGS:
-        - "-DIS_NSE -DIS_ENVIRONMENT_DEVELOPMENT"
+        - "-DIS_NSE -DIS_TCHAP_DEVELOPMENT"
         
     sources:
     - path: ../../../NSE/Sources
@@ -121,3 +121,4 @@ targets:
     - path: ../../../ElementX/Sources/AppHooks/Hooks/ClientBuilderHook.swift
     - path: ../../../TchapX/main/Sources/Generated/TchapAssets.swift
     - path: ../../../TchapX/main/Sources/Generated/TchapStrings.swift
+    - path: ../../../TchapX/main/Sources/Other/TchapFeatureFlag.swift
