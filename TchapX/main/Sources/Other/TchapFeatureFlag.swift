@@ -103,7 +103,7 @@ extension TchapFeatureFlag {
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [.agriculture, .agent])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
         #elseif IS_TCHAP_DEVELOPMENT
-        static let certificatePinning = TchapFeatureFlag(allowedInstances: [.agriculture, .agent])
+        static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
         #endif
     }
