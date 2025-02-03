@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import XCTest
@@ -138,8 +138,13 @@ class MediaUploadPreviewScreenViewModelTests: XCTestCase {
     }
     
     private func send() async throws {
+        XCTAssertFalse(context.viewState.shouldDisableInteraction, "Attempting to send when interaction is disabled.")
+        
         let deferred = deferFulfillment(viewModel.actions) { $0 == .dismiss }
         context.send(viewAction: .send)
+        
+        XCTAssertTrue(context.viewState.shouldDisableInteraction, "The interaction should be disabled while sending.")
+        
         try await deferred.fulfill()
     }
 }

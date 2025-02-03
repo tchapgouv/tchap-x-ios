@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -104,14 +104,18 @@ struct IdentityConfirmationScreen: View {
 // MARK: - Previews
 
 struct IdentityConfirmationScreen_Previews: PreviewProvider, TestablePreview {
+    static var viewModel = makeViewModel()
+    
     static var previews: some View {
         NavigationStack {
             IdentityConfirmationScreen(context: viewModel.context)
         }
-        .snapshotPreferences(delay: 1)
+        .snapshotPreferences(expect: viewModel.context.$viewState.map { state in
+            state.availableActions.contains([.interactiveVerification, .recovery])
+        })
     }
     
-    private static var viewModel: IdentityConfirmationScreenViewModel {
+    static func makeViewModel() -> IdentityConfirmationScreenViewModel {
         let clientProxy = ClientProxyMock(.init())
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
         userSession.sessionSecurityStatePublisher = CurrentValuePublisher<SessionSecurityState, Never>(.init(verificationState: .unverified, recoveryState: .enabled))

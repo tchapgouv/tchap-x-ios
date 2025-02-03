@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -16,11 +16,11 @@ struct TextRoomTimelineView: View, TextBasedRoomTimelineViewProtocol {
             if let attributedString = timelineItem.content.formattedBody {
                 FormattedBodyText(attributedString: attributedString,
                                   additionalWhitespacesCount: timelineItem.additionalWhitespaces(),
-                                  boostEmojiSize: true)
+                                  boostFontSize: timelineItem.shouldBoost)
             } else {
                 FormattedBodyText(text: timelineItem.body,
                                   additionalWhitespacesCount: timelineItem.additionalWhitespaces(),
-                                  boostEmojiSize: true)
+                                  boostFontSize: timelineItem.shouldBoost)
             }
         }
     }

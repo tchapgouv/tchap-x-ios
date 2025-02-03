@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 @testable import ElementX
@@ -73,7 +73,7 @@ final class MediaProviderTests: XCTestCase {
     }
     
     func test_whenImageFromSourceWithSourceNil_nilReturned() throws {
-        let image = try mediaProvider.imageFromSource(nil, size: Avatars.Size.room(on: .timeline).scaledSize)
+        let image = mediaProvider.imageFromSource(nil, size: Avatars.Size.room(on: .timeline).scaledSize)
         XCTAssertNil(image)
     }
     

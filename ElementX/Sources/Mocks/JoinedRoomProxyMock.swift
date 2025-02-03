@@ -1,8 +1,8 @@
 //
 // Copyright 2023, 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -25,11 +25,13 @@ struct JoinedRoomProxyMockConfiguration {
     var isEncrypted = true
     var hasOngoingCall = true
     var canonicalAlias: String?
+    var alternativeAliases: [String] = []
     var pinnedEventIDs: Set<String> = []
     
     var timelineStartReached = false
     
     var members: [RoomMemberProxyMock] = .allMembers
+    var heroes: [RoomMemberProxyMock] = []
     var knockRequestsState: KnockRequestsState = .loaded([])
     var ownUserID = RoomMemberProxyMock.mockMe.userID
     var inviter: RoomMemberProxyProtocol?
@@ -41,6 +43,7 @@ struct JoinedRoomProxyMockConfiguration {
     
     var shouldUseAutoUpdatingTimeline = false
     var joinRule: JoinRule?
+    var isVisibleInPublicDirectory = false
 }
 
 extension JoinedRoomProxyMock {
@@ -127,6 +130,7 @@ extension JoinedRoomProxyMock {
         loadDraftReturnValue = .success(nil)
         clearDraftReturnValue = .success(())
         sendTypingNotificationIsTypingReturnValue = .success(())
+        isVisibleInRoomDirectoryReturnValue = .success(configuration.isVisibleInPublicDirectory)
     }
 }
 
@@ -144,7 +148,7 @@ extension RoomInfo {
                   isTombstoned: false,
                   isFavourite: false,
                   canonicalAlias: configuration.canonicalAlias,
-                  alternativeAliases: [],
+                  alternativeAliases: configuration.alternativeAliases,
                   membership: .joined,
                   inviter: configuration.inviter.map { RoomMember(userId: $0.userID,
                                                                   displayName: $0.displayName,
@@ -154,8 +158,9 @@ extension RoomInfo {
                                                                   powerLevel: Int64($0.powerLevel),
                                                                   normalizedPowerLevel: Int64($0.powerLevel),
                                                                   isIgnored: $0.isIgnored,
-                                                                  suggestedRoleForPowerLevel: $0.role) },
-                  heroes: [],
+                                                                  suggestedRoleForPowerLevel: $0.role,
+                                                                  membershipChangeReason: $0.membershipChangeReason) },
+                  heroes: configuration.heroes.map(RoomHero.init),
                   activeMembersCount: UInt64(configuration.members.filter { $0.membership == .join || $0.membership == .invite }.count),
                   invitedMembersCount: UInt64(configuration.members.filter { $0.membership == .invite }.count),
                   joinedMembersCount: UInt64(configuration.members.filter { $0.membership == .join }.count),
@@ -170,6 +175,15 @@ extension RoomInfo {
                   numUnreadNotifications: 0,
                   numUnreadMentions: 0,
                   pinnedEventIds: Array(configuration.pinnedEventIDs),
-                  joinRule: configuration.joinRule)
+                  joinRule: configuration.joinRule,
+                  historyVisibility: .shared)
+    }
+}
+
+private extension RoomHero {
+    init(from memberProxy: RoomMemberProxyMock) {
+        self.init(userId: memberProxy.userID,
+                  displayName: memberProxy.displayName,
+                  avatarUrl: memberProxy.avatarURL?.absoluteString)
     }
 }

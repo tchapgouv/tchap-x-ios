@@ -1,8 +1,8 @@
 //
 // Copyright 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import XCTest
@@ -35,6 +35,6 @@ class EncryptionResetUITests: XCTestCase {
         let passwordField = app.secureTextFields[A11yIdentifiers.encryptionResetPasswordScreen.passwordField]
         passwordField.clearAndTypeText("supersecurepassword", app: app)
         app.buttons[A11yIdentifiers.encryptionResetPasswordScreen.submit].tap()
-        try await app.assertScreenshot(.encryptionReset, step: Step.resetingEncryption)
+        try await app.assertScreenshot(.encryptionReset, step: Step.resetingEncryption, delay: .seconds(0.5))
     }
 }

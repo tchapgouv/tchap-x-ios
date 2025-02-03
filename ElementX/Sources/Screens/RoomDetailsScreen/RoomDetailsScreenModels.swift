@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -12,9 +12,10 @@ import SwiftUI
 
 // MARK: View model
 
-enum RoomDetailsScreenViewModelAction {
+enum RoomDetailsScreenViewModelAction: Equatable {
     case requestNotificationSettingsPresentation
     case requestMemberDetailsPresentation
+    case requestRecipientDetailsPresentation(userID: String)
     case requestInvitePeoplePresentation
     case leftRoom
     case requestEditDetailsPresentation
@@ -68,7 +69,7 @@ struct RoomDetailsScreenViewState: BindableState {
     }
     
     var hasTopicSection: Bool {
-        topic != nil || (canEdit && canEditRoomTopic)
+        topic != nil || canEditRoomTopic
     }
 
     var bindings: RoomDetailsScreenViewStateBindings
@@ -201,6 +202,7 @@ enum RoomDetailsScreenViewAction {
     case ignoreConfirmed
     case unignoreConfirmed
     case processTapNotifications
+    case processTapRecipientProfile
     case processToggleMuteNotifications
     case displayAvatar(URL)
     case processTapPolls

@@ -1,8 +1,8 @@
 //
 // Copyright 2023, 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import AVFoundation
@@ -175,7 +175,8 @@ struct MediaUploadingPreprocessor {
                                       size: fileSize,
                                       thumbnailInfo: thumbnailInfo,
                                       thumbnailSource: nil,
-                                      blurhash: thumbnailResult.blurhash)
+                                      blurhash: thumbnailResult.blurhash,
+                                      isAnimated: nil)
             
             let mediaInfo = MediaInfo.image(imageURL: url, thumbnailURL: thumbnailResult.url, imageInfo: imageInfo)
             

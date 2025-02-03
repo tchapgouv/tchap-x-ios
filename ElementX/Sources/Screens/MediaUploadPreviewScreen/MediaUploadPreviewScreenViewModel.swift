@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -16,11 +16,9 @@ class MediaUploadPreviewScreenViewModel: MediaUploadPreviewScreenViewModelType, 
     private let roomProxy: JoinedRoomProxyProtocol
     private let mediaUploadingPreprocessor: MediaUploadingPreprocessor
     private let url: URL
-    private var requestHandle: SendAttachmentJoinHandleProtocol? {
-        didSet {
-            state.shouldDisableInteraction = requestHandle != nil
-        }
-    }
+    
+    private var processingTask: Task<Result<MediaInfo, MediaUploadingPreprocessorError>, Never>
+    private var requestHandle: SendAttachmentJoinHandleProtocol?
     
     private var actionsSubject: PassthroughSubject<MediaUploadPreviewScreenViewModelAction, Never> = .init()
     
@@ -39,6 +37,9 @@ class MediaUploadPreviewScreenViewModel: MediaUploadPreviewScreenViewModelType, 
         self.mediaUploadingPreprocessor = mediaUploadingPreprocessor
         self.url = url
         
+        // Start processing the media whilst the user is reviewing it/adding a caption.
+        processingTask = Task { await mediaUploadingPreprocessor.processMedia(at: url) }
+        
         super.init(initialViewState: MediaUploadPreviewScreenViewState(url: url, title: title, shouldShowCaptionWarning: shouldShowCaptionWarning))
     }
     
@@ -48,10 +49,10 @@ class MediaUploadPreviewScreenViewModel: MediaUploadPreviewScreenViewModelType, 
         
         switch viewAction {
         case .send:
+            startLoading()
+            
             Task {
-                startLoading()
-                
-                switch await mediaUploadingPreprocessor.processMedia(at: url) {
+                switch await processingTask.value {
                 case .success(let mediaInfo):
                     switch await sendAttachment(mediaInfo: mediaInfo, caption: caption) {
                     case .success:
@@ -73,6 +74,10 @@ class MediaUploadPreviewScreenViewModel: MediaUploadPreviewScreenViewModelType, 
             requestHandle?.cancel()
             actionsSubject.send(.dismiss)
         }
+    }
+    
+    func stopProcessing() {
+        processingTask.cancel()
     }
     
     // MARK: - Private
@@ -111,16 +116,17 @@ class MediaUploadPreviewScreenViewModel: MediaUploadPreviewScreenViewModelType, 
     private static let loadingIndicatorIdentifier = "\(MediaUploadPreviewScreenViewModel.self)-Loading"
     
     private func startLoading() {
-        userIndicatorController.submitIndicator(
-            UserIndicator(id: Self.loadingIndicatorIdentifier,
-                          type: .modal(progress: .indeterminate, interactiveDismissDisabled: false, allowsInteraction: true),
-                          title: L10n.commonSending,
-                          persistent: true)
-        )
+        userIndicatorController.submitIndicator(UserIndicator(id: Self.loadingIndicatorIdentifier,
+                                                              type: .modal(progress: .indeterminate, interactiveDismissDisabled: false, allowsInteraction: true),
+                                                              title: L10n.commonSending,
+                                                              persistent: true))
+        
+        state.shouldDisableInteraction = true
     }
     
     private func stopLoading() {
         userIndicatorController.retractIndicatorWithId(Self.loadingIndicatorIdentifier)
+        state.shouldDisableInteraction = false
         requestHandle = nil
     }
     

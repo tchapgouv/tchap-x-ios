@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import XCTest
@@ -21,7 +21,7 @@ class RoomMembersListScreenUITests: XCTestCase {
         let searchBar = app.searchFields.firstMatch
         searchBar.clearAndTypeText("alice\n", app: app)
         
-        try await app.assertScreenshot(.roomMembersListScreenPendingInvites, step: 1)
+        try await app.assertScreenshot(.roomMembersListScreenPendingInvites, step: 1, delay: .seconds(0.5))
     }
     
     func testSearchJoinedMember() async throws {
@@ -30,6 +30,6 @@ class RoomMembersListScreenUITests: XCTestCase {
         let searchBar = app.searchFields.firstMatch
         searchBar.clearAndTypeText("bob\n", app: app)
         
-        try await app.assertScreenshot(.roomMembersListScreenPendingInvites, step: 2)
+        try await app.assertScreenshot(.roomMembersListScreenPendingInvites, step: 2, delay: .seconds(0.5))
     }
 }

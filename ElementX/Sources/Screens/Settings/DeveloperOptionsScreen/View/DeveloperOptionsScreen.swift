@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import SwiftUI
@@ -152,7 +152,7 @@ struct DeveloperOptionsScreen: View {
 }
 
 private struct LogLevelConfigurationView: View {
-    @Binding var logLevel: TracingConfiguration.LogLevel
+    @Binding var logLevel: LogLevel
     
     var body: some View {
         Picker(selection: $logLevel) {
@@ -166,7 +166,7 @@ private struct LogLevelConfigurationView: View {
     }
     
     /// Allows the picker to work with associated values
-    private var logLevels: [TracingConfiguration.LogLevel] {
+    private var logLevels: [LogLevel] {
         [.error, .warn, .info, .debug, .trace]
     }
 }

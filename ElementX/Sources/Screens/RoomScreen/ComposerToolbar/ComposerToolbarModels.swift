@@ -1,8 +1,8 @@
 //
 // Copyright 2023, 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -66,6 +66,8 @@ enum ComposerAttachmentType {
 struct ComposerToolbarViewState: BindableState {
     var composerMode: ComposerMode = .default
     var composerEmpty = true
+    /// Could be false if sending is disabled in the room
+    var canSend = true
     var suggestions: [SuggestionItem] = []
     var audioPlayerState: AudioPlayerState
     var audioRecorderState: AudioRecorderState
@@ -97,6 +99,10 @@ struct ComposerToolbarViewState: BindableState {
     }
     
     var sendButtonDisabled: Bool {
+        if !canSend {
+            return true
+        }
+        
         if case .previewVoiceMessage = composerMode {
             return false
         }

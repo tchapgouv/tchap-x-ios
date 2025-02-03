@@ -1,8 +1,8 @@
 //
 // Copyright 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -28,6 +28,7 @@ extension EventTimelineItem {
                   timestamp: 0,
                   reactions: [],
                   localSendState: nil,
+                  localCreatedAt: nil,
                   readReceipts: [:],
                   origin: nil,
                   canBeRepliedTo: false,

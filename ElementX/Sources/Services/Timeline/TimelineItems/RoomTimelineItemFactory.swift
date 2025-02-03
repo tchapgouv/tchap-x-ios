@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import MatrixRustSDK
@@ -205,6 +205,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                              isEditable: eventItemProxy.isEditable,
                              canBeRepliedTo: eventItemProxy.canBeRepliedTo,
                              isThreaded: messageContent.threadRoot != nil,
+                             shouldBoost: eventItemProxy.shouldBoost,
                              sender: eventItemProxy.sender,
                              content: buildTextTimelineItemContent(textMessageContent),
                              replyDetails: buildReplyToDetailsFromDetailsIfAvailable(details: messageContent.inReplyTo),
@@ -225,6 +226,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                               isEditable: eventItemProxy.isEditable,
                               canBeRepliedTo: eventItemProxy.canBeRepliedTo,
                               isThreaded: messageContent.threadRoot != nil,
+                              shouldBoost: eventItemProxy.shouldBoost,
                               sender: eventItemProxy.sender,
                               content: buildImageTimelineItemContent(imageMessageContent),
                               replyDetails: buildReplyToDetailsFromDetailsIfAvailable(details: messageContent.inReplyTo),
@@ -245,6 +247,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                               isEditable: eventItemProxy.isEditable,
                               canBeRepliedTo: eventItemProxy.canBeRepliedTo,
                               isThreaded: messageContent.threadRoot != nil,
+                              shouldBoost: eventItemProxy.shouldBoost,
                               sender: eventItemProxy.sender,
                               content: buildVideoTimelineItemContent(videoMessageContent),
                               replyDetails: buildReplyToDetailsFromDetailsIfAvailable(details: messageContent.inReplyTo),
@@ -265,6 +268,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                               isEditable: eventItemProxy.isEditable,
                               canBeRepliedTo: eventItemProxy.canBeRepliedTo,
                               isThreaded: messageContent.threadRoot != nil,
+                              shouldBoost: eventItemProxy.shouldBoost,
                               sender: eventItemProxy.sender,
                               content: buildAudioTimelineItemContent(audioMessageContent),
                               replyDetails: buildReplyToDetailsFromDetailsIfAvailable(details: messageContent.inReplyTo),
@@ -305,6 +309,7 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                              isEditable: eventItemProxy.isEditable,
                              canBeRepliedTo: eventItemProxy.canBeRepliedTo,
                              isThreaded: messageContent.threadRoot != nil,
+                             shouldBoost: eventItemProxy.shouldBoost,
                              sender: eventItemProxy.sender,
                              content: buildFileTimelineItemContent(fileMessageContent),
                              replyDetails: buildReplyToDetailsFromDetailsIfAvailable(details: messageContent.inReplyTo),

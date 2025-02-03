@@ -1,8 +1,8 @@
 //
 // Copyright 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -66,6 +66,38 @@ struct RoomInfoProxy: BaseRoomInfoProxyProtocol {
     var unreadMentionsCount: UInt { UInt(roomInfo.numUnreadMentions) }
     var pinnedEventIDs: Set<String> { Set(roomInfo.pinnedEventIds) }
     var joinRule: JoinRule? { roomInfo.joinRule }
+    var historyVisibility: RoomHistoryVisibility { roomInfo.historyVisibility }
+    
+    /// Find the first alias that matches the given homeserver
+    /// - Parameters:
+    ///   - serverName: the homserver in question
+    ///   - useFallback: whether to return any alias if none match
+    func firstAliasMatching(serverName: String?, useFallback: Bool) -> String? {
+        guard let serverName else { return nil }
+        
+        // Check if the canonical alias matches the homeserver
+        if let canonicalAlias = roomInfo.canonicalAlias,
+           canonicalAlias.range(of: serverName) != nil {
+            return canonicalAlias
+        }
+        
+        // Otherwise check the alternative aliases and return the first one that matches
+        if let matchingAlternativeAlias = roomInfo.alternativeAliases.filter({ $0.range(of: serverName) != nil }).first {
+            return matchingAlternativeAlias
+        }
+        
+        guard useFallback else {
+            return nil
+        }
+        
+        // Or just return the canonical alias if any
+        if let canonicalAlias = roomInfo.canonicalAlias {
+            return canonicalAlias
+        }
+        
+        // And finally return whatever the first alternative alias is
+        return roomInfo.alternativeAliases.first
+    }
 }
 
 struct RoomPreviewInfoProxy: BaseRoomInfoProxyProtocol {
@@ -80,6 +112,9 @@ struct RoomPreviewInfoProxy: BaseRoomInfoProxyProtocol {
     var isDirect: Bool { roomPreviewInfo.isDirect ?? false }
     var isSpace: Bool { roomPreviewInfo.roomType == .space }
     var activeMembersCount: Int { Int(roomPreviewInfo.numActiveMembers ?? roomPreviewInfo.numJoinedMembers) }
+    
+    var joinRule: JoinRule { roomPreviewInfo.joinRule }
+    var membership: Membership? { roomPreviewInfo.membership }
     
     /// The room's avatar info for use in a ``RoomAvatarImage``.
     var avatar: RoomAvatar {

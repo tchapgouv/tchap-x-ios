@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -255,7 +255,9 @@ struct SettingsScreen_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
         NavigationStack {
             SettingsScreen(context: viewModel.context)
-                .snapshotPreferences(delay: 1.0)
+                .snapshotPreferences(expect: viewModel.context.$viewState.map { state in
+                    state.accountSessionsListURL != nil
+                })
         }
     }
 }

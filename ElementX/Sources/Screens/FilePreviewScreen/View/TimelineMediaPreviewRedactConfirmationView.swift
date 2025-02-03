@@ -1,8 +1,8 @@
 //
 // Copyright 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -11,8 +11,11 @@ import SwiftUI
 struct TimelineMediaPreviewRedactConfirmationView: View {
     @Environment(\.dismiss) private var dismiss
     
-    let item: TimelineMediaPreviewItem
+    let item: TimelineMediaPreviewItem.Media
     @ObservedObject var context: TimelineMediaPreviewViewModel.Context
+    
+    @State private var sheetHeight: CGFloat = .zero
+    private let topPadding: CGFloat = 19
     
     var body: some View {
         ScrollView {
@@ -21,10 +24,12 @@ struct TimelineMediaPreviewRedactConfirmationView: View {
                 preview
                 buttons
             }
+            .readHeight($sheetHeight)
         }
-        .presentationDetents([.medium])
+        .scrollBounceBehavior(.basedOnSize)
+        .padding(.top, topPadding) // For the drag indicator
+        .presentationDetents([.height(sheetHeight + topPadding)])
         .presentationDragIndicator(.visible)
-        .padding(.top, 19) // For the drag indicator
         .presentationBackground(.compound.bgCanvasDefault)
         .preferredColorScheme(.dark)
     }
@@ -120,7 +125,9 @@ struct TimelineMediaPreviewRedactConfirmationView_Previews: PreviewProvider, Tes
     static let viewModel = makeViewModel(contentType: .jpeg)
     
     static var previews: some View {
-        TimelineMediaPreviewRedactConfirmationView(item: viewModel.state.currentItem, context: viewModel.context)
+        if case let .media(mediaItem) = viewModel.state.currentItem {
+            TimelineMediaPreviewRedactConfirmationView(item: mediaItem, context: viewModel.context)
+        }
     }
     
     static func makeViewModel(contentType: UTType? = nil) -> TimelineMediaPreviewViewModel {

@@ -1,8 +1,8 @@
 //
 // Copyright 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -72,13 +72,11 @@ struct RoomMembersListManageMemberSheet_Previews: PreviewProvider, TestablePrevi
                                          actions: [.kick, .ban],
                                          context: viewModel.context)
             .previewDisplayName("Joined")
-            .snapshotPreferences(delay: 0.2)
         
         RoomMembersListManageMemberSheet(member: .init(withProxy: RoomMemberProxyMock.mockBanned[3]),
                                          actions: [],
                                          context: viewModel.context)
             .previewDisplayName("Banned")
-            .snapshotPreferences(delay: 0.2)
     }
 }
 

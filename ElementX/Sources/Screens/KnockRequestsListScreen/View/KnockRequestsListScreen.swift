@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -127,23 +127,32 @@ struct KnockRequestsListScreen_Previews: PreviewProvider, TestablePreview {
         NavigationStack {
             KnockRequestsListScreen(context: viewModel.context)
         }
-        .snapshotPreferences(delay: 0.2)
+        .snapshotPreferences(expect: viewModel.context.$viewState.map { state in
+            state.shouldDisplayRequests == true
+        })
         
         NavigationStack {
             KnockRequestsListScreen(context: singleRequestViewModel.context)
         }
+        .snapshotPreferences(expect: singleRequestViewModel.context.$viewState.map { state in
+            state.shouldDisplayRequests == true
+        })
         .previewDisplayName("Single Request")
-        .snapshotPreferences(delay: 0.2)
-
+        
         NavigationStack {
             KnockRequestsListScreen(context: emptyViewModel.context)
         }
+        .snapshotPreferences(expect: emptyViewModel.context.$viewState.map { state in
+            state.shouldDisplayEmptyView == true
+        })
         .previewDisplayName("Empty state")
-        .snapshotPreferences(delay: 0.2)
         
         NavigationStack {
             KnockRequestsListScreen(context: loadingViewModel.context)
         }
+        .snapshotPreferences(expect: loadingViewModel.context.$viewState.map { state in
+            state.isLoading == true
+        })
         .previewDisplayName("Loading state")
     }
 }

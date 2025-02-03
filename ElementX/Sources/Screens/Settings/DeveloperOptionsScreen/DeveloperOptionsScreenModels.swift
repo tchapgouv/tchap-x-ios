@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -41,7 +41,7 @@ enum DeveloperOptionsScreenViewAction {
 }
 
 protocol DeveloperOptionsProtocol: AnyObject {
-    var logLevel: TracingConfiguration.LogLevel { get set }
+    var logLevel: LogLevel { get set }
     var slidingSyncDiscovery: AppSettings.SlidingSyncDiscovery { get set }
     var publicSearchEnabled: Bool { get set }
     var hideUnreadMessagesBadge: Bool { get set }

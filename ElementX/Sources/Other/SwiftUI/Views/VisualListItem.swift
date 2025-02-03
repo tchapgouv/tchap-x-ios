@@ -1,8 +1,8 @@
 //
 // Copyright 2021-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import SwiftUI
@@ -25,15 +25,9 @@ enum ListPosition {
 }
 
 struct VisualListItem<Icon: View>: View {
-    @Environment(\.backgroundStyle) private var backgroundStyle
-    
     let title: String
     let position: ListPosition
     let iconContent: () -> Icon
-    
-    private var backgroundColor: AnyShapeStyle {
-        backgroundStyle ?? AnyShapeStyle(.compound.bgSubtleSecondary)
-    }
     
     var body: some View {
         Label { Text(title) } icon: {
@@ -43,7 +37,7 @@ struct VisualListItem<Icon: View>: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(backgroundColor, in: RoundedCornerShape(radius: 14, corners: position.roundedCorners))
+        .background(.compound.bgSubtleSecondary, in: RoundedCornerShape(radius: 14, corners: position.roundedCorners))
     }
 }
 
