@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import XCTest
@@ -26,7 +26,7 @@ class ServerSelectionUITests: XCTestCase {
         app.textFields[A11yIdentifiers.changeServerScreen.server].buttons.element.tap()
         
         // Then the screen should not allow the user to continue.
-        try await app.assertScreenshot(.serverSelection, step: 1)
+        try await app.assertScreenshot(.serverSelection, step: 1, delay: .seconds(0.5))
     }
 
     func testInvalidAddress() async throws {
@@ -37,7 +37,7 @@ class ServerSelectionUITests: XCTestCase {
         app.textFields[A11yIdentifiers.changeServerScreen.server].clearAndTypeText("thisisbad\n", app: app) // The tests only accept an address from LoginHomeserver.mockXYZ
         
         // Then an error should be shown and the confirmation button disabled.
-        try await app.assertScreenshot(.serverSelection, step: 2)
+        try await app.assertScreenshot(.serverSelection, step: 2, delay: .seconds(0.5))
         XCTAssertFalse(app.buttons[A11yIdentifiers.changeServerScreen.continue].isEnabled, "The continue button should be disabled when there is an error.")
     }
 }

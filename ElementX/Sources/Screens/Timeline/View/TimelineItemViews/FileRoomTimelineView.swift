@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -18,7 +18,8 @@ struct FileRoomTimelineView: View {
                                          fileSize: timelineItem.content.fileSize,
                                          caption: timelineItem.content.caption,
                                          formattedCaption: timelineItem.content.formattedCaption,
-                                         additionalWhitespaces: timelineItem.additionalWhitespaces()) {
+                                         additionalWhitespaces: timelineItem.additionalWhitespaces(),
+                                         shouldBoost: timelineItem.shouldBoost) {
                 context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
             }
             .accessibilityLabel(L10n.commonFile)
@@ -34,6 +35,7 @@ struct MediaFileRoomTimelineContent: View {
     let caption: String?
     let formattedCaption: AttributedString?
     let additionalWhitespaces: Int
+    var shouldBoost = false
     var isAudioFile = false
     
     var onMediaTap: (() -> Void)?
@@ -55,10 +57,12 @@ struct MediaFileRoomTimelineContent: View {
             
             if let formattedCaption {
                 FormattedBodyText(attributedString: formattedCaption,
-                                  additionalWhitespacesCount: additionalWhitespaces)
+                                  additionalWhitespacesCount: additionalWhitespaces,
+                                  boostFontSize: shouldBoost)
             } else if let caption {
                 FormattedBodyText(text: caption,
-                                  additionalWhitespacesCount: additionalWhitespaces)
+                                  additionalWhitespacesCount: additionalWhitespaces,
+                                  boostFontSize: shouldBoost)
             }
         }
     }

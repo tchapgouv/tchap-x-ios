@@ -1,8 +1,8 @@
 //
 // Copyright 2023, 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -868,6 +868,8 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
                 stateMachine.tryEvent(.presentMediaEventsTimeline)
             case .presentSecurityAndPrivacyScreen:
                 stateMachine.tryEvent(.presentSecurityAndPrivacyScreen)
+            case .presentRecipientDetails(let userID):
+                stateMachine.tryEvent(.presentRoomMemberDetails(userID: userID))
             }
         }
         .store(in: &cancellables)
@@ -1475,14 +1477,16 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private func presentSecurityAndPrivacyScreen() {
-        let coordinator = SecurityAndPrivacyScreenCoordinator(parameters: .init(roomProxy: roomProxy))
+        let coordinator = SecurityAndPrivacyScreenCoordinator(parameters: .init(roomProxy: roomProxy,
+                                                                                clientProxy: userSession.clientProxy,
+                                                                                userIndicatorController: userIndicatorController))
         
         coordinator.actionsPublisher.sink { [weak self] action in
             guard let self else { return }
             
             switch action {
-            case .done:
-                break
+            case .displayEditAddressScreen:
+                presentEditAddressScreen()
             }
         }
         .store(in: &cancellables)
@@ -1490,6 +1494,24 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         navigationStackCoordinator.push(coordinator) { [weak self] in
             self?.stateMachine.tryEvent(.dismissSecurityAndPrivacyScreen)
         }
+    }
+    
+    private func presentEditAddressScreen() {
+        let stackCoordinator = NavigationStackCoordinator()
+        let coordinator = EditRoomAddressScreenCoordinator(parameters: .init(roomProxy: roomProxy,
+                                                                             clientProxy: userSession.clientProxy,
+                                                                             userIndicatorController: userIndicatorController))
+        
+        coordinator.actionsPublisher.sink { [weak self] action in
+            switch action {
+            case .dismiss:
+                self?.navigationStackCoordinator.setSheetCoordinator(nil)
+            }
+        }
+        .store(in: &cancellables)
+        
+        stackCoordinator.setRootCoordinator(coordinator)
+        navigationStackCoordinator.setSheetCoordinator(stackCoordinator)
     }
     
     // MARK: - Other flows

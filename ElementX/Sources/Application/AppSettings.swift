@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -10,7 +10,7 @@ import SwiftUI
 
 // Common settings between app and NSE
 protocol CommonSettingsProtocol {
-    var logLevel: TracingConfiguration.LogLevel { get }
+    var logLevel: LogLevel { get }
     var enableOnlySignedDeviceIsolationMode: Bool { get }
     var hideTimelineMedia: Bool { get }
     var eventCacheEnabled: Bool { get }
@@ -315,7 +315,7 @@ final class AppSettings {
     
     // MARK: - Shared
         
-    @UserPreference(key: UserDefaultsKeys.logLevel, defaultValue: TracingConfiguration.LogLevel.info, storageType: .userDefaults(store))
+    @UserPreference(key: UserDefaultsKeys.logLevel, defaultValue: LogLevel.info, storageType: .userDefaults(store))
     var logLevel
     
     /// Configuration to enable only signed device isolation mode for  crypto. In this mode only devices signed by their owner will be considered in e2ee rooms.

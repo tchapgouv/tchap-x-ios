@@ -1,8 +1,8 @@
 //
 // Copyright 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import SwiftUI
@@ -11,6 +11,10 @@ struct RoomListFiltersView: View {
     let leadingID = "leading"
     @Binding var state: RoomListFiltersState
     @Namespace private var namespace
+    
+    /// When you connect a mouse on macOS the scrollbars aren't hidden. This is some extra padding
+    /// applied to the scroll view content to make sure the bars don't overlap the filters.
+    private var macScrollBarPadding: CGFloat { ProcessInfo.processInfo.isiOSAppOnMac ? 16 : 0 }
     
     var body: some View {
         ScrollViewReader { proxy in
@@ -39,11 +43,13 @@ struct RoomListFiltersView: View {
                                 .matchedGeometryEffect(id: filter.id, in: namespace)
                         }
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, macScrollBarPadding)
                 }
             }
             .scrollIndicators(.hidden)
-            .padding(.leading, 16)
             .padding(.vertical, 12)
+            .padding(.bottom, -macScrollBarPadding)
         }
     }
     

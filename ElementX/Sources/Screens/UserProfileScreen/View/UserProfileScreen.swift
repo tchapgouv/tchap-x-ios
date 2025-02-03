@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -112,14 +112,22 @@ struct UserProfileScreen_Previews: PreviewProvider, TestablePreview {
     
     static var previews: some View {
         UserProfileScreen(context: verifiedUserViewModel.context)
+            .snapshotPreferences(expect: verifiedUserViewModel.context.$viewState.map { state in
+                state.isVerified != nil
+            })
             .previewDisplayName("Verified User")
-            .snapshotPreferences(delay: 0.25)
+        
         UserProfileScreen(context: otherUserViewModel.context)
+            .snapshotPreferences(expect: otherUserViewModel.context.$viewState.map { state in
+                state.isVerified != nil
+            })
             .previewDisplayName("Other User")
-            .snapshotPreferences(delay: 0.25)
+        
         UserProfileScreen(context: accountOwnerViewModel.context)
+            .snapshotPreferences(expect: accountOwnerViewModel.context.$viewState.map { state in
+                state.isVerified != nil
+            })
             .previewDisplayName("Account Owner")
-            .snapshotPreferences(delay: 0.25)
     }
     
     static func makeViewModel(userID: String) -> UserProfileScreenViewModel {

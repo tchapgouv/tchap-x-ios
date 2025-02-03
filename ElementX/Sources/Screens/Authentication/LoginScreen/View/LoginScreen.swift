@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import SwiftUI
@@ -136,20 +136,23 @@ struct LoginScreen_Previews: PreviewProvider, TestablePreview {
         NavigationStack {
             LoginScreen(context: viewModel.context)
         }
+        .snapshotPreferences(expect: viewModel.context.$viewState.map { state in
+            state.homeserver.loginMode == .password
+        })
         .previewDisplayName("matrix.org")
-        .snapshotPreferences(delay: 1)
         
         NavigationStack {
             LoginScreen(context: credentialsViewModel.context)
         }
+        .snapshotPreferences(expect: credentialsViewModel.context.$viewState.map { state in
+            state.homeserver.loginMode == .password
+        })
         .previewDisplayName("Credentials Entered")
-        .snapshotPreferences(delay: 1)
         
         NavigationStack {
             LoginScreen(context: unconfiguredViewModel.context)
         }
         .previewDisplayName("Unsupported")
-        .snapshotPreferences(delay: 1)
     }
     
     static func makeViewModel(homeserverAddress: String = "matrix.org", withCredentials: Bool = false) -> LoginScreenViewModel {

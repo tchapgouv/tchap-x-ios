@@ -1,8 +1,8 @@
 //
 // Copyright 2023, 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import XCTest
@@ -316,17 +316,7 @@ class RoomFlowCoordinatorTests: XCTestCase {
         clientProxy.roomPreviewForIdentifierViaClosure = { [roomType] roomID, _ in
             switch roomType {
             case .invited:
-                return .success(.init(roomID: roomID,
-                                      name: "Invite",
-                                      canonicalAlias: nil,
-                                      topic: nil,
-                                      avatarURL: nil,
-                                      memberCount: 0,
-                                      isHistoryWorldReadable: nil,
-                                      isJoined: false,
-                                      isInvited: true,
-                                      isPublic: false,
-                                      canKnock: false))
+                return .success(RoomPreviewProxyMock.invited(roomID: roomID))
             default:
                 fatalError("Something isn't set up right")
             }

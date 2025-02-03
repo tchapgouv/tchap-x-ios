@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -35,10 +35,13 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                     }
                     
                     do {
-                        let timeline = try await TimelineProxy(timeline: room.pinnedEventsTimeline(internalIdPrefix: nil,
-                                                                                                   maxEventsToLoad: 100,
-                                                                                                   maxConcurrentRequests: 10),
-                                                               kind: .pinned)
+                        let sdkTimeline = try await room.timelineWithConfiguration(configuration: .init(focus: .pinnedEvents(maxEventsToLoad: 100, maxConcurrentRequests: 10),
+                                                                                                        allowedMessageTypes: .all,
+                                                                                                        internalIdPrefix: nil,
+                                                                                                        dateDividerMode: .daily))
+                        
+                        let timeline = TimelineProxy(timeline: sdkTimeline, kind: .pinned)
+                        
                         await timeline.subscribeForUpdates()
                         innerPinnedEventsTimeline = timeline
                         return timeline
@@ -155,8 +158,12 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     func timelineFocusedOnEvent(eventID: String, numberOfEvents: UInt16) async -> Result<TimelineProxyProtocol, RoomProxyError> {
         do {
-            let timeline = try await room.timelineFocusedOnEvent(eventId: eventID, numContextEvents: numberOfEvents, internalIdPrefix: UUID().uuidString)
-            return .success(TimelineProxy(timeline: timeline, kind: .detached))
+            let sdkTimeline = try await room.timelineWithConfiguration(configuration: .init(focus: .event(eventId: eventID, numContextEvents: numberOfEvents),
+                                                                                            allowedMessageTypes: .all,
+                                                                                            internalIdPrefix: UUID().uuidString,
+                                                                                            dateDividerMode: .daily))
+            
+            return .success(TimelineProxy(timeline: sdkTimeline, kind: .detached))
         } catch let error as FocusEventError {
             switch error {
             case .InvalidEventId(_, let error):
@@ -177,15 +184,27 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     func messageFilteredTimeline(allowedMessageTypes: [RoomMessageEventMessageType]) async -> Result<any TimelineProxyProtocol, RoomProxyError> {
         do {
-            let timeline = try await TimelineProxy(timeline: room.messageFilteredTimeline(internalIdPrefix: nil,
-                                                                                          allowedMessageTypes: allowedMessageTypes,
-                                                                                          dateDividerMode: .monthly),
-                                                   kind: .media(.mediaFilesScreen))
+            let sdkTimeline = try await room.timelineWithConfiguration(configuration: .init(focus: .live,
+                                                                                            allowedMessageTypes: .only(types: allowedMessageTypes),
+                                                                                            internalIdPrefix: nil,
+                                                                                            dateDividerMode: .monthly))
+            
+            let timeline = TimelineProxy(timeline: sdkTimeline, kind: .media(.mediaFilesScreen))
             await timeline.subscribeForUpdates()
             
             return .success(timeline)
         } catch {
             MXLog.error("Failed retrieving media events timeline with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func enableEncryption() async -> Result<Void, RoomProxyError> {
+        do {
+            try await room.enableEncryption()
+            return .success(())
+        } catch {
+            MXLog.error("Failed enabling encryption with error: \(error)")
             return .failure(.sdkError(error))
         }
     }
@@ -355,6 +374,79 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             return .success(())
         } catch {
             MXLog.error("Failed withdrawing verification of \(userIDs) and resending \(sendHandle.itemID) with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    // MARK: - Privacy settings
+    
+    func updateJoinRule(_ rule: JoinRule) async -> Result<Void, RoomProxyError> {
+        do {
+            try await room.updateJoinRules(newRule: rule)
+            return .success(())
+        } catch {
+            MXLog.error("Failed updating join rule with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func updateHistoryVisibility(_ visibility: RoomHistoryVisibility) async -> Result<Void, RoomProxyError> {
+        do {
+            try await room.updateHistoryVisibility(visibility: visibility)
+            return .success(())
+        } catch {
+            MXLog.error("Failed updating history visibility with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func isVisibleInRoomDirectory() async -> Result<Bool, RoomProxyError> {
+        do {
+            return try await .success(room.getRoomVisibility() == .public)
+        } catch {
+            MXLog.error("Failed checking if room is visible in room directory with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func updateRoomDirectoryVisibility(_ visibility: RoomVisibility) async -> Result<Void, RoomProxyError> {
+        do {
+            try await room.updateRoomVisibility(visibility: visibility)
+            return .success(())
+        } catch {
+            MXLog.error("Failed updating room directory visibility with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    // MARK: - Canonical Alias
+    
+    func updateCanonicalAlias(_ alias: String?, altAliases: [String]) async -> Result<Void, RoomProxyError> {
+        do {
+            try await room.updateCanonicalAlias(alias: alias, altAliases: altAliases)
+            return .success(())
+        } catch {
+            MXLog.error("Failed updating canonical alias with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func publishRoomAliasInRoomDirectory(_ alias: String) async -> Result<Bool, RoomProxyError> {
+        do {
+            let result = try await room.publishRoomAliasInRoomDirectory(alias: alias)
+            return .success(result)
+        } catch {
+            MXLog.error("Failed publishing the room's alias in the room directory with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func removeRoomAliasFromRoomDirectory(_ alias: String) async -> Result<Bool, RoomProxyError> {
+        do {
+            let result = try await room.removeRoomAliasFromRoomDirectory(alias: alias)
+            return .success(result)
+        } catch {
+            MXLog.error("Failed removing the room's alias in the room directory with error: \(error)")
             return .failure(.sdkError(error))
         }
     }

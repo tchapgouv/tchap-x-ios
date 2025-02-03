@@ -1,8 +1,8 @@
 //
 // Copyright 2023, 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -180,6 +180,10 @@ class TimelineInteractionHandler {
             analyticsService.trackInteraction(name: .PinnedMessageListViewTimeline)
             guard let eventID = itemID.eventID else { return }
             actionsSubject.send(.viewInRoomTimeline(eventID: eventID))
+        case .share:
+            break // Handled inline in the media preview screen with a ShareLink.
+        case .save:
+            break // Handled inline in the media preview screen.
         }
         
         if action.switchToDefaultComposer {

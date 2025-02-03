@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import SwiftUI
@@ -95,5 +95,15 @@ extension String {
     /// detects if the string is empty or contains only whitespaces and newlines
     var isBlank: Bool {
         trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
+
+extension String {
+    static func makeCanonicalAlias(aliasLocalPart: Self?, serverName: Self?) -> Self? {
+        guard let aliasLocalPart, !aliasLocalPart.isEmpty,
+              let serverName, !serverName.isEmpty else {
+            return nil
+        }
+        return "#\(aliasLocalPart):\(serverName)"
     }
 }

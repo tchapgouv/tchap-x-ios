@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -22,7 +22,7 @@ struct EncryptionResetScreen: View {
             .accessibilityIdentifier(A11yIdentifiers.encryptionResetScreen.continueReset)
         }
         .background()
-        .backgroundStyle(.compound.bgSubtleSecondary)
+        .backgroundStyle(.compound.bgCanvasDefault)
         .interactiveDismissDisabled()
         .toolbar { toolbar }
         .toolbar(.visible, for: .navigationBar)
@@ -40,7 +40,7 @@ struct EncryptionResetScreen: View {
     
     private var header: some View {
         VStack(spacing: 8) {
-            BigIcon(icon: \.error, style: .alert)
+            BigIcon(icon: \.error, style: .alertSolid)
                 .padding(.bottom, 8)
             
             Text(L10n.screenEncryptionResetTitle)
@@ -76,7 +76,6 @@ struct EncryptionResetScreen: View {
                 .foregroundColor(positive ? .compound.iconAccentPrimary : .compound.iconSecondary)
                 .alignmentGuide(.top) { _ in 2 }
         }
-        .backgroundStyle(.compound.bgCanvasDefault)
     }
     
     @ToolbarContentBuilder

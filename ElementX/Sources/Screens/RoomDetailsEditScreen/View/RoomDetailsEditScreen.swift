@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -174,12 +174,13 @@ struct RoomDetailsEditScreen_Previews: PreviewProvider, TestablePreview {
             RoomDetailsEditScreen(context: readOnlyViewModel.context)
         }
         .previewDisplayName("Read only")
-        .snapshotPreferences(delay: 0.25)
         
         NavigationStack {
             RoomDetailsEditScreen(context: editableViewModel.context)
         }
+        .snapshotPreferences(expect: editableViewModel.context.$viewState.map { state in
+            state.canEditTopic == true
+        })
         .previewDisplayName("Editable")
-        .snapshotPreferences(delay: 0.25)
     }
 }

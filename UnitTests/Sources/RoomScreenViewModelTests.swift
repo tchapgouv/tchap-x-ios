@@ -1,8 +1,8 @@
 //
 // Copyright 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 @testable import ElementX
@@ -345,7 +345,7 @@ class RoomScreenViewModelTests: XCTestCase {
                                             userIndicatorController: ServiceLocator.shared.userIndicatorController)
         self.viewModel = viewModel
         
-        var deferred = deferFulfillment(viewModel.context.$viewState) { state in
+        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
             state.unseenKnockRequests == [.init(displayName: "Alice", avatarURL: nil, userID: "@alice:matrix.org", reason: "Hello World!", eventID: "1")] &&
                 !state.shouldSeeKnockRequests
         }

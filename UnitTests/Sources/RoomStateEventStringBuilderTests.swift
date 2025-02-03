@@ -1,8 +1,8 @@
 //
 // Copyright 2023, 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 @testable import ElementX
@@ -79,5 +79,27 @@ class RoomStateEventStringBuilderTests: XCTestCase {
                                                             member: sender.id,
                                                             memberIsYou: sender.id == userID)
         XCTAssertEqual(string, expectedString)
+    }
+    
+    func testTopicChanges() {
+        let you = TimelineItemSender(id: userID, displayName: "Alice")
+        let other = TimelineItemSender(id: "@bob:matrix.org", displayName: "Bob")
+        
+        let newTopic = "New topic"
+        var string = stringBuilder.buildString(for: .roomTopic(topic: newTopic), sender: you, isOutgoing: true)
+        XCTAssertEqual(string, L10n.stateEventRoomTopicChangedByYou(newTopic))
+        string = stringBuilder.buildString(for: .roomTopic(topic: newTopic), sender: other, isOutgoing: false)
+        XCTAssertEqual(string, L10n.stateEventRoomTopicChanged(other.displayName ?? "", newTopic))
+        
+        let emptyTopic = ""
+        string = stringBuilder.buildString(for: .roomTopic(topic: emptyTopic), sender: you, isOutgoing: true)
+        XCTAssertEqual(string, L10n.stateEventRoomTopicRemovedByYou)
+        string = stringBuilder.buildString(for: .roomTopic(topic: emptyTopic), sender: other, isOutgoing: false)
+        XCTAssertEqual(string, L10n.stateEventRoomTopicRemoved(other.displayName ?? ""))
+        
+        string = stringBuilder.buildString(for: .roomTopic(topic: nil), sender: you, isOutgoing: true)
+        XCTAssertEqual(string, L10n.stateEventRoomTopicRemovedByYou)
+        string = stringBuilder.buildString(for: .roomTopic(topic: nil), sender: other, isOutgoing: false)
+        XCTAssertEqual(string, L10n.stateEventRoomTopicRemoved(other.displayName ?? ""))
     }
 }

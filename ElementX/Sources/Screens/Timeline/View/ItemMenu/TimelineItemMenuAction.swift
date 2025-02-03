@@ -1,8 +1,8 @@
 //
 // Copyright 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import OrderedCollections
@@ -74,6 +74,8 @@ enum TimelineItemMenuAction: Identifiable, Hashable {
     case pin
     case unpin
     case viewInRoomTimeline
+    case share
+    case save
     
     var id: Self { self }
     
@@ -128,7 +130,7 @@ enum TimelineItemMenuAction: Identifiable, Hashable {
     
     var canAppearInMediaDetails: Bool {
         switch self {
-        case .viewInRoomTimeline, .redact:
+        case .viewInRoomTimeline, .share, .save, .redact:
             true
         default:
             false
@@ -178,6 +180,10 @@ enum TimelineItemMenuAction: Identifiable, Hashable {
             Label(L10n.actionUnpin, icon: \.unpin)
         case .viewInRoomTimeline:
             Label(L10n.actionViewInTimeline, icon: \.visibilityOn)
+        case .share:
+            Label(L10n.actionShare, icon: \.shareIos)
+        case .save:
+            Label(L10n.actionSave, icon: \.downloadIos)
         }
     }
 }

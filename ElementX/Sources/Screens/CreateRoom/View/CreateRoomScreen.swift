@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -278,35 +278,17 @@ struct CreateRoomScreen: View {
     
     private var roomAliasSection: some View {
         Section {
-            ListRow(kind: .custom {
-                HStack(spacing: 0) {
-                    Text("#")
-                        .font(.compound.bodyLG)
-                        .foregroundStyle(.compound.textSecondary)
-                    TextField("", text: aliasBinding)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .textContentType(.URL)
-                        .focused($focus, equals: .alias)
-                        .tint(.compound.iconAccentTertiary)
-                        .font(.compound.bodyLG)
-                        .foregroundStyle(.compound.textPrimary)
-                        .padding(.horizontal, 8)
-                    Text(":\(context.viewState.serverName)")
-                        .font(.compound.bodyLG)
-                        .foregroundStyle(.compound.textSecondary)
-                }
-                .padding(ListRowPadding.textFieldInsets)
-                .environment(\.layoutDirection, .leftToRight)
-                .errorBackground(!context.viewState.aliasErrors.isEmpty)
-            })
-            .id(Focus.alias)
+            EditRoomAddressListRow(aliasLocalPart: aliasBinding,
+                                   serverName: context.viewState.serverName,
+                                   shouldDisplayError: context.viewState.aliasErrors.errorDescription != nil)
+                .focused($focus, equals: .alias)
+                .id(Focus.alias)
         } header: {
             Text(L10n.screenCreateRoomRoomAddressSectionTitle)
                 .compoundListSectionHeader()
         } footer: {
             VStack(alignment: .leading, spacing: 12) {
-                if let errorDescription = context.viewState.aliasErrorDescription {
+                if let errorDescription = context.viewState.aliasErrors.errorDescription {
                     Label(errorDescription, icon: \.error, iconSize: .xSmall, relativeTo: .compound.bodySM)
                         .foregroundStyle(.compound.textCriticalPrimary)
                         .font(.compound.bodySM)
@@ -326,15 +308,6 @@ struct CreateRoomScreen: View {
             }
             .disabled(!context.viewState.canCreateRoom)
         }
-    }
-}
-
-private extension View {
-    func errorBackground(_ shouldDisplay: Bool) -> some View {
-        listRowBackground(shouldDisplay ? AnyView(RoundedRectangle(cornerRadius: 10)
-                .inset(by: 1)
-                .fill(.compound.bgCriticalSubtleHovered)
-                .stroke(Color.compound.borderCriticalPrimary)) : AnyView(Color.compound.bgCanvasDefaultLevel1))
     }
 }
 
@@ -420,12 +393,16 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
         NavigationStack {
             CreateRoomScreen(context: publicRoomInvalidAliasViewModel.context)
         }
-        .snapshotPreferences(delay: 1.5)
+        .snapshotPreferences(expect: publicRoomExistingAliasViewModel.context.$viewState.map { state in
+            !state.aliasErrors.isEmpty
+        })
         .previewDisplayName("Create Public Room, invalid alias")
         NavigationStack {
             CreateRoomScreen(context: publicRoomExistingAliasViewModel.context)
         }
-        .snapshotPreferences(delay: 1.5)
+        .snapshotPreferences(expect: publicRoomExistingAliasViewModel.context.$viewState.map { state in
+            !state.aliasErrors.isEmpty
+        })
         .previewDisplayName("Create Public Room, existing alias")
     }
 }

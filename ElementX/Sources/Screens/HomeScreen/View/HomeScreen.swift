@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -199,19 +199,26 @@ struct HomeScreen_Previews: PreviewProvider, TestablePreview {
         NavigationStack {
             HomeScreen(context: loadingViewModel.context)
         }
+        .snapshotPreferences(expect: loadedViewModel.context.$viewState.map { state in
+            state.roomListMode == .skeletons
+        })
         .previewDisplayName("Loading")
         
         NavigationStack {
             HomeScreen(context: emptyViewModel.context)
         }
+        .snapshotPreferences(expect: emptyViewModel.context.$viewState.map { state in
+            state.roomListMode == .empty
+        })
         .previewDisplayName("Empty")
-        .snapshotPreferences(delay: 4.0)
         
         NavigationStack {
             HomeScreen(context: loadedViewModel.context)
         }
+        .snapshotPreferences(expect: loadedViewModel.context.$viewState.map { state in
+            state.roomListMode == .rooms
+        })
         .previewDisplayName("Loaded")
-        .snapshotPreferences(delay: 4.0)
     }
     
     static func viewModel(_ mode: HomeScreenRoomListMode) -> HomeScreenViewModel {

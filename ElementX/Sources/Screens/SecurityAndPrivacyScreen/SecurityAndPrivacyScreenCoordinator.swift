@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -10,16 +10,15 @@ import SwiftUI
 
 struct SecurityAndPrivacyScreenCoordinatorParameters {
     let roomProxy: JoinedRoomProxyProtocol
+    let clientProxy: ClientProxyProtocol
+    let userIndicatorController: UserIndicatorControllerProtocol
 }
 
 enum SecurityAndPrivacyScreenCoordinatorAction {
-    case done
-    
-    // Consider adding CustomStringConvertible conformance if the actions contain PII
+    case displayEditAddressScreen
 }
 
 final class SecurityAndPrivacyScreenCoordinator: CoordinatorProtocol {
-    private let parameters: SecurityAndPrivacyScreenCoordinatorParameters
     private let viewModel: SecurityAndPrivacyScreenViewModelProtocol
     
     private var cancellables = Set<AnyCancellable>()
@@ -30,9 +29,9 @@ final class SecurityAndPrivacyScreenCoordinator: CoordinatorProtocol {
     }
     
     init(parameters: SecurityAndPrivacyScreenCoordinatorParameters) {
-        self.parameters = parameters
-        
-        viewModel = SecurityAndPrivacyScreenViewModel(roomProxy: parameters.roomProxy)
+        viewModel = SecurityAndPrivacyScreenViewModel(roomProxy: parameters.roomProxy,
+                                                      clientProxy: parameters.clientProxy,
+                                                      userIndicatorController: parameters.userIndicatorController)
     }
     
     func start() {
@@ -41,8 +40,8 @@ final class SecurityAndPrivacyScreenCoordinator: CoordinatorProtocol {
             
             guard let self else { return }
             switch action {
-            case .done:
-                actionsSubject.send(.done)
+            case .displayEditAddressScreen:
+                actionsSubject.send(.displayEditAddressScreen)
             }
         }
         .store(in: &cancellables)

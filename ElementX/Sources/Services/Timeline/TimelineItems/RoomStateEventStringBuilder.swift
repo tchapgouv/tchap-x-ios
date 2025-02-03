@@ -1,8 +1,8 @@
 //
 // Copyright 2023, 2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import MatrixRustSDK
@@ -169,13 +169,13 @@ struct RoomStateEventStringBuilder {
             }
         case .roomTopic(let topic):
             switch (topic, isOutgoing) {
-            case (.some(let topic), false):
+            case (.some(let topic), false) where !topic.isBlank:
                 return L10n.stateEventRoomTopicChanged(displayName, topic)
-            case (nil, false):
+            case (_, false):
                 return L10n.stateEventRoomTopicRemoved(displayName)
-            case (.some(let name), true):
-                return L10n.stateEventRoomTopicChangedByYou(name)
-            case (nil, true):
+            case (.some(let topic), true) where !topic.isBlank:
+                return L10n.stateEventRoomTopicChangedByYou(topic)
+            case (_, true):
                 return L10n.stateEventRoomTopicRemovedByYou
             }
         case .roomPinnedEvents(let change):

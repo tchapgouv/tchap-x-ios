@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -139,17 +139,28 @@ struct RoomMemberDetailsScreen_Previews: PreviewProvider, TestablePreview {
     
     static var previews: some View {
         RoomMemberDetailsScreen(context: verifiedUserViewModel.context)
+            .snapshotPreferences(expect: verifiedUserViewModel.context.$viewState.map { state in
+                state.isVerified == true
+            })
             .previewDisplayName("Verified User")
-            .snapshotPreferences(delay: 0.25)
+            
         RoomMemberDetailsScreen(context: otherUserViewModel.context)
+            .snapshotPreferences(expect: otherUserViewModel.context.$viewState.map { state in
+                state.memberDetails?.role == .user
+            })
             .previewDisplayName("Other User")
-            .snapshotPreferences(delay: 0.25)
+            
         RoomMemberDetailsScreen(context: accountOwnerViewModel.context)
+            .snapshotPreferences(expect: accountOwnerViewModel.context.$viewState.map { state in
+                state.isOwnMemberDetails == true
+            })
             .previewDisplayName("Account Owner")
-            .snapshotPreferences(delay: 0.25)
+            
         RoomMemberDetailsScreen(context: ignoredUserViewModel.context)
+            .snapshotPreferences(expect: ignoredUserViewModel.context.$viewState.map { state in
+                state.memberDetails?.isIgnored ?? false && state.dmRoomID != nil
+            })
             .previewDisplayName("Ignored User")
-            .snapshotPreferences(delay: 0.25)
     }
     
     static func makeViewModel(member: RoomMemberProxyMock) -> RoomMemberDetailsScreenViewModel {

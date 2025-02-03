@@ -1,8 +1,8 @@
 //
 // Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
-// Please see LICENSE in the repository root for full details.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -15,13 +15,7 @@ struct RoomDetailsScreen: View {
     
     var body: some View {
         Form {
-            if let recipient = context.viewState.dmRecipient,
-               let accountOwner = context.viewState.accountOwner {
-                dmHeaderSection(accountOwner: accountOwner,
-                                recipient: recipient)
-            } else {
-                normalRoomHeaderSection
-            }
+            roomHeaderSection
 
             topicSection
             
@@ -66,7 +60,7 @@ struct RoomDetailsScreen: View {
     
     // MARK: - Private
     
-    private var normalRoomHeaderSection: some View {
+    private var roomHeaderSection: some View {
         AvatarHeaderView(room: context.viewState.details,
                          externalCount: $context.externalCount, // Tchap: pass `externalCount` binding parameter
                          avatarSize: .room(on: .details),
@@ -78,20 +72,6 @@ struct RoomDetailsScreen: View {
             }
         }
         .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.avatar)
-    }
-    
-    private func dmHeaderSection(accountOwner: RoomMemberDetails, recipient: RoomMemberDetails) -> some View {
-        AvatarHeaderView(accountOwner: accountOwner,
-                         dmRecipient: recipient,
-                         externalCount: $context.externalCount, // Tchap: pass `externalCount` binding parameter
-                         mediaProvider: context.mediaProvider) { url in
-            context.send(viewAction: .displayAvatar(url))
-        } footer: {
-            if !context.viewState.shortcuts.isEmpty {
-                headerSectionShortcuts
-            }
-        }
-        .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.dmAvatar)
     }
     
     @ViewBuilder
@@ -204,6 +184,14 @@ struct RoomDetailsScreen: View {
                                         icon: \.lock),
                         kind: .navigationLink {
                             context.send(viewAction: .processTapSecurityAndPrivacy)
+                        })
+            }
+            
+            if context.viewState.dmRecipient != nil {
+                ListRow(label: .default(title: L10n.screenRoomDetailsProfileRowTitle,
+                                        icon: \.userProfile),
+                        kind: .navigationLink {
+                            context.send(viewAction: .processTapRecipientProfile)
                         })
             }
         }
@@ -371,12 +359,12 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
         ]
         
         let roomProxy = JoinedRoomProxyMock(.init(id: "dm_room_id",
-                                                  name: "DM Room",
+                                                  name: "Dan",
                                                   topic: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
                                                   isDirect: true,
                                                   isEncrypted: true,
-                                                  canonicalAlias: "#alias:domain.com",
-                                                  members: members))
+                                                  members: members,
+                                                  heroes: [.mockDan]))
         let notificationSettingsProxy = NotificationSettingsProxyMock(with: .init())
         
         return RoomDetailsScreenViewModel(roomProxy: roomProxy,
@@ -421,13 +409,21 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
     
     static var previews: some View {
         RoomDetailsScreen(context: simpleRoomViewModel.context)
+            .snapshotPreferences(expect: simpleRoomViewModel.context.$viewState.map { state in
+                state.shortcuts.contains(.invite)
+            })
             .previewDisplayName("Simple Room")
-            .snapshotPreferences(delay: 2)
+        
         RoomDetailsScreen(context: dmRoomViewModel.context)
+            .snapshotPreferences(expect: dmRoomViewModel.context.$viewState.map { state in
+                state.accountOwner != nil
+            })
             .previewDisplayName("DM Room")
-            .snapshotPreferences(delay: 0.25)
+
         RoomDetailsScreen(context: genericRoomViewModel.context)
+            .snapshotPreferences(expect: genericRoomViewModel.context.$viewState.map { state in
+                state.shortcuts.contains(.invite)
+            })
             .previewDisplayName("Generic Room")
-            .snapshotPreferences(delay: 0.25)
     }
 }

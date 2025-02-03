@@ -212,7 +212,8 @@ targets:
     sources:
     - path: ../../ElementX/Sources
       excludes:
-        - Other/Extensions/XCUIElement.swift
+       - Other/Extensions/XCTestCase.swift
+       - Other/Extensions/XCUIElement.swift
     - path: ../main/Sources
       excludes:
         - Other/Extensions/XCUIElement.swift
