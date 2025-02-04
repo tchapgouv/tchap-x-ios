@@ -238,9 +238,11 @@ struct CreateRoomScreen: View {
 //                                    icon: \.public,
 //                                    iconAlignment: .top),
 //                    kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
+
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateEncryptedOptionTitle,
                                     description: TchapL10n.screenCreateRoomPrivateEncryptedOptionDescription,
-                                    icon: \.lockSolid, // Tchap: Should modify `ListRowLabel.iconForegroundColor` to tint icon.
+                                    icon: \.lockSolid,
+                                    role: .coloredIcon(CompoundCoreColorTokens.green800),
                                     iconAlignment: .top),
                     kind: .selection(isSelected: context.isRoomPrivate && context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = true })
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
