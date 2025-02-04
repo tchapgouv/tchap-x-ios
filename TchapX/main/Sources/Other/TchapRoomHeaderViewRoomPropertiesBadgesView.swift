@@ -26,7 +26,7 @@ struct TchapRoomHeaderViewRoomPropertiesBadgesView: View {
                isPublic == true {
                 BadgeLabel(title: TchapL10n.roomHeaderBadgePublic, icon: \.public, isHighlighted: false, tchapUsage: .roomIsPublic)
             } else if externalCount > 0 {
-                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.group, isHighlighted: false, tchapUsage: .roomIsAccessibleToExternals)
+                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, isHighlighted: false, tchapUsage: .roomIsAccessibleToExternals)
             }
         }
     }
