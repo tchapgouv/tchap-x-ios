@@ -251,7 +251,7 @@ struct CreateRoomScreen: View {
                                     iconAlignment: .top),
                     kind: .selection(isSelected: context.isRoomPrivate && !context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = false })
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPublicOptionTitle,
-                                    attributedDescription: warningPublicRoomIsNotOpenToExterns,
+                                    attributedDescriptionWhenDisabled: warningPublicRoomIsNotOpenToExterns,
                                     icon: \.public,
                                     iconAlignment: .top),
                     kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })

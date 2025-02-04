@@ -28,11 +28,11 @@ struct BadgeLabel: View {
     var iconSize: CompoundIcon.Size {
         switch tchapUsage {
         case .none: .xSmall
-        case .userIsExternal: .xxSmall
-        case .roomIsEncrypted: .xxSmall
-        case .roomIsNotEncrypted: .xxSmall
-        case .roomIsPublic: .xxSmall
-        case .roomIsAccessibleToExternals: .xxSmall
+        case .userIsExternal: .xSmall
+        case .roomIsEncrypted: .xSmall
+        case .roomIsNotEncrypted: .xSmall
+        case .roomIsPublic: .xSmall
+        case .roomIsAccessibleToExternals: .xSmall
         }
     }
 
