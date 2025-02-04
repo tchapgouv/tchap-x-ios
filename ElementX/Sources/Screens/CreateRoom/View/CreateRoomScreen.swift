@@ -217,6 +217,14 @@ struct CreateRoomScreen: View {
         }
     }
     
+    // Tchap: colored line warning about publoc rooms not open to externals.
+    private var warningPublicRoomIsNotOpenToExterns: AttributedString {
+        let description = AttributedString(TchapL10n.screenCreateRoomPublicOptionDescription1)
+        var warning = AttributedString(TchapL10n.screenCreateRoomPublicOptionDescription2)
+        warning.foregroundColor = CompoundCoreColorTokens.orange700
+        return description + warning
+    }
+    
     private var securitySection: some View {
         Section {
             // Tchap: use Tchap own room types list
@@ -241,7 +249,7 @@ struct CreateRoomScreen: View {
                                     iconAlignment: .top),
                     kind: .selection(isSelected: context.isRoomPrivate && !context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = false })
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPublicOptionTitle,
-                                    description: TchapL10n.screenCreateRoomPublicOptionDescription,
+                                    attributedDescription: warningPublicRoomIsNotOpenToExterns,
                                     icon: \.public,
                                     iconAlignment: .top),
                     kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
