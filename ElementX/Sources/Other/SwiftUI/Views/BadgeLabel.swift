@@ -68,7 +68,7 @@ private struct BadgeLabelStyle: LabelStyle {
         case .roomIsEncrypted: CompoundCoreColorTokens.green1200
         case .roomIsNotEncrypted: CompoundCoreColorTokens.gray1200
         case .roomIsPublic: CompoundCoreColorTokens.gray1200
-        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.gray1200
+        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange1200
         }
     }
     
