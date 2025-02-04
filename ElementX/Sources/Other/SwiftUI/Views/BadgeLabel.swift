@@ -28,11 +28,11 @@ struct BadgeLabel: View {
     var iconSize: CompoundIcon.Size {
         switch tchapUsage {
         case .none: .xSmall
-        case .userIsExternal: .xxSmall
-        case .roomIsEncrypted: .xxSmall
-        case .roomIsNotEncrypted: .xxSmall
-        case .roomIsPublic: .xxSmall
-        case .roomIsAccessibleToExternals: .xxSmall
+        case .userIsExternal: .xSmall
+        case .roomIsEncrypted: .xSmall
+        case .roomIsNotEncrypted: .xSmall
+        case .roomIsPublic: .xSmall
+        case .roomIsAccessibleToExternals: .xSmall
         }
     }
 
@@ -68,7 +68,7 @@ private struct BadgeLabelStyle: LabelStyle {
         case .roomIsEncrypted: CompoundCoreColorTokens.green1200
         case .roomIsNotEncrypted: CompoundCoreColorTokens.gray1200
         case .roomIsPublic: CompoundCoreColorTokens.gray1200
-        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.gray1200
+        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange1200
         }
     }
     
@@ -83,7 +83,7 @@ private struct BadgeLabelStyle: LabelStyle {
         case .roomIsEncrypted: CompoundCoreColorTokens.green1200
         case .roomIsNotEncrypted: CompoundCoreColorTokens.gray1200
         case .roomIsPublic: CompoundCoreColorTokens.gray1200
-        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.gray1200
+        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange1200
         }
     }
 
@@ -98,7 +98,7 @@ private struct BadgeLabelStyle: LabelStyle {
         case .roomIsEncrypted: CompoundCoreColorTokens.green400
         case .roomIsNotEncrypted: CompoundCoreColorTokens.gray400
         case .roomIsPublic: CompoundCoreColorTokens.gray400
-        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.gray400
+        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange400
         }
     }
     

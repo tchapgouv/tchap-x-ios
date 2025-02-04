@@ -22,7 +22,7 @@ struct RoomHeaderView: View {
             avatarImage
                 .accessibilityHidden(true)
             // Tchap: embedd in a VStack to add badges.
-            VStack(alignment: .leading, spacing: -2.0) {
+            VStack(alignment: .leading, spacing: 0.0) {
                 Text(roomName)
                     .lineLimit(1)
                     .font(.compound.bodyLGSemibold)
@@ -30,6 +30,7 @@ struct RoomHeaderView: View {
                 // Tchap: additional room info
                 roomPropertiesBadgesView
                     .zIndex(-1)
+                Spacer(minLength: 8)
             }
         }
         // Take up as much space as possible, with a leading alignment for use in the principal toolbar position.
