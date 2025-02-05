@@ -113,9 +113,10 @@ targets:
 
     settings:
       base:
-        PRODUCTION_APP_NAME: TchapX DEVELOPMENT
-        BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx.dev
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.dev
+        BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx.dev
+        KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(AppIdentifierPrefix)$(BASE_BUNDLE_IDENTIFIER)"
+        PRODUCTION_APP_NAME: TchapX DEVELOPMENT
         APP_NAME: TchapX-Development
         APP_DISPLAY_NAME: TchapX Development # The name used in the application.
 
@@ -180,9 +181,11 @@ targets:
 
     dependencies:
     - target: TchapX-NSE-Development
+    - target: TchapX-ShareExtension-Development
     # not used yet
     # - target: NCE
     - package: MatrixRustSDK
+      embed: true
     - package: Compound
     - package: Algorithms
     - package: AnalyticsEvents
@@ -212,8 +215,8 @@ targets:
     sources:
     - path: ../../ElementX/Sources
       excludes:
-       - Other/Extensions/XCTestCase.swift
-       - Other/Extensions/XCUIElement.swift
+        - Other/Extensions/XCTestCase.swift
+        - Other/Extensions/XCUIElement.swift
     - path: ../main/Sources
       excludes:
         - Other/Extensions/XCUIElement.swift

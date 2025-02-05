@@ -62,6 +62,9 @@ targets:
 
     settings:
       base:
+        BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.staging
+        BASE_APP_GROUP_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
+        APP_GROUP_IDENTIFIER: group.$(BASE_APP_GROUP_IDENTIFIER)
         PRODUCT_NAME: TchapX-ShareExtension-Staging
         PRODUCT_DISPLAY_NAME: $(APP_DISPLAY_NAME)
         PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.shareextension

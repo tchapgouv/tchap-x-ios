@@ -113,9 +113,10 @@ targets:
 
     settings:
       base:
-        PRODUCTION_APP_NAME: TchapX STAGING
-        BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx.staging
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.staging
+        BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx.staging
+        KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(AppIdentifierPrefix)$(BASE_BUNDLE_IDENTIFIER)"
+        PRODUCTION_APP_NAME: TchapX STAGING
         APP_NAME: TchapX-Staging
         APP_DISPLAY_NAME: TchapX Staging # The name used in the application.
 
@@ -180,9 +181,11 @@ targets:
 
     dependencies:
     - target: TchapX-NSE-Staging
+    - target: TchapX-ShareExtension-Staging
     # not used yet
     # - target: NCE
     - package: MatrixRustSDK
+      embed: true
     - package: Compound
     - package: Algorithms
     - package: AnalyticsEvents
