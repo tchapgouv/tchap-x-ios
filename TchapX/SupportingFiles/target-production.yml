@@ -117,7 +117,7 @@ targets:
         # Generate SPKI: cat certignaservicesrootca.pem | openssl x509 -inform pem -noout -outform pem -pubkey | openssl pkey -pubin -inform pem -outform der | openssl dgst -sha256 -binary | openssl enc -base64
         NSAppTransportSecurity: {
           NSPinnedDomains: {
-            "tchap.gouv.fr": {
+            "gouv.fr": {
               NSIncludesSubdomains: true,
               NSPinnedCAIdentities: [
                 "SPKI-SHA256-BASE64": "Vvyvg4+bOEbI6aO7K28ioVsUfckLqCSKqlIqZTEB/uE=",
@@ -129,9 +129,10 @@ targets:
 
     settings:
       base:
-        PRODUCTION_APP_NAME: TchapX PRODUCTION
-        BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx
+        BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx
+        KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(AppIdentifierPrefix)$(BASE_BUNDLE_IDENTIFIER)"
+        PRODUCTION_APP_NAME: TchapX PRODUCTION
         APP_NAME: TchapX-Production
         APP_DISPLAY_NAME: TchapX # The name used in the application.
 
@@ -196,9 +197,11 @@ targets:
 
     dependencies:
     - target: TchapX-NSE-Production
+    - target: TchapX-ShareExtension-Production
     # not used yet
     # - target: NCE
     - package: MatrixRustSDK
+      embed: true
     - package: Compound
     - package: Algorithms
     - package: AnalyticsEvents

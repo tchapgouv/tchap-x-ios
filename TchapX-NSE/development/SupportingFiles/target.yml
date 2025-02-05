@@ -58,9 +58,9 @@ targets:
 
     settings:
       base:
-        PRODUCTION_APP_NAME: TchapX-NSE Development
-        BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx.dev
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.dev
+        BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx.dev
+        PRODUCTION_APP_NAME: TchapX-NSE Development
         APP_NAME: TchapX-NSE-Development
         APP_DISPLAY_NAME: TchapX-NSE Development
 
