@@ -1,14 +1,14 @@
-name: TchapX-ShareExtension-Staging
+name: TchapX-Staging-ShareExtension
 
 schemes:
-  TchapX-ShareExtension-Staging:
+  TchapX-Staging-ShareExtension:
     analyze:
       config: Debug
     archive:
       config: Release
     build:
       targets:
-        TchapX-ShareExtension-Staging:
+        TchapX-Staging-ShareExtension:
         - running
         - testing
         - profiling
@@ -27,7 +27,7 @@ schemes:
       disableMainThreadChecker: false
 
 targets:
-  TchapX-ShareExtension-Staging:
+  TchapX-Staging-ShareExtension:
     type: app-extension
     platform: iOS
 
@@ -65,8 +65,8 @@ targets:
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.staging
         BASE_APP_GROUP_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
         APP_GROUP_IDENTIFIER: group.$(BASE_APP_GROUP_IDENTIFIER)
-        APP_DISPLAY_NAME: TchapX-ShareExtension Staging
-        PRODUCT_NAME: TchapX-ShareExtension-Staging
+        APP_DISPLAY_NAME: TchapX-Staging ShareExtension
+        PRODUCT_NAME: TchapX-Staging-ShareExtension
         PRODUCT_DISPLAY_NAME: $(APP_DISPLAY_NAME)
         PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.shareextension
         MARKETING_VERSION: $(MARKETING_VERSION)

@@ -1,14 +1,14 @@
-name: TchapX-NSE-Staging
+name: TchapX-Staging-NSE
 
 schemes:
-  TchapX-NSE-Staging:
+  TchapX-Staging-NSE:
     analyze:
       config: Debug
     archive:
       config: Release
     build:
       targets:
-        TchapX-NSE-Staging:
+        TchapX-Staging-NSE:
         - running
         - testing
         - profiling
@@ -27,7 +27,7 @@ schemes:
       disableMainThreadChecker: false
 
 targets:
-  TchapX-NSE-Staging:
+  TchapX-Staging-NSE:
     type: app-extension
     platform: iOS
 
@@ -60,11 +60,11 @@ targets:
       base:
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.staging
         BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx.staging
-        PRODUCTION_APP_NAME: TchapX-NSE Staging
-        APP_NAME: TchapX-NSE-Staging
-        APP_DISPLAY_NAME: TchapX-NSE Staging
+        PRODUCTION_APP_NAME: TchapX-Staging NSE
+        APP_NAME: TchapX-Staging-NSE
+        APP_DISPLAY_NAME: TchapX-Staging NSE
 
-        PRODUCT_NAME: TchapX-NSE-Staging
+        PRODUCT_NAME: TchapX-Staging-NSE
         PRODUCT_DISPLAY_NAME: $(APP_DISPLAY_NAME)
         PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.nse
         MARKETING_VERSION: $(MARKETING_VERSION)

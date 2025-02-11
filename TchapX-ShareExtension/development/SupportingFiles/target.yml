@@ -1,14 +1,14 @@
-name: TchapX-ShareExtension-Development
+name: TchapX-Development-ShareExtension
 
 schemes:
-  TchapX-ShareExtension-Development:
+  TchapX-Development-ShareExtension:
     analyze:
       config: Debug
     archive:
       config: Release
     build:
       targets:
-        TchapX-ShareExtension-Development:
+        TchapX-Development-ShareExtension:
         - running
         - testing
         - profiling
@@ -27,7 +27,7 @@ schemes:
       disableMainThreadChecker: false
 
 targets:
-  TchapX-ShareExtension-Development:
+  TchapX-Development-ShareExtension:
     type: app-extension
     platform: iOS
 
@@ -65,8 +65,8 @@ targets:
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.dev
         BASE_APP_GROUP_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
         APP_GROUP_IDENTIFIER: group.$(BASE_APP_GROUP_IDENTIFIER)
-        APP_DISPLAY_NAME: TchapX-ShareExtension Development
-        PRODUCT_NAME: TchapX-ShareExtension-Development
+        APP_DISPLAY_NAME: TchapX-Development ShareExtension
+        PRODUCT_NAME: TchapX-Development-ShareExtension
         PRODUCT_DISPLAY_NAME: $(APP_DISPLAY_NAME)
         PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.shareextension
         MARKETING_VERSION: $(MARKETING_VERSION)

@@ -198,8 +198,8 @@ targets:
         fi
 
     dependencies:
-    - target: TchapX-NSE-Production
-    - target: TchapX-ShareExtension-Production
+    - target: TchapX-Production-NSE
+    - target: TchapX-Production-ShareExtension
     # not used yet
     # - target: NCE
     - package: MatrixRustSDK

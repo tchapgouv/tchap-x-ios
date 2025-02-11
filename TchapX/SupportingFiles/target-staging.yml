@@ -182,8 +182,8 @@ targets:
         fi
 
     dependencies:
-    - target: TchapX-NSE-Staging
-    - target: TchapX-ShareExtension-Staging
+    - target: TchapX-Staging-NSE
+    - target: TchapX-Staging-ShareExtension
     # not used yet
     # - target: NCE
     - package: MatrixRustSDK
