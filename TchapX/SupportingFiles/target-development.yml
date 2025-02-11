@@ -34,8 +34,10 @@ schemes:
       coverageTargets:
         - TchapX-Development
       testPlans:
-        - path: ../../UnitTests/SupportingFiles/UnitTests.xctestplan
+        - path: ../UnitTests/SupportingFiles/UnitTests.xctestplan
           defaultPlan: true
+        - path: ../UITests/SupportingFiles/UITests.xctestplan
+          defaultPlan: false
 
 targets:
   TchapX-Development:

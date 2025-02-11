@@ -37,7 +37,7 @@ targets:
       - package: Compound
 
     info:
-      path: Info.plist
+      path: ../SupportingFiles/Info.plist
       properties:
         CFBundleDisplayName: $(PRODUCT_DISPLAY_NAME)
         CFBundleShortVersionString: $(MARKETING_VERSION)
@@ -65,6 +65,7 @@ targets:
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx
         BASE_APP_GROUP_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
         APP_GROUP_IDENTIFIER: group.$(BASE_APP_GROUP_IDENTIFIER)
+        APP_DISPLAY_NAME: TchapX-ShareExtension Production
         PRODUCT_NAME: TchapX-ShareExtension-Production
         PRODUCT_DISPLAY_NAME: $(APP_DISPLAY_NAME)
         PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.shareextension

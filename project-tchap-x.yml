@@ -19,6 +19,7 @@ options:
     order:
     - Sources
     - UnitTests
+    - UITests
     - Resources
     - SupportingFiles
 
@@ -43,3 +44,4 @@ include:
 - path: TchapX-ShareExtension/development/SupportingFiles/target.yml
 
 - path: TchapX/SupportingFiles/target-unitTests.yml
+- path: TchapX/SupportingFiles/target-UITests.yml

@@ -23,8 +23,8 @@
     {
       "target" : {
         "containerPath" : "container:TchapX.xcodeproj",
-        "identifier" : "1DD96BBB3C4E4AEAA7084993",
-        "name" : "TchapX-UnitTests"
+        "identifier" : "A307AE776E1E01CC080003D8",
+        "name" : "TchapX-UITests"
       }
     }
   ],
