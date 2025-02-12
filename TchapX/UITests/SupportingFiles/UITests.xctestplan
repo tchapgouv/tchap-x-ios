@@ -2,10 +2,10 @@
   "configurations" : [
     {
       "id" : "183696C6-4CBB-4BCE-8F4C-D2B848395699",
-      "name" : "English",
+      "name" : "Français",
       "options" : {
-        "language" : "en",
-        "region" : "GB"
+        "language" : "fr",
+        "region" : "FR"
       }
     }
   ],
@@ -35,7 +35,7 @@
       }
     ],
     "locationScenario" : {
-      "identifier" : "London, England",
+      "identifier" : "Paris, France",
       "referenceType" : "built-in"
     },
     "targetForVariableExpansion" : {

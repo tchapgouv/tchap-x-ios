@@ -32,3 +32,6 @@ Certains paramètres du simulateur comme la langue ou la géolocalisation peuven
 
 Documentation :
 -  https://developer.apple.com/documentation/xctest
+
+
+Les tests Preview sont accessibles de la même manière.

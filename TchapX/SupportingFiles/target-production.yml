@@ -38,6 +38,8 @@ schemes:
           defaultPlan: true
         - path: ../UITests/SupportingFiles/UITests.xctestplan
           defaultPlan: false
+        - path: ../PreviewTests/SupportingFiles/PreviewTests.xctestplan
+          defaultPlan: false
 
 targets:
   TchapX-Production:

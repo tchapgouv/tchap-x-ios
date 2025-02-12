@@ -43,5 +43,6 @@ include:
 - path: TchapX-NSE/development/SupportingFiles/target.yml
 - path: TchapX-ShareExtension/development/SupportingFiles/target.yml
 
-- path: TchapX/SupportingFiles/target-unitTests.yml
+- path: TchapX/SupportingFiles/target-UnitTests.yml
 - path: TchapX/SupportingFiles/target-UITests.yml
+- path: TchapX/SupportingFiles/target-PreviewTests.yml
