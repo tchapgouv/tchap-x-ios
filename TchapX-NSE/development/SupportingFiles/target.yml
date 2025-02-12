@@ -1,14 +1,14 @@
-name: TchapX-NSE-Development
+name: TchapX-Development-NSE
 
 schemes:
-  TchapX-NSE-Development:
+  TchapX-Development-NSE:
     analyze:
       config: Debug
     archive:
       config: Release
     build:
       targets:
-        TchapX-NSE-Development:
+        TchapX-Development-NSE:
         - running
         - testing
         - profiling
@@ -27,7 +27,7 @@ schemes:
       disableMainThreadChecker: false
 
 targets:
-  TchapX-NSE-Development:
+  TchapX-Development-NSE:
     type: app-extension
     platform: iOS
 
@@ -60,11 +60,11 @@ targets:
       base:
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.dev
         BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx.dev
-        PRODUCTION_APP_NAME: TchapX-NSE Development
-        APP_NAME: TchapX-NSE-Development
-        APP_DISPLAY_NAME: TchapX-NSE Development
+        PRODUCTION_APP_NAME: TchapX-Development NSE
+        APP_NAME: TchapX-Development-NSE
+        APP_DISPLAY_NAME: TchapX-Development NSE
 
-        PRODUCT_NAME: TchapX-NSE-Development
+        PRODUCT_NAME: TchapX-Development-NSE
         PRODUCT_DISPLAY_NAME: $(APP_DISPLAY_NAME)
         PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.nse
         MARKETING_VERSION: $(MARKETING_VERSION)

@@ -34,8 +34,10 @@ schemes:
       coverageTargets:
         - TchapX-Development
       testPlans:
-        - path: ../../UnitTests/SupportingFiles/UnitTests.xctestplan
+        - path: ../UnitTests/SupportingFiles/UnitTests.xctestplan
           defaultPlan: true
+        - path: ../UITests/SupportingFiles/UITests.xctestplan
+          defaultPlan: false
 
 targets:
   TchapX-Development:
@@ -180,8 +182,8 @@ targets:
         fi
 
     dependencies:
-    - target: TchapX-NSE-Development
-    - target: TchapX-ShareExtension-Development
+    - target: TchapX-Development-NSE
+    - target: TchapX-Development-ShareExtension
     # not used yet
     # - target: NCE
     - package: MatrixRustSDK

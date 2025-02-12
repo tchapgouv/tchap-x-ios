@@ -1,0 +1,70 @@
+name: TchapX-UITests
+
+schemes:
+  TchapX-UITests:
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+    build:
+      targets:
+        TchapX-UITests: all
+    profile:
+      config: Release
+    run:
+      config: Debug
+      disableMainThreadChecker: false
+    test:
+      config: Debug
+      testPlans:
+        - path: ../UITests/SupportingFiles/UITests.xctestplan
+        # Don't set it as defaultPlan to avoid conflict with ElementX defaultPlan.
+          defaultPlan: true
+
+targets:
+  TchapX-UITests:
+    type: bundle.ui-testing
+    platform: iOS
+
+    dependencies:
+    - target: TchapX-Production
+    - package: MatrixRustSDK
+    - package: AnalyticsEvents
+    - package: DeviceKit
+    - package: DTCoreText
+    - package: KeychainAccess
+    - package: Kingfisher
+    - package: KZFileWatchers
+    - package: PostHog
+    - package: SwiftState
+    - package: GZIP
+    - package: Sentry
+    - package: SnapshotTesting
+    - package: Collections
+    - package: SwiftOGG
+
+    info:
+      path: ../UITests/SupportingFiles/Info.plist
+
+    settings:
+      base:
+        BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx
+        BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx
+        APP_GROUP_IDENTIFIER: group.$(BASE_APP_GROUP_IDENTIFIER)
+        APP_DISPLAY_NAME: TchapX # The name used in the application.
+        PRODUCT_NAME: TchapX-UITests
+        PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.ui.tests
+      debug:
+      release:
+
+    sources:
+    - path: ../../UITests/Sources
+      excludes:
+        - "**/__Snapshots__/**"
+    - path: ../SupportingFiles
+    - path: ../../ElementX/Sources/Other/AccessibilityIdentifiers.swift
+    - path: ../../ElementX/Sources/Other/Extensions/Bundle.swift
+    - path: ../../ElementX/Sources/Other/Extensions/XCUIElement.swift
+    - path: ../../ElementX/Sources/UITests/UITestsScreenIdentifier.swift
+    - path: ../../ElementX/Sources/UITests/UITestsSignalling.swift
+    - path: ../../Tools/Scripts/Templates/SimpleScreenExample/Tests/UI

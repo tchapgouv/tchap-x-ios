@@ -2,7 +2,7 @@
   "configurations" : [
     {
       "id" : "991CB720-B4D2-4F1F-BB8A-A2C1A717F529",
-      "name" : "TchapX",
+      "name" : "TchapX-Production",
       "options" : {
 
       }
@@ -23,8 +23,8 @@
     {
       "target" : {
         "containerPath" : "container:TchapX.xcodeproj",
-        "identifier" : "E156D99C308BC583D03697F6",
-        "name" : "Tchap-Production"
+        "identifier" : "1DD96BBB3C4E4AEAA7084993",
+        "name" : "TchapX-UnitTests"
       }
     }
   ],

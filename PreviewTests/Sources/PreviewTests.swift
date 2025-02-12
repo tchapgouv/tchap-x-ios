@@ -9,13 +9,13 @@ import Combine
 import SwiftUI
 import XCTest
 
-@testable import ElementX
 @testable import SnapshotTesting
+@testable import TchapX_Production // Tchap: adjustement
 
 @MainActor
 class PreviewTests: XCTestCase {
     private let deviceConfig: ViewImageConfig = .iPhoneX
-    private let simulatorDevice: String? = "iPhone14,6" // iPhone SE 3rd Generation
+    private let simulatorDevice: String? = "iPhone17,3" // iPhone 16 // Tchap: adjustement
     private let requiredOSVersion = (major: 18, minor: 1)
     private let snapshotDevices = ["iPhone 16", "iPad"]
     private var recordMode: SnapshotTestingConfiguration.Record = .missing
