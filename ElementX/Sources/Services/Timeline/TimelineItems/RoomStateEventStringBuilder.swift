@@ -203,8 +203,13 @@ struct RoomStateEventStringBuilder {
             break
         case .spaceChild, .spaceParent: // Users shouldn't see the timeline of a Space.
             break
-        case .custom: // Won't provide actionable information to the user.
-            break
+        // Tchap: intercept access_rule event
+        //        case .custom: // Won't provide actionable information to the user.
+        //            break
+        case .custom(let eventType):
+            if eventType == "im.vector.room.access_rules" {
+                return TchapL10n.stateEventRoomAccessRules
+            }
         }
         
         MXLog.verbose("Filtering timeline item for state: \(state)")

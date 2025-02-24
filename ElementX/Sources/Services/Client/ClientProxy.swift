@@ -393,7 +393,10 @@ class ClientProxy: ClientProxyProtocol {
     }
     
     // swiftlint:disable:next function_parameter_count
-    func createRoom(name: String,
+    // Tchap: handle `access_rules` state event at room creation.
+//    func createRoom(name: String,
+    func createRoom(accessRules: AccessRule? = nil,
+                    name: String,
                     topic: String?,
                     isRoomPrivate: Bool,
                     isRoomEncrypted: Bool, // Tchap: additional parameter
@@ -402,7 +405,10 @@ class ClientProxy: ClientProxyProtocol {
                     avatarURL: URL?,
                     aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
         do {
-            let parameters = CreateRoomParameters(name: name,
+            // Tchap: handle `access_rules` state event at room creation.
+//            let parameters = CreateRoomParameters(name: name,
+            let parameters = CreateRoomParameters(accessRulesOverride: accessRules,
+                                                  name: name,
                                                   topic: topic,
                                                   // Tchap: handle correctly additional property
 //                                                  isEncrypted: isRoomPrivate,
@@ -864,6 +870,9 @@ class ClientProxy: ClientProxyProtocol {
                 break
             case .error:
                 restartSync()
+            case .offline:
+                // This needs to be enabled in the client builder first to be actually used
+                break
             }
         })
     }

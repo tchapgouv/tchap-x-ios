@@ -262,7 +262,16 @@ class CreateRoomViewModel: CreateRoomViewModelType, CreateRoomViewModelProtocol 
             avatarURL = nil
         }
         
-        switch await userSession.clientProxy.createRoom(name: createRoomParameters.name,
+        // Tchap: handle `access_rules` state event at room creation.
+        let roomIsPublic = !createRoomParameters.isRoomPrivate
+        let roomAcceptExternals = state.selectedUsers.contains { MatrixIdFromString($0.userID).isExternalTchapUser }
+        
+        let roomAccessRules: AccessRule = roomIsPublic || !roomAcceptExternals ? .restricted : .unrestricted
+        
+        // Tchap: handle `access_rules` state event at room creation.
+//        switch await userSession.clientProxy.createRoom(name: createRoomParameters.name,
+        switch await userSession.clientProxy.createRoom(accessRules: roomAccessRules,
+                                                        name: createRoomParameters.name,
                                                         topic: createRoomParameters.topic,
                                                         isRoomPrivate: createRoomParameters.isRoomPrivate,
                                                         isRoomEncrypted: createRoomParameters.isRoomEncrypted, // Tchap: additional property

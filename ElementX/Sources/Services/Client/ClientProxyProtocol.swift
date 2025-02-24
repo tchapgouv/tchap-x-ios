@@ -120,7 +120,10 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func createDirectRoom(with userID: String, expectedRoomName: String?) async -> Result<String, ClientProxyError>
     
     // swiftlint:disable:next function_parameter_count
-    func createRoom(name: String,
+    // Tchap: handle `access_rules` state event at room creation.
+//    func createRoom(name: String,
+    func createRoom(accessRules: AccessRule?,
+                    name: String,
                     topic: String?,
                     isRoomPrivate: Bool,
                     isRoomEncrypted: Bool, // Tchap: additional property

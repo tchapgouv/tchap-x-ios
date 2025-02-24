@@ -311,7 +311,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         // Tchap: fill room properties
         state.bindings.isEncrypted = roomProxy.isEncrypted
         state.bindings.isPublic = roomProxy.infoPublisher.value.isPublic
-        // Tchap: Tchap should read the `external` valu in the `accessRules` of the room.
+        // Tchap: Tchap should read the `external` value in the `accessRules` of the room.
         state.bindings.externalCount = roomProxy.membersPublisher.value.filter { MatrixIdFromString($0.userID).isExternalTchapUser }.count
     }
     
