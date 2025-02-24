@@ -68,7 +68,7 @@
 	<dict>
 		<key>NSPinnedDomains</key>
 		<dict>
-			<key>tchap.gouv.fr</key>
+			<key>gouv.fr</key>
 			<dict>
 				<key>NSIncludesSubdomains</key>
 				<true/>
