@@ -204,8 +204,16 @@ final class AppSettings {
     
     // Tchap: use Tchap Sygnal as push notification server.
 //    let pushGatewayBaseURL: URL = "https://matrix.org/_matrix/push/v1/notify"
+    #if IS_TCHAP_DEVELOPMENT
+    let pushGatewayBaseURL: URL = "https://sygnal.tchap.incubateur.net/_matrix/push/v1/notify"
+    #elseif IS_TCHAP_STAGING
+    let pushGatewayBaseURL: URL = "https://sygnal.preprod.tchap.gouv.fr/_matrix/push/v1/notify"
+    #elseif IS_TCHAP_PRODUCTION
     let pushGatewayBaseURL: URL = "https://sygnal.tchap.gouv.fr/_matrix/push/v1/notify"
-
+    #else
+    let pushGatewayBaseURL: URL = "https://matrix.org/_matrix/push/v1/notify"
+    #endif
+    
     @UserPreference(key: UserDefaultsKeys.enableNotifications, defaultValue: true, storageType: .userDefaults(store))
     var enableNotifications
 
