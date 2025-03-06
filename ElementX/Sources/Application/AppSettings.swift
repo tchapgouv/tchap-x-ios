@@ -202,7 +202,7 @@ final class AppSettings {
 //        InfoPlistReader.main.baseBundleIdentifier + ".ios.prod"
 //        #endif
         InfoPlistReader.main.baseBundleIdentifier + ".ios.prod"
-   }
+    }
     
     // Tchap: use Tchap Sygnal as push notification server.
 //    let pushGatewayBaseURL: URL = "https://matrix.org/_matrix/push/v1/notify"
