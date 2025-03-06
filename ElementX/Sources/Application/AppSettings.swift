@@ -195,14 +195,26 @@ final class AppSettings {
     // MARK: - Notifications
     
     var pusherAppId: String {
-        #if DEBUG
-        InfoPlistReader.main.baseBundleIdentifier + ".ios.dev"
-        #else
+        // Tchap: always use `.ios.prod` pusherAppId suffix.
+//        #if DEBUG
+//        InfoPlistReader.main.baseBundleIdentifier + ".ios.dev"
+//        #else
+//        InfoPlistReader.main.baseBundleIdentifier + ".ios.prod"
+//        #endif
         InfoPlistReader.main.baseBundleIdentifier + ".ios.prod"
-        #endif
     }
     
+    // Tchap: use Tchap Sygnal as push notification server.
+//    let pushGatewayBaseURL: URL = "https://matrix.org/_matrix/push/v1/notify"
+    #if IS_TCHAP_DEVELOPMENT
+    let pushGatewayBaseURL: URL = "https://sygnal.tchap.incubateur.net/_matrix/push/v1/notify"
+    #elseif IS_TCHAP_STAGING
+    let pushGatewayBaseURL: URL = "https://sygnal.preprod.tchap.gouv.fr/_matrix/push/v1/notify"
+    #elseif IS_TCHAP_PRODUCTION
+    let pushGatewayBaseURL: URL = "https://sygnal.tchap.gouv.fr/_matrix/push/v1/notify"
+    #else
     let pushGatewayBaseURL: URL = "https://matrix.org/_matrix/push/v1/notify"
+    #endif
     
     @UserPreference(key: UserDefaultsKeys.enableNotifications, defaultValue: true, storageType: .userDefaults(store))
     var enableNotifications
