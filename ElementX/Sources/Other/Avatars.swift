@@ -70,12 +70,14 @@ enum UserAvatarSizeOnScreen {
     case readReceipt
     case readReceiptSheet
     case editUserDetails
-    case suggestions
+    case completionSuggestions
     case blockedUsers
     case knockingUsersBannerStack
     case knockingUserBanner
     case knockingUserList
     case mediaPreviewDetails
+    case sendInviteConfirmation
+    case sessionVerification
 
     var value: CGFloat {
         switch self {
@@ -87,7 +89,7 @@ enum UserAvatarSizeOnScreen {
             return 32
         case .home:
             return 32
-        case .suggestions:
+        case .completionSuggestions:
             return 32
         case .blockedUsers:
             return 32
@@ -113,6 +115,10 @@ enum UserAvatarSizeOnScreen {
             return 52
         case .mediaPreviewDetails:
             return 32
+        case .sendInviteConfirmation:
+            return 64
+        case .sessionVerification:
+            return 52
         }
     }
 }
@@ -127,6 +133,7 @@ enum RoomAvatarSizeOnScreen {
     case notificationSettings
     case roomDirectorySearch
     case joinRoom
+    case completionSuggestions
 
     var value: CGFloat {
         switch self {
@@ -135,6 +142,8 @@ enum RoomAvatarSizeOnScreen {
         case .timeline:
             return 32
         case .roomDirectorySearch:
+            return 32
+        case .completionSuggestions:
             return 32
         case .messageForwarding:
             return 36

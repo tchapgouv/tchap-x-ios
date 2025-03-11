@@ -42,10 +42,20 @@ class RoomMemberDetailsScreenViewModel: RoomMemberDetailsScreenViewModelType, Ro
         super.init(initialViewState: initialViewState, mediaProvider: mediaProvider)
         
         showMemberLoadingIndicator()
+        
         Task {
             await loadMember()
             hideMemberLoadingIndicator()
         }
+        
+        roomProxy.identityStatusChangesPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { changes in
+                if changes.map(\.userId).contains(userID) {
+                    Task { await self.loadMember() }
+                }
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Public
@@ -71,18 +81,21 @@ class RoomMemberDetailsScreenViewModel: RoomMemberDetailsScreenViewModelType, Ro
             Task { await displayFullScreenAvatar(url) }
         case .openDirectChat:
             Task { await openDirectChat() }
+        case .createDirectChat:
+            Task { await createDirectChat() }
         case .startCall(let roomID):
             actionsSubject.send(.startCall(roomID: roomID))
+        case .verifyUser:
+            actionsSubject.send(.verifyUser(userID: state.userID))
+        case .withdrawVerification:
+            Task { await clientProxy.withdrawUserIdentityVerification(state.userID) }
         }
     }
 
     // MARK: - Private
     
     private func loadMember() async {
-        async let memberResult = roomProxy.getMember(userID: state.userID)
-        async let identityResult = clientProxy.userIdentity(for: state.userID)
-        
-        switch await memberResult {
+        switch await roomProxy.getMember(userID: state.userID) {
         case .success(let member):
             roomMemberProxy = member
             state.memberDetails = RoomMemberDetails(withProxy: member)
@@ -101,8 +114,8 @@ class RoomMemberDetailsScreenViewModel: RoomMemberDetailsScreenViewModelType, Ro
             actionsSubject.send(.openUserProfile)
         }
         
-        if case let .success(.some(identity)) = await identityResult {
-            state.isVerified = identity.isVerified()
+        if case let .success(.some(identity)) = await clientProxy.userIdentity(for: state.userID) {
+            state.verificationState = identity.verificationState
         } else {
             MXLog.error("Failed to find the member's identity.")
         }
@@ -178,14 +191,36 @@ class RoomMemberDetailsScreenViewModel: RoomMemberDetailsScreenViewModelType, Ro
         userIndicatorController.submitIndicator(UserIndicator(id: loadingIndicatorIdentifier,
                                                               type: .modal(progress: .indeterminate, interactiveDismissDisabled: true, allowsInteraction: false),
                                                               title: L10n.commonLoading,
-                                                              persistent: true))
+                                                              persistent: true),
+                                                delay: .milliseconds(200))
         defer { userIndicatorController.retractIndicatorWithId(loadingIndicatorIdentifier) }
         
-        switch await clientProxy.createDirectRoomIfNeeded(with: roomMemberProxy.userID, expectedRoomName: roomMemberProxy.displayName) {
-        case .success((let roomID, let isNewRoom)):
-            if isNewRoom {
-                analytics.trackCreatedRoom(isDM: true)
+        switch await clientProxy.directRoomForUserID(roomMemberProxy.userID) {
+        case .success(let roomID):
+            if let roomID {
+                actionsSubject.send(.openDirectChat(roomID: roomID))
+            } else {
+                state.bindings.inviteConfirmationUser = .init(userID: roomMemberProxy.userID, displayName: roomMemberProxy.displayName, avatarURL: roomMemberProxy.avatarURL)
             }
+        case .failure:
+            state.bindings.alertInfo = .init(id: .failedOpeningDirectChat)
+        }
+    }
+    
+    private func createDirectChat() async {
+        guard let roomMemberProxy else { fatalError() }
+
+        let loadingIndicatorIdentifier = "createDirectChatLoadingIndicator"
+        userIndicatorController.submitIndicator(UserIndicator(id: loadingIndicatorIdentifier,
+                                                              type: .modal(progress: .indeterminate, interactiveDismissDisabled: true, allowsInteraction: false),
+                                                              title: L10n.commonLoading,
+                                                              persistent: true),
+                                                delay: .milliseconds(200))
+        defer { userIndicatorController.retractIndicatorWithId(loadingIndicatorIdentifier) }
+        
+        switch await clientProxy.createDirectRoom(with: roomMemberProxy.userID, expectedRoomName: roomMemberProxy.displayName) {
+        case .success(let roomID):
+            analytics.trackCreatedRoom(isDM: true)
             actionsSubject.send(.openDirectChat(roomID: roomID))
         case .failure:
             state.bindings.alertInfo = .init(id: .failedOpeningDirectChat)

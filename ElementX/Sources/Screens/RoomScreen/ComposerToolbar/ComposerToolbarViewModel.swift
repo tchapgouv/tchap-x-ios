@@ -66,6 +66,7 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
                                                                                       title: L10n.commonVoiceMessage,
                                                                                       duration: 0),
                                                               audioRecorderState: .init(),
+                                                              isRoomEncrypted: roomProxy.isEncrypted,
                                                               bindings: .init()),
                    mediaProvider: mediaProvider)
 
@@ -197,7 +198,9 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
         case .voiceMessage(let voiceMessageAction):
             processVoiceMessageAction(voiceMessageAction)
         case .plainComposerTextChanged:
-            completionSuggestionService.processTextMessage(state.bindings.plainComposerText.string)
+            completionSuggestionService.processTextMessage(state.bindings.plainComposerText.string, selectedRange: context.viewState.bindings.selectedRange)
+        case .selectedTextChanged:
+            completionSuggestionService.processTextMessage(state.bindings.plainComposerText.string, selectedRange: context.viewState.bindings.selectedRange)
         case .didToggleFormattingOptions:
             if context.composerFormattingEnabled {
                 guard !context.plainComposerText.string.isEmpty else {
@@ -284,7 +287,7 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
         case .newMessage:
             set(mode: .default)
         case .edit(let eventID):
-            set(mode: .edit(originalEventOrTransactionID: .eventId(eventId: eventID), type: .default))
+            set(mode: .edit(originalEventOrTransactionID: .eventID(eventID), type: .default))
         case .reply(let eventID):
             set(mode: .reply(eventID: eventID, replyDetails: .loading(eventID: eventID), isThread: false))
             replyLoadingTask = Task {
@@ -340,7 +343,7 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
         switch state.composerMode {
         case .default:
             type = .newMessage
-        case .edit(.eventId(let originalEventID), .default):
+        case .edit(.eventID(let originalEventID), .default):
             type = .edit(eventID: originalEventID)
         case .reply(let eventID, _, _):
             type = .reply(eventID: eventID)
@@ -375,22 +378,23 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
             shouldMakeAnotherPass = false
             attributedString.enumerateAttribute(.link, in: .init(location: 0, length: attributedString.length), options: []) { value, range, stop in
                 guard let value else { return }
-                
                 shouldMakeAnotherPass = true
                 
                 // Remove the attribute so it doesn't get inherited by the new string
                 attributedString.removeAttribute(.link, range: range)
                 
-                guard let userID = attributedString.attribute(.MatrixUserID, at: range.location, effectiveRange: nil) as? String else {
+                if let userID = attributedString.attribute(.MatrixUserID, at: range.location, effectiveRange: nil) as? String {
+                    let displayName = attributedString.attribute(.MatrixUserDisplayName, at: range.location, effectiveRange: nil)
+                    attributedString.replaceCharacters(in: range, with: "[\(displayName ?? userID)](\(value))")
+                    userIDs.insert(userID)
+                    stop.pointee = true
+                } else if let roomAlias = attributedString.attribute(.MatrixRoomAlias, at: range.location, effectiveRange: nil) as? String {
+                    let displayName = attributedString.attribute(.MatrixRoomDisplayName, at: range.location, effectiveRange: nil)
+                    attributedString.replaceCharacters(in: range, with: "[\(displayName ?? roomAlias)](\(value))")
+                    stop.pointee = true
+                } else {
                     return
                 }
-                
-                let displayName = attributedString.attribute(.MatrixUserDisplayName, at: range.location, effectiveRange: nil)
-                
-                attributedString.replaceCharacters(in: range, with: "[\(displayName ?? userID)](\(value))")
-                userIDs.insert(userID)
-                
-                stop.pointee = true
             }
         } while shouldMakeAnotherPass
         
@@ -470,19 +474,22 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
     }
     
     private func handleSuggestion(_ suggestion: SuggestionItem) {
-        switch suggestion {
-        case let .user(item):
-            guard let url = try? URL(string: matrixToUserPermalink(userId: item.id)) else {
+        switch suggestion.suggestionType {
+        case let .user(user):
+            guard let url = try? URL(string: matrixToUserPermalink(userId: user.id)) else {
                 MXLog.error("Could not build user permalink")
                 return
             }
             
             if context.composerFormattingEnabled {
-                wysiwygViewModel.setMention(url: url.absoluteString, name: item.id, mentionType: .user)
+                wysiwygViewModel.setMention(url: url.absoluteString, name: user.id, mentionType: .user)
             } else {
                 let attributedString = NSMutableAttributedString(attributedString: state.bindings.plainComposerText)
-                mentionBuilder.handleUserMention(for: attributedString, in: suggestion.range, url: url, userID: item.id, userDisplayName: item.displayName)
+                mentionBuilder.handleUserMention(for: attributedString, in: suggestion.range, url: url, userID: user.id, userDisplayName: user.displayName)
                 state.bindings.plainComposerText = attributedString
+                
+                let newSelectedRange = NSRange(location: state.bindings.selectedRange.location - suggestion.rawSuggestionText.count, length: 0)
+                state.bindings.selectedRange = newSelectedRange
             }
         case .allUsers:
             if context.composerFormattingEnabled {
@@ -491,6 +498,25 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
                 let attributedString = NSMutableAttributedString(attributedString: state.bindings.plainComposerText)
                 mentionBuilder.handleAllUsersMention(for: attributedString, in: suggestion.range)
                 state.bindings.plainComposerText = attributedString
+                
+                let newSelectedRange = NSRange(location: state.bindings.selectedRange.location - suggestion.rawSuggestionText.count, length: 0)
+                state.bindings.selectedRange = newSelectedRange
+            }
+        case let .room(room):
+            guard let url = try? URL(string: matrixToRoomAliasPermalink(roomAlias: room.canonicalAlias)) else {
+                MXLog.error("Could not build alias permalink")
+                return
+            }
+            
+            if context.composerFormattingEnabled {
+                wysiwygViewModel.setMention(url: url.absoluteString, name: room.name, mentionType: .room)
+            } else {
+                let attributedString = NSMutableAttributedString(attributedString: state.bindings.plainComposerText)
+                mentionBuilder.handleRoomAliasMention(for: attributedString, in: suggestion.range, url: url, roomAlias: room.canonicalAlias, roomDisplayName: room.name)
+                state.bindings.plainComposerText = attributedString
+                
+                let newSelectedRange = NSRange(location: state.bindings.selectedRange.location - suggestion.rawSuggestionText.count, length: 0)
+                state.bindings.selectedRange = newSelectedRange
             }
         }
     }

@@ -17,7 +17,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     let adjustedDeliveryStatus: TimelineItemDeliveryStatus?
     @ViewBuilder let content: () -> Content
 
-    private var isEncryptedOneToOneRoom: Bool { context.viewState.isEncryptedOneToOneRoom }
+    private var isDirectOneToOneRoom: Bool { context.viewState.isDirectOneToOneRoom }
     private var isFocussed: Bool { focussedEventID != nil && timelineItem.id.eventID == focussedEventID }
     private var isPinned: Bool {
         guard context.viewState.timelineKind != .pinned,
@@ -33,14 +33,14 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     private let bubbleHorizontalPadding: CGFloat = 8
     /// Additional padding applied to outgoing bubbles when the avatar is shown
     private var bubbleAvatarPadding: CGFloat {
-        guard !timelineItem.isOutgoing, !isEncryptedOneToOneRoom else { return 0 }
+        guard !timelineItem.isOutgoing, !isDirectOneToOneRoom else { return 0 }
         return 8
     }
     
     var body: some View {
         ZStack(alignment: .trailingFirstTextBaseline) {
             VStack(alignment: alignment, spacing: -12) {
-                if !timelineItem.isOutgoing, !isEncryptedOneToOneRoom {
+                if !timelineItem.isOutgoing, !isDirectOneToOneRoom {
                     header
                         .zIndex(1)
                 }
@@ -147,7 +147,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                                                               canCurrentUserRedactOthers: context.viewState.canCurrentUserRedactOthers,
                                                               canCurrentUserPin: context.viewState.canCurrentUserPin,
                                                               pinnedEventIDs: context.viewState.pinnedEventIDs,
-                                                              isDM: context.viewState.isEncryptedOneToOneRoom,
+                                                              isDM: context.viewState.isDirectOneToOneRoom,
                                                               isViewSourceEnabled: context.viewState.isViewSourceEnabled,
                                                               timelineKind: context.viewState.timelineKind,
                                                               emojiProvider: context.viewState.emojiProvider)
@@ -208,7 +208,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     }
     
     private var messageBubbleTopPadding: CGFloat {
-        guard timelineItem.isOutgoing || isEncryptedOneToOneRoom else { return 0 }
+        guard timelineItem.isOutgoing || isDirectOneToOneRoom else { return 0 }
         return timelineGroupStyle == .single || timelineGroupStyle == .first ? 8 : 0
     }
     
@@ -330,7 +330,7 @@ struct TimelineItemBubbledStylerView_Previews: PreviewProvider, TestablePreview 
         let roomProxy = JoinedRoomProxyMock(.init(name: "Preview Room", pinnedEventIDs: ["pinned"]))
         return TimelineViewModel(roomProxy: roomProxy,
                                  focussedEventID: nil,
-                                 timelineController: MockRoomTimelineController(),
+                                 timelineController: MockTimelineController(),
                                  mediaProvider: MediaProviderMock(configuration: .init()),
                                  mediaPlayerProvider: MediaPlayerProviderMock(),
                                  voiceMessageMediaManager: VoiceMessageMediaManagerMock(),
@@ -338,7 +338,9 @@ struct TimelineItemBubbledStylerView_Previews: PreviewProvider, TestablePreview 
                                  appMediator: AppMediatorMock.default,
                                  appSettings: ServiceLocator.shared.settings,
                                  analyticsService: ServiceLocator.shared.analytics,
-                                 emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings))
+                                 emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                 timelineControllerFactory: TimelineControllerFactoryMock(.init()),
+                                 clientProxy: ClientProxyMock(.init()))
     }()
 
     static var previews: some View {
@@ -612,7 +614,7 @@ private struct MockTimelineContent: View {
     }
     
     func makeItemIdentifier() -> TimelineItemIdentifier {
-        isPinned ? .event(uniqueID: .init(id: ""), eventOrTransactionID: .eventId(eventId: "pinned")) : .randomEvent
+        isPinned ? .event(uniqueID: .init(""), eventOrTransactionID: .eventID("pinned")) : .randomEvent
     }
     
     var replyDetails: TimelineItemReplyDetails? {

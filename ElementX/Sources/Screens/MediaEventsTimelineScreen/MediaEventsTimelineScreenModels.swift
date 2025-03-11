@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum MediaEventsTimelineScreenViewModelAction {
-    case viewItem(TimelineMediaPreviewContext)
+    case viewInRoomTimeline(TimelineItemIdentifier)
 }
 
 enum MediaEventsTimelineScreenMode {
@@ -28,20 +28,19 @@ struct MediaEventsTimelineScreenViewState: BindableState {
     
     var groups = [MediaEventsTimelineGroup]()
     
-    var activeTimelineContextProvider: (() -> TimelineViewModel.Context)!
+    var activeTimelineContext: TimelineViewModel.Context
     
     var bindings: MediaEventsTimelineScreenViewStateBindings
-    
-    var currentPreviewItemID: TimelineItemIdentifier?
 }
 
 struct MediaEventsTimelineScreenViewStateBindings {
     var screenMode: MediaEventsTimelineScreenMode
+    var mediaPreviewViewModel: TimelineMediaPreviewViewModel?
 }
 
 enum MediaEventsTimelineScreenViewAction {
     case changedScreenMode
     case oldestItemDidAppear
     case oldestItemDidDisappear
-    case tappedItem(item: RoomTimelineItemViewState, namespace: Namespace.ID)
+    case tappedItem(item: RoomTimelineItemViewState)
 }

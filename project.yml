@@ -38,10 +38,9 @@ options:
 settings:
   CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: true
   ENABLE_BITCODE: false
-  APP_GROUP_IDENTIFIER: group.$(BASE_APP_GROUP_IDENTIFIER)
   APP_NAME: ElementX
-  KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(AppIdentifierPrefix)$(BASE_BUNDLE_IDENTIFIER)"
-  MARKETING_VERSION: 25.02.0
+  KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).$(BASE_BUNDLE_IDENTIFIER)"
+  MARKETING_VERSION: 25.03.2
   CURRENT_PROJECT_VERSION: 1
   SUPPORTS_MACCATALYST: false
 
@@ -54,12 +53,12 @@ include:
 - path: IntegrationTests/SupportingFiles/target.yml
 - path: NSE/SupportingFiles/target.yml
 - path: ShareExtension/SupportingFiles/target.yml
-# - path: NCE/SupportingFiles/target.yml (not used yet)
 # - path: MyAppVariant/override.yml
 
 packages:
   # Element/Matrix dependencies
   MatrixRustSDK:
+<<<<<<< HEAD
 #    url: https://github.com/element-hq/matrix-rust-components-swift
 #    exactVersion: 1.0.83
     path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
@@ -67,6 +66,15 @@ packages:
 #    url: https://github.com/element-hq/compound-ios
 #    revision: 9325643cb4d22150881c5bf79e1e6e3c5a87ea89
     path: ../compound-ios
+=======
+    url: https://github.com/element-hq/matrix-rust-components-swift
+    exactVersion: 25.03.06
+    # path: ../matrix-rust-sdk
+  Compound:
+    url: https://github.com/element-hq/compound-ios
+    revision: 5af528a2925816ab0ee1945c6321e7c476baca8a
+    # path: ../compound-ios
+>>>>>>> 25.03.2
   AnalyticsEvents:
     url: https://github.com/matrix-org/matrix-analytics-events
     minorVersion: 0.28.0

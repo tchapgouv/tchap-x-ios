@@ -45,7 +45,7 @@ struct VideoRoomTimelineView: View {
     var thumbnail: some View {
         if let thumbnailSource = timelineItem.content.thumbnailInfo?.source {
             LoadableImage(mediaSource: thumbnailSource,
-                          mediaType: .timelineItem(uniqueID: timelineItem.id.uniqueID.id),
+                          mediaType: .timelineItem(uniqueID: timelineItem.id.uniqueID),
                           blurhash: timelineItem.content.blurhash,
                           size: timelineItem.content.thumbnailInfo?.size,
                           mediaProvider: context?.mediaProvider) { imageView in
@@ -85,8 +85,8 @@ struct VideoRoomTimelineView_Previews: PreviewProvider, TestablePreview {
                 
                 // Blurhash item?
                 
-                VideoRoomTimelineView(timelineItem: makeTimelineItem(caption: "This is a great image 😎"))
-                VideoRoomTimelineView(timelineItem: makeTimelineItem(caption: "This is a great image with a really long multiline caption",
+                VideoRoomTimelineView(timelineItem: makeTimelineItem(caption: "This is a great video 😎"))
+                VideoRoomTimelineView(timelineItem: makeTimelineItem(caption: "This is a great video with a really long multiline caption",
                                                                      isEdited: true))
             }
         }

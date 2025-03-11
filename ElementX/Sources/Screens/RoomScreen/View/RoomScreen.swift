@@ -73,7 +73,7 @@ struct RoomScreen: View {
                                                              canCurrentUserRedactOthers: timelineContext.viewState.canCurrentUserRedactOthers,
                                                              canCurrentUserPin: timelineContext.viewState.canCurrentUserPin,
                                                              pinnedEventIDs: timelineContext.viewState.pinnedEventIDs,
-                                                             isDM: timelineContext.viewState.isEncryptedOneToOneRoom,
+                                                             isDM: timelineContext.viewState.isDirectOneToOneRoom,
                                                              isViewSourceEnabled: timelineContext.viewState.isViewSourceEnabled,
                                                              timelineKind: timelineContext.viewState.timelineKind,
                                                              emojiProvider: timelineContext.viewState.emojiProvider)
@@ -94,7 +94,7 @@ struct RoomScreen: View {
                 ReadReceiptsSummaryView(orderedReadReceipts: $0.orderedReceipts)
                     .environmentObject(timelineContext)
             }
-            .interactiveQuickLook(item: $timelineContext.mediaPreviewItem)
+            .timelineMediaPreview(viewModel: $roomContext.mediaPreviewViewModel)
             .track(screen: .Room)
             .onDrop(of: ["public.item", "public.file-url"], isTargeted: $dragOver) { providers -> Bool in
                 guard let provider = providers.first,
@@ -204,9 +204,13 @@ struct RoomScreen: View {
         ToolbarItem(placement: .principal) {
             RoomHeaderView(roomName: roomContext.viewState.roomTitle,
                            roomAvatar: roomContext.viewState.roomAvatar,
+<<<<<<< HEAD
                            roomPropertiesBadgesView:
                            // Tchap: add badges
                            TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: $roomContext.isEncrypted, isPublic: $roomContext.isPublic, externalCount: $roomContext.externalCount),
+=======
+                           dmRecipientVerificationState: roomContext.viewState.dmRecipientVerificationState,
+>>>>>>> 25.03.2
                            mediaProvider: roomContext.mediaProvider)
                 // Using a button stops it from getting truncated in the navigation bar
                 .contentShape(.rect)
@@ -259,7 +263,7 @@ struct RoomScreen_Previews: PreviewProvider, TestablePreview {
                                                          hasOngoingCall: true))
     static let roomViewModel = RoomScreenViewModel.mock(roomProxyMock: roomProxyMock)
     static let timelineViewModel = TimelineViewModel(roomProxy: roomProxyMock,
-                                                     timelineController: MockRoomTimelineController(),
+                                                     timelineController: MockTimelineController(),
                                                      mediaProvider: MediaProviderMock(configuration: .init()),
                                                      mediaPlayerProvider: MediaPlayerProviderMock(),
                                                      voiceMessageMediaManager: VoiceMessageMediaManagerMock(),
@@ -267,7 +271,9 @@ struct RoomScreen_Previews: PreviewProvider, TestablePreview {
                                                      appMediator: AppMediatorMock.default,
                                                      appSettings: ServiceLocator.shared.settings,
                                                      analyticsService: ServiceLocator.shared.analytics,
-                                                     emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings))
+                                                     emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                                     timelineControllerFactory: TimelineControllerFactoryMock(.init()),
+                                                     clientProxy: ClientProxyMock(.init()))
 
     static var previews: some View {
         NavigationStack {

@@ -12,17 +12,23 @@ enum StartChatScreenErrorType: Error {
     case unknown
 }
 
-enum StartChatScreenViewModelAction {
+enum StartChatScreenViewModelAction: Equatable {
     case close
     case createRoom
+<<<<<<< HEAD
     case openRoom(withIdentifier: String)
     case joinForum // Tchap: add `join Forum` action to `StartChat` screen
+=======
+    case showRoom(withIdentifier: String)
+    case openRoomDirectorySearch
+>>>>>>> 25.03.2
 }
 
 struct StartChatScreenViewState: BindableState {
     let userID: String
     var bindings = StartChatScreenViewStateBindings()
     var usersSection: UserDiscoverySection = .init(type: .suggestions, users: [])
+    var isRoomDirectoryEnabled = false
 
     var isSearching: Bool {
         !bindings.searchQuery.isEmpty
@@ -31,18 +37,37 @@ struct StartChatScreenViewState: BindableState {
     var hasEmptySearchResults: Bool {
         isSearching && usersSection.type == .searchResult && usersSection.users.isEmpty
     }
+    
+    var joinByAddressState: JoinByAddressState = .example
 }
 
 struct StartChatScreenViewStateBindings {
     var searchQuery = ""
+    var roomAddress = ""
     
     /// Information describing the currently displayed alert.
     var alertInfo: AlertInfo<StartChatScreenErrorType>?
+    
+    var selectedUserToInvite: UserProfileProxy?
+    var isJoinRoomByAddressSheetPresented = false
 }
 
 enum StartChatScreenViewAction {
     case close
     case createRoom
+    case createDM(user: UserProfileProxy)
     case selectUser(UserProfileProxy)
+<<<<<<< HEAD
     case joinForum // Tchap: add `join Forum` action to `StartChat` screen
+=======
+    case joinRoomByAddress
+    case openRoomDirectorySearch
+}
+
+enum JoinByAddressState: Equatable {
+    case example
+    case invalidAddress
+    case addressNotFound
+    case addressFound(address: String, roomID: String)
+>>>>>>> 25.03.2
 }

@@ -11,6 +11,7 @@ xcuserdata/
 *.ipa
 *.dSYM.zip
 *.dSYM
+*.xcarchive
 
 ## SwiftPM
 /.build
@@ -40,3 +41,7 @@ build
 ## macOS Files
 .DS_Store
 ._*
+
+# This is a temporary file that is used to generate Secrets.swift
+# That file doesn't need to be ignored, as it we assumed-unchanged it post-checkout.
+Secrets/secrets.yml

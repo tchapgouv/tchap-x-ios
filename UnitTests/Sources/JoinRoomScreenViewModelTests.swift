@@ -11,19 +11,41 @@ import XCTest
 
 @MainActor
 class JoinRoomScreenViewModelTests: XCTestCase {
+    private enum TestMode {
+        case joined
+        case knocked
+        case invited
+        case banned
+    }
+    
     var viewModel: JoinRoomScreenViewModelProtocol!
+    
+    var clientProxy: ClientProxyMock!
+    var appSettings: AppSettings!
     
     var context: JoinRoomScreenViewModelType.Context {
         viewModel.context
     }
     
+    override func setUp() {
+        AppSettings.resetAllSettings()
+        appSettings = AppSettings()
+        ServiceLocator.shared.register(appSettings: appSettings)
+    }
+    
     override func tearDown() {
         viewModel = nil
+        clientProxy = nil
         AppSettings.resetAllSettings()
     }
 
     func testInteraction() async throws {
+        XCTAssertTrue(appSettings.seenInvites.isEmpty, "There shouldn't be any seen invites before running the tests.")
+        
         setupViewModel()
+        try await deferFulfillment(viewModel.context.$viewState) { $0.mode == .joinable }.fulfill()
+        
+        XCTAssertTrue(appSettings.seenInvites.isEmpty, "Only an invited room should register the room ID as a seen invite.")
         
         let deferred = deferFulfillment(viewModel.actionsPublisher) { $0 == .joined }
         context.send(viewAction: .join)
@@ -31,33 +53,49 @@ class JoinRoomScreenViewModelTests: XCTestCase {
     }
     
     func testAcceptInviteInteraction() async throws {
-        setupViewModel()
+        XCTAssertTrue(appSettings.seenInvites.isEmpty, "There shouldn't be any seen invites before running the tests.")
+        
+        setupViewModel(mode: .invited)
+        try await deferFulfillment(viewModel.context.$viewState) { $0.mode == .invited(isDM: false) }.fulfill()
+        
+        XCTAssertEqual(appSettings.seenInvites, ["1"], "The invited room's ID should be registered as a seen invite.")
         
         let deferred = deferFulfillment(viewModel.actionsPublisher) { $0 == .joined }
         context.send(viewAction: .acceptInvite)
         try await deferred.fulfill()
+        
+        XCTAssertTrue(appSettings.seenInvites.isEmpty, "The after accepting an invite the invite should be forgotten in case the user leaves.")
     }
     
     func testDeclineInviteInteraction() async throws {
-        setupViewModel()
+        XCTAssertTrue(appSettings.seenInvites.isEmpty, "There shouldn't be any seen invites before running the tests.")
         
-        try await deferFulfillment(viewModel.context.$viewState) { $0.roomDetails != nil }.fulfill()
+        setupViewModel(mode: .invited)
+        
+        try await deferFulfillment(viewModel.context.$viewState) { $0.mode == .invited(isDM: false) }.fulfill()
+        XCTAssertEqual(appSettings.seenInvites, ["1"], "The invited room's ID should be registered as a seen invite.")
         
         context.send(viewAction: .declineInvite)
         
         XCTAssertEqual(viewModel.context.alertInfo?.id, .declineInvite)
+        let deferred = deferFulfillment(viewModel.actionsPublisher) { $0 == .dismiss }
+        context.alertInfo?.secondaryButton?.action?()
+        try await deferred.fulfill()
+        
+        XCTAssertTrue(appSettings.seenInvites.isEmpty, "The after declining an invite the invite should be forgotten in case another invite is received.")
     }
     
     func testKnockedState() async throws {
-        setupViewModel(knocked: true)
+        XCTAssertTrue(appSettings.seenInvites.isEmpty, "There shouldn't be any seen invites before running the tests.")
+        setupViewModel(mode: .knocked)
         
-        try await deferFulfillment(viewModel.context.$viewState) { state in
-            state.mode == .knocked
-        }.fulfill()
+        try await deferFulfillment(viewModel.context.$viewState) { $0.mode == .knocked }.fulfill()
+        
+        XCTAssertTrue(appSettings.seenInvites.isEmpty, "Only an invited room should register the room ID as a seen invite.")
     }
     
     func testCancelKnock() async throws {
-        setupViewModel(knocked: true)
+        setupViewModel(mode: .knocked)
         
         try await deferFulfillment(viewModel.context.$viewState) { state in
             state.mode == .knocked
@@ -73,14 +111,52 @@ class JoinRoomScreenViewModelTests: XCTestCase {
         try await deferred.fulfill()
     }
     
-    private func setupViewModel(throwing: Bool = false, knocked: Bool = false) {
+    func testDeclineAndBlockInviteInteraction() async throws {
+        setupViewModel(mode: .invited)
+        let expectation = expectation(description: "Wait for the user to be ignored")
+        clientProxy.ignoreUserClosure = { userID in
+            defer { expectation.fulfill() }
+            XCTAssertEqual(userID, "@test:matrix.org")
+            return .success(())
+        }
+        
+        try await deferFulfillment(viewModel.context.$viewState) { $0.roomDetails != nil }.fulfill()
+        
+        context.send(viewAction: .declineInviteAndBlock(userID: "@test:matrix.org"))
+        
+        XCTAssertEqual(viewModel.context.alertInfo?.id, .declineInviteAndBlock)
+        
+        let deferred = deferFulfillment(viewModel.actionsPublisher) { action in
+            action == .dismiss
+        }
+        context.alertInfo?.secondaryButton?.action?()
+        try await deferred.fulfill()
+        
+        await fulfillment(of: [expectation], timeout: 10)
+    }
+    
+    func testForgetRoom() async throws {
+        setupViewModel(mode: .banned)
+        
+        try await deferFulfillment(viewModel.context.$viewState) { $0.roomDetails != nil }.fulfill()
+        
+        let deferred = deferFulfillment(viewModel.actionsPublisher) { action in
+            action == .dismiss
+        }
+        context.send(viewAction: .forget)
+        try await deferred.fulfill()
+    }
+    
+    private func setupViewModel(throwing: Bool = false, mode: TestMode = .joined) {
         ServiceLocator.shared.settings.knockingEnabled = true
         
-        let clientProxy = ClientProxyMock(.init())
+        clientProxy = ClientProxyMock(.init())
         
         clientProxy.joinRoomViaReturnValue = throwing ? .failure(.sdkError(ClientProxyMockError.generic)) : .success(())
+        clientProxy.joinRoomAliasReturnValue = clientProxy.joinRoomViaReturnValue
         
-        if knocked {
+        switch mode {
+        case .knocked:
             clientProxy.roomPreviewForIdentifierViaReturnValue = .success(RoomPreviewProxyMock.knocked)
             
             clientProxy.roomForIdentifierClosure = { _ in
@@ -89,13 +165,27 @@ class JoinRoomScreenViewModelTests: XCTestCase {
                 roomProxy.cancelKnockUnderlyingReturnValue = .success(())
                 return .knocked(roomProxy)
             }
-        } else {
+        case .joined:
             clientProxy.roomPreviewForIdentifierViaReturnValue = .success(RoomPreviewProxyMock.joinable)
+        case .invited:
+            clientProxy.roomPreviewForIdentifierViaReturnValue = .success(RoomPreviewProxyMock.invited())
+            clientProxy.roomForIdentifierClosure = { _ in
+                let roomProxy = InvitedRoomProxyMock(.init())
+                roomProxy.rejectInvitationReturnValue = .success(())
+                return .invited(roomProxy)
+            }
+        case .banned:
+            clientProxy.roomPreviewForIdentifierViaReturnValue = .success(RoomPreviewProxyMock.banned)
+            clientProxy.roomForIdentifierClosure = { _ in
+                let roomProxy = BannedRoomProxyMock(.init())
+                roomProxy.forgetRoomReturnValue = .success(())
+                return .banned(roomProxy)
+            }
         }
         
         viewModel = JoinRoomScreenViewModel(roomID: "1",
                                             via: [],
-                                            appSettings: ServiceLocator.shared.settings,
+                                            appSettings: appSettings,
                                             clientProxy: clientProxy,
                                             mediaProvider: MediaProviderMock(configuration: .init()),
                                             userIndicatorController: ServiceLocator.shared.userIndicatorController)

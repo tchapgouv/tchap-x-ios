@@ -21,6 +21,7 @@ enum TimelineViewModelAction {
     case displayMediaUploadPreviewScreen(url: URL)
     case tappedOnSenderDetails(userID: String)
     case displayMessageForwarding(forwardingItem: MessageForwardingItem)
+    case displayMediaPreview(TimelineMediaPreviewViewModel)
     case displayLocation(body: String, geoURI: GeoURI, description: String?)
     case displayResolveSendFailure(failure: TimelineItemSendFailure.VerifiedUser, sendHandle: SendHandleProxy)
     case composer(action: TimelineComposerAction)
@@ -91,7 +92,7 @@ struct TimelineViewState: BindableState {
     var typingMembers: [String] = []
     var showLoading = false
     var showReadReceipts = false
-    var isEncryptedOneToOneRoom = false
+    var isDirectOneToOneRoom = false
     var timelineState: TimelineState // check the doc before changing this
 
     var ownUserID: String
@@ -113,6 +114,9 @@ struct TimelineViewState: BindableState {
     /// A closure providing the associated audio player state for an item in the timeline.
     var audioPlayerStateProvider: (@MainActor (_ itemId: TimelineItemIdentifier) -> AudioPlayerState?)?
     
+    /// A closure that updates the associated pill context
+    var pillContextUpdater: (@MainActor (PillContext) -> Void)?
+    
     var emojiProvider: EmojiProviderProtocol
 }
 
@@ -122,9 +126,6 @@ struct TimelineViewStateBindings {
     /// The state of wether reactions listed on the timeline are expanded/collapsed.
     /// Key is itemID, value is the collapsed state.
     var reactionsCollapsed: [TimelineItemIdentifier: Bool]
-    
-    /// A media item that will be previewed with QuickLook.
-    var mediaPreviewItem: MediaPreviewItem?
     
     var alertInfo: AlertInfo<RoomScreenAlertInfoType>?
     
@@ -206,9 +207,9 @@ struct TimelineState {
     // These can be removed when we have full swiftUI and moved as @State values in the view
     var scrollToBottomPublisher = PassthroughSubject<Void, Never>()
     
-    var itemsDictionary = OrderedDictionary<TimelineUniqueId, RoomTimelineItemViewState>()
+    var itemsDictionary = OrderedDictionary<TimelineItemIdentifier.UniqueID, RoomTimelineItemViewState>()
     
-    var uniqueIDs: [TimelineUniqueId] {
+    var uniqueIDs: [TimelineItemIdentifier.UniqueID] {
         itemsDictionary.keys.elements
     }
     

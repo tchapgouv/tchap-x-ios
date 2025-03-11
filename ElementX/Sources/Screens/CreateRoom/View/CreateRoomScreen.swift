@@ -82,6 +82,9 @@ struct CreateRoomScreen: View {
                               text: roomNameBinding,
                               prompt: Text(L10n.commonRoomNamePlaceholder).foregroundColor(.compound.textSecondary),
                               axis: .horizontal)
+                        .font(.compound.bodyLG)
+                        .foregroundStyle(.compound.textPrimary)
+                        .tint(.compound.iconAccentTertiary)
                         .focused($focus, equals: .name)
                         .accessibilityIdentifier(A11yIdentifiers.createRoomScreen.roomName)
                         .padding(.horizontal, ListRowPadding.horizontal)
@@ -299,7 +302,7 @@ struct CreateRoomScreen: View {
         } footer: {
             VStack(alignment: .leading, spacing: 12) {
                 if let errorDescription = context.viewState.aliasErrors.errorDescription {
-                    Label(errorDescription, icon: \.error, iconSize: .xSmall, relativeTo: .compound.bodySM)
+                    Label(errorDescription, icon: \.errorSolid, iconSize: .xSmall, relativeTo: .compound.bodySM)
                         .foregroundStyle(.compound.textCriticalPrimary)
                         .font(.compound.bodySM)
                 }

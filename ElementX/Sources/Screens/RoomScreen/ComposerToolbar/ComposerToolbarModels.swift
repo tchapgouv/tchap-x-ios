@@ -53,6 +53,7 @@ enum ComposerToolbarViewAction {
     
     case plainComposerTextChanged
     case didToggleFormattingOptions
+    case selectedTextChanged
 }
 
 enum ComposerAttachmentType {
@@ -71,6 +72,8 @@ struct ComposerToolbarViewState: BindableState {
     var suggestions: [SuggestionItem] = []
     var audioPlayerState: AudioPlayerState
     var audioRecorderState: AudioRecorderState
+    
+    let isRoomEncrypted: Bool
     
     var bindings: ComposerToolbarViewStateBindings
 
@@ -131,6 +134,7 @@ struct ComposerToolbarViewStateBindings {
     var composerExpanded = false
     var formatItems: [FormatItem] = .init()
     var alertInfo: AlertInfo<UUID>?
+    var selectedRange = NSRange(location: 0, length: 0)
     
     var presendCallback: (() -> Void)?
 }
@@ -294,7 +298,7 @@ enum ComposerMode: Equatable {
     
     case `default`
     case reply(eventID: String, replyDetails: TimelineItemReplyDetails, isThread: Bool)
-    case edit(originalEventOrTransactionID: EventOrTransactionId, type: EditType)
+    case edit(originalEventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID, type: EditType)
     case recordVoiceMessage(state: AudioRecorderState)
     case previewVoiceMessage(state: AudioPlayerState, waveform: WaveformSource, isUploading: Bool)
 

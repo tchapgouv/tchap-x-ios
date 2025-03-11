@@ -14,7 +14,6 @@ import XCTest
 class HomeScreenRoomTests: XCTestCase {
     var roomSummary: RoomSummary!
     
-    // swiftlint:disable:next function_parameter_count
     func setupRoomSummary(isMarkedUnread: Bool,
                           unreadMessagesCount: UInt,
                           unreadMentionsCount: UInt,
@@ -23,7 +22,7 @@ class HomeScreenRoomTests: XCTestCase {
                           hasOngoingCall: Bool) {
         roomSummary = RoomSummary(roomListItem: .init(noPointer: .init()),
                                   id: "Test room",
-                                  knockRequestType: nil,
+                                  joinRequestType: nil,
                                   name: "Test room",
                                   isDirect: false,
                                   avatarURL: nil,
@@ -35,6 +34,7 @@ class HomeScreenRoomTests: XCTestCase {
                                   unreadNotificationsCount: unreadNotificationsCount,
                                   notificationMode: notificationMode,
                                   canonicalAlias: nil,
+                                  alternativeAliases: [],
                                   hasOngoingCall: hasOngoingCall,
                                   isMarkedUnread: isMarkedUnread,
                                   isFavourite: false)

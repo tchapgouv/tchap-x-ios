@@ -28,14 +28,11 @@ struct UserProfileScreenViewState: BindableState {
     var showVerifiedBadge: Bool {
         isVerified == true // We purposely show the badge on your own account for consistency with Web.
     }
-    
-    var showVerificationSection: Bool {
-        isVerified == false && !isOwnUser
-    }
 }
 
 struct UserProfileScreenViewStateBindings {
-    var alertInfo: AlertInfo<UserProfileScreenError>?
+    var alertInfo: AlertInfo<UserProfileScreenAlertType>?
+    var inviteConfirmationUser: UserProfileProxy?
     
     /// A media item that will be previewed with QuickLook.
     var mediaPreviewItem: MediaPreviewItem?
@@ -44,11 +41,12 @@ struct UserProfileScreenViewStateBindings {
 enum UserProfileScreenViewAction {
     case displayAvatar(URL)
     case openDirectChat
+    case createDirectChat
     case startCall(roomID: String)
     case dismiss
 }
 
-enum UserProfileScreenError: Hashable {
+enum UserProfileScreenAlertType: Hashable {
     case failedOpeningDirectChat
     case unknown
 }

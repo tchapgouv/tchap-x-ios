@@ -19,6 +19,8 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
     
     private var roomPreview: RoomPreviewProxyProtocol?
     private var room: RoomProxyType?
+    private var isLoadingPreview = true
+    private var membershipStateChangeCancellable: AnyCancellable?
     
     private let actionsSubject: PassthroughSubject<JoinRoomScreenViewModelAction, Never> = .init()
     var actionsPublisher: AnyPublisher<JoinRoomScreenViewModelAction, Never> {
@@ -39,6 +41,18 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
         
         super.init(initialViewState: JoinRoomScreenViewState(roomID: roomID), mediaProvider: mediaProvider)
         
+        context.$viewState.map(\.mode)
+            .removeDuplicates()
+            .sink { mode in
+                switch mode {
+                case .invited:
+                    appSettings.seenInvites.insert(roomID)
+                default:
+                    break
+                }
+            }
+            .store(in: &cancellables)
+        
         Task {
             await loadRoomDetails()
         }
@@ -56,10 +70,16 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
             Task { await joinRoom() }
         case .acceptInvite:
             Task { await joinRoom() }
+        case .forget:
+            Task { await forgetRoom() }
         case .declineInvite:
             showDeclineInviteConfirmationAlert()
         case .cancelKnock:
             showCancelKnockConfirmationAlert()
+        case .dismiss:
+            actionsSubject.send(.dismiss)
+        case .declineInviteAndBlock(let userID):
+            showDeclineAndBlockConfirmationAlert(userID: userID)
         }
     }
     
@@ -76,12 +96,19 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
         
         switch await clientProxy.roomPreviewForIdentifier(roomID, via: via) {
         case .success(let roomPreview):
+            isLoadingPreview = false
             self.roomPreview = roomPreview
             await updateRoomDetails()
         case .failure(.roomPreviewIsPrivate):
-            break // Handled by the mode, we don't need an error indicator.
+            // Handled by the mode, we don't need an error indicator.
+            isLoadingPreview = false
         case .failure:
-            userIndicatorController.submitIndicator(UserIndicator(title: L10n.errorUnknown))
+            hideLoadingIndicator()
+            state.bindings.alertInfo = .init(id: .loadingError,
+                                             title: L10n.commonError,
+                                             message: L10n.screenJoinRoomLoadingAlertMessage,
+                                             primaryButton: .init(title: L10n.actionTryAgain) { [weak self] in Task { await self?.loadRoomDetails() }},
+                                             secondaryButton: .init(title: L10n.actionCancel, role: .cancel) { [weak self] in self?.actionsSubject.send(.dismiss) })
         }
         
         hideLoadingIndicator()
@@ -101,6 +128,7 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
     }
     
     private func updateRoomDetails() async {
+        membershipStateChangeCancellable = nil
         var roomInfo: BaseRoomInfoProxyProtocol?
         var inviter: RoomInviterDetails?
         
@@ -112,22 +140,50 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
             roomInfo = invitedRoomProxy.info
         case .knocked(let knockedRoomProxy):
             roomInfo = knockedRoomProxy.info
+            if let roomSummaryProvider = clientProxy.staticRoomSummaryProvider {
+                membershipStateChangeCancellable = roomSummaryProvider.roomListPublisher
+                    .compactMap { summaries -> Void? in
+                        guard let roomSummary = summaries.first(where: { $0.id == roomInfo?.id }),
+                              roomSummary.roomListItem.membership() != .knocked else {
+                            return nil
+                        }
+                        return ()
+                    }
+                    .sink { [weak self] in
+                        Task { await self?.loadRoomDetails() }
+                    }
+            }
+        case .banned(let bannedRoomProxy):
+            roomInfo = bannedRoomProxy.info
         default:
             break
         }
 
         let info = roomPreview?.info ?? roomInfo
+        let avatar: RoomAvatar? = if let avatar = info?.avatar {
+            avatar
+        } else if let displayName = info?.displayName {
+            .room(id: roomID, name: displayName, avatarURL: nil)
+        } else {
+            nil
+        }
         state.roomDetails = JoinRoomScreenRoomDetails(name: info?.displayName,
                                                       topic: info?.topic,
                                                       canonicalAlias: info?.canonicalAlias,
-                                                      avatar: info?.avatar ?? .room(id: roomID, name: info?.displayName ?? "", avatarURL: nil),
-                                                      memberCount: UInt(info?.activeMembersCount ?? 0),
-                                                      inviter: inviter)
+                                                      avatar: avatar,
+                                                      memberCount: info?.joinedMembersCount,
+                                                      inviter: inviter,
+                                                      isDirect: info?.isDirect)
         
         await updateMode()
     }
     
     private func updateMode() async {
+        if isLoadingPreview {
+            state.mode = .loading
+            return
+        }
+        
         if roomPreview == nil, room == nil {
             state.mode = .unknown
             return
@@ -138,7 +194,7 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
             
             switch roomPreview.info.membership {
             case .invited:
-                state.mode = .invited
+                state.mode = .invited(isDM: state.roomDetails?.isDirect == true && state.roomDetails?.memberCount == 1)
             case .knocked:
                 state.mode = .knocked
             case .banned:
@@ -159,7 +215,7 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
         } else if let room {
             switch room {
             case .invited:
-                state.mode = .invited
+                state.mode = .invited(isDM: state.roomDetails?.isDirect == true && state.roomDetails?.memberCount == 1)
             case .knocked:
                 state.mode = .knocked
             case .banned:
@@ -181,18 +237,30 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
         if let alias = state.roomDetails?.canonicalAlias {
             switch await clientProxy.joinRoomAlias(alias) {
             case .success:
+                appSettings.seenInvites.remove(roomID)
                 actionsSubject.send(.joined)
             case .failure(let error):
-                MXLog.error("Failed joining room alias: \(alias) with error: \(error)")
-                userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
+                if case .forbiddenAccess = error {
+                    MXLog.error("Failed joining room alias: \(alias) forbidden access")
+                    state.mode = .forbidden
+                } else {
+                    MXLog.error("Failed joining room alias: \(alias) with error: \(error)")
+                    userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
+                }
             }
         } else {
             switch await clientProxy.joinRoom(roomID, via: via) {
             case .success:
+                appSettings.seenInvites.remove(roomID)
                 actionsSubject.send(.joined)
             case .failure(let error):
-                MXLog.error("Failed joining room id: \(roomID) with error: \(error)")
-                userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
+                if case .forbiddenAccess = error {
+                    MXLog.error("Failed joining room id: \(roomID) forbidden access")
+                    state.mode = .forbidden
+                } else {
+                    MXLog.error("Failed joining room id: \(roomID) with error: \(error)")
+                    userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
+                }
             }
         }
     }
@@ -227,7 +295,7 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
             }
         }
     }
-    
+        
     private func showDeclineInviteConfirmationAlert() {
         guard let roomDetails = state.roomDetails else {
             userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
@@ -250,7 +318,27 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
                                          secondaryButton: .init(title: L10n.screenJoinRoomCancelKnockAlertConfirmation, role: .destructive) { Task { await self.cancelKnock() } })
     }
     
-    private func declineInvite() async {
+    private func showDeclineAndBlockConfirmationAlert(userID: String) {
+        state.bindings.alertInfo = .init(id: .declineInviteAndBlock,
+                                         title: L10n.screenJoinRoomDeclineAndBlockAlertTitle,
+                                         message: L10n.screenJoinRoomDeclineAndBlockAlertMessage(userID),
+                                         primaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil),
+                                         secondaryButton: .init(title: L10n.screenJoinRoomDeclineAndBlockAlertConfirmation, role: .destructive) { Task { await self.declineAndBlock(userID: userID) } })
+    }
+    
+    private func declineAndBlock(userID: String) async {
+        guard await declineInvite() else {
+            return
+        }
+        // The decline alert and the view are already dismissed at this point so we can dispatch this separately as a best effort
+        // but only if the decline invite was succesfull
+        Task {
+            await clientProxy.ignoreUser(userID)
+        }
+    }
+    
+    @discardableResult
+    private func declineInvite() async -> Bool {
         defer {
             userIndicatorController.retractIndicatorWithId(roomID)
         }
@@ -259,16 +347,20 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
         
         guard case let .invited(roomProxy) = room else {
             userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
-            return
+            return false
         }
         
         let result = await roomProxy.rejectInvitation()
         
         if case .failure = result {
             userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
-        } else {
-            actionsSubject.send(.dismiss)
+            return false
         }
+        
+        appSettings.seenInvites.remove(roomID)
+        
+        actionsSubject.send(.dismiss)
+        return true
     }
     
     private func cancelKnock() async {
@@ -284,6 +376,27 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
         }
         
         let result = await roomProxy.cancelKnock()
+        
+        if case .failure = result {
+            userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
+        } else {
+            actionsSubject.send(.dismiss)
+        }
+    }
+    
+    private func forgetRoom() async {
+        defer {
+            userIndicatorController.retractIndicatorWithId(roomID)
+        }
+        
+        userIndicatorController.submitIndicator(UserIndicator(id: roomID, type: .modal, title: L10n.commonLoading, persistent: true))
+        
+        guard case let .banned(roomProxy) = room else {
+            userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
+            return
+        }
+        
+        let result = await roomProxy.forgetRoom()
         
         if case .failure = result {
             userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))

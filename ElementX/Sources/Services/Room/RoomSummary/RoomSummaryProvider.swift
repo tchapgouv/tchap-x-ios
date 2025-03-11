@@ -17,7 +17,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
     private let notificationSettings: NotificationSettingsProxyProtocol
     private let appSettings: AppSettings
 
-    private let roomListPageSize = 200
+    private let roomListPageSize: UInt32
     
     private let serialDispatchQueue: DispatchQueue
     
@@ -59,6 +59,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
          eventStringBuilder: RoomEventStringBuilder,
          name: String,
          shouldUpdateVisibleRange: Bool = false,
+         roomListPageSize: UInt32 = 200,
          notificationSettings: NotificationSettingsProxyProtocol,
          appSettings: AppSettings) {
         self.roomListService = roomListService
@@ -68,6 +69,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         self.shouldUpdateVisibleRange = shouldUpdateVisibleRange
         self.notificationSettings = notificationSettings
         self.appSettings = appSettings
+        self.roomListPageSize = roomListPageSize
         
         diffsPublisher
             .receive(on: serialDispatchQueue)
@@ -243,7 +245,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         var lastMessageFormattedTimestamp: String?
         
         if let latestRoomMessage = roomDetails.latestEvent {
-            let lastMessage = EventTimelineItemProxy(item: latestRoomMessage, uniqueID: .init(id: "0"))
+            let lastMessage = EventTimelineItemProxy(item: latestRoomMessage, uniqueID: .init("0"))
             lastMessageFormattedTimestamp = lastMessage.timestamp.formattedMinimal()
             attributedLastMessage = eventStringBuilder.buildAttributedString(for: lastMessage)
         }
@@ -255,7 +257,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         
         let notificationMode = roomInfo.cachedUserDefinedNotificationMode.flatMap { RoomNotificationModeProxy.from(roomNotificationMode: $0) }
         
-        let knockRequestType: RoomSummary.KnockRequestType? = switch roomInfo.membership {
+        let joinRequestType: RoomSummary.JoinRequestType? = switch roomInfo.membership {
         case .invited: .invite(inviter: inviterProxy)
         case .knocked: .knock
         default: nil
@@ -263,7 +265,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         
         return RoomSummary(roomListItem: roomListItem,
                            id: roomInfo.id,
-                           knockRequestType: knockRequestType,
+                           joinRequestType: joinRequestType,
                            name: roomInfo.displayName ?? roomInfo.id,
                            isDirect: roomInfo.isDirect,
                            avatarURL: roomInfo.avatarUrl.flatMap(URL.init(string:)),
@@ -275,6 +277,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
                            unreadNotificationsCount: UInt(roomInfo.numUnreadNotifications),
                            notificationMode: notificationMode,
                            canonicalAlias: roomInfo.canonicalAlias,
+                           alternativeAliases: .init(roomInfo.alternativeAliases),
                            hasOngoingCall: roomInfo.hasRoomCall,
                            isMarkedUnread: roomInfo.isMarkedUnread,
                            isFavourite: roomInfo.isFavourite)

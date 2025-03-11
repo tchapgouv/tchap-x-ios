@@ -35,6 +35,7 @@ extension ClientProxyMock {
         
         roomSummaryProvider = configuration.roomSummaryProvider
         alternateRoomSummaryProvider = RoomSummaryProviderMock(.init())
+        staticRoomSummaryProvider = RoomSummaryProviderMock(.init())
         
         roomDirectorySearchProxyReturnValue = configuration.roomDirectorySearchProxy
         
@@ -63,16 +64,13 @@ extension ClientProxyMock {
         setUserAvatarMediaReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         removeUserAvatarReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         isAliasAvailableReturnValue = .success(true)
-        logoutReturnValue = nil
         searchUsersSearchTermLimitReturnValue = .success(.init(results: [], limited: false))
         profileForReturnValue = .success(.init(userID: "@a:b.com", displayName: "Some user"))
         ignoreUserReturnValue = .success(())
         unignoreUserReturnValue = .success(())
         
+        needsSlidingSyncMigration = false
         slidingSyncVersion = .native
-        availableSlidingSyncVersionsClosure = {
-            []
-        }
         
         trackRecentlyVisitedRoomReturnValue = .success(())
         recentlyVisitedRoomsReturnValue = .success([])
@@ -95,6 +93,6 @@ extension ClientProxyMock {
             return await .joined(JoinedRoomProxyMock(.init(id: room.id, name: room.name)))
         }
         
-        userIdentityForReturnValue = .success(UserIdentitySDKMock(configuration: .init()))
+        userIdentityForReturnValue = .success(UserIdentityProxyMock(configuration: .init()))
     }
 }

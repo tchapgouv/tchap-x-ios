@@ -15,11 +15,17 @@ typealias PasteHandler = (NSItemProvider) -> Void
 struct MessageComposer: View {
     @Binding var plainComposerText: NSAttributedString
     @Binding var presendCallback: (() -> Void)?
+    @Binding var selectedRange: NSRange
+    
     let composerView: WysiwygComposerView
     let mode: ComposerMode
+    let placeholder: String
+    
     let composerFormattingEnabled: Bool
     let showResizeGrabber: Bool
     @Binding var isExpanded: Bool
+    let isEncrypted: Bool
+    
     let sendAction: () -> Void
     let editAction: () -> Void
     let pasteAction: PasteHandler
@@ -36,7 +42,7 @@ struct MessageComposer: View {
             }
             
             composerTextField
-                .messageComposerStyle(header: header)
+                .messageComposerStyle(header: header, isEncrypted: isEncrypted)
                 // Explicitly disable all animations to fix weirdness with the header immediately
                 // appearing whilst the text field and keyboard are still animating up to it.
                 .animation(.noAnimation, value: mode)
@@ -63,9 +69,10 @@ struct MessageComposer: View {
                     onAppearAction()
                 }
         } else {
-            MessageComposerTextField(placeholder: L10n.richTextEditorComposerPlaceholder,
+            MessageComposerTextField(placeholder: placeholder,
                                      text: $plainComposerText,
                                      presendCallback: $presendCallback,
+                                     selectedRange: $selectedRange,
                                      maxHeight: ComposerConstant.maxHeight,
                                      keyHandler: { handleKeyPress($0) },
                                      pasteHandler: pasteAction)
@@ -193,8 +200,8 @@ private struct MessageComposerHeaderLabelStyle: LabelStyle {
 // MARK: - Style
 
 extension View {
-    func messageComposerStyle(header: some View = EmptyView()) -> some View {
-        modifier(MessageComposerStyleModifier(header: header))
+    func messageComposerStyle(header: some View = EmptyView(), isEncrypted: Bool) -> some View {
+        modifier(MessageComposerStyleModifier(header: header, isEncrypted: isEncrypted))
     }
 }
 
@@ -202,14 +209,20 @@ private struct MessageComposerStyleModifier<Header: View>: ViewModifier {
     private let composerShape = RoundedRectangle(cornerRadius: 21, style: .circular)
     
     let header: Header
+    let isEncrypted: Bool
     
     func body(content: Content) -> some View {
         VStack(alignment: .leading, spacing: -6) {
             header
             
-            content
-                .tint(.compound.iconAccentTertiary)
-                .padding(.vertical, 10)
+            HStack(alignment: .top, spacing: 6) {
+                icon
+                    .scaledOffset(y: 2)
+                
+                content
+                    .tint(.compound.iconAccentTertiary)
+            }
+            .padding(.vertical, 10)
         }
         .padding(.horizontal, 12.0)
         .clipShape(composerShape)
@@ -220,6 +233,14 @@ private struct MessageComposerStyleModifier<Header: View>: ViewModifier {
                 composerShape
                     .stroke(Color.compound.borderInteractiveSecondary, lineWidth: 0.5)
             }
+        }
+    }
+    
+    @ViewBuilder
+    private var icon: some View {
+        if !isEncrypted {
+            CompoundIcon(\.lockOff, size: .xSmall, relativeTo: .compound.bodyMD)
+                .foregroundStyle(.compound.iconInfoPrimary)
         }
     }
 }
@@ -272,7 +293,8 @@ struct MessageComposer_Previews: PreviewProvider, TestablePreview {
     ]
     
     static func messageComposer(_ content: NSAttributedString = .init(string: ""),
-                                mode: ComposerMode = .default) -> MessageComposer {
+                                mode: ComposerMode = .default,
+                                placeholder: String = L10n.richTextEditorComposerEncryptedPlaceholder) -> MessageComposer {
         let viewModel = WysiwygComposerViewModel(minHeight: 22,
                                                  maxExpandedHeight: 250)
         viewModel.setMarkdownContent(content.string)
@@ -285,11 +307,14 @@ struct MessageComposer_Previews: PreviewProvider, TestablePreview {
         
         return MessageComposer(plainComposerText: .constant(content),
                                presendCallback: .constant(nil),
+                               selectedRange: .constant(NSRange(location: 0, length: 0)),
                                composerView: composerView,
                                mode: mode,
+                               placeholder: placeholder,
                                composerFormattingEnabled: false,
                                showResizeGrabber: false,
                                isExpanded: .constant(false),
+                               isEncrypted: false,
                                sendAction: { },
                                editAction: { },
                                pasteAction: { _ in },
@@ -302,7 +327,11 @@ struct MessageComposer_Previews: PreviewProvider, TestablePreview {
             messageComposer()
             
             messageComposer(.init(string: "Some message"),
-                            mode: .edit(originalEventOrTransactionID: .eventId(eventId: UUID().uuidString), type: .default))
+                            mode: .edit(originalEventOrTransactionID: .eventID(UUID().uuidString), type: .default))
+            
+            let longMessage = "Short loin ground round tongue hamburger, fatback salami shoulder. Beef turkey sausage kielbasa strip steak. Alcatra capicola pig tail pancetta chislic."
+            messageComposer(.init(string: longMessage),
+                            mode: .edit(originalEventOrTransactionID: .eventID(UUID().uuidString), type: .default))
             
             messageComposer(mode: .reply(eventID: UUID().uuidString,
                                          replyDetails: .loaded(sender: .init(id: "Kirk"),
@@ -310,12 +339,10 @@ struct MessageComposer_Previews: PreviewProvider, TestablePreview {
                                                                eventContent: .message(.text(.init(body: "Text: Where the wild things are")))),
                                          isThread: false))
             
-            Color.clear.frame(height: 20)
-            
             messageComposer(.init(string: "Some new caption"),
-                            mode: .edit(originalEventOrTransactionID: .eventId(eventId: UUID().uuidString), type: .addCaption))
+                            mode: .edit(originalEventOrTransactionID: .eventID(UUID().uuidString), type: .addCaption))
             messageComposer(.init(string: "Some updated caption"),
-                            mode: .edit(originalEventOrTransactionID: .eventId(eventId: UUID().uuidString), type: .editCaption))
+                            mode: .edit(originalEventOrTransactionID: .eventID(UUID().uuidString), type: .editCaption))
         }
         .padding(.horizontal)
         
@@ -335,7 +362,8 @@ struct MessageComposer_Previews: PreviewProvider, TestablePreview {
             VStack(spacing: 8) {
                 ForEach(replyTypes, id: \.self) { replyDetails in
                     messageComposer(mode: .reply(eventID: UUID().uuidString,
-                                                 replyDetails: replyDetails, isThread: true))
+                                                 replyDetails: replyDetails, isThread: true),
+                                    placeholder: L10n.actionReplyInThread)
                 }
             }
         }

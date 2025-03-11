@@ -9,6 +9,14 @@ import Foundation
 import UIKit
 
 enum PillType: Codable, Equatable {
+    enum EventRoom: Codable, Equatable {
+        case roomAlias(String)
+        case roomID(String)
+    }
+    
+    case event(room: EventRoom)
+    case roomAlias(String)
+    case roomID(String)
     /// A pill that mentions a user
     case user(userID: String)
     /// A pill that mentions all users in a room

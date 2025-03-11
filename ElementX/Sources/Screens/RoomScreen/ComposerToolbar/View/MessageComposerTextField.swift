@@ -12,6 +12,7 @@ struct MessageComposerTextField: View {
     let placeholder: String
     @Binding var text: NSAttributedString
     @Binding var presendCallback: (() -> Void)?
+    @Binding var selectedRange: NSRange
 
     let maxHeight: CGFloat
     let keyHandler: GenericKeyHandler
@@ -20,6 +21,7 @@ struct MessageComposerTextField: View {
     var body: some View {
         UITextViewWrapper(text: $text,
                           presendCallback: $presendCallback,
+                          selectedRange: $selectedRange,
                           maxHeight: maxHeight,
                           keyHandler: keyHandler,
                           pasteHandler: pasteHandler)
@@ -54,6 +56,7 @@ private struct UITextViewWrapper: UIViewRepresentable {
 
     @Binding var text: NSAttributedString
     @Binding var presendCallback: (() -> Void)?
+    @Binding var selectedRange: NSRange
 
     let maxHeight: CGFloat
 
@@ -135,12 +138,21 @@ private struct UITextViewWrapper: UIViewRepresentable {
                 // moves the caret back to the bottom of the composer.
                 // https://github.com/element-hq/element-x-ios/issues/3104
                 textView.selectedTextRange = selection
+            } else {
+                // Re-setting the selected range is important when inserting pills
+                // but we need to not do that when entering edit mode, where the
+                // cursor needs to stay at the end of the text
+                // https://github.com/element-hq/element-x-ios/issues/3830
+                if textView.selectedRange.location != text.length {
+                    textView.selectedRange = selectedRange
+                }
             }
         }
     }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text,
+                    selectedRange: $selectedRange,
                     maxHeight: maxHeight,
                     keyHandler: keyHandler,
                     pasteHandler: pasteHandler)
@@ -148,6 +160,7 @@ private struct UITextViewWrapper: UIViewRepresentable {
 
     final class Coordinator: NSObject, UITextViewDelegate, ElementTextViewDelegate {
         private var text: Binding<NSAttributedString>
+        private var selectedRange: Binding<NSRange>
 
         private let maxHeight: CGFloat
 
@@ -155,10 +168,12 @@ private struct UITextViewWrapper: UIViewRepresentable {
         private let pasteHandler: PasteHandler
 
         init(text: Binding<NSAttributedString>,
+             selectedRange: Binding<NSRange>,
              maxHeight: CGFloat,
              keyHandler: @escaping GenericKeyHandler,
              pasteHandler: @escaping PasteHandler) {
             self.text = text
+            self.selectedRange = selectedRange
             self.maxHeight = maxHeight
             self.keyHandler = keyHandler
             self.pasteHandler = pasteHandler
@@ -178,6 +193,14 @@ private struct UITextViewWrapper: UIViewRepresentable {
 
         func textView(_ textView: UITextView, didReceivePasteWith provider: NSItemProvider) {
             pasteHandler(provider)
+        }
+        
+        func textViewDidChangeSelection(_ textView: UITextView) {
+            DispatchQueue.main.async {
+                if self.selectedRange.wrappedValue != textView.selectedRange {
+                    self.selectedRange.wrappedValue = textView.selectedRange
+                }
+            }
         }
     }
 }
@@ -331,6 +354,7 @@ struct MessageComposerTextField_Previews: PreviewProvider, TestablePreview {
             MessageComposerTextField(placeholder: "Placeholder",
                                      text: $text,
                                      presendCallback: .constant(nil),
+                                     selectedRange: .constant(NSRange(location: 0, length: 0)),
                                      maxHeight: 300,
                                      keyHandler: { _ in },
                                      pasteHandler: { _ in })

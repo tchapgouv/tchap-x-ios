@@ -533,7 +533,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                                                                     appLockService: appLockFlowCoordinator.appLockService,
                                                                     bugReportService: ServiceLocator.shared.bugReportService,
                                                                     elementCallService: elementCallService,
-                                                                    roomTimelineControllerFactory: RoomTimelineControllerFactory(),
+                                                                    timelineControllerFactory: TimelineControllerFactory(),
                                                                     appMediator: appMediator,
                                                                     appSettings: appSettings,
                                                                     appHooks: appHooks,
@@ -590,7 +590,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         Task {
             // First log out from the server
-            let accountLogoutURL = await userSession.clientProxy.logout()
+            await userSession.clientProxy.logout()
             
             // Regardless of the result, clear user data
             userSessionStore.logout(userSession: userSession)
@@ -603,13 +603,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             ServiceLocator.shared.analytics.resetConsentState()
             
             stateMachine.processEvent(.completedSigningOut)
-            
-            // Handle OIDC's RP-Initiated Logout if needed. Don't fallback to an ASWebAuthenticationSession
-            // as it looks weird to show an alert to the user asking them to sign in to their provider.
-            if let accountLogoutURL, UIApplication.shared.canOpenURL(accountLogoutURL) {
-                await UIApplication.shared.open(accountLogoutURL)
-            }
-            
+                       
             hideLoadingIndicator()
         }
     }
@@ -762,13 +756,12 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         stopSync(isBackgroundTask: false)
         userSessionFlowCoordinator?.stop()
         
-        let userID = userSession.clientProxy.userID
         tearDownUserSession()
     
         // Allow for everything to deallocate properly
         Task {
             try? await Task.sleep(for: .seconds(2))
-            userSessionStore.clearCache(for: userID)
+            await userSession.clientProxy.clearCaches()
             stateMachine.processEvent(.startWithExistingSession)
             hideLoadingIndicator()
         }

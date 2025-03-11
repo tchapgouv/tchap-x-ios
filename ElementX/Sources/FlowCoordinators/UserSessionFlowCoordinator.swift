@@ -34,7 +34,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
     
     // periphery:ignore - retaining purpose
     private var roomFlowCoordinator: RoomFlowCoordinator?
-    private let roomTimelineControllerFactory: RoomTimelineControllerFactoryProtocol
+    private let timelineControllerFactory: TimelineControllerFactoryProtocol
     
     private let settingsFlowCoordinator: SettingsFlowCoordinator
     
@@ -69,7 +69,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
          appLockService: AppLockServiceProtocol,
          bugReportService: BugReportServiceProtocol,
          elementCallService: ElementCallServiceProtocol,
-         roomTimelineControllerFactory: RoomTimelineControllerFactoryProtocol,
+         timelineControllerFactory: TimelineControllerFactoryProtocol,
          appMediator: AppMediatorProtocol,
          appSettings: AppSettings,
          appHooks: AppHooks,
@@ -81,7 +81,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         self.navigationRootCoordinator = navigationRootCoordinator
         self.bugReportService = bugReportService
         self.elementCallService = elementCallService
-        self.roomTimelineControllerFactory = roomTimelineControllerFactory
+        self.timelineControllerFactory = timelineControllerFactory
         self.appMediator = appMediator
         self.appSettings = appSettings
         self.appHooks = appHooks
@@ -146,10 +146,8 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
     // MARK: - Private
     
     func asyncHandleAppRoute(_ appRoute: AppRoute, animated: Bool) async {
-        showLoadingIndicator(delay: .seconds(0.25))
-        defer {
-            hideLoadingIndicator()
-        }
+        showLoadingIndicator(delay: .seconds(0.5))
+        defer { hideLoadingIndicator() }
         
         await clearPresentedSheets(animated: animated)
         
@@ -217,6 +215,8 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     func attemptStartingOnboarding() {
+        MXLog.info("Attempting to start onboarding")
+        
         if onboardingFlowCoordinator.shouldStart {
             clearRoute(animated: false)
             onboardingFlowCoordinator.start()
@@ -331,7 +331,6 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         userSession.sessionSecurityStatePublisher
             .map(\.verificationState)
             .filter { $0 != .unknown }
-            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
@@ -430,18 +429,26 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
                 
                 MXLog.info("Received session verification request")
                 
-                presentSessionVerificationScreen(details: details)
+                if details.senderProfile.userID == userSession.clientProxy.userID {
+                    presentSessionVerificationScreen(flow: .deviceResponder(requestDetails: details))
+                } else {
+                    presentSessionVerificationScreen(flow: .userResponder(requestDetails: details))
+                }
             }
             .store(in: &cancellables)
     }
     
-    private func presentSessionVerificationScreen(details: SessionVerificationRequestDetails) {
+    private func presentSessionVerificationScreen(flow: SessionVerificationScreenFlow) {
         guard let sessionVerificationController = userSession.clientProxy.sessionVerificationController else {
             fatalError("The sessionVerificationController should aways be valid at this point")
         }
         
+        let navigationStackCoordinator = NavigationStackCoordinator()
+        
         let parameters = SessionVerificationScreenCoordinatorParameters(sessionVerificationControllerProxy: sessionVerificationController,
-                                                                        flow: .responder(details: details))
+                                                                        flow: flow,
+                                                                        appSettings: appSettings,
+                                                                        mediaProvider: userSession.mediaProvider)
         
         let coordinator = SessionVerificationScreenCoordinator(parameters: parameters)
         
@@ -454,7 +461,9 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             }
             .store(in: &cancellables)
         
-        navigationSplitCoordinator.setSheetCoordinator(coordinator)
+        navigationStackCoordinator.setRootCoordinator(coordinator)
+        
+        navigationSplitCoordinator.setSheetCoordinator(navigationStackCoordinator)
     }
     
     private func presentHomeScreen() {
@@ -491,8 +500,6 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
                     stateMachine.processEvent(.showStartChatScreen)
                 case .presentGlobalSearch:
                     presentGlobalSearch()
-                case .presentRoomDirectorySearch:
-                    stateMachine.processEvent(.showRoomDirectorySearchScreen)
                 case .logoutWithoutConfirmation:
                     self.actionsSubject.send(.logout)
                 case .logout:
@@ -564,7 +571,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         let coordinator = await RoomFlowCoordinator(roomID: roomID,
                                                     userSession: userSession,
                                                     isChildFlow: false,
-                                                    roomTimelineControllerFactory: roomTimelineControllerFactory,
+                                                    timelineControllerFactory: timelineControllerFactory,
                                                     navigationStackCoordinator: detailNavigationStackCoordinator,
                                                     emojiProvider: EmojiProvider(appSettings: appSettings),
                                                     ongoingCallRoomIDPublisher: elementCallService.ongoingCallRoomIDPublisher,
@@ -580,6 +587,8 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             case .presentCallScreen(let roomProxy):
                 // Here we assume that the app is running and the call state is already up to date
                 presentCallScreen(roomProxy: roomProxy, notifyOtherParticipants: !roomProxy.infoPublisher.value.hasRoomCall)
+            case .verifyUser(let userID):
+                presentSessionVerificationScreen(flow: .userIntiator(userID: userID))
             case .finished:
                 stateMachine.processEvent(.deselectRoom)
             }
@@ -634,12 +643,20 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             guard let self else { return }
             switch action {
             case .close:
-                self.navigationSplitCoordinator.setSheetCoordinator(nil)
+                navigationSplitCoordinator.setSheetCoordinator(nil)
             case .openRoom(let roomID):
+<<<<<<< HEAD
                 self.navigationSplitCoordinator.setSheetCoordinator(nil)
                 self.stateMachine.processEvent(.selectRoom(roomID: roomID, via: [], entryPoint: .room))
             case .joinForum: // Tchap: handle `joinForum` action
                 presentRoomDirectorySearch(inFullScreenMode: false)
+=======
+                navigationSplitCoordinator.setSheetCoordinator(nil)
+                stateMachine.processEvent(.selectRoom(roomID: roomID, via: [], entryPoint: .room))
+            case .openRoomDirectorySearch:
+                navigationSplitCoordinator.setSheetCoordinator(nil)
+                stateMachine.processEvent(.showRoomDirectorySearchScreen)
+>>>>>>> 25.03.2
             }
         }
         .store(in: &cancellables)
@@ -650,9 +667,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             self?.stateMachine.processEvent(.dismissedStartChatScreen)
         }
     }
-    
-    // MARK: Session Verification
-    
+        
     // MARK: Calls
     
     private func presentCallScreen(genericCallLink url: URL) {
