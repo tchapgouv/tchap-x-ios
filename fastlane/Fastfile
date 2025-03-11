@@ -1,7 +1,6 @@
 require 'yaml'
-require 'semantic'
 
-enterprise = '../Enterprise/fastlane/Fastfile'
+enterprise = '../Enterprise/Pipeline/Scripts/iOS/Fastfile'
 if File.exist?(enterprise)
   import enterprise
 end
@@ -170,7 +169,11 @@ lane :config_nightly do |options|
 
   target_file_path = "../project.yml"
   data = YAML.load_file target_file_path
-  data["include"].append({ "path" => "Variants/Nightly/nightly.yml" })
+  
+  # Check if the "path" already exists in the "include" array
+  if !data["include"].any? { |item| item["path"] == "Variants/Nightly/nightly.yml" }
+    data["include"].append({ "path" => "Variants/Nightly/nightly.yml" })
+  end
 
   config_secrets()
   
@@ -253,14 +256,20 @@ lane :prepare_next_release do
 
   data = YAML.load_file target_file_path
   current_version = data["settings"]["MARKETING_VERSION"]
-
-  version = Semantic::Version.new(current_version)
-
-  new_version = version.increment!(:patch)
   
-  # Bump the patch version. The empty string after -i is so that sed doesn't 
+  matches = current_version.match(/^(\d{2})\.(\d{2})\.(\d+)$/)
+  unless matches
+    UI.user_error!("Invalid version format: #{current_version}")
+  end
+
+  year, month, build = matches.captures
+  new_build = build.to_i + 1
+  new_version = "#{year}.#{month}.#{new_build}"
+
+  # Bump the patch version. The empty string after -i is so that sed doesn't
   # create a backup file on macOS
-  sh("sed -i '' 's/MARKETING_VERSION: #{current_version}/MARKETING_VERSION: #{new_version.to_string}/g' #{target_file_path}")
+  sh("sed -i '' 's/MARKETING_VERSION: #{current_version}/MARKETING_VERSION: #{new_version}/g' #{target_file_path}")
+  UI.message("Version updated from #{current_version} to #{new_version}")
 
   xcodegen(spec: "project.yml")
 
@@ -316,7 +325,12 @@ end
 lane :config_alpha do
   target_file_path = "../project.yml"
   data = YAML.load_file target_file_path
-  data["include"].append({ "path" => "Variants/Alpha/alpha.yml" })
+  
+  # Check if the "path" already exists in the "include" array
+  if !data["include"].any? { |item| item["path"] == "Variants/Alpha/alpha.yml" }
+    data["include"].append({ "path" => "Variants/Alpha/alpha.yml" })
+  end
+  
   File.open(target_file_path, 'w') { |f| YAML.dump(data, f) }
 
   xcodegen(spec: "project.yml")
@@ -394,14 +408,9 @@ private_lane :create_simulator_if_necessary do |options|
   end
 end
 
-private_lane :config_secrets do
-  maplibre_api_key = ENV["MAPLIBRE_API_KEY"]
-  UI.user_error!("Invalid Map Libre API key.") unless !maplibre_api_key.to_s.empty?
-
-  set_xcconfig_value(
-    path: './ElementX/SupportingFiles/secrets.xcconfig',
-    name: 'MAPLIBRE_API_KEY',
-    value: maplibre_api_key,
-    mask_value: true
-  )
+lane :config_secrets do
+  Dir.chdir "../Secrets" do
+    sh("pkl eval -f yaml -o secrets.yml Secrets.pkl")
+    sh("swiftgen run yaml -n inline-swift5 --param enumName=Secrets -o Secrets.swift secrets.yml")
+  end
 end

@@ -12,31 +12,38 @@ import SwiftUI
 struct RoomHeaderView: View {
     let roomName: String
     let roomAvatar: RoomAvatar
+    var dmRecipientVerificationState: UserIdentityVerificationState?
     // Tchap:
     let roomPropertiesBadgesView: TchapRoomHeaderViewRoomPropertiesBadgesView
     
     let mediaProvider: MediaProviderProtocol?
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             avatarImage
                 .accessibilityHidden(true)
             // Tchap: embedd in a VStack to add badges.
             VStack(alignment: .leading, spacing: 0.0) {
-                Text(roomName)
-                    .lineLimit(1)
-                    .font(.compound.bodyLGSemibold)
-                    .accessibilityIdentifier(A11yIdentifiers.roomScreen.name)
+                HStack(spacing: 4) {
+                    Text(roomName)
+                        .lineLimit(1)
+                        .font(.compound.bodyLGSemibold)
+                        .accessibilityIdentifier(A11yIdentifiers.roomScreen.name)
+                    
+                    if let dmRecipientVerificationState {
+                        VerificationBadge(verificationState: dmRecipientVerificationState)
+                    }
+                }
                 // Tchap: additional room info
                 roomPropertiesBadgesView
                     .zIndex(-1)
                 Spacer(minLength: 8)
             }
+            // Take up as much space as possible, with a leading alignment for use in the principal toolbar position.
+            // Tchap: allowing `idealWidth` to grow to `infinity` crash the rendering in some conditions (redraw triggered by bindings in roomPropertiesBadgesView).
+            //            .frame(idealWidth: .greatestFiniteMagnitude, maxWidth: .infinity, alignment: .leading)
+            .frame(idealWidth: 65535.0, maxWidth: .infinity, alignment: .leading)
         }
-        // Take up as much space as possible, with a leading alignment for use in the principal toolbar position.
-        // Tchap: allowing `idealWidth` to grow to `infinity` crash the rendering in some conditions (redraw triggered by bindings in roomPropertiesBadgesView).
-//            .frame(idealWidth: .greatestFiniteMagnitude, maxWidth: .infinity, alignment: .leading)
-        .frame(idealWidth: 65535.0, maxWidth: .infinity, alignment: .leading)
     }
     
     private var avatarImage: some View {
@@ -49,22 +56,24 @@ struct RoomHeaderView: View {
 
 struct RoomHeaderView_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
+        VStack(spacing: 8) {
+            makeHeader(avatarURL: nil, verificationState: .notVerified)
+            makeHeader(avatarURL: .mockMXCAvatar, verificationState: .notVerified)
+            makeHeader(avatarURL: .mockMXCAvatar, verificationState: .verified)
+            makeHeader(avatarURL: .mockMXCAvatar, verificationState: .verificationViolation)
+        }
+        .previewLayout(.sizeThatFits)
+    }
+    
+    static func makeHeader(avatarURL: URL?,
+                           verificationState: UserIdentityVerificationState) -> some View {
         RoomHeaderView(roomName: "Some Room name",
                        roomAvatar: .room(id: "1",
                                          name: "Some Room Name",
-                                         avatarURL: .mockMXCAvatar),
+                                         avatarURL: avatarURL),
+                       dmRecipientVerificationState: verificationState,
                        roomPropertiesBadgesView: .sample, // Tchap addition
                        mediaProvider: MediaProviderMock(configuration: .init()))
-            .previewLayout(.sizeThatFits)
-            .padding()
-        
-        RoomHeaderView(roomName: "Some Room name",
-                       roomAvatar: .room(id: "1",
-                                         name: "Some Room Name",
-                                         avatarURL: nil),
-                       roomPropertiesBadgesView: .sample, // Tchap addition
-                       mediaProvider: MediaProviderMock(configuration: .init()))
-            .previewLayout(.sizeThatFits)
             .padding()
     }
 }

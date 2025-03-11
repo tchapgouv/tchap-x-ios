@@ -8,24 +8,23 @@
 import Foundation
 import MatrixRustSDK
 
+/// A quick summary of a Room, useful to describe and give quick informations for the room list
 struct RoomSummary {
-    enum KnockRequestType {
+    enum JoinRequestType {
         case invite(inviter: RoomMemberProxyProtocol?)
         case knock
         
         var isInvite: Bool {
-            if case .invite = self {
-                return true
-            } else {
-                return false
+            switch self {
+            case .invite: true
+            default: false
             }
         }
         
         var isKnock: Bool {
-            if case .knock = self {
-                return true
-            } else {
-                return false
+            switch self {
+            case .knock: true
+            default: false
             }
         }
     }
@@ -34,7 +33,7 @@ struct RoomSummary {
     
     let id: String
     
-    let knockRequestType: KnockRequestType?
+    let joinRequestType: JoinRequestType?
     
     let name: String
     let isDirect: Bool
@@ -47,6 +46,7 @@ struct RoomSummary {
     let unreadNotificationsCount: UInt
     let notificationMode: RoomNotificationModeProxy?
     let canonicalAlias: String?
+    let alternativeAliases: Set<String>
     
     let hasOngoingCall: Bool
     
@@ -101,9 +101,10 @@ extension RoomSummary {
         unreadNotificationsCount = hasUnreadNotifications ? 1 : 0
         notificationMode = settingsMode
         canonicalAlias = nil
+        alternativeAliases = []
         hasOngoingCall = false
         
-        knockRequestType = nil
+        joinRequestType = nil
         isMarkedUnread = false
         isFavourite = false
     }

@@ -64,12 +64,13 @@ class UserSessionStore: UserSessionStoreProtocol {
         do {
             let session = try client.session()
             let userID = try client.userId()
-            let clientProxy = await setupProxyForClient(client)
+            let clientProxy = await setupProxyForClient(client, needsSlidingSyncMigration: false)
             
             keychainController.setRestorationToken(RestorationToken(session: session,
                                                                     sessionDirectories: sessionDirectories,
                                                                     passphrase: passphrase,
-                                                                    pusherNotificationClientIdentifier: clientProxy.pusherNotificationClientIdentifier),
+                                                                    pusherNotificationClientIdentifier: clientProxy.pusherNotificationClientIdentifier,
+                                                                    slidingSyncProxyURLString: nil),
                                                    forUsername: userID)
             
             MXLog.info("Set up session for user \(userID) at: \(sessionDirectories)")
@@ -90,15 +91,7 @@ class UserSessionStore: UserSessionStoreProtocol {
             credentials.restorationToken.sessionDirectories.delete()
         }
     }
-    
-    func clearCache(for userID: String) {
-        guard let credentials = keychainController.restorationTokens().first(where: { $0.userID == userID }) else {
-            MXLog.error("Failed to clearing caches: Credentials missing")
-            return
-        }
-        credentials.restorationToken.sessionDirectories.deleteTransientUserData()
-    }
-    
+        
     // MARK: - Private
     
     private func buildUserSessionWithClient(_ clientProxy: ClientProxyProtocol) -> UserSessionProtocol {
@@ -145,15 +138,16 @@ class UserSessionStore: UserSessionStoreProtocol {
             
             MXLog.info("Set up session for user \(credentials.userID) at: \(credentials.restorationToken.sessionDirectories)")
             
-            return await .success(setupProxyForClient(client))
+            return await .success(setupProxyForClient(client, needsSlidingSyncMigration: credentials.restorationToken.needsSlidingSyncMigration))
         } catch {
             MXLog.error("Failed restoring login with error: \(error)")
             return .failure(.failedRestoringLogin)
         }
     }
     
-    private func setupProxyForClient(_ client: ClientProtocol) async -> ClientProxyProtocol {
+    private func setupProxyForClient(_ client: ClientProtocol, needsSlidingSyncMigration: Bool) async -> ClientProxyProtocol {
         await ClientProxy(client: client,
+                          needsSlidingSyncMigration: needsSlidingSyncMigration,
                           networkMonitor: networkMonitor,
                           appSettings: appSettings)
     }

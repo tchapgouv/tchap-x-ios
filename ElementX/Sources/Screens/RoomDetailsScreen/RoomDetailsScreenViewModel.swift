@@ -20,8 +20,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
     private let attributedStringBuilder: AttributedStringBuilderProtocol
     private let appSettings: AppSettings
 
-    private var dmRecipient: RoomMemberProxyProtocol?
-    private var pinnedEventsTimelineProvider: RoomTimelineProviderProtocol? {
+    private var pinnedEventsTimelineProvider: TimelineProviderProtocol? {
         didSet {
             guard let pinnedEventsTimelineProvider else {
                 return
@@ -171,7 +170,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         case .processTapSecurityAndPrivacy:
             actionsSubject.send(.displaySecurityAndPrivacy)
         case .processTapRecipientProfile:
-            guard let userID = dmRecipient?.userID else {
+            guard let userID = state.dmRecipientInfo?.member.id else {
                 return
             }
             actionsSubject.send(.requestRecipientDetailsPresentation(userID: userID))
@@ -199,6 +198,12 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             .removeDuplicates()
             .throttle(for: .milliseconds(100), scheduler: DispatchQueue.main, latest: true)
             .weakAssign(to: \.state.knockRequestsCount, on: self)
+            .store(in: &cancellables)
+        
+        roomProxy.membersPublisher.combineLatest(roomProxy.identityStatusChangesPublisher)
+            .sink { _ in
+                Task { await self.updateMemberIdentityVerificationStates() }
+            }
             .store(in: &cancellables)
     }
     
@@ -233,11 +238,15 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 // Tchap: add this condition since we don't bypass anymore the members fetching
                 // and the following properties must not be filled if we are not in a Direct 1-to-1 Room.
                 if roomProxy.isDirectOneToOneRoom {
-                    let accountOwner = members.first { $0.userID == ownUserID }
-                    let dmRecipient = members.first { $0.userID != ownUserID }
-                    self.dmRecipient = dmRecipient
-                    self.state.dmRecipient = dmRecipient.map(RoomMemberDetails.init(withProxy:))
-                    self.state.accountOwner = accountOwner.map(RoomMemberDetails.init(withProxy:))
+                    if let accountOwner = members.first(where: { $0.userID == ownUserID }) {
+                        self.state.accountOwner = .init(withProxy: accountOwner)
+                    }
+                
+                    if let dmRecipient = members.first(where: { $0.userID != ownUserID }) {
+                        self.state.dmRecipientInfo = .init(member: .init(withProxy: dmRecipient))
+                    
+                        Task { await self.updateMemberIdentityVerificationStates() }
+                    }
                 }
                 
                 // Tchap: update `externalCount` to display `external` badge on RoomDetailsScreen if necessary.
@@ -246,6 +255,33 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             .store(in: &cancellables)
         
         await roomProxy.updateMembers()
+    }
+    
+    private func updateMemberIdentityVerificationStates() async {
+        guard roomProxy.isEncrypted else {
+            // We don't care about identity statuses on non-encrypted rooms
+            return
+        }
+        
+        if roomProxy.isDirectOneToOneRoom {
+            if var dmRecipientInfo = state.dmRecipientInfo {
+                if case let .success(userIdentity) = await clientProxy.userIdentity(for: dmRecipientInfo.member.id) {
+                    dmRecipientInfo.verificationState = userIdentity?.verificationState
+                    state.dmRecipientInfo = dmRecipientInfo
+                }
+            }
+        } else {
+            for member in roomProxy.membersPublisher.value {
+                if case let .success(userIdentity) = await clientProxy.userIdentity(for: member.userID) {
+                    if userIdentity?.verificationState == .verificationViolation {
+                        state.hasMemberIdentityVerificationStateViolations = true
+                        return
+                    }
+                }
+            }
+            
+            state.hasMemberIdentityVerificationStateViolations = false
+        }
     }
     
     private func updatePowerLevelPermissions() async {
@@ -353,7 +389,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
     }
 
     private func ignore() async {
-        guard let dmUserID = dmRecipient?.userID else {
+        guard let dmUserID = state.dmRecipientInfo?.member.id else {
             MXLog.error("Attempting to ignore a nil DM Recipient")
             state.bindings.alertInfo = .init(id: .unknown)
             return
@@ -365,16 +401,16 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         switch result {
         case .success:
             // Mutating the optional in place when built for Release crashes 🤷‍♂️
-            var dmRecipient = state.dmRecipient
-            dmRecipient?.isIgnored = true
-            state.dmRecipient = dmRecipient
+            var dmRecipientInfo = state.dmRecipientInfo
+            dmRecipientInfo?.member.isIgnored = true
+            state.dmRecipientInfo = dmRecipientInfo
         case .failure:
             state.bindings.alertInfo = .init(id: .unknown)
         }
     }
 
     private func unignore() async {
-        guard let dmUserID = dmRecipient?.userID else {
+        guard let dmUserID = state.dmRecipientInfo?.member.id else {
             MXLog.error("Attempting to unignore a nil DM Recipient")
             state.bindings.alertInfo = .init(id: .unknown)
             return
@@ -386,9 +422,9 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         switch result {
         case .success:
             // Mutating the optional in place when built for Release crashes 🤷‍♂️
-            var dmRecipient = state.dmRecipient
-            dmRecipient?.isIgnored = false
-            state.dmRecipient = dmRecipient
+            var dmRecipientInfo = state.dmRecipientInfo
+            dmRecipientInfo?.member.isIgnored = false
+            state.dmRecipientInfo = dmRecipientInfo
         case .failure:
             state.bindings.alertInfo = .init(id: .unknown)
         }

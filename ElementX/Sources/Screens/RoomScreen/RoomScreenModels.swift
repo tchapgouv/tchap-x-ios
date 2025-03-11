@@ -31,6 +31,7 @@ enum RoomScreenViewAction {
 struct RoomScreenViewState: BindableState {
     var roomTitle = ""
     var roomAvatar: RoomAvatar
+    var dmRecipientVerificationState: UserIdentityVerificationState?
     
     var lastScrollDirection: ScrollDirection?
     // This is used to control the banner
@@ -68,6 +69,8 @@ struct RoomScreenViewState: BindableState {
 }
 
 struct RoomScreenViewStateBindings {
+    /// The view model used to present a QuickLook media preview.
+    var mediaPreviewViewModel: TimelineMediaPreviewViewModel?
     // Tchap: display room properties badges. As they are queried async, make them Bindable.
     var isEncrypted: Bool?
     var isPublic: Bool?

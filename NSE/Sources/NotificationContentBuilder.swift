@@ -53,16 +53,20 @@ struct NotificationContentBuilder {
     
     func baseMutableContent(for notificationItem: NotificationItemProxyProtocol) -> UNMutableNotificationContent {
         let notification = UNMutableNotificationContent()
+        
         notification.receiverID = notificationItem.receiverID
         notification.roomID = notificationItem.roomID
         notification.eventID = switch notificationItem.event {
         case .timeline(let event): event.eventId()
         case .invite, .none: nil
         }
-        notification.sound = notificationItem.isNoisy ? UNNotificationSound(named: UNNotificationSoundName(rawValue: "message.caf")) : nil
         // So that the UI groups notification that are received for the same room but also for the same user
         // Removing the @ fixes an iOS bug where the notification crashes if the mute button is tapped
         notification.threadIdentifier = "\(notificationItem.receiverID)\(notificationItem.roomID)".replacingOccurrences(of: "@", with: "")
+        
+        MXLog.info("isNoisy: \(notificationItem.isNoisy)")
+        notification.sound = notificationItem.isNoisy ? UNNotificationSound(named: UNNotificationSoundName(rawValue: "message.caf")) : nil
+        
         return notification
     }
     
@@ -137,7 +141,7 @@ struct NotificationContentBuilder {
     
     private func processCallNotifyEvent(notificationItem: NotificationItemProxyProtocol, mediaProvider: MediaProviderProtocol?) async throws -> UNMutableNotificationContent {
         let notification = try await processCommonRoomMessage(notificationItem: notificationItem, mediaProvider: mediaProvider)
-        notification.body = L10n.commonCallStarted
+        notification.body = L10n.notificationIncomingCall
         return notification
     }
 

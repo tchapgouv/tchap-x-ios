@@ -11,12 +11,13 @@ enum RoomMemberDetailsScreenViewModelAction {
     case openUserProfile
     case openDirectChat(roomID: String)
     case startCall(roomID: String)
+    case verifyUser(userID: String)
 }
 
 struct RoomMemberDetailsScreenViewState: BindableState {
     let userID: String
     var memberDetails: RoomMemberDetails?
-    var isVerified: Bool?
+    var verificationState: UserIdentityVerificationState?
     var isOwnMemberDetails = false
     var isProcessingIgnoreRequest = false
     var dmRoomID: String?
@@ -24,11 +25,15 @@ struct RoomMemberDetailsScreenViewState: BindableState {
     var bindings: RoomMemberDetailsScreenViewStateBindings
     
     var showVerifiedBadge: Bool {
-        isVerified == true // We purposely show the badge on your own account for consistency with Web.
+        verificationState == .verified // We purposely show the badge on your own account for consistency with Web.
     }
     
-    var showVerificationSection: Bool {
-        isVerified == false && !isOwnMemberDetails
+    var showVerifyIdentitySection: Bool {
+        verificationState == .notVerified && !isOwnMemberDetails
+    }
+    
+    var showWithdrawVerificationSection: Bool {
+        verificationState == .verificationViolation && !isOwnMemberDetails
     }
 }
 
@@ -72,7 +77,8 @@ struct RoomMemberDetailsScreenViewStateBindings {
     }
     
     var ignoreUserAlert: IgnoreUserAlertItem?
-    var alertInfo: AlertInfo<RoomMemberDetailsScreenError>?
+    var alertInfo: AlertInfo<RoomMemberDetailsScreenAlertType>?
+    var inviteConfirmationUser: UserProfileProxy?
     
     /// A media item that will be previewed with QuickLook.
     var mediaPreviewItem: MediaPreviewItem?
@@ -85,10 +91,13 @@ enum RoomMemberDetailsScreenViewAction {
     case unignoreConfirmed
     case displayAvatar(URL)
     case openDirectChat
+    case createDirectChat
     case startCall(roomID: String)
+    case verifyUser
+    case withdrawVerification
 }
 
-enum RoomMemberDetailsScreenError: Hashable {
+enum RoomMemberDetailsScreenAlertType: Hashable {
     case failedOpeningDirectChat
     case unknown
 }

@@ -36,9 +36,10 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                     
                     do {
                         let sdkTimeline = try await room.timelineWithConfiguration(configuration: .init(focus: .pinnedEvents(maxEventsToLoad: 100, maxConcurrentRequests: 10),
-                                                                                                        allowedMessageTypes: .all,
+                                                                                                        filter: .all,
                                                                                                         internalIdPrefix: nil,
-                                                                                                        dateDividerMode: .daily))
+                                                                                                        dateDividerMode: .daily,
+                                                                                                        trackReadReceipts: false))
                         
                         let timeline = TimelineProxy(timeline: sdkTimeline, kind: .pinned)
                         
@@ -134,15 +135,17 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         
         await timeline.subscribeForUpdates()
         
-        subscribeToRoomInfoUpdates()
-        
-        if isEncrypted {
-            subscribeToIdentityStatusChanges()
+        Task {
+            subscribeToRoomInfoUpdates()
+            
+            subscribeToTypingNotifications()
+            
+            await subscribeToKnockRequests()
+            
+            if isEncrypted { // This is actually blocking on the rust side and might make network requests
+                subscribeToIdentityStatusChanges()
+            }
         }
-        
-        subscribeToTypingNotifications()
-        
-        await subscribeToKnockRequests()
     }
     
     func subscribeToRoomInfoUpdates() {
@@ -159,9 +162,10 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     func timelineFocusedOnEvent(eventID: String, numberOfEvents: UInt16) async -> Result<TimelineProxyProtocol, RoomProxyError> {
         do {
             let sdkTimeline = try await room.timelineWithConfiguration(configuration: .init(focus: .event(eventId: eventID, numContextEvents: numberOfEvents),
-                                                                                            allowedMessageTypes: .all,
+                                                                                            filter: .all,
                                                                                             internalIdPrefix: UUID().uuidString,
-                                                                                            dateDividerMode: .daily))
+                                                                                            dateDividerMode: .daily,
+                                                                                            trackReadReceipts: false))
             
             return .success(TimelineProxy(timeline: sdkTimeline, kind: .detached))
         } catch let error as FocusEventError {
@@ -182,14 +186,32 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         }
     }
     
-    func messageFilteredTimeline(allowedMessageTypes: [RoomMessageEventMessageType]) async -> Result<any TimelineProxyProtocol, RoomProxyError> {
+    func messageFilteredTimeline(focus: TimelineFocus,
+                                 allowedMessageTypes: [TimelineAllowedMessageType],
+                                 presentation: TimelineKind.MediaPresentation) async -> Result<any TimelineProxyProtocol, RoomProxyError> {
         do {
-            let sdkTimeline = try await room.timelineWithConfiguration(configuration: .init(focus: .live,
-                                                                                            allowedMessageTypes: .only(types: allowedMessageTypes),
-                                                                                            internalIdPrefix: nil,
-                                                                                            dateDividerMode: .monthly))
+            let rustFocus: MatrixRustSDK.TimelineFocus = switch focus {
+            case .live: .live
+            case .eventID(let eventID): .event(eventId: eventID, numContextEvents: 100)
+            case .pinned: .pinnedEvents(maxEventsToLoad: 100, maxConcurrentRequests: 10)
+            }
             
-            let timeline = TimelineProxy(timeline: sdkTimeline, kind: .media(.mediaFilesScreen))
+            let rustMessageTypes: [MatrixRustSDK.RoomMessageEventMessageType] = allowedMessageTypes.map {
+                switch $0 {
+                case .audio: .audio
+                case .file: .file
+                case .image: .image
+                case .video: .video
+                }
+            }
+            
+            let sdkTimeline = try await room.timelineWithConfiguration(configuration: .init(focus: rustFocus,
+                                                                                            filter: .onlyMessage(types: rustMessageTypes),
+                                                                                            internalIdPrefix: nil,
+                                                                                            dateDividerMode: .monthly,
+                                                                                            trackReadReceipts: false))
+            
+            let timeline = TimelineProxy(timeline: sdkTimeline, kind: .media(presentation))
             await timeline.subscribeForUpdates()
             
             return .success(timeline)

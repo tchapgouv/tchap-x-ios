@@ -15,6 +15,7 @@ struct MediaUploadPreviewScreenViewState: BindableState {
     let url: URL
     let title: String?
     let shouldShowCaptionWarning: Bool
+    let isRoomEncrypted: Bool
     var shouldDisableInteraction = false
     
     var bindings = MediaUploadPreviewScreenBindings()
@@ -23,6 +24,7 @@ struct MediaUploadPreviewScreenViewState: BindableState {
 struct MediaUploadPreviewScreenBindings: BindableState {
     var caption = NSAttributedString()
     var presendCallback: (() -> Void)?
+    var selectedRange = NSRange(location: 0, length: 0)
     
     var isPresentingMediaCaptionWarning = false
 }

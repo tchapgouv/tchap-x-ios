@@ -243,9 +243,9 @@ class CreateRoomViewModel: CreateRoomViewModelType, CreateRoomViewModelProtocol 
                 avatarURL = URL(string: url)
             case .failure(let error):
                 switch error {
-                case .failedUploadingMedia(_, let errorCode):
-                    switch errorCode {
-                    case .fileTooLarge:
+                case .failedUploadingMedia(let errorKind):
+                    switch errorKind {
+                    case .tooLarge:
                         state.bindings.alertInfo = AlertInfo(id: .fileTooLarge)
                     default:
                         state.bindings.alertInfo = AlertInfo(id: .failedUploadingMedia)
@@ -263,7 +263,7 @@ class CreateRoomViewModel: CreateRoomViewModelType, CreateRoomViewModelProtocol 
         }
         
         switch await userSession.clientProxy.createRoom(name: createRoomParameters.name,
-                                                        topic: createRoomParameters.topic,
+                                                        topic: createRoomParameters.topic.isBlank ? nil : createRoomParameters.topic,
                                                         isRoomPrivate: createRoomParameters.isRoomPrivate,
                                                         isRoomEncrypted: createRoomParameters.isRoomEncrypted, // Tchap: additional property
                                                         // TODO: add parameter       isRoomFederated: createRoomParameters.isRoomPrivate || createRoomParameters. , // Tchap: additional property `isRoomFederated`. And Private room is always federated. Only Public room can be non-federated.

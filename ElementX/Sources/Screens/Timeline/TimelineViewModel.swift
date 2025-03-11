@@ -22,13 +22,16 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     }
 
     private let roomProxy: JoinedRoomProxyProtocol
-    private let timelineController: RoomTimelineControllerProtocol
+    private let timelineController: TimelineControllerProtocol
+    private let mediaProvider: MediaProviderProtocol
     private let mediaPlayerProvider: MediaPlayerProviderProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let appMediator: AppMediatorProtocol
     private let appSettings: AppSettings
     private let analyticsService: AnalyticsService
     private let emojiProvider: EmojiProviderProtocol
+    private let timelineControllerFactory: TimelineControllerFactoryProtocol
+    private let clientProxy: ClientProxyProtocol
     
     private let timelineInteractionHandler: TimelineInteractionHandler
     
@@ -44,7 +47,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
 
     init(roomProxy: JoinedRoomProxyProtocol,
          focussedEventID: String? = nil,
-         timelineController: RoomTimelineControllerProtocol,
+         timelineController: TimelineControllerProtocol,
          mediaProvider: MediaProviderProtocol,
          mediaPlayerProvider: MediaPlayerProviderProtocol,
          voiceMessageMediaManager: VoiceMessageMediaManagerProtocol,
@@ -52,8 +55,11 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
          appMediator: AppMediatorProtocol,
          appSettings: AppSettings,
          analyticsService: AnalyticsService,
-         emojiProvider: EmojiProviderProtocol) {
+         emojiProvider: EmojiProviderProtocol,
+         timelineControllerFactory: TimelineControllerFactoryProtocol,
+         clientProxy: ClientProxyProtocol) {
         self.timelineController = timelineController
+        self.mediaProvider = mediaProvider
         self.mediaPlayerProvider = mediaPlayerProvider
         self.roomProxy = roomProxy
         self.appSettings = appSettings
@@ -61,6 +67,8 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         self.userIndicatorController = userIndicatorController
         self.appMediator = appMediator
         self.emojiProvider = emojiProvider
+        self.timelineControllerFactory = timelineControllerFactory
+        self.clientProxy = clientProxy
         
         let voiceMessageRecorder = VoiceMessageRecorder(audioRecorder: AudioRecorder(), mediaPlayerProvider: mediaPlayerProvider)
         
@@ -73,11 +81,14 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                                                                 userIndicatorController: userIndicatorController,
                                                                 appMediator: appMediator,
                                                                 appSettings: appSettings,
-                                                                analyticsService: analyticsService)
+                                                                analyticsService: analyticsService,
+                                                                emojiProvider: emojiProvider,
+                                                                timelineControllerFactory: timelineControllerFactory,
+                                                                clientProxy: clientProxy)
         
         super.init(initialViewState: TimelineViewState(timelineKind: timelineController.timelineKind,
                                                        roomID: roomProxy.id,
-                                                       isEncryptedOneToOneRoom: roomProxy.isDirectOneToOneRoom,
+                                                       isDirectOneToOneRoom: roomProxy.isDirectOneToOneRoom,
                                                        timelineState: TimelineState(focussedEvent: focussedEventID.map { .init(eventID: $0, appearance: .immediate) }),
                                                        ownUserID: roomProxy.ownUserID,
                                                        isViewSourceEnabled: appSettings.viewSourceEnabled,
@@ -106,6 +117,10 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             return self.timelineInteractionHandler.audioPlayerState(for: itemID)
         }
         
+        state.pillContextUpdater = { [weak self] pillContext in
+            self?.pillContextUpdater(pillContext)
+        }
+        
         state.timelineState.paginationState = timelineController.paginationState
         buildTimelineViews(timelineItems: timelineController.timelineItems)
         
@@ -117,11 +132,6 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     }
     
     // MARK: - Public
-    
-    func stop() {
-        // Work around QLPreviewController dismissal issues, see the InteractiveQuickLookModifier.
-        state.bindings.mediaPreviewItem = nil
-    }
     
     override func process(viewAction: TimelineViewAction) {
         switch viewAction {
@@ -537,11 +547,13 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     private func handleMediaTapped(with itemID: TimelineItemIdentifier) async {
         state.showLoading = true
         let action = await timelineInteractionHandler.processItemTap(itemID)
-
+        
         switch action {
-        case .displayMediaFile(let file, let title):
+        case .displayMediaPreview(let item, let timelineViewModelKind):
             actionsSubject.send(.composer(action: .removeFocus)) // Hide the keyboard otherwise a big white space is sometimes shown when dismissing the preview.
-            state.bindings.mediaPreviewItem = MediaPreviewItem(file: file, title: title)
+            
+            let mediaPreviewViewModel = makeMediaPreviewViewModel(item: item, timelineViewModelKind: timelineViewModelKind)
+            actionsSubject.send(.displayMediaPreview(mediaPreviewViewModel))
         case .displayLocation(let body, let geoURI, let description):
             actionsSubject.send(.displayLocation(body: body, geoURI: geoURI, description: description))
         case .none:
@@ -650,10 +662,25 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         analyticsService.trackComposer(inThread: false, isEditing: isEdit, isReply: isReply, startsThread: nil)
     }
     
+    private func makeMediaPreviewViewModel(item: EventBasedMessageTimelineItemProtocol,
+                                           timelineViewModelKind: TimelineControllerAction.TimelineViewModelKind) -> TimelineMediaPreviewViewModel {
+        let timelineViewModel = switch timelineViewModelKind {
+        case .active: self
+        case .new(let newViewModel): newViewModel
+        }
+        
+        return TimelineMediaPreviewViewModel(initialItem: item,
+                                             timelineViewModel: timelineViewModel,
+                                             mediaProvider: mediaProvider,
+                                             photoLibraryManager: PhotoLibraryManager(),
+                                             userIndicatorController: userIndicatorController,
+                                             appMediator: appMediator)
+    }
+    
     // MARK: - Timeline Item Building
     
     private func buildTimelineViews(timelineItems: [RoomTimelineItemProtocol], isSwitchingTimelines: Bool = false) {
-        var timelineItemsDictionary = OrderedDictionary<TimelineUniqueId, RoomTimelineItemViewState>()
+        var timelineItemsDictionary = OrderedDictionary<TimelineItemIdentifier.UniqueID, RoomTimelineItemViewState>()
         
         timelineItems.filter { $0 is RedactedRoomTimelineItem }.forEach { timelineItem in
             // Stops the audio player when a voice message is redacted.
@@ -807,6 +834,72 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         actionsSubject.send(.displayMessageForwarding(forwardingItem: .init(id: itemID, roomID: roomProxy.id, content: content)))
     }
     
+    // MARK: Pills
+    
+    private func pillContextUpdater(_ pillContext: PillContext) {
+        switch pillContext.data.type {
+        case let .user(id):
+            let isOwnMention = id == state.ownUserID
+            if let profile = state.members[id] {
+                var name = id
+                if let displayName = profile.displayName {
+                    name = "@\(displayName)"
+                }
+                pillContext.viewState = .mention(isOwnMention: isOwnMention, displayText: name)
+            } else {
+                pillContext.viewState = .mention(isOwnMention: isOwnMention, displayText: id)
+                pillContext.cancellable = context.$viewState
+                    .compactMap { $0.members[id] }
+                    .sink { [weak pillContext] profile in
+                        guard let pillContext else {
+                            return
+                        }
+                        
+                        var name = id
+                        if let displayName = profile.displayName {
+                            name = "@\(displayName)"
+                        }
+                        pillContext.viewState = .mention(isOwnMention: isOwnMention, displayText: name)
+                        pillContext.cancellable = nil
+                    }
+            }
+        case .allUsers:
+            pillContext.viewState = .mention(isOwnMention: true, displayText: PillConstants.atRoom)
+        case .event(let room):
+            var pillViewState: PillViewState = .reference(avatar: .link, displayText: L10n.screenRoomEventPill(L10n.commonRoom))
+            defer {
+                pillContext.viewState = pillViewState
+            }
+            
+            switch room {
+            case .roomAlias(let alias):
+                guard let roomSummary = clientProxy.roomSummaryForAlias(alias) else {
+                    return
+                }
+                // We always show the link image for event permalinks
+                pillViewState = .reference(avatar: .link, displayText: L10n.screenRoomEventPill(roomSummary.name))
+            case .roomID(let id):
+                guard let roomSummary = clientProxy.roomSummaryForIdentifier(id) else {
+                    return
+                }
+                // We always show the link image for event permalinks
+                pillViewState = .reference(avatar: .link, displayText: L10n.screenRoomEventPill(roomSummary.name))
+            }
+        case .roomAlias(let alias):
+            guard let roomSummary = clientProxy.roomSummaryForAlias(alias) else {
+                pillContext.viewState = .reference(avatar: .link, displayText: alias)
+                return
+            }
+            pillContext.viewState = .reference(avatar: .roomAvatar(roomSummary.avatar), displayText: roomSummary.name)
+        case .roomID(let id):
+            guard let roomSummary = clientProxy.roomSummaryForIdentifier(id) else {
+                pillContext.viewState = .reference(avatar: .link, displayText: id)
+                return
+            }
+            pillContext.viewState = .reference(avatar: .roomAvatar(roomSummary.avatar), displayText: roomSummary.name)
+        }
+    }
+    
     // MARK: - User Indicators
     
     private func showFocusLoadingIndicator() {
@@ -865,10 +958,10 @@ private extension RoomInfoProxy {
 extension TimelineViewModel {
     static let mock = mock(timelineKind: .live)
     
-    static func mock(timelineKind: TimelineKind = .live, timelineController: MockRoomTimelineController? = nil) -> TimelineViewModel {
+    static func mock(timelineKind: TimelineKind = .live, timelineController: MockTimelineController? = nil) -> TimelineViewModel {
         TimelineViewModel(roomProxy: JoinedRoomProxyMock(.init(name: "Preview room")),
                           focussedEventID: nil,
-                          timelineController: timelineController ?? MockRoomTimelineController(timelineKind: timelineKind),
+                          timelineController: timelineController ?? MockTimelineController(timelineKind: timelineKind),
                           mediaProvider: MediaProviderMock(configuration: .init()),
                           mediaPlayerProvider: MediaPlayerProviderMock(),
                           voiceMessageMediaManager: VoiceMessageMediaManagerMock(),
@@ -876,7 +969,9 @@ extension TimelineViewModel {
                           appMediator: AppMediatorMock.default,
                           appSettings: ServiceLocator.shared.settings,
                           analyticsService: ServiceLocator.shared.analytics,
-                          emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings))
+                          emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                          timelineControllerFactory: TimelineControllerFactoryMock(.init()),
+                          clientProxy: ClientProxyMock(.init()))
     }
 }
 

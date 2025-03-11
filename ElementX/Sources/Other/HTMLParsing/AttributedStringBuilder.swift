@@ -224,7 +224,8 @@ struct AttributedStringBuilder: AttributedStringBuilderProtocol {
             case .atRoom:
                 attributedString.addAttribute(.MatrixAllUsersMention, value: true, range: match.range)
             case .roomAlias(let alias):
-                if let url = try? matrixToRoomAliasPermalink(roomAlias: alias) {
+                if let urlString = try? matrixToRoomAliasPermalink(roomAlias: alias),
+                   let url = URL(string: urlString) {
                     attributedString.addAttribute(.link, value: url, range: match.range)
                 }
             case .matrixURI(let uri):
@@ -282,13 +283,13 @@ struct AttributedStringBuilder: AttributedStringBuilderProtocol {
                     case .user(let userID):
                         mentionBuilder.handleUserMention(for: attributedString, in: range, url: url, userID: userID, userDisplayName: nil)
                     case .room(let roomID):
-                        attributedString.addAttributes([.MatrixRoomID: roomID], range: range)
+                        mentionBuilder.handleRoomIDMention(for: attributedString, in: range, url: url, roomID: roomID)
                     case .roomAlias(let alias):
-                        attributedString.addAttributes([.MatrixRoomAlias: alias], range: range)
+                        mentionBuilder.handleRoomAliasMention(for: attributedString, in: range, url: url, roomAlias: alias, roomDisplayName: nil)
                     case .eventOnRoomId(let roomID, let eventID):
-                        attributedString.addAttributes([.MatrixEventOnRoomID: EventOnRoomIDAttribute.Value(roomID: roomID, eventID: eventID)], range: range)
+                        mentionBuilder.handleEventOnRoomIDMention(for: attributedString, in: range, url: url, eventID: eventID, roomID: roomID)
                     case .eventOnRoomAlias(let alias, let eventID):
-                        attributedString.addAttributes([.MatrixEventOnRoomAlias: EventOnRoomAliasAttribute.Value(alias: alias, eventID: eventID)], range: range)
+                        mentionBuilder.handleEventOnRoomAliasMention(for: attributedString, in: range, url: url, eventID: eventID, roomAlias: alias)
                     }
                 }
             }
@@ -355,6 +356,7 @@ extension NSAttributedString.Key {
     static let MatrixBlockquote: NSAttributedString.Key = .init(rawValue: BlockquoteAttribute.name)
     static let MatrixUserID: NSAttributedString.Key = .init(rawValue: UserIDAttribute.name)
     static let MatrixUserDisplayName: NSAttributedString.Key = .init(rawValue: UserDisplayNameAttribute.name)
+    static let MatrixRoomDisplayName: NSAttributedString.Key = .init(rawValue: RoomDisplayNameAttribute.name)
     static let MatrixRoomID: NSAttributedString.Key = .init(rawValue: RoomIDAttribute.name)
     static let MatrixRoomAlias: NSAttributedString.Key = .init(rawValue: RoomAliasAttribute.name)
     static let MatrixEventOnRoomID: NSAttributedString.Key = .init(rawValue: EventOnRoomIDAttribute.name)
@@ -364,6 +366,10 @@ extension NSAttributedString.Key {
 
 protocol MentionBuilderProtocol {
     func handleUserMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, userID: String, userDisplayName: String?)
+    func handleRoomIDMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, roomID: String)
+    func handleRoomAliasMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, roomAlias: String, roomDisplayName: String?)
+    func handleEventOnRoomAliasMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, eventID: String, roomAlias: String)
+    func handleEventOnRoomIDMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, eventID: String, roomID: String)
     func handleAllUsersMention(for attributedString: NSMutableAttributedString, in range: NSRange)
 }
 

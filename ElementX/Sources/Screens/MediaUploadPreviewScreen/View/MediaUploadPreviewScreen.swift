@@ -60,6 +60,7 @@ struct MediaUploadPreviewScreen: View {
                 MessageComposerTextField(placeholder: L10n.richTextEditorComposerCaptionPlaceholder,
                                          text: $context.caption,
                                          presendCallback: $context.presendCallback,
+                                         selectedRange: $context.selectedRange,
                                          maxHeight: ComposerConstant.maxHeight,
                                          keyHandler: handleKeyPress) { _ in }
                     .focused($isComposerFocussed)
@@ -68,7 +69,7 @@ struct MediaUploadPreviewScreen: View {
                     captionWarningButton
                 }
             }
-            .messageComposerStyle()
+            .messageComposerStyle(isEncrypted: context.viewState.isRoomEncrypted)
             
             SendButton {
                 context.send(viewAction: .send)
@@ -227,7 +228,7 @@ struct MediaUploadPreviewScreen_Previews: PreviewProvider, TestablePreview {
     static let testURL = Bundle.main.url(forResource: "AppIcon60x60@2x", withExtension: "png")
     
     static let viewModel = MediaUploadPreviewScreenViewModel(userIndicatorController: UserIndicatorControllerMock.default,
-                                                             roomProxy: JoinedRoomProxyMock(),
+                                                             roomProxy: JoinedRoomProxyMock(.init()),
                                                              mediaUploadingPreprocessor: MediaUploadingPreprocessor(appSettings: ServiceLocator.shared.settings),
                                                              title: "App Icon.png",
                                                              url: snapshotURL,

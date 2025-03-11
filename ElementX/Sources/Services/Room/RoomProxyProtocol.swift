@@ -18,12 +18,13 @@ enum RoomProxyError: Error {
     case missingTransactionID
 }
 
+/// An enum that describes the relationship between the current user and the room, and contains a reference to the specific implementation of the `RoomProxy`.
 enum RoomProxyType {
     case joined(JoinedRoomProxyProtocol)
     case invited(InvitedRoomProxyProtocol)
     case knocked(KnockedRoomProxyProtocol)
+    case banned(BannedRoomProxyProtocol)
     case left
-    case banned
 }
 
 // sourcery: AutoMockable
@@ -43,6 +44,12 @@ protocol InvitedRoomProxyProtocol: RoomProxyProtocol {
 protocol KnockedRoomProxyProtocol: RoomProxyProtocol {
     var info: BaseRoomInfoProxyProtocol { get }
     func cancelKnock() async -> Result<Void, RoomProxyError>
+}
+
+// sourcery: AutoMockable
+protocol BannedRoomProxyProtocol: RoomProxyProtocol {
+    var info: BaseRoomInfoProxyProtocol { get }
+    func forgetRoom() async -> Result<Void, RoomProxyError>
 }
 
 enum JoinedRoomProxyAction: Equatable {
@@ -78,7 +85,9 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     func timelineFocusedOnEvent(eventID: String, numberOfEvents: UInt16) async -> Result<TimelineProxyProtocol, RoomProxyError>
     
-    func messageFilteredTimeline(allowedMessageTypes: [RoomMessageEventMessageType]) async -> Result<TimelineProxyProtocol, RoomProxyError>
+    func messageFilteredTimeline(focus: TimelineFocus,
+                                 allowedMessageTypes: [TimelineAllowedMessageType],
+                                 presentation: TimelineKind.MediaPresentation) async -> Result<TimelineProxyProtocol, RoomProxyError>
     
     func enableEncryption() async -> Result<Void, RoomProxyError>
     

@@ -31,6 +31,16 @@ struct StartChatScreen: View {
                           disablesInteractiveDismiss: true)
         .compoundSearchField()
         .alert(item: $context.alertInfo)
+        .sheet(item: $context.selectedUserToInvite) { user in
+            SendInviteConfirmationView(userToInvite: user, mediaProvider: context.mediaProvider) {
+                context.send(viewAction: .createDM(user: user))
+            }
+        }
+        .sheet(isPresented: $context.isJoinRoomByAddressSheetPresented) {
+            context.roomAddress = ""
+        } content: {
+            JoinRoomByAddressView(context: context)
+        }
     }
 
     // MARK: - Private
@@ -39,9 +49,33 @@ struct StartChatScreen: View {
     @ViewBuilder
     private var mainContent: some View {
         createRoomSection
+        if context.viewState.isRoomDirectoryEnabled {
+            roomDirectorySearch
+        }
         joinForumSection // Tchap: Join a forum
         inviteFriendsSection
+        joinRoomByAddressSection
         usersSection
+    }
+    
+    private var joinRoomByAddressSection: some View {
+        Section {
+            ListRow(label: .default(title: L10n.screenStartChatJoinRoomByAddressAction,
+                                    icon: \.room),
+                    kind: .button {
+                        context.isJoinRoomByAddressSheetPresented = true
+                    })
+        }
+    }
+    
+    private var roomDirectorySearch: some View {
+        Section {
+            ListRow(label: .default(title: L10n.screenRoomDirectorySearchTitle,
+                                    icon: \.listBulleted),
+                    kind: .navigationLink {
+                        context.send(viewAction: .openRoomDirectorySearch)
+                    })
+        }
     }
     
     /// The content shown in the form when a search query has been entered.
@@ -131,13 +165,16 @@ struct StartChatScreen: View {
 
 struct StartChatScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModel = {
+        let appSettings = AppSettings()
+        appSettings.publicSearchEnabled = true
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@userid:example.com"))))
         let userDiscoveryService = UserDiscoveryServiceMock()
         userDiscoveryService.searchProfilesWithReturnValue = .success([.mockAlice])
         let viewModel = StartChatScreenViewModel(userSession: userSession,
                                                  analytics: ServiceLocator.shared.analytics,
                                                  userIndicatorController: UserIndicatorControllerMock(),
-                                                 userDiscoveryService: userDiscoveryService)
+                                                 userDiscoveryService: userDiscoveryService,
+                                                 appSettings: appSettings)
         return viewModel
     }()
     

@@ -30,10 +30,11 @@ enum ClientProxyLoadingState {
 
 enum ClientProxyError: Error {
     case sdkError(Error)
+    case forbiddenAccess
     
     case invalidMedia
     case invalidServerName
-    case failedUploadingMedia(Error, MatrixErrorCode)
+    case failedUploadingMedia(ErrorKind)
     case roomPreviewIsPrivate
     case failedRetrievingUserIdentity
     case failedResolvingRoomAlias
@@ -74,9 +75,11 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     var deviceID: String? { get }
 
     var homeserver: String { get }
-
+    
+    // TODO: This is a temporary value, in the future we should throw a migration error
+    // when decoding a session that contains a sliding sync proxy URL instead of restoring it.
+    var needsSlidingSyncMigration: Bool { get }
     var slidingSyncVersion: SlidingSyncVersion { get }
-    var availableSlidingSyncVersions: [SlidingSyncVersion] { get async }
     
     var canDeactivateAccount: Bool { get }
     
@@ -93,10 +96,15 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     
     var roomSummaryProvider: RoomSummaryProviderProtocol? { get }
     
-    var roomsToAwait: Set<String> { get set }
-    
     /// Used for listing rooms that shouldn't be affected by the main `roomSummaryProvider` filtering
+    /// But can still be filtered by queries, since this may be shared across multiple views, remember to reset
+    /// The filtering state when you are done with it
     var alternateRoomSummaryProvider: RoomSummaryProviderProtocol? { get }
+    
+    /// Used for listing rooms, can't be filtered nor its state observed
+    var staticRoomSummaryProvider: StaticRoomSummaryProviderProtocol? { get }
+    
+    var roomsToAwait: Set<String> { get set }
     
     var notificationSettings: NotificationSettingsProxyProtocol { get }
     
@@ -109,17 +117,15 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func startSync()
 
     func stopSync()
+    
     func stopSync(completion: (() -> Void)?) // Hopefully this will become async once we get SE-0371.
-    
+        
     func accountURL(action: AccountManagementAction) async -> URL?
-    
-    func createDirectRoomIfNeeded(with userID: String, expectedRoomName: String?) async -> Result<(roomID: String, isNewRoom: Bool), ClientProxyError>
     
     func directRoomForUserID(_ userID: String) async -> Result<String?, ClientProxyError>
     
     func createDirectRoom(with userID: String, expectedRoomName: String?) async -> Result<String, ClientProxyError>
     
-    // swiftlint:disable:next function_parameter_count
     func createRoom(name: String,
                     topic: String?,
                     isRoomPrivate: Bool,
@@ -144,6 +150,10 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     
     func roomPreviewForIdentifier(_ identifier: String, via: [String]) async -> Result<RoomPreviewProxyProtocol, ClientProxyError>
     
+    func roomSummaryForIdentifier(_ identifier: String) -> RoomSummary?
+    
+    func roomSummaryForAlias(_ alias: String) -> RoomSummary?
+    
     @discardableResult func loadUserDisplayName() async -> Result<Void, ClientProxyError>
     
     func setUserDisplayName(_ name: String) async -> Result<Void, ClientProxyError>
@@ -156,7 +166,7 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
 
     func deactivateAccount(password: String?, eraseData: Bool) async -> Result<Void, ClientProxyError>
     
-    func logout() async -> URL?
+    func logout() async
 
     func setPusher(with configuration: PusherConfiguration) async throws
     
@@ -171,6 +181,8 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func isAliasAvailable(_ alias: String) async -> Result<Bool, ClientProxyError>
     
     func getElementWellKnown() async -> Result<ElementWellKnown?, ClientProxyError>
+    
+    @discardableResult func clearCaches() async -> Result<Void, ClientProxyError>
 
     // MARK: - Ignored users
     
@@ -195,5 +207,5 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func withdrawUserIdentityVerification(_ userID: String) async -> Result<Void, ClientProxyError>
     func resetIdentity() async -> Result<IdentityResetHandle?, ClientProxyError>
     
-    func userIdentity(for userID: String) async -> Result<UserIdentity?, ClientProxyError>
+    func userIdentity(for userID: String) async -> Result<UserIdentityProxyProtocol?, ClientProxyError>
 }

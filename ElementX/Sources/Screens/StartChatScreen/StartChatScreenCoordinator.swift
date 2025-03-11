@@ -20,6 +20,7 @@ struct StartChatScreenCoordinatorParameters {
 enum StartChatScreenCoordinatorAction {
     case close
     case openRoom(withIdentifier: String)
+    case openRoomDirectorySearch
     case joinForum // Tchap: add `join Forum` action to `StartChat` screen
 }
 
@@ -49,7 +50,8 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
         viewModel = StartChatScreenViewModel(userSession: parameters.userSession,
                                              analytics: ServiceLocator.shared.analytics,
                                              userIndicatorController: parameters.userIndicatorController,
-                                             userDiscoveryService: parameters.userDiscoveryService)
+                                             userDiscoveryService: parameters.userDiscoveryService,
+                                             appSettings: ServiceLocator.shared.settings)
     }
     
     func start() {
@@ -61,8 +63,10 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
             case .createRoom:
                 // before creating a room we select the users we would like to invite in that room
                 presentInviteUsersScreen()
-            case .openRoom(let identifier):
+            case .showRoom(let identifier):
                 actionsSubject.send(.openRoom(withIdentifier: identifier))
+            case .openRoomDirectorySearch:
+                actionsSubject.send(.openRoomDirectorySearch)
             case .joinForum: // Tchap: add `join Forum` action to `StartChat` screen
                 actionsSubject.send(.joinForum)
             }

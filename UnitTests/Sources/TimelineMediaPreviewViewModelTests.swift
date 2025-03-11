@@ -19,7 +19,7 @@ class TimelineMediaPreviewViewModelTests: XCTestCase {
     var context: TimelineMediaPreviewViewModel.Context { viewModel.context }
     var mediaProvider: MediaProviderMock!
     var photoLibraryManager: PhotoLibraryManagerMock!
-    var timelineController: MockRoomTimelineController!
+    var timelineController: MockTimelineController!
     
     func testLoadingItem() async throws {
         // Given a fresh view model.
@@ -51,7 +51,7 @@ class TimelineMediaPreviewViewModelTests: XCTestCase {
         
         // When the preview controller sets an item that fails to load.
         mediaProvider.loadFileFromSourceFilenameClosure = { _, _ in .failure(.failedRetrievingFile) }
-        let failure = deferFailure(viewModel.state.fileLoadedPublisher, timeout: 1) { _ in true }
+        let failure = deferFailure(viewModel.state.previewControllerDriver, timeout: 1) { $0.isItemLoaded }
         context.send(viewAction: .updateCurrentItem(.media(context.viewState.dataSource.previewItems[0])))
         try await failure.fulfill()
         
@@ -66,7 +66,7 @@ class TimelineMediaPreviewViewModelTests: XCTestCase {
         try await testLoadingItem()
         
         // When swiping to another item.
-        let deferred = deferFulfillment(viewModel.state.fileLoadedPublisher) { _ in true }
+        let deferred = deferFulfillment(viewModel.state.previewControllerDriver) { $0.isItemLoaded }
         context.send(viewAction: .updateCurrentItem(.media(context.viewState.dataSource.previewItems[1])))
         try await deferred.fulfill()
         
@@ -75,7 +75,7 @@ class TimelineMediaPreviewViewModelTests: XCTestCase {
         XCTAssertEqual(context.viewState.currentItem, .media(context.viewState.dataSource.previewItems[1]))
         
         // When swiping back to the first item.
-        let failure = deferFailure(viewModel.state.fileLoadedPublisher, timeout: 1) { _ in true }
+        let failure = deferFailure(viewModel.state.previewControllerDriver, timeout: 1) { $0.isItemLoaded }
         context.send(viewAction: .updateCurrentItem(.media(context.viewState.dataSource.previewItems[0])))
         try await failure.fulfill()
         
@@ -84,18 +84,22 @@ class TimelineMediaPreviewViewModelTests: XCTestCase {
         XCTAssertEqual(context.viewState.currentItem, .media(context.viewState.dataSource.previewItems[0]))
     }
     
-    func testLoadingMoreItem() async throws {
+    func testLoadingMoreItems() async throws {
         // Given a view model with a loaded item.
         try await testLoadingItem()
+        XCTAssertEqual(timelineController.paginateBackwardsCallCount, 0)
         
-        // When swiping to a "loading more" item.
-        let deferred = deferFailure(viewModel.state.fileLoadedPublisher, timeout: 1) { _ in true }
-        context.send(viewAction: .updateCurrentItem(.loading(.paginating)))
-        try await deferred.fulfill()
+        // When swiping to a "loading more" item and there are more media items to load.
+        timelineController.paginationState = .init(backward: .idle, forward: .timelineEndReached)
+        timelineController.backPaginationResponses.append(RoomTimelineItemFixtures.mediaChunk)
+        let failure = deferFailure(viewModel.state.previewControllerDriver, timeout: 1) { $0.isItemLoaded }
+        context.send(viewAction: .updateCurrentItem(.loading(.paginatingBackwards)))
+        try await failure.fulfill()
         
-        // Then there should no longer be a media preview and no attempt should be made to load one.
+        // Then there should no longer be a media preview and instead of loading any media, a pagination request should be made.
         XCTAssertEqual(mediaProvider.loadFileFromSourceFilenameCallsCount, 1)
-        XCTAssertEqual(context.viewState.currentItem, .loading(.paginating))
+        XCTAssertEqual(context.viewState.currentItem, .loading(.paginatingBackwards)) // Note: This item only changes when the preview controller handles the new items.
+        XCTAssertEqual(timelineController.paginateBackwardsCallCount, 1)
     }
     
     func testPagination() async throws {
@@ -111,7 +115,7 @@ class TimelineMediaPreviewViewModelTests: XCTestCase {
         
         // And the preview controller attempts to update the current item (now at a new index in the array but it hasn't changed in the data source).
         mediaProvider.loadFileFromSourceFilenameClosure = { _, _ in .failure(.failedRetrievingFile) }
-        let failure = deferFailure(viewModel.state.fileLoadedPublisher, timeout: 1) { _ in true }
+        let failure = deferFailure(viewModel.state.previewControllerDriver, timeout: 1) { $0.isItemLoaded }
         context.send(viewAction: .updateCurrentItem(.media(context.viewState.dataSource.previewItems[3])))
         try await failure.fulfill()
         
@@ -130,7 +134,7 @@ class TimelineMediaPreviewViewModelTests: XCTestCase {
             return
         }
         
-        let deferred = deferFulfillment(viewModel.actions) { $0 == .viewInRoomTimeline(mediaItem.id) }
+        let deferred = deferFulfillment(viewModel.actions) { $0 == .viewInRoomTimeline(mediaItem.timelineItem.id) }
         context.send(viewAction: .menuAction(.viewInRoomTimeline, item: mediaItem))
         
         // Then the action should be sent upwards to make this happen.
@@ -148,25 +152,27 @@ class TimelineMediaPreviewViewModelTests: XCTestCase {
         }
         
         // When choosing to show the item details.
+        let deferredDriver = deferFulfillment(context.viewState.previewControllerDriver) { $0.isShowItemDetails }
         context.send(viewAction: .showItemDetails(mediaItem))
         
         // Then the details sheet should be presented.
-        guard let mediaDetailsItem = context.mediaDetailsItem else {
-            XCTFail("The default of the current item should be presented")
+        let action = try await deferredDriver.fulfill()
+        guard case let .showItemDetails(mediaDetailsItem) = action else {
+            XCTFail("The action should include the media item.")
             return
         }
         XCTAssertEqual(.media(mediaDetailsItem), context.viewState.currentItem)
         
         // When choosing to redact the item.
-        context.send(viewAction: .menuAction(.redact, item: mediaDetailsItem))
+        context.send(viewAction: .menuAction(.redact, item: mediaItem))
         
         // Then the confirmation sheet should be presented.
-        XCTAssertEqual(context.redactConfirmationItem, mediaDetailsItem)
+        XCTAssertEqual(context.redactConfirmationItem, mediaItem)
         XCTAssertFalse(timelineController.redactCalled)
         
         // When confirming the redaction.
         let deferred = deferFulfillment(viewModel.actions) { $0 == .dismiss }
-        context.send(viewAction: .redactConfirmation(item: mediaDetailsItem))
+        context.send(viewAction: .redactConfirmation(item: mediaItem))
         
         // Then the item should be redacted and the view should be dismissed.
         try await deferred.fulfill()
@@ -203,13 +209,12 @@ class TimelineMediaPreviewViewModelTests: XCTestCase {
         XCTAssertEqual(mediaItem.contentType, "JPEG image")
         
         // When choosing to save the image.
-        let deferred = deferFulfillment(context.$viewState) { $0.bindings.alertInfo != nil }
+        let deferred = deferFulfillment(context.viewState.previewControllerDriver) { $0.isAuthorizationRequired }
         context.send(viewAction: .menuAction(.save, item: mediaItem))
-        try await deferred.fulfill()
         
         // Then the user should be prompted to allow access.
+        try await deferred.fulfill()
         XCTAssertTrue(photoLibraryManager.addResourceAtCalled)
-        XCTAssertEqual(context.alertInfo?.id, .authorizationRequired)
     }
     
     func testSaveVideo() async throws {
@@ -243,31 +248,24 @@ class TimelineMediaPreviewViewModelTests: XCTestCase {
         XCTAssertEqual(mediaItem.contentType, "PDF document")
         
         // When choosing to save the file.
+        let deferred = deferFulfillment(context.viewState.previewControllerDriver) { $0.isExportFile }
         context.send(viewAction: .menuAction(.save, item: mediaItem))
-        try await Task.sleep(for: .seconds(0.5))
+        let exportAction = try await deferred.fulfill()
+        
+        guard case let .exportFile(file) = exportAction else {
+            XCTFail("Unexpected action")
+            return
+        }
         
         // Then the binding should be set for the user to export the file to their specified location.
         XCTAssertFalse(photoLibraryManager.addResourceAtCalled)
-        XCTAssertNotNil(context.fileToExport)
-        XCTAssertEqual(context.fileToExport?.url, mediaItem.fileHandle?.url)
-    }
-    
-    func testDismiss() async throws {
-        // Given a view model with a loaded item.
-        try await testLoadingItem()
-        
-        // When requesting to dismiss the view.
-        let deferred = deferFulfillment(viewModel.actions) { $0 == .dismiss }
-        context.send(viewAction: .dismiss)
-        
-        // Then the action should be sent upwards to make this happen.
-        try await deferred.fulfill()
+        XCTAssertEqual(file.url, mediaItem.fileHandle?.url)
     }
     
     // MARK: - Helpers
     
     private func loadInitialItem() async throws {
-        let deferred = deferFulfillment(viewModel.state.fileLoadedPublisher) { _ in true }
+        let deferred = deferFulfillment(viewModel.state.previewControllerDriver) { $0.isItemLoaded }
         let initialItem = context.viewState.dataSource.previewController(QLPreviewController(),
                                                                          previewItemAt: context.viewState.dataSource.initialItemIndex)
         guard let initialPreviewItem = initialItem as? TimelineMediaPreviewItem.Media else {
@@ -278,20 +276,17 @@ class TimelineMediaPreviewViewModelTests: XCTestCase {
         try await deferred.fulfill()
     }
     
-    @Namespace private var testNamespace
-    
     private func setupViewModel(initialItemIndex: Int = 0, photoLibraryAuthorizationDenied: Bool = false) {
         let initialItems = makeItems()
-        timelineController = MockRoomTimelineController(timelineKind: .media(.mediaFilesScreen))
+        timelineController = MockTimelineController(timelineKind: .media(.mediaFilesScreen))
         timelineController.timelineItems = initialItems
         
         mediaProvider = MediaProviderMock(configuration: .init())
         photoLibraryManager = PhotoLibraryManagerMock(.init(authorizationDenied: photoLibraryAuthorizationDenied))
         
-        viewModel = TimelineMediaPreviewViewModel(context: .init(item: initialItems[initialItemIndex],
-                                                                 viewModel: TimelineViewModel.mock(timelineKind: .media(.mediaFilesScreen),
-                                                                                                   timelineController: timelineController),
-                                                                 namespace: testNamespace),
+        viewModel = TimelineMediaPreviewViewModel(initialItem: initialItems[initialItemIndex],
+                                                  timelineViewModel: TimelineViewModel.mock(timelineKind: .media(.mediaFilesScreen),
+                                                                                            timelineController: timelineController),
                                                   mediaProvider: mediaProvider,
                                                   photoLibraryManager: photoLibraryManager,
                                                   userIndicatorController: UserIndicatorControllerMock(),

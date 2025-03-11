@@ -43,10 +43,12 @@ internal enum TchapL10n {
   internal static var screenCreateRoomPrivateOptionDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_private_option_description") }
   /// Private room
   internal static var screenCreateRoomPrivateOptionTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_private_option_title") }
-  /// - Not end-to-end encrypted
-  /// - Visible in the list of rooms
-  /// - Not allwed to external guests
-  internal static var screenCreateRoomPublicOptionDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_public_option_description") }
+  /// • Not end-to-end encrypted
+  /// • Visible in the list of rooms
+  /// 
+  internal static var screenCreateRoomPublicOptionDescription1: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_public_option_description_1") }
+  /// • Not allwed to external guests
+  internal static var screenCreateRoomPublicOptionDescription2: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_public_option_description_2") }
   /// Public room
   internal static var screenCreateRoomPublicOptionTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_public_option_title") }
   /// Visible only to members of "%1$@"
