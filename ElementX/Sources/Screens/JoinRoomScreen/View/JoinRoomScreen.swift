@@ -293,18 +293,12 @@ struct JoinRoomScreen: View {
     private var toolbar: some ToolbarContent {
         if context.viewState.mode == .knocked {
             ToolbarItem(placement: .principal) {
-<<<<<<< HEAD
-                RoomHeaderView(roomName: context.viewState.title,
-                               roomAvatar: context.viewState.avatar,
-                               roomPropertiesBadgesView: .sample, // Tchap addition
-                               mediaProvider: context.mediaProvider)
-=======
                 if let avatar = context.viewState.avatar {
                     RoomHeaderView(roomName: context.viewState.title,
                                    roomAvatar: avatar,
+                                   roomPropertiesBadgesView: .sample, // Tchap addition
                                    mediaProvider: context.mediaProvider)
                 }
->>>>>>> 25.03.2
             }
         }
     }

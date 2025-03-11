@@ -204,13 +204,10 @@ struct RoomScreen: View {
         ToolbarItem(placement: .principal) {
             RoomHeaderView(roomName: roomContext.viewState.roomTitle,
                            roomAvatar: roomContext.viewState.roomAvatar,
-<<<<<<< HEAD
+                           dmRecipientVerificationState: roomContext.viewState.dmRecipientVerificationState,
                            roomPropertiesBadgesView:
                            // Tchap: add badges
                            TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: $roomContext.isEncrypted, isPublic: $roomContext.isPublic, externalCount: $roomContext.externalCount),
-=======
-                           dmRecipientVerificationState: roomContext.viewState.dmRecipientVerificationState,
->>>>>>> 25.03.2
                            mediaProvider: roomContext.mediaProvider)
                 // Using a button stops it from getting truncated in the navigation bar
                 .contentShape(.rect)

@@ -62,15 +62,10 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         XCTAssertNotEqual(context.viewState.selectedUsers.first?.userID, UserProfileProxy.mockAlice.userID)
     }
     
-<<<<<<< HEAD
     func testDefaulSecurity() {
         // Tchap: handle `isRoomEncrypted` and `isFederated` additional properties
 //        XCTAssertTrue(context.viewState.bindings.isRoomPrivate)
         XCTAssertTrue(context.viewState.bindings.isRoomPrivate && context.viewState.bindings.isRoomEncrypted && context.viewState.bindings.isRoomFederated)
-=======
-    func testDefaultSecurity() {
-        XCTAssertTrue(context.viewState.bindings.isRoomPrivate)
->>>>>>> 25.03.2
     }
     
     func testCreateRoomRequirements() {

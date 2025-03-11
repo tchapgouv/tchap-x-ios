@@ -49,13 +49,10 @@ struct StartChatScreen: View {
     @ViewBuilder
     private var mainContent: some View {
         createRoomSection
-<<<<<<< HEAD
-        joinForumSection // Tchap: Join a forum
-=======
         if context.viewState.isRoomDirectoryEnabled {
             roomDirectorySearch
         }
->>>>>>> 25.03.2
+        joinForumSection // Tchap: Join a forum
         inviteFriendsSection
         joinRoomByAddressSection
         usersSection

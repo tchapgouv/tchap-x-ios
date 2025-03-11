@@ -235,30 +235,22 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             .sink { [weak self, ownUserID = roomProxy.ownUserID] members in
                 guard let self else { return }
                 
-<<<<<<< HEAD
                 // Tchap: add this condition since we don't bypass anymore the members fetching
                 // and the following properties must not be filled if we are not in a Direct 1-to-1 Room.
                 if roomProxy.isDirectOneToOneRoom {
-                    let accountOwner = members.first { $0.userID == ownUserID }
-                    let dmRecipient = members.first { $0.userID != ownUserID }
-                    self.dmRecipient = dmRecipient
-                    self.state.dmRecipient = dmRecipient.map(RoomMemberDetails.init(withProxy:))
-                    self.state.accountOwner = accountOwner.map(RoomMemberDetails.init(withProxy:))
+                    if let accountOwner = members.first(where: { $0.userID == ownUserID }) {
+                        self.state.accountOwner = .init(withProxy: accountOwner)
+                    }
+                
+                    if let dmRecipient = members.first(where: { $0.userID != ownUserID }) {
+                        self.state.dmRecipientInfo = .init(member: .init(withProxy: dmRecipient))
+                    
+                        Task { await self.updateMemberIdentityVerificationStates() }
+                    }
                 }
                 
                 // Tchap: update `externalCount` to display `external` badge on RoomDetailsScreen if necessary.
                 self.state.bindings.externalCount = members.filter { MatrixIdFromString($0.userID).isExternalTchapUser }.count
-=======
-                if let accountOwner = members.first(where: { $0.userID == ownUserID }) {
-                    self.state.accountOwner = .init(withProxy: accountOwner)
-                }
-                
-                if let dmRecipient = members.first(where: { $0.userID != ownUserID }) {
-                    self.state.dmRecipientInfo = .init(member: .init(withProxy: dmRecipient))
-                    
-                    Task { await self.updateMemberIdentityVerificationStates() }
-                }
->>>>>>> 25.03.2
             }
             .store(in: &cancellables)
         

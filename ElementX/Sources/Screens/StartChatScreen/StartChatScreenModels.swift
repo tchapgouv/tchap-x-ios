@@ -15,13 +15,9 @@ enum StartChatScreenErrorType: Error {
 enum StartChatScreenViewModelAction: Equatable {
     case close
     case createRoom
-<<<<<<< HEAD
-    case openRoom(withIdentifier: String)
-    case joinForum // Tchap: add `join Forum` action to `StartChat` screen
-=======
     case showRoom(withIdentifier: String)
     case openRoomDirectorySearch
->>>>>>> 25.03.2
+    case joinForum // Tchap: add `join Forum` action to `StartChat` screen
 }
 
 struct StartChatScreenViewState: BindableState {
@@ -57,11 +53,9 @@ enum StartChatScreenViewAction {
     case createRoom
     case createDM(user: UserProfileProxy)
     case selectUser(UserProfileProxy)
-<<<<<<< HEAD
-    case joinForum // Tchap: add `join Forum` action to `StartChat` screen
-=======
     case joinRoomByAddress
     case openRoomDirectorySearch
+    case joinForum // Tchap: add `join Forum` action to `StartChat` screen
 }
 
 enum JoinByAddressState: Equatable {
@@ -69,5 +63,4 @@ enum JoinByAddressState: Equatable {
     case invalidAddress
     case addressNotFound
     case addressFound(address: String, roomID: String)
->>>>>>> 25.03.2
 }

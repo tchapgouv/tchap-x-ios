@@ -645,18 +645,13 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             case .close:
                 navigationSplitCoordinator.setSheetCoordinator(nil)
             case .openRoom(let roomID):
-<<<<<<< HEAD
-                self.navigationSplitCoordinator.setSheetCoordinator(nil)
-                self.stateMachine.processEvent(.selectRoom(roomID: roomID, via: [], entryPoint: .room))
-            case .joinForum: // Tchap: handle `joinForum` action
-                presentRoomDirectorySearch(inFullScreenMode: false)
-=======
                 navigationSplitCoordinator.setSheetCoordinator(nil)
                 stateMachine.processEvent(.selectRoom(roomID: roomID, via: [], entryPoint: .room))
             case .openRoomDirectorySearch:
                 navigationSplitCoordinator.setSheetCoordinator(nil)
                 stateMachine.processEvent(.showRoomDirectorySearchScreen)
->>>>>>> 25.03.2
+            case .joinForum: // Tchap: handle `joinForum` action
+                presentRoomDirectorySearch(inFullScreenMode: false)
             }
         }
         .store(in: &cancellables)

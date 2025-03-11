@@ -105,15 +105,11 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.lastVersionLaunched, storageType: .userDefaults(store))
     var lastVersionLaunched: String?
         
-<<<<<<< HEAD
-    // Tchap: define Tchap default HomeServer by environment.
-=======
     /// The Set of room identifiers of invites that the user already saw in the invites list.
     /// This Set is being used to implement badges for unread invites.
     @UserPreference(key: UserDefaultsKeys.seenInvites, defaultValue: [], storageType: .userDefaults(store))
     var seenInvites: Set<String>
     
->>>>>>> 25.03.2
     /// The default homeserver address used. This is intentionally a string without a scheme
     /// so that it can be passed to Rust as a ServerName for well-known discovery.
     #if IS_TCHAP_DEVELOPMENT

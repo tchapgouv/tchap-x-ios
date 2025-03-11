@@ -73,17 +73,14 @@ class StartChatScreenViewModel: StartChatScreenViewModelType, StartChatScreenVie
                     displayError()
                 }
             }
-<<<<<<< HEAD
-        case .joinForum: // Tchap: handle `joinForum` action
-            actionsSubject.send(.joinForum)
-=======
         case .createDM(let user):
             Task { await createDirectRoom(user: user) }
         case .joinRoomByAddress:
             joinRoomByAddress()
         case .openRoomDirectorySearch:
             actionsSubject.send(.openRoomDirectorySearch)
->>>>>>> 25.03.2
+        case .joinForum: // Tchap: handle `joinForum` action
+            actionsSubject.send(.joinForum)
         }
     }
     

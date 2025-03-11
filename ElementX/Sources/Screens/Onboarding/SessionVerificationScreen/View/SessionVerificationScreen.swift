@@ -89,6 +89,7 @@ struct SessionVerificationScreen: View {
         case .showingChallenge(let emojis), .acceptingChallenge(let emojis), .decliningChallenge(let emojis):
             emojisPanel(with: emojis)
                 .accessibilityIdentifier(A11yIdentifiers.sessionVerificationScreen.emojiWrapper)
+
         default:
             EmptyView()
         }

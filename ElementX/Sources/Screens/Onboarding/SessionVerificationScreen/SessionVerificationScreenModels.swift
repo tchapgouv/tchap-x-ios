@@ -156,7 +156,6 @@ struct SessionVerificationScreenViewState: BindableState {
             case .userIntiator, .userResponder:
                 return L10n.screenSessionVerificationCompleteUserSubtitle
             }
-            
         case .cancelled:
             return L10n.screenSessionVerificationFailedSubtitle
         }

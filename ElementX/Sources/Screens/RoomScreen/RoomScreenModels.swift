@@ -69,15 +69,12 @@ struct RoomScreenViewState: BindableState {
 }
 
 struct RoomScreenViewStateBindings {
-<<<<<<< HEAD
+    /// The view model used to present a QuickLook media preview.
+    var mediaPreviewViewModel: TimelineMediaPreviewViewModel?
     // Tchap: display room properties badges. As they are queried async, make them Bindable.
     var isEncrypted: Bool?
     var isPublic: Bool?
     var externalCount = 0
-=======
-    /// The view model used to present a QuickLook media preview.
-    var mediaPreviewViewModel: TimelineMediaPreviewViewModel?
->>>>>>> 25.03.2
 }
 
 enum RoomScreenFooterViewAction {
