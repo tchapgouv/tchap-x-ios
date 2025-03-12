@@ -248,22 +248,22 @@ final class AppSettings {
     #else
     let bugReportApplicationId = "element-x-ios"
     #endif
-    /// The maximum size of the upload request. Default value is just below CloudFlare's max request size.
     // Tchap: limit upload filesize to 10MB.
 //    let bugReportMaxUploadSize = 50 * 1024 * 1024
+    /// The maximum size of the upload request. Default value is just below CloudFlare's max request size.
     let bugReportMaxUploadSize = 10 * 1024 * 1024
 
     // MARK: - Analytics
     
+//    let analyticsConfiguration = AnalyticsConfiguration(isEnabled: InfoPlistReader.main.bundleIdentifier.starts(with: "io.element."),
+//                                                        host: Secrets.postHogHost,
+//                                                        apiKey: Secrets.postHogAPIKey,
+//                                                        termsURL: "https://element.io/cookie-policy")
     /// The configuration to use for analytics. Set `isEnabled` to false to disable analytics.
     ///
     /// **Note:** Analytics are disabled by default for forks. If you are maintaining a fork you will
     /// need to regenerate the Secrets file with your PostHog server and API key before enabling.
     /// // Tchap: disable analytics for the moment
-//    let analyticsConfiguration = AnalyticsConfiguration(isEnabled: InfoPlistReader.main.bundleIdentifier.starts(with: "io.element."),
-//                                                        host: Secrets.postHogHost,
-//                                                        apiKey: Secrets.postHogAPIKey,
-//                                                        termsURL: "https://element.io/cookie-policy")
     let analyticsConfiguration = AnalyticsConfiguration(isEnabled: false,
                                                         host: Secrets.postHogHost,
                                                         apiKey: Secrets.postHogAPIKey,
@@ -322,7 +322,9 @@ final class AppSettings {
         case ign = "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"
     }
 
+    // swiftlint:disable force_unwrapping
     let mapTilerBaseURL = URL(string: TchapMapProvider.geoDataGouv.rawValue)!
+    // swiftlint:enable force_unwrapping
     #else
     let mapTilerBaseURL: URL = "https://api.maptiler.com/maps"
     #endif
