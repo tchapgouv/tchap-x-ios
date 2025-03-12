@@ -64,7 +64,8 @@ packages:
   Compound:
 #    url: https://github.com/element-hq/compound-ios
 #    revision: 9325643cb4d22150881c5bf79e1e6e3c5a87ea89
-    path: ../tchap-x-compound/compound-ios
+    url: https://github.com/tchapgouv/compound-ios
+    branch: main
   AnalyticsEvents:
     url: https://github.com/matrix-org/matrix-analytics-events
     minorVersion: 0.28.0
