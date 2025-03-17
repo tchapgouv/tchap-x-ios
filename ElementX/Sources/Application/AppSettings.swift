@@ -94,8 +94,10 @@ final class AppSettings {
         #if DEBUG
         true
         #else
-        let apps = ["io.element.elementx.nightly", "io.element.elementx.pr"]
-        return apps.contains(InfoPlistReader.main.baseBundleIdentifier)
+        // Tchap: set Development Build flag to false if not in DEBUG mode
+//        let apps = ["io.element.elementx.nightly", "io.element.elementx.pr"]
+//        return apps.contains(InfoPlistReader.main.baseBundleIdentifier)
+        return false
         #endif
     }()
     
@@ -235,17 +237,34 @@ final class AppSettings {
     let bugReportServiceBaseURL: URL! = URL(string: Secrets.rageshakeServerURL)
     let bugReportSentryURL: URL! = URL(string: Secrets.sentryDSN)
     // Use the name allocated by the bug report server
+    // Tchap: customize bug report application id to TchapX.
+//    let bugReportApplicationId = "element-x-ios"
+    #if IS_TCHAP_DEVELOPMENT
+    let bugReportApplicationId = "tchax-development-ios"
+    #elseif IS_TCHAP_STAGING
+    let bugReportApplicationId = "tchax-staging-ios"
+    #elseif IS_TCHAP_PRODUCTION
+    let bugReportApplicationId = "tchax-production-ios"
+    #else
     let bugReportApplicationId = "element-x-ios"
+    #endif
+    // Tchap: limit upload filesize to 10MB.
+//    let bugReportMaxUploadSize = 50 * 1024 * 1024
     /// The maximum size of the upload request. Default value is just below CloudFlare's max request size.
-    let bugReportMaxUploadSize = 50 * 1024 * 1024
-    
+    let bugReportMaxUploadSize = 10 * 1024 * 1024
+
     // MARK: - Analytics
     
+//    let analyticsConfiguration = AnalyticsConfiguration(isEnabled: InfoPlistReader.main.bundleIdentifier.starts(with: "io.element."),
+//                                                        host: Secrets.postHogHost,
+//                                                        apiKey: Secrets.postHogAPIKey,
+//                                                        termsURL: "https://element.io/cookie-policy")
     /// The configuration to use for analytics. Set `isEnabled` to false to disable analytics.
     ///
     /// **Note:** Analytics are disabled by default for forks. If you are maintaining a fork you will
     /// need to regenerate the Secrets file with your PostHog server and API key before enabling.
-    let analyticsConfiguration = AnalyticsConfiguration(isEnabled: InfoPlistReader.main.bundleIdentifier.starts(with: "io.element."),
+    /// // Tchap: disable analytics for the moment
+    let analyticsConfiguration = AnalyticsConfiguration(isEnabled: false,
                                                         host: Secrets.postHogHost,
                                                         apiKey: Secrets.postHogAPIKey,
                                                         termsURL: "https://element.io/cookie-policy")
@@ -295,7 +314,20 @@ final class AppSettings {
     // MARK: - Maps
     
     // maptiler base url
+    // Tchap: customize map tiler url for Tchap.
+//    let mapTilerBaseURL: URL = "https://api.maptiler.com/maps"
+    #if IS_TCHAP_DEVELOPMENT || IS_TCHAP_STAGING || IS_TCHAP_PRODUCTION
+    private enum TchapMapProvider: String {
+        case geoDataGouv = "https://openmaptiles.geo.data.gouv.fr/styles/osm-bright/style.json"
+        case ign = "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"
+    }
+
+    // swiftlint:disable force_unwrapping
+    let mapTilerBaseURL = URL(string: TchapMapProvider.geoDataGouv.rawValue)!
+    // swiftlint:enable force_unwrapping
+    #else
     let mapTilerBaseURL: URL = "https://api.maptiler.com/maps"
+    #endif
 
     // maptiler api key
     let mapTilerApiKey = Secrets.mapLibreAPIKey
