@@ -160,7 +160,7 @@ end
 
 lane :config_production do
   config_secrets()
-  xcodegen(spec: "project.yml")
+  xcodegen(spec: "project-tchap-x.yml")
 end
 
 lane :config_nightly do |options|
