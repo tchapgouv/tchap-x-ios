@@ -6,7 +6,7 @@ if File.exist?(enterprise)
 end
 
 before_all do
-  xcversion(version: "16.1")
+  xcversion(version: "16.2")
 
   ENV["FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT"] = "180"
   ENV["FASTLANE_XCODE_LIST_TIMEOUT"] = "180"
@@ -22,16 +22,16 @@ lane :build_alpha do
 
   config_alpha()
 
-  code_signing_identity = "Apple Distribution: Vector Creations Limited (7J4U792NQT)"
+  code_signing_identity = "Apple Distribution: DINSIC (NVMQD635C6)"
   
-  app_provisioning_profile_name = "ElementX PR Ad Hoc"
-  app_bundle_identifier = "io.element.elementx.pr"
+  app_provisioning_profile_name = "TchapX Ad Hoc"
+  app_bundle_identifier = "fr.gouv.tchapx"
 
-  nse_provisioning_profile_name = "ElementX NSE PR Ad Hoc"
-  nse_bundle_identifier = "io.element.elementx.pr.nse"
+  nse_provisioning_profile_name = "TchapX NSE PR Ad Hoc"
+  nse_bundle_identifier = "fr.gouv.tchapx.nse"
 
   update_code_signing_settings(
-    targets: ["ElementX"],
+    targets: ["TchapX-Production"],
     use_automatic_signing: false,
     bundle_identifier: app_bundle_identifier,
     profile_name: app_provisioning_profile_name,
@@ -46,7 +46,7 @@ lane :build_alpha do
   )
 
   update_code_signing_settings(
-    targets: ["NSE"],
+    targets: ["TchapX-Production-NSE"],
     use_automatic_signing: false,
     bundle_identifier: nse_bundle_identifier,
     profile_name: nse_provisioning_profile_name,
@@ -61,7 +61,7 @@ lane :build_alpha do
   )
 
   build_ios_app(
-    scheme: "ElementX",
+    scheme: "TchapX-Production",
     clean: true,
     export_method: "ad-hoc",
     output_directory: "build",
@@ -81,8 +81,14 @@ end
 lane :unit_tests do |options|
   reset_simulator = ENV.key?('CI')
   
+  # Tchap: generate xcode project because .xcodeporj files are not gitted.
+  xcodegen(
+    spec: "project-tchap-x.yml"
+  )
+  
   run_tests(
-    scheme: "UnitTests",
+    project: "TchapX.xcodeproj",
+    scheme: "TchapX-UnitTests",
     device: "iPhone 16 (18.1)",
     ensure_devices_found: true,
     result_bundle: true,
@@ -92,6 +98,7 @@ lane :unit_tests do |options|
   
   if !options[:skip_previews]
     run_tests(
+      project: TchapX.xcodeproj,
       scheme: "PreviewTests",
       device: "iPhone SE (3rd generation) (18.1)",
       ensure_devices_found: true,
@@ -160,14 +167,14 @@ end
 
 lane :config_production do
   config_secrets()
-  xcodegen(spec: "project.yml")
+  xcodegen(spec: "project-tchap-x.yml")
 end
 
 lane :config_nightly do |options|
   build_number = options[:build_number]
   UI.user_error!("Invalid build number.") unless !build_number.to_s.empty?
 
-  target_file_path = "../project.yml"
+  target_file_path = "../project-tchap-x.yml"
   data = YAML.load_file target_file_path
   
   # Check if the "path" already exists in the "include" array
@@ -179,55 +186,56 @@ lane :config_nightly do |options|
   
   File.open(target_file_path, 'w') { |f| YAML.dump(data, f) }
 
-  xcodegen(spec: "project.yml")
+  xcodegen(spec: "project-tchap-x.yml")
 
   # Automatically done by Xcode Cloud. Cannot override
   # https://developer.apple.com/documentation/xcode/setting-the-next-build-number-for-xcode-cloud-builds
   # bump_build_number()
 
-  release_version = get_version_number(target: "ElementX")
+  release_version = get_version_number(target: "TchapX-Production")
 
   Dir.chdir ".." do
     sh("swift run tools app-icon-banner Variants/Nightly/Resources/Nightly.xcassets/NightlyAppIcon.appiconset/AppIcon.png --banner-text '#{release_version} (#{build_number})'")
   end
 end
 
-$sentry_retry=0
+# Tchap: Disable upload to Sentry for the moment,
+# $sentry_retry=0
 lane :upload_dsyms_to_sentry do |options|
-  auth_token = ENV["SENTRY_AUTH_TOKEN"]
-  UI.user_error!("Invalid Sentry Auth token.") unless !auth_token.to_s.empty?
-
-  dsym_path = options[:dsym_path]
-  UI.user_error!("Invalid DSYM path.") unless !dsym_path.to_s.empty?
-
-  begin
-    sentry_upload_dif(
-      auth_token: auth_token,
-      org_slug: 'element',
-      project_slug: 'element-x-ios',
-      url: 'https://sentry.tools.element.io/',
-      path: dsym_path,
-    )
-  rescue => exception
-    $sentry_retry += 1
-
-    if $sentry_retry <= 5
-      UI.message "Sentry failed, retrying."
-      upload_dsyms_to_sentry options
-    else
-      raise exception
-    end
-  end
+#   auth_token = ENV["SENTRY_AUTH_TOKEN"]
+#   UI.user_error!("Invalid Sentry Auth token.") unless !auth_token.to_s.empty?
+# 
+#   dsym_path = options[:dsym_path]
+#   UI.user_error!("Invalid DSYM path.") unless !dsym_path.to_s.empty?
+# 
+#   begin
+#     sentry_upload_dif(
+#       auth_token: auth_token,
+#       org_slug: 'element',
+#       project_slug: 'element-x-ios',
+#       url: 'https://sentry.tools.element.io/',
+#       path: dsym_path,
+#     )
+#   rescue => exception
+#     $sentry_retry += 1
+# 
+#     if $sentry_retry <= 5
+#       UI.message "Sentry failed, retrying."
+#       upload_dsyms_to_sentry options
+#     else
+#       raise exception
+#     end
+#   end
 end
 
 lane :release_to_github do
   api_token = ENV["GITHUB_TOKEN"]
   UI.user_error!("Invalid GitHub API token.") unless !api_token.to_s.empty?
 
-  release_version = get_version_number(target: "ElementX")
+  release_version = get_version_number(target: "TchapX")
 
   github_release = set_github_release(
-    repository_name: "element-hq/element-x-ios",
+    repository_name: "tchapgouv/tchap-x-ios",
     api_token: api_token,
     name: release_version,
     tag_name: release_version,
@@ -251,8 +259,8 @@ lane :release_to_github do
 end
 
 lane :prepare_next_release do
-  target_file_path = "../project.yml"
-  xcode_project_file_path = "../ElementX.xcodeproj"
+  target_file_path = "../project-tchap-x.yml"
+  xcode_project_file_path = "../TchapX.xcodeproj"
 
   data = YAML.load_file target_file_path
   current_version = data["settings"]["MARKETING_VERSION"]
@@ -271,7 +279,7 @@ lane :prepare_next_release do
   sh("sed -i '' 's/MARKETING_VERSION: #{current_version}/MARKETING_VERSION: #{new_version}/g' #{target_file_path}")
   UI.message("Version updated from #{current_version} to #{new_version}")
 
-  xcodegen(spec: "project.yml")
+  xcodegen(spec: "project-tchap-x.yml")
 
   setup_git()
 
@@ -286,7 +294,7 @@ lane :tag_nightly do |options|
   build_number = options[:build_number]
   UI.user_error!("Invalid build number.") unless !build_number.to_s.empty?
 
-  xcodegen_project_file_path = "../project.yml"
+  xcodegen_project_file_path = "../project-tchap-x.yml"
   data = YAML.load_file xcodegen_project_file_path
   current_version = data["settings"]["MARKETING_VERSION"]
 
@@ -299,8 +307,8 @@ lane :tag_nightly do |options|
 end
 
 private_lane :setup_git do
-  sh("git config --global user.name 'Element CI'")
-  sh("git config --global user.email 'ci@element.io'")
+#   sh("git config --global user.name 'Element CI'")
+#   sh("git config --global user.email 'ci@element.io'")
 end
 
 private_lane :git_push do |options|
@@ -323,7 +331,7 @@ private_lane :git_push do |options|
 end
 
 lane :config_alpha do
-  target_file_path = "../project.yml"
+  target_file_path = "../project-tchap-x.yml"
   data = YAML.load_file target_file_path
   
   # Check if the "path" already exists in the "include" array
@@ -333,7 +341,7 @@ lane :config_alpha do
   
   File.open(target_file_path, 'w') { |f| YAML.dump(data, f) }
 
-  xcodegen(spec: "project.yml")
+  xcodegen(spec: "project-tchap-x.yml")
 
   version = ENV["GITHUB_PR_NUMBER"]
 
@@ -379,7 +387,7 @@ private_lane :upload_to_browserstack do
     browserstack_username: browserstack_username,
     browserstack_access_key: browserstack_access_key,
     file_path: lane_context[SharedValues::IPA_OUTPUT_PATH],
-    custom_id: "element-x-ios-pr"
+    custom_id: "tchap-x-ios-pr"
   )
 end
 

@@ -45,6 +45,8 @@ targets:
         APP_DISPLAY_NAME: TchapX # The name used in the application.
         PRODUCT_NAME: TchapX-UnitTests
         PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.unit.tests
+        OTHER_SWIFT_FLAGS:
+        - "-DIS_MAIN_APP -DIS_TCHAP_UNIT_TESTS"
       debug:
       release:
 

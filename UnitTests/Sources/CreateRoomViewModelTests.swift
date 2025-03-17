@@ -8,7 +8,13 @@
 import Combine
 import XCTest
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 
 @MainActor
 class CreateRoomScreenViewModelTests: XCTestCase {
@@ -82,7 +88,8 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         XCTAssertTrue(context.viewState.canCreateRoom)
         
         // When creating the room.
-        clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
+        // Tchap: adapted test adding `isEncrypted`
+        clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
         let deferred = deferFulfillment(viewModel.actions) { action in
             guard case .openRoom("1") = action else { return false }
             return true
@@ -91,9 +98,10 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         try await deferred.fulfill()
         
         // Then the room should be created and a topic should not be set.
-        XCTAssertTrue(clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
-        XCTAssertEqual(clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReceivedArguments?.name, "A")
-        XCTAssertNil(clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReceivedArguments?.topic,
+        // Tchap: adapted test adding `isEncrypted`
+        XCTAssertTrue(clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
+        XCTAssertEqual(clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReceivedArguments?.name, "A")
+        XCTAssertNil(clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReceivedArguments?.topic,
                      "The topic should be sent as nil when it is empty.")
     }
     

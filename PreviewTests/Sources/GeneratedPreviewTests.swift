@@ -1,11 +1,11 @@
-// Generated using Sourcery 2.2.5 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.6 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 // swiftlint:disable all
 // swiftformat:disable all
 
 import XCTest
-@testable import TchapX_Production // Tchap: adjustement
+@testable import ElementX
 
 extension PreviewTests {
 
