@@ -7,7 +7,13 @@
 
 import XCTest
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 
 @MainActor
 final class EmojiProviderTests: XCTestCase {
@@ -88,8 +94,18 @@ final class EmojiProviderTests: XCTestCase {
 }
 
 private class EmojiLoaderMock: EmojiLoaderProtocol {
+    // Tchap: specify target for unit tests
+    #if IS_TCHAP_UNIT_TESTS
+    var categories = [TchapX_Production.EmojiCategory]()
+    func load() async -> [TchapX_Production.EmojiCategory] {
+        categories
+    }
+
+    #else
     var categories = [ElementX.EmojiCategory]()
     func load() async -> [ElementX.EmojiCategory] {
         categories
     }
+
+    #endif
 }

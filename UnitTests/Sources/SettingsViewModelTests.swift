@@ -8,7 +8,13 @@
 import Combine
 import XCTest
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 
 @MainActor
 class SettingsScreenViewModelTests: XCTestCase {
@@ -19,7 +25,12 @@ class SettingsScreenViewModelTests: XCTestCase {
     @MainActor override func setUpWithError() throws {
         cancellables.removeAll()
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: ""))))
+        // Tchap: specify target for unit tests
+        #if IS_TCHAP_UNIT_TESTS
+        viewModel = SettingsScreenViewModel(userSession: userSession, appSettings: AppSettings())
+        #else
         viewModel = SettingsScreenViewModel(userSession: userSession)
+        #endif
         context = viewModel.context
     }
 

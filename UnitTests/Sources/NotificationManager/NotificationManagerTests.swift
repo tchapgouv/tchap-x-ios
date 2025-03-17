@@ -9,7 +9,13 @@ import Combine
 import NotificationCenter
 import XCTest
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 
 @MainActor
 final class NotificationManagerTests: XCTestCase {
@@ -243,7 +249,14 @@ extension NotificationManagerTests: NotificationManagerDelegate {
         notificationTappedDelegateCalled = true
     }
     
+    // Tchap: specify target for unit tests
+    #if IS_TCHAP_UNIT_TESTS
+    func handleInlineReply(_ service: TchapX_Production.NotificationManagerProtocol, content: UNNotificationContent, replyText: String) async {
+        handleInlineReplyDelegateCalled = true
+    }
+    #else
     func handleInlineReply(_ service: ElementX.NotificationManagerProtocol, content: UNNotificationContent, replyText: String) async {
         handleInlineReplyDelegateCalled = true
     }
+    #endif
 }

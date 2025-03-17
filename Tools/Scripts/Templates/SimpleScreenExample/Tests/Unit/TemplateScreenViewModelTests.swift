@@ -7,7 +7,11 @@
 
 import XCTest
 
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 
 @MainActor
 class TemplateScreenViewModelTests: XCTestCase {
