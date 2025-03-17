@@ -113,7 +113,7 @@ class UserSessionFlowCoordinatorStateMachine {
         case showRoomDirectorySearchScreen
         /// The room directory search screen has been dismissed.
         // Tchap: add a flag to present the view fullscreen or in sheet.
-//        case dismissedRoomDirectorySearchScreen
+        //        case dismissedRoomDirectorySearchScreen
         case dismissedRoomDirectorySearchScreen(isPresentedInFullScreenMode: Bool)
 
         /// Request presentation of the user profile screen.
