@@ -81,6 +81,11 @@ end
 lane :unit_tests do |options|
   reset_simulator = ENV.key?('CI')
   
+  # Tchap: generate xcode project because .xcodeporj files are not gitted.
+  xcodegen(
+    spec: "project-tchap-x.yml"
+  )
+  
   run_tests(
     project: "TchapX.xcodeproj",
     scheme: "TchapX-UnitTests",
@@ -169,7 +174,7 @@ lane :config_nightly do |options|
   build_number = options[:build_number]
   UI.user_error!("Invalid build number.") unless !build_number.to_s.empty?
 
-  target_file_path = "../project.yml"
+  target_file_path = "../project-tchap-x.yml"
   data = YAML.load_file target_file_path
   
   # Check if the "path" already exists in the "include" array
@@ -181,7 +186,7 @@ lane :config_nightly do |options|
   
   File.open(target_file_path, 'w') { |f| YAML.dump(data, f) }
 
-  xcodegen(spec: "project.yml")
+  xcodegen(spec: "project-tchap-x.yml")
 
   # Automatically done by Xcode Cloud. Cannot override
   # https://developer.apple.com/documentation/xcode/setting-the-next-build-number-for-xcode-cloud-builds
@@ -253,7 +258,7 @@ lane :release_to_github do
 end
 
 lane :prepare_next_release do
-  target_file_path = "../project.yml"
+  target_file_path = "../project-tchap-x.yml"
   xcode_project_file_path = "../TchapX.xcodeproj"
 
   data = YAML.load_file target_file_path
@@ -273,7 +278,7 @@ lane :prepare_next_release do
   sh("sed -i '' 's/MARKETING_VERSION: #{current_version}/MARKETING_VERSION: #{new_version}/g' #{target_file_path}")
   UI.message("Version updated from #{current_version} to #{new_version}")
 
-  xcodegen(spec: "project.yml")
+  xcodegen(spec: "project-tchap-x.yml")
 
   setup_git()
 
@@ -288,7 +293,7 @@ lane :tag_nightly do |options|
   build_number = options[:build_number]
   UI.user_error!("Invalid build number.") unless !build_number.to_s.empty?
 
-  xcodegen_project_file_path = "../project.yml"
+  xcodegen_project_file_path = "../project-tchap-x.yml"
   data = YAML.load_file xcodegen_project_file_path
   current_version = data["settings"]["MARKETING_VERSION"]
 
@@ -325,7 +330,7 @@ private_lane :git_push do |options|
 end
 
 lane :config_alpha do
-  target_file_path = "../project.yml"
+  target_file_path = "../project-tchap-x.yml"
   data = YAML.load_file target_file_path
   
   # Check if the "path" already exists in the "include" array
@@ -335,7 +340,7 @@ lane :config_alpha do
   
   File.open(target_file_path, 'w') { |f| YAML.dump(data, f) }
 
-  xcodegen(spec: "project.yml")
+  xcodegen(spec: "project-tchap-x.yml")
 
   version = ENV["GITHUB_PR_NUMBER"]
 
