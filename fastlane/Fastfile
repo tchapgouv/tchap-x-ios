@@ -199,6 +199,7 @@ lane :config_nightly do |options|
   end
 end
 
+# Tchap: Disable upload to Sentry for the moment,
 # $sentry_retry=0
 lane :upload_dsyms_to_sentry do |options|
 #   auth_token = ENV["SENTRY_AUTH_TOKEN"]
