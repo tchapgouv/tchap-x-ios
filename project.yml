@@ -59,7 +59,7 @@ packages:
   # Element/Matrix dependencies
   MatrixRustSDK:
 #    url: https://github.com/element-hq/matrix-rust-components-swift
-#    exactVersion: 1.0.83
+#    exactVersion: 25.03.13
     url: https://github.com/tchapgouv/matrix-rust-components-swift
     branch: main
   Compound:
@@ -126,7 +126,7 @@ packages:
     minorVersion: 3.2.5
   Sentry:
     url: https://github.com/getsentry/sentry-cocoa
-    minorVersion: 8.30.0
+    minorVersion: 8.35.1
   SnapshotTesting:
     url: https://github.com/pointfreeco/swift-snapshot-testing
     minorVersion: 1.17.5

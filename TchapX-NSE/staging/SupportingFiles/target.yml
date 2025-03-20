@@ -59,7 +59,8 @@ targets:
     settings:
       base:
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.staging
-        BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx.staging
+        BASE_APP_GROUP_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
+        APP_GROUP_IDENTIFIER: group.$(BASE_APP_GROUP_IDENTIFIER)
         PRODUCTION_APP_NAME: TchapX-Staging NSE
         APP_NAME: TchapX-Staging-NSE
         APP_DISPLAY_NAME: TchapX-Staging NSE
