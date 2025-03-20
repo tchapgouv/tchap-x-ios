@@ -56,6 +56,15 @@ targets:
           NSExtensionPointIdentifier: com.apple.usernotifications.service
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).NotificationServiceExtension
 
+    entitlements:
+      path: NSE.entitlements
+      properties:
+        com.apple.developer.usernotifications.filtering: true
+        com.apple.security.application-groups:
+        - $(APP_GROUP_IDENTIFIER)
+        keychain-access-groups:
+        - $(KEYCHAIN_ACCESS_GROUP_IDENTIFIER)
+
     settings:
       base:
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.dev
@@ -78,9 +87,14 @@ targets:
     sources:
     - path: ../../../NSE/Sources
     - path: ../SupportingFiles
+    - path: ../../../ElementX/Sources/AppHooks/AppHooks.swift
+    - path: ../../../ElementX/Sources/AppHooks/Hooks/ClientBuilderHook.swift
+    - path: ../../../ElementX/Sources/Application/AppSettings.swift
+    - path: ../../../ElementX/Sources/Application/TargetConfiguration.swift
     - path: ../../../ElementX/Sources/Generated/Assets.swift
     - path: ../../../ElementX/Sources/Generated/Strings.swift
     - path: ../../../ElementX/Sources/Other/Avatars.swift
+    - path: ../../../ElementX/Sources/Other/CurrentValuePublisher.swift
     - path: ../../../ElementX/Sources/Other/Extensions/AttributedString.swift
     - path: ../../../ElementX/Sources/Other/Extensions/Bundle.swift
     - path: ../../../ElementX/Sources/Other/Extensions/ClientBuilder.swift
@@ -99,14 +113,14 @@ targets:
     - path: ../../../ElementX/Sources/Other/InfoPlistReader.swift
     - path: ../../../ElementX/Sources/Other/Logging
     - path: ../../../ElementX/Sources/Other/MatrixEntityRegex.swift
-    - path: ../../../ElementX/Sources/Other/SwiftUI/Views/PlaceholderAvatarImage.swift
-    - path: ../../../ElementX/Sources/Other/UserAgentBuilder.swift
-    - path: ../../../ElementX/Sources/Other/UserPreference.swift
-    - path: ../../../ElementX/Sources/Other/TestablePreview.swift
+    - path: ../../../ElementX/Sources/Other/NetworkMonitor
     - path: ../../../ElementX/Sources/Other/Pills/PlainMentionBuilder.swift
     - path: ../../../ElementX/Sources/Other/Pills/PillConstants.swift
-    - path: ../../../ElementX/Sources/Other/CurrentValuePublisher.swift
-    - path: ../../../ElementX/Sources/Other/NetworkMonitor
+    - path: ../../../ElementX/Sources/Other/SwiftUI/Views/PlaceholderAvatarImage.swift
+    - path: ../../../ElementX/Sources/Other/TestablePreview.swift
+    - path: ../../../ElementX/Sources/Other/UserAgentBuilder.swift
+    - path: ../../../ElementX/Sources/Other/UserPreference.swift
+    - path: ../../../ElementX/Sources/Services/ElementCall/ElementCallServiceConstants.swift
     - path: ../../../ElementX/Sources/Services/Keychain/KeychainController.swift
     - path: ../../../ElementX/Sources/Services/Keychain/KeychainControllerProtocol.swift
     - path: ../../../ElementX/Sources/Services/Media/Provider
@@ -116,10 +130,6 @@ targets:
     - path: ../../../ElementX/Sources/Services/UserSession/RestorationToken.swift
     - path: ../../../ElementX/Sources/Services/UserSession/SessionDirectories.swift
     - path: ../../../ElementX/Sources/UITests/UITestsScreenIdentifier.swift
-    - path: ../../../ElementX/Sources/Services/ElementCall/ElementCallServiceConstants.swift
-    - path: ../../../ElementX/Sources/Application/AppSettings.swift
-    - path: ../../../ElementX/Sources/AppHooks/AppHooks.swift
-    - path: ../../../ElementX/Sources/AppHooks/Hooks/ClientBuilderHook.swift
     - path: ../../../TchapX/main/Sources/Generated/TchapAssets.swift
     - path: ../../../TchapX/main/Sources/Generated/TchapStrings.swift
     - path: ../../../TchapX/main/Sources/Other/TchapFeatureFlag.swift

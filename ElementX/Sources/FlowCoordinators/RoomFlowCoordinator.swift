@@ -703,7 +703,7 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         self.timelineController = timelineController
         
         let completionSuggestionService = CompletionSuggestionService(roomProxy: roomProxy,
-                                                                      roomListPublisher: userSession.clientProxy.staticRoomSummaryProvider?.roomListPublisher.eraseToAnyPublisher() ?? Empty().replaceEmpty(with: []).eraseToAnyPublisher())
+                                                                      roomListPublisher: userSession.clientProxy.staticRoomSummaryProvider.roomListPublisher.eraseToAnyPublisher())
         let composerDraftService = ComposerDraftService(roomProxy: roomProxy, timelineItemfactory: timelineItemFactory)
         
         let parameters = RoomScreenCoordinatorParameters(clientProxy: userSession.clientProxy,
@@ -1302,9 +1302,7 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private func presentMessageForwarding(with forwardingItem: MessageForwardingItem) {
-        guard let roomSummaryProvider = userSession.clientProxy.alternateRoomSummaryProvider else {
-            fatalError()
-        }
+        let roomSummaryProvider = userSession.clientProxy.alternateRoomSummaryProvider
         
         let stackCoordinator = NavigationStackCoordinator()
         
