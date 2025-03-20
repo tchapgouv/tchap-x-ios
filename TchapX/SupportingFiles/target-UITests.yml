@@ -49,7 +49,7 @@ targets:
     settings:
       base:
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx
-        BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx
+        BASE_APP_GROUP_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
         APP_GROUP_IDENTIFIER: group.$(BASE_APP_GROUP_IDENTIFIER)
         APP_DISPLAY_NAME: TchapX # The name used in the application.
         PRODUCT_NAME: TchapX-UITests

@@ -116,7 +116,8 @@ targets:
     settings:
       base:
         BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.dev
-        BASE_APP_GROUP_IDENTIFIER: fr.gouv.tchapx.dev
+        BASE_APP_GROUP_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
+        APP_GROUP_IDENTIFIER: group.$(BASE_APP_GROUP_IDENTIFIER)
         KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(AppIdentifierPrefix)$(BASE_BUNDLE_IDENTIFIER)"
         PRODUCTION_APP_NAME: TchapX DEVELOPMENT
         APP_NAME: TchapX-Development
