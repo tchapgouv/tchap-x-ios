@@ -9,7 +9,8 @@ import Combine
 import Foundation
 
 private enum SuggestionTriggerRegex {
-    static let atOrHash = /[@#]\w*/
+    /// Matches any string of characters after an @ or # that is not a whitespace
+    static let atOrHash = /[@#]\S*/
     
     static let at: Character = "@"
     static let hash: Character = "#"
@@ -81,7 +82,7 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
         
         if canMentionAllUsers,
            !roomProxy.isDirectOneToOneRoom,
-           Self.shouldIncludeMember(userID: PillConstants.atRoom, displayName: PillConstants.everyone, searchText: suggestionTrigger.text) {
+           Self.shouldIncludeMember(userID: PillUtilities.atRoom, displayName: PillUtilities.everyone, searchText: suggestionTrigger.text) {
             membersSuggestion
                 .insert(SuggestionItem(suggestionType: .allUsers(roomProxy.details.avatar), range: suggestionTrigger.range, rawSuggestionText: suggestionTrigger.text), at: 0)
         }
@@ -138,11 +139,11 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
         guard !searchText.isEmpty else {
             return true
         }
-        let containedInUserID = userID.localizedStandardContains(searchText.lowercased())
+        let containedInUserID = userID.localizedStandardContains(searchText)
         
         let containedInDisplayName: Bool
         if let displayName {
-            containedInDisplayName = displayName.localizedStandardContains(searchText.lowercased())
+            containedInDisplayName = displayName.localizedStandardContains(searchText)
         } else {
             containedInDisplayName = false
         }
@@ -155,6 +156,6 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
         guard !searchText.isEmpty else {
             return true
         }
-        return roomName.localizedStandardContains(searchText.lowercased()) || roomAlias.localizedStandardContains(searchText.lowercased())
+        return roomName.localizedStandardContains(searchText) || roomAlias.localizedStandardContains(searchText)
     }
 }

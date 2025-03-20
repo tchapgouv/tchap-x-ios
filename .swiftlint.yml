@@ -12,14 +12,11 @@ opt_in_rules:
   - trailing_closure
 
 included:
-  - ElementX
-  - UnitTests
-  - UITests
+  - "*/Sources/*"
   - Tools/Scripts/Templates
 excluded:
-  - IntegrationTests
-  - ElementX/Sources/Generated
-# Tchap: add TchapX generated files to exclusion list.
+  - "*/Sources/Generated/*"
+  - Tools/Sources # Our command-line tools use a lot of print commands.
   - TchapX/Sources/main/Generated
 
 line_length:

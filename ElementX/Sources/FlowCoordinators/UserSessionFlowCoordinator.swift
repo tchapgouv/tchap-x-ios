@@ -299,9 +299,15 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
                 presentUserProfileScreen(userID: userID, animated: animated)
             case (.userProfileScreen, .dismissedUserProfileScreen, .roomList):
                 break
-            case (.roomList, .showShareExtensionRoomList, .shareExtensionRoomList(let sharePayload)):
-                clearRoute(animated: animated)
-                presentRoomSelectionScreen(sharePayload: sharePayload, animated: animated)
+            case (.roomList(let selectedRoomID), .showShareExtensionRoomList, .shareExtensionRoomList(let sharePayload)):
+                Task {
+                    if selectedRoomID != nil {
+                        self.clearRoute(animated: animated)
+                        try? await Task.sleep(for: .seconds(1.5))
+                    }
+                    
+                    self.presentRoomSelectionScreen(sharePayload: sharePayload, animated: animated)
+                }
             case (.shareExtensionRoomList, .dismissedShareExtensionRoomList, .roomList):
                 dismissRoomSelectionScreen()
             default:
