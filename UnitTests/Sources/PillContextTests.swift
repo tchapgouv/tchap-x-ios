@@ -46,7 +46,6 @@ class PillContextTests: XCTestCase {
         await Task.yield()
         
         XCTAssertFalse(context.viewState.isOwnMention)
-        XCTAssertNil(context.viewState.image)
         XCTAssertEqual(context.viewState.displayText, "@\(name)")
     }
     
@@ -69,7 +68,6 @@ class PillContextTests: XCTestCase {
                                      clientProxy: ClientProxyMock(.init()))
         let context = PillContext(timelineContext: mock.context, data: PillTextAttachmentData(type: .user(userID: id), font: .preferredFont(forTextStyle: .body)))
         
-        XCTAssertNil(context.viewState.image)
         XCTAssertTrue(context.viewState.isOwnMention)
     }
     
@@ -95,8 +93,7 @@ class PillContextTests: XCTestCase {
         let context = PillContext(timelineContext: mock.context, data: PillTextAttachmentData(type: .allUsers, font: .preferredFont(forTextStyle: .body)))
         
         XCTAssertTrue(context.viewState.isOwnMention)
-        XCTAssertNil(context.viewState.image)
-        XCTAssertEqual(context.viewState.displayText, PillConstants.atRoom)
+        XCTAssertEqual(context.viewState.displayText, PillUtilities.atRoom)
     }
     
     func testRoomIDMention() {
@@ -121,8 +118,7 @@ class PillContextTests: XCTestCase {
         
         XCTAssertFalse(context.viewState.isOwnMention)
         XCTAssertFalse(context.viewState.isUndefined)
-        XCTAssertEqual(context.viewState.image, .roomAvatar(.room(id: "1", name: "Foundation 🔭🪐🌌", avatarURL: nil)))
-        XCTAssertEqual(context.viewState.displayText, "Foundation 🔭🪐🌌")
+        XCTAssertEqual(context.viewState.displayText, "#Foundation 🔭🪐🌌")
     }
     
     func testRoomIDMentionMissingRoom() {
@@ -145,7 +141,6 @@ class PillContextTests: XCTestCase {
         
         XCTAssertFalse(context.viewState.isOwnMention)
         XCTAssertFalse(context.viewState.isUndefined)
-        XCTAssertEqual(context.viewState.image, .link)
         XCTAssertEqual(context.viewState.displayText, "1")
     }
     
@@ -173,8 +168,7 @@ class PillContextTests: XCTestCase {
         
         XCTAssertFalse(context.viewState.isOwnMention)
         XCTAssertFalse(context.viewState.isUndefined)
-        XCTAssertEqual(context.viewState.image, .roomAvatar(.room(id: "2", name: "Foundation and Empire", avatarURL: nil)))
-        XCTAssertEqual(context.viewState.displayText, "Foundation and Empire")
+        XCTAssertEqual(context.viewState.displayText, "#Foundation and Empire")
     }
     
     func testRoomAliasMentionMissingRoom() {
@@ -197,7 +191,6 @@ class PillContextTests: XCTestCase {
         
         XCTAssertFalse(context.viewState.isOwnMention)
         XCTAssertFalse(context.viewState.isUndefined)
-        XCTAssertEqual(context.viewState.image, .link)
         XCTAssertEqual(context.viewState.displayText, "#foundation-and-empire:matrix.org")
     }
     
@@ -223,8 +216,7 @@ class PillContextTests: XCTestCase {
         
         XCTAssertFalse(context.viewState.isOwnMention)
         XCTAssertFalse(context.viewState.isUndefined)
-        XCTAssertEqual(context.viewState.image, .link)
-        XCTAssertEqual(context.viewState.displayText, L10n.screenRoomEventPill("Foundation 🔭🪐🌌"))
+        XCTAssertEqual(context.viewState.displayText, "💬 > #Foundation 🔭🪐🌌")
     }
     
     func testEventOnRoomIDMentionMissingRoom() {
@@ -247,8 +239,7 @@ class PillContextTests: XCTestCase {
         
         XCTAssertFalse(context.viewState.isOwnMention)
         XCTAssertFalse(context.viewState.isUndefined)
-        XCTAssertEqual(context.viewState.image, .link)
-        XCTAssertEqual(context.viewState.displayText, L10n.screenRoomEventPill(L10n.commonRoom))
+        XCTAssertEqual(context.viewState.displayText, "💬 > 1")
     }
     
     func testEventOnRoomAliasMention() async throws {
@@ -275,8 +266,7 @@ class PillContextTests: XCTestCase {
         
         XCTAssertFalse(context.viewState.isOwnMention)
         XCTAssertFalse(context.viewState.isUndefined)
-        XCTAssertEqual(context.viewState.image, .link)
-        XCTAssertEqual(context.viewState.displayText, L10n.screenRoomEventPill("Foundation and Empire"))
+        XCTAssertEqual(context.viewState.displayText, "💬 > #Foundation and Empire")
     }
     
     func testEventOnRoomAliasMentionMissingRoom() async throws {
@@ -299,7 +289,6 @@ class PillContextTests: XCTestCase {
         
         XCTAssertFalse(context.viewState.isOwnMention)
         XCTAssertFalse(context.viewState.isUndefined)
-        XCTAssertEqual(context.viewState.image, .link)
-        XCTAssertEqual(context.viewState.displayText, L10n.screenRoomEventPill(L10n.commonRoom))
+        XCTAssertEqual(context.viewState.displayText, "💬 > #foundation-and-empire:matrix.org")
     }
 }
