@@ -209,6 +209,9 @@ private extension VirtualTimelineItem {
             return "DayDiviver(\(timestamp))"
         case .readMarker:
             return "ReadMarker"
+        // Tchap: add content scanner missing case
+        case .scanStateChanged(eventId: let eventId, newScanState: let newScanState):
+            return "Scan state changed for event \(eventId) to \(newScanState)"
         }
     }
 }

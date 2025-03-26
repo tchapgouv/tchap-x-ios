@@ -480,6 +480,10 @@ class TimelineController: TimelineControllerProtocol {
                 return SeparatorRoomTimelineItem(id: .virtual(uniqueID: uniqueID), timestamp: date)
             case .readMarker:
                 return ReadMarkerRoomTimelineItem(id: .virtual(uniqueID: uniqueID))
+            // Tchap: add content scanner missing case
+            case .scanStateChanged(eventId: let eventId, newScanState: let newScanState):
+                MXLog.info("Scan state changed for event \(eventId) to \(newScanState)")
+                return nil
             }
         case .unknown:
             return nil
