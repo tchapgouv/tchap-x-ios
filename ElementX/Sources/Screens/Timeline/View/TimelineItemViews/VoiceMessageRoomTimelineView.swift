@@ -21,7 +21,9 @@ struct VoiceMessageRoomTimelineView: View {
                     .accessibilityLabel(L10n.commonVoiceMessage)
                     .frame(maxWidth: 400)
             } else {
-                TimelineItemScanStatusFileView(scanState: timelineItem.scanState, filename: "VoiceMessage.ogg", fileSize: nil)
+                TimelineItemScanStatusFileView(scanState: timelineItem.scanState,
+                                               filename: "VoiceMessage.ogg",
+                                               fileSize: nil)
             }
         }
     }

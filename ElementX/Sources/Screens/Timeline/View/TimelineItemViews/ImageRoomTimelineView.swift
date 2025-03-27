@@ -29,7 +29,9 @@ struct ImageRoomTimelineView: View {
                             context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
                         }
                 } else {
-                    TimelineItemScanStatusImageView(scanState: timelineItem.scanState, imageInfo: timelineItem.content.thumbnailInfo, filename: timelineItem.content.filename)
+                    TimelineItemScanStatusImageView(scanState: timelineItem.scanState,
+                                                    imageInfo: timelineItem.content.thumbnailInfo,
+                                                    filename: timelineItem.content.filename)
                 }
                 
                 if let attributedCaption = timelineItem.content.formattedCaption {
