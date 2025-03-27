@@ -5,6 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import MatrixRustSDK // Tchap
 import UIKit
 
 struct NoticeRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
@@ -30,4 +31,7 @@ struct NoticeRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .notice(content)
     }
+
+    // Tchap: BWI content-scanner scan state
+    var scanState: BwiScanState = .trusted
 }

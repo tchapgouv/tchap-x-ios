@@ -17,17 +17,22 @@ struct VideoRoomTimelineView: View {
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {
             VStack(alignment: .leading, spacing: 4) {
-                thumbnail
-                    .timelineMediaFrame(imageInfo: timelineItem.content.thumbnailInfo)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(L10n.commonVideo)
-                    // This clip shape is distinct from the one in the styler as that one
-                    // operates on the entire message so wouldn't round the bottom corners.
-                    .clipShape(RoundedRectangle(cornerRadius: hasMediaCaption ? 6 : 0))
-                    .onTapGesture {
-                        context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
-                    }
-                
+                // Tchap: BWI content-scanner - scanState Views on scanstates other than trusted,
+                if timelineItem.scanState == .trusted {
+                    thumbnail
+                        .timelineMediaFrame(imageInfo: timelineItem.content.thumbnailInfo)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(L10n.commonVideo)
+                        // This clip shape is distinct from the one in the styler as that one
+                        // operates on the entire message so wouldn't round the bottom corners.
+                        .clipShape(RoundedRectangle(cornerRadius: hasMediaCaption ? 6 : 0))
+                        .onTapGesture {
+                            context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
+                        }
+                } else {
+                    TimelineItemScanStatusImageView(scanState: timelineItem.scanState, imageInfo: timelineItem.content.thumbnailInfo, filename: timelineItem.content.filename)
+                }
+
                 if let attributedCaption = timelineItem.content.formattedCaption {
                     FormattedBodyText(attributedString: attributedCaption,
                                       additionalWhitespacesCount: timelineItem.additionalWhitespaces(),

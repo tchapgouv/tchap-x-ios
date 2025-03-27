@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import MatrixRustSDK // Tchap
 
 struct LocationRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     let id: TimelineItemIdentifier
@@ -31,4 +32,7 @@ struct LocationRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatabl
     var contentType: EventBasedMessageTimelineItemContentType {
         .location(content)
     }
+    
+    // Tchap: BWI content-scanner scan state
+    var scanState: BwiScanState = .trusted
 }

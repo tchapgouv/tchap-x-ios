@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import MatrixRustSDK
 
 enum EventBasedMessageTimelineItemContentType: Hashable {
     case audio(AudioRoomTimelineItemContent)
@@ -23,6 +24,8 @@ protocol EventBasedMessageTimelineItemProtocol: EventBasedTimelineItemProtocol {
     var replyDetails: TimelineItemReplyDetails? { get }
     var contentType: EventBasedMessageTimelineItemContentType { get }
     var isThreaded: Bool { get }
+    // Tchap: BWI content-scanner scan state
+    var scanState: BwiScanState { get set }
 }
 
 extension EventBasedMessageTimelineItemProtocol {

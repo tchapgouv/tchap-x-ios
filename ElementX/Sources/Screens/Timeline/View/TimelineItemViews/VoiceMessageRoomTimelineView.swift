@@ -14,10 +14,15 @@ struct VoiceMessageRoomTimelineView: View {
     
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {
-            VoiceMessageRoomTimelineContent(timelineItem: timelineItem,
-                                            playerState: playerState)
-                .accessibilityLabel(L10n.commonVoiceMessage)
-                .frame(maxWidth: 400)
+            // Tchap: BWI content-scanner - scanState Views on scanstates other than trusted,
+            if timelineItem.scanState == .trusted {
+                VoiceMessageRoomTimelineContent(timelineItem: timelineItem,
+                                                playerState: playerState)
+                    .accessibilityLabel(L10n.commonVoiceMessage)
+                    .frame(maxWidth: 400)
+            } else {
+                TimelineItemScanStatusFileView(scanState: timelineItem.scanState, filename: "VoiceMessage.ogg", fileSize: nil)
+            }
         }
     }
 }
