@@ -61,12 +61,13 @@ packages:
 #    url: https://github.com/element-hq/matrix-rust-components-swift
 #    exactVersion: 25.03.13
     url: https://github.com/tchapgouv/matrix-rust-components-swift
-    branch: main
+    branch: 25.3.25-contentscanner-03
   Compound:
 #    url: https://github.com/element-hq/compound-ios
 #    revision: 9325643cb4d22150881c5bf79e1e6e3c5a87ea89
-    url: https://github.com/tchapgouv/compound-ios
-    branch: main
+#    url: https://github.com/tchapgouv/compound-ios
+#    branch: main
+    path: ../tchap-x-compound/compound-ios
   AnalyticsEvents:
     url: https://github.com/matrix-org/matrix-analytics-events
     minorVersion: 0.28.0

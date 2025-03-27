@@ -5,6 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import MatrixRustSDK // Tchap
 import UIKit
 import UniformTypeIdentifiers
 
@@ -32,4 +33,7 @@ struct VideoRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .video(content)
     }
+    
+    // Tchap: BWI content-scanner scan state
+    var scanState: BwiScanState = .inProgress
 }

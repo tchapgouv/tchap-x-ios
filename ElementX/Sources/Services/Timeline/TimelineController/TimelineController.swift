@@ -430,6 +430,13 @@ class TimelineController: TimelineControllerProtocol {
             return newTimelineItems
         }.value
         
+        // Tchap: BWI content-scanner
+        newTimelineItems = ScanStateVirtualEventHelper().mergeVirtualScanStateIntoTimeline(timelineItems: newTimelineItems)
+        
+        // no need to keep the virtual events afterwards
+        newTimelineItems.removeAll { $0 is ScanStateRoomTimelineItem }
+        // Tchap: BWI content-scanner end
+
         // Check if we need to add anything to the top of the timeline.
         switch paginationState.backward {
         case .timelineEndReached:
@@ -480,10 +487,10 @@ class TimelineController: TimelineControllerProtocol {
                 return SeparatorRoomTimelineItem(id: .virtual(uniqueID: uniqueID), timestamp: date)
             case .readMarker:
                 return ReadMarkerRoomTimelineItem(id: .virtual(uniqueID: uniqueID))
-            // Tchap: add content scanner missing case
-            case .scanStateChanged(eventId: let eventId, newScanState: let newScanState):
-                MXLog.info("Scan state changed for event \(eventId) to \(newScanState)")
-                return nil
+            // Tchap: BWI content-scanner for app build purposes
+            case .scanStateChanged(eventId: let eventID, newScanState: let scanState):
+                MXLog.info("Scan state changed for event \(eventID) to \(scanState)")
+                return ScanStateRoomTimelineItem(id: .virtual(uniqueID: uniqueID), correspondingEventId: eventID, scanState: scanState)
             }
         case .unknown:
             return nil

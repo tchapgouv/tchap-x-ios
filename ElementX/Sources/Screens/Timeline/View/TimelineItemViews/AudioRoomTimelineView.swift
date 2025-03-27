@@ -14,16 +14,23 @@ struct AudioRoomTimelineView: View {
     
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {
-            MediaFileRoomTimelineContent(filename: timelineItem.content.filename,
-                                         fileSize: timelineItem.content.fileSize,
-                                         caption: timelineItem.content.caption,
-                                         formattedCaption: timelineItem.content.formattedCaption,
-                                         additionalWhitespaces: timelineItem.additionalWhitespaces(),
-                                         shouldBoost: timelineItem.shouldBoost,
-                                         isAudioFile: true) {
-                context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
+            // Tchap: content-scanner - scanState Views on scanstates other than trusted,
+            if timelineItem.scanState == .trusted {
+                MediaFileRoomTimelineContent(filename: timelineItem.content.filename,
+                                             fileSize: timelineItem.content.fileSize,
+                                             caption: timelineItem.content.caption,
+                                             formattedCaption: timelineItem.content.formattedCaption,
+                                             additionalWhitespaces: timelineItem.additionalWhitespaces(),
+                                             shouldBoost: timelineItem.shouldBoost,
+                                             isAudioFile: true) {
+                    context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
+                }
+                .accessibilityLabel(L10n.commonAudio)
+            } else {
+                TimelineItemScanStatusFileView(scanState: timelineItem.scanState,
+                                               filename: timelineItem.content.filename,
+                                               fileSize: timelineItem.content.fileSize)
             }
-            .accessibilityLabel(L10n.commonAudio)
         }
     }
 }

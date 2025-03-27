@@ -159,7 +159,7 @@ struct CreateRoomScreen: View {
     
     // Tchap: boolean representing the presence of external members in invited users
     private var externalsArePresents: Bool {
-        context.viewState.selectedUsers.first(where: { MatrixIdFromString($0.userID).isExternalTchapUser }) != nil
+        context.viewState.selectedUsers.first { MatrixIdFromString($0.userID).isExternalTchapUser } != nil
     }
     
     // Tchap: "external are present" warning
