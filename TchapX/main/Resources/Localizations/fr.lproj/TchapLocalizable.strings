@@ -38,6 +38,6 @@ screen_room_directory_search_title = "Rejoindre un salon public";
 
 // Tchap: BWI content-scanner
 content_scanner_scan_status_in_progress = "Analyse anti-virus…";
-content_scanner_scan_status_infected = "Bloqué";
+content_scanner_scan_status_infected = "Contenu bloqué";
 content_scanner_scan_status_not_found = "Fichier indisponible";
 content_scanner_scan_status_error = "Fichier temporairement indisponible";

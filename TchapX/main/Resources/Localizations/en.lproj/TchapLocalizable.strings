@@ -38,6 +38,6 @@ screen_room_directory_search_title = "Join a public room";
 
 // Tchap: BWI content-scanner
 content_scanner_scan_status_in_progress = "Scanning for virus…";
-content_scanner_scan_status_infected = "Blocked";
+content_scanner_scan_status_infected = "Content blocked";
 content_scanner_scan_status_not_found = "File no longer available";
 content_scanner_scan_status_error = "File temporarily unavailable";
