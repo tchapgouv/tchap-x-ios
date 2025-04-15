@@ -80,10 +80,12 @@ struct HomeScreenRecoveryKeyConfirmationBanner: View {
     
     var buttons: some View {
         VStack(spacing: 16) {
-            Button(actionTitle) {
+            Button {
                 context.send(viewAction: primaryAction)
+            } label: {
+                Text(actionTitle)
+                    .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
             .buttonStyle(.compound(.primary, size: .medium))
             .accessibilityIdentifier(A11yIdentifiers.homeScreen.recoveryKeyConfirmationBannerContinue)
             
@@ -92,9 +94,10 @@ struct HomeScreenRecoveryKeyConfirmationBanner: View {
                     context.send(viewAction: .resetEncryption)
                 } label: {
                     Text(L10n.confirmRecoveryKeyBannerSecondaryButtonTitle)
-                        .padding(.vertical, 7)
                         .frame(maxWidth: .infinity)
                 }
+                // Tchap: tertiary not yet available in Compound
+//                .buttonStyle(.compound(.tertiary, size: .medium))
                 .buttonStyle(.compound(.plain, size: .medium))
             }
         }

@@ -167,6 +167,8 @@ private struct PollFormOptionRow: View {
                         CompoundIcon(\.delete)
                     }
                     .disabled(!canDeleteItem)
+                    // Tchap: textLink not yet available in Compound
+//                    .buttonStyle(.compound(.textLink))
                     .buttonStyle(.compound(.plain))
                     .accessibilityLabel(L10n.actionRemove)
                 }

@@ -184,8 +184,6 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     
     func isAliasAvailable(_ alias: String) async -> Result<Bool, ClientProxyError>
     
-    func getElementWellKnown() async -> Result<ElementWellKnown?, ClientProxyError>
-    
     @discardableResult func clearCaches() async -> Result<Void, ClientProxyError>
 
     // MARK: - Ignored users

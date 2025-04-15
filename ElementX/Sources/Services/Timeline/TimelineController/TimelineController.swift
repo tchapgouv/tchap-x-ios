@@ -504,7 +504,7 @@ class TimelineController: TimelineControllerProtocol {
             return
         }
 
-        switch timelineItem.replyDetails {
+        switch timelineItem.properties.replyDetails {
         case .notLoaded:
             activeTimeline.fetchDetails(for: eventID)
         case .error:

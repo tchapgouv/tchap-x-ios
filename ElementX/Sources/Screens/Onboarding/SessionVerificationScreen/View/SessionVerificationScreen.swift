@@ -81,6 +81,8 @@ struct SessionVerificationScreen: View {
                 Button(L10n.actionLearnMore) {
                     UIApplication.shared.open(context.viewState.learnMoreURL)
                 }
+                // Tchap: tertiary not yet available in Compound.
+//                .buttonStyle(.compound(.tertiary, size: .small))
                 .buttonStyle(.compound(.plain))
             default:
                 EmptyView()
@@ -133,6 +135,8 @@ struct SessionVerificationScreen: View {
                     Button(L10n.actionIgnore) {
                         context.send(viewAction: .ignoreVerificationRequest)
                     }
+                    // Tchap: tertiary not yet available in Compound
+//                    .buttonStyle(.compound(.tertiary))
                     .buttonStyle(.compound(.plain))
                     .accessibilityIdentifier(A11yIdentifiers.sessionVerificationScreen.ignoreVerificationRequest)
                 }
@@ -160,7 +164,7 @@ struct SessionVerificationScreen: View {
             .accessibilityIdentifier(A11yIdentifiers.sessionVerificationScreen.startSasVerification)
         
         case .showingChallenge:
-            VStack(spacing: 32) {
+            VStack(spacing: 16) {
                 Button(L10n.screenSessionVerificationTheyMatch) {
                     context.send(viewAction: .accept)
                 }
@@ -170,6 +174,8 @@ struct SessionVerificationScreen: View {
                 Button(L10n.screenSessionVerificationTheyDontMatch) {
                     context.send(viewAction: .decline)
                 }
+                // Tchap: tertiary not yet available in Compound
+//                .buttonStyle(.compound(.tertiary))
                 .buttonStyle(.compound(.plain))
                 .accessibilityIdentifier(A11yIdentifiers.sessionVerificationScreen.declineChallenge)
             }
