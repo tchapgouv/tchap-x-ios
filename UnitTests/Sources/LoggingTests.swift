@@ -127,7 +127,6 @@ class LoggingTests: XCTestCase {
                                                isOutgoing: false,
                                                isEditable: false,
                                                canBeRepliedTo: true,
-                                               isThreaded: false,
                                                sender: .init(id: "sender"),
                                                content: .init(body: "TextString", formattedBody: AttributedString(textAttributedString)))
         let noticeAttributedString = "NoticeAttributed"
@@ -136,7 +135,6 @@ class LoggingTests: XCTestCase {
                                                    isOutgoing: false,
                                                    isEditable: false,
                                                    canBeRepliedTo: true,
-                                                   isThreaded: false,
                                                    sender: .init(id: "sender"),
                                                    content: .init(body: "NoticeString", formattedBody: AttributedString(noticeAttributedString)))
         let emoteAttributedString = "EmoteAttributed"
@@ -145,7 +143,6 @@ class LoggingTests: XCTestCase {
                                                  isOutgoing: false,
                                                  isEditable: false,
                                                  canBeRepliedTo: true,
-                                                 isThreaded: false,
                                                  sender: .init(id: "sender"),
                                                  content: .init(body: "EmoteString", formattedBody: AttributedString(emoteAttributedString)))
         let imageMessage = ImageRoomTimelineItem(id: .randomEvent,
@@ -153,7 +150,6 @@ class LoggingTests: XCTestCase {
                                                  isOutgoing: false,
                                                  isEditable: false,
                                                  canBeRepliedTo: true,
-                                                 isThreaded: false,
                                                  sender: .init(id: "sender"),
                                                  content: .init(filename: "ImageString",
                                                                 caption: "ImageString",
@@ -164,7 +160,6 @@ class LoggingTests: XCTestCase {
                                                  isOutgoing: false,
                                                  isEditable: false,
                                                  canBeRepliedTo: true,
-                                                 isThreaded: false,
                                                  sender: .init(id: "sender"),
                                                  content: .init(filename: "VideoString",
                                                                 caption: "VideoString",
@@ -175,7 +170,6 @@ class LoggingTests: XCTestCase {
                                                isOutgoing: false,
                                                isEditable: false,
                                                canBeRepliedTo: true,
-                                               isThreaded: false,
                                                sender: .init(id: "sender"),
                                                content: .init(filename: "FileString",
                                                               caption: "FileString",

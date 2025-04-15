@@ -21,9 +21,7 @@ enum EventBasedMessageTimelineItemContentType: Hashable {
 }
 
 protocol EventBasedMessageTimelineItemProtocol: EventBasedTimelineItemProtocol {
-    var replyDetails: TimelineItemReplyDetails? { get }
     var contentType: EventBasedMessageTimelineItemContentType { get }
-    var isThreaded: Bool { get }
     // Tchap: BWI content-scanner scan state
     var scanState: BwiScanState { get set }
 }

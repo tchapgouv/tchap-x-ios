@@ -54,6 +54,8 @@ struct IdentityConfirmationScreen: View {
             Button(L10n.actionLearnMore) {
                 UIApplication.shared.open(context.viewState.learnMoreURL)
             }
+            // Tchap: tertiary not yet available in Compound
+//            .buttonStyle(.compound(.tertiary, size: .small))
             .buttonStyle(.compound(.plain))
             .padding(.top, 16)
         }
@@ -85,8 +87,9 @@ struct IdentityConfirmationScreen: View {
                 Button("\(L10n.actionSkip) 🙉") {
                     context.send(viewAction: .skip)
                 }
+                // Tchap: tertiary not yet available in Compound
+//                    .buttonStyle(.compound(.tertiary))
                 .buttonStyle(.compound(.plain))
-                .padding(.vertical, 14)
             }
         }
     }

@@ -68,7 +68,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     // MARK: - Private
     
     private func showStartScreen() {
-        let parameters = AuthenticationStartScreenParameters(webRegistrationEnabled: appSettings.webRegistrationEnabled,
+        let parameters = AuthenticationStartScreenParameters(showCreateAccountButton: appSettings.showCreateAccountButton,
                                                              isBugReportServiceEnabled: bugReportService.isEnabled)
         let coordinator = AuthenticationStartScreenCoordinator(parameters: parameters)
         
@@ -144,14 +144,10 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
             guard let self else { return }
             
             switch action {
-            case .continue(let window):
-                if authenticationService.homeserver.value.loginMode == .oidc, let window {
-                    showOIDCAuthentication(presentationAnchor: window)
-                } else if authenticationFlow == .register {
-                    showWebRegistration()
-                } else {
-                    showLoginScreen()
-                }
+            case .continueWithOIDC(let oidcData, let window):
+                showOIDCAuthentication(oidcData: oidcData, presentationAnchor: window)
+            case .continueWithPassword:
+                showLoginScreen()
             case .changeServer:
                 showServerSelectionScreen(authenticationFlow: authenticationFlow)
             }
@@ -187,49 +183,21 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         navigationStackCoordinator.setSheetCoordinator(navigationCoordinator)
     }
     
-    private func showWebRegistration() {
-        let parameters = WebRegistrationScreenCoordinatorParameters(authenticationService: authenticationService,
-                                                                    userIndicatorController: userIndicatorController)
-        let coordinator = WebRegistrationScreenCoordinator(parameters: parameters)
-        
-        coordinator.actionsPublisher.sink { [weak self] action in
-            guard let self else { return }
-            
-            switch action {
-            case .cancel:
-                navigationStackCoordinator.setSheetCoordinator(nil)
-            case .signedIn(let userSession):
-                userHasSignedIn(userSession: userSession)
-            }
-        }
-        .store(in: &cancellables)
-        
-        navigationStackCoordinator.setSheetCoordinator(coordinator)
-    }
-    
-    private func showOIDCAuthentication(presentationAnchor: UIWindow) {
-        startLoading()
+    private func showOIDCAuthentication(oidcData: OIDCAuthorizationDataProxy, presentationAnchor: UIWindow) {
+        let presenter = OIDCAuthenticationPresenter(authenticationService: authenticationService,
+                                                    oidcRedirectURL: appSettings.oidcRedirectURL,
+                                                    presentationAnchor: presentationAnchor,
+                                                    userIndicatorController: userIndicatorController)
+        oidcPresenter = presenter
         
         Task {
-            switch await authenticationService.urlForOIDCLogin() {
-            case .failure(let error):
-                stopLoading()
-                handleError(error)
-            case .success(let oidcData):
-                stopLoading()
-                
-                let presenter = OIDCAuthenticationPresenter(authenticationService: authenticationService,
-                                                            oidcRedirectURL: appSettings.oidcRedirectURL,
-                                                            presentationAnchor: presentationAnchor)
-                self.oidcPresenter = presenter
-                switch await presenter.authenticate(using: oidcData) {
-                case .success(let userSession):
-                    userHasSignedIn(userSession: userSession)
-                case .failure(let error):
-                    handleError(error)
-                }
-                oidcPresenter = nil
+            switch await presenter.authenticate(using: oidcData) {
+            case .success(let userSession):
+                userHasSignedIn(userSession: userSession)
+            case .failure:
+                break // Nothing to do, the alerts are handled by the presenter.
             }
+            oidcPresenter = nil
         }
     }
     
@@ -259,36 +227,5 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         
     private func userHasSignedIn(userSession: UserSessionProtocol) {
         delegate?.authenticationFlowCoordinator(didLoginWithSession: userSession)
-    }
-    
-    private static let loadingIndicatorIdentifier = "\(AuthenticationFlowCoordinator.self)-Loading"
-    
-    private func startLoading() {
-        userIndicatorController.submitIndicator(UserIndicator(id: Self.loadingIndicatorIdentifier,
-                                                              type: .modal,
-                                                              title: L10n.commonLoading,
-                                                              persistent: true))
-    }
-    
-    private func stopLoading() {
-        userIndicatorController.retractIndicatorWithId(Self.loadingIndicatorIdentifier)
-    }
-    
-    /// Processes an error to either update the flow or display it to the user.
-    private func handleError(_ error: AuthenticationServiceError) {
-        MXLog.warning("Error occurred: \(error)")
-        
-        switch error {
-        case .oidcError(.notSupported):
-            // Temporary alert hijacking the use of .notSupported, can be removed when OIDC support is in the SDK.
-            userIndicatorController.alertInfo = AlertInfo(id: UUID(),
-                                                          title: L10n.commonError,
-                                                          message: L10n.commonServerNotSupported)
-        case .oidcError(.userCancellation):
-            // No need to show an error, the user cancelled authentication.
-            break
-        default:
-            userIndicatorController.alertInfo = AlertInfo(id: UUID())
-        }
     }
 }

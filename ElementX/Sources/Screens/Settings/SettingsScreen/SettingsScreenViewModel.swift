@@ -23,7 +23,7 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
                                            showAccountDeactivation: userSession.clientProxy.canDeactivateAccount,
                                            showDeveloperOptions: AppSettings.isDevelopmentBuild,
                                            showAnalyticsSettings: appSettings.canPromptForAnalytics,
-                                           isBugReportServiceEnabled: isBugReportServiceEnabled),
+                                           isBugReportServiceEnabled: isBugReportServiceEnabled,
                                            tchapFaqURL: appSettings.tchapFaqURL),
                    mediaProvider: userSession.mediaProvider)
         

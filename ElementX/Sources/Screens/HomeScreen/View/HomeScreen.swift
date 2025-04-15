@@ -166,8 +166,11 @@ struct HomeScreen: View {
             Button {
                 context.send(viewAction: .startChat)
             } label: {
-                CompoundIcon(\.compose)
+                CompoundIcon(\.plus)
             }
+            // Tchap: size toolbarIcon not yet available in Compound
+//            .buttonStyle(.compound(.super, size: .toolbarIcon))
+            .buttonStyle(.compound(.super))
             .accessibilityLabel(L10n.actionStartChat)
             .accessibilityIdentifier(A11yIdentifiers.homeScreen.startChat)
         default:
