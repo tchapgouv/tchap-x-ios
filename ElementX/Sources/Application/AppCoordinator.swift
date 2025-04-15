@@ -61,7 +61,10 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
 
     init(appDelegate: AppDelegate) {
         let appHooks = AppHooks()
-        appHooks.configure()
+        appHooks.setUp()
+        
+        // Override colours before we start building any UI components.
+        appHooks.compoundHook.override(colors: Color.compound, uiColors: UIColor.compound)
         
         windowManager = WindowManager(appDelegate: appDelegate)
         let networkMonitor = NetworkMonitor()
@@ -69,7 +72,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         let appSettings = appHooks.appSettingsHook.configure(AppSettings())
         
-        Target.mainApp.configure(logLevel: appSettings.logLevel)
+        Target.mainApp.configure(logLevel: appSettings.logLevel, traceLogPacks: appSettings.traceLogPacks)
         
         let appName = InfoPlistReader.main.bundleDisplayName
         let appVersion = InfoPlistReader.main.bundleShortVersionString
@@ -122,6 +125,9 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         if let previousVersion = appSettings.lastVersionLaunched.flatMap(Version.init) {
             performMigrationsIfNecessary(from: previousVersion, to: currentVersion)
+            
+            // Manual clean to handle the potential case where the app crashes before moving a shared file.
+            cleanAppGroupTemporaryDirectory()
         } else {
             // The app has been deleted since the previous run. Reset everything.
             wipeUserData(includingSettings: true)
@@ -249,12 +255,17 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                 } else {
                     handleAppRoute(.childEventOnRoomAlias(eventID: eventID, alias: alias))
                 }
-            case .share:
+            case .share(let payload):
                 guard isExternalURL else {
                     MXLog.error("Received unexpected internal share route")
                     break
                 }
-                handleAppRoute(route)
+                
+                do {
+                    try handleAppRoute(.share(payload.withDefaultTemporaryDirectory()))
+                } catch {
+                    MXLog.error("Failed moving payload out of the app group container: \(error)")
+                }
             default:
                 break
             }
@@ -355,8 +366,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private static func setupServiceLocator(appSettings: AppSettings, appHooks: AppHooks) {
         ServiceLocator.shared.register(userIndicatorController: UserIndicatorController())
         ServiceLocator.shared.register(appSettings: appSettings)
-        ServiceLocator.shared.register(bugReportService: BugReportService(withBaseURL: appSettings.bugReportServiceBaseURL,
-                                                                          applicationId: appSettings.bugReportApplicationId,
+        ServiceLocator.shared.register(bugReportService: BugReportService(baseURL: appSettings.bugReportServiceBaseURL,
+                                                                          applicationID: appSettings.bugReportApplicationID,
                                                                           sdkGitSHA: sdkGitSha(),
                                                                           maxUploadSize: appSettings.bugReportMaxUploadSize,
                                                                           appHooks: appHooks))
@@ -384,6 +395,15 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             Tracing.deleteLogFiles()
             MXLog.info("Migrating to v1.6.7, log files have been wiped")
         }
+        
+        if oldVersion < Version(25, 4, 2) {
+            MXLog.info("Migrating to v25.04.2, checking if hideTimelineMedia flag can be migrated to timelineMediaVisibility")
+            // Migration for the old `hideTimelineMedia` flag.
+            if let userDefaults = UserDefaults(suiteName: InfoPlistReader.main.appGroupIdentifier),
+               let hideTimelineMedia = userDefaults.value(forKey: "hideTimelineMedia") as? Bool {
+                appSettings.timelineMediaVisibility = hideTimelineMedia ? .never : .always
+            }
+        }
     }
     
     /// Clears the keychain, app support directory etc ready for a fresh use.
@@ -394,6 +414,31 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             appLockFlowCoordinator.appLockService.disable()
         }
         userSessionStore.reset()
+    }
+    
+    /// Manually cleans up any files in the app group's `tmp` directory.
+    ///
+    /// **Note:** If there is a single file we consider it to be an active share payload and ignore it.
+    private func cleanAppGroupTemporaryDirectory() {
+        let fileURLs: [URL]
+        do {
+            fileURLs = try FileManager.default.contentsOfDirectory(at: URL.appGroupTemporaryDirectory, includingPropertiesForKeys: nil, options: [])
+        } catch {
+            MXLog.warning("Failed to enumerate app group temporary directory: \(error)")
+            return
+        }
+        
+        guard fileURLs.count > 1 else {
+            return // If there is only a single item in here, there's likely a pending share payload that is yet to be processed.
+        }
+        
+        for url in fileURLs {
+            do {
+                try FileManager.default.removeItem(at: url)
+            } catch {
+                MXLog.warning("Failed to remove file from app group temporary directory: \(error)")
+            }
+        }
     }
     
     private func setupStateMachine() {
@@ -781,6 +826,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     }
     
     private static func setupSentry(appSettings: AppSettings) {
+        guard let bugReportSentryURL = appSettings.bugReportSentryURL else { return }
+        
         let options: Options = .init()
         
         #if DEBUG
@@ -789,7 +836,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         options.enabled = appSettings.analyticsConsentState == .optedIn
         #endif
 
-        options.dsn = appSettings.bugReportSentryURL.absoluteString
+        options.dsn = bugReportSentryURL.absoluteString
         
         if AppSettings.isDevelopmentBuild {
             options.environment = "development"
@@ -892,8 +939,11 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             // Attempt to stop the background task sync loop cleanly, only if the app not already running
             return
         }
-        userSession?.clientProxy.stopSync(completion: completion)
-        clientProxyObserver = nil
+        
+        MainActor.assumeIsolated {
+            userSession?.clientProxy.stopSync(completion: completion)
+            clientProxyObserver = nil
+        }
     }
 
     private func startSync() {
@@ -1035,12 +1085,20 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         // This is important for the app to keep refreshing in the background
         scheduleBackgroundAppRefresh()
         
-        task.expirationHandler = { [weak self] in
+        /// We have a lot of crashes stemming here which we previously believed are caused by stopSync not being async
+        /// on the client proxy side (see the comment on that method). We have now realised that will likely not fix anything but
+        /// we also noticed this does not crash on the main thread, even though the whole AppCoordinator is on the Main actor.
+        /// As such, we introduced a MainActor conformance on the expirationHandler but we are also assuming main actor
+        /// isolated in the `stopSync` method above.
+        /// https://sentry.tools.element.io/organizations/element/issues/4477794/
+        task.expirationHandler = { @Sendable [weak self] in
             MXLog.info("Background app refresh task is about to expire.")
             
-            self?.stopSync(isBackgroundTask: true) {
-                MXLog.info("Marking Background app refresh task as complete.")
-                task.setTaskCompleted(success: true)
+            Task { @MainActor in
+                self?.stopSync(isBackgroundTask: true) {
+                    MXLog.info("Marking Background app refresh task as complete.")
+                    task.setTaskCompleted(success: true)
+                }
             }
         }
         

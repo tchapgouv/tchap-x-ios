@@ -27,7 +27,7 @@ struct HomeScreenRoomList: View {
                 HomeScreenRoomCell(room: room, context: context, isSelected: false)
                     .redacted(reason: .placeholder)
             case .invite:
-                HomeScreenInviteCell(room: room, context: context)
+                HomeScreenInviteCell(room: room, context: context, hideInviteAvatars: context.viewState.hideInviteAvatars)
             case .knock:
                 HomeScreenKnockedCell(room: room, context: context)
             case .room:
@@ -67,6 +67,14 @@ struct HomeScreenRoomList: View {
                             context.send(viewAction: .showRoomDetails(roomIdentifier: room.id))
                         } label: {
                             Label(L10n.commonSettings, icon: \.settings)
+                        }
+                        
+                        if context.viewState.reportRoomEnabled {
+                            Button(role: .destructive) {
+                                context.send(viewAction: .reportRoom(roomIdentifier: room.id))
+                            } label: {
+                                Label(L10n.actionReportRoom, icon: \.chatProblem)
+                            }
                         }
                         
                         Button(role: .destructive) {

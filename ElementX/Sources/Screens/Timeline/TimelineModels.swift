@@ -19,7 +19,7 @@ enum TimelineViewModelAction {
     case displayLocationPicker
     case displayPollForm(mode: PollFormMode)
     case displayMediaUploadPreviewScreen(url: URL)
-    case tappedOnSenderDetails(userID: String)
+    case displaySenderDetails(userID: String)
     case displayMessageForwarding(forwardingItem: MessageForwardingItem)
     case displayMediaPreview(TimelineMediaPreviewViewModel)
     case displayLocation(body: String, geoURI: GeoURI, description: String?)
@@ -99,6 +99,8 @@ struct TimelineViewState: BindableState {
     var canCurrentUserRedactOthers = false
     var canCurrentUserRedactSelf = false
     var canCurrentUserPin = false
+    var canCurrentUserKick = false
+    var canCurrentUserBan = false
     var isViewSourceEnabled: Bool
     var hideTimelineMedia: Bool
         
@@ -109,15 +111,23 @@ struct TimelineViewState: BindableState {
     /// an openURL closure which opens URLs first using the App's environment rather than skipping out to external apps
     var openURL: OpenURLAction?
     
-    var bindings: TimelineViewStateBindings
-    
     /// A closure providing the associated audio player state for an item in the timeline.
     var audioPlayerStateProvider: (@MainActor (_ itemId: TimelineItemIdentifier) -> AudioPlayerState?)?
     
     /// A closure that updates the associated pill context
     var pillContextUpdater: (@MainActor (PillContext) -> Void)?
     
+    /// A closure that returns the associated room name give its id
+    var roomNameForIDResolver: (@MainActor (String) -> String?)?
+    
+    /// A closure that returns the associated room name give its alias
+    var roomNameForAliasResolver: (@MainActor (String) -> String?)?
+    
     var emojiProvider: EmojiProviderProtocol
+    
+    var mapTilerConfiguration: MapTilerConfiguration
+    
+    var bindings: TimelineViewStateBindings
 }
 
 struct TimelineViewStateBindings {
@@ -127,7 +137,7 @@ struct TimelineViewStateBindings {
     /// Key is itemID, value is the collapsed state.
     var reactionsCollapsed: [TimelineItemIdentifier: Bool]
     
-    var alertInfo: AlertInfo<RoomScreenAlertInfoType>?
+    var alertInfo: AlertInfo<TimelineAlertInfoType>?
     
     var debugInfo: TimelineItemDebugInfo?
     
@@ -136,6 +146,8 @@ struct TimelineViewStateBindings {
     var reactionSummaryInfo: ReactionSummaryInfo?
     
     var readReceiptsSummaryInfo: ReadReceiptSummaryInfo?
+    
+    var manageMemberViewModel: ManageRoomMemberSheetViewModel?
 }
 
 struct TimelineItemActionMenuInfo: Equatable, Identifiable {
@@ -164,7 +176,7 @@ struct ReadReceiptSummaryInfo: Identifiable {
     let id: TimelineItemIdentifier
 }
 
-enum RoomScreenAlertInfoType: Hashable {
+enum TimelineAlertInfoType: Hashable {
     case audioRecodingPermissionError
     case pollEndConfirmation(String)
     case sendingFailed

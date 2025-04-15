@@ -15,8 +15,10 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
     private let roomProxy: JoinedRoomProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let analytics: AnalyticsService
+    private let mediaProvider: MediaProviderProtocol
     
     private var members: [RoomMemberProxyProtocol] = []
+    private var currentUserProxy: RoomMemberProxyProtocol?
     
     private var actionsSubject: PassthroughSubject<RoomMembersListScreenViewModelAction, Never> = .init()
     
@@ -34,6 +36,7 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
         self.roomProxy = roomProxy
         self.userIndicatorController = userIndicatorController
         self.analytics = analytics
+        self.mediaProvider = mediaProvider
         
         super.init(initialViewState: .init(joinedMembersCount: roomProxy.infoPublisher.value.joinedMembersCount,
                                            bindings: .init(mode: initialMode)),
@@ -48,12 +51,6 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
         switch viewAction {
         case .selectMember(let member):
             selectMember(member)
-        case .showMemberDetails(let member):
-            showMemberDetails(member)
-        case .kickMember(let member):
-            Task { await kickMember(member) }
-        case .banMember(let member):
-            Task { await banMember(member) }
         case .unbanMember(let member):
             Task { await unbanMember(member) }
         case .invite:
@@ -96,6 +93,7 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
             let members = members.sorted()
             let roomMembersDetails = await buildMembersDetails(members: members)
             self.members = members
+            self.currentUserProxy = members.first { $0.userID == roomProxy.ownUserID }
             
             self.state = .init(joinedMembersCount: roomProxy.infoPublisher.value.joinedMembersCount,
                                joinedMembers: roomMembersDetails.joinedMembers,
@@ -153,6 +151,12 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
     }
     
     private func selectMember(_ member: RoomMemberDetails) {
+        guard let currentUserProxy,
+              currentUserProxy.powerLevel > member.powerLevel else {
+            showMemberDetails(member)
+            return
+        }
+              
         if member.isBanned { // No need to check canBan here, banned users are only shown when it is true.
             state.bindings.alertInfo = AlertInfo(id: .unbanConfirmation(member),
                                                  title: L10n.screenRoomMemberListManageMemberUnbanTitle,
@@ -164,16 +168,26 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
             return
         }
         
-        var actions = [RoomMembersListScreenManagementDetails.Action]()
-        if state.canKickUsers, member.role != .administrator {
-            actions.append(.kick)
-        }
-        if state.canBanUsers, member.role != .administrator {
-            actions.append(.ban)
-        }
-        
-        if !actions.isEmpty {
-            state.bindings.memberToManage = .init(member: member, actions: actions)
+        if state.canKickUsers || state.canBanUsers {
+            let manageMemeberViewModel = ManageRoomMemberSheetViewModel(member: member,
+                                                                        canKick: state.canKickUsers,
+                                                                        canBan: state.canBanUsers,
+                                                                        roomProxy: roomProxy,
+                                                                        userIndicatorController: userIndicatorController,
+                                                                        analyticsService: analytics,
+                                                                        mediaProvider: mediaProvider)
+            manageMemeberViewModel.actions.sink { [weak self] action in
+                guard let self else { return }
+                switch action {
+                case .dismiss(let shouldShowDetails):
+                    state.bindings.manageMemeberViewModel = nil
+                    if shouldShowDetails {
+                        showMemberDetails(member)
+                    }
+                }
+            }
+            .store(in: &cancellables)
+            state.bindings.manageMemeberViewModel = manageMemeberViewModel
         } else {
             showMemberDetails(member)
         }
@@ -185,38 +199,9 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
             return
         }
         actionsSubject.send(.selectMember(member))
-        state.bindings.memberToManage = nil
     }
     
     // MARK: - Member Management
-    
-    private func kickMember(_ member: RoomMemberDetails) async {
-        let indicatorTitle = L10n.screenRoomMemberListRemovingUser(member.name ?? member.id)
-        showManageMemberIndicator(title: indicatorTitle)
-        
-        switch await roomProxy.kickUser(member.id) {
-        case .success:
-            state.bindings.memberToManage = nil
-            hideManageMemberIndicator(title: indicatorTitle)
-            analytics.trackRoomModeration(action: .KickMember, role: nil)
-        case .failure:
-            showManageMemberFailure(title: indicatorTitle)
-        }
-    }
-    
-    private func banMember(_ member: RoomMemberDetails) async {
-        let indicatorTitle = L10n.screenRoomMemberListBanningUser(member.name ?? member.id)
-        showManageMemberIndicator(title: indicatorTitle)
-        
-        switch await roomProxy.banUser(member.id) {
-        case .success:
-            state.bindings.memberToManage = nil
-            hideManageMemberIndicator(title: indicatorTitle)
-            analytics.trackRoomModeration(action: .BanMember, role: nil)
-        case .failure:
-            showManageMemberFailure(title: indicatorTitle)
-        }
-    }
     
     private func unbanMember(_ member: RoomMemberDetails) async {
         let indicatorTitle = L10n.screenRoomMemberListUnbanningUser(member.name ?? member.id)
@@ -224,7 +209,6 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
         
         switch await roomProxy.unbanUser(member.id) {
         case .success:
-            state.bindings.memberToManage = nil
             hideManageMemberIndicator(title: indicatorTitle)
             analytics.trackRoomModeration(action: .UnbanMember, role: nil)
         case .failure:

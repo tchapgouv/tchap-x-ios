@@ -215,6 +215,19 @@ class ClientProxy: ClientProxyProtocol {
                 }
             }
             .store(in: &cancellables)
+        
+        Task {
+            do {
+                try await client.setMediaRetentionPolicy(policy: .init(maxCacheSize: nil,
+                                                                       maxFileSize: nil,
+                                                                       // 30 days in seconds
+                                                                       lastAccessExpiry: 30 * 24 * 60 * 60,
+                                                                       // 1 day in seconds
+                                                                       cleanupFrequency: 24 * 60 * 60))
+            } catch {
+                MXLog.error("Failed setting media retention policy with error: \(error)")
+            }
+        }
     }
     
     var userID: String {
@@ -353,15 +366,13 @@ class ClientProxy: ClientProxyProtocol {
         try? await client.accountUrl(action: action).flatMap(URL.init(string:))
     }
     
-    func directRoomForUserID(_ userID: String) async -> Result<String?, ClientProxyError> {
-        await Task.dispatch(on: clientQueue) {
-            do {
-                let roomID = try self.client.getDmRoom(userId: userID)?.id()
-                return .success(roomID)
-            } catch {
-                MXLog.error("Failed retrieving direct room for userID: \(userID) with error: \(error)")
-                return .failure(.sdkError(error))
-            }
+    func directRoomForUserID(_ userID: String) -> Result<String?, ClientProxyError> {
+        do {
+            let roomID = try client.getDmRoom(userId: userID)?.id()
+            return .success(roomID)
+        } catch {
+            MXLog.error("Failed retrieving direct room for userID: \(userID) with error: \(error)")
+            return .failure(.sdkError(error))
         }
     }
     
@@ -376,7 +387,7 @@ class ClientProxy: ClientProxyProtocol {
                                                   invite: [userID],
                                                   avatar: nil,
                                                   powerLevelContentOverride: Self.roomCreationPowerLevelOverrides)
-            let roomID = try await client.createRoom(request: parameters)
+            let roomID = try await client.createRoom(request: parameters, isFederated: true)
             
             await waitForRoomToSync(roomID: roomID)
             
@@ -411,7 +422,7 @@ class ClientProxy: ClientProxyProtocol {
                                                   historyVisibilityOverride: isRoomPrivate ? .invited : nil,
                                                   // This is an FFI naming mistake, what is required is the `aliasLocalPart` not the whole alias
                                                   canonicalAlias: aliasLocalPart)
-            let roomID = try await client.createRoom(request: parameters)
+            let roomID = try await client.createRoom(request: parameters, isFederated: true)
             
             await waitForRoomToSync(roomID: roomID)
             
@@ -533,6 +544,20 @@ class ClientProxy: ClientProxyProtocol {
     
     func roomSummaryForAlias(_ alias: String) -> RoomSummary? {
         staticRoomSummaryProvider.roomListPublisher.value.first { $0.canonicalAlias == alias || $0.alternativeAliases.contains(alias) }
+    }
+    
+    func reportRoomForIdentifier(_ identifier: String, reason: String?) async -> Result<Void, ClientProxyError> {
+        do {
+            guard let room = try client.getRoom(roomId: identifier) else {
+                MXLog.error("Failed reporting room with identifier: \(identifier), room not in local store")
+                return .failure(.roomNotInLocalStore)
+            }
+            try await room.reportRoom(reason: reason)
+            return .success(())
+        } catch {
+            MXLog.error("Failed reporting room with identifier: \(identifier), with error: \(error)")
+            return .failure(.sdkError(error))
+        }
     }
 
     func loadUserDisplayName() async -> Result<Void, ClientProxyError> {

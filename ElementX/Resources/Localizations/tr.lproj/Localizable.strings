@@ -1,11 +1,14 @@
 "Notification" = "Bildirim";
+"a11y_avatar" = "Avatar";
 "a11y_delete" = "Sil";
 "a11y_hide_password" = "Şifreyi gizle";
+"a11y_join_call" = "Join call";
 "a11y_jump_to_bottom" = "Aşağıya atla";
 "a11y_notifications_mentions_only" = "Yalnızca bahsetmeler";
 "a11y_notifications_muted" = "Sessiz";
 "a11y_page_n" = "Sayfa %1$d";
 "a11y_pause" = "Duraklat";
+"a11y_paused_voice_message" = "Voice message, duration: %1$@, current position: %2$@";
 "a11y_pin_field" = "PIN alanı";
 "a11y_play" = "Oynat";
 "a11y_poll_end" = "Anket sona erdi";
@@ -19,6 +22,7 @@
 "a11y_show_password" = "Şifreyi göster";
 "a11y_start_call" = "Bir arama başlatın";
 "a11y_user_menu" = "Kullanıcı menüsü";
+"a11y_voice_message" = "Voice message, duration: %1$@";
 "a11y_voice_message_record" = "Sesli mesajı kaydedin.";
 "a11y_voice_message_stop_recording" = "Kaydı durdur";
 "a11y.view_details" = "Ayrıntıları görüntüle";
@@ -46,9 +50,11 @@
 "action_deactivate" = "Devre dışı bırak";
 "action_deactivate_account" = "Hesabı devre dışı bırak";
 "action_decline" = "Reddet";
+"action_decline_and_block" = "Decline and block";
 "action_delete_poll" = "Anketi Sil";
 "action_disable" = "Devre dışı";
 "action_discard" = "Vazgeç";
+"action_dismiss" = "Dismiss";
 "action_done" = "Bitti";
 "action_edit" = "Düzenle";
 "action_edit_caption" = "Açıklamayı düzenle";
@@ -90,8 +96,10 @@
 "action_remove_message" = "Mesajı kaldır";
 "action_reply" = "Yanıtla";
 "action_reply_in_thread" = "Konuya cevap ver";
+"action_report" = "Report";
 "action_report_bug" = "Hata bildir";
 "action_report_content" = "İçeriği bildir";
+"action_report_room" = "Report room";
 "action_reset" = "Sıfırla";
 "action_reset_identity" = "Kimliği sıfırla";
 "action_retry" = "Yeniden dene";
@@ -187,6 +195,7 @@
 "common_name_and_id" = "%1$@ (%2$@)";
 "common_no_results" = "Sonuç yok";
 "common_no_room_name" = "Oda adı yok";
+"common_not_encrypted" = "Not encrypted";
 "common_offline" = "Çevrimdışı";
 "common_optic_id_ios" = "Optik Kimlik";
 "common_or" = "veya";
@@ -194,6 +203,7 @@
 "common_people" = "Kişiler";
 "common_permalink" = "Kalıcı bağlantı";
 "common_permission" = "İzin";
+"common_please_check_internet_connection" = "Please check your internet connection";
 "common_please_wait" = "Lütfen bekleyin...";
 "common_poll_end_confirmation" = "Bu anketi sonlandırmak istediğinizden emin misiniz?";
 "common_poll_summary" = "Anket: %1$@";
@@ -202,6 +212,7 @@
 "common_privacy_policy" = "Gizlilik Politikası";
 "common_reaction" = "Tepki";
 "common_reactions" = "Tepkiler";
+"common_reason" = "Reason";
 "common_recovery_key" = "Kurtarma anahtarı";
 "common_refreshing" = "Yenileniyor...";
 "common_replying_to" = "Cevaplamak için %1$@";
@@ -262,6 +273,8 @@
 "common_waiting_for_decryption_key" = "Bu mesajı bekliyorum";
 "common.copied_to_clipboard" = "Panoya kopyalandı";
 "common.do_not_show_this_again" = "Bunu bir daha gösterme";
+"common.empty_file" = "Empty file";
+"common.line_copied_to_clipboard" = "Line copied to clipboard";
 "common.open_source_licenses" = "Açık kaynak lisansları";
 "common.pinned" = "Sabitlendi";
 "common.send_to" = "Şuraya gönder";
@@ -290,6 +303,8 @@
 "dialog_permission_microphone_title_ios" = "%1$@ mikrofonunuza erişim izni gerekiyor.";
 "dialog_permission_notification" = "Uygulamanın bildirimleri görüntülemesine izin vermek için lütfen sistem ayarlarından izin verin.";
 "dialog_permission_photo_library_title_ios" = "%1$@ fotoğraf arşivinize erişimi yok.";
+"dialog_room_reported" = "Room reported";
+"dialog_room_reported_and_left" = "Reported and left room";
 "dialog_title_confirmation" = "Onaylama";
 "dialog_title_warning" = "Uyarı";
 "dialog_unsaved_changes_description_ios" = "Değişiklikleriniz kaydedilmeyecek";
@@ -381,6 +396,9 @@
 "screen_advanced_settings_element_call_base_url" = "Özel Element Call temel URL'si";
 "screen_advanced_settings_element_call_base_url_description" = "Element Call için özel bir temel URL ayarlayın.";
 "screen_advanced_settings_element_call_base_url_validation_error" = "Geçersiz URL, lütfen protokolü (http/https) ve doğru adresi eklediğinizden emin olun.";
+"screen_advanced_settings_hide_invite_avatars_toggle_title" = "Hide avatars in room invite requests";
+"screen_advanced_settings_hide_timeline_media_toggle_title" = "Hide media previews in timeline";
+"screen_advanced_settings_moderation_and_safety_section_title" = "Moderation and Safety";
 "screen_bottom_sheet_create_dm_confirmation_button_title" = "Davet gönder";
 "screen_bottom_sheet_create_dm_message" = "%1$@ ile sohbet başlatmak ister misiniz?";
 "screen_bottom_sheet_create_dm_title" = "Davet gönder?";
@@ -391,6 +409,10 @@
 "screen_create_room_room_access_section_knocking_option_title" = "Katılmak için sor";
 "screen_create_room_room_address_section_footer" = "Bu odanın genel oda dizininde görünür olması için bir oda adresine ihtiyacınız olacaktır.";
 "screen_create_room_room_visibility_section_title" = "Oda görünürlüğü";
+"screen_decline_and_block_block_user_option_description" = "You will not see any messages or room invites from this user";
+"screen_decline_and_block_block_user_option_title" = "Block user";
+"screen_decline_and_block_report_user_option_description" = "Report this room to your account provider.";
+"screen_decline_and_block_title" = "Decline and block";
 "screen_edit_room_address_room_address_section_footer" = "Dizinde görünür hale getirmek için bir oda adresine ihtiyacınız olacak.";
 "screen_edit_room_address_title" = "Oda adresi";
 "screen_join_room_cancel_knock_action" = "İsteği iptal et";
@@ -441,6 +463,11 @@
 "screen_media_upload_preview_error_failed_sending" = "Medya yüklenemedi, lütfen tekrar deneyin.";
 "screen_pinned_timeline_empty_state_description" = "Bir mesaja basın ve buraya eklemek için “%1$@” yi seçin.";
 "screen_pinned_timeline_empty_state_headline" = "Önemli mesajları kolayca keşfedilebilmeleri için sabitleyin";
+"screen_report_room_leave_failed_alert_message" = "Your report was submitted successfully, but we encountered an issue while trying to leave the room. Please try again.";
+"screen_report_room_leave_failed_alert_title" = "Unable to Leave Room";
+"screen_report_room_reason_footer" = "Report this room to your admin. If the messages are encrypted, your admin will not be able to read them.";
+"screen_report_room_reason_placeholder" = "Describe the reason…";
+"screen_report_room_title" = "Report room";
 "screen_reset_encryption_password_error" = "Bilinmeyen bir hata oluştu. Lütfen hesap şifrenizin doğru olup olmadığını kontrol edin ve tekrar deneyin.";
 "screen_resolve_send_failure_changed_identity_primary_button_title" = "Doğrulamayı geri çek ve gönder";
 "screen_resolve_send_failure_changed_identity_subtitle" = "Doğrulamanızı geri çekebilir ve yine de bu mesajı gönderebilir veya şimdilik iptal edebilir ve %1$@ yeniden doğruladıktan sonra daha sonra tekrar deneyebilirsiniz.";
@@ -864,6 +891,9 @@
 "screen_room_member_list_ban_member_confirmation_title" = "Bu üyeyi yasaklamak istediğinize emin misiniz?";
 "screen_room_member_list_banned_empty" = "Bu odada yasaklı kullanıcı yok.";
 "screen_room_member_list_banning_user" = "Yasaklanıyor %1$@";
+"screen_room_member_list_kick_member_confirmation_action" = "Remove";
+"screen_room_member_list_kick_member_confirmation_description" = "They will be able to join this room again if invited.";
+"screen_room_member_list_kick_member_confirmation_title" = "Are you sure you want to remove this member?";
 "screen_room_member_list_manage_member_ban" = "Üyeyi çıkar ve yasakla";
 "screen_room_member_list_manage_member_remove" = "Odadan çıkar";
 "screen_room_member_list_manage_member_remove_confirmation_kick" = "Yalnızca üyeyi kaldır";

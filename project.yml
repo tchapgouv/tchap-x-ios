@@ -40,7 +40,7 @@ settings:
   ENABLE_BITCODE: false
   APP_NAME: ElementX
   KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).$(BASE_BUNDLE_IDENTIFIER)"
-  MARKETING_VERSION: 25.03.3
+  MARKETING_VERSION: 25.04.3
   CURRENT_PROJECT_VERSION: 1
   SUPPORTS_MACCATALYST: false
 
@@ -61,7 +61,7 @@ packages:
 #    url: https://github.com/element-hq/matrix-rust-components-swift
 #    exactVersion: 25.03.13
     url: https://github.com/tchapgouv/matrix-rust-components-swift
-    branch: 25.3.25-contentscanner-03
+    branch: 25.04.11-bwi-0-8-1
   Compound:
 #    url: https://github.com/element-hq/compound-ios
 #    revision: 9325643cb4d22150881c5bf79e1e6e3c5a87ea89
@@ -84,6 +84,9 @@ packages:
     url: https://github.com/element-hq/matrix-rich-text-editor-swift
     exactVersion: 2.37.12
     # path: ../matrix-rich-text-editor/platforms/ios/lib/WysiwygComposer
+  EmbeddedElementCall:
+    url: https://github.com/element-hq/element-call-swift
+    exactVersion: 0.9.0
   
   # External dependencies
   Algorithms:

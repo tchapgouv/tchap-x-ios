@@ -16,6 +16,14 @@ internal enum TchapL10n {
   internal static var commonLegal: String { return TchapL10n.tr("TchapLocalizable", "common_legal") }
   /// EXTERNAL GUEST
   internal static var commonUserIsExternal: String { return TchapL10n.tr("TchapLocalizable", "common_user_is_external") }
+  /// File temporarily unavailable
+  internal static var contentScannerScanStatusError: String { return TchapL10n.tr("TchapLocalizable", "content_scanner_scan_status_error") }
+  /// Scanning for virus…
+  internal static var contentScannerScanStatusInProgress: String { return TchapL10n.tr("TchapLocalizable", "content_scanner_scan_status_in_progress") }
+  /// Content blocked
+  internal static var contentScannerScanStatusInfected: String { return TchapL10n.tr("TchapLocalizable", "content_scanner_scan_status_infected") }
+  /// File no longer available
+  internal static var contentScannerScanStatusNotFound: String { return TchapL10n.tr("TchapLocalizable", "content_scanner_scan_status_not_found") }
   /// Privacy policy
   internal static var legalPrivacyPolicy: String { return TchapL10n.tr("TchapLocalizable", "legal_privacy_policy") }
   /// Terms of use

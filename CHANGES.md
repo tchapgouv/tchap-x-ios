@@ -1,3 +1,217 @@
+## Changes in 25.04.2 (2025-04-10)
+
+### What's Changed
+
+✨ Features
+* Setup the client media retention policy by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4001
+
+🙌 Improvements
+* Also show the room member management sheet when tapping on a profile in the timeline. by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3995
+* Add an option to hiding timeline media only in public rooms by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4004
+
+🐛 Bugfixes
+* Manually enable the event cache  by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4005
+
+🧱 Build
+* Fix the post-release workflow. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3996
+
+Others
+* Update dependency fastlane to v2.227.1 by @renovate in https://github.com/element-hq/element-x-ios/pull/3999
+* Re-write integration test login for OIDC. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3997
+* Only use the appGroupTemporaryDirectory to access a file from the share extension. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4002
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.04.0...release/25.04.2
+
+## Changes in 25.04.0 (2025-04-08)
+
+### What's Changed
+
+✨ Features
+* Add alerts with reason for kick and ban by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3967
+
+🙌 Improvements
+* Update the app icon. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3977
+
+🐛 Bugfixes
+* fix: update compound to fix accessibility in pickers and toggles by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3947
+* Bring back the background refresh stop sync crash fix by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/3960
+* Load single rooms in the notification service extension by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/3973
+
+⚠️ API Changes
+* Add the push gateway to settings overrides and remove the endpoint path from it. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3970
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/3959
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/3984
+
+🧱 Build
+* Make the secrets optional. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3966
+* Add a post-release workflow. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3986
+* Prepare for version 25.04.x. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3994
+* Vendor our StaticCode pkl package inside the project. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3993
+
+🚧 In development 🚧
+* feat: report a room by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3971
+* feat:  decline and block screen by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3989
+
+Others
+* a11y: accessibility labels for calls by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3949
+* a11y: add profile picture accessibility label by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3948
+* a11y: better voice over for voice messages by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3950
+* Allow the services that are configured by secrets to be disabled. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3961
+* Bump the RustSDK to v25.03.31 by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/3964
+* Updated EC to 0.9.0 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3962
+* Allow overriding the bug report app ID and analytics cookies URL. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3969
+* Add the build number to rageshakes. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3978
+* Add a Compound hook. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3979
+* Fix UI test toggle tapping after compound accessibility change. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/3985
+* Add support URLs to the app setting overrides. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3987
+* Update actions/github-script action to v7 by @renovate in https://github.com/element-hq/element-x-ios/pull/3988
+* Bump the Rust SDK, futher decrease NSE memory consumption by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/3992
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.03.8...release/25.04.0
+
+## Changes in 25.03.8 (2025-03-27)
+
+### What's Changed
+
+🐛 Bugfixes
+* Revert "Attempt to prevent crashes after expiring background refreshes." by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/3946
+
+⚠️ API Changes
+* Refactor the MapTiler configuration into a single place. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3944
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.03.7...release/25.03.8
+
+## Changes in 25.03.7 (2025-03-26)
+
+### What's Changed
+
+✨ Features
+* Hide invite avatars when such flag is on by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3919
+
+🐛 Bugfixes
+* FIX: DM invites now render avatars correctly by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3931
+* FIX: Reply view will now render pills as plain text by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3938
+* EC Embedding improvements by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3943
+* Attempt to prevent crashes after expiring background refreshes. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/3942
+
+⚠️ API Changes
+* Updated the SDK to 25.03.24 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3916
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/3932
+
+Others
+* Add developer options for Rust's Log Packs. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3929
+* Update GitHub Actions to v5 (major) by @renovate in https://github.com/element-hq/element-x-ios/pull/3928
+* Update apple-actions/import-codesign-certs digest to cfd6eb3 by @renovate in https://github.com/element-hq/element-x-ios/pull/3937
+* Use 'Dismiss' to close pinned identity changes, instead of 'Ok' by @andybalaam in https://github.com/element-hq/element-x-ios/pull/3936
+* Add NSPrivacyTracking and NSPrivacyCollectedDataTypes to PrivacyInfo.xcprivacy by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3935
+* Embed element call by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3939
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.03.5...release/25.03.7
+
+## Changes in 25.03.6 (2025-03-25)
+
+### What's Changed
+
+✨ Features
+* Hide invite avatars when such flag is on by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3919
+
+🐛 Bugfixes
+* FIX: DM invites now render avatars correctly by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3931
+* FIX: Reply view will now render pills as plain text by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3938
+
+⚠️ API Changes
+* Updated the SDK to 25.03.24 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3916
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/3932
+
+Others
+* Add developer options for Rust's Log Packs. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3929
+* Update GitHub Actions to v5 (major) by @renovate in https://github.com/element-hq/element-x-ios/pull/3928
+* Update apple-actions/import-codesign-certs digest to cfd6eb3 by @renovate in https://github.com/element-hq/element-x-ios/pull/3937
+* Use 'Dismiss' to close pinned identity changes, instead of 'Ok' by @andybalaam in https://github.com/element-hq/element-x-ios/pull/3936
+* Add NSPrivacyTracking and NSPrivacyCollectedDataTypes to PrivacyInfo.xcprivacy by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3935
+* Embed element call by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3939
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.03.5...release/25.03.6
+
+## Changes in 25.03.5 (2025-03-21)
+
+### What's Changed
+
+🧱 Build
+* Discard any changes before rebasing main. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3927
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.03.3...release/25.03.5
+
+## Changes in 25.03.4 (2025-03-20)
+
+### What's Changed
+
+🧱 Build
+* Discard any changes before rebasing main. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3927
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.03.3...release/25.03.4
+
+## Changes in 25.03.3 (2025-03-20)
+
+### What's Changed
+
+✨ Features
+* Alert for phishing attempts by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3895
+
+🙌 Improvements
+* Added @room to suggestion view for room mentions by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3896
+* Removed images in pills in favour of text decorations by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3905
+
+🐛 Bugfixes
+* Fix sharing from in-app QuickLook to itself by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/3902
+* Fix: completion service matches now any character by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3911
+* Fix an issue rendering pills in some forks. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3913
+* Attempt to fix the wrong timeline start display by defaulting the backwards publisher to .idle by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/3924
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/3885
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/3903
+
+🧱 Build
+* Improve next release flow to rebase main by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3876
+* Check if the git is shallow before fetching by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3879
+* CI: git fetch unshallow only in post-clone by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3880
+* Use updated Fastlane lane. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3877
+* Prefix our release tags with `release/` by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3894
+* Remove the unused TestMeasurementParser and lint integration tests again by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3918
+* Stop CI from uploading Codecov results when a PR comes from a fork. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3917
+
+Others
+* ClientProxy refactor by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3875
+* Change badge label colors to blue when not highlighted by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/3882
+* Update sentry to 8.35 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3888
+* Update sentry to 8.35.1 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3890
+* SDK update by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/3891
+* Update dependency fastlane to v2.227.0 by @renovate in https://github.com/element-hq/element-x-ios/pull/3900
+* Update the Enterprise submodule. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3899
+* Added a test to check if URLs with RTL are not marked as phishing by @Velin92 in https://github.com/element-hq/element-x-ios/pull/3907
+* Pin all 3rd party github actions to their full length commit SHA by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/3908
+* Update codecov/codecov-action action to v3.1.6 by @renovate in https://github.com/element-hq/element-x-ios/pull/3915
+* Add overrides for OIDC configuration. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3910
+* Run the 'prevent blocked' workflow even if PR has conflicts by @robintown in https://github.com/element-hq/element-x-ios/pull/3914
+* Update the SDK to 25.03.20. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/3925
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/25.03.2...release/25.03.3
+
 ## Changes in 25.03.2 (2025-03-06)
 
 ### What's Changed
