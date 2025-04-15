@@ -38,6 +38,7 @@ enum ClientProxyError: Error {
     case roomPreviewIsPrivate
     case failedRetrievingUserIdentity
     case failedResolvingRoomAlias
+    case roomNotInLocalStore
 }
 
 enum SlidingSyncConstants {
@@ -122,7 +123,7 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
         
     func accountURL(action: AccountManagementAction) async -> URL?
     
-    func directRoomForUserID(_ userID: String) async -> Result<String?, ClientProxyError>
+    func directRoomForUserID(_ userID: String) -> Result<String?, ClientProxyError>
     
     func createDirectRoom(with userID: String, expectedRoomName: String?) async -> Result<String, ClientProxyError>
     
@@ -153,6 +154,9 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func roomSummaryForIdentifier(_ identifier: String) -> RoomSummary?
     
     func roomSummaryForAlias(_ alias: String) -> RoomSummary?
+    
+    /// Will only work for rooms that are in our room list/local store
+    func reportRoomForIdentifier(_ identifier: String, reason: String?) async -> Result<Void, ClientProxyError>
     
     @discardableResult func loadUserDisplayName() async -> Result<Void, ClientProxyError>
     

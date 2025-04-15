@@ -5,15 +5,20 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+#if canImport(EmbeddedElementCall)
+import EmbeddedElementCall
+#endif
+
 import Foundation
 import SwiftUI
 
 // Common settings between app and NSE
 protocol CommonSettingsProtocol {
     var logLevel: LogLevel { get }
+    var traceLogPacks: Set<TraceLogPack> { get }
     var enableOnlySignedDeviceIsolationMode: Bool { get }
-    var hideTimelineMedia: Bool { get }
-    var eventCacheEnabled: Bool { get }
+    var hideInviteAvatars: Bool { get }
+    var timelineMediaVisibility: TimelineMediaVisibility { get }
 }
 
 /// Store Element specific app settings.
@@ -35,12 +40,14 @@ final class AppSettings {
         case enableInAppNotifications
         case pusherProfileTag
         case logLevel
+        case traceLogPacks
         case viewSourceEnabled
         case optimizeMediaUploads
         case appAppearance
         case sharePresence
         case hideUnreadMessagesBadge
-        case hideTimelineMedia
+        case hideInviteAvatars
+        case timelineMediaVisibility
         
         case elementCallBaseURLOverride
         
@@ -49,10 +56,12 @@ final class AppSettings {
         case fuzzyRoomListSearchEnabled
         case enableOnlySignedDeviceIsolationMode
         case knockingEnabled
-        case eventCacheEnabledV2
+        case reportRoomEnabled
+        case reportInviteEnabled
     }
     
     private static var suiteName: String = InfoPlistReader.main.appGroupIdentifier
+    private static var remoteSuiteName = "\(InfoPlistReader.main.appGroupIdentifier).remote"
 
     /// UserDefaults to be used on reads and writes.
     private static var store: UserDefaults! = UserDefaults(suiteName: suiteName)
@@ -81,15 +90,25 @@ final class AppSettings {
     
     // MARK: - Hooks
     
+    // swiftlint:disable:next function_parameter_count
     func override(defaultHomeserverAddress: String,
+                  pushGatewayBaseURL: URL,
                   oidcRedirectURL: URL,
                   websiteURL: URL,
                   logoURL: URL,
                   copyrightURL: URL,
                   acceptableUseURL: URL,
                   privacyURL: URL,
-                  supportEmailAddress: String) {
+                  supportEmailAddress: String,
+                  encryptionURL: URL,
+                  chatBackupDetailsURL: URL,
+                  identityPinningViolationDetailsURL: URL,
+                  elementWebHosts: [String],
+                  bugReportApplicationID: String,
+                  analyticsTermsURL: URL?,
+                  mapTilerConfiguration: MapTilerConfiguration) {
         self.defaultHomeserverAddress = defaultHomeserverAddress
+        self.pushGatewayBaseURL = pushGatewayBaseURL
         self.oidcRedirectURL = oidcRedirectURL
         self.websiteURL = websiteURL
         self.logoURL = logoURL
@@ -97,6 +116,13 @@ final class AppSettings {
         self.acceptableUseURL = acceptableUseURL
         self.privacyURL = privacyURL
         self.supportEmailAddress = supportEmailAddress
+        self.encryptionURL = encryptionURL
+        self.chatBackupDetailsURL = chatBackupDetailsURL
+        self.identityPinningViolationDetailsURL = identityPinningViolationDetailsURL
+        self.elementWebHosts = elementWebHosts
+        self.bugReportApplicationID = bugReportApplicationID
+        self.analyticsTermsURL = analyticsTermsURL
+        self.mapTilerConfiguration = mapTilerConfiguration
     }
     
     // MARK: - Application
@@ -164,13 +190,13 @@ final class AppSettings {
     /// An email address that should be used for support requests.
     private(set) var supportEmailAddress = "support@element.io"
     /// A URL where users can go read more about encryption in general.
-    let encryptionURL: URL = "https://element.io/help#encryption"
+    private(set) var encryptionURL: URL = "https://element.io/help#encryption"
     /// A URL where users can go read more about the chat backup.
-    let chatBackupDetailsURL: URL = "https://element.io/help#encryption5"
+    private(set) var chatBackupDetailsURL: URL = "https://element.io/help#encryption5"
     /// A URL where users can go read more about identity pinning violations
-    let identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
+    private(set) var identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
     /// Any domains that Element web may be hosted on - used for handling links.
-    let elementWebHosts = ["app.element.io", "staging.element.io", "develop.element.io"]
+    private(set) var elementWebHosts = ["app.element.io", "staging.element.io", "develop.element.io"]
     
     @UserPreference(key: UserDefaultsKeys.appAppearance, defaultValue: .system, storageType: .userDefaults(store))
     var appAppearance: AppAppearance
@@ -204,15 +230,14 @@ final class AppSettings {
                                                                      tosURI: acceptableUseURL,
                                                                      policyURI: privacyURL,
                                                                      contacts: [supportEmailAddress],
-                                                                     staticRegistrations: oidcStaticRegistrations.mapKeys { $0.absoluteString },
-                                                                     dynamicRegistrationsFile: .sessionsBaseDirectory.appending(path: "oidc/registrations.json"))
+                                                                     staticRegistrations: oidcStaticRegistrations.mapKeys { $0.absoluteString })
     
     /// A temporary hack to allow registration on matrix.org until MAS is deployed.
     let webRegistrationEnabled = true
     
     // MARK: - Notifications
     
-    var pusherAppId: String {
+    var pusherAppID: String {
         // Tchap: always use `.ios.prod` pusherAppId suffix.
 //        #if DEBUG
 //        InfoPlistReader.main.baseBundleIdentifier + ".ios.dev"
@@ -223,16 +248,17 @@ final class AppSettings {
     }
     
     // Tchap: use Tchap Sygnal as push notification server.
-//    let pushGatewayBaseURL: URL = "https://matrix.org/_matrix/push/v1/notify"
+//    private(set) var pushGatewayBaseURL: URL = "https://matrix.org"
     #if IS_TCHAP_DEVELOPMENT
-    let pushGatewayBaseURL: URL = "https://sygnal.tchap.incubateur.net/_matrix/push/v1/notify"
+    var pushGatewayBaseURL: URL = "https://sygnal.tchap.incubateur.net"
     #elseif IS_TCHAP_STAGING
-    let pushGatewayBaseURL: URL = "https://sygnal.preprod.tchap.gouv.fr/_matrix/push/v1/notify"
+    var pushGatewayBaseURL: URL = "https://sygnal.preprod.tchap.gouv.fr"
     #elseif IS_TCHAP_PRODUCTION
-    let pushGatewayBaseURL: URL = "https://sygnal.tchap.gouv.fr/_matrix/push/v1/notify"
+    var pushGatewayBaseURL: URL = "https://sygnal.tchap.gouv.fr"
     #else
-    let pushGatewayBaseURL: URL = "https://matrix.org/_matrix/push/v1/notify"
+    var pushGatewayBaseURL: URL = "https://matrix.org"
     #endif
+    var pushGatewayNotifyEndpoint: URL { pushGatewayBaseURL.appending(path: "_matrix/push/v1/notify") }
     
     @UserPreference(key: UserDefaultsKeys.enableNotifications, defaultValue: true, storageType: .userDefaults(store))
     var enableNotifications
@@ -246,9 +272,9 @@ final class AppSettings {
         
     // MARK: - Bug report
 
-    let bugReportServiceBaseURL: URL! = URL(string: Secrets.rageshakeServerURL)
-    let bugReportSentryURL: URL! = URL(string: Secrets.sentryDSN)
-    // Use the name allocated by the bug report server
+    let bugReportServiceBaseURL: URL? = Secrets.rageshakeServerURL.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
+    let bugReportSentryURL: URL? = Secrets.sentryDSN.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
+    /// The name allocated by the bug report server
     // Tchap: customize bug report application id to TchapX.
 //    let bugReportApplicationId = "element-x-ios"
     #if IS_TCHAP_DEVELOPMENT
@@ -260,26 +286,23 @@ final class AppSettings {
     #else
     let bugReportApplicationId = "element-x-ios"
     #endif
-    // Tchap: limit upload filesize to 10MB.
-//    let bugReportMaxUploadSize = 50 * 1024 * 1024
+    private(set) var bugReportApplicationID = "element-x-ios"
     /// The maximum size of the upload request. Default value is just below CloudFlare's max request size.
     let bugReportMaxUploadSize = 10 * 1024 * 1024
 
     // MARK: - Analytics
     
-//    let analyticsConfiguration = AnalyticsConfiguration(isEnabled: InfoPlistReader.main.bundleIdentifier.starts(with: "io.element."),
-//                                                        host: Secrets.postHogHost,
-//                                                        apiKey: Secrets.postHogAPIKey,
-//                                                        termsURL: "https://element.io/cookie-policy")
-    /// The configuration to use for analytics. Set `isEnabled` to false to disable analytics.
-    ///
-    /// **Note:** Analytics are disabled by default for forks. If you are maintaining a fork you will
-    /// need to regenerate the Secrets file with your PostHog server and API key before enabling.
-    /// // Tchap: disable analytics for the moment
-    let analyticsConfiguration = AnalyticsConfiguration(isEnabled: false,
-                                                        host: Secrets.postHogHost,
-                                                        apiKey: Secrets.postHogAPIKey,
-                                                        termsURL: "https://element.io/cookie-policy")
+    /// The configuration to use for analytics. Set to `nil` to disable analytics.
+    let analyticsConfiguration: AnalyticsConfiguration? = AppSettings.makeAnalyticsConfiguration()
+    /// The URL to open with more information about analytics terms. When this is `nil` the "Learn more" link will be hidden.
+    private(set) var analyticsTermsURL: URL? = "https://element.io/cookie-policy"
+    /// Whether or not there the app is able ask for user consent to enable analytics or sentry reporting.
+    
+    var canPromptForAnalytics: Bool { analyticsConfiguration != nil || bugReportSentryURL != nil }
+    private static func makeAnalyticsConfiguration() -> AnalyticsConfiguration? {
+        guard let host = Secrets.postHogHost, let apiKey = Secrets.postHogAPIKey else { return nil }
+        return AnalyticsConfiguration(host: host, apiKey: apiKey)
+    }
     
     /// Whether the user has opted in to send analytics.
     @UserPreference(key: UserDefaultsKeys.analyticsConsentState, defaultValue: AnalyticsConsentState.unknown, storageType: .userDefaults(store))
@@ -313,7 +336,13 @@ final class AppSettings {
 
     // MARK: - Element Call
     
-    let elementCallBaseURL: URL = "https://call.element.io"
+    // swiftlint:disable:next force_unwrapping
+    let elementCallBaseURL: URL = EmbeddedElementCall.appURL!
+    
+    // These are publicly availble on https://call.element.io so we don't neeed to treat them as secrets
+    let elementCallPosthogAPIHost = "https://posthog-element-call.element.io"
+    let elementCallPosthogAPIKey = "phc_rXGHx9vDmyEvyRxPziYtdVIv0ahEv8A9uLWFcCi1WcU"
+    let elementCallPosthogSentryDSN = "https://3bd2f95ba5554d4497da7153b552ffb5@sentry.tools.element.io/41"
     
     @UserPreference(key: UserDefaultsKeys.elementCallBaseURLOverride, defaultValue: nil, storageType: .userDefaults(store))
     var elementCallBaseURLOverride: URL?
@@ -327,22 +356,23 @@ final class AppSettings {
     
     // maptiler base url
     // Tchap: customize map tiler url for Tchap.
-//    let mapTilerBaseURL: URL = "https://api.maptiler.com/maps"
     #if IS_TCHAP_DEVELOPMENT || IS_TCHAP_STAGING || IS_TCHAP_PRODUCTION
     private enum TchapMapProvider: String {
         case geoDataGouv = "https://openmaptiles.geo.data.gouv.fr/styles/osm-bright/style.json"
         case ign = "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"
     }
 
-    // swiftlint:disable force_unwrapping
-    let mapTilerBaseURL = URL(string: TchapMapProvider.geoDataGouv.rawValue)!
-    // swiftlint:enable force_unwrapping
-    #else
-    let mapTilerBaseURL: URL = "https://api.maptiler.com/maps"
-    #endif
+    private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!,
+                                                                   apiKey: Secrets.mapLibreAPIKey,
+                                                                   lightStyleID: "",
+                                                                   darkStyleID: "")
 
-    // maptiler api key
-    let mapTilerApiKey = Secrets.mapLibreAPIKey
+    #else
+    private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
+                                                                   apiKey: Secrets.mapLibreAPIKey,
+                                                                   lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
+                                                                   darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
+    #endif
     
     // MARK: - Presence
 
@@ -360,6 +390,11 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.knockingEnabled, defaultValue: false, storageType: .userDefaults(store))
     var knockingEnabled
     
+    @UserPreference(key: UserDefaultsKeys.reportRoomEnabled, defaultValue: false, storageType: .userDefaults(store)) var reportRoomEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.reportInviteEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var reportInviteEnabled
+    
     #endif
     
     // MARK: - Shared
@@ -367,15 +402,24 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.logLevel, defaultValue: LogLevel.info, storageType: .userDefaults(store))
     var logLevel
     
+    @UserPreference(key: UserDefaultsKeys.traceLogPacks, defaultValue: [], storageType: .userDefaults(store))
+    var traceLogPacks: Set<TraceLogPack>
+    
     /// Configuration to enable only signed device isolation mode for  crypto. In this mode only devices signed by their owner will be considered in e2ee rooms.
     @UserPreference(key: UserDefaultsKeys.enableOnlySignedDeviceIsolationMode, defaultValue: false, storageType: .userDefaults(store))
     var enableOnlySignedDeviceIsolationMode
     
-    @UserPreference(key: UserDefaultsKeys.hideTimelineMedia, defaultValue: false, storageType: .userDefaults(store))
-    var hideTimelineMedia
+    @UserPreference(key: UserDefaultsKeys.hideInviteAvatars, defaultValue: false, storageType: .userDefaults(store))
+    var hideInviteAvatars
     
-    @UserPreference(key: UserDefaultsKeys.eventCacheEnabledV2, defaultValue: true, storageType: .userDefaults(store))
-    var eventCacheEnabled
+    @UserPreference(key: UserDefaultsKeys.timelineMediaVisibility, defaultValue: TimelineMediaVisibility.always, storageType: .userDefaults(store))
+    var timelineMediaVisibility
 }
 
 extension AppSettings: CommonSettingsProtocol { }
+
+enum TimelineMediaVisibility: Codable {
+    case always
+    case privateOnly
+    case never
+}

@@ -159,15 +159,13 @@ final class TimelineProxy: TimelineProxyProtocol {
         }
     }
     
-    func retryDecryption(sessionIDs: [String]?) async {
+    func retryDecryption(sessionIDs: [String]?) {
         let sessionIDs = sessionIDs ?? []
         
         MXLog.info("Retrying decryption for sessionIDs: \(sessionIDs)")
         
-        await Task.dispatch(on: .global()) { [weak self] in
-            self?.timeline.retryDecryption(sessionIds: sessionIDs)
-            MXLog.info("Finished retrying decryption for sessionID: \(sessionIDs)")
-        }
+        timeline.retryDecryption(sessionIds: sessionIDs)
+        MXLog.info("Finished retrying decryption for sessionID: \(sessionIDs)")
     }
     
     func edit(_ eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID, newContent: EditedContent) async -> Result<Void, TimelineProxyError> {
@@ -238,6 +236,7 @@ final class TimelineProxy: TimelineProxyProtocol {
                                                               caption: caption,
                                                               formattedCaption: nil, // Rust will build this from the caption's markdown.
                                                               mentions: nil,
+                                                              replyParams: nil,
                                                               useSendQueue: true),
                                                 audioInfo: audioInfo,
                                                 progressWatcher: nil)
@@ -265,6 +264,7 @@ final class TimelineProxy: TimelineProxyProtocol {
                                                              caption: caption,
                                                              formattedCaption: nil, // Rust will build this from the caption's markdown.
                                                              mentions: nil,
+                                                             replyParams: nil,
                                                              useSendQueue: true),
                                                fileInfo: fileInfo,
                                                progressWatcher: nil)
@@ -293,6 +293,7 @@ final class TimelineProxy: TimelineProxyProtocol {
                                                               caption: caption,
                                                               formattedCaption: nil, // Rust will build this from the caption's markdown.
                                                               mentions: nil,
+                                                              replyParams: nil,
                                                               useSendQueue: true),
                                                 thumbnailPath: thumbnailURL.path(percentEncoded: false),
                                                 imageInfo: imageInfo,
@@ -340,6 +341,7 @@ final class TimelineProxy: TimelineProxyProtocol {
                                                               caption: caption,
                                                               formattedCaption: nil,
                                                               mentions: nil,
+                                                              replyParams: nil,
                                                               useSendQueue: true),
                                                 thumbnailPath: thumbnailURL.path(percentEncoded: false),
                                                 videoInfo: videoInfo,
@@ -368,6 +370,7 @@ final class TimelineProxy: TimelineProxyProtocol {
                                                                      caption: nil,
                                                                      formattedCaption: nil,
                                                                      mentions: nil,
+                                                                     replyParams: nil,
                                                                      useSendQueue: true),
                                                        audioInfo: audioInfo,
                                                        waveform: waveform,
@@ -401,7 +404,11 @@ final class TimelineProxy: TimelineProxyProtocol {
         
         do {
             if let inReplyToEventID {
-                try await timeline.sendReply(msg: messageContent, eventId: inReplyToEventID)
+                // `enforceThread` will force send the message a thread with `inReplyToEventID` while
+                // `replyWithinThread` will create an in-reply-to associated field *within* that same thread
+                try await timeline.sendReply(msg: messageContent, replyParams: .init(eventId: inReplyToEventID,
+                                                                                     enforceThread: false,
+                                                                                     replyWithinThread: false))
                 MXLog.info("Finished sending reply to eventID: \(inReplyToEventID)")
             } else {
                 _ = try await timeline.send(msg: messageContent)
@@ -504,17 +511,15 @@ final class TimelineProxy: TimelineProxyProtocol {
     func endPoll(pollStartID: String, text: String) async -> Result<Void, TimelineProxyError> {
         MXLog.info("Ending poll with eventID: \(pollStartID)")
         
-        return await Task.dispatch(on: .global()) {
-            do {
-                try self.timeline.endPoll(pollStartEventId: pollStartID, text: text)
-                
-                MXLog.info("Finished ending poll with eventID: \(pollStartID)")
-                
-                return .success(())
-            } catch {
-                MXLog.error("Failed ending poll with eventID: \(pollStartID) with error: \(error)")
-                return .failure(.sdkError(error))
-            }
+        do {
+            try await timeline.endPoll(pollStartEventId: pollStartID, text: text)
+            
+            MXLog.info("Finished ending poll with eventID: \(pollStartID)")
+            
+            return .success(())
+        } catch {
+            MXLog.error("Failed ending poll with eventID: \(pollStartID) with error: \(error)")
+            return .failure(.sdkError(error))
         }
     }
 

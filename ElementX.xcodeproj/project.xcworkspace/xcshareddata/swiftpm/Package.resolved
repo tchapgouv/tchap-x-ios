@@ -1,5 +1,5 @@
 {
-  "originHash" : "f9011692b20e61e6f0df94b6e0946a4c8f4d58429a88998f249712bb1fee47f1",
+  "originHash" : "cb4b4c28930e04929217c9570b7f82a1dc8e3dc51e3f956f11584dbae9bac079",
   "pins" : [
     {
       "identity" : "compound-design-tokens",
@@ -15,7 +15,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/element-hq/compound-ios",
       "state" : {
-        "revision" : "978a953fac36472b772dbd38263ebc81b96bfdce"
+        "revision" : "500e734ae918dc93dde7b1b50e5599b9807d4285"
       }
     },
     {
@@ -52,6 +52,15 @@
       "state" : {
         "revision" : "76062513434421cb6c8a1ae1d4f8368a7ebc2da3",
         "version" : "1.7.18"
+      }
+    },
+    {
+      "identity" : "element-call-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/element-hq/element-call-swift",
+      "state" : {
+        "revision" : "07a4f35ac39fba83e462492efb36249807a20125",
+        "version" : "0.9.0"
       }
     },
     {
@@ -149,8 +158,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/element-hq/matrix-rust-components-swift",
       "state" : {
-        "revision" : "d86698c49d66f2cc100a37d55e591f60b98c5bc4",
-        "version" : "25.3.20"
+        "revision" : "ed17777f10cca2282b2331e6e61f0b1c281f52ea",
+        "version" : "25.4.8"
       }
     },
     {

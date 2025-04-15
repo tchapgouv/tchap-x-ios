@@ -21,17 +21,16 @@ struct DeveloperOptionsScreen: View {
         Form {
             Section("Logging") {
                 LogLevelConfigurationView(logLevel: $context.logLevel)
-            }
-            
-            Section("General") {
-                Toggle(isOn: $context.eventCacheEnabled) {
-                    Text("Event cache")
+                
+                DisclosureGroup("SDK trace packs") {
+                    ForEach(TraceLogPack.allCases, id: \.self) { pack in
+                        Toggle(isOn: $context.traceLogPacks[pack]) {
+                            Text(pack.title)
+                        }
+                    }
                 }
-                .onChange(of: context.eventCacheEnabled) {
-                    context.send(viewAction: .clearCache)
-                }
             }
-            
+                        
             Section("Room List") {
                 Toggle(isOn: $context.publicSearchEnabled) {
                     Text("Public search")
@@ -43,12 +42,6 @@ struct DeveloperOptionsScreen: View {
                 
                 Toggle(isOn: $context.fuzzyRoomListSearchEnabled) {
                     Text("Fuzzy searching")
-                }
-            }
-            
-            Section("Room") {
-                Toggle(isOn: $context.hideTimelineMedia) {
-                    Text("Hide image & video previews")
                 }
             }
             
@@ -69,9 +62,20 @@ struct DeveloperOptionsScreen: View {
             } footer: {
                 Text("This setting controls how end-to-end encryption (E2EE) keys are exchanged. Enabling it will prevent the inclusion of devices that have not been explicitly verified by their owners.")
             }
+            
+            Section("Reporting") {
+                Toggle(isOn: $context.reportRoomEnabled) {
+                    Text("Report rooms")
+                    Text("Report API might not work properly")
+                }
+                Toggle(isOn: $context.reportInviteEnabled) {
+                    Text("Report invites")
+                    Text("Report API might not work properly")
+                }
+            }
 
             Section {
-                TextField(context.viewState.elementCallBaseURL.absoluteString, text: $elementCallURLOverrideString)
+                TextField("Leave empty to use EC locally", text: $elementCallURLOverrideString)
                     .autocorrectionDisabled(true)
                     .autocapitalization(.none)
                     .foregroundColor(URL(string: elementCallURLOverrideString) == nil ? .red : .primary)
@@ -84,11 +88,7 @@ struct DeveloperOptionsScreen: View {
                         }
                     }
             } header: {
-                Text("Element Call")
-            } footer: {
-                if context.elementCallBaseURLOverride == nil {
-                    Text("The call URL may be overridden by your homeserver.")
-                }
+                Text("Element Call remote URL override")
             }
             
             Section {
@@ -156,6 +156,20 @@ private struct LogLevelConfigurationView: View {
     /// Allows the picker to work with associated values
     private var logLevels: [LogLevel] {
         [.error, .warn, .info, .debug, .trace]
+    }
+}
+
+private extension Set<TraceLogPack> {
+    /// A custom subscript that allows binding a toggle to add/remove a pack from the array.
+    subscript(pack: TraceLogPack) -> Bool {
+        get { contains(pack) }
+        set {
+            if newValue {
+                insert(pack)
+            } else {
+                remove(pack)
+            }
+        }
     }
 }
 

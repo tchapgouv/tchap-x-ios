@@ -71,7 +71,7 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                                             mediaProvider: parameters.mediaProvider,
                                             ongoingCallRoomIDPublisher: parameters.ongoingCallRoomIDPublisher,
                                             appMediator: parameters.appMediator,
-                                            appSettings: ServiceLocator.shared.settings,
+                                            appSettings: parameters.appSettings,
                                             analyticsService: ServiceLocator.shared.analytics,
                                             userIndicatorController: ServiceLocator.shared.userIndicatorController)
         
@@ -99,6 +99,7 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                                                          completionSuggestionService: parameters.completionSuggestionService,
                                                          mediaProvider: parameters.mediaProvider,
                                                          mentionDisplayHelper: ComposerMentionDisplayHelper(timelineContext: timelineViewModel.context),
+                                                         appSettings: parameters.appSettings,
                                                          analyticsService: ServiceLocator.shared.analytics,
                                                          composerDraftService: parameters.composerDraftService)
         self.composerViewModel = composerViewModel
@@ -135,7 +136,7 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.presentPollForm(mode: mode))
                 case .displayMediaUploadPreviewScreen(let url):
                     actionsSubject.send(.presentMediaUploadPreviewScreen(url))
-                case .tappedOnSenderDetails(userID: let userID):
+                case .displaySenderDetails(userID: let userID):
                     actionsSubject.send(.presentRoomMemberDetails(userID: userID))
                 case .displayMessageForwarding(let forwardingItem):
                     actionsSubject.send(.presentMessageForwarding(forwardingItem: forwardingItem))

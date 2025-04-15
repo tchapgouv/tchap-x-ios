@@ -299,6 +299,7 @@ def rebase_main_onto_current_branch
   UI.message("Current branch: #{current_branch}")
 
   # Switch to main and update it
+  sh("git reset --hard")
   sh("git checkout main")
   sh("git pull origin main")
   sh("git rebase #{current_branch}")
@@ -436,7 +437,6 @@ end
 
 lane :config_secrets do
   Dir.chdir "../Secrets" do
-    sh("pkl eval -f yaml -o secrets.yml Secrets.pkl")
-    sh("swiftgen run yaml -n inline-swift5 --param enumName=Secrets -o Secrets.swift secrets.yml")
+    sh("pkl eval --cache-dir vendor -o Secrets.swift Secrets.pkl")
   end
 end
