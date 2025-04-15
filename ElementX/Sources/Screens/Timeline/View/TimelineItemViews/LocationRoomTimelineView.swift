@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LocationRoomTimelineView: View {
-    @Environment(\.timelineContext) private var context
+    @Environment(\.timelineContext) private var context: TimelineViewModel.Context!
     let timelineItem: LocationRoomTimelineItem
     
     var body: some View {
@@ -17,7 +17,8 @@ struct LocationRoomTimelineView: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(accessibilityLabel)
                 .onTapGesture {
-                    context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
+                    guard context.viewState.mapTilerConfiguration.isEnabled else { return }
+                    context.send(viewAction: .mediaTapped(itemID: timelineItem.id))
                 }
         }
     }
@@ -29,7 +30,9 @@ struct LocationRoomTimelineView: View {
                 descriptionView
                     .frame(maxWidth: mapAspectRatio * mapMaxHeight, alignment: .leading)
                 
-                MapLibreStaticMapView(geoURI: geoURI, mapSize: .init(width: mapAspectRatio * mapMaxHeight, height: mapMaxHeight)) {
+                MapLibreStaticMapView(geoURI: geoURI,
+                                      mapURLBuilder: context.viewState.mapTilerConfiguration,
+                                      mapSize: .init(width: mapAspectRatio * mapMaxHeight, height: mapMaxHeight)) {
                     LocationMarkerView()
                 }
                 .frame(maxHeight: mapMaxHeight)
@@ -64,12 +67,11 @@ struct LocationRoomTimelineView: View {
 }
 
 private extension MapLibreStaticMapView {
-    init(geoURI: GeoURI, mapSize: CGSize, @ViewBuilder pinAnnotationView: () -> PinAnnotation) {
+    init(geoURI: GeoURI, mapURLBuilder: MapTilerURLBuilderProtocol, mapSize: CGSize, @ViewBuilder pinAnnotationView: () -> PinAnnotation) {
         self.init(coordinates: .init(latitude: geoURI.latitude, longitude: geoURI.longitude),
                   zoomLevel: 15,
                   attributionPlacement: .bottomLeft,
-                  mapTilerStatic: MapTilerStaticMap(baseURL: ServiceLocator.shared.settings.mapTilerBaseURL,
-                                                    key: ServiceLocator.shared.settings.mapTilerApiKey),
+                  mapURLBuilder: mapURLBuilder,
                   mapSize: mapSize,
                   pinAnnotationView: pinAnnotationView)
     }
@@ -85,6 +87,7 @@ struct LocationRoomTimelineView_Previews: PreviewProvider, TestablePreview {
             }
         }
         .environmentObject(viewModel.context)
+        .environment(\.timelineContext, viewModel.context)
         .previewDisplayName("Bubbles")
     }
 

@@ -42,6 +42,6 @@ build
 .DS_Store
 ._*
 
-# This is a temporary file that is used to generate Secrets.swift
-# That file doesn't need to be ignored, as it we assumed-unchanged it post-checkout.
-Secrets/secrets.yml
+# Only commit Pkl packages (there may be other caches in here).
+Secrets/vendor/*
+!Secrets/vendor/package-2

@@ -1,11 +1,14 @@
 "Notification" = "Notificación";
+"a11y_avatar" = "Avatar";
 "a11y_delete" = "Borrar";
 "a11y_hide_password" = "Ocultar contraseña";
+"a11y_join_call" = "Join call";
 "a11y_jump_to_bottom" = "Ir al final";
 "a11y_notifications_mentions_only" = "Sólo menciones";
 "a11y_notifications_muted" = "Silenciado";
 "a11y_page_n" = "Página %1$d";
 "a11y_pause" = "Pausar";
+"a11y_paused_voice_message" = "Voice message, duration: %1$@, current position: %2$@";
 "a11y_pin_field" = "Campo PIN";
 "a11y_play" = "Reproducir";
 "a11y_poll_end" = "Encuesta finalizada";
@@ -19,6 +22,7 @@
 "a11y_show_password" = "Mostrar contraseña";
 "a11y_start_call" = "Iniciar llamada";
 "a11y_user_menu" = "Menú de usuario";
+"a11y_voice_message" = "Voice message, duration: %1$@";
 "a11y_voice_message_record" = "Grabar mensaje de voz";
 "a11y_voice_message_stop_recording" = "Detener grabación";
 "a11y.view_details" = "Mostrar detalles";
@@ -46,9 +50,11 @@
 "action_deactivate" = "Desactivar";
 "action_deactivate_account" = "Desactivar cuenta";
 "action_decline" = "Rechazar";
+"action_decline_and_block" = "Decline and block";
 "action_delete_poll" = "Eliminar encuesta";
 "action_disable" = "Desactivar";
 "action_discard" = "Descartar";
+"action_dismiss" = "Dismiss";
 "action_done" = "Hecho";
 "action_edit" = "Editar";
 "action_edit_caption" = "Editar leyenda";
@@ -90,8 +96,10 @@
 "action_remove_message" = "Eliminar mensaje";
 "action_reply" = "Responder";
 "action_reply_in_thread" = "Responder en el hilo";
+"action_report" = "Report";
 "action_report_bug" = "Informar de un error";
 "action_report_content" = "Reportar contenido";
+"action_report_room" = "Report room";
 "action_reset" = "Restablecer";
 "action_reset_identity" = "Restablecer identidad";
 "action_retry" = "Reintentar";
@@ -187,6 +195,7 @@
 "common_name_and_id" = "%1$@ (%2$@)";
 "common_no_results" = "No hay resultados";
 "common_no_room_name" = "Sala sin nombre";
+"common_not_encrypted" = "Not encrypted";
 "common_offline" = "Sin conexión";
 "common_optic_id_ios" = "Optic ID";
 "common_or" = "o";
@@ -194,6 +203,7 @@
 "common_people" = "Personas";
 "common_permalink" = "Enlace permanente";
 "common_permission" = "Permiso";
+"common_please_check_internet_connection" = "Please check your internet connection";
 "common_please_wait" = "Espera, por favor…";
 "common_poll_end_confirmation" = "¿Estás seguro de que quieres finalizar esta encuesta?";
 "common_poll_summary" = "Encuesta: %1$@";
@@ -202,6 +212,7 @@
 "common_privacy_policy" = "Política de privacidad";
 "common_reaction" = "Reacción";
 "common_reactions" = "Reacciones";
+"common_reason" = "Reason";
 "common_recovery_key" = "Clave de recuperación";
 "common_refreshing" = "Recargando…";
 "common_replying_to" = "Respondiendo a %1$@";
@@ -262,6 +273,8 @@
 "common_waiting_for_decryption_key" = "Esperando este mensaje";
 "common.copied_to_clipboard" = "Copiado al portapapeles";
 "common.do_not_show_this_again" = "No mostrar de nuevo";
+"common.empty_file" = "Empty file";
+"common.line_copied_to_clipboard" = "Line copied to clipboard";
 "common.open_source_licenses" = "Licencias de código abierto";
 "common.pinned" = "Fijado";
 "common.send_to" = "Enviar a";
@@ -290,6 +303,8 @@
 "dialog_permission_microphone_title_ios" = "%1$@ necesita permiso para acceder al micrófono.";
 "dialog_permission_notification" = "Para permitir que la aplicación muestre notificaciones, por favor concede el permiso en los ajustes del sistema.";
 "dialog_permission_photo_library_title_ios" = "%1$@ no tiene acceso a tu biblioteca de fotos.";
+"dialog_room_reported" = "Room reported";
+"dialog_room_reported_and_left" = "Reported and left room";
 "dialog_title_confirmation" = "Confirmar";
 "dialog_title_warning" = "Atención";
 "dialog_unsaved_changes_description_ios" = "Tus cambios no se guardarán";
@@ -381,6 +396,9 @@
 "screen_advanced_settings_element_call_base_url" = "URL base personalizada de Element Call";
 "screen_advanced_settings_element_call_base_url_description" = "Define una URL base personalizada para Element Call.";
 "screen_advanced_settings_element_call_base_url_validation_error" = "URL no válida, asegúrate de incluir el protocolo (http/https) y la dirección correcta.";
+"screen_advanced_settings_hide_invite_avatars_toggle_title" = "Hide avatars in room invite requests";
+"screen_advanced_settings_hide_timeline_media_toggle_title" = "Hide media previews in timeline";
+"screen_advanced_settings_moderation_and_safety_section_title" = "Moderation and Safety";
 "screen_bottom_sheet_create_dm_confirmation_button_title" = "Enviar invitación";
 "screen_bottom_sheet_create_dm_message" = "¿Quieres iniciar un chat con %1$@?";
 "screen_bottom_sheet_create_dm_title" = "¿Enviar invitación?";
@@ -391,6 +409,10 @@
 "screen_create_room_room_access_section_knocking_option_title" = "Solicitud para unirse";
 "screen_create_room_room_address_section_footer" = "Para que esta sala sea visible en el directorio de salas públicas, necesitarás una dirección de sala.";
 "screen_create_room_room_visibility_section_title" = "Visibilidad de la sala";
+"screen_decline_and_block_block_user_option_description" = "You will not see any messages or room invites from this user";
+"screen_decline_and_block_block_user_option_title" = "Block user";
+"screen_decline_and_block_report_user_option_description" = "Report this room to your account provider.";
+"screen_decline_and_block_title" = "Decline and block";
 "screen_edit_room_address_room_address_section_footer" = "Necesitarás una dirección de sala para que sea visible en el directorio.";
 "screen_edit_room_address_title" = "Dirección de la sala";
 "screen_join_room_cancel_knock_action" = "Cancelar solicitud";
@@ -441,6 +463,11 @@
 "screen_media_upload_preview_error_failed_sending" = "Error al subir el contenido multimedia, por favor inténtalo de nuevo.";
 "screen_pinned_timeline_empty_state_description" = "Presiona sobre un mensaje y selecciona «%1$@» para incluirlo aquí.";
 "screen_pinned_timeline_empty_state_headline" = "Fija los mensajes importantes para que se puedan descubrir fácilmente";
+"screen_report_room_leave_failed_alert_message" = "Your report was submitted successfully, but we encountered an issue while trying to leave the room. Please try again.";
+"screen_report_room_leave_failed_alert_title" = "Unable to Leave Room";
+"screen_report_room_reason_footer" = "Report this room to your admin. If the messages are encrypted, your admin will not be able to read them.";
+"screen_report_room_reason_placeholder" = "Describe the reason…";
+"screen_report_room_title" = "Report room";
 "screen_reset_encryption_password_error" = "Se ha producido un error desconocido. Comprueba que la contraseña de tu cuenta sea correcta y vuelve a intentarlo.";
 "screen_resolve_send_failure_changed_identity_primary_button_title" = "Retirar la verificación y enviar";
 "screen_resolve_send_failure_changed_identity_subtitle" = "Puedes retirar tu verificación y enviar este mensaje de todos modos, o puedes cancelarlo por ahora e intentarlo de nuevo más tarde después de volver a verificar a %1$@.";
@@ -864,6 +891,9 @@
 "screen_room_member_list_ban_member_confirmation_title" = "¿Estás seguro de que quieres vetar a este miembro?";
 "screen_room_member_list_banned_empty" = "No hay usuarios vetados en esta sala.";
 "screen_room_member_list_banning_user" = "Vetando a %1$@";
+"screen_room_member_list_kick_member_confirmation_action" = "Remove";
+"screen_room_member_list_kick_member_confirmation_description" = "They will be able to join this room again if invited.";
+"screen_room_member_list_kick_member_confirmation_title" = "Are you sure you want to remove this member?";
 "screen_room_member_list_manage_member_ban" = "Sacar y vetar a un miembro";
 "screen_room_member_list_manage_member_remove" = "Sacar de la sala";
 "screen_room_member_list_manage_member_remove_confirmation_kick" = "Solo eliminar miembro";

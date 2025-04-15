@@ -92,6 +92,8 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func redact(_ eventID: String) async -> Result<Void, RoomProxyError>
     
     func reportContent(_ eventID: String, reason: String?) async -> Result<Void, RoomProxyError>
+    
+    func reportRoom(reason: String?) async -> Result<Void, RoomProxyError>
 
     func leaveRoom() async -> Result<Void, RoomProxyError>
     
@@ -159,8 +161,8 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     // MARK: - Moderation
     
-    func kickUser(_ userID: String) async -> Result<Void, RoomProxyError>
-    func banUser(_ userID: String) async -> Result<Void, RoomProxyError>
+    func kickUser(_ userID: String, reason: String?) async -> Result<Void, RoomProxyError>
+    func banUser(_ userID: String, reason: String?) async -> Result<Void, RoomProxyError>
     func unbanUser(_ userID: String) async -> Result<Void, RoomProxyError>
     
     // MARK: - Element Call

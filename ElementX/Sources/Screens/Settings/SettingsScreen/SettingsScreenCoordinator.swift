@@ -11,6 +11,7 @@ import SwiftUI
 struct SettingsScreenCoordinatorParameters {
     let userSession: UserSessionProtocol
     let appSettings: AppSettings
+    let isBugReportServiceEnabled: Bool
 }
 
 enum SettingsScreenCoordinatorAction {
@@ -43,10 +44,10 @@ final class SettingsScreenCoordinator: CoordinatorProtocol {
     // MARK: - Setup
     
     init(parameters: SettingsScreenCoordinatorParameters) {
-        // Tchap: add `appSettings` parameter for FAQ URL.
-//        viewModel = SettingsScreenViewModel(userSession: parameters.userSession)
-        viewModel = SettingsScreenViewModel(userSession: parameters.userSession, appSettings: parameters.appSettings)
-
+        viewModel = SettingsScreenViewModel(userSession: parameters.userSession,
+                                            appSettings: parameters.appSettings,
+                                            isBugReportServiceEnabled: parameters.isBugReportServiceEnabled)
+        
         viewModel.actions
             .sink { [weak self] action in
                 guard let self else { return }

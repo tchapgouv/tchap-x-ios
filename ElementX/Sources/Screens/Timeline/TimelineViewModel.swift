@@ -42,6 +42,8 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         actionsSubject.eraseToAnyPublisher()
     }
     
+    private var currentUserProxy: RoomMemberProxyProtocol?
+    
     private var paginateBackwardsTask: Task<Void, Never>?
     private var paginateForwardsTask: Task<Void, Never>?
 
@@ -86,16 +88,25 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                                                                 timelineControllerFactory: timelineControllerFactory,
                                                                 clientProxy: clientProxy)
         
+        let hideTimelineMedia = switch appSettings.timelineMediaVisibility {
+        case .always:
+            false
+        case .privateOnly:
+            roomProxy.infoPublisher.value.isPublic
+        case .never:
+            true
+        }
         super.init(initialViewState: TimelineViewState(timelineKind: timelineController.timelineKind,
                                                        roomID: roomProxy.id,
                                                        isDirectOneToOneRoom: roomProxy.isDirectOneToOneRoom,
                                                        timelineState: TimelineState(focussedEvent: focussedEventID.map { .init(eventID: $0, appearance: .immediate) }),
                                                        ownUserID: roomProxy.ownUserID,
                                                        isViewSourceEnabled: appSettings.viewSourceEnabled,
-                                                       hideTimelineMedia: appSettings.hideTimelineMedia,
+                                                       hideTimelineMedia: hideTimelineMedia,
                                                        pinnedEventIDs: roomProxy.infoPublisher.value.pinnedEventIDs,
-                                                       bindings: .init(reactionsCollapsed: [:]),
-                                                       emojiProvider: emojiProvider),
+                                                       emojiProvider: emojiProvider,
+                                                       mapTilerConfiguration: appSettings.mapTilerConfiguration,
+                                                       bindings: .init(reactionsCollapsed: [:])),
                    mediaProvider: mediaProvider)
         
         if focussedEventID != nil {
@@ -119,6 +130,14 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         
         state.pillContextUpdater = { [weak self] pillContext in
             self?.pillContextUpdater(pillContext)
+        }
+        
+        state.roomNameForIDResolver = { [weak self] roomID in
+            self?.clientProxy.roomSummaryForIdentifier(roomID)?.name
+        }
+        
+        state.roomNameForAliasResolver = { [weak self] alias in
+            self?.clientProxy.roomSummaryForAlias(alias)?.name
         }
         
         state.timelineState.paginationState = timelineController.paginationState
@@ -164,7 +183,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         case .handleTimelineItemMenuAction(let itemID, let action):
             timelineInteractionHandler.handleTimelineItemMenuAction(action, itemID: itemID)
         case .tappedOnSenderDetails(userID: let userID):
-            actionsSubject.send(.tappedOnSenderDetails(userID: userID))
+            handleTappedOnSenderDetails(userID: userID)
         case .displayEmojiPicker(let itemID):
             timelineInteractionHandler.displayEmojiPicker(for: itemID)
         case .displayReactionSummary(let itemID, let key):
@@ -248,6 +267,41 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     }
     
     // MARK: - Private
+    
+    private func handleTappedOnSenderDetails(userID: String) {
+        // We also need to make sure the user is in the joined state, otherwise we just show the details.
+        guard let memberProxy = roomProxy.membersPublisher.value.first(where: { $0.userID == userID && $0.membership == .join }),
+              let currentUserProxy,
+              currentUserProxy.powerLevel > memberProxy.powerLevel else {
+            actionsSubject.send(.displaySenderDetails(userID: userID))
+            return
+        }
+        
+        if state.canCurrentUserBan || state.canCurrentUserKick {
+            let member = RoomMemberDetails(withProxy: memberProxy)
+            let manageMemeberViewModel = ManageRoomMemberSheetViewModel(member: member,
+                                                                        canKick: state.canCurrentUserKick,
+                                                                        canBan: state.canCurrentUserBan,
+                                                                        roomProxy: roomProxy,
+                                                                        userIndicatorController: userIndicatorController,
+                                                                        analyticsService: analyticsService,
+                                                                        mediaProvider: mediaProvider)
+            manageMemeberViewModel.actions.sink { [weak self] action in
+                guard let self else { return }
+                switch action {
+                case .dismiss(let shouldShowDetails):
+                    state.bindings.manageMemberViewModel = nil
+                    if shouldShowDetails {
+                        actionsSubject.send(.displaySenderDetails(userID: userID))
+                    }
+                }
+            }
+            .store(in: &cancellables)
+            state.bindings.manageMemberViewModel = manageMemeberViewModel
+        } else {
+            actionsSubject.send(.displaySenderDetails(userID: userID))
+        }
+    }
     
     private func focusLive() {
         timelineController.focusLive()
@@ -339,6 +393,9 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     private func updateMembers(_ members: [RoomMemberProxyProtocol]) {
         state.members = members.reduce(into: [String: RoomMemberState]()) { dictionary, member in
             dictionary[member.userID] = RoomMemberState(displayName: member.displayName, avatarURL: member.avatarURL)
+            if member.userID == roomProxy.ownUserID {
+                currentUserProxy = member
+            }
         }
     }
     
@@ -359,6 +416,18 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             state.canCurrentUserPin = value
         } else {
             state.canCurrentUserPin = false
+        }
+        
+        if case let .success(value) = await roomProxy.canUserKick(userID: roomProxy.ownUserID) {
+            state.canCurrentUserKick = value
+        } else {
+            state.canCurrentUserKick = false
+        }
+        
+        if case let .success(value) = await roomProxy.canUserBan(userID: roomProxy.ownUserID) {
+            state.canCurrentUserBan = value
+        } else {
+            state.canCurrentUserBan = false
         }
     }
     
@@ -458,7 +527,23 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             .weakAssign(to: \.state.isViewSourceEnabled, on: self)
             .store(in: &cancellables)
         
-        appSettings.$hideTimelineMedia
+        appSettings.$timelineMediaVisibility
+            .removeDuplicates()
+            .flatMap { [weak self] timelineMediaVisibility -> AnyPublisher<Bool, Never> in
+                switch timelineMediaVisibility {
+                case .always:
+                    return Just(false).eraseToAnyPublisher()
+                case .never:
+                    return Just(true).eraseToAnyPublisher()
+                case .privateOnly:
+                    guard let self else { return Just(false).eraseToAnyPublisher() }
+                    return roomProxy.infoPublisher
+                        .map(\.isPublic)
+                        .removeDuplicates()
+                        .receive(on: DispatchQueue.main)
+                        .eraseToAnyPublisher()
+                }
+            }
             .weakAssign(to: \.state.hideTimelineMedia, on: self)
             .store(in: &cancellables)
     }
@@ -889,7 +974,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         userIndicatorController.retractIndicatorWithId(Constants.focusTimelineToastIndicatorID)
     }
     
-    private func displayAlert(_ type: RoomScreenAlertInfoType) {
+    private func displayAlert(_ type: TimelineAlertInfoType) {
         switch type {
         case .audioRecodingPermissionError:
             state.bindings.alertInfo = .init(id: type,
@@ -935,19 +1020,22 @@ extension TimelineViewModel {
     static let mock = mock(timelineKind: .live)
     
     static func mock(timelineKind: TimelineKind = .live, timelineController: MockTimelineController? = nil) -> TimelineViewModel {
-        TimelineViewModel(roomProxy: JoinedRoomProxyMock(.init(name: "Preview room")),
-                          focussedEventID: nil,
-                          timelineController: timelineController ?? MockTimelineController(timelineKind: timelineKind),
-                          mediaProvider: MediaProviderMock(configuration: .init()),
-                          mediaPlayerProvider: MediaPlayerProviderMock(),
-                          voiceMessageMediaManager: VoiceMessageMediaManagerMock(),
-                          userIndicatorController: ServiceLocator.shared.userIndicatorController,
-                          appMediator: AppMediatorMock.default,
-                          appSettings: ServiceLocator.shared.settings,
-                          analyticsService: ServiceLocator.shared.analytics,
-                          emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
-                          timelineControllerFactory: TimelineControllerFactoryMock(.init()),
-                          clientProxy: ClientProxyMock(.init()))
+        let clientProxyMock = ClientProxyMock(.init())
+        clientProxyMock.roomSummaryForAliasReturnValue = .mock(id: "!room:matrix.org", name: "Room")
+        clientProxyMock.roomSummaryForIdentifierReturnValue = .mock(id: "!room:matrix.org", name: "Room", canonicalAlias: "#room:matrix.org")
+        return TimelineViewModel(roomProxy: JoinedRoomProxyMock(.init(name: "Preview room")),
+                                 focussedEventID: nil,
+                                 timelineController: timelineController ?? MockTimelineController(timelineKind: timelineKind),
+                                 mediaProvider: MediaProviderMock(configuration: .init()),
+                                 mediaPlayerProvider: MediaPlayerProviderMock(),
+                                 voiceMessageMediaManager: VoiceMessageMediaManagerMock(),
+                                 userIndicatorController: ServiceLocator.shared.userIndicatorController,
+                                 appMediator: AppMediatorMock.default,
+                                 appSettings: ServiceLocator.shared.settings,
+                                 analyticsService: ServiceLocator.shared.analytics,
+                                 emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                 timelineControllerFactory: TimelineControllerFactoryMock(.init()),
+                                 clientProxy: clientProxyMock)
     }
 }
 
