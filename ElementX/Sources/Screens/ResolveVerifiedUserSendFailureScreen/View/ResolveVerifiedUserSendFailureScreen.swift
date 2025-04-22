@@ -59,9 +59,7 @@ struct ResolveVerifiedUserSendFailureScreen: View {
             Button { context.send(viewAction: .cancel) } label: {
                 Text(L10n.actionCancelForNow)
             }
-            // Tchap: tertiary not yet available in Compound
-//            .buttonStyle(.compound(.tertiary))
-            .buttonStyle(.compound(.plain))
+            .buttonStyle(.compound(.tertiary))
         }
     }
 }

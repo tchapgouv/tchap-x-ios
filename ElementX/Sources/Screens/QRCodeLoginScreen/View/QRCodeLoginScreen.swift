@@ -383,9 +383,7 @@ struct QRCodeLoginScreen: View {
                 Button(L10n.actionCancel) {
                     context.send(viewAction: .cancel)
                 }
-                // Tchap: tertiary not yet available in Compound
-//                .buttonStyle(.compound(.tertiary))
-                .buttonStyle(.compound(.plain))
+                .buttonStyle(.compound(.tertiary))
             }
         }
     }

@@ -107,9 +107,7 @@ struct AuthenticationStartScreen: View {
                 Button { context.send(viewAction: .register) } label: {
                     Text(L10n.screenCreateAccountTitle)
                 }
-                // Tchap: tertiary not yet available in Compound
-//                    .buttonStyle(.compound(.tertiary))
-                .buttonStyle(.compound(.plain))
+                .buttonStyle(.compound(.tertiary))
             }
         }
         .padding(.horizontal, verticalSizeClass == .compact ? 128 : 24)
