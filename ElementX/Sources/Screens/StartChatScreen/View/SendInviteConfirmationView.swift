@@ -82,9 +82,7 @@ struct SendInviteConfirmationView: View {
             } label: {
                 Text(L10n.actionCancel)
             }
-            // Tchap: tertiary not yet available in Compound
-//            .buttonStyle(.compound(.tertiary))
-            .buttonStyle(.compound(.plain))
+            .buttonStyle(.compound(.tertiary))
         }
         .padding(.horizontal, 16)
     }
