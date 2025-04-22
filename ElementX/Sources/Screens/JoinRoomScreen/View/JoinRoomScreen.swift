@@ -279,9 +279,7 @@ struct JoinRoomScreen: View {
             Button(L10n.screenJoinRoomDeclineAndBlockButtonTitle, role: .destructive) {
                 context.send(viewAction: .declineInviteAndBlock(userID: inviter.id))
             }
-            // Tchap: tertiary not yet available in Compound
-//                    .buttonStyle(.compound(.tertiary))
-            .buttonStyle(.compound(.plain))
+            .buttonStyle(.compound(.tertiary))
         }
     }
     

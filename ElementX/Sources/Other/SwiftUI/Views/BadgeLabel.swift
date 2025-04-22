@@ -63,7 +63,7 @@ private struct BadgeLabelStyle: LabelStyle {
 //    }
     var titleColor: Color {
         switch tchapUsage {
-        case .none: isHighlighted ? .compound._badgeTextSuccess : .compound._badgeTextSubtle
+        case .none: isHighlighted ? .compound.textBadgeAccent : .compound.textBadgeInfo
         case .userIsExternal: CompoundCoreColorTokens.orange1200
         case .roomIsEncrypted: CompoundCoreColorTokens.green1200
         case .roomIsNotEncrypted: CompoundCoreColorTokens.gray1200
@@ -78,7 +78,7 @@ private struct BadgeLabelStyle: LabelStyle {
 //    }
     var iconColor: Color {
         switch tchapUsage {
-        case .none: isHighlighted ? .compound.iconSuccessPrimary : .compound.iconSecondary
+        case .none: isHighlighted ? .compound.iconSuccessPrimary : .compound.iconInfoPrimary
         case .userIsExternal: CompoundCoreColorTokens.orange1200
         case .roomIsEncrypted: CompoundCoreColorTokens.green1200
         case .roomIsNotEncrypted: CompoundCoreColorTokens.gray1200
@@ -93,7 +93,7 @@ private struct BadgeLabelStyle: LabelStyle {
 //    }
     var backgroundColor: Color {
         switch tchapUsage {
-        case .none: isHighlighted ? .compound._bgBadgeSuccess : .compound.bgSubtlePrimary
+        case .none: isHighlighted ? .compound.bgBadgeAccent : .compound.bgBadgeInfo
         case .userIsExternal: CompoundCoreColorTokens.orange400
         case .roomIsEncrypted: CompoundCoreColorTokens.green400
         case .roomIsNotEncrypted: CompoundCoreColorTokens.gray400

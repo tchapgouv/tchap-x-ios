@@ -39,9 +39,7 @@ struct AppLockSetupPINScreen: View {
                     Button(L10n.screenAppLockForgotPin) {
                         context.send(viewAction: .forgotPIN)
                     }
-                    // Tchap: tertiary not yet available in Compound
-//                    .buttonStyle(.compound(.tertiary, size: .medium))
-                    .buttonStyle(.compound(.plain, size: .medium))
+                    .buttonStyle(.compound(.tertiary, size: .medium))
                 }
             }
             .padding(.horizontal, 16)

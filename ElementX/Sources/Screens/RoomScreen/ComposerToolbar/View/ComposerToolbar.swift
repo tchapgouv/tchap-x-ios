@@ -293,9 +293,7 @@ struct ComposerToolbar: View {
                 .scaledFrame(size: 30, relativeTo: .compound.headingLG)
                 .scaledPadding(7, relativeTo: .compound.headingLG)
         }
-        // Tchap: textLink not yet available in Compound
-//        .buttonStyle(.compound(.textLink))
-        .buttonStyle(.compound(.plain))
+        .buttonStyle(.compound(.textLink))
         .accessibilityLabel(L10n.a11yDelete)
     }
     

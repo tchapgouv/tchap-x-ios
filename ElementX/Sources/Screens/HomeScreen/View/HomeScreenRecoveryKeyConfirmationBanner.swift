@@ -96,9 +96,7 @@ struct HomeScreenRecoveryKeyConfirmationBanner: View {
                     Text(L10n.confirmRecoveryKeyBannerSecondaryButtonTitle)
                         .frame(maxWidth: .infinity)
                 }
-                // Tchap: tertiary not yet available in Compound
-//                .buttonStyle(.compound(.tertiary, size: .medium))
-                .buttonStyle(.compound(.plain, size: .medium))
+                .buttonStyle(.compound(.tertiary, size: .medium))
             }
         }
     }

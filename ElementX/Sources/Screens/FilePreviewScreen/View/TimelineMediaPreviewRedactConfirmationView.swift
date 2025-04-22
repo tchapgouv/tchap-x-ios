@@ -106,9 +106,7 @@ struct TimelineMediaPreviewRedactConfirmationView: View {
             Button(L10n.actionCancel) {
                 dismiss()
             }
-            // Tchap: tertiary not yet available in Compound
-//                    .buttonStyle(.compound(.tertiary))
-            .buttonStyle(.compound(.plain))
+            .buttonStyle(.compound(.tertiary))
         }
         .padding(.bottom, 16)
         .padding(.horizontal, 16)

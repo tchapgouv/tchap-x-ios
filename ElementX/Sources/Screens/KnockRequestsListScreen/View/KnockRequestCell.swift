@@ -113,9 +113,7 @@ struct KnockRequestCell: View {
                     Text(L10n.screenKnockRequestsListDeclineAndBanActionTitle)
                         .frame(maxWidth: .infinity)
                 }
-                // Tchap: tertiary not yet available in Compound
-//                .buttonStyle(.compound(.tertiary, size: .small))
-                .buttonStyle(.compound(.plain))
+                .buttonStyle(.compound(.tertiary, size: .small))
                 .padding(.top, 4)
             }
         }
