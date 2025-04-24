@@ -35,5 +35,3 @@ Documentation :
 
 
 Les tests Preview sont accessibles de la même manière.
-
-Testsignature GPG.
