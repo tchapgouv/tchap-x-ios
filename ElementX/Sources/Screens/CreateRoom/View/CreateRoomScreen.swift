@@ -220,7 +220,7 @@ struct CreateRoomScreen: View {
         }
     }
     
-    // Tchap: colored line warning about publoc rooms not open to externals.
+    // Tchap: colored line warning about public rooms not open to externals.
     private var warningPublicRoomIsNotOpenToExterns: AttributedString {
         let description = AttributedString(TchapL10n.screenCreateRoomPublicOptionDescription1)
         var warning = AttributedString(TchapL10n.screenCreateRoomPublicOptionDescription2)
@@ -248,11 +248,12 @@ struct CreateRoomScreen: View {
                                     role: .coloredIcon(CompoundCoreColorTokens.green800),
                                     iconAlignment: .top),
                     kind: .selection(isSelected: context.isRoomPrivate && context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = true })
-            ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
-                                    description: TchapL10n.screenCreateRoomPrivateOptionDescription,
-                                    icon: \.lockOff,
-                                    iconAlignment: .top),
-                    kind: .selection(isSelected: context.isRoomPrivate && !context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = false })
+            // Tchap: hide uncyphered room option for 1st external beta
+//            ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
+//                                    description: TchapL10n.screenCreateRoomPrivateOptionDescription,
+//                                    icon: \.lockOff,
+//                                    iconAlignment: .top),
+//                    kind: .selection(isSelected: context.isRoomPrivate && !context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = false })
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPublicOptionTitle,
                                     attributedDescriptionWhenDisabled: warningPublicRoomIsNotOpenToExterns,
                                     icon: \.public,
