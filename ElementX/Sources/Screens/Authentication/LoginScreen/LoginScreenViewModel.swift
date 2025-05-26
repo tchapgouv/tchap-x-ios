@@ -59,7 +59,7 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
     /// Parses the specified username and looks up the homeserver when a Matrix ID is entered.
     private func parseUsername() {
         let username = state.bindings.username
-        
+
         guard MatrixEntityRegex.isMatrixUserIdentifier(username) else { return }
         
         let homeserverDomain = String(username.split(separator: ":")[1])
@@ -80,14 +80,36 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
         }
     }
     
+    // Tchap: convert matrixID to email if necessary
+    func tchapConvertEmailToMatrixId(identifier: String) -> String {
+        // If the user email doesn't contain an '@' character, it can be the start of a matrixID (e.g. 'firstname.lastname-myDomain').
+        // Try to replace last hyphen ('-') by an '@' to make it looks like a email address.
+     
+        let isEmail = identifier.isEmailAddress
+        
+        guard let indexOfLastArobase = identifier.lastIndex(of: "@") else {
+            return identifier
+        }
+        
+        let prefix = identifier.index(identifier.startIndex, offsetBy: identifier.distance(from: identifier.startIndex, to: indexOfLastArobase))
+        let suffix = identifier.index(prefix, offsetBy: 1)
+        
+        var email = identifier
+        email.replaceSubrange(prefix..<suffix, with: "-")
+        
+        return email
+    }
+    
     /// Requests the authentication coordinator to log in using the specified credentials.
     private func login() {
         MXLog.info("Starting login with password.")
         startLoading(isInteractionBlocking: true)
-        
+
         Task {
             analytics.signpost.beginLogin()
-            switch await authenticationService.login(username: state.bindings.username,
+            // Tchap: convert email to matrixID if necessary.
+//            switch await authenticationService.login(username: state.bindings.username,
+            switch await authenticationService.login(username: tchapConvertEmailToMatrixId(identifier: state.bindings.username),
                                                      password: state.bindings.password,
                                                      initialDeviceName: UIDevice.current.initialDeviceName,
                                                      deviceID: nil) {
