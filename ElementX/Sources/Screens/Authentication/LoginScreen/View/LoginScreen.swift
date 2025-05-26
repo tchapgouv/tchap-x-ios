@@ -66,7 +66,9 @@ struct LoginScreen: View {
                 .padding(.bottom, 8)
             
             TextField(text: $context.username) {
-                Text(L10n.commonUsername).foregroundColor(.compound.textSecondary)
+                // Tchap: Hint as "Email" rather than "User name".
+//                Text(L10n.commonUsername).foregroundColor(.compound.textSecondary)
+                Text(TchapL10n.commonEmail).foregroundColor(.compound.textSecondary)
             }
             .focused($isUsernameFocused)
             .textFieldStyle(.element(accessibilityIdentifier: A11yIdentifiers.loginScreen.emailUsername))
