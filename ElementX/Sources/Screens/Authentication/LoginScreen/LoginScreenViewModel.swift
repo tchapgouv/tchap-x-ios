@@ -85,9 +85,8 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
         // If the user email doesn't contain an '@' character, it can be the start of a matrixID (e.g. 'firstname.lastname-myDomain').
         // Try to replace last hyphen ('-') by an '@' to make it looks like a email address.
      
-        let isEmail = identifier.isEmailAddress
-        
-        guard let indexOfLastArobase = identifier.lastIndex(of: "@") else {
+        guard identifier.isEmailAddress,
+              let indexOfLastArobase = identifier.lastIndex(of: "@") else {
             return identifier
         }
         
