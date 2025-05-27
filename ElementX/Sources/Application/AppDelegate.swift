@@ -6,6 +6,7 @@
 //
 
 import Combine
+import CompoundDesignTokens // Tchap: embed Marianne fonts
 import SwiftUI
 
 enum AppDelegateCallback {
@@ -26,6 +27,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         NSTextAttachment.registerViewProviderClass(PillAttachmentViewProvider.self, forFileType: InfoPlistReader.main.pillsUTType)
+        
+        // Tchap: embed Marianne fonts
+        CompoundDesignTokensResources.registerFonts()
+        
+        // Tchap: set appearance from Compound Design Tokens
+        CompoundDesignTokensResources.setAppearance()
+        
         return true
     }
 

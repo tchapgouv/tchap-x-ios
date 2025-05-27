@@ -68,7 +68,7 @@ struct HomeScreen: View {
             }
             .sentryTrace("\(Self.self)")
     }
-    
+
     // MARK: - Private
     
     private var bloomGradient: some View {
