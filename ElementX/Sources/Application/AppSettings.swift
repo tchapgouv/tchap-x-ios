@@ -276,19 +276,18 @@ final class AppSettings {
 
     let bugReportServiceBaseURL: URL? = Secrets.rageshakeServerURL.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
     let bugReportSentryURL: URL? = Secrets.sentryDSN.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
-    /// The name allocated by the bug report server
     // Tchap: customize bug report application id to TchapX.
-//    let bugReportApplicationId = "element-x-ios"
+//    private(set) var bugReportApplicationID = "element-x-ios"
+    /// The name allocated by the bug report server
     #if IS_TCHAP_DEVELOPMENT
-    let bugReportApplicationId = "tchax-development-ios"
+    private(set) var bugReportApplicationID = "tchax-development-ios"
     #elseif IS_TCHAP_STAGING
-    let bugReportApplicationId = "tchax-staging-ios"
+    private(set) var bugReportApplicationID = "tchax-staging-ios"
     #elseif IS_TCHAP_PRODUCTION
-    let bugReportApplicationId = "tchax-production-ios"
+    private(set) var bugReportApplicationID = "tchax-production-ios"
     #else
-    let bugReportApplicationId = "element-x-ios"
-    #endif
     private(set) var bugReportApplicationID = "element-x-ios"
+    #endif
     /// The maximum size of the upload request. Default value is just below CloudFlare's max request size.
     let bugReportMaxUploadSize = 10 * 1024 * 1024
 

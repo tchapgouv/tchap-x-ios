@@ -140,7 +140,9 @@ class BugReportService: NSObject, BugReportServiceProtocol {
             decoder.keyDecodingStrategy = .convertFromSnakeCase
             let uploadResponse = try decoder.decode(SubmitBugReportResponse.self, from: data)
             
-            if !uploadResponse.reportUrl.isEmpty {
+            // Tchap: allow SubmitBugReportResponse to not contains `reportUrl` value.
+//            if !uploadResponse.reportUrl.isEmpty {
+            if !(uploadResponse.reportUrl?.isEmpty ?? false) {
                 lastCrashEventID = nil
             }
             
