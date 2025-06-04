@@ -296,11 +296,10 @@ final class AppSettings {
     /// The configuration to use for analytics. Set to `nil` to disable analytics.
     let analyticsConfiguration: AnalyticsConfiguration? = AppSettings.makeAnalyticsConfiguration()
     // Tchap: customize analytics policy url.
-    /// The URL to open with more information about analytics terms. When this is `nil` the "Learn more" link will be hidden.
 //    private(set) var analyticsTermsURL: URL? = "https://element.io/cookie-policy"
+    /// The URL to open with more information about analytics terms. When this is `nil` the "Learn more" link will be hidden.
     private(set) var analyticsTermsURL: URL? = "https://tchap.numerique.gouv.fr/politique-de-confidentialite"
     /// Whether or not there the app is able ask for user consent to enable analytics or sentry reporting.
-    
     var canPromptForAnalytics: Bool { analyticsConfiguration != nil || bugReportSentryURL != nil }
     private static func makeAnalyticsConfiguration() -> AnalyticsConfiguration? {
         guard let host = Secrets.postHogHost, let apiKey = Secrets.postHogAPIKey else { return nil }
@@ -365,6 +364,7 @@ final class AppSettings {
         case ign = "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"
     }
 
+    // swiftlint:disable:next force_unwrapping
     private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!,
                                                                    apiKey: Secrets.mapLibreAPIKey,
                                                                    lightStyleID: "",
