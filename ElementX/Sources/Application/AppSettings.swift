@@ -364,12 +364,10 @@ final class AppSettings {
         case ign = "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"
     }
 
-    // swiftlint:disable:next force_unwrapping
-    private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!,
+    private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
                                                                    apiKey: Secrets.mapLibreAPIKey,
                                                                    lightStyleID: "",
                                                                    darkStyleID: "")
-
     #else
     private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
                                                                    apiKey: Secrets.mapLibreAPIKey,
