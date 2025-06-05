@@ -6,7 +6,7 @@ if File.exist?(enterprise)
 end
 
 before_all do
-  xcversion(version: "16.2")
+  xcversion(version: "16.3")
 
   ENV["FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT"] = "180"
   ENV["FASTLANE_XCODE_LIST_TIMEOUT"] = "180"
