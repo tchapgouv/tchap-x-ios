@@ -232,7 +232,7 @@ lane :release_to_github do
   api_token = ENV["GITHUB_TOKEN"]
   UI.user_error!("Invalid GitHub API token.") unless !api_token.to_s.empty?
 
-  release_version = get_version_number(target: "TchapX")
+  release_version = get_version_number(target: "TchapX-Production")
 
   github_release = set_github_release(
     repository_name: "tchapgouv/tchap-x-ios",
