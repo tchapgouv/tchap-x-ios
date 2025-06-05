@@ -276,9 +276,9 @@ final class AppSettings {
 
     let bugReportServiceBaseURL: URL? = Secrets.rageshakeServerURL.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
     let bugReportSentryURL: URL? = Secrets.sentryDSN.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
-    /// The name allocated by the bug report server
     // Tchap: customize bug report application id to TchapX.
 //    let bugReportApplicationId = "element-x-ios"
+    /// The name allocated by the bug report server
     #if IS_TCHAP_DEVELOPMENT
     let bugReportApplicationId = "tchax-development-ios"
     #elseif IS_TCHAP_STAGING
@@ -366,11 +366,10 @@ final class AppSettings {
         case ign = "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"
     }
 
-    private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!,
+    private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
                                                                    apiKey: Secrets.mapLibreAPIKey,
                                                                    lightStyleID: "",
                                                                    darkStyleID: "")
-
     #else
     private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
                                                                    apiKey: Secrets.mapLibreAPIKey,
