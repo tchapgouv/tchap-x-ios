@@ -10,6 +10,8 @@ import Foundation
 // swiftlint:disable explicit_type_interface function_parameter_count identifier_name line_length
 // swiftlint:disable nesting type_body_length type_name vertical_whitespace_opening_braces
 internal enum TchapL10n {
+  /// Email
+  internal static var commonEmail: String { return TchapL10n.tr("TchapLocalizable", "common_email") }
   /// Frequently Asked Questions
   internal static var commonFaq: String { return TchapL10n.tr("TchapLocalizable", "common_faq") }
   /// Legals

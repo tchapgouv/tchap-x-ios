@@ -6,7 +6,7 @@ if File.exist?(enterprise)
 end
 
 before_all do
-  xcversion(version: "16.2")
+  xcversion(version: "16.3")
 
   ENV["FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT"] = "180"
   ENV["FASTLANE_XCODE_LIST_TIMEOUT"] = "180"
@@ -232,7 +232,7 @@ lane :release_to_github do
   api_token = ENV["GITHUB_TOKEN"]
   UI.user_error!("Invalid GitHub API token.") unless !api_token.to_s.empty?
 
-  release_version = get_version_number(target: "TchapX")
+  release_version = get_version_number(target: "TchapX-Production")
 
   github_release = set_github_release(
     repository_name: "tchapgouv/tchap-x-ios",
