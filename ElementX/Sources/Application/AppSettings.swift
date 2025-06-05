@@ -297,8 +297,8 @@ final class AppSettings {
     /// The configuration to use for analytics. Set to `nil` to disable analytics.
     let analyticsConfiguration: AnalyticsConfiguration? = AppSettings.makeAnalyticsConfiguration()
     // Tchap: customize analytics policy url.
-    /// The URL to open with more information about analytics terms. When this is `nil` the "Learn more" link will be hidden.
 //    private(set) var analyticsTermsURL: URL? = "https://element.io/cookie-policy"
+    /// The URL to open with more information about analytics terms. When this is `nil` the "Learn more" link will be hidden.
     private(set) var analyticsTermsURL: URL? = "https://tchap.numerique.gouv.fr/politique-de-confidentialite"
     /// Whether or not there the app is able ask for user consent to enable analytics or sentry reporting.
     
