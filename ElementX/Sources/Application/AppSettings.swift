@@ -277,18 +277,17 @@ final class AppSettings {
     let bugReportServiceBaseURL: URL? = Secrets.rageshakeServerURL.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
     let bugReportSentryURL: URL? = Secrets.sentryDSN.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
     // Tchap: customize bug report application id to TchapX.
-//    let bugReportApplicationId = "element-x-ios"
+//    private(set) var bugReportApplicationID = "element-x-ios"
     /// The name allocated by the bug report server
     #if IS_TCHAP_DEVELOPMENT
-    let bugReportApplicationId = "tchax-development-ios"
+    private(set) var bugReportApplicationID = "tchax-development-ios"
     #elseif IS_TCHAP_STAGING
-    let bugReportApplicationId = "tchax-staging-ios"
+    private(set) var bugReportApplicationID = "tchax-staging-ios"
     #elseif IS_TCHAP_PRODUCTION
-    let bugReportApplicationId = "tchax-production-ios"
+    private(set) var bugReportApplicationID = "tchax-production-ios"
     #else
-    let bugReportApplicationId = "element-x-ios"
-    #endif
     private(set) var bugReportApplicationID = "element-x-ios"
+    #endif
     /// The maximum size of the upload request. Default value is just below CloudFlare's max request size.
     let bugReportMaxUploadSize = 10 * 1024 * 1024
 
@@ -301,7 +300,6 @@ final class AppSettings {
     /// The URL to open with more information about analytics terms. When this is `nil` the "Learn more" link will be hidden.
     private(set) var analyticsTermsURL: URL? = "https://tchap.numerique.gouv.fr/politique-de-confidentialite"
     /// Whether or not there the app is able ask for user consent to enable analytics or sentry reporting.
-    
     var canPromptForAnalytics: Bool { analyticsConfiguration != nil || bugReportSentryURL != nil }
     private static func makeAnalyticsConfiguration() -> AnalyticsConfiguration? {
         guard let host = Secrets.postHogHost, let apiKey = Secrets.postHogAPIKey else { return nil }
