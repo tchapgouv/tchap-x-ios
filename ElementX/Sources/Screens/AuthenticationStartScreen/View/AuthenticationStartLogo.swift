@@ -23,14 +23,14 @@ struct AuthenticationStartLogo: View {
     
     var body: some View {
         Image(asset: Asset.Images.appLogo)
-        // Tchap: remove background around App logo.
+            // Tchap: remove background around App logo.
 //            .background {
 //                Circle()
 //                    .inset(by: 1)
 //                    .shadow(color: .black.opacity(!isLight && isOnGradient ? 0.3 : 0.4),
 //                            radius: 12.57143,
 //                            y: 6.28571)
-//                
+//
 //                Circle()
 //                    .inset(by: 1)
 //                    .shadow(color: .black.opacity(0.5),
@@ -67,7 +67,7 @@ struct AuthenticationStartLogo: View {
 //                            .shadow(color: outerShapeShadowColor.opacity(isLight ? 0.23 : 0.08),
 //                                    radius: 16,
 //                                    y: 8)
-//                        
+//
 //                        outerShape
 //                            .inset(by: 1)
 //                            .padding(extra)
