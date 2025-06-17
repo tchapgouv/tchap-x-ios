@@ -1,24 +1,21 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
 import NotificationCenter
 import XCTest
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 
 @MainActor
 final class NotificationManagerTests: XCTestCase {
@@ -39,6 +36,7 @@ final class NotificationManagerTests: XCTestCase {
         notificationCenter = UserNotificationCenterMock()
         notificationCenter.requestAuthorizationOptionsReturnValue = true
         notificationCenter.authorizationStatusReturnValue = .authorized
+        notificationCenter.notificationSettingsClosure = { await UNUserNotificationCenter.current().notificationSettings() }
         
         notificationManager = NotificationManager(notificationCenter: notificationCenter, appSettings: appSettings)
         notificationManager.start()
@@ -81,7 +79,7 @@ final class NotificationManagerTests: XCTestCase {
         }
         
         XCTAssertEqual(configuration.identifiers.pushkey, pushkeyData.base64EncodedString())
-        XCTAssertEqual(configuration.identifiers.appId, appSettings.pusherAppId)
+        XCTAssertEqual(configuration.identifiers.appId, appSettings.pusherAppID)
         XCTAssertEqual(configuration.appDisplayName, "\(InfoPlistReader.main.bundleDisplayName) (iOS)")
         XCTAssertEqual(configuration.deviceDisplayName, UIDevice.current.name)
         XCTAssertNotNil(configuration.profileTag)
@@ -90,7 +88,7 @@ final class NotificationManagerTests: XCTestCase {
             XCTFail("Http kind expected")
             return
         }
-        XCTAssertEqual(data.url, appSettings.pushGatewayBaseURL.absoluteString)
+        XCTAssertEqual(data.url, appSettings.pushGatewayNotifyEndpoint.absoluteString)
         XCTAssertEqual(data.format, .eventIdOnly)
         let defaultPayload = APNSPayload(aps: APSInfo(mutableContent: 1,
                                                       alert: APSAlert(locKey: "Notification",
@@ -117,15 +115,16 @@ final class NotificationManagerTests: XCTestCase {
         XCTAssertEqual(request.content.title, "Title")
         XCTAssertEqual(request.content.subtitle, "Subtitle")
     }
-
+    
     func test_whenStart_notificationCategoriesAreSet() throws {
-        //        let replyAction = UNTextInputNotificationAction(identifier: NotificationConstants.Action.inlineReply,
-        //                                                        title: L10n.actionQuickReply,
-        //                                                        options: [])
+        let replyAction = UNTextInputNotificationAction(identifier: NotificationConstants.Action.inlineReply,
+                                                        title: L10n.actionQuickReply,
+                                                        options: [])
         let messageCategory = UNNotificationCategory(identifier: NotificationConstants.Category.message,
-                                                     actions: [],
+                                                     actions: [replyAction],
                                                      intentIdentifiers: [],
                                                      options: [])
+        
         let inviteCategory = UNNotificationCategory(identifier: NotificationConstants.Category.invite,
                                                     actions: [],
                                                     intentIdentifiers: [],
@@ -250,7 +249,14 @@ extension NotificationManagerTests: NotificationManagerDelegate {
         notificationTappedDelegateCalled = true
     }
     
+    // Tchap: specify target for unit tests
+    #if IS_TCHAP_UNIT_TESTS
+    func handleInlineReply(_ service: TchapX_Production.NotificationManagerProtocol, content: UNNotificationContent, replyText: String) async {
+        handleInlineReplyDelegateCalled = true
+    }
+    #else
     func handleInlineReply(_ service: ElementX.NotificationManagerProtocol, content: UNNotificationContent, replyText: String) async {
         handleInlineReplyDelegateCalled = true
     }
+    #endif
 }

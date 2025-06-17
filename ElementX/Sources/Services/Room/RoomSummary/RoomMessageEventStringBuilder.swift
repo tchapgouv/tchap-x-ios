@@ -1,78 +1,100 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
 import MatrixRustSDK
 
 struct RoomMessageEventStringBuilder {
-    let attributedStringBuilder: AttributedStringBuilderProtocol
+    enum Destination {
+        /// Strings show on the room list as the last message
+        /// The sender will be prefixed in bold
+        case roomList
+        /// Events pinned to the banner on the top of the timeline
+        /// The message type will be prefixed in bold
+        case pinnedEvent
+        /// Shown in push notifications
+        /// No prefix
+        case notification
+    }
     
-    func buildAttributedString(for messageType: MessageType, senderDisplayName: String, prefixWithSenderName: Bool) -> AttributedString {
-        let message: String
+    let attributedStringBuilder: AttributedStringBuilderProtocol
+    let destination: Destination
+    
+    func buildAttributedString(for messageType: MessageType, senderDisplayName: String) -> AttributedString {
+        let message: AttributedString
         switch messageType {
-        // Message types that don't need a prefix.
         case .emote(content: let content):
             if let attributedMessage = attributedMessageFrom(formattedBody: content.formatted) {
                 return AttributedString(L10n.commonEmote(senderDisplayName, String(attributedMessage.characters)))
             } else {
                 return AttributedString(L10n.commonEmote(senderDisplayName, content.body))
             }
-        // Message types that should be prefixed with the sender's name.
         case .audio(content: let content):
             let isVoiceMessage = content.voice != nil
-            message = isVoiceMessage ? L10n.commonVoiceMessage : L10n.commonAudio
+            var content = AttributedString(isVoiceMessage ? L10n.commonVoiceMessage : L10n.commonAudio)
+            if destination == .pinnedEvent {
+                content.bold()
+            }
+            message = content
         case .image(let content):
-            message = "\(L10n.commonImage) - \(content.body)"
+            message = buildMessage(for: destination, caption: content.caption, type: L10n.commonImage)
         case .video(let content):
-            message = "\(L10n.commonVideo) - \(content.body)"
+            message = buildMessage(for: destination, caption: content.caption, type: L10n.commonVideo)
         case .file(let content):
-            message = "\(L10n.commonFile) - \(content.body)"
+            message = buildMessage(for: destination, caption: content.caption, type: L10n.commonFile)
         case .location:
-            message = L10n.commonSharedLocation
+            var content = AttributedString(L10n.commonSharedLocation)
+            if destination == .pinnedEvent {
+                content.bold()
+            }
+            message = content
         case .notice(content: let content):
             if let attributedMessage = attributedMessageFrom(formattedBody: content.formatted) {
-                message = String(attributedMessage.characters)
+                message = attributedMessage
             } else {
-                message = content.body
+                message = AttributedString(content.body)
             }
         case .text(content: let content):
             if let attributedMessage = attributedMessageFrom(formattedBody: content.formatted) {
-                message = String(attributedMessage.characters)
+                message = attributedMessage
             } else {
-                message = content.body
+                message = AttributedString(content.body)
             }
         case .other(_, let body):
-            message = body
+            message = AttributedString(body)
         }
 
-        if prefixWithSenderName {
+        if destination == .roomList {
             return prefix(message, with: senderDisplayName)
         } else {
-            return AttributedString(message)
+            return message
         }
     }
     
-    private func prefix(_ eventSummary: String, with senderDisplayName: String) -> AttributedString {
-        let attributedEventSummary = AttributedString(eventSummary.trimmingCharacters(in: .whitespacesAndNewlines))
+    private func buildMessage(for destination: Destination, caption: String?, type: String) -> AttributedString {
+        guard let caption else {
+            return AttributedString(type)
+        }
         
-        var attributedSenderDisplayName = AttributedString(senderDisplayName)
-        attributedSenderDisplayName.bold()
+        if destination == .pinnedEvent {
+            return prefix(AttributedString(caption), with: type)
+        } else {
+            return AttributedString("\(type) - \(caption)")
+        }
+    }
+    
+    private func prefix(_ eventSummary: AttributedString, with textToBold: String) -> AttributedString {
+        let attributedEventSummary = AttributedString(eventSummary.string.trimmingCharacters(in: .whitespacesAndNewlines))
+        
+        var attributedPrefix = AttributedString(textToBold + ":")
+        attributedPrefix.bold()
         
         // Don't include the message body in the markdown otherwise it makes tappable links.
-        return attributedSenderDisplayName + ": " + attributedEventSummary
+        return attributedPrefix + " " + attributedEventSummary
     }
     
     private func attributedMessageFrom(formattedBody: FormattedBody?) -> AttributedString? {

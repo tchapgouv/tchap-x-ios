@@ -1,74 +1,61 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import SwiftUI
 
 struct AvatarHeaderView<Footer: View>: View {
-    private struct AvatarInfo {
-        let id: String
-        let name: String?
-        let avatarURL: URL?
-        
-        init(from room: RoomDetails) {
-            id = room.id
-            name = room.name
-            avatarURL = room.avatarURL
-        }
-        
-        init(from member: RoomMemberDetails) {
-            id = member.id
-            name = member.isBanned ? nil : member.name
-            avatarURL = member.isBanned ? nil : member.avatarURL
-        }
-        
-        init(from user: UserProfileProxy) {
-            id = user.userID
-            name = user.displayName
-            avatarURL = user.avatarURL
-        }
+    private enum AvatarInfo {
+        case room(RoomAvatar)
+        case user(UserProfileProxy)
     }
     
     private enum Badge: Hashable {
         case encrypted(Bool)
         case `public`
+        case verified
     }
     
-    private let mainAvatarInfo: AvatarInfo
-    private let secondaryAvatarInfo: AvatarInfo?
+    private let avatarInfo: AvatarInfo
+    private let title: String
     private let subtitle: String?
     private let badges: [Badge]
     
-    private let avatarSize: AvatarSize
-    private let imageProvider: ImageProviderProtocol?
-    private var onAvatarTap: (() -> Void)?
+    private let avatarSize: Avatars.Size
+    private let mediaProvider: MediaProviderProtocol?
+    private var onAvatarTap: ((URL) -> Void)?
     @ViewBuilder private var footer: () -> Footer
     
+    // Tchap: add `externalCount` property
+    var externalCount: Binding<Int>
+    
     init(room: RoomDetails,
-         avatarSize: AvatarSize,
-         imageProvider: ImageProviderProtocol? = nil,
-         onAvatarTap: (() -> Void)? = nil,
+         externalCount: Binding<Int>, // Tchap: add `externalCount` parameter
+         avatarSize: Avatars.Size,
+         mediaProvider: MediaProviderProtocol? = nil,
+         onAvatarTap: ((URL) -> Void)? = nil,
          @ViewBuilder footer: @escaping () -> Footer) {
-        mainAvatarInfo = .init(from: room)
-        secondaryAvatarInfo = nil
-        subtitle = room.canonicalAlias
+        avatarInfo = .room(room.avatar)
+        title = room.name ?? room.id
+        
+        if let roomAlias = room.canonicalAlias {
+            subtitle = roomAlias
+        } else if room.isDirect, case let .heroes(heroes) = room.avatar, heroes.count == 1 {
+            subtitle = heroes[0].userID
+        } else {
+            subtitle = nil
+        }
         
         self.avatarSize = avatarSize
-        self.imageProvider = imageProvider
+        self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
+        // Tchap: store `externalCount` parameter
+        self.externalCount = externalCount
         
         var badges = [Badge]()
         badges.append(.encrypted(room.isEncrypted))
@@ -80,135 +67,134 @@ struct AvatarHeaderView<Footer: View>: View {
     
     init(accountOwner: RoomMemberDetails,
          dmRecipient: RoomMemberDetails,
-         imageProvider: ImageProviderProtocol? = nil,
-         onAvatarTap: (() -> Void)? = nil,
+         externalCount: Binding<Int>, // Tchap: add `externalCount` parameter
+         mediaProvider: MediaProviderProtocol? = nil,
+         onAvatarTap: ((URL) -> Void)? = nil,
          @ViewBuilder footer: @escaping () -> Footer) {
-        mainAvatarInfo = .init(from: dmRecipient)
-        secondaryAvatarInfo = .init(from: accountOwner)
-        subtitle = dmRecipient.isBanned ? nil : dmRecipient.name == nil ? nil : dmRecipient.id
+        let dmRecipientProfile = UserProfileProxy(member: dmRecipient)
+        avatarInfo = .room(.heroes([dmRecipientProfile, UserProfileProxy(member: accountOwner)]))
+        title = dmRecipientProfile.displayName ?? dmRecipientProfile.userID
+        subtitle = dmRecipientProfile.displayName == nil ? nil : dmRecipientProfile.userID
         
         avatarSize = .user(on: .dmDetails)
-        self.imageProvider = imageProvider
+        self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
+        // Tchap: store `externalCount` parameter
+        self.externalCount = externalCount
+        
         // In EL-X a DM is by definition always encrypted
         badges = [.encrypted(true)]
     }
     
     init(member: RoomMemberDetails,
-         avatarSize: AvatarSize,
-         imageProvider: ImageProviderProtocol? = nil,
-         onAvatarTap: (() -> Void)? = nil,
+         isVerified: Bool = false,
+         avatarSize: Avatars.Size,
+         mediaProvider: MediaProviderProtocol? = nil,
+         onAvatarTap: ((URL) -> Void)? = nil,
          @ViewBuilder footer: @escaping () -> Footer) {
-        mainAvatarInfo = .init(from: member)
-        secondaryAvatarInfo = nil
-        subtitle = member.isBanned ? nil : member.name == nil ? nil : member.id
+        let profile = UserProfileProxy(member: member)
         
-        self.avatarSize = avatarSize
-        self.imageProvider = imageProvider
-        self.onAvatarTap = onAvatarTap
-        self.footer = footer
-        badges = []
+        self.init(user: profile,
+                  isVerified: isVerified,
+                  avatarSize: avatarSize,
+                  mediaProvider: mediaProvider,
+                  onAvatarTap: onAvatarTap,
+                  footer: footer)
     }
     
     init(user: UserProfileProxy,
-         avatarSize: AvatarSize,
-         imageProvider: ImageProviderProtocol? = nil,
-         onAvatarTap: (() -> Void)? = nil,
+         isVerified: Bool,
+         avatarSize: Avatars.Size,
+         mediaProvider: MediaProviderProtocol? = nil,
+         onAvatarTap: ((URL) -> Void)? = nil,
          @ViewBuilder footer: @escaping () -> Footer) {
-        mainAvatarInfo = .init(from: user)
-        secondaryAvatarInfo = nil
+        avatarInfo = .user(user)
+        title = user.displayName ?? user.userID
         subtitle = user.displayName == nil ? nil : user.userID
         
         self.avatarSize = avatarSize
-        self.imageProvider = imageProvider
+        self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
-        badges = []
+        // Tchap: evaluate externalCount to 1 if displayed user is external.
+        externalCount = .constant(MatrixIdFromString(user.userID).isExternalTchapUser ? 1 : 0)
+        
+        badges = isVerified ? [.verified] : []
     }
     
     private var badgesStack: some View {
         HStack(spacing: 8) {
             ForEach(badges, id: \.self) { badge in
                 switch badge {
-                case .encrypted(let isEncrypted):
-                    if isEncrypted {
-                        BadgeLabel(title: L10n.screenRoomDetailsBadgeEncrypted,
-                                   icon: \.lockSolid,
-                                   isHighlighted: true)
-                    } else {
-                        BadgeLabel(title: L10n.screenRoomDetailsBadgeNotEncrypted,
-                                   icon: \.lockOff,
-                                   isHighlighted: false)
-                    }
+                case .encrypted(true):
+                    // Tchap: use Tchap label
+//                    BadgeLabel(title: L10n.screenRoomDetailsBadgeEncrypted,
+                    BadgeLabel(title: TchapL10n.roomHeaderBadgeEncrypted,
+                               icon: \.lockSolid,
+                               isHighlighted: true)
+                case .encrypted(false):
+                    // Tchap: use Tchap label
+//                    BadgeLabel(title: L10n.screenRoomDetailsBadgeNotEncrypted,
+                    BadgeLabel(title: TchapL10n.roomHeaderBadgeNotEncrypted,
+                               icon: \.lockOff,
+                               isHighlighted: false)
                 case .public:
-                    BadgeLabel(title: L10n.screenRoomDetailsBadgePublic,
+                    // Tchap: use Tchap label
+//                    BadgeLabel(title: L10n.screenRoomDetailsBadgePublic,
+                    BadgeLabel(title: TchapL10n.roomHeaderBadgePublic,
                                icon: \.public,
                                isHighlighted: false)
+                case .verified:
+                    BadgeLabel(title: L10n.commonVerified,
+                               icon: \.verified,
+                               isHighlighted: true)
                 }
+            }
+            
+            // Tchap: add `External` badge if necessary.
+            if externalCount.wrappedValue > 0 {
+                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, isHighlighted: false, tchapUsage: .userIsExternal)
             }
         }
     }
     
     @ViewBuilder
     private var avatar: some View {
-        if let secondaryAvatarInfo {
-            ZStack {
-                LoadableAvatarImage(url: mainAvatarInfo.avatarURL,
-                                    name: mainAvatarInfo.name,
-                                    contentID: mainAvatarInfo.id,
-                                    avatarSize: avatarSize,
-                                    imageProvider: imageProvider)
-                    .scaledFrame(size: 120, alignment: .topTrailing)
-                LoadableAvatarImage(url: secondaryAvatarInfo.avatarURL,
-                                    name: secondaryAvatarInfo.name,
-                                    contentID: secondaryAvatarInfo.id,
-                                    avatarSize: avatarSize,
-                                    imageProvider: imageProvider)
-                    .mask {
-                        Rectangle()
-                            .fill(Color.white)
-                            .overlay {
-                                Circle()
-                                    .inset(by: -4)
-                                    .fill(Color.black)
-                                    .scaledOffset(x: 120 - avatarSize.value,
-                                                  y: -120 + avatarSize.value)
-                            }
-                            .compositingGroup()
-                            .luminanceToAlpha()
-                    }
-                    .scaledFrame(size: 120, alignment: .bottomLeading)
-            }
-            .scaledFrame(size: 120)
+        switch avatarInfo {
+        case .room(let roomAvatar):
+            RoomAvatarImage(avatar: roomAvatar,
+                            avatarSize: avatarSize,
+                            mediaProvider: mediaProvider,
+                            onAvatarTap: onAvatarTap)
+                .accessibilityLabel(L10n.a11yAvatar)
             
-        } else {
-            LoadableAvatarImage(url: mainAvatarInfo.avatarURL,
-                                name: mainAvatarInfo.name,
-                                contentID: mainAvatarInfo.id,
+        case .user(let userProfile):
+            LoadableAvatarImage(url: userProfile.avatarURL,
+                                name: userProfile.displayName,
+                                contentID: userProfile.userID,
                                 avatarSize: avatarSize,
-                                imageProvider: imageProvider)
+                                mediaProvider: mediaProvider,
+                                onTap: onAvatarTap)
+                .accessibilityLabel(L10n.a11yAvatar)
         }
     }
     
     var body: some View {
         VStack(spacing: 8.0) {
-            Button {
-                onAvatarTap?()
-            } label: {
-                avatar
-            }
-            .buttonStyle(.borderless) // Add a button style to stop the whole row being tappable.
+            avatar
             
             Spacer()
                 .frame(height: 9)
             
-            Text(mainAvatarInfo.name ?? mainAvatarInfo.id)
+            Text(title)
                 .foregroundColor(.compound.textPrimary)
                 .font(.compound.headingMDBold)
                 .multilineTextAlignment(.center)
                 .textSelection(.enabled)
             
+            // Tchap: only display User ID or Room canonical alias in room info when in debug mode.
+            #if DEBUG
             if let subtitle {
                 Text(subtitle)
                     .foregroundColor(.compound.textSecondary)
@@ -216,6 +202,7 @@ struct AvatarHeaderView<Footer: View>: View {
                     .multilineTextAlignment(.center)
                     .textSelection(.enabled)
             }
+            #endif
             
             if !badges.isEmpty {
                 badgesStack
@@ -237,15 +224,19 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
         Form {
             AvatarHeaderView(room: .init(id: "@test:matrix.org",
                                          name: "Test Room",
-                                         avatarURL: URL.picturesDirectory,
+                                         avatar: .room(id: "@test:matrix.org",
+                                                       name: "Test Room",
+                                                       avatarURL: .mockMXCAvatar),
                                          canonicalAlias: "#test:matrix.org",
                                          isEncrypted: true,
-                                         isPublic: true),
+                                         isPublic: true,
+                                         isDirect: false),
+                             externalCount: .constant(1),
                              avatarSize: .room(on: .details),
-                             imageProvider: MockMediaProvider()) {
+                             mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {
                     ShareLink(item: "test") {
-                        Image(systemName: "square.and.arrow.up")
+                        CompoundIcon(\.shareIos)
                     }
                     .buttonStyle(FormActionButtonStyle(title: "Test"))
                 }
@@ -255,11 +246,11 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
         .previewDisplayName("Room")
         
         Form {
-            AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice),
-                             imageProvider: MockMediaProvider()) {
+            AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice), externalCount: .constant(1),
+                             mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {
                     ShareLink(item: "test") {
-                        Image(systemName: "square.and.arrow.up")
+                        CompoundIcon(\.shareIos)
                     }
                     .buttonStyle(FormActionButtonStyle(title: "Test"))
                 }
@@ -271,11 +262,16 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
         VStack(spacing: 16) {
             AvatarHeaderView(member: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice),
                              avatarSize: .room(on: .details),
-                             imageProvider: MockMediaProvider()) { Text("") }
+                             mediaProvider: MediaProviderMock(configuration: .init())) { Text("") }
+            
+            AvatarHeaderView(member: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockBob),
+                             isVerified: true,
+                             avatarSize: .room(on: .details),
+                             mediaProvider: MediaProviderMock(configuration: .init())) { Text("") }
             
             AvatarHeaderView(member: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockBanned[3]),
                              avatarSize: .room(on: .details),
-                             imageProvider: MockMediaProvider()) { Text("") }
+                             mediaProvider: MediaProviderMock(configuration: .init())) { Text("") }
         }
         .padding()
         .background(Color.compound.bgSubtleSecondaryLevel0)

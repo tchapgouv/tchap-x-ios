@@ -1,21 +1,19 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import AnalyticsEvents
+
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 import PostHog
 import XCTest
 
@@ -76,7 +74,6 @@ class AnalyticsTests: XCTestCase {
         // Given a fresh install of the app Analytics should be disabled
         XCTAssertEqual(appSettings.analyticsConsentState, .unknown)
         XCTAssertFalse(ServiceLocator.shared.analytics.isEnabled)
-        XCTAssertFalse(ServiceLocator.shared.analytics.isRunningPublisher.value)
         XCTAssertFalse(analyticsClient.startAnalyticsConfigurationCalled)
     }
     
@@ -87,7 +84,6 @@ class AnalyticsTests: XCTestCase {
         // Then analytics should be disabled
         XCTAssertEqual(appSettings.analyticsConsentState, .optedOut)
         XCTAssertFalse(ServiceLocator.shared.analytics.isEnabled)
-        XCTAssertFalse(ServiceLocator.shared.analytics.isRunningPublisher.value)
         XCTAssertFalse(analyticsClient.isRunning)
         // Analytics client should have been stopped
         XCTAssertTrue(analyticsClient.stopCalled)
@@ -166,11 +162,11 @@ class AnalyticsTests: XCTestCase {
         XCTAssertEqual(client.pendingUserProperties?.numSpaces, 5, "The number of spaces should have been updated.")
     }
     
-    func testSendingUserProperties() {
+    func testSendingUserProperties() throws {
         // Given a client with user properties set
         
         let client = PostHogAnalyticsClient(posthogFactory: MockPostHogFactory(mock: posthogMock))
-        client.start(analyticsConfiguration: appSettings.analyticsConfiguration)
+        try client.start(analyticsConfiguration: XCTUnwrap(appSettings.analyticsConfiguration))
         
         client.updateUserProperties(AnalyticsEvent.UserProperties(allChatsActiveFilter: nil, ftueUseCaseSelection: .PersonalMessaging,
                                                                   numFavouriteRooms: nil,
@@ -215,10 +211,10 @@ class AnalyticsTests: XCTestCase {
         XCTAssertTrue(ServiceLocator.shared.analytics.shouldShowAnalyticsPrompt)
     }
     
-    func testSendingAndUpdatingSuperProperties() {
+    func testSendingAndUpdatingSuperProperties() throws {
         // Given a client with user properties set
         let client = PostHogAnalyticsClient(posthogFactory: MockPostHogFactory(mock: posthogMock))
-        client.start(analyticsConfiguration: appSettings.analyticsConfiguration)
+        try client.start(analyticsConfiguration: XCTUnwrap(appSettings.analyticsConfiguration))
         
         client.updateSuperProperties(
             AnalyticsEvent.SuperProperties(appPlatform: .EXI,
@@ -275,7 +271,7 @@ class AnalyticsTests: XCTestCase {
         XCTAssertEqual(capturedEvent2?.properties?["cryptoSDKVersion"] as? String, "001")
     }
     
-    func testShouldNotReportIfNotStarted() {
+    func testShouldNotReportIfNotStarted() throws {
         // Given a client with user properties set
         let client = PostHogAnalyticsClient(posthogFactory: MockPostHogFactory(mock: posthogMock))
     
@@ -302,7 +298,7 @@ class AnalyticsTests: XCTestCase {
         XCTAssertEqual(posthogMock.capturePropertiesUserPropertiesCalled, false)
         
         // start now
-        client.start(analyticsConfiguration: appSettings.analyticsConfiguration)
+        try client.start(analyticsConfiguration: XCTUnwrap(appSettings.analyticsConfiguration))
         XCTAssertEqual(posthogMock.optInCalled, true)
         
         client.capture(someEvent)

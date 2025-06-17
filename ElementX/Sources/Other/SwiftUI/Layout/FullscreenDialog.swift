@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import SwiftUI
@@ -73,7 +64,7 @@ struct FullscreenDialog<Content: View, BottomContent: View>: View {
     }
     
     /// A layout where the content scrolls with the bottom content overlaid. Used with regular font sizes.
-    var standardLayout: some View {
+    @MainActor var standardLayout: some View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(spacing: 0) {
@@ -157,15 +148,11 @@ struct FullscreenDialog<Content: View, BottomContent: View>: View {
 enum FullscreenDialogBackground {
     /// The bottom gradient from the FTUE flow.
     case gradient
-    /// The subtle bloom from the room discovery and permalink flows.
-    case bloom
     
     private var asset: ImageAsset {
         switch self {
         case .gradient:
             Asset.Images.backgroundBottom
-        case .bloom:
-            Asset.Images.joinRoomBackground
         }
     }
     
@@ -173,8 +160,6 @@ enum FullscreenDialogBackground {
         switch self {
         case .gradient:
             EdgeInsets(top: 0, leading: 0, bottom: 250, trailing: 0)
-        case .bloom:
-            EdgeInsets() // This one covers the entire screen.
         }
     }
     
@@ -204,15 +189,6 @@ struct FullscreenDialog_Previews: PreviewProvider, TestablePreview {
         .background()
         .backgroundStyle(.compound.bgCanvasDefault)
         .previewDisplayName("Gradient")
-        
-        FullscreenDialog(topPadding: UIConstants.iconTopPaddingToNavigationBar, background: .bloom) {
-            content
-        } bottomContent: {
-            buttons
-        }
-        .background()
-        .backgroundStyle(.compound.bgCanvasDefault)
-        .previewDisplayName("Bloom")
     }
     
     private static var content: some View {

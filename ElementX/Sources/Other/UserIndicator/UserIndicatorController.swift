@@ -1,23 +1,15 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+import Combine
 import SwiftUI
 
 class UserIndicatorController: ObservableObject, UserIndicatorControllerProtocol {
-    private var dismissalTimer: Timer?
+    private var timerCancellable: AnyCancellable?
     private var displayTimes = [String: Date]()
     private var delayedIndicators = Set<String>()
     
@@ -30,10 +22,11 @@ class UserIndicatorController: ObservableObject, UserIndicatorControllerProtocol
             activeIndicator = indicatorQueue.last
             
             if let activeIndicator, !activeIndicator.persistent {
-                dismissalTimer?.invalidate()
-                dismissalTimer = Timer.scheduledTimer(withTimeInterval: nonPersistentDisplayDuration, repeats: false) { [weak self] _ in
+                timerCancellable?.cancel()
+                timerCancellable = Task { [weak self, nonPersistentDisplayDuration] in
+                    try await Task.sleep(for: .seconds(nonPersistentDisplayDuration))
                     self?.retractIndicatorWithId(activeIndicator.id)
-                }
+                }.asCancellable()
             }
         }
     }
@@ -55,9 +48,9 @@ class UserIndicatorController: ObservableObject, UserIndicatorControllerProtocol
         } else {
             if let delay {
                 delayedIndicators.insert(indicator.id)
-
-                Timer.scheduledTimer(withTimeInterval: delay.seconds, repeats: false) { [weak self] _ in
-                    guard let self else { return }
+                
+                Task {
+                    try await Task.sleep(for: .seconds(delay.seconds))
                     
                     guard delayedIndicators.contains(indicator.id) else {
                         return
@@ -84,10 +77,11 @@ class UserIndicatorController: ObservableObject, UserIndicatorControllerProtocol
             indicatorQueue.removeAll { $0.id == id }
             return
         }
-    
-        Timer.scheduledTimer(withTimeInterval: minimumDisplayDuration, repeats: false) { [weak self] _ in
-            self?.indicatorQueue.removeAll { $0.id == id }
-            self?.displayTimes[id] = nil
+        
+        Task {
+            try? await Task.sleep(for: .seconds(minimumDisplayDuration))
+            indicatorQueue.removeAll { $0.id == id }
+            displayTimes[id] = nil
         }
     }
     

@@ -1,20 +1,17 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 
 import Combine
 import Foundation
@@ -50,22 +47,34 @@ class BugReportServiceTests: XCTestCase {
     }
     
     func testInitialStateWithRealService() throws {
-        let service = BugReportService(withBaseURL: "https://www.example.com",
-                                       sentryURL: "https://1234@sentry.com/1234",
-                                       applicationId: "mock_app_id",
+        let service = BugReportService(baseURL: "https://www.example.com",
+                                       applicationID: "mock_app_id",
                                        sdkGitSHA: "1234",
                                        maxUploadSize: ServiceLocator.shared.settings.bugReportMaxUploadSize,
-                                       session: .mock)
+                                       session: .mock,
+                                       appHooks: AppHooks())
+        XCTAssertTrue(service.isEnabled)
+        XCTAssertFalse(service.crashedLastRun)
+    }
+    
+    func testInitialStateWithRealServiceAndNoURL() throws {
+        let service = BugReportService(baseURL: nil,
+                                       applicationID: "mock_app_id",
+                                       sdkGitSHA: "1234",
+                                       maxUploadSize: ServiceLocator.shared.settings.bugReportMaxUploadSize,
+                                       session: .mock,
+                                       appHooks: AppHooks())
+        XCTAssertFalse(service.isEnabled)
         XCTAssertFalse(service.crashedLastRun)
     }
     
     @MainActor func testSubmitBugReportWithRealService() async throws {
-        let service = BugReportService(withBaseURL: "https://www.example.com",
-                                       sentryURL: "https://1234@sentry.com/1234",
-                                       applicationId: "mock_app_id",
+        let service = BugReportService(baseURL: "https://www.example.com",
+                                       applicationID: "mock_app_id",
                                        sdkGitSHA: "1234",
                                        maxUploadSize: ServiceLocator.shared.settings.bugReportMaxUploadSize,
-                                       session: .mock)
+                                       session: .mock,
+                                       appHooks: AppHooks())
 
         let bugReport = BugReport(userID: "@mock:client.com",
                                   deviceID: nil,

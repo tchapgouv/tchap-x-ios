@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import SwiftUI
@@ -41,7 +32,7 @@ struct ServerSelectionScreen: View {
     var header: some View {
         VStack(spacing: 8) {
             Image(asset: Asset.Images.serverSelectionIcon)
-                .heroImage(insets: 19)
+                .bigIcon(insets: 19)
                 .padding(.bottom, 8)
             
             Text(L10n.screenChangeServerTitle)
@@ -61,19 +52,19 @@ struct ServerSelectionScreen: View {
     var serverForm: some View {
         VStack(alignment: .leading, spacing: 24) {
             TextField(L10n.commonServerUrl, text: $context.homeserverAddress)
-                .textFieldStyle(.authentication(labelText: Text(L10n.screenChangeServerFormHeader),
-                                                footerText: Text(context.viewState.footerMessage),
-                                                isError: context.viewState.isShowingFooterError,
-                                                accessibilityIdentifier: A11yIdentifiers.changeServerScreen.server))
+                .textFieldStyle(.element(labelText: Text(L10n.screenChangeServerFormHeader),
+                                         footerText: Text(context.viewState.footerMessage),
+                                         state: context.viewState.isShowingFooterError ? .error : .default,
+                                         accessibilityIdentifier: A11yIdentifiers.changeServerScreen.server))
                 .keyboardType(.URL)
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
-                .onChange(of: context.homeserverAddress) { _ in context.send(viewAction: .clearFooterError) }
+                .onChange(of: context.homeserverAddress) { context.send(viewAction: .clearFooterError) }
                 .submitLabel(.done)
                 .onSubmit(submit)
             
             Button(action: submit) {
-                Text(context.viewState.buttonTitle)
+                Text(L10n.actionContinue)
             }
             .buttonStyle(.compound(.primary))
             .disabled(context.viewState.hasValidationError)
@@ -81,15 +72,12 @@ struct ServerSelectionScreen: View {
         }
     }
     
-    @ToolbarContentBuilder
     var toolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            if context.viewState.isModallyPresented {
-                Button { context.send(viewAction: .dismiss) } label: {
-                    Text(L10n.actionCancel)
-                }
-                .accessibilityIdentifier(A11yIdentifiers.changeServerScreen.dismiss)
+            Button { context.send(viewAction: .dismiss) } label: {
+                Text(L10n.actionCancel)
             }
+            .accessibilityIdentifier(A11yIdentifiers.changeServerScreen.dismiss)
         }
     }
     
@@ -103,11 +91,40 @@ struct ServerSelectionScreen: View {
 // MARK: - Previews
 
 struct ServerSelection_Previews: PreviewProvider, TestablePreview {
+    static let matrixViewModel = makeViewModel(for: "https://matrix.org")
+    static let emptyViewModel = makeViewModel(for: "")
+    static let invalidViewModel = makeViewModel(for: "thisisbad")
+    
     static var previews: some View {
-        ForEach(MockServerSelectionScreenState.allCases, id: \.self) { state in
-            NavigationStack {
-                ServerSelectionScreen(context: state.viewModel.context)
-            }
+        NavigationStack {
+            ServerSelectionScreen(context: matrixViewModel.context)
         }
+        
+        NavigationStack {
+            ServerSelectionScreen(context: emptyViewModel.context)
+        }
+        
+        NavigationStack {
+            ServerSelectionScreen(context: invalidViewModel.context)
+        }
+        .snapshotPreferences(expect: invalidViewModel.context.$viewState.map { state in
+            state.hasValidationError == true
+        })
+    }
+    
+    static func makeViewModel(for homeserverAddress: String) -> ServerSelectionScreenViewModel {
+        let authenticationService = AuthenticationService.mock
+        
+        let slidingSyncLearnMoreURL = ServiceLocator.shared.settings.slidingSyncLearnMoreURL
+        
+        let viewModel = ServerSelectionScreenViewModel(authenticationService: authenticationService,
+                                                       authenticationFlow: .login,
+                                                       slidingSyncLearnMoreURL: slidingSyncLearnMoreURL,
+                                                       userIndicatorController: UserIndicatorControllerMock())
+        viewModel.context.homeserverAddress = homeserverAddress
+        if homeserverAddress == "thisisbad" {
+            viewModel.context.send(viewAction: .confirm)
+        }
+        return viewModel
     }
 }

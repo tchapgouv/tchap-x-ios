@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -28,11 +19,11 @@ class GlobalSearchScreenViewModel: GlobalSearchScreenViewModelType, GlobalSearch
     }
 
     init(roomSummaryProvider: RoomSummaryProviderProtocol,
-         imageProvider: ImageProviderProtocol) {
+         mediaProvider: MediaProviderProtocol) {
         self.roomSummaryProvider = roomSummaryProvider
         
         super.init(initialViewState: GlobalSearchScreenViewState(bindings: .init(searchQuery: "")),
-                   imageProvider: imageProvider)
+                   mediaProvider: mediaProvider)
         
         roomSummaryProvider.roomListPublisher
             .receive(on: DispatchQueue.main)
@@ -45,11 +36,20 @@ class GlobalSearchScreenViewModel: GlobalSearchScreenViewModelType, GlobalSearch
             .map(\.bindings.searchQuery)
             .removeDuplicates()
             .sink { [weak self] searchQuery in
-                self?.roomSummaryProvider.setFilter(.search(query: searchQuery))
+                if searchQuery.isEmpty {
+                    self?.roomSummaryProvider.setFilter(.all(filters: []))
+                } else {
+                    self?.roomSummaryProvider.setFilter(.search(query: searchQuery))
+                }
             }
             .store(in: &cancellables)
         
         updateRooms(with: roomSummaryProvider.roomListPublisher.value)
+    }
+    
+    func stop() {
+        // This is a shared provider so we should reset the filtering when we are done with the view
+        roomSummaryProvider.setFilter(.all(filters: []))
     }
     
     // MARK: - Public
@@ -60,7 +60,6 @@ class GlobalSearchScreenViewModel: GlobalSearchScreenViewModelType, GlobalSearch
         switch viewAction {
         case .dismiss:
             actionsSubject.send(.dismiss)
-            roomSummaryProvider.setFilter(.all(filters: [])) // This is a shared provider
         case .select(let roomID):
             actionsSubject.send(.select(roomID: roomID))
         case .reachedTop:
@@ -74,15 +73,10 @@ class GlobalSearchScreenViewModel: GlobalSearchScreenViewModelType, GlobalSearch
     
     private func updateRooms(with summaries: [RoomSummary]) {
         state.rooms = summaries.compactMap { summary in
-            switch summary {
-            case .empty:
-                return nil
-            case .invalidated(let details), .filled(let details):
-                return GlobalSearchRoom(id: details.id,
-                                        name: details.name,
-                                        alias: details.canonicalAlias,
-                                        avatarURL: details.avatarURL)
-            }
+            GlobalSearchRoom(id: summary.id,
+                             title: summary.name,
+                             description: summary.roomListDescription,
+                             avatar: summary.avatar)
         }
     }
     

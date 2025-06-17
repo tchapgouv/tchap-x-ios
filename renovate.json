@@ -1,7 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    ":semanticCommitsDisabled"
+  ],
+  "labels" : [
+    "pr-misc"
   ],
   "packageRules" : [
     {
@@ -15,6 +19,11 @@
     {
       "matchManagers": ["bundler"],
       "groupName" : "Ruby"
+    },
+    {
+      "matchPackageNames": ["codecov/codecov-action"],
+      "allowedVersions": "^3.0.0"
     }
   ]
 }
+

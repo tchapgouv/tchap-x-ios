@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -21,6 +12,7 @@ import WysiwygComposer
 struct SuggestionTrigger: Equatable {
     enum SuggestionType: Equatable {
         case user
+        case room
     }
     
     let type: SuggestionType
@@ -28,39 +20,69 @@ struct SuggestionTrigger: Equatable {
     let range: NSRange
 }
 
-enum SuggestionItem: Identifiable, Equatable {
-    case user(item: MentionSuggestionItem)
-    case allUsers(item: MentionSuggestionItem)
+struct SuggestionItem: Identifiable, Equatable {
+    enum SuggestionType: Equatable {
+        case user(User)
+        case allUsers(RoomAvatar)
+        case room(Room)
+    }
+    
+    struct User: Equatable {
+        let id: String
+        let displayName: String?
+        let avatarURL: URL?
+    }
+    
+    struct Room: Equatable {
+        let id: String
+        let canonicalAlias: String
+        let name: String
+        let avatar: RoomAvatar
+    }
+    
+    let suggestionType: SuggestionType
+    let range: NSRange
+    let rawSuggestionText: String
     
     var id: String {
-        switch self {
+        switch suggestionType {
         case .user(let user):
-            return user.id
+            user.id
         case .allUsers:
-            return PillConstants.atRoom
+            PillUtilities.atRoom
+        case .room(let room):
+            room.id
         }
     }
     
-    var range: NSRange {
-        switch self {
-        case .user(let item), .allUsers(let item):
-            return item.range
+    var displayName: String {
+        switch suggestionType {
+        case .allUsers:
+            return PillUtilities.everyone
+        case .user(let user):
+            return user.displayName ?? user.id
+        case .room(let room):
+            return room.name
         }
     }
-}
-
-struct MentionSuggestionItem: Identifiable, Equatable {
-    let id: String
-    let displayName: String?
-    let avatarURL: URL?
-    let range: NSRange
+    
+    var subtitle: String? {
+        switch suggestionType {
+        case .allUsers:
+            return PillUtilities.atRoom
+        case .user(let user):
+            return user.displayName == nil ? nil : user.id
+        case .room(let room):
+            return room.canonicalAlias
+        }
+    }
 }
 
 // sourcery: AutoMockable
 protocol CompletionSuggestionServiceProtocol {
     var suggestionsPublisher: AnyPublisher<[SuggestionItem], Never> { get }
     
-    func processTextMessage(_ textMessage: String?)
+    func processTextMessage(_ textMessage: String, selectedRange: NSRange)
     
     func setSuggestionTrigger(_ suggestionTrigger: SuggestionTrigger?)
 }
@@ -70,6 +92,8 @@ extension WysiwygComposer.SuggestionPattern {
         switch key {
         case .at:
             return SuggestionTrigger(type: .user, text: text, range: .init(location: Int(start), length: Int(end)))
+        case .hash:
+            return SuggestionTrigger(type: .room, text: text, range: .init(location: Int(start), length: Int(end)))
         default:
             return nil
         }

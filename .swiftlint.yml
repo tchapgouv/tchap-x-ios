@@ -9,23 +9,23 @@ opt_in_rules:
   - private_action
   - explicit_init
   - shorthand_optional_binding
+  - trailing_closure
 
 included:
-  - ElementX
-  - UnitTests
-  - UITests
+  - "*/Sources/*"
   - Tools/Scripts/Templates
 excluded:
-  - IntegrationTests
-  - ElementX/Sources/Generated
+  - "*/Sources/Generated/*"
+  - Tools/Sources # Our command-line tools use a lot of print commands.
+  - Secrets
+  - TchapX/Sources/main/Generated
 
 line_length:
   warning: 250
   error: 1000
 
 file_length:
-  warning: 1000
-  error: 1000
+  warning: 2000
 
 type_name:
   min_length: 3
@@ -40,6 +40,10 @@ type_body_length:
 function_body_length:
   warning: 100
   error: 100
+
+function_parameter_count:
+  warning: 10
+  error: 10
 
 cyclomatic_complexity:
   ignores_case_statements: true
@@ -59,6 +63,12 @@ custom_rules:
     regex: "(?-s)HStack((?!spacing:).)*\\s*\\{"
     match_kinds: identifier
     message: "Please use explicit spacing in HStacks."
+    severity: warning
+
+  compound_color_conversion:
+    regex: "UIColor\\(\\.compound"
+    match_kinds: identifier
+    message: "Please use the UIColor token directly to ensure the colour scheme is honoured."
     severity: warning
 
   print_deprecation:

@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import MatrixRustSDK
@@ -44,7 +35,7 @@ struct RoomStateEventStringBuilder {
         case .joined:
             return memberIsYou ? L10n.stateEventRoomJoinByYou : L10n.stateEventRoomJoin(senderDisplayName)
         case .left:
-            return memberIsYou ? L10n.stateEventRoomLeaveByYou : L10n.stateEventRoomLeave(senderDisplayName)
+            return memberIsYou ? L10n.stateEventRoomLeaveByYou : L10n.stateEventRoomLeave(member)
         case .banned, .kickedAndBanned:
             return senderIsYou ? L10n.stateEventRoomBanByYou(member) : L10n.stateEventRoomBan(senderDisplayName, member)
         case .unbanned:
@@ -60,7 +51,7 @@ struct RoomStateEventStringBuilder {
                 return L10n.stateEventRoomInvite(senderDisplayName, member)
             }
         case .invitationAccepted:
-            return memberIsYou ? L10n.stateEventRoomInviteAcceptedByYou : L10n.stateEventRoomInviteAccepted(senderDisplayName)
+            return memberIsYou ? L10n.stateEventRoomInviteAcceptedByYou : L10n.stateEventRoomInviteAccepted(member)
         case .invitationRejected:
             return memberIsYou ? L10n.stateEventRoomRejectByYou : L10n.stateEventRoomReject(senderDisplayName)
         case .invitationRevoked:
@@ -68,7 +59,7 @@ struct RoomStateEventStringBuilder {
         case .knocked:
             return memberIsYou ? L10n.stateEventRoomKnockByYou : L10n.stateEventRoomKnock(member)
         case .knockAccepted:
-            return senderIsYou ? L10n.stateEventRoomKnockAcceptedByYou(senderDisplayName) : L10n.stateEventRoomKnockAccepted(senderDisplayName, member)
+            return senderIsYou ? L10n.stateEventRoomKnockAcceptedByYou(member) : L10n.stateEventRoomKnockAccepted(senderDisplayName, member)
         case .knockRetracted:
             return memberIsYou ? L10n.stateEventRoomKnockRetractedByYou : L10n.stateEventRoomKnockRetracted(member)
         case .knockDenied:
@@ -85,7 +76,6 @@ struct RoomStateEventStringBuilder {
         }
     }
     
-    // swiftlint:disable:next function_parameter_count
     func buildProfileChangeString(displayName: String?, previousDisplayName: String?,
                                   avatarURLString: String?, previousAvatarURLString: String?,
                                   member: String, memberIsYou: Bool) -> String? {
@@ -178,14 +168,23 @@ struct RoomStateEventStringBuilder {
             }
         case .roomTopic(let topic):
             switch (topic, isOutgoing) {
-            case (.some(let topic), false):
+            case (.some(let topic), false) where !topic.isBlank:
                 return L10n.stateEventRoomTopicChanged(displayName, topic)
-            case (nil, false):
+            case (_, false):
                 return L10n.stateEventRoomTopicRemoved(displayName)
-            case (.some(let name), true):
-                return L10n.stateEventRoomTopicChangedByYou(name)
-            case (nil, true):
+            case (.some(let topic), true) where !topic.isBlank:
+                return L10n.stateEventRoomTopicChangedByYou(topic)
+            case (_, true):
                 return L10n.stateEventRoomTopicRemovedByYou
+            }
+        case .roomPinnedEvents(let change):
+            switch change {
+            case .added:
+                return isOutgoing ? L10n.stateEventRoomPinnedEventsPinnedByYou : L10n.stateEventRoomPinnedEventsPinned(displayName)
+            case .changed:
+                return isOutgoing ? L10n.stateEventRoomPinnedEventsChangedByYou : L10n.stateEventRoomPinnedEventsChanged(displayName)
+            case .removed:
+                return isOutgoing ? L10n.stateEventRoomPinnedEventsUnpinnedByYou : L10n.stateEventRoomPinnedEventsUnpinned(displayName)
             }
         case .roomPowerLevels: // Long term we might show only the user changes, but we need an SDK filter to fix read receipts in that case.
             break
@@ -197,7 +196,7 @@ struct RoomStateEventStringBuilder {
             break
         case .roomJoinRules: // Doesn't provide information about the change.
             break
-        case .roomPinnedEvents, .roomServerAcl: // Doesn't provide information about the change.
+        case .roomServerAcl: // Doesn't provide information about the change.
             break
         case .roomTombstone: // Handle as a virtual timeline item with a link to the upgraded room.
             break

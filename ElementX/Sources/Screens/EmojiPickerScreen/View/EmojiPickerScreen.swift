@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -60,11 +51,13 @@ struct EmojiPickerScreen: View {
             .toolbar { toolbar }
             .isSearching($isSearching)
             .searchable(text: $searchString, placement: .navigationBarDrawer(displayMode: .always))
+            .focusSearchIfHardwareKeyboardAvailable()
+            .onSubmit(of: .search, sendFirstEmojiOnMac)
             .compoundSearchField()
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(isSearching ? .hidden : .visible)
-        .onChange(of: searchString) { _ in
+        .onChange(of: searchString) {
             context.send(viewAction: .search(searchString: searchString))
         }
     }
@@ -85,17 +78,35 @@ struct EmojiPickerScreen: View {
             }
         }
     }
+    
+    func sendFirstEmojiOnMac() {
+        // No sure-fire way to detect that the submit came from a h/w keyboard on iOS/iPadOS.
+        guard ProcessInfo.processInfo.isiOSAppOnMac else { return }
+        
+        if !searchString.isBlank, let emoji = context.viewState.categories.first?.emojis.first {
+            context.send(viewAction: .emojiTapped(emoji: emoji))
+        }
+    }
 }
 
 // MARK: - Previews
 
 struct EmojiPickerScreen_Previews: PreviewProvider, TestablePreview {
-    static let viewModel = EmojiPickerScreenViewModel(emojiProvider: EmojiProvider())
+    static let viewModel = EmojiPickerScreenViewModel(emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings))
     
     static var previews: some View {
         EmojiPickerScreen(context: viewModel.context, selectedEmojis: ["😀", "😄"])
             .previewDisplayName("Screen")
-        
+            .snapshotPreferences(expect: viewModel.context.$viewState.map { state in
+                !state.categories.isEmpty
+            })
+    }
+}
+
+struct EmojiPickerScreenSheet_Previews: PreviewProvider {
+    static let viewModel = EmojiPickerScreenViewModel(emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings))
+    
+    static var previews: some View {
         Text("Timeline view")
             .sheet(isPresented: .constant(true)) {
                 EmojiPickerScreen(context: viewModel.context, selectedEmojis: ["😀", "😄"])

@@ -1,34 +1,43 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
 import Foundation
 import MatrixRustSDK
 
+enum TimelineKind: Equatable {
+    case live
+    case detached
+    case pinned
+    
+    enum MediaPresentation { case roomScreenLive, roomScreenDetached, pinnedEventsScreen, mediaFilesScreen }
+    case media(MediaPresentation)
+}
+
+enum TimelineFocus {
+    case live
+    case eventID(String)
+    case pinned
+}
+
+enum TimelineAllowedMessageType {
+    case audio, file, image, video
+}
+
 enum TimelineProxyError: Error {
     case sdkError(Error)
     
-    case failedEditing
     case failedRedacting
     case failedPaginatingEndReached
 }
 
 // sourcery: AutoMockable
 protocol TimelineProxyProtocol {
-    var timelineProvider: RoomTimelineProviderProtocol { get }
+    var timelineProvider: TimelineProviderProtocol { get }
     
     func subscribeForUpdates() async
     
@@ -36,35 +45,37 @@ protocol TimelineProxyProtocol {
     
     func messageEventContent(for timelineItemID: TimelineItemIdentifier) async -> RoomMessageEventContentWithoutRelation?
     
-    func retryDecryption(for sessionID: String) async
+    func retryDecryption(sessionIDs: [String]?)
     
     func paginateBackwards(requestSize: UInt16) async -> Result<Void, TimelineProxyError>
     func paginateForwards(requestSize: UInt16) async -> Result<Void, TimelineProxyError>
     
-    func edit(_ timelineItemID: TimelineItemIdentifier,
-              message: String,
-              html: String?,
-              intentionalMentions: IntentionalMentions) async -> Result<Void, TimelineProxyError>
+    func edit(_ eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID,
+              newContent: EditedContent) async -> Result<Void, TimelineProxyError>
     
-    func redact(_ timelineItemID: TimelineItemIdentifier,
+    func redact(_ eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID,
                 reason: String?) async -> Result<Void, TimelineProxyError>
+    
+    func pin(eventID: String) async -> Result<Bool, TimelineProxyError>
+    
+    func unpin(eventID: String) async -> Result<Bool, TimelineProxyError>
     
     // MARK: - Sending
     
     func sendAudio(url: URL,
                    audioInfo: AudioInfo,
-                   progressSubject: CurrentValueSubject<Double, Never>?,
+                   caption: String?,
                    requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError>
     
     func sendFile(url: URL,
                   fileInfo: FileInfo,
-                  progressSubject: CurrentValueSubject<Double, Never>?,
+                  caption: String?,
                   requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError>
     
     func sendImage(url: URL,
                    thumbnailURL: URL,
                    imageInfo: ImageInfo,
-                   progressSubject: CurrentValueSubject<Double, Never>?,
+                   caption: String?,
                    requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError>
     
     func sendLocation(body: String,
@@ -76,13 +87,12 @@ protocol TimelineProxyProtocol {
     func sendVideo(url: URL,
                    thumbnailURL: URL,
                    videoInfo: VideoInfo,
-                   progressSubject: CurrentValueSubject<Double, Never>?,
+                   caption: String?,
                    requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError>
     
     func sendVoiceMessage(url: URL,
                           audioInfo: AudioInfo,
                           waveform: [UInt16],
-                          progressSubject: CurrentValueSubject<Double, Never>?,
                           requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError>
     
     func sendReadReceipt(for eventID: String, type: ReceiptType) async -> Result<Void, TimelineProxyError>
@@ -91,12 +101,11 @@ protocol TimelineProxyProtocol {
     
     func sendMessage(_ message: String,
                      html: String?,
-                     inReplyTo eventID: String?,
+                     inReplyToEventID: String?,
                      intentionalMentions: IntentionalMentions) async -> Result<Void, TimelineProxyError>
     
-    func toggleReaction(_ reaction: String, to eventID: String) async -> Result<Void, TimelineProxyError>
+    func toggleReaction(_ reaction: String, to eventID: TimelineItemIdentifier.EventOrTransactionID) async -> Result<Void, TimelineProxyError>
     
-    // Polls
     func createPoll(question: String, answers: [String], pollKind: Poll.Kind) async -> Result<Void, TimelineProxyError>
     
     func editPoll(original eventID: String,
@@ -107,15 +116,10 @@ protocol TimelineProxyProtocol {
     func endPoll(pollStartID: String, text: String) async -> Result<Void, TimelineProxyError>
     
     func sendPollResponse(pollStartID: String, answers: [String]) async -> Result<Void, TimelineProxyError>
-}
-
-extension TimelineProxyProtocol {
-    func sendMessage(_ message: String,
-                     html: String?,
-                     intentionalMentions: IntentionalMentions) async -> Result<Void, TimelineProxyError> {
-        await sendMessage(message,
-                          html: html,
-                          inReplyTo: nil,
-                          intentionalMentions: intentionalMentions)
-    }
+    
+    func getLoadedReplyDetails(eventID: String) async -> Result<InReplyToDetails, TimelineProxyError>
+    
+    func buildMessageContentFor(_ message: String,
+                                html: String?,
+                                intentionalMentions: Mentions) -> RoomMessageEventContentWithoutRelation
 }

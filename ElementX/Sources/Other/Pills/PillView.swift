@@ -1,23 +1,15 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import SwiftUI
 
 struct PillView: View {
-    let imageProvider: ImageProviderProtocol?
+    let mediaProvider: MediaProviderProtocol?
     @ObservedObject var context: PillContext
     /// callback triggerd by changes in the display text
     let didChangeText: () -> Void
@@ -31,6 +23,14 @@ struct PillView: View {
     }
         
     var body: some View {
+        mainContent
+            .onChange(of: context.viewState.displayText) {
+                didChangeText()
+            }
+    }
+    
+    @ViewBuilder
+    private var mainContent: some View {
         Text(context.viewState.displayText)
             .font(.compound.bodyLGSemibold)
             .foregroundColor(textColor)
@@ -39,35 +39,52 @@ struct PillView: View {
             .padding(.trailing, 6)
             .padding(.vertical, 1)
             .background { Capsule().foregroundColor(backgroundColor) }
-            .onChange(of: context.viewState.displayText) { _ in
-                didChangeText()
-            }
     }
 }
 
 struct PillView_Previews: PreviewProvider, TestablePreview {
-    static let mockMediaProvider = MockMediaProvider()
+    static let mockMediaProvider = MediaProviderMock(configuration: .init())
     
     static var previews: some View {
-        PillView(imageProvider: mockMediaProvider,
-                 context: PillContext.mock(type: .loadUser(isOwn: false))) { }
-            .frame(maxWidth: PillConstants.mockMaxWidth)
-            .previewDisplayName("Loading")
-        PillView(imageProvider: mockMediaProvider,
-                 context: PillContext.mock(type: .loadUser(isOwn: true))) { }
-            .frame(maxWidth: PillConstants.mockMaxWidth)
-            .previewDisplayName("Loading Own")
-        PillView(imageProvider: mockMediaProvider,
-                 context: PillContext.mock(type: .loadedUser(isOwn: false))) { }
-            .frame(maxWidth: PillConstants.mockMaxWidth)
-            .previewDisplayName("Loaded Long")
-        PillView(imageProvider: mockMediaProvider,
-                 context: PillContext.mock(type: .loadedUser(isOwn: true))) { }
-            .frame(maxWidth: PillConstants.mockMaxWidth)
-            .previewDisplayName("Loaded Long Own")
-        PillView(imageProvider: mockMediaProvider,
-                 context: PillContext.mock(type: .allUsers)) { }
-            .frame(maxWidth: PillConstants.mockMaxWidth)
-            .previewDisplayName("All Users")
+        PillView(mediaProvider: mockMediaProvider,
+                 context: PillContext.mock(viewState: .mention(isOwnMention: false,
+                                                               displayText: PillUtilities.userPillDisplayText(username: "User",
+                                                                                                              userID: "@alice:matrix.org")))) { }
+            .frame(maxWidth: PillUtilities.mockMaxWidth)
+            .previewDisplayName("User")
+        PillView(mediaProvider: mockMediaProvider,
+                 context: PillContext.mock(viewState: .mention(isOwnMention: false,
+                                                               displayText: PillUtilities.userPillDisplayText(username: "Alice but with a very long name",
+                                                                                                              userID: "@alice:matrix.org")))) { }
+            .frame(maxWidth: PillUtilities.mockMaxWidth)
+            .previewDisplayName("User with a long name")
+        PillView(mediaProvider: mockMediaProvider,
+                 context: PillContext.mock(viewState: .mention(isOwnMention: false,
+                                                               displayText: PillUtilities.userPillDisplayText(username: nil, userID: "@alice:matrix.org")))) { }
+            .frame(maxWidth: PillUtilities.mockMaxWidth)
+            .previewDisplayName("User with missing name")
+        PillView(mediaProvider: mockMediaProvider,
+                 context: PillContext.mock(viewState: .mention(isOwnMention: true,
+                                                               displayText: PillUtilities.userPillDisplayText(username: "Alice", userID: "@alice:matrix.org")))) { }
+            .frame(maxWidth: PillUtilities.mockMaxWidth)
+            .previewDisplayName("Own user")
+        PillView(mediaProvider: mockMediaProvider,
+                 context: PillContext.mock(viewState: .reference(displayText: PillUtilities.roomPillDisplayText(roomName: "Room",
+                                                                                                                rawRoomText: "#room:matrix.org")))) { }
+            .frame(maxWidth: PillUtilities.mockMaxWidth)
+            .previewDisplayName("Room")
+        PillView(mediaProvider: mockMediaProvider,
+                 context: PillContext.mock(viewState: .reference(displayText: PillUtilities.roomPillDisplayText(roomName: nil,
+                                                                                                                rawRoomText: "#room:matrix.org")))) { }
+            .frame(maxWidth: PillUtilities.mockMaxWidth)
+            .previewDisplayName("Room without name")
+        PillView(mediaProvider: mockMediaProvider,
+                 context: PillContext.mock(viewState: .reference(displayText: PillUtilities.eventPillDisplayText(roomName: "Room", rawRoomText: "#room:matrix.org")))) { }
+            .frame(maxWidth: PillUtilities.mockMaxWidth)
+            .previewDisplayName("Message link")
+        PillView(mediaProvider: mockMediaProvider,
+                 context: PillContext.mock(viewState: .reference(displayText: PillUtilities.eventPillDisplayText(roomName: nil, rawRoomText: "#room:matrix.org")))) { }
+            .frame(maxWidth: PillUtilities.mockMaxWidth)
+            .previewDisplayName("Message link without room name")
     }
 }

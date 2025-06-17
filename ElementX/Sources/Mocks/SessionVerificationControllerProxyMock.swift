@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -25,16 +16,18 @@ extension SessionVerificationControllerProxyMock {
                          SessionVerificationEmoji(symbol: "🏁", description: "Flag"),
                          SessionVerificationEmoji(symbol: "🌏", description: "Globe")]
 
-    static func configureMock(callbacks: PassthroughSubject<SessionVerificationControllerProxyCallback, Never> = .init(),
+    static func configureMock(actions: PassthroughSubject<SessionVerificationControllerProxyAction, Never> = .init(),
                               isVerified: Bool = false,
                               requestDelay: Duration = .seconds(1)) -> SessionVerificationControllerProxyMock {
         let mock = SessionVerificationControllerProxyMock()
-        mock.underlyingCallbacks = callbacks
+        mock.underlyingActions = actions
+        
+        mock.acknowledgeVerificationRequestDetailsReturnValue = .success(())
 
-        mock.requestVerificationClosure = { [unowned mock] in
+        mock.requestDeviceVerificationClosure = { [unowned mock] in
             Task.detached {
                 try await Task.sleep(for: requestDelay)
-                mock.callbacks.send(.acceptedVerificationRequest)
+                mock.actions.send(.acceptedVerificationRequest)
             }
 
             return .success(())
@@ -43,11 +36,11 @@ extension SessionVerificationControllerProxyMock {
         mock.startSasVerificationClosure = { [unowned mock] in
             Task.detached {
                 try await Task.sleep(for: requestDelay)
-                mock.callbacks.send(.startedSasVerification)
+                mock.actions.send(.startedSasVerification)
 
                 Task.detached {
                     try await Task.sleep(for: requestDelay)
-                    mock.callbacks.send(.receivedVerificationData(emojis))
+                    mock.actions.send(.receivedVerificationData(emojis))
                 }
             }
 
@@ -57,7 +50,7 @@ extension SessionVerificationControllerProxyMock {
         mock.approveVerificationClosure = { [unowned mock] in
             Task.detached {
                 try await Task.sleep(for: requestDelay)
-                mock.callbacks.send(.finished)
+                mock.actions.send(.finished)
             }
 
             return .success(())
@@ -66,7 +59,7 @@ extension SessionVerificationControllerProxyMock {
         mock.declineVerificationClosure = { [unowned mock] in
             Task.detached {
                 try await Task.sleep(for: requestDelay)
-                mock.callbacks.send(.cancelled)
+                mock.actions.send(.cancelled)
             }
 
             return .success(())
@@ -75,7 +68,7 @@ extension SessionVerificationControllerProxyMock {
         mock.cancelVerificationClosure = { [unowned mock] in
             Task.detached {
                 try await Task.sleep(for: requestDelay)
-                mock.callbacks.send(.cancelled)
+                mock.actions.send(.cancelled)
             }
 
             return .success(())

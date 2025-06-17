@@ -1,19 +1,11 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import DTCoreText
 import Foundation
 import LRUCache
@@ -106,6 +98,7 @@ struct AttributedStringBuilder: AttributedStringBuilderProtocol {
         
         let mutableAttributedString = NSMutableAttributedString(attributedString: attributedString)
         removeDefaultForegroundColors(mutableAttributedString)
+        detectPhishingAttempts(mutableAttributedString)
         addLinksAndMentions(mutableAttributedString)
         replaceMarkedBlockquotes(mutableAttributedString)
         replaceMarkedCodeBlocks(mutableAttributedString)
@@ -185,12 +178,7 @@ struct AttributedStringBuilder: AttributedStringBuilderProtocol {
                 return nil
             }
             
-            var link = String(string[matchRange])
-            
-            if !link.contains("://") {
-                link.insert(contentsOf: "https://", at: link.startIndex)
-            }
-            
+            let link = String(string[matchRange]).asSanitizedLink
             return TextParsingMatch(type: .link(urlString: link), range: match.range)
         })
         
@@ -225,7 +213,8 @@ struct AttributedStringBuilder: AttributedStringBuilderProtocol {
             case .atRoom:
                 attributedString.addAttribute(.MatrixAllUsersMention, value: true, range: match.range)
             case .roomAlias(let alias):
-                if let url = try? matrixToRoomAliasPermalink(roomAlias: alias) {
+                if let urlString = try? matrixToRoomAliasPermalink(roomAlias: alias),
+                   let url = URL(string: urlString) {
                     attributedString.addAttribute(.link, value: url, range: match.range)
                 }
             case .matrixURI(let uri):
@@ -269,7 +258,7 @@ struct AttributedStringBuilder: AttributedStringBuilderProtocol {
         attributedString.enumerateAttribute(.backgroundColor, in: .init(location: 0, length: attributedString.length), options: []) { value, range, _ in
             if let value = value as? UIColor,
                value == temporaryCodeBlockMarkingColor {
-                attributedString.addAttribute(.backgroundColor, value: UIColor(.compound._bgCodeBlock) as Any, range: range)
+                attributedString.addAttribute(.backgroundColor, value: UIColor.compound._bgCodeBlock as Any, range: range)
                 attributedString.removeAttribute(.link, range: range)
             }
         }
@@ -278,18 +267,19 @@ struct AttributedStringBuilder: AttributedStringBuilderProtocol {
     func detectPermalinks(_ attributedString: NSMutableAttributedString) {
         attributedString.enumerateAttribute(.link, in: .init(location: 0, length: attributedString.length), options: []) { value, range, _ in
             if value != nil {
-                if let url = value as? URL, let matrixEntity = parseMatrixEntityFrom(uri: url.absoluteString) {
+                if let url = value as? URL,
+                   let matrixEntity = parseMatrixEntityFrom(uri: url.absoluteString) {
                     switch matrixEntity.id {
                     case .user(let userID):
                         mentionBuilder.handleUserMention(for: attributedString, in: range, url: url, userID: userID, userDisplayName: nil)
                     case .room(let roomID):
-                        attributedString.addAttributes([.MatrixRoomID: roomID], range: range)
+                        mentionBuilder.handleRoomIDMention(for: attributedString, in: range, url: url, roomID: roomID)
                     case .roomAlias(let alias):
-                        attributedString.addAttributes([.MatrixRoomAlias: alias], range: range)
+                        mentionBuilder.handleRoomAliasMention(for: attributedString, in: range, url: url, roomAlias: alias, roomDisplayName: nil)
                     case .eventOnRoomId(let roomID, let eventID):
-                        attributedString.addAttributes([.MatrixEventOnRoomID: EventOnRoomIDAttribute.Value(roomID: roomID, eventID: eventID)], range: range)
+                        mentionBuilder.handleEventOnRoomIDMention(for: attributedString, in: range, url: url, eventID: eventID, roomID: roomID)
                     case .eventOnRoomAlias(let alias, let eventID):
-                        attributedString.addAttributes([.MatrixEventOnRoomAlias: EventOnRoomAliasAttribute.Value(alias: alias, eventID: eventID)], range: range)
+                        mentionBuilder.handleEventOnRoomAliasMention(for: attributedString, in: range, url: url, eventID: eventID, roomAlias: alias)
                     }
                 }
             }
@@ -302,7 +292,41 @@ struct AttributedStringBuilder: AttributedStringBuilderProtocol {
             }
         }
     }
+        
+    private func detectPhishingAttempts(_ attributedString: NSMutableAttributedString) {
+        attributedString.enumerateAttribute(.link, in: .init(location: 0, length: attributedString.length), options: []) { value, range, _ in
+            guard value != nil, let internalURL = value as? URL else {
+                return
+            }
+            let displayString = attributedString.attributedSubstring(from: range).string
+            
+            guard PhishingDetector.isPhishingAttempt(displayString: displayString, internalURL: internalURL) else {
+                return
+            }
+            handlePhishingAttempt(for: attributedString, in: range, internalURL: internalURL, displayString: displayString)
+        }
+    }
     
+    private func handlePhishingAttempt(for attributedString: NSMutableAttributedString,
+                                       in range: NSRange,
+                                       internalURL: URL,
+                                       displayString: String) {
+        // Let's remove the existing link attribute
+        attributedString.removeAttribute(.link, range: range)
+        
+        var urlComponents = URLComponents()
+        urlComponents.scheme = URL.confirmationScheme
+        urlComponents.host = ""
+        let parameters = ConfirmURLParameters(internalURL: internalURL, displayString: displayString)
+        urlComponents.queryItems = parameters.urlQueryItems
+        
+        guard let finalURL = urlComponents.url else {
+            return
+        }
+        
+        attributedString.addAttribute(.link, value: finalURL, range: range)
+    }
+        
     private func removeDTCoreTextArtifacts(_ attributedString: NSMutableAttributedString) {
         guard attributedString.length > 0 else {
             return
@@ -356,6 +380,7 @@ extension NSAttributedString.Key {
     static let MatrixBlockquote: NSAttributedString.Key = .init(rawValue: BlockquoteAttribute.name)
     static let MatrixUserID: NSAttributedString.Key = .init(rawValue: UserIDAttribute.name)
     static let MatrixUserDisplayName: NSAttributedString.Key = .init(rawValue: UserDisplayNameAttribute.name)
+    static let MatrixRoomDisplayName: NSAttributedString.Key = .init(rawValue: RoomDisplayNameAttribute.name)
     static let MatrixRoomID: NSAttributedString.Key = .init(rawValue: RoomIDAttribute.name)
     static let MatrixRoomAlias: NSAttributedString.Key = .init(rawValue: RoomAliasAttribute.name)
     static let MatrixEventOnRoomID: NSAttributedString.Key = .init(rawValue: EventOnRoomIDAttribute.name)
@@ -365,6 +390,10 @@ extension NSAttributedString.Key {
 
 protocol MentionBuilderProtocol {
     func handleUserMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, userID: String, userDisplayName: String?)
+    func handleRoomIDMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, roomID: String)
+    func handleRoomAliasMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, roomAlias: String, roomDisplayName: String?)
+    func handleEventOnRoomAliasMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, eventID: String, roomAlias: String)
+    func handleEventOnRoomIDMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, eventID: String, roomID: String)
     func handleAllUsersMention(for attributedString: NSMutableAttributedString, in range: NSRange)
 }
 

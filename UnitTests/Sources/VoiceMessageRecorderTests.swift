@@ -1,21 +1,19 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
+
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 import Foundation
 import XCTest
 
@@ -52,9 +50,7 @@ class VoiceMessageRecorderTests: XCTestCase {
         audioPlayer.state = .stopped
         
         mediaPlayerProvider = MediaPlayerProviderMock()
-        mediaPlayerProvider.playerForClosure = { _ in
-            .success(self.audioPlayer)
-        }
+        mediaPlayerProvider.player = audioPlayer
         audioConverter = AudioConverterMock()
         voiceMessageCache = VoiceMessageCacheMock()
         voiceMessageCache.urlForRecording = FileManager.default.temporaryDirectory.appendingPathComponent("test-voice-message").appendingPathExtension("m4a")
@@ -130,11 +126,10 @@ class VoiceMessageRecorderTests: XCTestCase {
             return
         }
         XCTAssertEqual(voiceMessageRecorder.previewAudioPlayerState?.isAttached, true)
-        XCTAssert(audioPlayer.loadMediaSourceUsingAutoplayCalled)
-        XCTAssertEqual(audioPlayer.loadMediaSourceUsingAutoplayReceivedArguments?.url, recordingURL)
-        XCTAssertEqual(audioPlayer.loadMediaSourceUsingAutoplayReceivedArguments?.mediaSource.mimeType, "audio/m4a")
-        XCTAssertEqual(audioPlayer.loadMediaSourceUsingAutoplayReceivedArguments?.mediaSource.url, recordingURL)
-        XCTAssertEqual(audioPlayer.loadMediaSourceUsingAutoplayReceivedArguments?.autoplay, true)
+        XCTAssert(audioPlayer.loadSourceURLPlaybackURLAutoplayCalled)
+        XCTAssertEqual(audioPlayer.loadSourceURLPlaybackURLAutoplayReceivedArguments?.sourceURL, recordingURL)
+        XCTAssertEqual(audioPlayer.loadSourceURLPlaybackURLAutoplayReceivedArguments?.playbackURL, recordingURL)
+        XCTAssertEqual(audioPlayer.loadSourceURLPlaybackURLAutoplayReceivedArguments?.autoplay, true)
         XCTAssertFalse(audioPlayer.playCalled)
     }
     
@@ -150,7 +145,7 @@ class VoiceMessageRecorderTests: XCTestCase {
     
     func testResumePlayback() async throws {
         try await setRecordingComplete()
-        audioPlayer.url = recordingURL
+        audioPlayer.playbackURL = recordingURL
 
         guard case .success = await voiceMessageRecorder.startPlayback() else {
             XCTFail("Playback should start")
@@ -158,7 +153,7 @@ class VoiceMessageRecorderTests: XCTestCase {
         }
         XCTAssertEqual(voiceMessageRecorder.previewAudioPlayerState?.isAttached, true)
         // The media must not have been reloaded
-        XCTAssertFalse(audioPlayer.loadMediaSourceUsingAutoplayCalled)
+        XCTAssertFalse(audioPlayer.loadSourceURLPlaybackURLAutoplayCalled)
         XCTAssertTrue(audioPlayer.playCalled)
     }
 
@@ -204,7 +199,7 @@ class VoiceMessageRecorderTests: XCTestCase {
     }
     
     func testSendVoiceMessage_NoRecordingFile() async throws {
-        let roomProxy = RoomProxyMock()
+        let roomProxy = JoinedRoomProxyMock()
 
         // If there is no recording file, an error is expected
         audioRecorder.audioFileURL = nil
@@ -219,7 +214,7 @@ class VoiceMessageRecorderTests: XCTestCase {
         // If the converter returns an error
         audioConverter.convertToOpusOggSourceURLDestinationURLThrowableError = AudioConverterError.conversionFailed(nil)
         
-        let roomProxy = RoomProxyMock()
+        let roomProxy = JoinedRoomProxyMock()
         guard case .failure(.failedSendingVoiceMessage) = await voiceMessageRecorder.sendVoiceMessage(inRoom: roomProxy, audioConverter: audioConverter) else {
             XCTFail("An error is expected")
             return
@@ -237,9 +232,9 @@ class VoiceMessageRecorderTests: XCTestCase {
         }
         
         let timelineProxy = TimelineProxyMock()
-        let roomProxy = RoomProxyMock()
+        let roomProxy = JoinedRoomProxyMock()
         roomProxy.timeline = timelineProxy
-        timelineProxy.sendVoiceMessageUrlAudioInfoWaveformProgressSubjectRequestHandleReturnValue = .failure(.sdkError(SDKError.generic))
+        timelineProxy.sendVoiceMessageUrlAudioInfoWaveformRequestHandleReturnValue = .failure(.sdkError(SDKError.generic))
         guard case .failure(.failedSendingVoiceMessage) = await voiceMessageRecorder.sendVoiceMessage(inRoom: roomProxy, audioConverter: audioConverter) else {
             XCTFail("An error is expected")
             return
@@ -258,9 +253,9 @@ class VoiceMessageRecorderTests: XCTestCase {
         }
         
         let timelineProxy = TimelineProxyMock()
-        let roomProxy = RoomProxyMock()
+        let roomProxy = JoinedRoomProxyMock()
         roomProxy.timeline = timelineProxy
-        timelineProxy.sendVoiceMessageUrlAudioInfoWaveformProgressSubjectRequestHandleReturnValue = .failure(.sdkError(SDKError.generic))
+        timelineProxy.sendVoiceMessageUrlAudioInfoWaveformRequestHandleReturnValue = .failure(.sdkError(SDKError.generic))
         guard case .failure(.failedSendingVoiceMessage) = await voiceMessageRecorder.sendVoiceMessage(inRoom: roomProxy, audioConverter: audioConverter) else {
             XCTFail("An error is expected")
             return
@@ -281,9 +276,9 @@ class VoiceMessageRecorderTests: XCTestCase {
         
         // If the media upload fails
         let timelineProxy = TimelineProxyMock()
-        let roomProxy = RoomProxyMock()
+        let roomProxy = JoinedRoomProxyMock()
         roomProxy.timeline = timelineProxy
-        timelineProxy.sendVoiceMessageUrlAudioInfoWaveformProgressSubjectRequestHandleReturnValue = .failure(.sdkError(SDKError.generic))
+        timelineProxy.sendVoiceMessageUrlAudioInfoWaveformRequestHandleReturnValue = .failure(.sdkError(SDKError.generic))
         guard case .failure(.failedSendingVoiceMessage) = await voiceMessageRecorder.sendVoiceMessage(inRoom: roomProxy, audioConverter: audioConverter) else {
             XCTFail("An error is expected")
             return
@@ -297,7 +292,7 @@ class VoiceMessageRecorderTests: XCTestCase {
         }
         
         let timelineProxy = TimelineProxyMock()
-        let roomProxy = RoomProxyMock()
+        let roomProxy = JoinedRoomProxyMock()
         roomProxy.timeline = timelineProxy
         audioRecorder.currentTime = 42
         audioRecorder.audioFileURL = imageFileURL
@@ -319,7 +314,7 @@ class VoiceMessageRecorderTests: XCTestCase {
             XCTAssertEqual(destination.pathExtension, "ogg")
         }
         
-        timelineProxy.sendVoiceMessageUrlAudioInfoWaveformProgressSubjectRequestHandleClosure = { url, audioInfo, waveform, _, _ in
+        timelineProxy.sendVoiceMessageUrlAudioInfoWaveformRequestHandleClosure = { url, audioInfo, waveform, _ in
             XCTAssertEqual(url, convertedFileURL)
             XCTAssertEqual(audioInfo.duration, self.audioRecorder.currentTime)
             XCTAssertEqual(audioInfo.size, convertedFileSize)
@@ -335,7 +330,7 @@ class VoiceMessageRecorderTests: XCTestCase {
         }
         
         XCTAssert(audioConverter.convertToOpusOggSourceURLDestinationURLCalled)
-        XCTAssert(timelineProxy.sendVoiceMessageUrlAudioInfoWaveformProgressSubjectRequestHandleCalled)
+        XCTAssert(timelineProxy.sendVoiceMessageUrlAudioInfoWaveformRequestHandleCalled)
         
         // the converted file must have been deleted
         if let convertedFileURL {

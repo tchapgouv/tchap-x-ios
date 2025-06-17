@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -36,6 +27,7 @@ struct SettingsFlowCoordinatorParameters {
     let appSettings: AppSettings
     let navigationSplitCoordinator: NavigationSplitCoordinator
     let userIndicatorController: UserIndicatorControllerProtocol
+    let analytics: AnalyticsService
 }
 
 class SettingsFlowCoordinator: FlowCoordinatorProtocol {
@@ -47,9 +39,10 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
     
     // periphery:ignore - retaining purpose
     private var appLockSetupFlowCoordinator: AppLockSetupFlowCoordinator?
-    
     // periphery:ignore - retaining purpose
     private var bugReportFlowCoordinator: BugReportFlowCoordinator?
+    // periphery:ignore - retaining purpose
+    private var encryptionSettingsFlowCoordinator: EncryptionSettingsFlowCoordinator?
     
     private let actionsSubject: PassthroughSubject<SettingsFlowCoordinatorAction, Never> = .init()
     var actions: AnyPublisher<SettingsFlowCoordinatorAction, Never> {
@@ -76,7 +69,7 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
             // The navigation stack doesn't like it if the root and the push happen
             // on the same loop run
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                self.presentSecureBackupScreen(animated: animated)
+                self.startEncryptionSettingsFlow(animated: animated)
             }
         default:
             break
@@ -93,7 +86,8 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
         navigationStackCoordinator = NavigationStackCoordinator()
         
         let settingsScreenCoordinator = SettingsScreenCoordinator(parameters: .init(userSession: parameters.userSession,
-                                                                                    appSettings: parameters.appSettings))
+                                                                                    appSettings: parameters.appSettings,
+                                                                                    isBugReportServiceEnabled: parameters.bugReportService.isEnabled))
         
         settingsScreenCoordinator.actions
             .sink { [weak self] action in
@@ -110,7 +104,7 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
                         self.actionsSubject.send(.runLogoutFlow)
                     }
                 case .secureBackup:
-                    presentSecureBackupScreen(animated: true)
+                    startEncryptionSettingsFlow(animated: true)
                 case .userDetails:
                     presentUserDetailsEditScreen()
                 case let .manageAccount(url):
@@ -135,6 +129,8 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
                     presentAdvancedSettings()
                 case .developerOptions:
                     presentDeveloperOptions()
+                case .deactivateAccount:
+                    presentDeactivateAccount()
                 }
             }
             .store(in: &cancellables)
@@ -151,19 +147,29 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
         actionsSubject.send(.presentedSettings)
     }
     
-    private func presentSecureBackupScreen(animated: Bool) {
-        let coordinator = SecureBackupScreenCoordinator(parameters: .init(appSettings: parameters.appSettings,
-                                                                          secureBackupController: parameters.userSession.clientProxy.secureBackupController,
-                                                                          navigationStackCoordinator: navigationStackCoordinator,
-                                                                          userIndicatorController: parameters.userIndicatorController))
+    private func startEncryptionSettingsFlow(animated: Bool) {
+        let coordinator = EncryptionSettingsFlowCoordinator(parameters: .init(userSession: parameters.userSession,
+                                                                              appSettings: parameters.appSettings,
+                                                                              userIndicatorController: parameters.userIndicatorController,
+                                                                              navigationStackCoordinator: navigationStackCoordinator))
+        coordinator.actionsPublisher.sink { [weak self] action in
+            switch action {
+            case .complete:
+                // The flow coordinator tidies up the stack, no need to do anything.
+                self?.encryptionSettingsFlowCoordinator = nil
+            }
+        }
+        .store(in: &cancellables)
         
-        navigationStackCoordinator.push(coordinator, animated: animated)
+        encryptionSettingsFlowCoordinator = coordinator
+        coordinator.start()
     }
     
     private func presentUserDetailsEditScreen() {
         let coordinator = UserDetailsEditScreenCoordinator(parameters: .init(orientationManager: parameters.windowManager,
                                                                              clientProxy: parameters.userSession.clientProxy,
                                                                              mediaProvider: parameters.userSession.mediaProvider,
+                                                                             mediaUploadingPreprocessor: MediaUploadingPreprocessor(appSettings: parameters.appSettings),
                                                                              navigationStackCoordinator: navigationStackCoordinator,
                                                                              userIndicatorController: parameters.userIndicatorController))
         
@@ -172,7 +178,7 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
     
     private func presentAnalyticsScreen() {
         let coordinator = AnalyticsSettingsScreenCoordinator(parameters: .init(appSettings: parameters.appSettings,
-                                                                               analytics: ServiceLocator.shared.analytics))
+                                                                               analytics: parameters.analytics))
         navigationStackCoordinator?.push(coordinator)
     }
     
@@ -219,7 +225,8 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private func presentAdvancedSettings() {
-        let coordinator = AdvancedSettingsScreenCoordinator()
+        let coordinator = AdvancedSettingsScreenCoordinator(parameters: .init(appSettings: parameters.appSettings,
+                                                                              analytics: parameters.analytics))
         navigationStackCoordinator.push(coordinator)
     }
     
@@ -233,6 +240,25 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
                 switch action {
                 case .clearCache:
                     actionsSubject.send(.clearCache)
+                }
+            }
+            .store(in: &cancellables)
+        
+        navigationStackCoordinator.push(coordinator)
+    }
+    
+    private func presentDeactivateAccount() {
+        let parameters = DeactivateAccountScreenCoordinatorParameters(clientProxy: parameters.userSession.clientProxy,
+                                                                      userIndicatorController: parameters.userIndicatorController)
+        let coordinator = DeactivateAccountScreenCoordinator(parameters: parameters)
+        
+        coordinator.actionsPublisher
+            .sink { [weak self] action in
+                guard let self else { return }
+                
+                switch action {
+                case .accountDeactivated:
+                    actionsSubject.send(.forceLogout)
                 }
             }
             .store(in: &cancellables)

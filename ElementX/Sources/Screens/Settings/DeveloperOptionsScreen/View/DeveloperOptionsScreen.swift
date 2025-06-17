@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import SwiftUI
@@ -19,45 +10,85 @@ import SwiftUI
 struct DeveloperOptionsScreen: View {
     @ObservedObject var context: DeveloperOptionsScreenViewModel.Context
     @State private var showConfetti = false
-    @State private var elementCallBaseURLString = ""
+    @State private var elementCallURLOverrideString: String
+    
+    init(context: DeveloperOptionsScreenViewModel.Context) {
+        self.context = context
+        elementCallURLOverrideString = context.elementCallBaseURLOverride?.absoluteString ?? ""
+    }
     
     var body: some View {
         Form {
             Section("Logging") {
                 LogLevelConfigurationView(logLevel: $context.logLevel)
+                
+                DisclosureGroup("SDK trace packs") {
+                    ForEach(TraceLogPack.allCases, id: \.self) { pack in
+                        Toggle(isOn: $context.traceLogPacks[pack]) {
+                            Text(pack.title)
+                        }
+                    }
+                }
             }
-            
+                        
             Section("Room List") {
+                Toggle(isOn: $context.publicSearchEnabled) {
+                    Text("Public search")
+                }
+                
                 Toggle(isOn: $context.hideUnreadMessagesBadge) {
                     Text("Hide grey dots")
                 }
-            }
-            
-            Section("Room Directory Search") {
-                Toggle(isOn: $context.publicSearchEnabled) {
-                    Text("Public rooms search")
+                
+                Toggle(isOn: $context.fuzzyRoomListSearchEnabled) {
+                    Text("Fuzzy searching")
                 }
             }
             
-            Section("Room") {
-                Toggle(isOn: $context.shouldCollapseRoomStateEvents) {
-                    Text("Collapse room state events")
+            Section("Join rules") {
+                Toggle(isOn: $context.knockingEnabled) {
+                    Text("Knocking")
+                    Text("Ask to join rooms")
                 }
             }
             
-            Section("Element Call") {
-                TextField(context.elementCallBaseURL.absoluteString, text: $elementCallBaseURLString)
-                    .submitLabel(.done)
-                    .onSubmit {
-                        guard let url = URL(string: elementCallBaseURLString) else {
-                            return
-                        }
-                        
-                        context.elementCallBaseURL = url
-                    }
+            Section {
+                Toggle(isOn: $context.enableOnlySignedDeviceIsolationMode) {
+                    Text("Exclude insecure devices when sending/receiving messages")
+                    Text("Requires app reboot")
+                }
+            } header: {
+                Text("Trust and Decoration")
+            } footer: {
+                Text("This setting controls how end-to-end encryption (E2EE) keys are exchanged. Enabling it will prevent the inclusion of devices that have not been explicitly verified by their owners.")
+            }
+            
+            Section("Reporting") {
+                Toggle(isOn: $context.reportRoomEnabled) {
+                    Text("Report rooms")
+                    Text("Report API might not work properly")
+                }
+                Toggle(isOn: $context.reportInviteEnabled) {
+                    Text("Report invites")
+                    Text("Report API might not work properly")
+                }
+            }
+
+            Section {
+                TextField("Leave empty to use EC locally", text: $elementCallURLOverrideString)
                     .autocorrectionDisabled(true)
                     .autocapitalization(.none)
-                    .foregroundColor(URL(string: elementCallBaseURLString) == nil ? .red : .primary)
+                    .foregroundColor(URL(string: elementCallURLOverrideString) == nil ? .red : .primary)
+                    .submitLabel(.done)
+                    .onSubmit {
+                        if elementCallURLOverrideString.isEmpty {
+                            context.elementCallBaseURLOverride = nil
+                        } else if let url = URL(string: elementCallURLOverrideString) {
+                            context.elementCallBaseURLOverride = url
+                        }
+                    }
+            } header: {
+                Text("Element Call remote URL override")
             }
             
             Section {
@@ -109,19 +140,7 @@ struct DeveloperOptionsScreen: View {
 }
 
 private struct LogLevelConfigurationView: View {
-    @Binding var logLevel: TracingConfiguration.LogLevel
-    
-    @State private var customTracingConfiguration: String
-
-    init(logLevel: Binding<TracingConfiguration.LogLevel>) {
-        _logLevel = logLevel
-        
-        if case .custom(let configuration) = logLevel.wrappedValue {
-            customTracingConfiguration = configuration
-        } else {
-            customTracingConfiguration = TracingConfiguration(logLevel: .info, target: nil).filter
-        }
-    }
+    @Binding var logLevel: LogLevel
     
     var body: some View {
         Picker(selection: $logLevel) {
@@ -132,23 +151,24 @@ private struct LogLevelConfigurationView: View {
             Text("Log level")
             Text("Requires app reboot")
         }
-        
-        if case .custom = logLevel {
-            TextEditor(text: $customTracingConfiguration)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .onChange(of: customTracingConfiguration) { newValue in
-                    logLevel = .custom(newValue)
-                }
-        }
     }
     
     /// Allows the picker to work with associated values
-    private var logLevels: [TracingConfiguration.LogLevel] {
-        if case let .custom(filter) = logLevel {
-            return [.error, .warn, .info, .debug, .trace, .custom(filter)]
-        } else {
-            return [.error, .warn, .info, .debug, .trace, .custom("")]
+    private var logLevels: [LogLevel] {
+        [.error, .warn, .info, .debug, .trace]
+    }
+}
+
+private extension Set<TraceLogPack> {
+    /// A custom subscript that allows binding a toggle to add/remove a pack from the array.
+    subscript(pack: TraceLogPack) -> Bool {
+        get { contains(pack) }
+        set {
+            if newValue {
+                insert(pack)
+            } else {
+                remove(pack)
+            }
         }
     }
 }
@@ -156,7 +176,8 @@ private struct LogLevelConfigurationView: View {
 // MARK: - Previews
 
 struct DeveloperOptionsScreen_Previews: PreviewProvider {
-    static let viewModel = DeveloperOptionsScreenViewModel(developerOptions: ServiceLocator.shared.settings)
+    static let viewModel = DeveloperOptionsScreenViewModel(developerOptions: ServiceLocator.shared.settings,
+                                                           elementCallBaseURL: ServiceLocator.shared.settings.elementCallBaseURL)
     static var previews: some View {
         NavigationStack {
             DeveloperOptionsScreen(context: viewModel.context)

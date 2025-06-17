@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -43,7 +34,7 @@ struct MapLibreMapView: UIViewRepresentable {
     
     @Environment(\.colorScheme) private var colorScheme
     
-    let builder: MapTilerStyleBuilderProtocol
+    let mapURLBuilder: MapTilerURLBuilderProtocol
 
     let options: Options
     
@@ -73,7 +64,7 @@ struct MapLibreMapView: UIViewRepresentable {
         // Don't set the same value twice. Otherwise, if there is an error loading the map, a loop
         // is caused as the `error` binding being set, which triggers this update, which sets a
         // new URL, which causes another error, and so it goes on round and round in a circle.
-        let dynamicMapURL = builder.dynamicMapURL(for: .init(colorScheme))
+        let dynamicMapURL = mapURLBuilder.dynamicMapURL(for: .init(colorScheme))
         if mapView.styleURL != dynamicMapURL {
             mapView.styleURL = dynamicMapURL
         }
@@ -94,7 +85,7 @@ struct MapLibreMapView: UIViewRepresentable {
     }
     
     private func makeMapView() -> MGLMapView {
-        let mapView = MGLMapView(frame: .zero, styleURL: colorScheme == .dark ? builder.dynamicMapURL(for: .dark) : builder.dynamicMapURL(for: .light))
+        let mapView = MGLMapView(frame: .zero, styleURL: mapURLBuilder.dynamicMapURL(for: colorScheme == .dark ? .dark : .light))
         mapView.logoViewPosition = .topLeft
         mapView.attributionButtonPosition = .topLeft
         mapView.attributionButtonMargins = .init(x: mapView.logoView.frame.maxX + 8, y: mapView.logoView.center.y / 2)
@@ -182,7 +173,7 @@ extension MapLibreMapView {
         }
         
         func mapView(_ mapView: MGLMapView, regionDidChangeAnimated animated: Bool) {
-            // Fixes: "Publishing changes from within view updates is not allowed, this will cause undefined behavior."
+            // Avoid `Publishing changes from within view update` warnings
             DispatchQueue.main.async { [mapLibreView] in
                 mapLibreView.mapCenterCoordinate = mapView.centerCoordinate
             }

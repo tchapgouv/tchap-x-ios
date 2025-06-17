@@ -1,4 +1,8 @@
 // swiftlint:disable all
+@preconcurrency import MatrixRustSDK
+
+import Foundation
+
 {% for import in argument.autoMockableImports %}
 import {{ import }}
 {% endfor %}
@@ -24,11 +28,15 @@ import {{ import }}
     {% endset %}
     {% if method.parameters.count == 1 and not hasNonEscapingClosures %}
         {% call swiftifyMethodName method.selectorName %}Received{% for param in method.parameters %}{{ param.name |  replace:"`","" | upperFirstLetter  }} = {{ param.name | replace:"`","" }}{% endfor %}
-        {% call swiftifyMethodName method.selectorName %}ReceivedInvocations.append({% for param in method.parameters %}{{ param.name }}){% endfor %}
+        DispatchQueue.main.async {
+            self.{% call swiftifyMethodName method.selectorName %}ReceivedInvocations.append({% for param in method.parameters %}{{ param.name }}){% endfor %}
+        }
     {% else %}
     {% if not method.parameters.count == 0 and not hasNonEscapingClosures %}
         {% call swiftifyMethodName method.selectorName %}ReceivedArguments = ({% for param in method.parameters %}{{ param.name | replace:"`","" }}: {{ param.name | replace:"`",""  }}{% if not forloop.last%}, {% endif %}{% endfor %})
-        {% call swiftifyMethodName method.selectorName %}ReceivedInvocations.append(({% for param in method.parameters %}{{ param.name | replace:"`","" }}: {{ param.name | replace:"`",""  }}{% if not forloop.last%}, {% endif %}{% endfor %}))
+        DispatchQueue.main.async {
+            self.{% call swiftifyMethodName method.selectorName %}ReceivedInvocations.append(({% for param in method.parameters %}{{ param.name | replace:"`","" }}: {{ param.name | replace:"`",""  }}{% if not forloop.last%}, {% endif %}{% endfor %}))
+        }
     {% endif %}
     {% endif %}
 {% endmacro %}
@@ -214,7 +222,7 @@ import {{ import }}
 {% macro underlyingMockedVariableName variable %}underlying{{ variable.name|upperFirstLetter }}{% endmacro %}
 {% macro mockedVariableName variable %}{{ variable.name }}{% endmacro %}
 {% for type in types.classes %}{% if type.name != "AutoMockable" %}{% if type.accessLevel == "open" %}
-{% call accessLevel type.accessLevel %}class {{ type.name | replace:"Protocol","" }}SDKMock: MatrixRustSDK.{{ type.name }} {
+{% call accessLevel type.accessLevel %}class {{ type.name | replace:"Protocol","" }}SDKMock: MatrixRustSDK.{{ type.name }}, @unchecked Sendable {
     {% if type.accessLevel == "open" %}
     init() {
         super.init(noPointer: .init())

@@ -1,37 +1,20 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
+import MatrixRustSDK
 
 final class RoomTimelineItemViewState: Identifiable, Equatable, ObservableObject {
-    static func == (lhs: RoomTimelineItemViewState, rhs: RoomTimelineItemViewState) -> Bool {
-        lhs.type == rhs.type && lhs.groupStyle == rhs.groupStyle
-    }
-
     @Published var type: RoomTimelineItemType
     @Published var groupStyle: TimelineGroupStyle
 
-    /// Contains all the identification info of the item, `timelineID`, `eventID` and `transactionID`
+    /// Contains all the identification info of the item, `uniqueID`, `eventID` and `transactionID`
     var identifier: TimelineItemIdentifier {
         type.id
-    }
-
-    /// The `timelineID` of the item, used for the timeline view level identification, do not use for any business logic use `identifier` instead
-    var id: String {
-        identifier.timelineID
     }
 
     init(type: RoomTimelineItemType, groupStyle: TimelineGroupStyle) {
@@ -41,6 +24,19 @@ final class RoomTimelineItemViewState: Identifiable, Equatable, ObservableObject
 
     convenience init(item: RoomTimelineItemProtocol, groupStyle: TimelineGroupStyle) {
         self.init(type: .init(item: item), groupStyle: groupStyle)
+    }
+    
+    // MARK: - Equatable
+    
+    static func == (lhs: RoomTimelineItemViewState, rhs: RoomTimelineItemViewState) -> Bool {
+        lhs.type == rhs.type && lhs.groupStyle == rhs.groupStyle
+    }
+    
+    // MARK: Identifiable
+    
+    /// The `timelineID` of the item, used for the timeline view level identification, do not use for any business logic use `identifier` instead
+    var id: TimelineItemIdentifier.UniqueID {
+        identifier.uniqueID
     }
 }
 

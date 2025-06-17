@@ -1,89 +1,70 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 import XCTest
 
 final class TextBasedRoomTimelineTests: XCTestCase {
     func testTextRoomTimelineItemWhitespaceEnd() {
-        let timestamp = "Now"
-        let timelineItem = TextRoomTimelineItem(id: .random,
+        let timestamp = Calendar.current.startOfDay(for: .now).addingTimeInterval(60 * 60) // 1:00 am
+        let timelineItem = TextRoomTimelineItem(id: .randomEvent,
                                                 timestamp: timestamp,
                                                 isOutgoing: true,
                                                 isEditable: true,
                                                 canBeRepliedTo: true,
-                                                isThreaded: false,
                                                 sender: .init(id: UUID().uuidString),
                                                 content: .init(body: "Test"))
-        XCTAssertEqual(timelineItem.additionalWhitespaces(timelineStyle: .bubbles), timestamp.count + 1)
+        XCTAssertEqual(timelineItem.additionalWhitespaces(), timestamp.formattedTime().count + 1)
     }
 
     func testTextRoomTimelineItemWhitespaceEndLonger() {
-        let timestamp = "10:00 AM"
-        let timelineItem = TextRoomTimelineItem(id: .random,
+        let timestamp = Calendar.current.startOfDay(for: .now).addingTimeInterval(-60) // 11:59 pm
+        let timelineItem = TextRoomTimelineItem(id: .randomEvent,
                                                 timestamp: timestamp,
                                                 isOutgoing: true,
                                                 isEditable: true,
                                                 canBeRepliedTo: true,
-                                                isThreaded: false,
                                                 sender: .init(id: UUID().uuidString),
                                                 content: .init(body: "Test"))
-        XCTAssertEqual(timelineItem.additionalWhitespaces(timelineStyle: .bubbles), timestamp.count + 1)
-    }
-
-    func testTextRoomTimelineItemWhitespaceEndPlain() {
-        let timelineItem = TextRoomTimelineItem(id: .random,
-                                                timestamp: "Now",
-                                                isOutgoing: true,
-                                                isEditable: true,
-                                                canBeRepliedTo: true,
-                                                isThreaded: false,
-                                                sender: .init(id: UUID().uuidString),
-                                                content: .init(body: "Test"))
-        XCTAssertEqual(timelineItem.additionalWhitespaces(timelineStyle: .plain), 0)
+        XCTAssertEqual(timelineItem.additionalWhitespaces(), timestamp.formattedTime().count + 1)
     }
 
     func testTextRoomTimelineItemWhitespaceEndWithEdit() {
-        let timestamp = "Now"
-        var timelineItem = TextRoomTimelineItem(id: .random,
+        let timestamp = Date.mock
+        var timelineItem = TextRoomTimelineItem(id: .randomEvent,
                                                 timestamp: timestamp,
                                                 isOutgoing: true,
                                                 isEditable: true,
                                                 canBeRepliedTo: true,
-                                                isThreaded: false,
                                                 sender: .init(id: UUID().uuidString),
                                                 content: .init(body: "Test"))
         timelineItem.properties.isEdited = true
         let editedCount = L10n.commonEditedSuffix.count
-        XCTAssertEqual(timelineItem.additionalWhitespaces(timelineStyle: .bubbles), timestamp.count + editedCount + 2)
+        XCTAssertEqual(timelineItem.additionalWhitespaces(), timestamp.formattedTime().count + editedCount + 2)
     }
 
     func testTextRoomTimelineItemWhitespaceEndWithEditAndAlert() {
-        let timestamp = "Now"
-        var timelineItem = TextRoomTimelineItem(id: .random,
+        let timestamp = Date.mock
+        var timelineItem = TextRoomTimelineItem(id: .randomEvent,
                                                 timestamp: timestamp,
                                                 isOutgoing: true,
                                                 isEditable: true,
                                                 canBeRepliedTo: true,
-                                                isThreaded: false,
                                                 sender: .init(id: UUID().uuidString),
                                                 content: .init(body: "Test"))
         timelineItem.properties.isEdited = true
-        timelineItem.properties.deliveryStatus = .sendingFailed
+        timelineItem.properties.deliveryStatus = .sendingFailed(.unknown)
         let editedCount = L10n.commonEditedSuffix.count
-        XCTAssertEqual(timelineItem.additionalWhitespaces(timelineStyle: .bubbles), timestamp.count + editedCount + 5)
+        XCTAssertEqual(timelineItem.additionalWhitespaces(), timestamp.formattedTime().count + editedCount + 5)
     }
 }

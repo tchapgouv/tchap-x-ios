@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -21,49 +12,80 @@ import SwiftUI
 
 // MARK: View model
 
-enum RoomDetailsScreenViewModelAction {
+enum RoomDetailsScreenViewModelAction: Equatable {
     case requestNotificationSettingsPresentation
     case requestMemberDetailsPresentation
+    case requestRecipientDetailsPresentation(userID: String)
     case requestInvitePeoplePresentation
     case leftRoom
     case requestEditDetailsPresentation
     case requestPollsHistoryPresentation
     case requestRolesAndPermissionsPresentation
     case startCall
+    case displayPinnedEventsTimeline
+    case displayMediaEventsTimeline
+    case displayKnockingRequests
+    case displaySecurityAndPrivacy
+    case displayReportRoom
 }
 
 // MARK: View
 
+struct DMRecipientInfo {
+    var member: RoomMemberDetails
+    var verificationState: UserIdentityVerificationState?
+}
+
 struct RoomDetailsScreenViewState: BindableState {
     var details: RoomDetails
     
-    let isEncrypted: Bool
-    let isDirect: Bool
+    var isEncrypted: Bool
+    var isDirect: Bool
     var permalink: URL?
 
     var topic: AttributedString?
     var topicSummary: AttributedString?
+    
     var joinedMembersCount: Int
+    var hasMemberIdentityVerificationStateViolations = false
+    
     var isProcessingIgnoreRequest = false
     var canInviteUsers = false
     var canEditRoomName = false
     var canEditRoomTopic = false
     var canEditRoomAvatar = false
     var canEditRolesOrPermissions = false
+    var canKickUsers = false
+    var canBanUsers = false
     var notificationSettingsState: RoomDetailsNotificationSettingsState = .loading
     var canJoinCall = false
+    var pinnedEventsActionState = RoomDetailsScreenPinnedEventsActionState.loading
+    
+    var knockingEnabled = false
+    var isKnockableRoom = false
+    var knockRequestsCount = 0
+    
+    var reportRoomEnabled = false
+    
+    var canSeeKnockingRequests: Bool {
+        knockingEnabled && dmRecipientInfo == nil && isKnockableRoom && (canInviteUsers || canKickUsers || canBanUsers)
+    }
+    
+    var canSeeSecurityAndPrivacy: Bool {
+        knockingEnabled && dmRecipientInfo == nil && canEditRolesOrPermissions
+    }
     
     var canEdit: Bool {
         !isDirect && (canEditRoomName || canEditRoomTopic || canEditRoomAvatar)
     }
     
     var hasTopicSection: Bool {
-        topic != nil || (canEdit && canEditRoomTopic)
+        topic != nil || canEditRoomTopic
     }
 
     var bindings: RoomDetailsScreenViewStateBindings
 
-    var dmRecipient: RoomMemberDetails?
+    var dmRecipientInfo: DMRecipientInfo?
     var accountOwner: RoomMemberDetails?
     
     var shortcuts: [RoomDetailsScreenViewShortcut] {
@@ -71,10 +93,10 @@ struct RoomDetailsScreenViewState: BindableState {
         if !ProcessInfo.processInfo.isiOSAppOnMac, canJoinCall {
             shortcuts.append(.call)
         }
-        if dmRecipient == nil, canInviteUsers {
+        if dmRecipientInfo == nil, canInviteUsers {
             shortcuts.append(.invite)
         }
-        if let permalink = dmRecipient?.permalink {
+        if let permalink = dmRecipientInfo?.member.permalink {
             shortcuts.append(.share(link: permalink))
         } else if let permalink {
             shortcuts.append(.share(link: permalink))
@@ -148,6 +170,9 @@ struct RoomDetailsScreenViewStateBindings {
     
     /// A media item that will be previewed with QuickLook.
     var mediaPreviewItem: MediaPreviewItem?
+    
+    // Tchap: get number of external users to display or hide `External` badge.
+    var externalCount = 0
 }
 
 struct LeaveRoomAlertItem: AlertProtocol {
@@ -188,12 +213,18 @@ enum RoomDetailsScreenViewAction {
     case ignoreConfirmed
     case unignoreConfirmed
     case processTapNotifications
+    case processTapRecipientProfile
     case processToggleMuteNotifications
-    case displayAvatar
+    case displayAvatar(URL)
     case processTapPolls
     case toggleFavourite(isFavourite: Bool)
     case processTapRolesAndPermissions
+    case processTapSecurityAndPrivacy
     case processTapCall
+    case processTapPinnedEvents
+    case processTapMediaEvents
+    case processTapRequestsToJoin
+    case processTapReport
 }
 
 enum RoomDetailsScreenViewShortcut {
@@ -260,4 +291,27 @@ enum RoomDetailsScreenErrorType: Hashable {
     case alert
     /// Leaving room has failed..
     case unknown
+}
+
+enum RoomDetailsScreenPinnedEventsActionState {
+    case loading
+    case loaded(numberOfItems: Int)
+    
+    var count: String {
+        switch self {
+        case .loading:
+            return ""
+        case .loaded(let numberOfItems):
+            return "\(numberOfItems)"
+        }
+    }
+    
+    var isLoading: Bool {
+        switch self {
+        case .loading:
+            return true
+        default:
+            return false
+        }
+    }
 }

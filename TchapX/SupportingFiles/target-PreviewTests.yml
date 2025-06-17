@@ -1,0 +1,57 @@
+name: TchapX-PreviewTests
+
+schemes:
+  TchapX-PreviewTests:
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+    build:
+      targets:
+        TchapX-PreviewTests: all
+    profile:
+      config: Release
+    run:
+      config: Debug
+      disableMainThreadChecker: false
+    test:
+      config: Debug
+      disableMainThreadChecker: false
+      gatherCoverageData: true
+      coverageTargets:
+        - TchapX-Production
+      testPlans:
+        - path: ../PreviewTests/SupportingFiles/PreviewTests.xctestplan
+        # Don't set it as defaultPlan to avoid conflict with ElementX defaultPlan.
+          defaultPlan: false
+
+targets:
+  TchapX-PreviewTests:
+    type: bundle.unit-test
+    platform: iOS
+    
+    dependencies:
+    - target: TchapX-Production
+    - package: MatrixRustSDK
+    - package: SnapshotTesting
+
+    info:
+      path: ../PreviewTests/SupportingFiles/Info.plist
+
+    settings:
+      base:
+        BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx
+        BASE_APP_GROUP_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
+        APP_GROUP_IDENTIFIER: group.$(BASE_APP_GROUP_IDENTIFIER)
+        APP_DISPLAY_NAME: TchapX # The name used in the application.
+        PRODUCT_NAME: PreviewTests
+        PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.preview.tests
+      debug:
+      release:
+
+    sources:
+    - path: ../../PreviewTests/Sources
+      excludes:
+        - "**/__Snapshots__/**"
+    - path: ../SupportingFiles
+    - path: ../../ElementX/Sources/Other/Extensions/XCTestCase.swift

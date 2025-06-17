@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -34,9 +25,9 @@ struct IdentityConfirmationScreen: View {
         } bottomContent: {
             actionButtons
         }
+        .toolbar { toolbar }
         .background()
         .backgroundStyle(.compound.bgCanvasDefault)
-        .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
         .interactiveDismissDisabled()
     }
@@ -46,7 +37,7 @@ struct IdentityConfirmationScreen: View {
     @ViewBuilder
     private var screenHeader: some View {
         VStack(spacing: 0) {
-            HeroImage(icon: \.lockSolid)
+            BigIcon(icon: \.lockSolid)
                 .padding(.bottom, 16)
             
             Text(L10n.screenIdentityConfirmationTitle)
@@ -63,44 +54,48 @@ struct IdentityConfirmationScreen: View {
             Button(L10n.actionLearnMore) {
                 UIApplication.shared.open(context.viewState.learnMoreURL)
             }
-            .buttonStyle(.compound(.plain))
+            .buttonStyle(.compound(.tertiary, size: .small))
             .padding(.top, 16)
         }
     }
     
     @ViewBuilder
     private var actionButtons: some View {
-        VStack(spacing: 32) {
+        VStack(spacing: 16) {
             if context.viewState.availableActions.contains(.interactiveVerification) {
-                Button(L10n.actionStartVerification) {
+                Button(L10n.screenIdentityConfirmationUseAnotherDevice) {
                     context.send(viewAction: .otherDevice)
                 }
                 .buttonStyle(.compound(.primary))
-                
-                if context.viewState.availableActions.contains(.recovery) {
-                    Button(L10n.screenSessionVerificationEnterRecoveryKey) {
-                        context.send(viewAction: .recoveryKey)
-                    }
-                    .buttonStyle(.compound(.plain))
-                }
-            } else if context.viewState.availableActions.contains(.recovery) {
-                Button(L10n.screenSessionVerificationEnterRecoveryKey) {
+            }
+            
+            if context.viewState.availableActions.contains(.recovery) {
+                Button(L10n.screenIdentityConfirmationUseRecoveryKey) {
                     context.send(viewAction: .recoveryKey)
                 }
                 .buttonStyle(.compound(.primary))
             }
             
-            if shouldShowSkipButton {
-                Button(L10n.actionSkip) {
-                    context.send(viewAction: .skip)
-                }
-                .buttonStyle(.compound(.plain))
-            }
-            
-            Button(L10n.screenRecoveryKeyConfirmLostRecoveryKey, role: .destructive) {
+            Button(L10n.screenIdentityConfirmationCannotConfirm) {
                 context.send(viewAction: .reset)
             }
-            .buttonStyle(.compound(.plain))
+            .buttonStyle(.compound(.secondary))
+            
+            if shouldShowSkipButton {
+                Button("\(L10n.actionSkip) 🙉") {
+                    context.send(viewAction: .skip)
+                }
+                .buttonStyle(.compound(.tertiary))
+            }
+        }
+    }
+    
+    @ToolbarContentBuilder
+    var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .destructiveAction) {
+            Button(L10n.actionSignout) {
+                context.send(viewAction: .logout)
+            }
         }
     }
 }
@@ -108,15 +103,21 @@ struct IdentityConfirmationScreen: View {
 // MARK: - Previews
 
 struct IdentityConfirmationScreen_Previews: PreviewProvider, TestablePreview {
+    static var viewModel = makeViewModel()
+    
     static var previews: some View {
         NavigationStack {
             IdentityConfirmationScreen(context: viewModel.context)
         }
+        .snapshotPreferences(expect: viewModel.context.$viewState.map { state in
+            state.availableActions.contains([.interactiveVerification, .recovery])
+        })
     }
     
-    private static var viewModel: IdentityConfirmationScreenViewModel {
-        let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@user:example.com",
-                                                                                   roomSummaryProvider: RoomSummaryProviderMock(.init(state: .loaded([])))))))
+    static func makeViewModel() -> IdentityConfirmationScreenViewModel {
+        let clientProxy = ClientProxyMock(.init())
+        let userSession = UserSessionMock(.init(clientProxy: clientProxy))
+        userSession.sessionSecurityStatePublisher = CurrentValuePublisher<SessionSecurityState, Never>(.init(verificationState: .unverified, recoveryState: .enabled))
         
         return IdentityConfirmationScreenViewModel(userSession: userSession,
                                                    appSettings: ServiceLocator.shared.settings,

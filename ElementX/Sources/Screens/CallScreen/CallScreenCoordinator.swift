@@ -1,30 +1,32 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+import AVKit
 import Combine
 import SwiftUI
 
 struct CallScreenCoordinatorParameters {
     let elementCallService: ElementCallServiceProtocol
-    let roomProxy: RoomProxyProtocol
-    let callBaseURL: URL
-    let clientID: String
+    let configuration: ElementCallConfiguration
+    let allowPictureInPicture: Bool
+    let appHooks: AppHooks
 }
 
 enum CallScreenCoordinatorAction {
+    /// The call is able to be minimised to picture in picture with the provided controller.
+    ///
+    /// **Note:** Manually starting the PiP will not trigger the action below as we don't want
+    /// to change the app's navigation when backgrounding the app with the call screen visible.
+    case pictureInPictureIsAvailable(AVPictureInPictureController)
+    /// The call is still ongoing but the user requested to navigate around the app.
+    case pictureInPictureStarted
+    /// The call is hidden and the user wishes to return to it.
+    case pictureInPictureStopped
+    /// The call is finished and the screen is done with.
     case dismiss
 }
 
@@ -39,9 +41,11 @@ final class CallScreenCoordinator: CoordinatorProtocol {
     
     init(parameters: CallScreenCoordinatorParameters) {
         viewModel = CallScreenViewModel(elementCallService: parameters.elementCallService,
-                                        roomProxy: parameters.roomProxy,
-                                        callBaseURL: parameters.callBaseURL,
-                                        clientID: parameters.clientID)
+                                        configuration: parameters.configuration,
+                                        allowPictureInPicture: parameters.allowPictureInPicture,
+                                        appHooks: parameters.appHooks,
+                                        appSettings: ServiceLocator.shared.settings,
+                                        analyticsService: ServiceLocator.shared.analytics)
     }
     
     func start() {
@@ -49,6 +53,12 @@ final class CallScreenCoordinator: CoordinatorProtocol {
             guard let self else { return }
             
             switch action {
+            case .pictureInPictureIsAvailable(let controller):
+                actionsSubject.send(.pictureInPictureIsAvailable(controller))
+            case .pictureInPictureStarted:
+                actionsSubject.send(.pictureInPictureStarted)
+            case .pictureInPictureStopped:
+                actionsSubject.send(.pictureInPictureStopped)
             case .dismiss:
                 actionsSubject.send(.dismiss)
             }

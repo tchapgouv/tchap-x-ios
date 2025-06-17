@@ -29,12 +29,9 @@ targets:
     type: bundle.unit-test
     platform: iOS
     
-    buildToolPlugins:
-    - plugin: PrefireTestsPlugin
-      package: Prefire
-
     dependencies:
     - target: ElementX
+    - package: MatrixRustSDK
     - package: SnapshotTesting
 
     info:
@@ -48,4 +45,8 @@ targets:
       release:
 
     sources:
+    - path: ../Sources
+      excludes:
+        - "**/__Snapshots__/**"
     - path: ../SupportingFiles
+    - path: ../../ElementX/Sources/Other/Extensions/XCTestCase.swift

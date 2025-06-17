@@ -1,29 +1,40 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import SwiftUI
 
-extension LabelStyle where Self == MenuSheetLabelStyle {
-    /// A label style for labels that are within a menu that is being presented as a sheet.
-    static var menuSheet: Self { MenuSheetLabelStyle() }
+extension ButtonStyle where Self == MenuSheetButtonStyle {
+    /// A button style for buttons that are within a menu that is being presented as a sheet.
+    static var menuSheet: Self { MenuSheetButtonStyle() }
 }
 
-/// The style used for labels that are part of a menu that's presented as
-/// a sheet as `TimelineItemMenu` and `RoomAttachmentPicker`.
-struct MenuSheetLabelStyle: LabelStyle {
+/// The style used for buttons that are part of a menu that's presented as
+/// a sheet such as `TimelineItemMenu`.
+struct MenuSheetButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityShowButtonShapes) private var accessibilityShowButtonShapes
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .labelStyle(MenuSheetLabelStyle())
+            .foregroundStyle(configuration.role == .destructive ? .compound.textCriticalPrimary : .compound.textActionPrimary)
+            .contentShape(.rect)
+            .opacity(configuration.isPressed ? 0.3 : 1)
+            .background {
+                if accessibilityShowButtonShapes {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(uiColor: .secondarySystemFill))
+                        .opacity(configuration.isPressed ? 0.8 : 1)
+                        .padding(4)
+                }
+            }
+    }
+}
+
+private struct MenuSheetLabelStyle: LabelStyle {
     var spacing: CGFloat = 16
     
     func makeBody(configuration: Configuration) -> some View {

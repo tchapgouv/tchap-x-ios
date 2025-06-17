@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -20,6 +11,8 @@ import SwiftUI
 
 struct SettingsScreen: View {
     @ObservedObject var context: SettingsScreenViewModel.Context
+    // Tchap: `openURL` needed to open FAQ page.
+    @Environment(\.openURL) private var openURL
     
     private var shouldHideManageAccountSection: Bool {
         context.viewState.accountProfileURL == nil &&
@@ -38,6 +31,8 @@ struct SettingsScreen: View {
             }
             
             generalSection
+            
+            signOutSection
         }
         .compoundList()
         .navigationTitle(L10n.commonSettings)
@@ -56,16 +51,19 @@ struct SettingsScreen: View {
                                             name: context.viewState.userDisplayName,
                                             contentID: context.viewState.userID,
                                             avatarSize: .user(on: .settings),
-                                            imageProvider: context.imageProvider)
+                                            mediaProvider: context.mediaProvider)
                             .accessibilityHidden(true)
                         
                         VStack(alignment: .leading, spacing: 2) {
                             Text(context.viewState.userDisplayName ?? "")
                                 .font(.compound.headingMD)
                                 .foregroundColor(.compound.textPrimary)
+                            // Tchap: only display User ID of Settings when in debug mode
+                            #if DEBUG
                             Text(context.viewState.userID)
                                 .font(.compound.bodySM)
                                 .foregroundColor(.compound.textSecondary)
+                            #endif
                         }
                         
                         Spacer()
@@ -97,7 +95,7 @@ struct SettingsScreen: View {
             
             switch context.viewState.securitySectionMode {
             case .secureBackup:
-                ListRow(label: .default(title: L10n.commonChatBackup,
+                ListRow(label: .default(title: L10n.commonEncryption,
                                         icon: \.key),
                         details: context.viewState.showSecuritySectionBadge ? .icon(securitySectionBadge) : nil,
                         kind: .navigationLink { context.send(viewAction: .secureBackup) })
@@ -140,26 +138,39 @@ struct SettingsScreen: View {
     
     private var generalSection: some View {
         Section {
-            ListRow(label: .default(title: L10n.commonAbout,
+            // Tchap: Add FAQ item
+            ListRow(label: .default(title: TchapL10n.commonFaq,
                                     icon: \.info),
+                    kind: .button {
+                        openURL(context.viewState.tchapFaqURL)
+                    })
+                    .accessibilityIdentifier(A11yIdentifiers.settingsScreen.about)
+            // Tchap: Customize "About" menu into "Legal" menu
+//            ListRow(label: .default(title: L10n.commonAbout,
+            ListRow(label: .default(title: TchapL10n.commonLegal,
+                                    icon: \.listBulleted),
                     kind: .navigationLink {
                         context.send(viewAction: .about)
                     })
-                    .accessibilityIdentifier(A11yIdentifiers.settingsScreen.about)
+                    .accessibilityIdentifier(TchapA11yIdentifiers.settingsScreen.faq)
             
-            ListRow(label: .default(title: L10n.commonReportAProblem,
-                                    icon: \.chatProblem),
-                    kind: .navigationLink {
-                        context.send(viewAction: .reportBug)
-                    })
-                    .accessibilityIdentifier(A11yIdentifiers.settingsScreen.reportBug)
+            if context.viewState.isBugReportServiceEnabled {
+                ListRow(label: .default(title: L10n.commonReportAProblem,
+                                        icon: \.chatProblem),
+                        kind: .navigationLink {
+                            context.send(viewAction: .reportBug)
+                        })
+                        .accessibilityIdentifier(A11yIdentifiers.settingsScreen.reportBug)
+            }
             
-            ListRow(label: .default(title: L10n.commonAnalytics,
-                                    icon: \.chart),
-                    kind: .navigationLink {
-                        context.send(viewAction: .analytics)
-                    })
-                    .accessibilityIdentifier(A11yIdentifiers.settingsScreen.analytics)
+            if context.viewState.showAnalyticsSettings {
+                ListRow(label: .default(title: L10n.commonAnalytics,
+                                        icon: \.chart),
+                        kind: .navigationLink {
+                            context.send(viewAction: .analytics)
+                        })
+                        .accessibilityIdentifier(A11yIdentifiers.settingsScreen.analytics)
+            }
             
             ListRow(label: .default(title: L10n.commonAdvancedSettings,
                                     icon: \.settings),
@@ -176,7 +187,11 @@ struct SettingsScreen: View {
                         })
                         .accessibilityIdentifier(A11yIdentifiers.settingsScreen.developerOptions)
             }
-            
+        }
+    }
+    
+    private var signOutSection: some View {
+        Section {
             ListRow(label: .action(title: L10n.screenSignoutPreferenceItem,
                                    icon: \.signOut,
                                    role: .destructive),
@@ -184,6 +199,15 @@ struct SettingsScreen: View {
                         context.send(viewAction: .logout)
                     })
                     .accessibilityIdentifier(A11yIdentifiers.settingsScreen.logout)
+            
+            if context.viewState.showAccountDeactivation {
+                ListRow(label: .action(title: L10n.actionDeactivateAccount,
+                                       icon: \.warning,
+                                       role: .destructive),
+                        kind: .navigationLink {
+                            context.send(viewAction: .deactivateAccount)
+                        })
+            }
         } footer: {
             VStack(spacing: 0) {
                 versionText
@@ -196,6 +220,9 @@ struct SettingsScreen: View {
             .compoundListSectionFooter()
             .textSelection(.enabled)
             .padding(.top, 24)
+            .onTapGesture(count: 7) {
+                context.send(viewAction: .enableDeveloperOptions)
+            }
         }
     }
     
@@ -221,17 +248,32 @@ struct SettingsScreen: View {
 // MARK: - Previews
 
 struct SettingsScreen_Previews: PreviewProvider, TestablePreview {
-    static let viewModel = {
-        let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@userid:example.com",
-                                                                                   deviceID: "AAAAAAAAAAA"))))
-        return SettingsScreenViewModel(userSession: userSession,
-                                       appSettings: ServiceLocator.shared.settings)
-    }()
+    static let viewModel = makeViewModel()
+    static let bugReportDisabledViewModel = makeViewModel(isBugReportServiceEnabled: false)
     
     static var previews: some View {
         NavigationStack {
             SettingsScreen(context: viewModel.context)
-                .snapshot(delay: 1.0)
         }
+        .snapshotPreferences(expect: viewModel.context.$viewState.map { state in
+            state.accountSessionsListURL != nil
+        })
+        .previewDisplayName("Default")
+        
+        NavigationStack {
+            SettingsScreen(context: bugReportDisabledViewModel.context)
+        }
+        .snapshotPreferences(expect: bugReportDisabledViewModel.context.$viewState.map { state in
+            state.accountSessionsListURL != nil
+        })
+        .previewDisplayName("Bug report disabled")
+    }
+    
+    static func makeViewModel(isBugReportServiceEnabled: Bool = true) -> SettingsScreenViewModel {
+        let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@userid:example.com",
+                                                                                   deviceID: "AAAAAAAAAAA"))))
+        return SettingsScreenViewModel(userSession: userSession,
+                                       appSettings: ServiceLocator.shared.settings,
+                                       isBugReportServiceEnabled: isBugReportServiceEnabled)
     }
 }

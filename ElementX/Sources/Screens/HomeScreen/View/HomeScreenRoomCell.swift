@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -31,8 +22,8 @@ struct HomeScreenRoomCell: View {
     
     var body: some View {
         Button {
-            if let roomId = room.roomId {
-                context.send(viewAction: .selectRoom(roomIdentifier: roomId))
+            if let roomID = room.roomID {
+                context.send(viewAction: .selectRoom(roomIdentifier: roomID))
             }
         } label: {
             HStack(spacing: 16.0) {
@@ -57,11 +48,9 @@ struct HomeScreenRoomCell: View {
     @ViewBuilder @MainActor
     private var avatar: some View {
         if dynamicTypeSize < .accessibility3 {
-            LoadableAvatarImage(url: room.avatarURL,
-                                name: room.name,
-                                contentID: room.roomId,
-                                avatarSize: .room(on: .home),
-                                imageProvider: context.imageProvider)
+            RoomAvatarImage(avatar: room.avatar,
+                            avatarSize: .room(on: .home),
+                            mediaProvider: context.mediaProvider)
                 .dynamicTypeSize(dynamicTypeSize < .accessibility1 ? dynamicTypeSize : .accessibility1)
                 .accessibilityHidden(true)
         }
@@ -197,14 +186,7 @@ struct HomeScreenRoomCell_Previews: PreviewProvider, TestablePreview {
     }()
     
     static func mockRoom(summary: RoomSummary) -> HomeScreenRoom? {
-        switch summary {
-        case .empty:
-            nil
-        case .invalidated(let details):
-            HomeScreenRoom(details: details, invalidated: true, hideUnreadMessagesBadge: false)
-        case .filled(let details):
-            HomeScreenRoom(details: details, invalidated: false, hideUnreadMessagesBadge: false)
-        }
+        HomeScreenRoom(summary: summary, hideUnreadMessagesBadge: false)
     }
     
     static var previews: some View {

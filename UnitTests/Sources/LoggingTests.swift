@@ -1,20 +1,17 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 @testable import MatrixRustSDK
 import XCTest
 
@@ -24,14 +21,14 @@ class LoggingTests: XCTestCase {
     }
 
     override func setUpWithError() throws {
-        RustTracing.deleteLogFiles()
+        Tracing.deleteLogFiles()
     }
     
     func testLogging() async throws {
         let target = "tests"
-        XCTAssertTrue(RustTracing.logFiles.isEmpty)
+        XCTAssertTrue(Tracing.logFiles.isEmpty)
         
-        MXLog.configure(target: target, logLevel: .info)
+        Target.tests.configure(logLevel: .info, traceLogPacks: [])
         
         // There is something weird with Rust logging where the file writing handle doesn't
         // notice that the file it is writing to was deleted, so we can't run these checks
@@ -52,7 +49,7 @@ class LoggingTests: XCTestCase {
         
         MXLog.info(infoLog)
         
-        guard let logFile = RustTracing.logFiles.first else {
+        guard let logFile = Tracing.logFiles.first else {
             XCTFail(Constants.genericFailure)
             return
         }
@@ -64,7 +61,7 @@ class LoggingTests: XCTestCase {
         let verboseLog = UUID().uuidString
         
         MXLog.verbose(verboseLog)
-        guard let logFile = RustTracing.logFiles.first else {
+        guard let logFile = Tracing.logFiles.first else {
             XCTFail(Constants.genericFailure)
             return
         }
@@ -74,40 +71,43 @@ class LoggingTests: XCTestCase {
         
     func validateTargetName(_ target: String) throws {
         MXLog.info(UUID().uuidString)
-        guard let logFile = RustTracing.logFiles.first else {
+        guard let logFile = Tracing.logFiles.first else {
             XCTFail(Constants.genericFailure)
             return
         }
         
         XCTAssertTrue(logFile.lastPathComponent.contains(target))
     }
-        
+    
     func validateRoomSummaryContentIsRedacted() throws {
         // Given a room summary that contains sensitive information
         let roomName = "Private Conversation"
         let lastMessage = "Secret information"
-        let roomSummary = RoomSummaryDetails(id: "myroomid",
-                                             isInvite: false,
-                                             inviter: nil,
-                                             name: roomName,
-                                             isDirect: true,
-                                             avatarURL: nil,
-                                             lastMessage: AttributedString(lastMessage),
-                                             lastMessageFormattedTimestamp: "Now",
-                                             unreadMessagesCount: 0,
-                                             unreadMentionsCount: 0,
-                                             unreadNotificationsCount: 0,
-                                             notificationMode: nil,
-                                             canonicalAlias: nil,
-                                             hasOngoingCall: false,
-                                             isMarkedUnread: false,
-                                             isFavourite: false)
+        let heroName = "Pseudonym"
+        let roomSummary = RoomSummary(roomListItem: .init(noPointer: .init()),
+                                      id: "myroomid",
+                                      joinRequestType: nil,
+                                      name: roomName,
+                                      isDirect: true,
+                                      avatarURL: nil,
+                                      heroes: [.init(userID: "", displayName: heroName)],
+                                      lastMessage: AttributedString(lastMessage),
+                                      lastMessageFormattedTimestamp: "Now",
+                                      unreadMessagesCount: 0,
+                                      unreadMentionsCount: 0,
+                                      unreadNotificationsCount: 0,
+                                      notificationMode: nil,
+                                      canonicalAlias: nil,
+                                      alternativeAliases: [],
+                                      hasOngoingCall: false,
+                                      isMarkedUnread: false,
+                                      isFavourite: false)
         
         // When logging that value
         MXLog.info(roomSummary)
         
         // Then the log file should not include the sensitive information
-        guard let logFile = RustTracing.logFiles.first else {
+        guard let logFile = Tracing.logFiles.first else {
             XCTFail(Constants.genericFailure)
             return
         }
@@ -116,64 +116,70 @@ class LoggingTests: XCTestCase {
         XCTAssertTrue(content.contains(roomSummary.id))
         XCTAssertFalse(content.contains(roomName))
         XCTAssertFalse(content.contains(lastMessage))
+        XCTAssertFalse(content.contains(heroName))
     }
         
     func validateTimelineContentIsRedacted() throws {
         // Given timeline items that contain text
         let textAttributedString = "TextAttributed"
-        let textMessage = TextRoomTimelineItem(id: .random,
-                                               timestamp: "",
+        let textMessage = TextRoomTimelineItem(id: .randomEvent,
+                                               timestamp: .mock,
                                                isOutgoing: false,
                                                isEditable: false,
                                                canBeRepliedTo: true,
-                                               isThreaded: false,
                                                sender: .init(id: "sender"),
                                                content: .init(body: "TextString", formattedBody: AttributedString(textAttributedString)))
         let noticeAttributedString = "NoticeAttributed"
-        let noticeMessage = NoticeRoomTimelineItem(id: .random,
-                                                   timestamp: "",
+        let noticeMessage = NoticeRoomTimelineItem(id: .randomEvent,
+                                                   timestamp: .mock,
                                                    isOutgoing: false,
                                                    isEditable: false,
                                                    canBeRepliedTo: true,
-                                                   isThreaded: false,
                                                    sender: .init(id: "sender"),
                                                    content: .init(body: "NoticeString", formattedBody: AttributedString(noticeAttributedString)))
         let emoteAttributedString = "EmoteAttributed"
-        let emoteMessage = EmoteRoomTimelineItem(id: .random,
-                                                 timestamp: "",
+        let emoteMessage = EmoteRoomTimelineItem(id: .randomEvent,
+                                                 timestamp: .mock,
                                                  isOutgoing: false,
                                                  isEditable: false,
                                                  canBeRepliedTo: true,
-                                                 isThreaded: false,
                                                  sender: .init(id: "sender"),
                                                  content: .init(body: "EmoteString", formattedBody: AttributedString(emoteAttributedString)))
-        let imageMessage = ImageRoomTimelineItem(id: .init(timelineID: "myimagemessage"),
-                                                 timestamp: "",
+        let imageMessage = ImageRoomTimelineItem(id: .randomEvent,
+                                                 timestamp: .mock,
                                                  isOutgoing: false,
                                                  isEditable: false,
                                                  canBeRepliedTo: true,
-                                                 isThreaded: false,
                                                  sender: .init(id: "sender"),
-                                                 content: .init(body: "ImageString", source: MediaSourceProxy(url: .picturesDirectory, mimeType: "image/gif"), thumbnailSource: nil))
-        let videoMessage = VideoRoomTimelineItem(id: .random,
-                                                 timestamp: "",
+                                                 content: .init(filename: "ImageString",
+                                                                caption: "ImageString",
+                                                                imageInfo: .mockImage,
+                                                                thumbnailInfo: nil))
+        let videoMessage = VideoRoomTimelineItem(id: .randomEvent,
+                                                 timestamp: .mock,
                                                  isOutgoing: false,
                                                  isEditable: false,
                                                  canBeRepliedTo: true,
-                                                 isThreaded: false,
                                                  sender: .init(id: "sender"),
-                                                 content: .init(body: "VideoString", duration: 0, source: nil, thumbnailSource: nil))
-        let fileMessage = FileRoomTimelineItem(id: .random,
-                                               timestamp: "",
+                                                 content: .init(filename: "VideoString",
+                                                                caption: "VideoString",
+                                                                videoInfo: .mockVideo,
+                                                                thumbnailInfo: nil))
+        let fileMessage = FileRoomTimelineItem(id: .randomEvent,
+                                               timestamp: .mock,
                                                isOutgoing: false,
                                                isEditable: false,
                                                canBeRepliedTo: true,
-                                               isThreaded: false,
                                                sender: .init(id: "sender"),
-                                               content: .init(body: "FileString", source: nil, thumbnailSource: nil, contentType: nil))
+                                               content: .init(filename: "FileString",
+                                                              caption: "FileString",
+                                                              source: nil,
+                                                              fileSize: nil,
+                                                              thumbnailSource: nil,
+                                                              contentType: nil))
         
         // When logging that value
-        MXLog.configure(logLevel: .info)
+        Target.tests.configure(logLevel: .info, traceLogPacks: [])
         
         MXLog.info(textMessage)
         MXLog.info(noticeMessage)
@@ -183,31 +189,31 @@ class LoggingTests: XCTestCase {
         MXLog.info(fileMessage)
         
         // Then the log file should not include the text content
-        guard let logFile = RustTracing.logFiles.first else {
+        guard let logFile = Tracing.logFiles.first else {
             XCTFail(Constants.genericFailure)
             return
         }
         
         let content = try String(contentsOf: logFile)
-        XCTAssertTrue(content.contains(textMessage.id.timelineID))
+        XCTAssertTrue(content.contains(textMessage.id.uniqueID.value))
         XCTAssertFalse(content.contains(textMessage.body))
         XCTAssertFalse(content.contains(textAttributedString))
         
-        XCTAssertTrue(content.contains(noticeMessage.id.timelineID))
+        XCTAssertTrue(content.contains(noticeMessage.id.uniqueID.value))
         XCTAssertFalse(content.contains(noticeMessage.body))
         XCTAssertFalse(content.contains(noticeAttributedString))
         
-        XCTAssertTrue(content.contains(emoteMessage.id.timelineID))
+        XCTAssertTrue(content.contains(emoteMessage.id.uniqueID.value))
         XCTAssertFalse(content.contains(emoteMessage.body))
         XCTAssertFalse(content.contains(emoteAttributedString))
         
-        XCTAssertTrue(content.contains(imageMessage.id.timelineID))
+        XCTAssertTrue(content.contains(imageMessage.id.uniqueID.value))
         XCTAssertFalse(content.contains(imageMessage.body))
         
-        XCTAssertTrue(content.contains(videoMessage.id.timelineID))
+        XCTAssertTrue(content.contains(videoMessage.id.uniqueID.value))
         XCTAssertFalse(content.contains(videoMessage.body))
         
-        XCTAssertTrue(content.contains(fileMessage.id.timelineID))
+        XCTAssertTrue(content.contains(fileMessage.id.uniqueID.value))
         XCTAssertFalse(content.contains(fileMessage.body))
     }
         
@@ -223,9 +229,23 @@ class LoggingTests: XCTestCase {
         let rustEmoteMessage = EmoteMessageContent(body: emoteString,
                                                    formatted: FormattedBody(format: .html, body: "<b>\(emoteString)</b>"))
         
-        let rustImageMessage = ImageMessageContent(body: "ImageString", formatted: nil, filename: nil, source: MediaSource(noPointer: .init()), info: nil)
-        let rustVideoMessage = VideoMessageContent(body: "VideoString", formatted: nil, filename: nil, source: MediaSource(noPointer: .init()), info: nil)
-        let rustFileMessage = FileMessageContent(body: "FileString", formatted: nil, filename: "FileName", source: MediaSource(noPointer: .init()), info: nil)
+        let rustImageMessage = ImageMessageContent(filename: "ImageString",
+                                                   caption: "ImageString",
+                                                   formattedCaption: nil,
+                                                   source: MediaSource(noPointer: .init()),
+                                                   info: nil)
+        
+        let rustVideoMessage = VideoMessageContent(filename: "VideoString",
+                                                   caption: "VideoString",
+                                                   formattedCaption: nil,
+                                                   source: MediaSource(noPointer: .init()),
+                                                   info: nil)
+        
+        let rustFileMessage = FileMessageContent(filename: "FileString",
+                                                 caption: "FileString",
+                                                 formattedCaption: nil,
+                                                 source: MediaSource(noPointer: .init()),
+                                                 info: nil)
         
         // When logging that value
         MXLog.info(rustTextMessage)
@@ -236,7 +256,7 @@ class LoggingTests: XCTestCase {
         MXLog.info(rustFileMessage)
         
         // Then the log file should not include the text content
-        guard let logFile = RustTracing.logFiles.first else {
+        guard let logFile = Tracing.logFiles.first else {
             XCTFail(Constants.genericFailure)
             return
         }
@@ -252,21 +272,21 @@ class LoggingTests: XCTestCase {
         XCTAssertFalse(content.contains(emoteString))
         
         XCTAssertTrue(content.contains(String(describing: ImageMessageContent.self)))
-        XCTAssertFalse(content.contains(rustImageMessage.body))
+        XCTAssertFalse(content.contains(rustImageMessage.filename))
         
         XCTAssertTrue(content.contains(String(describing: VideoMessageContent.self)))
-        XCTAssertFalse(content.contains(rustVideoMessage.body))
+        XCTAssertFalse(content.contains(rustVideoMessage.filename))
         
         XCTAssertTrue(content.contains(String(describing: FileMessageContent.self)))
-        XCTAssertFalse(content.contains(rustFileMessage.body))
+        XCTAssertFalse(content.contains(rustFileMessage.filename))
     }
     
     func testLogFileSorting() async throws {
         // Given a collection of log files.
-        XCTAssertTrue(RustTracing.logFiles.isEmpty)
+        XCTAssertTrue(Tracing.logFiles.isEmpty)
         
         // When creating new logs.
-        let logsFileDirectory = RustTracing.logsDirectory
+        let logsFileDirectory = Tracing.logsDirectory
         for i in 1...5 {
             let filename = "console.\(i).log"
             try "console".write(to: logsFileDirectory.appending(path: filename), atomically: true, encoding: .utf8)
@@ -278,7 +298,7 @@ class LoggingTests: XCTestCase {
         }
         
         // Then the logs should be sorted chronologically (newest first) and not alphabetically.
-        XCTAssertEqual(RustTracing.logFiles.map(\.lastPathComponent),
+        XCTAssertEqual(Tracing.logFiles.map(\.lastPathComponent),
                        ["console-nse.5.log",
                         "console-nse.4.log",
                         "console-nse.3.log",
@@ -298,7 +318,7 @@ class LoggingTests: XCTestCase {
         try fileHandle.close()
         
         // Then that file should now be the first log file.
-        XCTAssertEqual(RustTracing.logFiles.map(\.lastPathComponent),
+        XCTAssertEqual(Tracing.logFiles.map(\.lastPathComponent),
                        ["console.1.log",
                         "console-nse.5.log",
                         "console-nse.4.log",

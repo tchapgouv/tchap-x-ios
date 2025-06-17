@@ -1,19 +1,11 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import SwiftUI
 
 /// The screen shown at the beginning of the onboarding flow.
@@ -43,15 +35,17 @@ struct AuthenticationStartScreen: View {
             }
             .frame(maxHeight: .infinity)
             .safeAreaInset(edge: .bottom) {
-                Button {
-                    context.send(viewAction: .reportProblem)
-                } label: {
-                    Text(L10n.commonReportAProblem)
-                        .font(.compound.bodySM)
-                        .foregroundColor(.compound.textSecondary)
-                        .padding(.bottom)
+                if context.viewState.isBugReportServiceEnabled {
+                    Button {
+                        context.send(viewAction: .reportProblem)
+                    } label: {
+                        Text(L10n.commonReportAProblem)
+                            .font(.compound.bodySM)
+                            .foregroundColor(.compound.textSecondary)
+                            .padding(.bottom)
+                    }
+                    .frame(width: geometry.size.width)
                 }
-                .frame(width: geometry.size.width)
             }
         }
         .navigationBarHidden(true)
@@ -108,6 +102,13 @@ struct AuthenticationStartScreen: View {
             }
             .buttonStyle(.compound(.primary))
             .accessibilityIdentifier(A11yIdentifiers.authenticationStartScreen.signIn)
+            
+            if context.viewState.showCreateAccountButton {
+                Button { context.send(viewAction: .register) } label: {
+                    Text(L10n.screenCreateAccountTitle)
+                }
+                .buttonStyle(.compound(.tertiary))
+            }
         }
         .padding(.horizontal, verticalSizeClass == .compact ? 128 : 24)
         .readableFrame()
@@ -117,12 +118,18 @@ struct AuthenticationStartScreen: View {
 // MARK: - Previews
 
 struct AuthenticationStartScreen_Previews: PreviewProvider, TestablePreview {
-    static let viewModel = {
-        ServiceLocator.shared.settings.qrCodeLoginEnabled = true
-        return AuthenticationStartScreenViewModel(appSettings: ServiceLocator.shared.settings)
-    }()
+    static let viewModel = makeViewModel()
+    static let bugReportDisabledViewModel = makeViewModel(isBugReportServiceEnabled: false)
     
     static var previews: some View {
         AuthenticationStartScreen(context: viewModel.context)
+            .previewDisplayName("Default")
+        AuthenticationStartScreen(context: bugReportDisabledViewModel.context)
+            .previewDisplayName("Bug report disabled")
+    }
+    
+    static func makeViewModel(isBugReportServiceEnabled: Bool = true) -> AuthenticationStartScreenViewModel {
+        AuthenticationStartScreenViewModel(showCreateAccountButton: true,
+                                           isBugReportServiceEnabled: isBugReportServiceEnabled)
     }
 }

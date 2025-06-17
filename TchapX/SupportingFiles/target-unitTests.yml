@@ -1,0 +1,60 @@
+name: TchapX-UnitTests
+
+schemes:
+  TchapX-UnitTests:
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+    build:
+      targets:
+        TchapX-UnitTests: all
+    profile:
+      config: Release
+    run:
+      config: Debug
+      disableMainThreadChecker: false
+    test:
+      config: Debug
+      disableMainThreadChecker: false
+      gatherCoverageData: true
+      coverageTargets:
+        - TchapX-Production
+      testPlans:
+        - path: ../UnitTests/SupportingFiles/UnitTests.xctestplan
+        # Don't set it as defaultPlan to avoid conflict with ElementX defaultPlan.
+          defaultPlan: true
+
+targets:
+  TchapX-UnitTests:
+    type: bundle.unit-test
+    platform: iOS
+
+    dependencies:
+    - target: TchapX-Production
+    - package: MatrixRustSDK
+
+    info:
+      path: ../UnitTests/SupportingFiles/Info.plist
+
+    settings:
+      base:
+        BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx
+        BASE_APP_GROUP_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
+        APP_GROUP_IDENTIFIER: group.$(BASE_APP_GROUP_IDENTIFIER)
+        APP_DISPLAY_NAME: TchapX # The name used in the application.
+        PRODUCT_NAME: TchapX-UnitTests
+        PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.unit.tests
+        OTHER_SWIFT_FLAGS:
+        - "-DIS_MAIN_APP -DIS_TCHAP_UNIT_TESTS"
+      debug:
+      release:
+
+    sources:
+    - path: ../../UnitTests/Sources
+    - path: ../SupportingFiles
+    - path: ../../DevelopmentAssets
+    - path: ../../ElementX/Sources/Other/Extensions/Publisher.swift
+    - path: ../../ElementX/Sources/Other/Extensions/XCTestCase.swift
+    - path: ../../ElementX/Sources/Other/InfoPlistReader.swift
+    - path: ../../Tools/Scripts/Templates/SimpleScreenExample/Tests/Unit

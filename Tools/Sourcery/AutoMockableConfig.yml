@@ -1,0 +1,9 @@
+sources:
+  include:
+    - ../../ElementX
+  exclude:
+    - ../../ElementX/Sources/Mocks/SDK
+templates:
+  - AutoMockable.stencil
+output:
+  ../../ElementX/Sources/Mocks/Generated/GeneratedMocks.swift

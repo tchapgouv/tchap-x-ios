@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -20,7 +11,9 @@ import MatrixRustSDK
 
 class UserSessionStore: UserSessionStoreProtocol {
     private let keychainController: KeychainControllerProtocol
-    private let matrixSDKStateKey = "matrix-sdk-state"
+    private let appSettings: AppSettings
+    private let networkMonitor: NetworkMonitorProtocol
+    private let appHooks: AppHooks
     
     /// Whether or not there are sessions in the store.
     var hasSessions: Bool { !keychainController.restorationTokens().isEmpty }
@@ -29,8 +22,14 @@ class UserSessionStore: UserSessionStoreProtocol {
     
     var clientSessionDelegate: ClientSessionDelegate { keychainController }
     
-    init(keychainController: KeychainControllerProtocol) {
+    init(keychainController: KeychainControllerProtocol,
+         appSettings: AppSettings,
+         appHooks: AppHooks,
+         networkMonitor: NetworkMonitorProtocol) {
         self.keychainController = keychainController
+        self.appSettings = appSettings
+        self.appHooks = appHooks
+        self.networkMonitor = networkMonitor
     }
     
     /// Deletes all data stored in the shared container and keychain
@@ -55,23 +54,26 @@ class UserSessionStore: UserSessionStoreProtocol {
             
             // On any restoration failure reset the token and restart
             keychainController.removeRestorationTokenForUsername(credentials.userID)
-            deleteSessionDirectory(for: credentials)
+            credentials.restorationToken.sessionDirectories.delete()
             
             return .failure(error)
         }
     }
     
-    func userSession(for client: Client, sessionDirectory: URL, passphrase: String?) async -> Result<UserSessionProtocol, UserSessionStoreError> {
+    func userSession(for client: ClientProtocol, sessionDirectories: SessionDirectories, passphrase: String?) async -> Result<UserSessionProtocol, UserSessionStoreError> {
         do {
             let session = try client.session()
             let userID = try client.userId()
-            let clientProxy = await setupProxyForClient(client)
+            let clientProxy = try await setupProxyForClient(client, needsSlidingSyncMigration: false)
             
             keychainController.setRestorationToken(RestorationToken(session: session,
-                                                                    sessionDirectory: sessionDirectory,
+                                                                    sessionDirectories: sessionDirectories,
                                                                     passphrase: passphrase,
-                                                                    pusherNotificationClientIdentifier: clientProxy.pusherNotificationClientIdentifier),
+                                                                    pusherNotificationClientIdentifier: clientProxy.pusherNotificationClientIdentifier,
+                                                                    slidingSyncProxyURLString: nil),
                                                    forUsername: userID)
+            
+            MXLog.info("Set up session for user \(userID) at: \(sessionDirectories)")
             
             return .success(buildUserSessionWithClient(clientProxy))
         } catch {
@@ -86,23 +88,16 @@ class UserSessionStore: UserSessionStoreProtocol {
         keychainController.removeRestorationTokenForUsername(userID)
         
         if let credentials {
-            deleteSessionDirectory(for: credentials)
+            credentials.restorationToken.sessionDirectories.delete()
         }
     }
-    
-    func clearCache(for userID: String) {
-        guard let credentials = keychainController.restorationTokens().first(where: { $0.userID == userID }) else {
-            MXLog.error("Failed to clearing caches: Credentials missing")
-            return
-        }
-        deleteCaches(for: credentials)
-    }
-    
+        
     // MARK: - Private
     
     private func buildUserSessionWithClient(_ clientProxy: ClientProxyProtocol) -> UserSessionProtocol {
         let mediaProvider = MediaProvider(mediaLoader: clientProxy,
-                                          imageCache: .onlyInMemory)
+                                          imageCache: .onlyInMemory,
+                                          networkMonitor: networkMonitor)
         
         let voiceMessageMediaManager = VoiceMessageMediaManager(mediaProvider: mediaProvider)
         
@@ -116,57 +111,52 @@ class UserSessionStore: UserSessionStoreProtocol {
             MXLog.info("Restoring client with encrypted store.")
         }
         
+        guard credentials.restorationToken.sessionDirectories.isNonTransientUserDataValid() else {
+            MXLog.error("Failed restoring login, missing non-transient user data")
+            return .failure(.failedRestoringLogin)
+        }
+        
         let homeserverURL = credentials.restorationToken.session.homeserverUrl
         
-        var builder = ClientBuilder()
-            .sessionPath(path: credentials.restorationToken.sessionDirectory.path(percentEncoded: false))
+        let builder = ClientBuilder
+            .baseBuilder(httpProxy: URL(string: homeserverURL)?.globalProxy,
+                         slidingSync: .restored,
+                         sessionDelegate: keychainController,
+                         appHooks: appHooks,
+                         enableOnlySignedDeviceIsolationMode: appSettings.enableOnlySignedDeviceIsolationMode)
+            .sessionPaths(dataPath: credentials.restorationToken.sessionDirectories.dataPath,
+                          cachePath: credentials.restorationToken.sessionDirectories.cachePath)
             .username(username: credentials.userID)
             .homeserverUrl(url: homeserverURL)
-            .passphrase(passphrase: credentials.restorationToken.passphrase)
-            .userAgent(userAgent: UserAgentBuilder.makeASCIIUserAgent())
-            .enableCrossProcessRefreshLock(processId: InfoPlistReader.main.bundleIdentifier,
-                                           sessionDelegate: keychainController)
-            .serverVersions(versions: ["v1.0", "v1.1", "v1.2", "v1.3", "v1.4", "v1.5"]) // FIXME: Quick and dirty fix for stopping version requests on startup https://github.com/matrix-org/matrix-rust-sdk/pull/1376
-        
-        if let homeserverURL = URL(string: homeserverURL),
-           let proxy = homeserverURL.globalProxy {
-            builder = builder.proxy(url: proxy)
-        }
-        let completeBuilder = builder
+            .sessionPassphrase(passphrase: credentials.restorationToken.passphrase)
         
         do {
-            let client = try await completeBuilder.build()
+            let client = try await builder.build()
             
             try await client.restoreSession(session: credentials.restorationToken.session)
             
-            return await .success(setupProxyForClient(client))
+            MXLog.info("Set up session for user \(credentials.userID) at: \(credentials.restorationToken.sessionDirectories)")
+            
+            return try await .success(setupProxyForClient(client, needsSlidingSyncMigration: credentials.restorationToken.needsSlidingSyncMigration))
+        } catch UserSessionStoreError.failedSettingUpClientProxy(let error) {
+            // If this has failed, there is likely something wrong with the creation of the sync service
+            // There is nothing we can do, but at the same time we don't want the user to the get logged out
+            // So it's better to crash here and let the app restart
+            fatalError("Failed setting up the client proxy with error: \(error)")
         } catch {
             MXLog.error("Failed restoring login with error: \(error)")
             return .failure(.failedRestoringLogin)
         }
     }
     
-    private func setupProxyForClient(_ client: Client) async -> ClientProxyProtocol {
-        await ClientProxy(client: client,
-                          networkMonitor: ServiceLocator.shared.networkMonitor)
-    }
-    
-    private func deleteSessionDirectory(for credentials: KeychainCredentials) {
+    private func setupProxyForClient(_ client: ClientProtocol, needsSlidingSyncMigration: Bool) async throws -> ClientProxyProtocol {
         do {
-            try FileManager.default.removeItem(at: credentials.restorationToken.sessionDirectory)
+            return try await ClientProxy(client: client,
+                                         needsSlidingSyncMigration: needsSlidingSyncMigration,
+                                         networkMonitor: networkMonitor,
+                                         appSettings: appSettings)
         } catch {
-            MXLog.failure("Failed deleting the session data: \(error)")
-        }
-    }
-    
-    private func deleteCaches(for credentials: KeychainCredentials) {
-        do {
-            let sessionDirectoryContents = try FileManager.default.contentsOfDirectory(at: credentials.restorationToken.sessionDirectory, includingPropertiesForKeys: nil)
-            for url in sessionDirectoryContents where url.path.contains(matrixSDKStateKey) {
-                try FileManager.default.removeItem(at: url)
-            }
-        } catch {
-            MXLog.failure("Failed clearing caches: \(error)")
+            throw UserSessionStoreError.failedSettingUpClientProxy(error)
         }
     }
 }

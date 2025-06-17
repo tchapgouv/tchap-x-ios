@@ -1,0 +1,54 @@
+{
+  "configurations" : [
+    {
+      "id" : "D789E5F1-30B8-4A23-B20E-281ACE05CFD6",
+      "name" : "Français",
+      "options" : {
+        "language" : "fr",
+        "locationScenario" : {
+          "identifier" : "Paris, France",
+          "referenceType" : "built-in"
+        },
+        "region" : "FR"
+      }
+    },
+    {
+      "id" : "059C4F1C-EAB6-4D96-BA8F-30DF92A365E9",
+      "name" : "Pseudolanguage",
+      "options" : {
+        "language" : "en",
+        "locationScenario" : {
+          "identifier" : "London, England",
+          "referenceType" : "built-in"
+        },
+        "region" : "GB"
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "defaultTestExecutionTimeAllowance" : 60,
+    "environmentVariableEntries" : [
+      {
+        "key" : "IS_RUNNING_UNIT_TESTS",
+        "value" : "1"
+      },
+      {
+        "enabled" : false,
+        "key" : "RECORD_FAILURES",
+        "value" : "true"
+      }
+    ],
+    "testExecutionOrdering" : "random",
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:TchapX.xcodeproj",
+        "identifier" : "CB69E71180645F7FC67A7031",
+        "name" : "TchapX-PreviewTests"
+      }
+    }
+  ],
+  "version" : 1
+}

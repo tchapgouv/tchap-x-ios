@@ -26,6 +26,10 @@ We suggest using an Xcode version later than 15.0.1.
 The Xcode project can be directly compiled through the shared ElementX scheme which includes the main application as well as the unit and UI tests.
 
 The Xcode project itself is generated through [xcodegen](https://github.com/yonaskolb/XcodeGen) so any changes shouldn't be made directly to it but to the configuration files.
+The command to generate the Tchap X project is: `xcodegen generate --spec project-tchap-x.yml`.
+
+The project needs the `Generated` files to build its structure.
+If these files are not presents, generate them with the command: `swiftgen config run --config Tools/SwiftGen/swiftgen-config.yml --config Tools/SwiftGen/swiftgen-config-tchap.yml`.
 
 ### Dependencies
 
@@ -45,13 +49,13 @@ swift run tools build-sdk --help
 
 ### Tools
 
-The project depends on some tools for the build process. These are all included in the `Brewfile` and can be easily installed by running
+The project depends on some tools for the build process which are normally installed through `swift run tools setup-project`. Installing them manually though is as easy as copying what the [script does](https://github.com/element-hq/element-x-ios/blob/develop/Tools/Sources/SetupProject.swift)
 
 ```
-brew bundle
+brew install [...]
 ```
 
-Git LFS is used to store UI test snapshots. `swift run tools setup-project` will already install it, however it can also be installed after a checkout by running:
+Git LFS is used to store UI and Preview test snapshots. `swift run tools setup-project` will already install it, however it can also be installed after a checkout by running:
 
 ```
 git lfs install
@@ -59,11 +63,7 @@ git lfs install
 
 ### Snapshot Tests
 
-If you make changes to the UI you may cause existing UI Snapshot tests to fail. You can run the snapshot tests using `UITests` target. To update the reference snapshots, delete them from `element-x-ios/UITests/Sources/__Snapshots__/Application` and run the tests again. 
-These are the devices we store snapshots for that you will need to run against which need to use the iOS 16.4 simulator in en-US for consistency:
-- iPhone 14
-- iPad (9th generation)
-
+If you make changes to the UI you may cause existing UI and Preview test snapshots to fail. The UITests run user flows and record snapshots while doing so using the settings defined under [checkEnvironments](https://github.com/element-hq/element-x-ios/blob/c29175d1f924e58b9646a200dbab0301fce3c258/UITests/Sources/Application.swift#L35-L37) while the PreviewTests use the settings defined in [PreviewTests.swift](https://github.com/element-hq/element-x-ios/blob/c29175d1f924e58b9646a200dbab0301fce3c258/PreviewTests/Sources/PreviewTests.swift#L18-L20). The snapshots are stored under `Sources/__Snapshots__` in their respective target's folder. 
 
 ### Githooks
 
@@ -99,62 +99,14 @@ New screen flows are currently using the MVVM-Coordinator pattern. Please refer 
 
 ## Changelog
 
-All changes, even minor ones, need a corresponding changelog / newsfragment
-entry. These are managed by [Towncrier](https://github.com/twisted/towncrier).
-
-To create a changelog entry, make a new file in the `changelog.d` directory
-named in the format of `ElementXiOSIssueNumber.type`. The type can be one of the
-following:
-
-- `feature` for a new feature
-- `change` for updates to an existing feature
-- `bugfix` for bug fix
-- `api` for an api break
-- `i18n` for translations
-- `build` for changes related to build, tools, CI/CD
-- `doc` for updates to the documentation
-- `wip` for anything that isn't ready to ship and will be enabled at a later date
-- `misc` for other changes
-
-This file will become part of our [changelog](CHANGES.md) at the next
-release, so the content of the file should be a short description of your
-change in the same style as the rest of the changelog. The file must only
-contain one line. It can contain Markdown formatting. It should start with the
-area of the change (screen, module, ...) and end with a full stop (.) or an
-exclamation mark (!) for consistency.
-
-Adding credits to the changelog is encouraged, we value your
-contributions and would like to have you shouted out in the release notes!
-
-For example, a fix for an issue #1234 would have its changelog entry in
-`changelog.d/1234.bugfix`, and contain content like:
-
-> Voice Messages: Fix a crash when sending a voice message. Contributed by
-> Jane Matrix.
-
-If there are multiple pull requests involved in a single bugfix/feature/etc,
-then the content for each `changelog.d` file should be the same. Towncrier will
-merge the matching files together into a single changelog entry when we come to
-release.
-
-There are exceptions on the `ElementXiOSIssueNumber.type` entry format. Even if
-it is not encouraged, you can use:
-
-- `pr-[PRNumber].type` for a PR with no related issue
-- `x-nolink-[AnyNumber].type` for a PR with a change entry that will not have a link automatically appended. It must be used for internal project update only. `AnyNumber` should be a value that does not clash with existing files.
-
-To preview the changelog for pending changelog entries, use:
-
-```bash
-$ towncrier build --draft --version 1.2.3
-```
+Our [changelog](CHANGES.md) is automatically generated by GitHub, based on the PR title that you use when opening the issue. The changelog can be categorised by applying on of the [`pr-` labels](https://github.com/element-hq/element-x-ios/labels?q=pr-) to your PR. The mapping of Label → Section can be found in the [release.yml](.github/release.yml) file. The contribution will be automatically credited to your GitHub username.
 
 ## Coding style
 
 For Swift coding style we use [SwiftLint](https://github.com/realm/SwiftLint) to check some conventions at compile time (rules are located in the `.swiftlint.yml` file). 
 Otherwise please have a look to [Apple Swift conventions](https://swift.org/documentation/api-design-guidelines.html#conventions). We are also using some of the conventions of [raywenderlich.com Swift style guide](https://github.com/raywenderlich/swift-style-guide).
 
-We enforce the coding style by running checks on the CI for every PR through [Danger](Dangerfile.swift), [SwiftLint](.swiftlint.yml), [SwiftFormat](.swiftformat) and [SonarCloud](https://sonarcloud.io/project/overview?id=vector-im_element-x-ios)
+We enforce the coding style by running checks on the CI for every PR through [Danger](Dangerfile.swift), [SwiftLint](.swiftlint.yml), [SwiftFormat](.swiftformat) and [SonarCloud](https://sonarcloud.io/project/overview?id=element-x-ios)
 
 We also gather coverage reports on every PR through [Codecov](https://app.codecov.io/gh/element-hq/element-x-ios) and will eventually start enforcing minimums.
 

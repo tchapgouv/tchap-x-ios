@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -19,75 +10,63 @@ import Foundation
 
 @MainActor
 final class PillContext: ObservableObject {
-    struct PillViewState: Equatable {
-        let isOwnMention: Bool
-        let displayText: String
-    }
+    @Published var viewState: PillViewState = .undefined
     
-    @Published private(set) var viewState: PillViewState
+    let data: PillTextAttachmentData
+    var cancellable: AnyCancellable?
     
-    private var cancellable: AnyCancellable?
-    
-    init(roomContext: RoomScreenViewModel.Context, data: PillTextAttachmentData) {
-        switch data.type {
-        case let .user(id):
-            let isOwnMention = id == roomContext.viewState.ownUserID
-            if let profile = roomContext.viewState.members[id] {
-                var name = id
-                if let displayName = profile.displayName {
-                    name = "@\(displayName)"
-                }
-                viewState = PillViewState(isOwnMention: isOwnMention, displayText: name)
-            } else {
-                viewState = PillViewState(isOwnMention: isOwnMention, displayText: id)
-                cancellable = roomContext.$viewState.sink { [weak self] viewState in
-                    guard let self else {
-                        return
-                    }
-                    if let profile = viewState.members[id] {
-                        var name = id
-                        if let displayName = profile.displayName {
-                            name = "@\(displayName)"
-                        }
-                        self.viewState = PillViewState(isOwnMention: isOwnMention, displayText: name)
-                        cancellable = nil
-                    }
-                }
-            }
-        case .allUsers:
-            viewState = PillViewState(isOwnMention: true, displayText: PillConstants.atRoom)
-        }
+    init(timelineContext: TimelineViewModel.Context, data: PillTextAttachmentData) {
+        self.data = data
+        timelineContext.viewState.pillContextUpdater?(self)
     }
 }
 
 extension PillContext {
-    enum MockType {
-        case loadUser(isOwn: Bool)
-        case loadedUser(isOwn: Bool)
-        case allUsers
+    static func mock(viewState: PillViewState, delay: Duration? = nil) -> PillContext {
+        // This is just for previews so the internal data doesn't really matter
+        let viewModel = PillContext(timelineContext: TimelineViewModel.mock.context, data: PillTextAttachmentData(type: .allUsers, font: .preferredFont(forTextStyle: .body)))
+        if let delay {
+            viewModel.viewState = .mention(isOwnMention: false, displayText: "placeholder")
+            Task {
+                try? await Task.sleep(for: delay)
+                viewModel.viewState = viewState
+            }
+        } else {
+            viewModel.viewState = viewState
+        }
+        return viewModel
+    }
+}
+
+enum PillViewState: Equatable {
+    case mention(isOwnMention: Bool, displayText: String)
+    case reference(displayText: String)
+    case undefined
+    
+    var isOwnMention: Bool {
+        switch self {
+        case .mention(let isOwnMention, _):
+            return isOwnMention
+        default:
+            return false
+        }
     }
     
-    static func mock(type: MockType) -> PillContext {
-        let testID = "@test:test.com"
-        let pillType: PillType
-        switch type {
-        case .loadUser(let isOwn):
-            pillType = .user(userID: testID)
-            let viewModel = PillContext(roomContext: RoomScreenViewModel.mock.context, data: PillTextAttachmentData(type: pillType, font: .preferredFont(forTextStyle: .body)))
-            viewModel.viewState = PillViewState(isOwnMention: isOwn, displayText: testID)
-            Task {
-                try? await Task.sleep(for: .seconds(2))
-                viewModel.viewState = PillViewState(isOwnMention: isOwn, displayText: "@Test Long Display Text")
-            }
-            return viewModel
-        case .loadedUser(let isOwn):
-            pillType = .user(userID: "@test:test.com")
-            let viewModel = PillContext(roomContext: RoomScreenViewModel.mock.context, data: PillTextAttachmentData(type: pillType, font: .preferredFont(forTextStyle: .body)))
-            viewModel.viewState = PillViewState(isOwnMention: isOwn, displayText: "@Very Very Long Test Display Text")
-            return viewModel
-        case .allUsers:
-            pillType = .allUsers
-            return PillContext(roomContext: RoomScreenViewModel.mock.context, data: PillTextAttachmentData(type: pillType, font: .preferredFont(forTextStyle: .body)))
+    var displayText: String {
+        switch self {
+        case .mention(_, let displayText), .reference(let displayText):
+            return displayText
+        case .undefined:
+            return ""
+        }
+    }
+    
+    var isUndefined: Bool {
+        switch self {
+        case .undefined:
+            return true
+        default:
+            return false
         }
     }
 }

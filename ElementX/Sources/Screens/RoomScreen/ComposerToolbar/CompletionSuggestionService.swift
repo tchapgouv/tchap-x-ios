@@ -1,39 +1,35 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
 import Foundation
 
-private enum SuggestionTriggerPattern: Character {
-    case at = "@"
+private enum SuggestionTriggerRegex {
+    /// Matches any string of characters after an @ or # that is not a whitespace
+    static let atOrHash = /[@#]\S*/
+    
+    static let at: Character = "@"
+    static let hash: Character = "#"
 }
 
 final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
-    private let roomProxy: RoomProxyProtocol
+    private let roomProxy: JoinedRoomProxyProtocol
     private var canMentionAllUsers = false
     private(set) var suggestionsPublisher: AnyPublisher<[SuggestionItem], Never> = Empty().eraseToAnyPublisher()
     
     private let suggestionTriggerSubject = CurrentValueSubject<SuggestionTrigger?, Never>(nil)
     
-    init(roomProxy: RoomProxyProtocol) {
+    init(roomProxy: JoinedRoomProxyProtocol,
+         roomListPublisher: AnyPublisher<[RoomSummary], Never>) {
         self.roomProxy = roomProxy
         
         suggestionsPublisher = suggestionTriggerSubject
-            .combineLatest(roomProxy.membersPublisher)
-            .map { [weak self, ownUserID = roomProxy.ownUserID] suggestionTrigger, members -> [SuggestionItem] in
+            .combineLatest(roomProxy.membersPublisher, roomListPublisher)
+            .map { [weak self, ownUserID = roomProxy.ownUserID] suggestionTrigger, members, roomSummaries -> [SuggestionItem] in
                 guard let self,
                       let suggestionTrigger else {
                     return []
@@ -41,30 +37,9 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
                 
                 switch suggestionTrigger.type {
                 case .user:
-                    var membersSuggestion = members
-                        .compactMap { member -> SuggestionItem? in
-                            guard member.userID != ownUserID,
-                                  member.membership == .join,
-                                  Self.shouldIncludeMember(userID: member.userID, displayName: member.displayName, searchText: suggestionTrigger.text) else {
-                                return nil
-                            }
-                            return SuggestionItem.user(item: .init(id: member.userID,
-                                                                   displayName: member.displayName,
-                                                                   avatarURL: member.avatarURL,
-                                                                   range: suggestionTrigger.range))
-                        }
-                    
-                    if self.canMentionAllUsers,
-                       !self.roomProxy.isEncryptedOneToOneRoom,
-                       Self.shouldIncludeMember(userID: PillConstants.atRoom, displayName: PillConstants.everyone, searchText: suggestionTrigger.text) {
-                        membersSuggestion
-                            .insert(SuggestionItem.allUsers(item: .init(id: PillConstants.atRoom,
-                                                                        displayName: PillConstants.everyone,
-                                                                        avatarURL: self.roomProxy.avatarURL,
-                                                                        range: suggestionTrigger.range)), at: 0)
-                    }
-                    
-                    return membersSuggestion
+                    return membersSuggestions(suggestionTrigger: suggestionTrigger, members: members, ownUserID: ownUserID)
+                case .room:
+                    return roomSuggestions(suggestionTrigger: suggestionTrigger, roomSummaries: roomSummaries)
                 }
             }
             // We only debounce if the suggestion is nil
@@ -82,8 +57,8 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
         }
     }
     
-    func processTextMessage(_ textMessage: String?) {
-        setSuggestionTrigger(detectTriggerInText(textMessage))
+    func processTextMessage(_ textMessage: String, selectedRange: NSRange) {
+        setSuggestionTrigger(detectTriggerInText(textMessage, selectedRange: selectedRange))
     }
     
     func setSuggestionTrigger(_ suggestionTrigger: SuggestionTrigger?) {
@@ -92,23 +67,71 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
     
     // MARK: - Private
     
-    private func detectTriggerInText(_ text: String?) -> SuggestionTrigger? {
-        guard let text else {
-            return nil
+    private func membersSuggestions(suggestionTrigger: SuggestionTrigger,
+                                    members: [RoomMemberProxyProtocol],
+                                    ownUserID: String) -> [SuggestionItem] {
+        var membersSuggestion = members
+            .compactMap { member -> SuggestionItem? in
+                guard member.userID != ownUserID,
+                      member.membership == .join,
+                      Self.shouldIncludeMember(userID: member.userID, displayName: member.displayName, searchText: suggestionTrigger.text) else {
+                    return nil
+                }
+                return .init(suggestionType: .user(.init(id: member.userID, displayName: member.displayName, avatarURL: member.avatarURL)), range: suggestionTrigger.range, rawSuggestionText: suggestionTrigger.text)
+            }
+        
+        if canMentionAllUsers,
+           !roomProxy.isDirectOneToOneRoom,
+           Self.shouldIncludeMember(userID: PillUtilities.atRoom, displayName: PillUtilities.everyone, searchText: suggestionTrigger.text) {
+            membersSuggestion
+                .insert(SuggestionItem(suggestionType: .allUsers(roomProxy.details.avatar), range: suggestionTrigger.range, rawSuggestionText: suggestionTrigger.text), at: 0)
         }
         
-        let components = text.components(separatedBy: .whitespaces)
-        
-        guard var lastComponent = components.last,
-              let range = text.range(of: lastComponent, options: .backwards),
-              lastComponent.count > 0,
-              let suggestionKey = SuggestionTriggerPattern(rawValue: lastComponent.removeFirst()),
-              // If a second character exists and is the same as the key it shouldn't trigger.
-              lastComponent.first != suggestionKey.rawValue else {
+        return membersSuggestion
+    }
+    
+    private func roomSuggestions(suggestionTrigger: SuggestionTrigger,
+                                 roomSummaries: [RoomSummary]) -> [SuggestionItem] {
+        roomSummaries
+            .compactMap { roomSummary -> SuggestionItem? in
+                guard let canonicalAlias = roomSummary.canonicalAlias,
+                      Self.shouldIncludeRoom(roomName: roomSummary.name, roomAlias: canonicalAlias, searchText: suggestionTrigger.text) else {
+                    return nil
+                }
+                
+                return .init(suggestionType: .room(.init(id: roomSummary.id,
+                                                         canonicalAlias: canonicalAlias,
+                                                         name: roomSummary.name,
+                                                         avatar: roomSummary.avatar)),
+                             range: suggestionTrigger.range, rawSuggestionText: suggestionTrigger.text)
+            }
+    }
+    
+    private func detectTriggerInText(_ text: String, selectedRange: NSRange) -> SuggestionTrigger? {
+        let matches = text.matches(of: SuggestionTriggerRegex.atOrHash)
+        let match = matches.first { matchResult in
+            let lowerBound = matchResult.range.lowerBound.utf16Offset(in: matchResult.base)
+            let upperBound = matchResult.range.upperBound.utf16Offset(in: matchResult.base)
+            return selectedRange.location >= lowerBound
+                && selectedRange.location <= upperBound
+                && selectedRange.length <= upperBound - lowerBound
+        }
+
+        guard let match else {
             return nil
         }
+
+        var suggestionText = String(text[match.range])
+        let firstChar = suggestionText.removeFirst()
         
-        return .init(type: .user, text: lastComponent, range: NSRange(range, in: text))
+        switch firstChar {
+        case SuggestionTriggerRegex.at:
+            return .init(type: .user, text: suggestionText, range: NSRange(match.range, in: text))
+        case SuggestionTriggerRegex.hash:
+            return .init(type: .room, text: suggestionText, range: NSRange(match.range, in: text))
+        default:
+            return nil
+        }
     }
     
     private static func shouldIncludeMember(userID: String, displayName: String?, searchText: String) -> Bool {
@@ -116,15 +139,23 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
         guard !searchText.isEmpty else {
             return true
         }
-        let containedInUserID = userID.localizedStandardContains(searchText.lowercased())
+        let containedInUserID = userID.localizedStandardContains(searchText)
         
         let containedInDisplayName: Bool
         if let displayName {
-            containedInDisplayName = displayName.localizedStandardContains(searchText.lowercased())
+            containedInDisplayName = displayName.localizedStandardContains(searchText)
         } else {
             containedInDisplayName = false
         }
         
         return containedInUserID || containedInDisplayName
+    }
+    
+    private static func shouldIncludeRoom(roomName: String, roomAlias: String, searchText: String) -> Bool {
+        // If the search text is empty give back all the results
+        guard !searchText.isEmpty else {
+            return true
+        }
+        return roomName.localizedStandardContains(searchText) || roomAlias.localizedStandardContains(searchText)
     }
 }

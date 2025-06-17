@@ -1,0 +1,44 @@
+/* 
+  Localizable.strings
+  TchapX
+
+  Created by Nicolas Buquet on 18/11/2024.
+  Copyright © 2024 Tchap. All rights reserved.
+*/
+
+common_legal = "Legals";
+common_faq = "Frequently Asked Questions";
+common_user_is_external = "EXTERNAL GUEST";
+common_email = "Email";
+
+legal_terms_of_use = "Terms of use";
+legal_privacy_policy = "Privacy policy";
+
+screen_create_room_selected_users_label = "Members";
+screen_create_room_private_encrypted_option_title = "Private secured room";
+screen_create_room_private_encrypted_option_description = "- End-to-end encrypted\n- Only people invited can access this room\n- Advised up to 500 members";
+screen_create_room_private_option_title = "Private room";
+screen_create_room_private_option_description = "- Not end-to-end encrypted\n- Only people invited can access this room";
+screen_create_room_public_option_title = "Public room";
+screen_create_room_public_option_description_1 = "• Not end-to-end encrypted\n• Visible in the list of rooms\n";
+screen_create_room_public_option_description_2 = "• Not allwed to external guests";
+screen_create_room_public_option_unfederated_title = "Limited to my domain";
+screen_create_room_public_option_unfederated_description = "Visible only to members of \"%1$@\"";
+screen_create_room_room_visibility_section_title = "Room type";
+screen_create_room_externals_are_presents_warning = "This room contains external members.";
+screen_create_room_externals_are_presents_link = "More info";
+
+room_header_badge_encrypted = "ENCRYPTED";
+room_header_badge_not_encrypted = "NOT ENCRYPTED";
+room_header_badge_public = "PUBLIC";
+room_header_badge_authorized_to_external = "EXTERNALS";
+
+start_chat_action_join_forum = "Join a public room";
+
+screen_room_directory_search_title = "Join a public room";
+
+// Tchap: BWI content-scanner
+content_scanner_scan_status_in_progress = "Scanning for virus…";
+content_scanner_scan_status_infected = "Content blocked";
+content_scanner_scan_status_not_found = "File no longer available";
+content_scanner_scan_status_error = "File temporarily unavailable";

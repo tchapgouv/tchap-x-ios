@@ -1,54 +1,67 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
+
+#if canImport(EmbeddedElementCall)
+import EmbeddedElementCall
+#endif
 
 import Foundation
 import SwiftUI
+
+// Common settings between app and NSE
+protocol CommonSettingsProtocol {
+    var logLevel: LogLevel { get }
+    var traceLogPacks: Set<TraceLogPack> { get }
+    var enableOnlySignedDeviceIsolationMode: Bool { get }
+    var hideInviteAvatars: Bool { get }
+    var timelineMediaVisibility: TimelineMediaVisibility { get }
+}
 
 /// Store Element specific app settings.
 final class AppSettings {
     private enum UserDefaultsKeys: String {
         case lastVersionLaunched
+        case seenInvites
         case appLockNumberOfPINAttempts
         case appLockNumberOfBiometricAttempts
-        case migratedAccounts
         case timelineStyle
         
         case analyticsConsentState
         case hasRunNotificationPermissionsOnboarding
         case hasRunIdentityConfirmationOnboarding
         
+        case frequentlyUsedSystemEmojis
+        
         case enableNotifications
         case enableInAppNotifications
         case pusherProfileTag
         case logLevel
+        case traceLogPacks
         case viewSourceEnabled
+        case optimizeMediaUploads
         case appAppearance
         case sharePresence
         case hideUnreadMessagesBadge
+        case hideInviteAvatars
+        case timelineMediaVisibility
         
-        case elementCallBaseURL
-        case elementCallEncryptionEnabled
+        case elementCallBaseURLOverride
         
         // Feature flags
-        case shouldCollapseRoomStateEvents
         case publicSearchEnabled
-        case qrCodeLoginEnabled
+        case fuzzyRoomListSearchEnabled
+        case enableOnlySignedDeviceIsolationMode
+        case knockingEnabled
+        case reportRoomEnabled
+        case reportInviteEnabled
     }
     
     private static var suiteName: String = InfoPlistReader.main.appGroupIdentifier
+    private static var remoteSuiteName = "\(InfoPlistReader.main.appGroupIdentifier).remote"
 
     /// UserDefaults to be used on reads and writes.
     private static var store: UserDefaults! = UserDefaults(suiteName: suiteName)
@@ -75,15 +88,54 @@ final class AppSettings {
         store = userDefaults
     }
     
+    // MARK: - Hooks
+    
+    // swiftlint:disable:next function_parameter_count
+    func override(defaultHomeserverAddress: String,
+                  pushGatewayBaseURL: URL,
+                  oidcRedirectURL: URL,
+                  websiteURL: URL,
+                  logoURL: URL,
+                  copyrightURL: URL,
+                  acceptableUseURL: URL,
+                  privacyURL: URL,
+                  supportEmailAddress: String,
+                  encryptionURL: URL,
+                  chatBackupDetailsURL: URL,
+                  identityPinningViolationDetailsURL: URL,
+                  elementWebHosts: [String],
+                  bugReportApplicationID: String,
+                  analyticsTermsURL: URL?,
+                  mapTilerConfiguration: MapTilerConfiguration) {
+        self.defaultHomeserverAddress = defaultHomeserverAddress
+        self.pushGatewayBaseURL = pushGatewayBaseURL
+        self.oidcRedirectURL = oidcRedirectURL
+        self.websiteURL = websiteURL
+        self.logoURL = logoURL
+        self.copyrightURL = copyrightURL
+        self.acceptableUseURL = acceptableUseURL
+        self.privacyURL = privacyURL
+        self.supportEmailAddress = supportEmailAddress
+        self.encryptionURL = encryptionURL
+        self.chatBackupDetailsURL = chatBackupDetailsURL
+        self.identityPinningViolationDetailsURL = identityPinningViolationDetailsURL
+        self.elementWebHosts = elementWebHosts
+        self.bugReportApplicationID = bugReportApplicationID
+        self.analyticsTermsURL = analyticsTermsURL
+        self.mapTilerConfiguration = mapTilerConfiguration
+    }
+    
     // MARK: - Application
     
     /// Whether or not the app is a development build that isn't in production.
-    lazy var isDevelopmentBuild: Bool = {
+    static var isDevelopmentBuild: Bool = {
         #if DEBUG
         true
         #else
-        let apps = ["io.element.elementx.nightly", "io.element.elementx.pr"]
-        return apps.contains(InfoPlistReader.main.baseBundleIdentifier)
+        // Tchap: set Development Build flag to false if not in DEBUG mode
+//        let apps = ["io.element.elementx.nightly", "io.element.elementx.pr"]
+//        return apps.contains(InfoPlistReader.main.baseBundleIdentifier)
+        return false
         #endif
     }()
     
@@ -93,35 +145,58 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.lastVersionLaunched, storageType: .userDefaults(store))
     var lastVersionLaunched: String?
         
+    /// The Set of room identifiers of invites that the user already saw in the invites list.
+    /// This Set is being used to implement badges for unread invites.
+    @UserPreference(key: UserDefaultsKeys.seenInvites, defaultValue: [], storageType: .userDefaults(store))
+    var seenInvites: Set<String>
+    
     /// The default homeserver address used. This is intentionally a string without a scheme
     /// so that it can be passed to Rust as a ServerName for well-known discovery.
-    let defaultHomeserverAddress = "matrix.org"
-    
-    /// An override of the homeserver's Sliding Sync proxy URL. This allows development against servers
-    /// that don't yet have an officially trusted proxy configured in their well-known.
-    let slidingSyncProxyURL: URL? = nil
+    #if IS_TCHAP_DEVELOPMENT
+    private(set) var defaultHomeserverAddress = "matrix.dev01.tchap.incubateur.net"
+    #elseif IS_TCHAP_STAGING
+    private(set) var defaultHomeserverAddress = "matrix.i.tchap.gouv.fr"
+    #elseif IS_TCHAP_PRODUCTION
+    private(set) var defaultHomeserverAddress = "matrix.agent.dinum.tchap.gouv.fr"
+    #else
+    private(set) var defaultHomeserverAddress = "matrix.org"
+    #endif
     
     /// The task identifier used for background app refresh. Also used in main target's the Info.plist
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
 
     /// A URL where users can go read more about the app.
-    let websiteURL: URL = "https://element.io"
+    private(set) var websiteURL: URL = "https://element.io"
     /// A URL that contains the app's logo that may be used when showing content in a web view.
-    let logoURL: URL = "https://element.io/mobile-icon.png"
+    private(set) var logoURL: URL = "https://element.io/mobile-icon.png"
     /// A URL that contains that app's copyright notice.
-    let copyrightURL: URL = "https://element.io/copyright"
+    private(set) var copyrightURL: URL = "https://element.io/copyright"
+    // Tchap: replace Terms of Use and Privacy policy URLs.
+//    /// A URL that contains the app's Terms of use.
+//    let acceptableUseURL: URL = "https://element.io/acceptable-use-policy-terms"
+//    /// A URL that contains the app's Privacy Policy.
+//        let privacyURL: URL = "https://element.io/privacy"
+    // Tchap: Tchap Terms of Use and Privacy policy
     /// A URL that contains the app's Terms of use.
-    let acceptableUseURL: URL = "https://element.io/acceptable-use-policy-terms"
+    private(set) var acceptableUseURL: URL = "https://tchap.numerique.gouv.fr/cgu" // Tchap
     /// A URL that contains the app's Privacy Policy.
-    let privacyURL: URL = "https://element.io/privacy"
+    private(set) var privacyURL: URL = "https://tchap.numerique.gouv.fr/politique-de-confidentialite/" // Tchap
+    // Tchap: FAQ url.
+    /// A URL that leads to Tchap FAQ page.
+    let tchapFaqURL: URL = "https://aide.tchap.beta.gouv.fr/" // Tchap
+    // Tchap: external members FAQ url.
+    /// A URL that leads to Tchap FAQ page.
+    let tchapExternalFaqURL: URL = "https://aide.tchap.beta.gouv.fr/fr/article/comment-inviter-un-partenaire-externe-sur-tchap-iphone-110q735//" // Tchap
     /// An email address that should be used for support requests.
-    let supportEmailAddress = "support@element.io"
+    private(set) var supportEmailAddress = "support@element.io"
     /// A URL where users can go read more about encryption in general.
-    let encryptionURL: URL = "https://element.io/help#encryption"
+    private(set) var encryptionURL: URL = "https://element.io/help#encryption"
     /// A URL where users can go read more about the chat backup.
-    let chatBackupDetailsURL: URL = "https://element.io/help#encryption5"
+    private(set) var chatBackupDetailsURL: URL = "https://element.io/help#encryption5"
+    /// A URL where users can go read more about identity pinning violations
+    private(set) var identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
     /// Any domains that Element web may be hosted on - used for handling links.
-    let elementWebHosts = ["app.element.io", "staging.element.io", "develop.element.io"]
+    private(set) var elementWebHosts = ["app.element.io", "staging.element.io", "develop.element.io"]
     
     @UserPreference(key: UserDefaultsKeys.appAppearance, defaultValue: .system, storageType: .userDefaults(store))
     var appAppearance: AppAppearance
@@ -145,14 +220,8 @@ final class AppSettings {
     
     /// Any pre-defined static client registrations for OIDC issuers.
     let oidcStaticRegistrations: [URL: String] = ["https://id.thirdroom.io/realms/thirdroom": "elementx"]
-    /// The redirect URL used for OIDC.
-    let oidcRedirectURL = {
-        guard let url = URL(string: "\(InfoPlistReader.main.appScheme):/callback") else {
-            fatalError("Invalid OIDC redirect URL")
-        }
-        
-        return url
-    }()
+    /// The redirect URL used for OIDC. This no longer uses universal links so we don't need the bundle ID to avoid conflicts between Element X, Nightly and PR builds.
+    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
     
     private(set) lazy var oidcConfiguration = OIDCConfigurationProxy(clientName: InfoPlistReader.main.bundleDisplayName,
                                                                      redirectURI: oidcRedirectURL,
@@ -161,27 +230,37 @@ final class AppSettings {
                                                                      tosURI: acceptableUseURL,
                                                                      policyURI: privacyURL,
                                                                      contacts: [supportEmailAddress],
-                                                                     staticRegistrations: oidcStaticRegistrations.mapKeys { $0.absoluteString },
-                                                                     dynamicRegistrationsFile: .sessionsBaseDirectory.appending(path: "oidc/registrations.json"))
-
-    /// A dictionary of accounts that have performed an initial sync through their proxy.
+                                                                     staticRegistrations: oidcStaticRegistrations.mapKeys { $0.absoluteString })
+    
+    /// Whether or not the Create Account button is shown on the start screen.
     ///
-    /// This is a temporary workaround. In the future we should be able to receive a signal from the
-    /// proxy that it is the first sync (or that an upgrade on the backend will involve a slower sync).
-    @UserPreference(key: UserDefaultsKeys.migratedAccounts, defaultValue: [:], storageType: .userDefaults(store))
-    var migratedAccounts: [String: Bool]
-
+    /// **Note:** Setting this to false doesn't prevent someone from creating an account when the selected homeserver's MAS allows registration.
+    let showCreateAccountButton = true
+    
     // MARK: - Notifications
     
-    var pusherAppId: String {
-        #if DEBUG
-        InfoPlistReader.main.baseBundleIdentifier + ".ios.dev"
-        #else
+    var pusherAppID: String {
+        // Tchap: always use `.ios.prod` pusherAppId suffix.
+//        #if DEBUG
+//        InfoPlistReader.main.baseBundleIdentifier + ".ios.dev"
+//        #else
+//        InfoPlistReader.main.baseBundleIdentifier + ".ios.prod"
+//        #endif
         InfoPlistReader.main.baseBundleIdentifier + ".ios.prod"
-        #endif
     }
     
-    let pushGatewayBaseURL: URL = "https://matrix.org/_matrix/push/v1/notify"
+    // Tchap: use Tchap Sygnal as push notification server.
+//    private(set) var pushGatewayBaseURL: URL = "https://matrix.org"
+    #if IS_TCHAP_DEVELOPMENT
+    var pushGatewayBaseURL: URL = "https://sygnal.tchap.incubateur.net"
+    #elseif IS_TCHAP_STAGING
+    var pushGatewayBaseURL: URL = "https://sygnal.preprod.tchap.gouv.fr"
+    #elseif IS_TCHAP_PRODUCTION
+    var pushGatewayBaseURL: URL = "https://sygnal.tchap.gouv.fr"
+    #else
+    var pushGatewayBaseURL: URL = "https://matrix.org"
+    #endif
+    var pushGatewayNotifyEndpoint: URL { pushGatewayBaseURL.appending(path: "_matrix/push/v1/notify") }
     
     @UserPreference(key: UserDefaultsKeys.enableNotifications, defaultValue: true, storageType: .userDefaults(store))
     var enableNotifications
@@ -195,31 +274,38 @@ final class AppSettings {
         
     // MARK: - Bug report
 
-    let bugReportServiceBaseURL: URL = "https://riot.im/bugreports"
-    let bugReportSentryURL: URL = "https://f39ac49e97714316965b777d9f3d6cd8@sentry.tools.element.io/44"
-    // Use the name allocated by the bug report server
-    let bugReportApplicationId = "element-x-ios"
+    let bugReportServiceBaseURL: URL? = Secrets.rageshakeServerURL.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
+    let bugReportSentryURL: URL? = Secrets.sentryDSN.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
+    // Tchap: customize bug report application id to TchapX.
+//    private(set) var bugReportApplicationID = "element-x-ios"
+    /// The name allocated by the bug report server
+    #if IS_TCHAP_DEVELOPMENT
+    private(set) var bugReportApplicationID = "tchax-development-ios"
+    #elseif IS_TCHAP_STAGING
+    private(set) var bugReportApplicationID = "tchax-staging-ios"
+    #elseif IS_TCHAP_PRODUCTION
+    private(set) var bugReportApplicationID = "tchax-production-ios"
+    #else
+    private(set) var bugReportApplicationID = "element-x-ios"
+    #endif
     /// The maximum size of the upload request. Default value is just below CloudFlare's max request size.
-    let bugReportMaxUploadSize = 50 * 1024 * 1024
-    
+    let bugReportMaxUploadSize = 10 * 1024 * 1024
+
     // MARK: - Analytics
     
-    #if DEBUG
-    /// The configuration to use for analytics during development. Set `isEnabled` to false to disable analytics in debug builds.
-    /// **Note:** Analytics are disabled by default for forks. If you are maintaining a fork, set custom configurations.
-    let analyticsConfiguration = AnalyticsConfiguration(isEnabled: InfoPlistReader.main.bundleIdentifier.starts(with: "io.element.elementx"),
-                                                        host: "https://posthog.element.dev",
-                                                        apiKey: "phc_VtA1L35nw3aeAtHIx1ayrGdzGkss7k1xINeXcoIQzXN",
-                                                        termsURL: "https://element.io/cookie-policy")
-    #else
-    /// The configuration to use for analytics. Set `isEnabled` to false to disable analytics.
-    /// **Note:** Analytics are disabled by default for forks. If you are maintaining a fork, set custom configurations.
-    let analyticsConfiguration = AnalyticsConfiguration(isEnabled: InfoPlistReader.main.bundleIdentifier.starts(with: "io.element.elementx"),
-                                                        host: "https://posthog.element.io",
-                                                        apiKey: "phc_Jzsm6DTm6V2705zeU5dcNvQDlonOR68XvX2sh1sEOHO",
-                                                        termsURL: URL("https://element.io/cookie-policy"))
-    #endif
-        
+    /// The configuration to use for analytics. Set to `nil` to disable analytics.
+    let analyticsConfiguration: AnalyticsConfiguration? = AppSettings.makeAnalyticsConfiguration()
+    // Tchap: customize analytics policy url.
+//    private(set) var analyticsTermsURL: URL? = "https://element.io/cookie-policy"
+    /// The URL to open with more information about analytics terms. When this is `nil` the "Learn more" link will be hidden.
+    private(set) var analyticsTermsURL: URL? = "https://tchap.numerique.gouv.fr/politique-de-confidentialite"
+    /// Whether or not there the app is able ask for user consent to enable analytics or sentry reporting.
+    var canPromptForAnalytics: Bool { analyticsConfiguration != nil || bugReportSentryURL != nil }
+    private static func makeAnalyticsConfiguration() -> AnalyticsConfiguration? {
+        guard let host = Secrets.postHogHost, let apiKey = Secrets.postHogAPIKey else { return nil }
+        return AnalyticsConfiguration(host: host, apiKey: apiKey)
+    }
+    
     /// Whether the user has opted in to send analytics.
     @UserPreference(key: UserDefaultsKeys.analyticsConsentState, defaultValue: AnalyticsConsentState.unknown, storageType: .userDefaults(store))
     var analyticsConsentState
@@ -230,6 +316,9 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.hasRunIdentityConfirmationOnboarding, defaultValue: false, storageType: .userDefaults(store))
     var hasRunIdentityConfirmationOnboarding
     
+    @UserPreference(key: UserDefaultsKeys.frequentlyUsedSystemEmojis, defaultValue: [FrequentlyUsedEmoji](), storageType: .userDefaults(store))
+    var frequentlyUsedSystemEmojis
+    
     // MARK: - Home Screen
     
     @UserPreference(key: UserDefaultsKeys.hideUnreadMessagesBadge, defaultValue: false, storageType: .userDefaults(store))
@@ -237,19 +326,28 @@ final class AppSettings {
     
     // MARK: - Room Screen
     
-    @UserPreference(key: UserDefaultsKeys.timelineStyle, defaultValue: TimelineStyle.bubbles, storageType: .userDefaults(store))
-    var timelineStyle
-    
-    @UserPreference(key: UserDefaultsKeys.shouldCollapseRoomStateEvents, defaultValue: true, storageType: .volatile)
-    var shouldCollapseRoomStateEvents
-    
-    @UserPreference(key: UserDefaultsKeys.viewSourceEnabled, defaultValue: false, storageType: .userDefaults(store))
+    @UserPreference(key: UserDefaultsKeys.viewSourceEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
     var viewSourceEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.optimizeMediaUploads, defaultValue: true, storageType: .userDefaults(store))
+    var optimizeMediaUploads
+    
+    /// Whether or not to show a warning on the media caption composer so the user knows
+    /// that captions might not be visible to users who are using other Matrix clients.
+    let shouldShowMediaCaptionWarning = true
 
     // MARK: - Element Call
     
-    @UserPreference(key: UserDefaultsKeys.elementCallBaseURL, defaultValue: "https://call.element.io", storageType: .userDefaults(store))
-    var elementCallBaseURL: URL
+    // swiftlint:disable:next force_unwrapping
+    let elementCallBaseURL: URL = EmbeddedElementCall.appURL!
+    
+    // These are publicly availble on https://call.element.io so we don't neeed to treat them as secrets
+    let elementCallPosthogAPIHost = "https://posthog-element-call.element.io"
+    let elementCallPosthogAPIKey = "phc_rXGHx9vDmyEvyRxPziYtdVIv0ahEv8A9uLWFcCi1WcU"
+    let elementCallPosthogSentryDSN = "https://3bd2f95ba5554d4497da7153b552ffb5@sentry.tools.element.io/41"
+    
+    @UserPreference(key: UserDefaultsKeys.elementCallBaseURLOverride, defaultValue: nil, storageType: .userDefaults(store))
+    var elementCallBaseURLOverride: URL?
     
     // MARK: - Users
     
@@ -259,10 +357,23 @@ final class AppSettings {
     // MARK: - Maps
     
     // maptiler base url
-    let mapTilerBaseURL: URL = "https://api.maptiler.com/maps"
+    // Tchap: customize map tiler url for Tchap.
+    #if IS_TCHAP_DEVELOPMENT || IS_TCHAP_STAGING || IS_TCHAP_PRODUCTION
+    private enum TchapMapProvider: String {
+        case geoDataGouv = "https://openmaptiles.geo.data.gouv.fr/styles/osm-bright/style.json"
+        case ign = "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"
+    }
 
-    // maptiler api key
-    let mapTilerApiKey = InfoPlistReader.main.mapLibreAPIKey
+    private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
+                                                                   apiKey: Secrets.mapLibreAPIKey,
+                                                                   lightStyleID: "",
+                                                                   darkStyleID: "")
+    #else
+    private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
+                                                                   apiKey: Secrets.mapLibreAPIKey,
+                                                                   lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
+                                                                   darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
+    #endif
     
     // MARK: - Presence
 
@@ -271,16 +382,45 @@ final class AppSettings {
     
     // MARK: - Feature Flags
     
-    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .volatile)
+    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
     var publicSearchEnabled
     
-    @UserPreference(key: UserDefaultsKeys.qrCodeLoginEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var qrCodeLoginEnabled
+    @UserPreference(key: UserDefaultsKeys.fuzzyRoomListSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var fuzzyRoomListSearchEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.knockingEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var knockingEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.reportRoomEnabled, defaultValue: false, storageType: .userDefaults(store)) var reportRoomEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.reportInviteEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var reportInviteEnabled
     
     #endif
     
     // MARK: - Shared
         
-    @UserPreference(key: UserDefaultsKeys.logLevel, defaultValue: TracingConfiguration.LogLevel.info, storageType: .userDefaults(store))
+    @UserPreference(key: UserDefaultsKeys.logLevel, defaultValue: LogLevel.info, storageType: .userDefaults(store))
     var logLevel
+    
+    @UserPreference(key: UserDefaultsKeys.traceLogPacks, defaultValue: [], storageType: .userDefaults(store))
+    var traceLogPacks: Set<TraceLogPack>
+    
+    /// Configuration to enable only signed device isolation mode for  crypto. In this mode only devices signed by their owner will be considered in e2ee rooms.
+    @UserPreference(key: UserDefaultsKeys.enableOnlySignedDeviceIsolationMode, defaultValue: false, storageType: .userDefaults(store))
+    var enableOnlySignedDeviceIsolationMode
+    
+    @UserPreference(key: UserDefaultsKeys.hideInviteAvatars, defaultValue: false, storageType: .userDefaults(store))
+    var hideInviteAvatars
+    
+    @UserPreference(key: UserDefaultsKeys.timelineMediaVisibility, defaultValue: TimelineMediaVisibility.always, storageType: .userDefaults(store))
+    var timelineMediaVisibility
+}
+
+extension AppSettings: CommonSettingsProtocol { }
+
+enum TimelineMediaVisibility: Codable {
+    case always
+    case privateOnly
+    case never
 }

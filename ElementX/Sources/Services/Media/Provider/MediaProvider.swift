@@ -1,30 +1,25 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+import Combine
 import Kingfisher
 import UIKit
 
 struct MediaProvider: MediaProviderProtocol {
     private let mediaLoader: MediaLoaderProtocol
     private let imageCache: Kingfisher.ImageCache
+    private let networkMonitor: NetworkMonitorProtocol?
     
     init(mediaLoader: MediaLoaderProtocol,
-         imageCache: Kingfisher.ImageCache) {
+         imageCache: Kingfisher.ImageCache,
+         networkMonitor: NetworkMonitorProtocol?) {
         self.mediaLoader = mediaLoader
         self.imageCache = imageCache
+        self.networkMonitor = networkMonitor
     }
     
     // MARK: Images
@@ -43,8 +38,8 @@ struct MediaProvider: MediaProviderProtocol {
         }
         
         let cacheKey = cacheKeyForURL(source.url, size: size)
-
-        if case let .success(cacheResult) = await imageCache.retrieveImage(forKey: cacheKey),
+        
+        if let cacheResult = try? await imageCache.retrieveImage(forKey: cacheKey, options: nil),
            let image = cacheResult.image {
             return .success(image)
         }
@@ -62,12 +57,51 @@ struct MediaProvider: MediaProviderProtocol {
                 return .failure(.invalidImageData)
             }
 
-            imageCache.store(image, forKey: cacheKey)
+            try await imageCache.store(image, forKey: cacheKey)
 
             return .success(image)
         } catch {
             MXLog.error("Failed retrieving image with error: \(error)")
             return .failure(.failedRetrievingImage)
+        }
+    }
+    
+    func loadImageRetryingOnReconnection(_ source: MediaSourceProxy, size: CGSize?) -> Task<UIImage, any Error> {
+        guard let networkMonitor else {
+            fatalError("This method shouldn't be invoked without a NetworkMonitor set.")
+        }
+        
+        return Task {
+            if case let .success(image) = await loadImageFromSource(source, size: size) {
+                return image
+            }
+            
+            guard !Task.isCancelled else {
+                throw MediaProviderError.cancelled
+            }
+            
+            for await reachability in networkMonitor.reachabilityPublisher.values {
+                guard !Task.isCancelled else {
+                    throw MediaProviderError.cancelled
+                }
+                
+                guard reachability == .reachable else {
+                    continue
+                }
+                
+                switch await loadImageFromSource(source, size: size) {
+                case .success(let image):
+                    return image
+                case .failure:
+                    // If it fails after a retry with the network available
+                    // then something else must be wrong. Bail out.
+                    if reachability == .reachable {
+                        throw MediaProviderError.cancelled
+                    }
+                }
+            }
+            
+            throw MediaProviderError.cancelled
         }
     }
     
@@ -83,9 +117,9 @@ struct MediaProvider: MediaProviderProtocol {
     
     // MARK: Files
     
-    func loadFileFromSource(_ source: MediaSourceProxy, body: String?) async -> Result<MediaFileHandleProxy, MediaProviderError> {
+    func loadFileFromSource(_ source: MediaSourceProxy, filename: String?) async -> Result<MediaFileHandleProxy, MediaProviderError> {
         do {
-            let file = try await mediaLoader.loadMediaFileForSource(source, body: body)
+            let file = try await mediaLoader.loadMediaFileForSource(source, filename: filename)
             return .success(file)
         } catch {
             MXLog.error("Failed retrieving file with error: \(error)")
@@ -112,16 +146,6 @@ struct MediaProvider: MediaProviderProtocol {
             return "\(url.absoluteString){\(size.width),\(size.height)}"
         } else {
             return url.absoluteString
-        }
-    }
-}
-
-private extension ImageCache {
-    func retrieveImage(forKey key: String) async -> Result<ImageCacheResult, KingfisherError> {
-        await withCheckedContinuation { continuation in
-            retrieveImage(forKey: key) { result in
-                continuation.resume(returning: result)
-            }
         }
     }
 }

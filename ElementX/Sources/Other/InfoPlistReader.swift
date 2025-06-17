@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -24,7 +15,6 @@ struct InfoPlistReader {
         static let bundleShortVersion = "CFBundleShortVersionString"
         static let bundleDisplayName = "CFBundleDisplayName"
         static let productionAppName = "productionAppName"
-        static let mapLibreAPIKey = "mapLibreAPIKey"
         static let utExportedTypeDeclarationsKey = "UTExportedTypeDeclarations"
         static let utTypeIdentifierKey = "UTTypeIdentifier"
         static let utDescriptionKey = "UTTypeDescription"
@@ -96,12 +86,6 @@ struct InfoPlistReader {
     var productionAppName: String {
         infoPlistValue(forKey: Keys.productionAppName)
     }
-
-    // MARK: - MapLibre
-    
-    var mapLibreAPIKey: String {
-        infoPlistValue(forKey: Keys.mapLibreAPIKey)
-    }
     
     // MARK: - Custom App Scheme
     
@@ -120,9 +104,53 @@ struct InfoPlistReader {
         let exportedTypes: [[String: Any]] = infoPlistValue(forKey: Keys.utExportedTypeDeclarationsKey)
         guard let mentionPills = exportedTypes.first(where: { $0[Keys.utDescriptionKey] as? String == Values.mentionPills }),
               let utType = mentionPills[Keys.utTypeIdentifierKey] as? String else {
-            fatalError("Add properly \(Values.mentionPills) exported type into your target's Info.plst")
+            fatalError("Add properly \(Values.mentionPills) exported type into your target's Info.plist")
         }
-        return utType
+        
+        // The pills type is formed from the baseBundleIdentifier, however weirdly, if a fork sets that with a value
+        // that includes one or more uppercase characters, pill rendering breaks. If we lowercase the type identifier
+        // the bug is fixed, even though the value used in the fork's Info.plist no longer matches the value returned.
+        // Maybe in the future the fork should set their own PILLS_UT_TYPE_IDENTIFIER, but for now this works 🤷‍♂️🤷‍♂️🤷‍♂️
+        return utType.lowercased()
+    }
+    
+    // Tchap: add `pinnedCertificates` property
+    
+    // MARK: - Tchap Certificate Pinning
+    
+    private func recursiveSearchCertificates(for searchedKey: String, into: [String: Any]) -> [String] {
+        var result = [String]()
+        into.forEach { key, value in
+            if key == searchedKey,
+               let stringValue = value as? String {
+                result.append(stringValue)
+            } else if let subDict = value as? [String: Any] {
+                result.append(contentsOf: recursiveSearchCertificates(for: searchedKey, into: subDict))
+            } else if let subArray = value as? [[String: Any]] {
+                subArray.forEach {
+                    result.append(contentsOf: recursiveSearchCertificates(for: searchedKey, into: $0))
+                }
+            }
+        }
+        return result
+    }
+    
+    var embeddedTransportSecurity: Any? {
+        bundle.object(forInfoDictionaryKey: "NSAppTransportSecurity")
+    }
+    
+    var embeddedSpkiCertificates: [String] {
+        guard let transportSecurityData = embeddedTransportSecurity as? [String: Any] else {
+            return []
+        }
+        return recursiveSearchCertificates(for: "SPKI-SHA256-BASE64", into: transportSecurityData)
+    }
+    
+    var embeddedPemCertificates: [String] {
+        guard let transportSecurityData = embeddedTransportSecurity as? [String: Any] else {
+            return []
+        }
+        return recursiveSearchCertificates(for: "PEM", into: transportSecurityData)
     }
     
     // MARK: - Private

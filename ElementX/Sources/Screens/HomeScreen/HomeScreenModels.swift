@@ -1,33 +1,28 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
 import Foundation
 import UIKit
 
-enum HomeScreenViewModelAction {
+enum HomeScreenViewModelAction: Equatable {
     case presentRoom(roomIdentifier: String)
     case presentRoomDetails(roomIdentifier: String)
+    case presentReportRoom(roomIdentifier: String)
+    case presentDeclineAndBlock(userID: String, roomID: String)
     case roomLeft(roomIdentifier: String)
     case presentSecureBackupSettings
+    case presentRecoveryKeyScreen
+    case presentEncryptionResetScreen
     case presentSettingsScreen
     case presentFeedbackScreen
     case presentStartChatScreen
     case presentGlobalSearch
-    case presentRoomDirectorySearch
+    case logoutWithoutConfirmation
     case logout
 }
 
@@ -36,31 +31,30 @@ enum HomeScreenViewAction {
     case showRoomDetails(roomIdentifier: String)
     case leaveRoom(roomIdentifier: String)
     case confirmLeaveRoom(roomIdentifier: String)
+    case reportRoom(roomIdentifier: String)
     case showSettings
     case startChat
+    case setupRecovery
     case confirmRecoveryKey
+    case resetEncryption
     case skipRecoveryKeyConfirmation
-    case updateVisibleItemRange(range: Range<Int>, isScrolling: Bool)
+    case updateVisibleItemRange(Range<Int>)
     case globalSearch
     case markRoomAsUnread(roomIdentifier: String)
     case markRoomAsRead(roomIdentifier: String)
     case markRoomAsFavourite(roomIdentifier: String, isFavourite: Bool)
-    case selectRoomDirectorySearch
     
     case acceptInvite(roomIdentifier: String)
     case declineInvite(roomIdentifier: String)
 }
 
 enum HomeScreenRoomListMode: CustomStringConvertible {
-    case migration
     case skeletons
     case empty
     case rooms
     
     var description: String {
         switch self {
-        case .migration:
-            return "Showing account migration"
         case .skeletons:
             return "Showing placeholders"
         case .empty:
@@ -71,10 +65,24 @@ enum HomeScreenRoomListMode: CustomStringConvertible {
     }
 }
 
-enum SecurityBannerMode {
+enum HomeScreenSecurityBannerMode: Equatable {
     case none
     case dismissed
-    case recoveryKeyConfirmation
+    case show(HomeScreenRecoveryKeyConfirmationBanner.State)
+    
+    var isDismissed: Bool {
+        switch self {
+        case .dismissed: true
+        default: false
+        }
+    }
+    
+    var isShown: Bool {
+        switch self {
+        case .show: true
+        default: false
+        }
+    }
 }
 
 struct HomeScreenViewState: BindableState {
@@ -82,17 +90,20 @@ struct HomeScreenViewState: BindableState {
     var userDisplayName: String?
     var userAvatarURL: URL?
     
-    var securityBannerMode = SecurityBannerMode.none
+    var securityBannerMode = HomeScreenSecurityBannerMode.none
+    
     var requiresExtraAccountSetup = false
         
     var rooms: [HomeScreenRoom] = []
     var roomListMode: HomeScreenRoomListMode = .skeletons
     
     var hasPendingInvitations = false
-    
-    var isRoomDirectorySearchEnabled = false
-    
+        
     var selectedRoomID: String?
+    
+    var hideInviteAvatars = false
+    
+    var reportRoomEnabled = false
     
     var visibleRooms: [HomeScreenRoom] {
         if roomListMode == .skeletons {
@@ -101,7 +112,7 @@ struct HomeScreenViewState: BindableState {
         
         return rooms
     }
-    
+        
     var bindings = HomeScreenViewStateBindings()
     
     var placeholderRooms: [HomeScreenRoom] {
@@ -120,11 +131,7 @@ struct HomeScreenViewState: BindableState {
     }
     
     var shouldShowFilters: Bool {
-        !bindings.isSearchFieldFocused
-    }
-    
-    var shouldShowRecoveryKeyConfirmationBanner: Bool {
-        securityBannerMode == .recoveryKeyConfirmation
+        !bindings.isSearchFieldFocused && roomListMode == .rooms
     }
 }
 
@@ -138,28 +145,29 @@ struct HomeScreenViewStateBindings {
 }
 
 struct HomeScreenRoom: Identifiable, Equatable {
-    enum RoomType {
+    enum RoomType: Equatable {
         case placeholder
         case room
-        case invite
-    }
-    
-    struct InviterDetails: Equatable {
-        let userID: String
-        let displayName: String?
-        let avatarURL: URL?
+        case invite(inviterDetails: RoomInviterDetails?)
+        case knock
     }
     
     static let placeholderLastMessage = AttributedString("Hidden last message")
         
-    /// The list item identifier can be a real room identifier, a custom one for invalidated entries
-    /// or a completely unique one for empty items and skeletons
+    /// The list item identifier is it's room identifier.
     let id: String
     
     /// The real room identifier this item points to
-    let roomId: String?
+    let roomID: String?
     
     let type: RoomType
+    
+    var inviter: RoomInviterDetails? {
+        if case .invite(let inviter) = type {
+            return inviter
+        }
+        return nil
+    }
     
     let badges: Badges
     struct Badges: Equatable {
@@ -181,15 +189,13 @@ struct HomeScreenRoom: Identifiable, Equatable {
     
     let lastMessage: AttributedString?
     
-    let avatarURL: URL?
-    
-    let inviter: InviterDetails?
-    
+    let avatar: RoomAvatar
+        
     let canonicalAlias: String?
     
     static func placeholder() -> HomeScreenRoom {
         HomeScreenRoom(id: UUID().uuidString,
-                       roomId: nil,
+                       roomID: nil,
                        type: .placeholder,
                        badges: .init(isDotShown: false, isMentionShown: false, isMuteShown: false, isCallShown: false),
                        name: "Placeholder room name",
@@ -198,46 +204,44 @@ struct HomeScreenRoom: Identifiable, Equatable {
                        isFavourite: false,
                        timestamp: "Now",
                        lastMessage: placeholderLastMessage,
-                       avatarURL: nil,
-                       inviter: nil,
+                       avatar: .room(id: "", name: "", avatarURL: nil),
                        canonicalAlias: nil)
     }
 }
 
 extension HomeScreenRoom {
-    init(details: RoomSummaryDetails, invalidated: Bool, hideUnreadMessagesBadge: Bool) {
-        let identifier = invalidated ? "invalidated-" + details.id : details.id
+    init(summary: RoomSummary, hideUnreadMessagesBadge: Bool, seenInvites: Set<String> = []) {
+        let roomID = summary.id
         
-        let hasUnreadMessages = hideUnreadMessagesBadge ? false : details.hasUnreadMessages
+        let hasUnreadMessages = hideUnreadMessagesBadge ? false : summary.hasUnreadMessages
+        let isUnseenInvite = summary.joinRequestType?.isInvite == true && !seenInvites.contains(roomID)
+
+        let isDotShown = hasUnreadMessages || summary.hasUnreadMentions || summary.hasUnreadNotifications || summary.isMarkedUnread || isUnseenInvite
+        let isMentionShown = summary.hasUnreadMentions && !summary.isMuted
+        let isMuteShown = summary.isMuted
+        let isCallShown = summary.hasOngoingCall
+        let isHighlighted = summary.isMarkedUnread || (!summary.isMuted && (summary.hasUnreadNotifications || summary.hasUnreadMentions)) || isUnseenInvite
         
-        let isDotShown = hasUnreadMessages || details.hasUnreadMentions || details.hasUnreadNotifications || details.isMarkedUnread
-        let isMentionShown = details.hasUnreadMentions && !details.isMuted
-        let isMuteShown = details.isMuted
-        let isCallShown = details.hasOngoingCall
-        let isHighlighted = details.isMarkedUnread || (!details.isMuted && (details.hasUnreadNotifications || details.hasUnreadMentions))
-        
-        var inviter: InviterDetails?
-        if let roomMemberProxy = details.inviter {
-            inviter = .init(userID: roomMemberProxy.userID,
-                            displayName: roomMemberProxy.displayName,
-                            avatarURL: roomMemberProxy.avatarURL)
+        let type: HomeScreenRoom.RoomType = switch summary.joinRequestType {
+        case .invite(let inviter): .invite(inviterDetails: inviter.map(RoomInviterDetails.init))
+        case .knock: .knock
+        case .none: .room
         }
         
-        self.init(id: identifier,
-                  roomId: details.id,
-                  type: details.isInvite ? .invite : .room,
+        self.init(id: roomID,
+                  roomID: summary.id,
+                  type: type,
                   badges: .init(isDotShown: isDotShown,
                                 isMentionShown: isMentionShown,
                                 isMuteShown: isMuteShown,
                                 isCallShown: isCallShown),
-                  name: details.name,
-                  isDirect: details.isDirect,
+                  name: summary.name,
+                  isDirect: summary.isDirect,
                   isHighlighted: isHighlighted,
-                  isFavourite: details.isFavourite,
-                  timestamp: details.lastMessageFormattedTimestamp,
-                  lastMessage: details.lastMessage,
-                  avatarURL: details.avatarURL,
-                  inviter: inviter,
-                  canonicalAlias: details.canonicalAlias)
+                  isFavourite: summary.isFavourite,
+                  timestamp: summary.lastMessageFormattedTimestamp,
+                  lastMessage: summary.lastMessage,
+                  avatar: summary.avatar,
+                  canonicalAlias: summary.canonicalAlias)
     }
 }

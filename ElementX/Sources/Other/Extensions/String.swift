@@ -1,20 +1,12 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 extension String {
     /// Returns the string as an `AttributedString` with the specified character tinted in a different color.
@@ -97,5 +89,51 @@ extension String {
         }
         
         return result
+    }
+}
+
+extension String {
+    /// detects if the string is empty or contains only whitespaces and newlines
+    var isBlank: Bool {
+        trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
+
+extension String {
+    static func makeCanonicalAlias(aliasLocalPart: Self?, serverName: Self?) -> Self? {
+        guard let aliasLocalPart, !aliasLocalPart.isEmpty,
+              let serverName, !serverName.isEmpty else {
+            return nil
+        }
+        return "#\(aliasLocalPart):\(serverName)"
+    }
+}
+
+extension String {
+    var validatedFileExtension: String {
+        let fileExtension = (self as NSString).pathExtension
+        guard !fileExtension.isEmpty else {
+            return "bin"
+        }
+        return UTType(filenameExtension: fileExtension) != nil ? fileExtension : "bin"
+    }
+}
+
+extension String {
+    /// To be used if the string is actually a URL
+    var asSanitizedLink: String {
+        var link = self
+        if !link.contains("://") {
+            link.insert(contentsOf: "https://", at: link.startIndex)
+        }
+        
+        // Don't include punctuation characters at the end of links
+        // e.g `https://element.io/blog:` <- which is a valid link but the wrong place
+        while !link.isEmpty,
+              link.rangeOfCharacter(from: .punctuationCharacters, options: .backwards)?.upperBound == link.endIndex {
+            link = String(link.dropLast())
+        }
+        
+        return link
     }
 }

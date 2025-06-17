@@ -170,6 +170,20 @@
 			<string>PIN salah. Anda memiliki %1$d percobaan lagi</string>
 		</dict>
 	</dict>
+	<key>screen_pinned_timeline_screen_title</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%1$d Pesan yang disematkan</string>
+		</dict>
+	</dict>
 	<key>screen_room_member_list_header_title</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -182,6 +196,20 @@
 			<string>d</string>
 			<key>other</key>
 			<string>%1$d orang</string>
+		</dict>
+	</dict>
+	<key>screen_room_multiple_knock_requests_title</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%1$@ +%2$d lainnya ingin bergabung ke ruangan ini</string>
 		</dict>
 	</dict>
 	<key>screen_room_timeline_state_changes</key>

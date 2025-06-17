@@ -1,0 +1,48 @@
+---
+name: TchapX
+attributes:
+  ORGANIZATIONNAME: Tchap
+
+fileGroups:
+- project-tchap-x.yml
+
+options:
+  groupOrdering:REPLACE:
+  - order:
+    - TchapX
+    - ElementX
+    - UnitTests
+    - UITests
+    - IntegrationTests
+    - Tools
+  - pattern: TchapX
+    order:
+    - Sources
+    - UnitTests
+    - UITests
+    - Resources
+    - SupportingFiles
+
+settings:
+  DEVELOPMENT_TEAM: NVMQD635C6
+  MARKETING_VERSION: 0.5.4
+  CURRENT_PROJECT_VERSION: 1
+
+include:
+- path: project.yml
+
+- path: TchapX/SupportingFiles/target-production.yml
+- path: TchapX-NSE/production/SupportingFiles/target.yml
+- path: TchapX-ShareExtension/production/SupportingFiles/target.yml
+
+- path: TchapX/SupportingFiles/target-staging.yml
+- path: TchapX-NSE/staging/SupportingFiles/target.yml
+- path: TchapX-ShareExtension/staging/SupportingFiles/target.yml
+
+- path: TchapX/SupportingFiles/target-development.yml
+- path: TchapX-NSE/development/SupportingFiles/target.yml
+- path: TchapX-ShareExtension/development/SupportingFiles/target.yml
+
+- path: TchapX/SupportingFiles/target-UnitTests.yml
+- path: TchapX/SupportingFiles/target-UITests.yml
+- path: TchapX/SupportingFiles/target-PreviewTests.yml

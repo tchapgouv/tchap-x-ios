@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -26,13 +17,17 @@ struct HomeScreenCoordinatorParameters {
 enum HomeScreenCoordinatorAction {
     case presentRoom(roomIdentifier: String)
     case presentRoomDetails(roomIdentifier: String)
+    case presentReportRoom(roomIdentifier: String)
+    case presentDeclineAndBlock(userID: String, roomID: String)
     case roomLeft(roomIdentifier: String)
     case presentSettingsScreen
     case presentFeedbackScreen
     case presentSecureBackupSettings
+    case presentRecoveryKeyScreen
+    case presentEncryptionResetScreen
     case presentStartChatScreen
     case presentGlobalSearch
-    case presentRoomDirectorySearch
+    case logoutWithoutConfirmation
     case logout
 }
 
@@ -65,6 +60,8 @@ final class HomeScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.presentRoom(roomIdentifier: roomIdentifier))
                 case .presentRoomDetails(roomIdentifier: let roomIdentifier):
                     actionsSubject.send(.presentRoomDetails(roomIdentifier: roomIdentifier))
+                case .presentReportRoom(let roomIdentifier):
+                    actionsSubject.send(.presentReportRoom(roomIdentifier: roomIdentifier))
                 case .roomLeft(roomIdentifier: let roomIdentifier):
                     actionsSubject.send(.roomLeft(roomIdentifier: roomIdentifier))
                 case .presentFeedbackScreen:
@@ -73,14 +70,20 @@ final class HomeScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.presentSettingsScreen)
                 case .presentSecureBackupSettings:
                     actionsSubject.send(.presentSecureBackupSettings)
-                case .logout:
-                    actionsSubject.send(.logout)
+                case .presentRecoveryKeyScreen:
+                    actionsSubject.send(.presentRecoveryKeyScreen)
+                case .presentEncryptionResetScreen:
+                    actionsSubject.send(.presentEncryptionResetScreen)
                 case .presentStartChatScreen:
                     actionsSubject.send(.presentStartChatScreen)
                 case .presentGlobalSearch:
                     actionsSubject.send(.presentGlobalSearch)
-                case .presentRoomDirectorySearch:
-                    actionsSubject.send(.presentRoomDirectorySearch)
+                case .logoutWithoutConfirmation:
+                    actionsSubject.send(.logoutWithoutConfirmation)
+                case .logout:
+                    actionsSubject.send(.logout)
+                case .presentDeclineAndBlock(let userID, let roomID):
+                    actionsSubject.send(.presentDeclineAndBlock(userID: userID, roomID: roomID))
                 }
             }
             .store(in: &cancellables)
@@ -90,7 +93,9 @@ final class HomeScreenCoordinator: CoordinatorProtocol {
     
     func start() {
         #if !DEBUG
-        if bugReportService.crashedLastRun {
+        // Note: bugReportService.isEnabled doesn't determine if a user has opted in to Analytics/Sentry.
+        // Therefore we use lastCrashEventID as this will only be set if we have crash ID from Sentry.
+        if bugReportService.crashedLastRun, bugReportService.lastCrashEventID != nil {
             viewModel.presentCrashedLastRunAlert()
         }
         #endif

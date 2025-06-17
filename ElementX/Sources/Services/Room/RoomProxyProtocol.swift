@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -24,62 +15,91 @@ enum RoomProxyError: Error {
     case invalidURL
     case invalidMedia
     case eventNotFound
+    case missingTransactionID
 }
 
-enum RoomProxyAction {
-    case roomInfoUpdate
+/// An enum that describes the relationship between the current user and the room, and contains a reference to the specific implementation of the `RoomProxy`.
+enum RoomProxyType {
+    case joined(JoinedRoomProxyProtocol)
+    case invited(InvitedRoomProxyProtocol)
+    case knocked(KnockedRoomProxyProtocol)
+    case banned(BannedRoomProxyProtocol)
+    case left
 }
 
 // sourcery: AutoMockable
 protocol RoomProxyProtocol {
     var id: String { get }
-    var isDirect: Bool { get }
-    var isPublic: Bool { get }
-    var isSpace: Bool { get }
-    var isEncrypted: Bool { get }
-    var isFavourite: Bool { get async }
-    var membership: Membership { get }
-    var hasOngoingCall: Bool { get }
-    var canonicalAlias: String? { get }
     var ownUserID: String { get }
-    
-    var name: String? { get }
-    
-    var topic: String? { get }
-    
-    var avatarURL: URL? { get }
+}
+
+// sourcery: AutoMockable
+protocol InvitedRoomProxyProtocol: RoomProxyProtocol {
+    var info: BaseRoomInfoProxyProtocol { get }
+    var inviter: RoomMemberProxyProtocol? { get }
+    func rejectInvitation() async -> Result<Void, RoomProxyError>
+}
+
+// sourcery: AutoMockable
+protocol KnockedRoomProxyProtocol: RoomProxyProtocol {
+    var info: BaseRoomInfoProxyProtocol { get }
+    func cancelKnock() async -> Result<Void, RoomProxyError>
+}
+
+// sourcery: AutoMockable
+protocol BannedRoomProxyProtocol: RoomProxyProtocol {
+    var info: BaseRoomInfoProxyProtocol { get }
+    func forgetRoom() async -> Result<Void, RoomProxyError>
+}
+
+enum JoinedRoomProxyAction: Equatable {
+    case roomInfoUpdate
+}
+
+enum KnockRequestsState {
+    case loading
+    case loaded([KnockRequestProxyProtocol])
+}
+
+// sourcery: AutoMockable
+protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
+    var infoPublisher: CurrentValuePublisher<RoomInfoProxy, Never> { get }
 
     var membersPublisher: CurrentValuePublisher<[RoomMemberProxyProtocol], Never> { get }
     
     var typingMembersPublisher: CurrentValuePublisher<[String], Never> { get }
-        
-    var joinedMembersCount: Int { get }
     
-    var activeMembersCount: Int { get }
+    var identityStatusChangesPublisher: CurrentValuePublisher<[IdentityStatusChange], Never> { get }
     
-    var actionsPublisher: AnyPublisher<RoomProxyAction, Never> { get }
+    var knockRequestsStatePublisher: CurrentValuePublisher<KnockRequestsState, Never> { get }
     
     var timeline: TimelineProxyProtocol { get }
     
+    var pinnedEventsTimeline: TimelineProxyProtocol? { get async }
+    
     func subscribeForUpdates() async
     
-    func unsubscribeFromUpdates()
+    func subscribeToRoomInfoUpdates()
     
     func timelineFocusedOnEvent(eventID: String, numberOfEvents: UInt16) async -> Result<TimelineProxyProtocol, RoomProxyError>
+    
+    func messageFilteredTimeline(focus: TimelineFocus,
+                                 allowedMessageTypes: [TimelineAllowedMessageType],
+                                 presentation: TimelineKind.MediaPresentation) async -> Result<TimelineProxyProtocol, RoomProxyError>
+    
+    func enableEncryption() async -> Result<Void, RoomProxyError>
     
     func redact(_ eventID: String) async -> Result<Void, RoomProxyError>
     
     func reportContent(_ eventID: String, reason: String?) async -> Result<Void, RoomProxyError>
+    
+    func reportRoom(reason: String?) async -> Result<Void, RoomProxyError>
 
     func leaveRoom() async -> Result<Void, RoomProxyError>
     
     func updateMembers() async
 
     func getMember(userID: String) async -> Result<RoomMemberProxyProtocol, RoomProxyError>
-    
-    func rejectInvitation() async -> Result<Void, RoomProxyError>
-    
-    func acceptInvitation() async -> Result<Void, RoomProxyError>
     
     func invite(userID: String) async -> Result<Void, RoomProxyError>
     
@@ -93,8 +113,29 @@ protocol RoomProxyProtocol {
     
     func markAsRead(receiptType: ReceiptType) async -> Result<Void, RoomProxyError>
     
+    func edit(eventID: String, newContent: RoomMessageEventContentWithoutRelation) async -> Result<Void, RoomProxyError>
+    
     /// https://spec.matrix.org/v1.9/client-server-api/#typing-notifications
     @discardableResult func sendTypingNotification(isTyping: Bool) async -> Result<Void, RoomProxyError>
+    
+    func ignoreDeviceTrustAndResend(devices: [String: [String]], sendHandle: SendHandleProxy) async -> Result<Void, RoomProxyError>
+    
+    func withdrawVerificationAndResend(userIDs: [String], sendHandle: SendHandleProxy) async -> Result<Void, RoomProxyError>
+    
+    // MARK: - Privacy settings
+    
+    func updateJoinRule(_ rule: JoinRule) async -> Result<Void, RoomProxyError>
+    func updateHistoryVisibility(_ visibility: RoomHistoryVisibility) async -> Result<Void, RoomProxyError>
+    
+    func isVisibleInRoomDirectory() async -> Result<Bool, RoomProxyError>
+    func updateRoomDirectoryVisibility(_ visibility: RoomVisibility) async -> Result<Void, RoomProxyError>
+    
+    // MARK: - Canonical Alias
+    
+    func updateCanonicalAlias(_ alias: String?, altAliases: [String]) async -> Result<Void, RoomProxyError>
+    
+    func publishRoomAliasInRoomDirectory(_ alias: String) async -> Result<Bool, RoomProxyError>
+    func removeRoomAliasFromRoomDirectory(_ alias: String) async -> Result<Bool, RoomProxyError>
     
     // MARK: - Room Flags
     
@@ -116,46 +157,46 @@ protocol RoomProxyProtocol {
     func canUserKick(userID: String) async -> Result<Bool, RoomProxyError>
     func canUserBan(userID: String) async -> Result<Bool, RoomProxyError>
     func canUserTriggerRoomNotification(userID: String) async -> Result<Bool, RoomProxyError>
+    func canUserPinOrUnpin(userID: String) async -> Result<Bool, RoomProxyError>
     
     // MARK: - Moderation
     
-    func kickUser(_ userID: String) async -> Result<Void, RoomProxyError>
-    func banUser(_ userID: String) async -> Result<Void, RoomProxyError>
+    func kickUser(_ userID: String, reason: String?) async -> Result<Void, RoomProxyError>
+    func banUser(_ userID: String, reason: String?) async -> Result<Void, RoomProxyError>
     func unbanUser(_ userID: String) async -> Result<Void, RoomProxyError>
     
     // MARK: - Element Call
     
     func canUserJoinCall(userID: String) async -> Result<Bool, RoomProxyError>
+    func elementCallWidgetDriver(deviceID: String) -> ElementCallWidgetDriverProtocol
     
-    func elementCallWidgetDriver() -> ElementCallWidgetDriverProtocol
-    
-    func sendCallNotificationIfNeeeded() async -> Result<Void, RoomProxyError>
+    func sendCallNotificationIfNeeded() async -> Result<Void, RoomProxyError>
     
     // MARK: - Permalinks
     
     func matrixToPermalink() async -> Result<URL, RoomProxyError>
-    
     func matrixToEventPermalink(_ eventID: String) async -> Result<URL, RoomProxyError>
+    
+    // MARK: - Drafts
+    
+    func saveDraft(_ draft: ComposerDraft) async -> Result<Void, RoomProxyError>
+    func loadDraft() async -> Result<ComposerDraft?, RoomProxyError>
+    func clearDraft() async -> Result<Void, RoomProxyError>
 }
 
-extension RoomProxyProtocol {
+extension JoinedRoomProxyProtocol {
     var details: RoomDetails {
         RoomDetails(id: id,
-                    name: name,
-                    avatarURL: avatarURL,
-                    canonicalAlias: canonicalAlias,
-                    isEncrypted: isEncrypted,
-                    isPublic: isPublic)
-    }
-        
-    // Avoids to duplicate the same logic around in the app
-    // Probably this should be done in rust.
-    var roomTitle: String {
-        name ?? "Unknown room 💥"
+                    name: infoPublisher.value.displayName,
+                    avatar: infoPublisher.value.avatar,
+                    canonicalAlias: infoPublisher.value.canonicalAlias,
+                    isEncrypted: infoPublisher.value.isEncrypted,
+                    isPublic: infoPublisher.value.isPublic,
+                    isDirect: infoPublisher.value.isDirect)
     }
     
-    var isEncryptedOneToOneRoom: Bool {
-        isDirect && isEncrypted && activeMembersCount <= 2
+    var isDirectOneToOneRoom: Bool {
+        infoPublisher.value.isDirect && infoPublisher.value.activeMembersCount <= 2
     }
 
     func members() async -> [RoomMemberProxyProtocol]? {

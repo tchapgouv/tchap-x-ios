@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -26,11 +17,15 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
         actionsSubject.eraseToAnyPublisher()
     }
     
-    init(userSession: UserSessionProtocol, appSettings: AppSettings) {
+    init(userSession: UserSessionProtocol, appSettings: AppSettings, isBugReportServiceEnabled: Bool) {
         super.init(initialViewState: .init(deviceID: userSession.clientProxy.deviceID,
                                            userID: userSession.clientProxy.userID,
-                                           showDeveloperOptions: appSettings.isDevelopmentBuild),
-                   imageProvider: userSession.mediaProvider)
+                                           showAccountDeactivation: userSession.clientProxy.canDeactivateAccount,
+                                           showDeveloperOptions: AppSettings.isDevelopmentBuild,
+                                           showAnalyticsSettings: appSettings.canPromptForAnalytics,
+                                           isBugReportServiceEnabled: isBugReportServiceEnabled,
+                                           tchapFaqURL: appSettings.tchapFaqURL),
+                   mediaProvider: userSession.mediaProvider)
         
         userSession.clientProxy.userAvatarURLPublisher
             .receive(on: DispatchQueue.main)
@@ -110,8 +105,12 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
             actionsSubject.send(.notifications)
         case .advancedSettings:
             actionsSubject.send(.advancedSettings)
+        case .enableDeveloperOptions:
+            state.showDeveloperOptions = true
         case .developerOptions:
             actionsSubject.send(.developerOptions)
+        case .deactivateAccount:
+            actionsSubject.send(.deactivateAccount)
         }
     }
 }

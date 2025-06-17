@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -27,31 +18,51 @@ struct AdvancedSettingsScreen: View {
                         kind: .picker(selection: $context.appAppearance,
                                       items: AppAppearance.allCases.map { (title: $0.name, tag: $0) }))
                 
-                ListRow(label: .plain(title: L10n.commonMessageLayout),
-                        kind: .picker(selection: $context.timelineStyle,
-                                      items: TimelineStyle.allCases.map { (title: $0.name, tag: $0) }))
-                
-                ListRow(label: .plain(title: L10n.actionViewSource),
+                ListRow(label: .plain(title: L10n.actionViewSource,
+                                      description: L10n.screenAdvancedSettingsViewSourceDescription),
                         kind: .toggle($context.viewSourceEnabled))
                 
                 ListRow(label: .plain(title: L10n.screenAdvancedSettingsSharePresence,
                                       description: L10n.screenAdvancedSettingsSharePresenceDescription),
                         kind: .toggle($context.sharePresence))
+                
+                ListRow(label: .plain(title: L10n.screenAdvancedSettingsMediaCompressionTitle,
+                                      description: L10n.screenAdvancedSettingsMediaCompressionDescription),
+                        kind: .toggle($context.optimizeMediaUploads))
+                    .onChange(of: context.optimizeMediaUploads) {
+                        context.send(viewAction: .optimizeMediaUploadsChanged)
+                    }
             }
+            
+            moderationAndSafetySection
+            timelineMediaSection
         }
         .compoundList()
         .navigationTitle(L10n.commonAdvancedSettings)
         .navigationBarTitleDisplayMode(.inline)
     }
-}
-
-private extension TimelineStyle {
-    var name: String {
-        switch self {
-        case .plain:
-            return L10n.commonModern
-        case .bubbles:
-            return L10n.commonBubbles
+    
+    private var moderationAndSafetySection: some View {
+        Section {
+            ListRow(label: .plain(title: L10n.screenAdvancedSettingsHideInviteAvatarsToggleTitle),
+                    kind: .toggle($context.hideInviteAvatars))
+        } header: {
+            Text(L10n.screenAdvancedSettingsModerationAndSafetySectionTitle)
+                .compoundListSectionHeader()
+        }
+    }
+    
+    private var timelineMediaSection: some View {
+        Section {
+            ListRow(label: .plain(title: L10n.screenAdvancedSettingsShowMediaTimelineTitle),
+                    kind: .inlinePicker(selection: $context.timelineMediaVisibility,
+                                        items: TimelineMediaVisibility.items))
+        } header: {
+            Text(L10n.screenAdvancedSettingsShowMediaTimelineTitle)
+                .compoundListSectionHeader()
+        } footer: {
+            Text(L10n.screenAdvancedSettingsShowMediaTimelineSubtitle)
+                .compoundListSectionFooter()
         }
     }
 }
@@ -72,10 +83,19 @@ private extension AppAppearance {
 // MARK: - Previews
 
 struct AdvancedSettingsScreen_Previews: PreviewProvider, TestablePreview {
-    static let viewModel = AdvancedSettingsScreenViewModel(advancedSettings: ServiceLocator.shared.settings)
+    static let viewModel = AdvancedSettingsScreenViewModel(advancedSettings: ServiceLocator.shared.settings,
+                                                           analytics: ServiceLocator.shared.analytics)
     static var previews: some View {
         NavigationStack {
             AdvancedSettingsScreen(context: viewModel.context)
         }
+    }
+}
+
+private extension TimelineMediaVisibility {
+    static var items: [(title: String, tag: TimelineMediaVisibility)] {
+        [(title: L10n.screenAdvancedSettingsShowMediaTimelineAlwaysShow, tag: .always),
+         (title: L10n.screenAdvancedSettingsShowMediaTimelinePrivateRooms, tag: .privateOnly),
+         (title: L10n.screenAdvancedSettingsShowMediaTimelineAlwaysHide, tag: .never)]
     }
 }

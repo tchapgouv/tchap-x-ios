@@ -1,17 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd
+// Copyright 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -21,6 +12,7 @@ import MatrixRustSDK
 
 final class RoomDirectorySearchProxy: RoomDirectorySearchProxyProtocol {
     private let roomDirectorySearch: RoomDirectorySearchProtocol
+    private let appSettings: AppSettings
     private let serialDispatchQueue = DispatchQueue(label: "io.element.elementx.roomdirectorysearch", qos: .default)
     
     private let resultsSubject = CurrentValueSubject<[RoomDirectorySearchResult], Never>([])
@@ -40,8 +32,10 @@ final class RoomDirectorySearchProxy: RoomDirectorySearchProxyProtocol {
     
     private var cancellables = Set<AnyCancellable>()
     
-    init(roomDirectorySearch: RoomDirectorySearchProtocol) {
+    init(roomDirectorySearch: RoomDirectorySearchProtocol,
+         appSettings: AppSettings) {
         self.roomDirectorySearch = roomDirectorySearch
+        self.appSettings = appSettings
         diffsPublisher
             .receive(on: serialDispatchQueue)
             .sink { [weak self] in self?.updateResultsWithDiffs($0) }
@@ -56,7 +50,7 @@ final class RoomDirectorySearchProxy: RoomDirectorySearchProxyProtocol {
     
     func search(query: String?) async -> Result<Void, RoomDirectorySearchError> {
         do {
-            try await roomDirectorySearch.search(filter: query, batchSize: 50)
+            try await roomDirectorySearch.search(filter: query, batchSize: 50, viaServerName: nil)
             return .success(())
         } catch {
             return .failure(.searchFailed)
@@ -154,8 +148,8 @@ final class RoomDirectorySearchProxy: RoomDirectorySearchProxyProtocol {
                                   alias: value.alias,
                                   name: value.name,
                                   topic: value.topic,
-                                  avatarURL: value.avatarUrl.flatMap(URL.init(string:)),
-                                  canBeJoined: value.joinRule == .public)
+                                  avatar: .room(id: value.roomId, name: value.name, avatarURL: value.avatarUrl.flatMap(URL.init(string:))),
+                                  canBeJoined: value.joinRule == .public || (appSettings.knockingEnabled && value.joinRule == .knock))
     }
 }
 

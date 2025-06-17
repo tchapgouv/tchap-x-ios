@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -38,10 +29,15 @@ enum RoomMembersListScreenMode {
     case banned
 }
 
+struct RoomMemberListScreenEntry: Equatable {
+    let member: RoomMemberDetails
+    let verificationState: UserIdentityVerificationState
+}
+
 struct RoomMembersListScreenViewState: BindableState {
-    private var joinedMembers: [RoomMemberDetails]
-    private var invitedMembers: [RoomMemberDetails]
-    private var bannedMembers: [RoomMemberDetails]
+    private var joinedMembers: [RoomMemberListScreenEntry]
+    private var invitedMembers: [RoomMemberListScreenEntry]
+    private var bannedMembers: [RoomMemberListScreenEntry]
     
     let joinedMembersCount: Int
     var bannedMembersCount: Int { bannedMembers.count }
@@ -53,9 +49,9 @@ struct RoomMembersListScreenViewState: BindableState {
     var bindings: RoomMembersListScreenViewStateBindings
     
     init(joinedMembersCount: Int,
-         joinedMembers: [RoomMemberDetails] = [],
-         invitedMembers: [RoomMemberDetails] = [],
-         bannedMembers: [RoomMemberDetails] = [],
+         joinedMembers: [RoomMemberListScreenEntry] = [],
+         invitedMembers: [RoomMemberListScreenEntry] = [],
+         bannedMembers: [RoomMemberListScreenEntry] = [],
          bindings: RoomMembersListScreenViewStateBindings) {
         self.joinedMembersCount = joinedMembersCount
         self.joinedMembers = joinedMembers
@@ -64,19 +60,19 @@ struct RoomMembersListScreenViewState: BindableState {
         self.bindings = bindings
     }
     
-    var visibleJoinedMembers: [RoomMemberDetails] {
+    var visibleJoinedMembers: [RoomMemberListScreenEntry] {
         joinedMembers
-            .filter { $0.matches(searchQuery: bindings.searchQuery) }
+            .filter { $0.member.matches(searchQuery: bindings.searchQuery) }
     }
     
-    var visibleInvitedMembers: [RoomMemberDetails] {
+    var visibleInvitedMembers: [RoomMemberListScreenEntry] {
         invitedMembers
-            .filter { $0.matches(searchQuery: bindings.searchQuery) }
+            .filter { $0.member.matches(searchQuery: bindings.searchQuery) }
     }
     
-    var visibleBannedMembers: [RoomMemberDetails] {
+    var visibleBannedMembers: [RoomMemberListScreenEntry] {
         bannedMembers
-            .filter { $0.matches(searchQuery: bindings.searchQuery) }
+            .filter { $0.member.matches(searchQuery: bindings.searchQuery) }
     }
 }
 
@@ -84,35 +80,21 @@ struct RoomMembersListScreenViewStateBindings {
     var searchQuery = ""
     /// The current mode the screen is in.
     var mode: RoomMembersListScreenMode = .members
-    /// A selected member to kick, ban, promote etc.
-    var memberToManage: RoomMembersListScreenManagementDetails?
+    /// A sheet model for the selected member to kick, ban, promote etc.
+    var manageMemeberViewModel: ManageRoomMemberSheetViewModel?
 
     /// Information describing the currently displayed alert.
     var alertInfo: AlertInfo<RoomMembersListScreenAlertType>?
 }
 
-/// Information about managing a particular room member.
-struct RoomMembersListScreenManagementDetails: Identifiable {
-    var id: String { member.id }
-    
-    /// The member that is being managed.
-    let member: RoomMemberDetails
-    
-    /// A management action that can be performed on the member.
-    enum Action { case kick, ban }
-    /// The management actions available for `member`.
-    let actions: [Action]
-}
-
 enum RoomMembersListScreenViewAction {
     case selectMember(RoomMemberDetails)
-    case showMemberDetails(RoomMemberDetails)
-    case kickMember(RoomMemberDetails)
-    case banMember(RoomMemberDetails)
     case unbanMember(RoomMemberDetails)
     case invite
 }
 
 enum RoomMembersListScreenAlertType: Hashable {
     case unbanConfirmation(RoomMemberDetails)
+    case kickConfirmation
+    case banConfirmation
 }

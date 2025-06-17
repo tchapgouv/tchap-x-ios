@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -40,6 +31,16 @@ struct StartChatScreen: View {
                           disablesInteractiveDismiss: true)
         .compoundSearchField()
         .alert(item: $context.alertInfo)
+        .sheet(item: $context.selectedUserToInvite) { user in
+            SendInviteConfirmationView(userToInvite: user, mediaProvider: context.mediaProvider) {
+                context.send(viewAction: .createDM(user: user))
+            }
+        }
+        .sheet(isPresented: $context.isJoinRoomByAddressSheetPresented) {
+            context.roomAddress = ""
+        } content: {
+            JoinRoomByAddressView(context: context)
+        }
     }
 
     // MARK: - Private
@@ -48,8 +49,33 @@ struct StartChatScreen: View {
     @ViewBuilder
     private var mainContent: some View {
         createRoomSection
+        if context.viewState.isRoomDirectoryEnabled {
+            roomDirectorySearch
+        }
+        joinForumSection // Tchap: Join a forum
         inviteFriendsSection
+        joinRoomByAddressSection
         usersSection
+    }
+    
+    private var joinRoomByAddressSection: some View {
+        Section {
+            ListRow(label: .default(title: L10n.screenStartChatJoinRoomByAddressAction,
+                                    icon: \.room),
+                    kind: .button {
+                        context.isJoinRoomByAddressSheetPresented = true
+                    })
+        }
+    }
+    
+    private var roomDirectorySearch: some View {
+        Section {
+            ListRow(label: .default(title: L10n.screenRoomDirectorySearchTitle,
+                                    icon: \.listBulleted),
+                    kind: .navigationLink {
+                        context.send(viewAction: .openRoomDirectorySearch)
+                    })
+        }
     }
     
     /// The content shown in the form when a search query has been entered.
@@ -83,6 +109,16 @@ struct StartChatScreen: View {
         }
     }
     
+    // Tchap: Join a forum (add section without chevron)
+    private var joinForumSection: some View {
+        Section {
+            ListRow(label: .default(title: TchapL10n.startChatActionJoinForum,
+                                    icon: \.listBulleted),
+                    kind: .button { context.send(viewAction: .joinForum) })
+                .accessibilityIdentifier(TchapA11yIdentifiers.startChatScreen.joinForum)
+        }
+    }
+    
     @ViewBuilder
     private var usersSection: some View {
         if !context.viewState.usersSection.users.isEmpty {
@@ -90,7 +126,7 @@ struct StartChatScreen: View {
                 ForEach(context.viewState.usersSection.users, id: \.userID) { user in
                     UserProfileListRow(user: user,
                                        membership: nil,
-                                       imageProvider: context.imageProvider,
+                                       mediaProvider: context.mediaProvider,
                                        kind: .button {
                                            context.send(viewAction: .selectUser(user))
                                        })
@@ -129,18 +165,21 @@ struct StartChatScreen: View {
 
 struct StartChatScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModel = {
+        let appSettings = AppSettings()
+        appSettings.publicSearchEnabled = true
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@userid:example.com"))))
         let userDiscoveryService = UserDiscoveryServiceMock()
         userDiscoveryService.searchProfilesWithReturnValue = .success([.mockAlice])
         let viewModel = StartChatScreenViewModel(userSession: userSession,
                                                  analytics: ServiceLocator.shared.analytics,
                                                  userIndicatorController: UserIndicatorControllerMock(),
-                                                 userDiscoveryService: userDiscoveryService)
+                                                 userDiscoveryService: userDiscoveryService,
+                                                 appSettings: appSettings)
         return viewModel
     }()
     
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             StartChatScreen(context: viewModel.context)
         }
     }

@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import SnapshotTesting
@@ -19,6 +10,10 @@ import XCTest
 
 enum Application {
     static func launch(_ identifier: UITestsScreenIdentifier, disableTimelineAccessibility: Bool = true) -> XCUIApplication {
+        if ProcessInfo().environment["RECORD_FAILURES"].map(Bool.init) == true {
+            XCUIApplication.recordMode = .failed
+        }
+        
         checkEnvironments()
         
         let app = XCUIApplication()
@@ -37,70 +32,66 @@ enum Application {
     }
     
     private static func checkEnvironments() {
-        let requirediPhoneSimulator = "iPhone15,4" // iPhone 15
+        let requirediPhoneSimulator = "iPhone17,3" // iPhone 16
         let requirediPadSimulator = "iPad13,18" // iPad (10th generation)
-        let requiredOSVersion = 17
+        let requiredOSVersion = 18
         
         let osVersion = ProcessInfo().operatingSystemVersion
         guard osVersion.majorVersion == requiredOSVersion else {
             fatalError("Switch to iOS \(requiredOSVersion) for these tests.")
         }
         
-        guard let deviceModel = ProcessInfo().environment["SIMULATOR_MODEL_IDENTIFIER"],
-              deviceModel == requirediPhoneSimulator || deviceModel == requirediPadSimulator else {
-            fatalError("Switch to using \(requirediPhoneSimulator) or \(requirediPadSimulator) for these tests.")
+        guard let deviceModel = ProcessInfo().environment["SIMULATOR_MODEL_IDENTIFIER"] else {
+            fatalError("Unknown simulator.")
+        }
+        guard deviceModel == requirediPhoneSimulator || deviceModel == requirediPadSimulator else {
+            fatalError("Running on \(deviceModel) but we only support \(requirediPhoneSimulator) and \(requirediPadSimulator).")
+        }
+        guard UIDevice.current.snapshotName == "iPhone-18.1" || UIDevice.current.snapshotName == "iPad-18.1" else {
+            fatalError("Running on a simulator that hasn't been renamed to match the expected snapshot filenames.")
         }
     }
 }
 
 extension XCUIApplication {
-    @MainActor
+    static var recordMode: SnapshotTestingConfiguration.Record = .missing
+    
     /// Assert screenshot for a screen with the given identifier. Does not fail if a screenshot is newly created.
-    /// - Parameter identifier: Identifier of the UI test screen
-    /// - Parameter step: An optional integer that can be used to take multiple snapshots per test identifier.
-    /// - Parameter insets: Optional insets with which to crop the image by.
-    func assertScreenshot(_ identifier: UITestsScreenIdentifier, step: Int? = nil, insets: UIEdgeInsets? = nil, delay: Duration = .seconds(1), precision: Float = 0.99) async throws {
-        var snapshotName = identifier.rawValue
-        if let step {
-            snapshotName += "-\(step)"
-        }
-        
-        snapshotName += "-\(deviceName)-\(localeCode)"
-
+    /// - Parameter testName: The current test name, first part of the resulting snapshot filename.
+    /// - Parameter step: An optional integer that can be used to take multiple snapshots per test identifier
+    /// - Parameter delay: How much to wait before taking the snapshot
+    @MainActor
+    func assertScreenshot(fileName: String = #file, testName: String = #function, step: Int? = nil, delay: Duration = .seconds(0.5)) async throws {
         // Sometimes the CI might be too slow to load the content so let's wait the delay time
         try await Task.sleep(for: delay)
         
-        var snapshot = screenshot().image
+        let snapshot = screenshot().image
         
-        if let insets {
-            snapshot = snapshot.inset(by: insets)
+        var sanitizedSuiteName = String(fileName.prefix(fileName.count - "Tests.swift".count))
+        sanitizedSuiteName = (sanitizedSuiteName as NSString).lastPathComponent
+        sanitizedSuiteName = sanitizedSuiteName.prefix(1).lowercased() + sanitizedSuiteName.dropFirst()
+        
+        var testName = "\(testName.dropLast(2))-\(deviceName)-\(localeCode)"
+        if let step {
+            testName += "-\(step)"
         }
-
-        let failure = verifySnapshot(of: snapshot,
-                                     as: .image(precision: precision,
-                                                perceptualPrecision: 0.98,
-                                                scale: nil),
-                                     // use any kind of suffix here to snapshot the same file multiple times and avoid countering on the library side
-                                     named: "UI",
-                                     testName: snapshotName)
         
-        if let failure,
-           !failure.contains("No reference was found on disk."),
-           !failure.contains("to test against the newly-recorded snapshot") {
+        let failure = withSnapshotTesting(record: Self.recordMode) {
+            verifySnapshot(of: snapshot,
+                           as: .image(precision: 0.99,
+                                      perceptualPrecision: 0.98,
+                                      scale: nil),
+                           named: testName,
+                           testName: sanitizedSuiteName)
+        }
+        
+        if let failure {
             XCTFail(failure)
         }
     }
     
     private var deviceName: String {
-        var name = UIDevice.current.name
-        
-        // When running with parallel execution simulators are named "Clone 2 of iPhone 14" etc.
-        // Tidy this prefix out of the name to generate snapshots with the correct name.
-        if name.starts(with: "Clone "), let range = name.range(of: " of ") {
-            name = String(name[range.upperBound...])
-        }
-        
-        return name
+        UIDevice.current.snapshotName
     }
     
     private var localeCode: String {
@@ -116,6 +107,20 @@ extension XCUIApplication {
 
     private var regionCode: String {
         Locale.current.language.region?.identifier ?? ""
+    }
+}
+
+private extension UIDevice {
+    var snapshotName: String {
+        var name = name
+        
+        // When running with parallel execution simulators are named "Clone 2 of iPhone 14" etc.
+        // Tidy this prefix out of the name to generate snapshots with the correct name.
+        if name.starts(with: "Clone "), let range = name.range(of: " of ") {
+            name = String(name[range.upperBound...])
+        }
+        
+        return name
     }
 }
 

@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import SwiftUI
@@ -20,35 +11,55 @@ struct LoadableAvatarImage: View {
     private let url: URL?
     private let name: String?
     private let contentID: String?
-    private let avatarSize: AvatarSize
-    private let imageProvider: ImageProviderProtocol?
+    private let avatarSize: Avatars.Size
+    private let mediaProvider: MediaProviderProtocol?
+    private let onTap: ((URL) -> Void)?
     
     @ScaledMetric private var frameSize: CGFloat
     
-    init(url: URL?, name: String?, contentID: String?, avatarSize: AvatarSize, imageProvider: ImageProviderProtocol?) {
+    init(url: URL?, name: String?,
+         contentID: String?,
+         avatarSize: Avatars.Size,
+         mediaProvider: MediaProviderProtocol?,
+         onTap: ((URL) -> Void)? = nil) {
         self.url = url
         self.name = name
         self.contentID = contentID
         self.avatarSize = avatarSize
-        self.imageProvider = imageProvider
+        self.mediaProvider = mediaProvider
+        self.onTap = onTap
         
         _frameSize = ScaledMetric(wrappedValue: avatarSize.value)
     }
     
     var body: some View {
+        if let onTap, let url {
+            Button {
+                onTap(url)
+            } label: {
+                clippedAvatar
+            }
+            .buttonStyle(.borderless) // Add a button style to stop the whole row being tappable.
+        } else {
+            clippedAvatar
+        }
+    }
+    
+    private var clippedAvatar: some View {
         avatar
             .frame(width: frameSize, height: frameSize)
             .background(Color.compound.bgCanvasDefault)
             .clipShape(Circle())
+            .environment(\.shouldAutomaticallyLoadImages, true) // We always load avatars.
     }
     
     @ViewBuilder
-    var avatar: some View {
+    private var avatar: some View {
         if let url {
             LoadableImage(url: url,
                           mediaType: .avatar,
                           size: avatarSize.scaledSize,
-                          imageProvider: imageProvider) { image in
+                          mediaProvider: mediaProvider) { image in
                 image
                     .scaledToFill()
             } placeholder: {

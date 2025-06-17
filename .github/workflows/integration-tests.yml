@@ -29,13 +29,22 @@ jobs:
       - name: Setup environment
         run:
           source ci_scripts/ci_common.sh && setup_github_actions_environment
-      
+
+      - name: Delete old log files
+        run: find '/Users/Shared' -name 'console*' -delete
+
       - name: Run tests
         run: bundle exec fastlane integration_tests
         env:
           INTEGRATION_TESTS_HOST: ${{ secrets.INTEGRATION_TESTS_HOST }}
           INTEGRATION_TESTS_USERNAME: ${{ secrets.INTEGRATION_TESTS_USERNAME }}
           INTEGRATION_TESTS_PASSWORD: ${{ secrets.INTEGRATION_TESTS_PASSWORD }}
+
+      - name: Check logs are set to the `trace` level
+        run: (grep ' TRACE ' /Users/Shared -qR)
+
+      - name: Check logs don't contain private messages
+        run: "! grep 'Go down in flames' /Users/Shared -R"
 
       - name: Zip results # for faster upload
         if: failure()
@@ -59,31 +68,27 @@ jobs:
           path: ~/Library/Logs/scan/IntegrationTests-IntegrationTests.log
           retention-days: 2
           if-no-files-found: ignore
-     
-      - name: Checkout gh-pages branch (for perf stats)
-        if: always()
-        uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Post-process archive to obtain performance metrics and upload to gh-pages
-        if: always()
-        run: |
-          ./Tools/Scripts/parsePerformanceMetrics.sh ~/Library/Logs/scan/IntegrationTests-IntegrationTests.log $GITHUB_SHA | tee perf-results.csv
-          cat perf-results.csv >> $GITHUB_WORKSPACE/gh-pages/performance/perf-data.csv
-          cd $GITHUB_WORKSPACE/gh-pages/performance/
-          git add .
-          git commit -m "Results for $GITHUB_SHA"
-          git push
 
       - name: Collect coverage
-        run: xcresultparser -q -o cobertura -t ElementX -p $(pwd) fastlane/test_output/IntegrationTests.xcresult > fastlane/test_output/integration-cobertura.xml
+        run: xcresultparser -q -o cobertura -t TchapX -p $(pwd) fastlane/test_output/IntegrationTests.xcresult > fastlane/test_output/integration-cobertura.xml
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457 # v3.1.6
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: integrationtests
+          version: v0.7.3
 
+      - name: Collect test results
+        if: ${{ !cancelled() }}
+        run: xcresultparser -q -o junit -p $(pwd) fastlane/test_output/IntegrationTests.xcresult > fastlane/test_output/integration-junit.xml
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@f2dba722c67b86c6caa034178c6e4d35335f6706 #v1.1.0
+        continue-on-error: true
+        with:
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: integrationtests

@@ -14,10 +14,13 @@ ignore:
   - "ElementX/Sources/Vendor"
   - "ElementX/Sources/UITests"
   - "ElementX/Sources/UnitTests"
+  - "ElementX/Sources/Settings/DeveloperOptionsScreen"
   - "Tools"
   - "**/Mock*.swift"
   - "**/*Mock.swift"
   - "**/*Proxy.swift"
+# Tchap: add TchapX generated files to exclusion list.
+  - "TchapX/Sources/main/Generated"
 
 flag_management:
   default_rules:

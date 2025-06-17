@@ -1,19 +1,11 @@
 //
-// Copyright 2021 New Vector Ltd
+// Copyright 2021-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import SwiftUI
 
 /// A prompt that asks the user whether they would like to enable Analytics or not.
@@ -43,7 +35,7 @@ struct AnalyticsPromptScreen: View {
     
     private var header: some View {
         VStack(spacing: 8) {
-            HeroImage(icon: \.chart)
+            BigIcon(icon: \.chart)
                 .padding(.bottom, 8)
             
             Text(L10n.screenAnalyticsPromptTitle(InfoPlistReader.main.bundleDisplayName))
@@ -57,14 +49,6 @@ struct AnalyticsPromptScreen: View {
                 .multilineTextAlignment(.center)
                 .foregroundColor(.compound.textSecondary)
         }
-    }
-
-    @ViewBuilder
-    private var checkMark: some View {
-        Image(systemName: "checkmark.circle")
-            .symbolVariant(.fill)
-            .symbolRenderingMode(.palette)
-            .foregroundStyle(Color.compound.iconAccentTertiary, Color.compound.textOnSolidPrimary)
     }
     
     /// The list of re-assurances about analytics.
@@ -81,8 +65,9 @@ struct AnalyticsPromptScreen: View {
 
     @ViewBuilder
     private func checkMarkItem(title: String, position: ListPosition) -> some View {
-        RoundedLabelItem(title: title, listPosition: position) {
-            checkMark
+        VisualListItem(title: title, position: position) {
+            CompoundIcon(\.checkCircle, size: .small, relativeTo: .body)
+                .foregroundColor(.compound.iconAccentPrimary)
         }
     }
     
@@ -106,8 +91,17 @@ struct AnalyticsPromptScreen: View {
 // MARK: - Previews
 
 struct AnalyticsPromptScreen_Previews: PreviewProvider, TestablePreview {
-    static let viewModel = AnalyticsPromptScreenViewModel(termsURL: ServiceLocator.shared.settings.analyticsConfiguration.termsURL)
+    static let viewModel = makeViewModel()
+    static let noTermsViewModel = makeViewModel(showTerms: false)
+    
     static var previews: some View {
         AnalyticsPromptScreen(context: viewModel.context)
+            .previewDisplayName("Default")
+        AnalyticsPromptScreen(context: noTermsViewModel.context)
+            .previewDisplayName("No terms")
+    }
+    
+    static func makeViewModel(showTerms: Bool = true) -> AnalyticsPromptScreenViewModel {
+        AnalyticsPromptScreenViewModel(termsURL: showTerms ? ServiceLocator.shared.settings.analyticsTermsURL : nil)
     }
 }

@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -20,12 +11,20 @@ import SwiftUI
 typealias AdvancedSettingsScreenViewModelType = StateStoreViewModel<AdvancedSettingsScreenViewState, AdvancedSettingsScreenViewAction>
 
 class AdvancedSettingsScreenViewModel: AdvancedSettingsScreenViewModelType, AdvancedSettingsScreenViewModelProtocol {
-    init(advancedSettings: AdvancedSettingsProtocol) {
-        let bindings = AdvancedSettingsScreenViewStateBindings(advancedSettings: advancedSettings)
-        let state = AdvancedSettingsScreenViewState(bindings: bindings)
+    private let analytics: AnalyticsService
+    
+    init(advancedSettings: AdvancedSettingsProtocol, analytics: AnalyticsService) {
+        self.analytics = analytics
         
+        let state = AdvancedSettingsScreenViewState(bindings: .init(advancedSettings: advancedSettings))
         super.init(initialViewState: state)
     }
     
-    override func process(viewAction: AdvancedSettingsScreenViewAction) { }
+    override func process(viewAction: AdvancedSettingsScreenViewAction) {
+        switch viewAction {
+        case .optimizeMediaUploadsChanged:
+            // Note: Using a view action here as sinking the AppSettings publisher tracks the initial value.
+            analytics.trackInteraction(name: state.bindings.optimizeMediaUploads ? .MobileSettingsOptimizeMediaUploadsEnabled : .MobileSettingsOptimizeMediaUploadsDisabled)
+        }
+    }
 }

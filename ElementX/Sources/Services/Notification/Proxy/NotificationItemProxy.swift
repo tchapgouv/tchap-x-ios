@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -48,6 +39,15 @@ struct NotificationItemProxy: NotificationItemProxyProtocol {
     var isRoomDirect: Bool {
         notificationItem.roomInfo.isDirect
     }
+    
+    var isRoomPrivate: Bool {
+        switch notificationItem.roomInfo.joinRule {
+        case .invite, .knock, .restricted, .knockRestricted:
+            true
+        default:
+            false
+        }
+    }
 
     var roomJoinedMembers: Int {
         Int(notificationItem.roomInfo.joinedMembersCount)
@@ -64,7 +64,7 @@ struct NotificationItemProxy: NotificationItemProxyProtocol {
     var senderAvatarMediaSource: MediaSourceProxy? {
         if let senderAvatarURLString = notificationItem.senderInfo.avatarUrl,
            let senderAvatarURL = URL(string: senderAvatarURLString) {
-            return MediaSourceProxy(url: senderAvatarURL, mimeType: nil)
+            return try? MediaSourceProxy(url: senderAvatarURL, mimeType: nil)
         }
         return nil
     }
@@ -72,7 +72,7 @@ struct NotificationItemProxy: NotificationItemProxyProtocol {
     var roomAvatarMediaSource: MediaSourceProxy? {
         if let roomAvatarURLString = notificationItem.roomInfo.avatarUrl,
            let roomAvatarURL = URL(string: roomAvatarURLString) {
-            return MediaSourceProxy(url: roomAvatarURL, mimeType: nil)
+            return try? MediaSourceProxy(url: roomAvatarURL, mimeType: nil)
         }
         return nil
     }
@@ -98,6 +98,8 @@ struct EmptyNotificationItemProxy: NotificationItemProxyProtocol {
     var isNoisy: Bool { false }
 
     var isRoomDirect: Bool { false }
+    
+    var isRoomPrivate: Bool { false }
 
     var senderAvatarMediaSource: MediaSourceProxy? { nil }
 

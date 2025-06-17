@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -24,23 +15,22 @@ struct SecureBackupRecoveryKeyScreenCoordinatorParameters {
 }
 
 enum SecureBackupRecoveryKeyScreenCoordinatorAction {
-    case cancel
-    case recoverySetUp
-    case recoveryChanged
-    case recoveryFixed
-    case showResetKeyInfo
+    case complete
 }
 
 final class SecureBackupRecoveryKeyScreenCoordinator: CoordinatorProtocol {
+    private let parameters: SecureBackupRecoveryKeyScreenCoordinatorParameters
     private var viewModel: SecureBackupRecoveryKeyScreenViewModelProtocol
-    private let actionsSubject: PassthroughSubject<SecureBackupRecoveryKeyScreenCoordinatorAction, Never> = .init()
+    
     private var cancellables = Set<AnyCancellable>()
     
+    private let actionsSubject: PassthroughSubject<SecureBackupRecoveryKeyScreenCoordinatorAction, Never> = .init()
     var actions: AnyPublisher<SecureBackupRecoveryKeyScreenCoordinatorAction, Never> {
         actionsSubject.eraseToAnyPublisher()
     }
     
     init(parameters: SecureBackupRecoveryKeyScreenCoordinatorParameters) {
+        self.parameters = parameters
         viewModel = SecureBackupRecoveryKeyScreenViewModel(secureBackupController: parameters.secureBackupController,
                                                            userIndicatorController: parameters.userIndicatorController,
                                                            isModallyPresented: parameters.isModallyPresented)
@@ -53,20 +43,19 @@ final class SecureBackupRecoveryKeyScreenCoordinator: CoordinatorProtocol {
             guard let self else { return }
             switch action {
             case .cancel:
-                self.actionsSubject.send(.cancel)
+                self.actionsSubject.send(.complete)
             case .done(let mode):
                 switch mode {
                 case .setupRecovery:
-                    self.actionsSubject.send(.recoverySetUp)
+                    showSuccessIndicator(title: L10n.screenRecoveryKeySetupSuccess)
                 case .changeRecovery:
-                    self.actionsSubject.send(.recoveryChanged)
+                    showSuccessIndicator(title: L10n.screenRecoveryKeyChangeSuccess)
                 case .fixRecovery:
-                    self.actionsSubject.send(.recoveryFixed)
+                    showSuccessIndicator(title: L10n.screenRecoveryKeyConfirmSuccess)
                 case .unknown:
                     fatalError()
                 }
-            case .showResetKeyInfo:
-                self.actionsSubject.send(.showResetKeyInfo)
+                self.actionsSubject.send(.complete)
             }
         }
         .store(in: &cancellables)
@@ -74,5 +63,15 @@ final class SecureBackupRecoveryKeyScreenCoordinator: CoordinatorProtocol {
     
     func toPresentable() -> AnyView {
         AnyView(SecureBackupRecoveryKeyScreen(context: viewModel.context))
+    }
+    
+    // MARK: - Private
+    
+    private func showSuccessIndicator(title: String) {
+        parameters.userIndicatorController.submitIndicator(.init(id: .init(),
+                                                                 type: .toast(progress: nil),
+                                                                 title: title,
+                                                                 iconName: "checkmark",
+                                                                 persistent: false))
     }
 }

@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -44,6 +35,10 @@ extension UNNotificationContent {
     @objc var roomID: String? {
         userInfo[NotificationConstants.UserInfoKey.roomIdentifier] as? String
     }
+    
+    @objc var eventID: String? {
+        userInfo[NotificationConstants.UserInfoKey.eventIdentifier] as? String
+    }
 }
 
 extension UNMutableNotificationContent {
@@ -62,6 +57,15 @@ extension UNMutableNotificationContent {
         }
         set {
             userInfo[NotificationConstants.UserInfoKey.roomIdentifier] = newValue
+        }
+    }
+    
+    override var eventID: String? {
+        get {
+            userInfo[NotificationConstants.UserInfoKey.eventIdentifier] as? String
+        }
+        set {
+            userInfo[NotificationConstants.UserInfoKey.eventIdentifier] = newValue
         }
     }
 
@@ -97,32 +101,24 @@ extension UNMutableNotificationContent {
     func addSenderIcon(using mediaProvider: MediaProviderProtocol?,
                        senderID: String,
                        senderName: String,
-                       icon: NotificationIcon) async throws -> UNMutableNotificationContent {
-        // We display the placeholder only if...
-        var needsPlaceholder = false
-
+                       icon: NotificationIcon,
+                       forcePlaceholder: Bool = false) async throws -> UNMutableNotificationContent {
         var fetchedImage: INImage?
         let image: INImage
-        if let mediaSource = icon.mediaSource {
-            switch await mediaProvider?.loadThumbnailForSource(source: mediaSource, size: .init(width: 100, height: 100)) {
+        if !forcePlaceholder,
+           let mediaProvider,
+           let mediaSource = icon.mediaSource {
+            switch await mediaProvider.loadThumbnailForSource(source: mediaSource, size: .init(width: 100, height: 100)) {
             case .success(let data):
                 fetchedImage = INImage(imageData: data)
             case .failure(let error):
                 MXLog.error("Couldn't add sender icon: \(error)")
-                // ...The provider failed to fetch
-                needsPlaceholder = true
-            case .none:
-                break
             }
-        } else {
-            // ...There is no media
-            needsPlaceholder = true
         }
 
         if let fetchedImage {
             image = fetchedImage
-        } else if needsPlaceholder,
-                  let data = await getPlaceholderAvatarImageData(name: icon.groupInfo?.name ?? senderName,
+        } else if let data = await getPlaceholderAvatarImageData(name: icon.groupInfo?.name ?? senderName,
                                                                  id: icon.groupInfo?.id ?? senderID) {
             image = INImage(imageData: data)
         } else {
@@ -179,37 +175,17 @@ extension UNMutableNotificationContent {
     @MainActor
     private func getPlaceholderAvatarImageData(name: String, id: String) async -> Data? {
         // The version value is used in case the design of the placeholder is updated to force a replacement
-        let shouldFlipAvatar = shouldFlipAvatar()
-        let prefix = "notification_placeholder\(shouldFlipAvatar ? "V8F" : "V8")"
+        let prefix = "notification_placeholderV9"
+        
         let fileName = "\(prefix)_\(name)_\(id).png"
         if let data = try? Data(contentsOf: URL.temporaryDirectory.appendingPathComponent(fileName)) {
             MXLog.info("Found existing notification icon placeholder")
             return data
         }
-
+        
         MXLog.info("Generating notification icon placeholder")
-        let image = PlaceholderAvatarImage(name: name,
-                                           contentID: id)
-            .clipShape(Circle())
-            .frame(width: 50, height: 50)
-        let renderer = ImageRenderer(content: image)
         
-        // Specify the scale so the image is rendered correctly. We don't have access to the screen
-        // here so a hardcoded 3.0 will have to do
-        renderer.scale = 3.0
-        
-        guard let image = renderer.uiImage else {
-            MXLog.info("Generating notification icon placeholder failed")
-            return nil
-        }
-        
-        let data: Data?
-        
-        if shouldFlipAvatar {
-            data = image.flippedVertically().pngData()
-        } else {
-            data = image.pngData()
-        }
+        let data = Avatars.generatePlaceholderAvatarImageData(name: name, id: id, size: .init(width: 50, height: 50))
         
         if let data {
             do {
@@ -220,44 +196,7 @@ extension UNMutableNotificationContent {
                 return data
             }
         }
+        
         return data
-    }
-    
-    /// On simulators and macOS the image is rendered correctly
-    /// On devices before iOS 17 and iOS 17.2.0 it's rendered upside down and needs to be flipped
-    /// On all other versions it's rendered correctly and **doesn't** need to be flipped
-    private func shouldFlipAvatar() -> Bool {
-        #if targetEnvironment(simulator)
-        return false
-        #else
-        if ProcessInfo.processInfo.isiOSAppOnMac {
-            return false
-        }
-        
-        guard let version = Version(UIDevice.current.systemVersion) else {
-            return false
-        }
-        
-        if version < Version(17, 0, 0) {
-            return true
-        }
-        
-        if version == Version(17, 2, 0) {
-            return true
-        }
-        
-        return false
-        #endif
-    }
-}
-
-private extension UIImage {
-    func flippedVertically() -> UIImage {
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = scale
-        return UIGraphicsImageRenderer(size: size, format: format).image { context in
-            context.cgContext.concatenate(CGAffineTransform(scaleX: 1, y: -1))
-            self.draw(at: CGPoint(x: 0, y: -size.height))
-        }
     }
 }

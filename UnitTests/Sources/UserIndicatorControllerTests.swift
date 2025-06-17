@@ -1,24 +1,21 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
 
 import XCTest
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 
 @MainActor
 class UserIndicatorControllerTests: XCTestCase {
@@ -51,7 +48,7 @@ class UserIndicatorControllerTests: XCTestCase {
         XCTAssertEqual(indicatorController.indicatorQueue.count, 0)
     }
     
-    func testChainedPresentation() {
+    func testChainedPresentation() async throws {
         indicatorController.minimumDisplayDuration = 0.25
         indicatorController.nonPersistentDisplayDuration = 2.5
         
@@ -61,18 +58,17 @@ class UserIndicatorControllerTests: XCTestCase {
         
         XCTAssertEqual(indicatorController.activeIndicator?.id, "Third")
         
-        let expectation = expectation(description: "Waiting for last indicator to be dismissed")
-        DispatchQueue.main.asyncAfter(deadline: .now() + indicatorController.nonPersistentDisplayDuration) {
-            expectation.fulfill()
+        let fulfillment = deferFulfillment(indicatorController.$activeIndicator, message: "Waiting for last indicator to be dismissed") { indicator in
+            indicator?.id == "Second"
         }
         
-        waitForExpectations(timeout: 5.0)
+        try await fulfillment.fulfill()
         
         XCTAssertEqual(indicatorController.indicatorQueue.count, 2)
         XCTAssertEqual(indicatorController.activeIndicator?.id, "Second")
     }
     
-    func testMinimumDisplayDuration() {
+    func testMinimumDisplayDuration() async throws {
         indicatorController.minimumDisplayDuration = 0.25
         indicatorController.nonPersistentDisplayDuration = 2.5
         
@@ -80,28 +76,26 @@ class UserIndicatorControllerTests: XCTestCase {
         indicatorController.submitIndicator(.init(id: "Second", title: ""))
         indicatorController.submitIndicator(.init(id: "Third", title: ""))
         
-        indicatorController.retractIndicatorWithId("Second")
-        
         XCTAssertEqual(indicatorController.indicatorQueue.count, 3)
         
-        let dismissalExpectation = expectation(description: "Waiting for minimum display duration to pass")
-        DispatchQueue.main.asyncAfter(deadline: .now() + indicatorController.minimumDisplayDuration) {
-            dismissalExpectation.fulfill()
+        var fulfillment = deferFulfillment(indicatorController.$activeIndicator, message: "Waiting for minimum display duration to pass") { indicator in
+            indicator?.id == "First"
         }
         
-        waitForExpectations(timeout: 5.0)
+        indicatorController.retractIndicatorWithId("Second")
         
-        XCTAssertEqual(indicatorController.indicatorQueue.count, 2)
-        XCTAssertEqual(indicatorController.activeIndicator?.id, "Third")
-        
-        let dismissalExpectation2 = expectation(description: "Waiting for last indicator to be dismissed")
-        DispatchQueue.main.asyncAfter(deadline: .now() + indicatorController.nonPersistentDisplayDuration) {
-            dismissalExpectation2.fulfill()
-        }
-        
-        waitForExpectations(timeout: 5.0)
+        try await fulfillment.fulfill()
         
         XCTAssertEqual(indicatorController.indicatorQueue.count, 1)
         XCTAssertEqual(indicatorController.activeIndicator?.id, "First")
+        
+        fulfillment = deferFulfillment(indicatorController.$activeIndicator, message: "Waiting for last indicator to be dismissed") { indicator in
+            indicator == nil
+        }
+        
+        try await fulfillment.fulfill()
+        
+        XCTAssertEqual(indicatorController.indicatorQueue.count, 0)
+        XCTAssertNil(indicatorController.activeIndicator)
     }
 }

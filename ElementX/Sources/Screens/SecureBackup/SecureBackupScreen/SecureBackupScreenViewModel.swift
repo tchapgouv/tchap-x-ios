@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -34,7 +25,8 @@ class SecureBackupScreenViewModel: SecureBackupScreenViewModelType, SecureBackup
         self.secureBackupController = secureBackupController
         self.userIndicatorController = userIndicatorController
         
-        super.init(initialViewState: .init(chatBackupDetailsURL: chatBackupDetailsURL))
+        super.init(initialViewState: .init(chatBackupDetailsURL: chatBackupDetailsURL,
+                                           bindings: SecureBackupScreenViewStateBindings(keyStorageEnabled: secureBackupController.keyBackupState.value.keyStorageToggleState)))
         
         secureBackupController.recoveryState
             .receive(on: DispatchQueue.main)
@@ -43,7 +35,11 @@ class SecureBackupScreenViewModel: SecureBackupScreenViewModelType, SecureBackup
         
         secureBackupController.keyBackupState
             .receive(on: DispatchQueue.main)
-            .weakAssign(to: \.state.keyBackupState, on: self)
+            .sink { [weak self] state in
+                guard let self else { return }
+                self.state.keyBackupState = state
+                self.state.bindings.keyStorageEnabled = state.keyStorageToggleState
+            }
             .store(in: &cancellables)
     }
     
@@ -52,13 +48,16 @@ class SecureBackupScreenViewModel: SecureBackupScreenViewModelType, SecureBackup
     override func process(viewAction: SecureBackupScreenViewAction) {
         switch viewAction {
         case .recoveryKey:
-            actionsSubject.send(.recoveryKey)
-        case .keyBackup:
-            switch secureBackupController.keyBackupState.value {
-            case .unknown:
+            actionsSubject.send(.manageRecoveryKey)
+        case .keyStorageToggled(let enable):
+            let keyBackupState = secureBackupController.keyBackupState.value
+            switch (keyBackupState, enable) {
+            case (.unknown, true):
+                state.bindings.keyStorageEnabled = keyBackupState.keyStorageToggleState // Reset the toggle in case enabling fails
                 enableBackup()
-            case .enabled:
-                actionsSubject.send(.keyBackup)
+            case (.enabled, false):
+                state.bindings.keyStorageEnabled = keyBackupState.keyStorageToggleState // Reset the toggle in case the user cancels
+                actionsSubject.send(.disableKeyBackup)
             default:
                 break
             }
@@ -80,6 +79,15 @@ class SecureBackupScreenViewModel: SecureBackupScreenViewModelType, SecureBackup
             }
             
             userIndicatorController.retractIndicatorWithId(loadingIndicatorIdentifier)
+        }
+    }
+}
+
+extension SecureBackupKeyBackupState {
+    var keyStorageToggleState: Bool {
+        switch self {
+        case .unknown, .enabling: false
+        case .enabled, .disabling: true
         }
     }
 }

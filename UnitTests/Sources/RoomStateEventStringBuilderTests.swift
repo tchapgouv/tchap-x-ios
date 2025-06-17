@@ -1,20 +1,17 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 import MatrixRustSDK
 import XCTest
 
@@ -88,5 +85,27 @@ class RoomStateEventStringBuilderTests: XCTestCase {
                                                             member: sender.id,
                                                             memberIsYou: sender.id == userID)
         XCTAssertEqual(string, expectedString)
+    }
+    
+    func testTopicChanges() {
+        let you = TimelineItemSender(id: userID, displayName: "Alice")
+        let other = TimelineItemSender(id: "@bob:matrix.org", displayName: "Bob")
+        
+        let newTopic = "New topic"
+        var string = stringBuilder.buildString(for: .roomTopic(topic: newTopic), sender: you, isOutgoing: true)
+        XCTAssertEqual(string, L10n.stateEventRoomTopicChangedByYou(newTopic))
+        string = stringBuilder.buildString(for: .roomTopic(topic: newTopic), sender: other, isOutgoing: false)
+        XCTAssertEqual(string, L10n.stateEventRoomTopicChanged(other.displayName ?? "", newTopic))
+        
+        let emptyTopic = ""
+        string = stringBuilder.buildString(for: .roomTopic(topic: emptyTopic), sender: you, isOutgoing: true)
+        XCTAssertEqual(string, L10n.stateEventRoomTopicRemovedByYou)
+        string = stringBuilder.buildString(for: .roomTopic(topic: emptyTopic), sender: other, isOutgoing: false)
+        XCTAssertEqual(string, L10n.stateEventRoomTopicRemoved(other.displayName ?? ""))
+        
+        string = stringBuilder.buildString(for: .roomTopic(topic: nil), sender: you, isOutgoing: true)
+        XCTAssertEqual(string, L10n.stateEventRoomTopicRemovedByYou)
+        string = stringBuilder.buildString(for: .roomTopic(topic: nil), sender: other, isOutgoing: false)
+        XCTAssertEqual(string, L10n.stateEventRoomTopicRemoved(other.displayName ?? ""))
     }
 }

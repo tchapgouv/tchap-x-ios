@@ -1,27 +1,22 @@
 //
-// Copyright 2024 New Vector Ltd
+// Copyright 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
 import Foundation
 
 struct ClientProxyMockConfiguration {
+    var homeserver = ""
+    var userIDServerName: String?
     var userID: String = RoomMemberProxyMock.mockMe.userID
     var deviceID: String?
-    var roomSummaryProvider: RoomSummaryProviderProtocol? = RoomSummaryProviderMock(.init())
+    var roomSummaryProvider: RoomSummaryProviderProtocol = RoomSummaryProviderMock(.init())
     var roomDirectorySearchProxy: RoomDirectorySearchProxyProtocol?
+    
+    var recoveryState: SecureBackupRecoveryState = .enabled
 }
 
 enum ClientProxyMockError: Error {
@@ -35,10 +30,12 @@ extension ClientProxyMock {
         userID = configuration.userID
         deviceID = configuration.deviceID
         
-        homeserver = ""
+        homeserver = configuration.homeserver
+        userIDServerName = configuration.userIDServerName
         
         roomSummaryProvider = configuration.roomSummaryProvider
         alternateRoomSummaryProvider = RoomSummaryProviderMock(.init())
+        staticRoomSummaryProvider = RoomSummaryProviderMock(.init())
         
         roomDirectorySearchProxyReturnValue = configuration.roomDirectorySearchProxy
         
@@ -56,21 +53,24 @@ extension ClientProxyMock {
         
         isOnlyDeviceLeftReturnValue = .success(false)
         accountURLActionReturnValue = "https://matrix.org/account"
+        canDeactivateAccount = false
         directRoomForUserIDReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         createDirectRoomWithExpectedRoomNameReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
-        createRoomNameTopicIsRoomPrivateUserIDsAvatarURLReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
+        createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReturnValue = .failure(.sdkError(ClientProxyMockError.generic)) // Tchap: handle additional `isEncrypted` property
         uploadMediaReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         loadUserDisplayNameReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         setUserDisplayNameReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         loadUserAvatarURLReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         setUserAvatarMediaReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         removeUserAvatarReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
-        logoutReturnValue = nil
+        isAliasAvailableReturnValue = .success(true)
         searchUsersSearchTermLimitReturnValue = .success(.init(results: [], limited: false))
         profileForReturnValue = .success(.init(userID: "@a:b.com", displayName: "Some user"))
-        sessionVerificationControllerProxyReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         ignoreUserReturnValue = .success(())
         unignoreUserReturnValue = .success(())
+        
+        needsSlidingSyncMigration = false
+        slidingSyncVersion = .native
         
         trackRecentlyVisitedRoomReturnValue = .success(())
         recentlyVisitedRoomsReturnValue = .success([])
@@ -78,28 +78,19 @@ extension ClientProxyMock {
         
         loadMediaContentForSourceThrowableError = ClientProxyError.sdkError(ClientProxyMockError.generic)
         loadMediaThumbnailForSourceWidthHeightThrowableError = ClientProxyError.sdkError(ClientProxyMockError.generic)
-        loadMediaFileForSourceBodyThrowableError = ClientProxyError.sdkError(ClientProxyMockError.generic)
+        loadMediaFileForSourceFilenameThrowableError = ClientProxyError.sdkError(ClientProxyMockError.generic)
         
-        secureBackupController = {
-            let secureBackupController = SecureBackupControllerMock()
-            secureBackupController.underlyingRecoveryState = .init(CurrentValueSubject<SecureBackupRecoveryState, Never>(.enabled))
-            secureBackupController.underlyingKeyBackupState = .init(CurrentValueSubject<SecureBackupKeyBackupState, Never>(.enabled))
-            return secureBackupController
-        }()
+        secureBackupController = SecureBackupControllerMock(.init(recoveryState: configuration.recoveryState))
+        resetIdentityReturnValue = .success(IdentityResetHandleSDKMock(.init()))
         
         roomForIdentifierClosure = { [weak self] identifier in
-            guard let room = self?.roomSummaryProvider?.roomListPublisher.value.first(where: { $0.id == identifier }) else {
+            guard let room = self?.roomSummaryProvider.roomListPublisher.value.first(where: { $0.id == identifier }) else {
                 return nil
             }
             
-            let roomID = room.id ?? UUID().uuidString
-        
-            switch room {
-            case .empty:
-                return await RoomProxyMock(.init(name: "Empty room"))
-            case .filled(let details), .invalidated(let details):
-                return await RoomProxyMock(.init(id: roomID, name: details.name))
-            }
+            return await .joined(JoinedRoomProxyMock(.init(id: room.id, name: room.name)))
         }
+        
+        userIdentityForReturnValue = .success(UserIdentityProxyMock(configuration: .init()))
     }
 }

@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -23,7 +14,7 @@ class UserDetailsEditScreenViewModel: UserDetailsEditScreenViewModelType, UserDe
     private let actionsSubject: PassthroughSubject<UserDetailsEditScreenViewModelAction, Never> = .init()
     private let clientProxy: ClientProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
-    private let mediaPreprocessor: MediaUploadingPreprocessor = .init()
+    private let mediaUploadingPreprocessor: MediaUploadingPreprocessor
     
     var actions: AnyPublisher<UserDetailsEditScreenViewModelAction, Never> {
         actionsSubject.eraseToAnyPublisher()
@@ -31,12 +22,14 @@ class UserDetailsEditScreenViewModel: UserDetailsEditScreenViewModelType, UserDe
     
     init(clientProxy: ClientProxyProtocol,
          mediaProvider: MediaProviderProtocol,
+         mediaUploadingPreprocessor: MediaUploadingPreprocessor,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.clientProxy = clientProxy
+        self.mediaUploadingPreprocessor = mediaUploadingPreprocessor
         self.userIndicatorController = userIndicatorController
         
         super.init(initialViewState: UserDetailsEditScreenViewState(userID: clientProxy.userID,
-                                                                    bindings: .init()), imageProvider: mediaProvider)
+                                                                    bindings: .init()), mediaProvider: mediaProvider)
         
         clientProxy.userAvatarURLPublisher
             .receive(on: DispatchQueue.main)
@@ -97,7 +90,7 @@ class UserDetailsEditScreenViewModel: UserDetailsEditScreenViewModelType, UserDe
                                                                   title: L10n.commonLoading,
                                                                   persistent: true))
             
-            let mediaResult = await mediaPreprocessor.processMedia(at: url)
+            let mediaResult = await mediaUploadingPreprocessor.processMedia(at: url)
             
             switch mediaResult {
             case .success(.image):

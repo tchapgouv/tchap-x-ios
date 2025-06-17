@@ -1,20 +1,12 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
+import MatrixRustSDK
 import SwiftUI
 import WysiwygComposer
 
@@ -31,13 +23,13 @@ enum ComposerToolbarVoiceMessageAction {
 }
 
 enum ComposerToolbarViewModelAction {
-    case sendMessage(plain: String, html: String?, mode: RoomScreenComposerMode, intentionalMentions: IntentionalMentions)
+    case sendMessage(plain: String, html: String?, mode: ComposerMode, intentionalMentions: IntentionalMentions)
     case editLastMessage
     case attach(ComposerAttachmentType)
 
     case handlePasteOrDrop(provider: NSItemProvider)
 
-    case composerModeChanged(mode: RoomScreenComposerMode)
+    case composerModeChanged(mode: ComposerMode)
     case composerFocusedChanged(isFocused: Bool)
     
     case voiceMessage(ComposerToolbarVoiceMessageAction)
@@ -61,6 +53,7 @@ enum ComposerToolbarViewAction {
     
     case plainComposerTextChanged
     case didToggleFormattingOptions
+    case selectedTextChanged
 }
 
 enum ComposerAttachmentType {
@@ -72,11 +65,16 @@ enum ComposerAttachmentType {
 }
 
 struct ComposerToolbarViewState: BindableState {
-    var composerMode: RoomScreenComposerMode = .default
+    var composerMode: ComposerMode = .default
     var composerEmpty = true
+    /// Could be false if sending is disabled in the room
+    var canSend = true
     var suggestions: [SuggestionItem] = []
     var audioPlayerState: AudioPlayerState
     var audioRecorderState: AudioRecorderState
+    
+    var isRoomEncrypted: Bool
+    var isLocationSharingEnabled: Bool
     
     var bindings: ComposerToolbarViewStateBindings
 
@@ -105,6 +103,10 @@ struct ComposerToolbarViewState: BindableState {
     }
     
     var sendButtonDisabled: Bool {
+        if !canSend {
+            return true
+        }
+        
         if case .previewVoiceMessage = composerMode {
             return false
         }
@@ -133,6 +135,9 @@ struct ComposerToolbarViewStateBindings {
     var composerExpanded = false
     var formatItems: [FormatItem] = .init()
     var alertInfo: AlertInfo<UUID>?
+    var selectedRange = NSRange(location: 0, length: 0)
+    
+    var presendCallback: (() -> Void)?
 }
 
 /// An item in the toolbar
@@ -285,6 +290,66 @@ extension FormatType {
             return .quote
         case .link:
             return .link
+        }
+    }
+}
+
+enum ComposerMode: Equatable {
+    enum EditType { case `default`, addCaption, editCaption }
+    
+    case `default`
+    case reply(eventID: String, replyDetails: TimelineItemReplyDetails, isThread: Bool)
+    case edit(originalEventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID, type: EditType)
+    case recordVoiceMessage(state: AudioRecorderState)
+    case previewVoiceMessage(state: AudioPlayerState, waveform: WaveformSource, isUploading: Bool)
+
+    var isEdit: Bool {
+        switch self {
+        case .edit:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var isTextEditingEnabled: Bool {
+        switch self {
+        case .default, .reply, .edit:
+            return true
+        case .recordVoiceMessage, .previewVoiceMessage:
+            return false
+        }
+    }
+    
+    var isLoadingReply: Bool {
+        switch self {
+        case .reply(_, let replyDetails, _):
+            switch replyDetails {
+            case .loading:
+                return true
+            default:
+                return false
+            }
+        default:
+            return false
+        }
+    }
+    
+    var replyEventID: String? {
+        switch self {
+        case .reply(let eventID, _, _):
+            return eventID
+        default:
+            return nil
+        }
+    }
+    
+    var isComposingNewMessage: Bool {
+        switch self {
+        case .default, .reply:
+            return true
+        default:
+            return false
         }
     }
 }

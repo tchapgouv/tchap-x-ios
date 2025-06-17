@@ -1,19 +1,11 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+import GameController
 import SwiftUI
 import SwiftUIIntrospect
 
@@ -174,18 +166,47 @@ private struct SearchController: UIViewControllerRepresentable {
 
 // MARK: - Searchable Extensions
 
-struct IsSearchingModifier: ViewModifier {
+extension View {
+    func isSearching(_ isSearching: Binding<Bool>) -> some View {
+        modifier(IsSearchingModifier(isSearching: isSearching))
+    }
+    
+    /// Automatically focusses the view's search field if a hardware keyboard is connected.
+    func focusSearchIfHardwareKeyboardAvailable() -> some View {
+        modifier(FocusSearchIfHardwareKeyboardAvailableModifier())
+    }
+}
+
+private struct IsSearchingModifier: ViewModifier {
     @Environment(\.isSearching) private var isSearchingEnv
     @Binding var isSearching: Bool
     
     func body(content: Content) -> some View {
         content
-            .onChange(of: isSearchingEnv) { isSearching = $0 }
+            .onChange(of: isSearchingEnv) { isSearching = $1 }
     }
 }
 
-extension View {
-    func isSearching(_ isSearching: Binding<Bool>) -> some View {
-        modifier(IsSearchingModifier(isSearching: isSearching))
+private struct FocusSearchIfHardwareKeyboardAvailableModifier: ViewModifier {
+    @FocusState private var isFocused
+    
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content
+                .searchFocused($isFocused)
+                .onAppear(perform: focusIfHardwareKeyboardAvailable)
+        } else {
+            content
+        }
+    }
+    
+    func focusIfHardwareKeyboardAvailable() {
+        // The simulator always detects the hardware keyboard as connected
+        #if !targetEnvironment(simulator)
+        if GCKeyboard.coalesced != nil {
+            MXLog.info("Hardware keyboard is connected")
+            isFocused = true
+        }
+        #endif
     }
 }

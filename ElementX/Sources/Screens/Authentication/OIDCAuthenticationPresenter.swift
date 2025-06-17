@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import AuthenticationServices
@@ -19,95 +10,77 @@ import AuthenticationServices
 /// Presents a web authentication session for an OIDC request.
 @MainActor
 class OIDCAuthenticationPresenter: NSObject {
-    private let authenticationService: AuthenticationServiceProxyProtocol
+    private let authenticationService: AuthenticationServiceProtocol
     private let oidcRedirectURL: URL
     private let presentationAnchor: UIWindow
+    private let userIndicatorController: UserIndicatorControllerProtocol
     
-    /// The data required to complete a request.
-    struct Request {
-        let session: ASWebAuthenticationSession
-        let oidcData: OIDCAuthenticationDataProxy
-        let continuation: CheckedContinuation<Result<UserSessionProtocol, AuthenticationServiceError>, Never>
-    }
-    
-    /// The current request in progress. This is a single use value and will be moved on access.
-    @Consumable private var request: Request?
-    
-    init(authenticationService: AuthenticationServiceProxyProtocol, oidcRedirectURL: URL, presentationAnchor: UIWindow) {
+    init(authenticationService: AuthenticationServiceProtocol,
+         oidcRedirectURL: URL,
+         presentationAnchor: UIWindow,
+         userIndicatorController: UserIndicatorControllerProtocol) {
         self.authenticationService = authenticationService
         self.oidcRedirectURL = oidcRedirectURL
         self.presentationAnchor = presentationAnchor
+        self.userIndicatorController = userIndicatorController
         super.init()
     }
     
     /// Presents a web authentication session for the supplied data.
-    func authenticate(using oidcData: OIDCAuthenticationDataProxy) async -> Result<UserSessionProtocol, AuthenticationServiceError> {
-        await withCheckedContinuation { continuation in
-            let session = ASWebAuthenticationSession(url: oidcData.url,
-                                                     callbackURLScheme: oidcRedirectURL.scheme) { [weak self] url, error in
-                // This closure won't be called if the scheme is https, see handleUniversalLinkCallback for more info.
-                guard let self else { return }
-                
-                guard let url else {
-                    // Check for user cancellation to avoid showing an alert in that instance.
-                    if let nsError = error as? NSError,
-                       nsError.domain == ASWebAuthenticationSessionErrorDomain,
-                       nsError.code == ASWebAuthenticationSessionError.canceledLogin.rawValue {
-                        self.completeAuthentication(throwing: .oidcError(.userCancellation))
-                        return
-                    }
-                    
-                    self.completeAuthentication(throwing: .oidcError(.unknown))
-                    return
-                }
-                
-                completeAuthentication(callbackURL: url)
+    func authenticate(using oidcData: OIDCAuthorizationDataProxy) async -> Result<UserSessionProtocol, AuthenticationServiceError> {
+        let (url, error) = await withCheckedContinuation { continuation in
+            let session = ASWebAuthenticationSession(url: oidcData.url, callback: .oidcRedirectURL(oidcRedirectURL)) { url, error in
+                continuation.resume(returning: (url, error))
             }
             
             session.prefersEphemeralWebBrowserSession = false
             session.presentationContextProvider = self
             
-            request = Request(session: session, oidcData: oidcData, continuation: continuation)
-            
             session.start()
         }
-    }
-    
-    /// This method will be used if the `appSettings.oidcRedirectURL`'s scheme is `https`.
-    /// When using a custom scheme, the redirect will be handled by the web auth session's closure.
-    func handleUniversalLinkCallback(_ url: URL) {
-        completeAuthentication(callbackURL: url)
-    }
-    
-    /// Completes the authentication by exchanging the callback URL for a user session.
-    private func completeAuthentication(callbackURL: URL) {
-        guard let request else {
-            MXLog.error("Failed to complete authentication. Missing request.")
-            return
-        }
         
-        if callbackURL.scheme?.starts(with: "http") == true {
-            request.session.cancel()
-        }
-        
-        Task {
-            switch await authenticationService.loginWithOIDCCallback(callbackURL, data: request.oidcData) {
-            case .success(let userSession):
-                request.continuation.resume(returning: .success(userSession))
-            case .failure(let error):
-                request.continuation.resume(returning: .failure(error))
+        guard let url else {
+            // Check for user cancellation to avoid showing an alert in that instance.
+            if let nsError = error as? NSError,
+               nsError.domain == ASWebAuthenticationSessionErrorDomain,
+               nsError.code == ASWebAuthenticationSessionError.canceledLogin.rawValue {
+                // No need to show an error here, just abort and return a failure.
+                await authenticationService.abortOIDCLogin(data: oidcData)
+                return .failure(.oidcError(.userCancellation))
             }
+            
+            MXLog.error("Missing callback URL from the web authentication session.")
+            userIndicatorController.alertInfo = AlertInfo(id: UUID())
+            await authenticationService.abortOIDCLogin(data: oidcData)
+            return .failure(.oidcError(.unknown))
+        }
+        
+        // Exchanging the callback with the homeserver can be slow, so show the loading indicator while we wait (the modal has already been dismissed).
+        startLoading(delay: .milliseconds(50)) // Small delay to handle a cancellation callback without the indicator showing.
+        defer { stopLoading() }
+        
+        switch await authenticationService.loginWithOIDCCallback(url) {
+        case .success(let userSession):
+            return .success(userSession)
+        case .failure(let error):
+            MXLog.error("Error occurred: \(error)")
+            userIndicatorController.alertInfo = AlertInfo(id: UUID())
+            return .failure(error)
         }
     }
     
-    /// Aborts the authentication with the supplied error.
-    private func completeAuthentication(throwing error: AuthenticationServiceError) {
-        guard let request else {
-            MXLog.error("Failed to throw authentication error. Missing request.")
-            return
-        }
-        
-        request.continuation.resume(returning: .failure(error))
+    private static let loadingIndicatorID = "\(OIDCAuthenticationPresenter.self)-Loading"
+    
+    private func startLoading(delay: Duration? = nil) {
+        userIndicatorController.submitIndicator(UserIndicator(id: Self.loadingIndicatorID,
+                                                              type: .modal,
+                                                              title: L10n.commonLoading,
+                                                              persistent: true),
+                                                delay: delay)
+    }
+    
+    private func stopLoading() {
+        userIndicatorController.retractIndicatorWithId(Self.loadingIndicatorID)
     }
 }
 
@@ -115,4 +88,16 @@ class OIDCAuthenticationPresenter: NSObject {
 
 extension OIDCAuthenticationPresenter: ASWebAuthenticationPresentationContextProviding {
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor { presentationAnchor }
+}
+
+extension ASWebAuthenticationSession.Callback {
+    static func oidcRedirectURL(_ url: URL) -> Self {
+        if url.scheme == "https", let host = url.host() {
+            .https(host: host, path: url.path())
+        } else if let scheme = url.scheme {
+            .customScheme(scheme)
+        } else {
+            fatalError("Invalid OIDC redirect URL: \(url)")
+        }
+    }
 }

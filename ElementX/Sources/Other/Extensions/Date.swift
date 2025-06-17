@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -26,7 +17,8 @@ extension Date {
             return formatted(date: .omitted, time: .shortened)
         } else if calendar.isDateInYesterday(self) {
             // Simply "Yesterday" if it was yesterday.
-            return formatted(Date.RelativeFormatStyle(presentation: .named, capitalizationContext: .beginningOfSentence))
+            guard let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) else { fatalError() }
+            return yesterday.formatted(Date.RelativeFormatStyle(presentation: .named, capitalizationContext: .beginningOfSentence))
         } else if let sixDaysAgo = calendar.date(byAdding: .day, value: -6, to: calendar.startOfDay(for: .now)),
                   sixDaysAgo <= self {
             // The named day if it was in the last 6 days.
@@ -39,5 +31,15 @@ extension Date {
             // The day, month and year if it is any older.
             return formatted(.dateTime.year().day().month())
         }
+    }
+    
+    /// The date formatted as just the time, for use in timeline items specifically.
+    func formattedTime() -> String {
+        formatted(date: .omitted, time: .shortened)
+    }
+    
+    /// A fixed date used for mocks, previews etc.
+    static var mock: Date {
+        DateComponents(calendar: .current, year: 2007, month: 1, day: 9, hour: 9, minute: 41).date ?? .now
     }
 }

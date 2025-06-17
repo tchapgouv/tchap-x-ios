@@ -1,32 +1,29 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import XCTest
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 
 @MainActor
 class RoomMemberDetailsViewModelTests: XCTestCase {
     var viewModel: RoomMemberDetailsScreenViewModelProtocol!
-    var roomProxyMock: RoomProxyMock!
+    var roomProxyMock: JoinedRoomProxyMock!
     var roomMemberProxyMock: RoomMemberProxyMock!
     var context: RoomMemberDetailsScreenViewModelType.Context { viewModel.context }
 
     override func setUp() async throws {
-        roomProxyMock = RoomProxyMock(.init(name: ""))
+        roomProxyMock = JoinedRoomProxyMock(.init(name: ""))
         
         roomProxyMock.getMemberUserIDClosure = { _ in
             .success(self.roomMemberProxyMock)
@@ -38,7 +35,7 @@ class RoomMemberDetailsViewModelTests: XCTestCase {
         viewModel = RoomMemberDetailsScreenViewModel(userID: roomMemberProxyMock.userID,
                                                      roomProxy: roomProxyMock,
                                                      clientProxy: ClientProxyMock(.init()),
-                                                     mediaProvider: MockMediaProvider(),
+                                                     mediaProvider: MediaProviderMock(configuration: .init()),
                                                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                      analytics: ServiceLocator.shared.analytics)
         
@@ -55,7 +52,7 @@ class RoomMemberDetailsViewModelTests: XCTestCase {
         viewModel = RoomMemberDetailsScreenViewModel(userID: roomMemberProxyMock.userID,
                                                      roomProxy: roomProxyMock,
                                                      clientProxy: ClientProxyMock(.init()),
-                                                     mediaProvider: MockMediaProvider(),
+                                                     mediaProvider: MediaProviderMock(configuration: .init()),
                                                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                      analytics: ServiceLocator.shared.analytics)
         
@@ -93,7 +90,7 @@ class RoomMemberDetailsViewModelTests: XCTestCase {
         viewModel = RoomMemberDetailsScreenViewModel(userID: roomMemberProxyMock.userID,
                                                      roomProxy: roomProxyMock,
                                                      clientProxy: clientProxy,
-                                                     mediaProvider: MockMediaProvider(),
+                                                     mediaProvider: MediaProviderMock(configuration: .init()),
                                                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                      analytics: ServiceLocator.shared.analytics)
         
@@ -130,7 +127,7 @@ class RoomMemberDetailsViewModelTests: XCTestCase {
         viewModel = RoomMemberDetailsScreenViewModel(userID: roomMemberProxyMock.userID,
                                                      roomProxy: roomProxyMock,
                                                      clientProxy: ClientProxyMock(.init()),
-                                                     mediaProvider: MockMediaProvider(),
+                                                     mediaProvider: MediaProviderMock(configuration: .init()),
                                                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                      analytics: ServiceLocator.shared.analytics)
         
@@ -166,7 +163,7 @@ class RoomMemberDetailsViewModelTests: XCTestCase {
         viewModel = RoomMemberDetailsScreenViewModel(userID: roomMemberProxyMock.userID,
                                                      roomProxy: roomProxyMock,
                                                      clientProxy: clientProxy,
-                                                     mediaProvider: MockMediaProvider(),
+                                                     mediaProvider: MediaProviderMock(configuration: .init()),
                                                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                      analytics: ServiceLocator.shared.analytics)
         
@@ -202,7 +199,7 @@ class RoomMemberDetailsViewModelTests: XCTestCase {
         viewModel = RoomMemberDetailsScreenViewModel(userID: roomMemberProxyMock.userID,
                                                      roomProxy: roomProxyMock,
                                                      clientProxy: ClientProxyMock(.init()),
-                                                     mediaProvider: MockMediaProvider(),
+                                                     mediaProvider: MediaProviderMock(configuration: .init()),
                                                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                      analytics: ServiceLocator.shared.analytics)
         
@@ -219,7 +216,7 @@ class RoomMemberDetailsViewModelTests: XCTestCase {
         viewModel = RoomMemberDetailsScreenViewModel(userID: roomMemberProxyMock.userID,
                                                      roomProxy: roomProxyMock,
                                                      clientProxy: ClientProxyMock(.init()),
-                                                     mediaProvider: MockMediaProvider(),
+                                                     mediaProvider: MediaProviderMock(configuration: .init()),
                                                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                      analytics: ServiceLocator.shared.analytics)
         

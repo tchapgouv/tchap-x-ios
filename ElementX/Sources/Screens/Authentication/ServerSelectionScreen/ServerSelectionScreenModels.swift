@@ -1,24 +1,15 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
 
 enum ServerSelectionScreenViewModelAction {
-    /// The user would like to use the homeserver at the given address.
-    case confirm(homeserverAddress: String)
+    /// The homeserver selection has been updated.
+    case updated
     /// Dismiss the view without using the entered address.
     case dismiss
 }
@@ -31,17 +22,10 @@ struct ServerSelectionScreenViewState: BindableState {
     var bindings: ServerSelectionScreenBindings
     /// An error message to be shown in the text field footer.
     var footerErrorMessage: String?
-    /// Whether the screen is presented modally or within a navigation stack.
-    var isModallyPresented: Bool
     
     /// The message to show in the text field footer.
     var footerMessage: AttributedString {
         footerErrorMessage.map(AttributedString.init) ?? regularFooterMessage
-    }
-    
-    /// The title shown on the confirm button.
-    var buttonTitle: String {
-        isModallyPresented ? L10n.actionContinue : L10n.actionNext
     }
     
     /// The text field is showing an error.
@@ -54,10 +38,9 @@ struct ServerSelectionScreenViewState: BindableState {
         bindings.homeserverAddress.isEmpty || isShowingFooterError
     }
     
-    init(slidingSyncLearnMoreURL: URL, bindings: ServerSelectionScreenBindings, footerErrorMessage: String? = nil, isModallyPresented: Bool) {
+    init(slidingSyncLearnMoreURL: URL, bindings: ServerSelectionScreenBindings, footerErrorMessage: String? = nil) {
         self.bindings = bindings
         self.footerErrorMessage = footerErrorMessage
-        self.isModallyPresented = isModallyPresented
         
         let linkPlaceholder = "{link}"
         var message = AttributedString(L10n.screenChangeServerFormNotice(linkPlaceholder))
@@ -91,4 +74,8 @@ enum ServerSelectionScreenErrorType: Hashable {
     case invalidWellKnownAlert(String)
     /// An alert that allows the user to learn about sliding sync.
     case slidingSyncAlert
+    /// An alert that informs the user that login isn't supported.
+    case loginAlert
+    /// An alert that informs the user that registration isn't supported.
+    case registrationAlert
 }

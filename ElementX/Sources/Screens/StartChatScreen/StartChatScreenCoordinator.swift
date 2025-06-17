@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -23,11 +14,14 @@ struct StartChatScreenCoordinatorParameters {
     let userIndicatorController: UserIndicatorControllerProtocol
     weak var navigationStackCoordinator: NavigationStackCoordinator?
     let userDiscoveryService: UserDiscoveryServiceProtocol
+    let mediaUploadingPreprocessor: MediaUploadingPreprocessor
 }
 
 enum StartChatScreenCoordinatorAction {
     case close
     case openRoom(withIdentifier: String)
+    case openRoomDirectorySearch
+    case joinForum // Tchap: add `join Forum` action to `StartChat` screen
 }
 
 final class StartChatScreenCoordinator: CoordinatorProtocol {
@@ -56,7 +50,8 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
         viewModel = StartChatScreenViewModel(userSession: parameters.userSession,
                                              analytics: ServiceLocator.shared.analytics,
                                              userIndicatorController: parameters.userIndicatorController,
-                                             userDiscoveryService: parameters.userDiscoveryService)
+                                             userDiscoveryService: parameters.userDiscoveryService,
+                                             appSettings: ServiceLocator.shared.settings)
     }
     
     func start() {
@@ -68,8 +63,12 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
             case .createRoom:
                 // before creating a room we select the users we would like to invite in that room
                 presentInviteUsersScreen()
-            case .openRoom(let identifier):
+            case .showRoom(let identifier):
                 actionsSubject.send(.openRoom(withIdentifier: identifier))
+            case .openRoomDirectorySearch:
+                actionsSubject.send(.openRoomDirectorySearch)
+            case .joinForum: // Tchap: add `join Forum` action to `StartChat` screen
+                actionsSubject.send(.joinForum)
             }
         }
         .store(in: &cancellables)
@@ -112,7 +111,7 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
             self?.selectedUsers.send([])
         }
     }
-    
+
     private func openCreateRoomScreen() {
         let createParameters = CreateRoomCoordinatorParameters(userSession: parameters.userSession,
                                                                userIndicatorController: parameters.userIndicatorController,
@@ -143,7 +142,6 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
     
     // MARK: - Private
     
-    let mediaUploadingPreprocessor = MediaUploadingPreprocessor()
     private func displayMediaPickerWithSource(_ source: MediaPickerScreenSource) {
         let stackCoordinator = NavigationStackCoordinator()
         
@@ -168,7 +166,7 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
         Task { [weak self] in
             guard let self else { return }
             do {
-                let media = try await mediaUploadingPreprocessor.processMedia(at: url).get()
+                let media = try await parameters.mediaUploadingPreprocessor.processMedia(at: url).get()
                 var parameters = createRoomParameters.value
                 parameters.avatarImageMedia = media
                 createRoomParameters.send(parameters)

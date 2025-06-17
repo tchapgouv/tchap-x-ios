@@ -13,10 +13,10 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 # Available Actions
 
-### alpha
+### build_alpha
 
 ```sh
-[bundle exec] fastlane alpha
+[bundle exec] fastlane build_alpha
 ```
 
 
@@ -45,18 +45,18 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 
 
-### config_nightly
-
-```sh
-[bundle exec] fastlane config_nightly
-```
-
-
-
 ### config_production
 
 ```sh
 [bundle exec] fastlane config_production
+```
+
+
+
+### config_nightly
+
+```sh
+[bundle exec] fastlane config_nightly
 ```
 
 
@@ -89,6 +89,22 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ```sh
 [bundle exec] fastlane tag_nightly
+```
+
+
+
+### config_alpha
+
+```sh
+[bundle exec] fastlane config_alpha
+```
+
+
+
+### config_secrets
+
+```sh
+[bundle exec] fastlane config_secrets
 ```
 
 

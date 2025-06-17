@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -20,7 +11,7 @@ import SwiftUI
 typealias RoomChangeRolesScreenViewModelType = StateStoreViewModel<RoomChangeRolesScreenViewState, RoomChangeRolesScreenViewAction>
 
 class RoomChangeRolesScreenViewModel: RoomChangeRolesScreenViewModelType, RoomChangeRolesScreenViewModelProtocol {
-    private let roomProxy: RoomProxyProtocol
+    private let roomProxy: JoinedRoomProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let analytics: AnalyticsService
     
@@ -30,7 +21,7 @@ class RoomChangeRolesScreenViewModel: RoomChangeRolesScreenViewModelType, RoomCh
     }
 
     init(mode: RoomMemberDetails.Role,
-         roomProxy: RoomProxyProtocol,
+         roomProxy: JoinedRoomProxyProtocol,
          mediaProvider: MediaProviderProtocol,
          userIndicatorController: UserIndicatorControllerProtocol,
          analytics: AnalyticsService) {
@@ -45,7 +36,7 @@ class RoomChangeRolesScreenViewModel: RoomChangeRolesScreenViewModelType, RoomCh
                                                                     moderators: [],
                                                                     users: [],
                                                                     bindings: .init()),
-                   imageProvider: mediaProvider)
+                   mediaProvider: mediaProvider)
         
         roomProxy.membersPublisher
             .receive(on: DispatchQueue.main)
@@ -152,7 +143,8 @@ class RoomChangeRolesScreenViewModel: RoomChangeRolesScreenViewModelType, RoomCh
         let demotingUpdates = state.membersToDemote.map { ($0.id, Int64(0)) }
         
         // A task we can await until the room's info gets modified with the new power levels.
-        let infoTask = Task { await roomProxy.actionsPublisher.values.first { $0 == .roomInfoUpdate } }
+        // Note: Ignore the first value as the publisher is backed by a current value subject.
+        let infoTask = Task { await roomProxy.infoPublisher.dropFirst().values.first { _ in true } }
         
         switch await roomProxy.updatePowerLevelsForUsers(promotingUpdates + demotingUpdates) {
         case .success:

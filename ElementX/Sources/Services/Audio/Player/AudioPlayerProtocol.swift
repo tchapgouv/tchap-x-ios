@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -19,6 +10,17 @@ import Foundation
 
 enum AudioPlayerError: Error {
     case genericError
+}
+
+// There used to be a MediaPlayerProtocol that AudioPlayerProtocol inherited from.
+// This should be called something else but we already have an AudioPlayerState,
+// AudioPlayerPlaybackState and InternalAudioPlayerState so who knows what to call this.
+enum MediaPlayerState {
+    case loading
+    case playing
+    case paused
+    case stopped
+    case error
 }
 
 enum AudioPlayerAction {
@@ -31,8 +33,21 @@ enum AudioPlayerAction {
     case didFailWithError(error: Error)
 }
 
-protocol AudioPlayerProtocol: MediaPlayerProtocol {
+protocol AudioPlayerProtocol: AnyObject {
+    var sourceURL: URL? { get }
+    var duration: TimeInterval { get }
+    var currentTime: TimeInterval { get }
+    var playbackURL: URL? { get }
+    var state: MediaPlayerState { get }
+    
     var actions: AnyPublisher<AudioPlayerAction, Never> { get }
+    
+    func load(sourceURL: URL, playbackURL: URL, autoplay: Bool)
+    func reset()
+    func play()
+    func pause()
+    func stop()
+    func seek(to progress: Double) async
 }
 
 // sourcery: AutoMockable

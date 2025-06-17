@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -44,7 +35,7 @@ class NotificationSettingsEditScreenViewModel: NotificationSettingsEditScreenVie
         
         super.init(initialViewState: NotificationSettingsEditScreenViewState(bindings: bindings,
                                                                              strings: NotificationSettingsEditScreenStrings(chatType: chatType)),
-                   imageProvider: userSession.mediaProvider)
+                   mediaProvider: userSession.mediaProvider)
         
         setupNotificationSettingsSubscription()
         setupRoomSummaryProviderSubscription()
@@ -132,43 +123,37 @@ class NotificationSettingsEditScreenViewModel: NotificationSettingsEditScreenVie
             guard !Task.isCancelled else { return }
             
             let filteredRoomsSummary = roomSummaryProvider.roomListPublisher.value.filter { summary in
-                roomsWithUserDefinedRules.contains(where: { summary.id == $0 })
+                roomsWithUserDefinedRules.contains { summary.id == $0 }
             }
             
             var roomsWithUserDefinedMode: [NotificationSettingsEditScreenRoom] = []
             
             for roomSummary in filteredRoomsSummary {
-                switch roomSummary {
-                case .empty, .invalidated:
+                guard case let .joined(roomProxy) = await userSession.clientProxy.roomForIdentifier(roomSummary.id) else { continue }
+                // `isOneToOneRoom` here is not the same as `isDirect` on the room. From the point of view of the push rule, a one-to-one room is a room with exactly two active members.
+                let isOneToOneRoom = roomProxy.infoPublisher.value.activeMembersCount == 2
+                // display only the rooms we're interested in
+                switch chatType {
+                case .oneToOneChat where isOneToOneRoom, .groupChat where !isOneToOneRoom:
+                    await roomsWithUserDefinedMode.append(buildRoom(with: roomSummary))
+                default:
                     break
-                case .filled(let details):
-                    guard let roomProxy = await userSession.clientProxy.roomForIdentifier(details.id) else { continue }
-                    // `isOneToOneRoom` here is not the same as `isDirect` on the room. From the point of view of the push rule, a one-to-one room is a room with exactly two active members.
-                    let isOneToOneRoom = roomProxy.activeMembersCount == 2
-                    // display only the rooms we're interested in
-                    switch chatType {
-                    case .oneToOneChat where isOneToOneRoom,
-                         .groupChat where !isOneToOneRoom:
-                        await roomsWithUserDefinedMode.append(buildRoom(with: details))
-                    default:
-                        break
-                    }
                 }
             }
             
             // Sort the room list
-            roomsWithUserDefinedMode.sort(by: { $0.name.localizedCompare($1.name) == .orderedAscending })
+            roomsWithUserDefinedMode.sort { $0.name.localizedCompare($1.name) == .orderedAscending }
             
             state.roomsWithUserDefinedMode = roomsWithUserDefinedMode
         }
     }
     
-    private func buildRoom(with details: RoomSummaryDetails) async -> NotificationSettingsEditScreenRoom {
-        let notificationMode = try? await notificationSettingsProxy.getUserDefinedRoomNotificationMode(roomId: details.id)
-        return NotificationSettingsEditScreenRoom(id: details.id,
-                                                  roomId: details.id,
-                                                  name: details.name,
-                                                  avatarURL: details.avatarURL,
+    private func buildRoom(with summary: RoomSummary) async -> NotificationSettingsEditScreenRoom {
+        let notificationMode = try? await notificationSettingsProxy.getUserDefinedRoomNotificationMode(roomId: summary.id)
+        return NotificationSettingsEditScreenRoom(id: summary.id,
+                                                  roomId: summary.id,
+                                                  name: summary.name,
+                                                  avatar: summary.avatar,
                                                   notificationMode: notificationMode)
     }
     

@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import CallKit
@@ -37,24 +28,35 @@ import UserNotifications
 // but it will always be called on different threads. It may or may not be
 // called on the same instance of `NotificationService` as a previous
 // notification.
-//
-// We keep a global `environment` singleton to ensure that our app context,
-// database, logging, etc. are only ever setup once per *process*
 
-private let settings: NSESettingsProtocol = AppSettings()
-private let notificationContentBuilder = NotificationContentBuilder(messageEventStringBuilder: RoomMessageEventStringBuilder(attributedStringBuilder: AttributedStringBuilder(mentionBuilder: PlainMentionBuilder())))
+private let settings: CommonSettingsProtocol = AppSettings()
+
 private let keychainController = KeychainController(service: .sessions,
                                                     accessGroup: InfoPlistReader.main.keychainAccessGroupIdentifier)
+
+private let eventStringBuilder = RoomMessageEventStringBuilder(attributedStringBuilder: AttributedStringBuilder(mentionBuilder: PlainMentionBuilder()),
+                                                               destination: .notification)
+
+private let notificationContentBuilder = NotificationContentBuilder(messageEventStringBuilder: eventStringBuilder,
+                                                                    settings: settings)
 
 class NotificationServiceExtension: UNNotificationServiceExtension {
     private var handler: ((UNNotificationContent) -> Void)?
     private var modifiedContent: UNMutableNotificationContent?
-
+    
+    private let appHooks = AppHooks()
+            
+    deinit {
+        cleanUp()
+        ExtensionLogger.logMemory(with: tag)
+        MXLog.info("\(tag) deinit")
+    }
+    
     override func didReceive(_ request: UNNotificationRequest,
                              withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
         guard !DataProtectionManager.isDeviceLockedAfterReboot(containerURL: URL.appGroupContainerDirectory),
-              let roomId = request.roomId,
-              let eventId = request.eventId,
+              let roomID = request.roomID,
+              let eventID = request.eventID,
               let clientID = request.pusherNotificationClientIdentifier,
               let credentials = keychainController.restorationTokens().first(where: { $0.restorationToken.pusherNotificationClientIdentifier == clientID }) else {
             // We cannot process this notification, it might be due to one of these:
@@ -64,84 +66,94 @@ class NotificationServiceExtension: UNNotificationServiceExtension {
             // - NotificationID could not be resolved
             return contentHandler(request.content)
         }
+        
+        Target.nse.configure(logLevel: settings.logLevel, traceLogPacks: settings.traceLogPacks)
 
         handler = contentHandler
         modifiedContent = request.content.mutableCopy() as? UNMutableNotificationContent
-
-        NSELogger.configure(logLevel: settings.logLevel)
-
+        
         MXLog.info("\(tag) #########################################")
-        NSELogger.logMemory(with: tag)
-        MXLog.info("\(tag) Payload came: \(request.content.userInfo)")
-
+        
+        ExtensionLogger.logMemory(with: tag)
+        MXLog.info("\(tag) Received payload: \(request.content.userInfo)")
+        
         Task {
-            await run(with: credentials,
-                      roomId: roomId,
-                      eventId: eventId,
-                      unreadCount: request.unreadCount)
+            do {
+                let userSession = try await NSEUserSession(credentials: credentials,
+                                                           roomID: roomID,
+                                                           clientSessionDelegate: keychainController,
+                                                           appHooks: appHooks,
+                                                           appSettings: settings)
+                
+                ExtensionLogger.logMemory(with: tag)
+                MXLog.info("\(tag) Configured user session")
+                
+                await processEvent(eventID,
+                                   roomID: roomID,
+                                   unreadCount: request.unreadCount,
+                                   userSession: userSession)
+            } catch {
+                MXLog.error("Failed creating user session with error: \(error)")
+            }
         }
     }
     
     override func serviceExtensionTimeWillExpire() {
         // Called just before the extension will be terminated by the system.
         // Use this as an opportunity to deliver your "best attempt" at modified content, otherwise the original push payload will be used.
-        MXLog.warning("\(tag) serviceExtensionTimeWillExpire")
+        MXLog.warning("\(tag) Extension time will expire")
         notify(unreadCount: nil)
     }
+    
+    // MARK: - Private
 
-    private func run(with credentials: KeychainCredentials,
-                     roomId: String,
-                     eventId: String,
-                     unreadCount: Int?) async {
-        MXLog.info("\(tag) run with roomId: \(roomId), eventId: \(eventId)")
-
+    private func processEvent(_ eventID: String,
+                              roomID: String,
+                              unreadCount: Int?,
+                              userSession: NSEUserSession) async {
+        MXLog.info("\(tag) Processing event: \(eventID) in room: \(roomID)")
+        
         do {
-            // This function might be run concurrently and from different processes, let the SDK handle race conditions
-            // on fetching user sessions
-            let userSession = try await NSEUserSession(credentials: credentials, clientSessionDelegate: keychainController)
-            
-            guard let itemProxy = await userSession.notificationItemProxy(roomID: roomId, eventID: eventId) else {
-                MXLog.info("\(tag) no notification for the event, discard")
+            guard let itemProxy = await userSession.notificationItemProxy(roomID: roomID, eventID: eventID) else {
+                MXLog.error("\(tag) Failed retrieving notification item")
                 return discard(unreadCount: unreadCount)
             }
-            
-            guard await shouldHandleCallNotification(itemProxy) else {
+                  
+            switch await preprocessNotification(itemProxy) {
+            case .processedShouldDiscard, .unsupportedShouldDiscard:
                 return discard(unreadCount: unreadCount)
+            case .shouldDisplay:
+                break
             }
             
-            // After the first processing, update the modified content
             modifiedContent = try await notificationContentBuilder.content(for: itemProxy, mediaProvider: nil)
             
             guard itemProxy.hasMedia else {
-                MXLog.info("\(tag) no media needed")
-
-                // We've processed the item and no media operations needed, so no need to go further
+                MXLog.info("\(tag) Notification item doesn't contain media")
                 return notify(unreadCount: unreadCount)
             }
 
-            MXLog.info("\(tag) process with media")
-
-            // There is some media to load, process it again
+            MXLog.info("\(tag) Processing media")
             if let latestContent = try? await notificationContentBuilder.content(for: itemProxy, mediaProvider: userSession.mediaProvider) {
-                // Processing finished, hopefully with some media
                 modifiedContent = latestContent
+            } else {
+                MXLog.error("\(tag) Failed processing notification media")
             }
-            // We still notify, but without the media attachment if it fails to load
             
             return notify(unreadCount: unreadCount)
         } catch {
-            MXLog.error("NSE run error: \(error)")
+            MXLog.error("Failed processing with error: \(error)")
             return discard(unreadCount: unreadCount)
         }
     }
     
     private func notify(unreadCount: Int?) {
-        MXLog.info("\(tag) notify")
-
         guard let modifiedContent else {
-            MXLog.info("\(tag) notify: no modified content")
+            MXLog.error("\(tag) Notification modified content invalid")
             return discard(unreadCount: unreadCount)
         }
+        
+        MXLog.info("\(tag) Displaying notification")
         
         if let unreadCount {
             modifiedContent.badge = NSNumber(value: unreadCount)
@@ -152,7 +164,7 @@ class NotificationServiceExtension: UNNotificationServiceExtension {
     }
 
     private func discard(unreadCount: Int?) {
-        MXLog.info("\(tag) discard")
+        MXLog.info("\(tag) Discarding notification")
         
         let content = UNMutableNotificationContent()
         
@@ -172,14 +184,71 @@ class NotificationServiceExtension: UNNotificationServiceExtension {
         handler = nil
         modifiedContent = nil
     }
-
-    deinit {
-        cleanUp()
-        NSELogger.logMemory(with: tag)
-        MXLog.info("\(tag) deinit")
+    
+    private func preprocessNotification(_ itemProxy: NotificationItemProxyProtocol) async -> NotificationProcessingResult {
+        guard case let .timeline(event) = itemProxy.event else {
+            return .shouldDisplay
+        }
+        
+        switch try? event.eventType() {
+        case .messageLike(let content):
+            switch content {
+            case .poll,
+                 .roomEncrypted,
+                 .sticker:
+                return .shouldDisplay
+            case .roomMessage(let messageType, _):
+                switch messageType {
+                case .emote, .image, .audio, .video, .file, .notice, .text, .location:
+                    return .shouldDisplay
+                case .other:
+                    return .unsupportedShouldDiscard
+                }
+            case .roomRedaction(let redactedEventID, _):
+                guard let redactedEventID else {
+                    MXLog.error("Unable to handle redact notification due to missing event ID")
+                    return .processedShouldDiscard
+                }
+                
+                let deliveredNotifications = await UNUserNotificationCenter.current().deliveredNotifications()
+                
+                if let targetNotification = deliveredNotifications.first(where: { $0.request.content.eventID == redactedEventID }) {
+                    UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [targetNotification.request.identifier])
+                }
+                
+                return .processedShouldDiscard
+            case .callNotify(let notifyType):
+                return await handleCallNotification(notifyType: notifyType,
+                                                    timestamp: event.timestamp(),
+                                                    roomID: itemProxy.roomID,
+                                                    roomDisplayName: itemProxy.roomDisplayName)
+            case .callAnswer,
+                 .callInvite,
+                 .callHangup,
+                 .callCandidates,
+                 .keyVerificationReady,
+                 .keyVerificationStart,
+                 .keyVerificationCancel,
+                 .keyVerificationAccept,
+                 .keyVerificationKey,
+                 .keyVerificationMac,
+                 .keyVerificationDone,
+                 .reactionContent:
+                return .unsupportedShouldDiscard
+            }
+        case .state:
+            return .unsupportedShouldDiscard
+        case .none:
+            return .unsupportedShouldDiscard
+        }
     }
     
-    private func shouldHandleCallNotification(_ itemProxy: NotificationItemProxyProtocol) async -> Bool {
+    /// Handle incoming call notifications.
+    /// - Returns: A boolean indicating whether the notification was handled and should now be discarded.
+    private func handleCallNotification(notifyType: NotifyType,
+                                        timestamp: Timestamp,
+                                        roomID: String,
+                                        roomDisplayName: String) async -> NotificationProcessingResult {
         // Handle incoming VoIP calls, show the native OS call screen
         // https://developer.apple.com/documentation/callkit/sending-end-to-end-encrypted-voip-calls
         //
@@ -192,30 +261,51 @@ class NotificationServiceExtension: UNNotificationServiceExtension {
         // - the main app picks this up in `PKPushRegistry.didReceiveIncomingPushWith` and
         // `CXProvider.reportNewIncomingCall` to show the system UI and handle actions on it.
         // N.B. this flow works properly only when background processing capabilities are enabled
-        
-        guard case let .timeline(event) = itemProxy.event,
-              case let .messageLike(content) = try? event.eventType(),
-              case let .callNotify(notificationType) = content,
-              notificationType == .ring else {
-            return true
+        guard notifyType == .ring else {
+            MXLog.info("Non-ringing call notification, handling as push notification")
+            return .shouldDisplay
         }
         
-        let timestamp = Date(timeIntervalSince1970: TimeInterval(event.timestamp() / 1000))
+        let timestamp = Date(timeIntervalSince1970: TimeInterval(timestamp / 1000))
         guard abs(timestamp.timeIntervalSinceNow) < ElementCallServiceNotificationDiscardDelta else {
             MXLog.info("Call notification is too old, handling as push notification")
-            return true
+            return .shouldDisplay
         }
         
-        let payload = [ElementCallServiceNotificationKey.roomID.rawValue: itemProxy.roomID,
-                       ElementCallServiceNotificationKey.roomDisplayName.rawValue: itemProxy.roomDisplayName]
+        let payload = [ElementCallServiceNotificationKey.roomID.rawValue: roomID,
+                       ElementCallServiceNotificationKey.roomDisplayName.rawValue: roomDisplayName]
         
         do {
             try await CXProvider.reportNewIncomingVoIPPushPayload(payload)
+            MXLog.info("Call notification delegated to CallKit")
         } catch {
             MXLog.error("Failed reporting voip call with error: \(error). Handling as push notification")
-            return true
+            return .shouldDisplay
         }
         
-        return false
+        return .processedShouldDiscard
+    }
+    
+    private enum NotificationProcessingResult {
+        case shouldDisplay
+        case processedShouldDiscard
+        case unsupportedShouldDiscard
+    }
+}
+
+// https://stackoverflow.com/a/77300959/730924
+private extension Task where Failure == Error {
+    /// Performs an async task in a sync context.
+    ///
+    /// - Note: This function blocks the thread until the given operation is finished. The caller is responsible for managing multithreading.
+    static func synchronous(priority: TaskPriority? = nil, operation: @escaping @Sendable () async throws -> Success) {
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task(priority: priority) {
+            defer { semaphore.signal() }
+            return try await operation()
+        }
+
+        semaphore.wait()
     }
 }

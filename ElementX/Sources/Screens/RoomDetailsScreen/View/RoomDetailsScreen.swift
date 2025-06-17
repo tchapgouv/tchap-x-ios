@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -24,23 +15,21 @@ struct RoomDetailsScreen: View {
     
     var body: some View {
         Form {
-            if let recipient = context.viewState.dmRecipient,
-               let accountOwner = context.viewState.accountOwner {
-                dmHeaderSection(accountOwner: accountOwner,
-                                recipient: recipient)
-            } else {
-                normalRoomHeaderSection
-            }
+            roomHeaderSection
 
             topicSection
             
             configurationSection
+            
+            if context.viewState.dmRecipientInfo == nil {
+                peopleSection
+            }
 
             aboutSection
 
             securitySection
 
-            if let recipient = context.viewState.dmRecipient {
+            if let recipient = context.viewState.dmRecipientInfo?.member {
                 ignoreUserSection(user: recipient)
             }
             
@@ -66,35 +55,23 @@ struct RoomDetailsScreen: View {
         .navigationTitle(L10n.screenRoomDetailsTitle)
         .navigationBarTitleDisplayMode(.inline)
         .track(screen: .RoomDetails)
-        .interactiveQuickLook(item: $context.mediaPreviewItem, shouldHideControls: true)
+        .interactiveQuickLook(item: $context.mediaPreviewItem, allowEditing: false)
     }
     
     // MARK: - Private
     
-    private var normalRoomHeaderSection: some View {
+    private var roomHeaderSection: some View {
         AvatarHeaderView(room: context.viewState.details,
+                         externalCount: $context.externalCount, // Tchap: pass `externalCount` binding parameter
                          avatarSize: .room(on: .details),
-                         imageProvider: context.imageProvider) {
-            context.send(viewAction: .displayAvatar)
+                         mediaProvider: context.mediaProvider) { url in
+            context.send(viewAction: .displayAvatar(url))
         } footer: {
             if !context.viewState.shortcuts.isEmpty {
                 headerSectionShortcuts
             }
         }
         .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.avatar)
-    }
-    
-    private func dmHeaderSection(accountOwner: RoomMemberDetails, recipient: RoomMemberDetails) -> some View {
-        AvatarHeaderView(accountOwner: accountOwner,
-                         dmRecipient: recipient,
-                         imageProvider: context.imageProvider) {
-            context.send(viewAction: .displayAvatar)
-        } footer: {
-            if !context.viewState.shortcuts.isEmpty {
-                headerSectionShortcuts
-            }
-        }
-        .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.dmAvatar)
     }
     
     @ViewBuilder
@@ -160,28 +137,29 @@ struct RoomDetailsScreen: View {
 
     private var aboutSection: some View {
         Section {
-            if context.viewState.dmRecipient == nil {
-                ListRow(label: .default(title: L10n.commonPeople,
-                                        icon: \.user),
-                        details: .title(String(context.viewState.joinedMembersCount)),
-                        kind: .navigationLink {
-                            context.send(viewAction: .processTapPeople)
-                        })
-                        .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.people)
-            }
-            ListRow(label: .default(title: L10n.screenPollsHistoryTitle,
-                                    icon: \.polls),
+            ListRow(label: .default(title: L10n.screenRoomDetailsPinnedEventsRowTitle, icon: \.pin),
+                    details: context.viewState.pinnedEventsActionState.isLoading ? .isWaiting(true) : .title(context.viewState.pinnedEventsActionState.count),
+                    kind: context.viewState.pinnedEventsActionState.isLoading ? .label : .navigationLink {
+                        context.send(viewAction: .processTapPinnedEvents)
+                    })
+                    .disabled(context.viewState.pinnedEventsActionState.isLoading)
+            
+            ListRow(label: .default(title: L10n.screenPollsHistoryTitle, icon: \.polls),
                     kind: .navigationLink {
                         context.send(viewAction: .processTapPolls)
                     })
                     .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.pollsHistory)
+            
+            ListRow(label: .default(title: L10n.screenMediaBrowserTitle, icon: \.image),
+                    kind: .navigationLink {
+                        context.send(viewAction: .processTapMediaEvents)
+                    })
         }
     }
     
     private var configurationSection: some View {
         Section {
-            ListRow(label: .default(title: L10n.screenRoomDetailsNotificationTitle,
-                                    icon: \.notifications),
+            ListRow(label: .default(title: L10n.screenRoomDetailsNotificationTitle, icon: \.notifications),
                     details: context.viewState.notificationSettingsState.isLoading ? .isWaiting(true)
                         : context.viewState.notificationSettingsState.isError ? .systemIcon(.exclamationmarkCircle)
                         : .title(context.viewState.notificationSettingsState.label),
@@ -194,19 +172,75 @@ struct RoomDetailsScreen: View {
             ListRow(label: .default(title: L10n.commonFavourite, icon: \.favourite),
                     kind: .toggle($context.isFavourite))
                 .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.favourite)
-                .onChange(of: context.isFavourite) { newValue in
+                .onChange(of: context.isFavourite) { _, newValue in
                     context.send(viewAction: .toggleFavourite(isFavourite: newValue))
                 }
             
-            if context.viewState.canEditRolesOrPermissions, context.viewState.dmRecipient == nil {
-                ListRow(label: .default(title: L10n.screenRoomDetailsRolesAndPermissions,
-                                        icon: \.admin),
+            if context.viewState.canSeeSecurityAndPrivacy {
+                ListRow(label: .default(title: L10n.screenRoomDetailsSecurityAndPrivacyTitle, icon: \.lock),
+                        kind: .navigationLink {
+                            context.send(viewAction: .processTapSecurityAndPrivacy)
+                        })
+            }
+            
+            if context.viewState.dmRecipientInfo != nil {
+                switch context.viewState.dmRecipientInfo?.verificationState {
+                case .verified:
+                    ListRow(label: .default(title: L10n.screenRoomDetailsProfileRowTitle, icon: \.userProfile),
+                            details: .icon(CompoundIcon(\.verified).foregroundStyle(.compound.iconSuccessPrimary)),
+                            kind: .navigationLink {
+                                context.send(viewAction: .processTapRecipientProfile)
+                            })
+                case .verificationViolation:
+                    ListRow(label: .default(title: L10n.screenRoomDetailsProfileRowTitle, icon: \.userProfile),
+                            details: .icon(CompoundIcon(\.infoSolid).foregroundStyle(.compound.iconCriticalPrimary)),
+                            kind: .navigationLink {
+                                context.send(viewAction: .processTapRecipientProfile)
+                            })
+                default:
+                    ListRow(label: .default(title: L10n.screenRoomDetailsProfileRowTitle, icon: \.userProfile),
+                            kind: .navigationLink {
+                                context.send(viewAction: .processTapRecipientProfile)
+                            })
+                }
+            }
+        }
+    }
+    
+    private var peopleSection: some View {
+        Section {
+            if context.viewState.hasMemberIdentityVerificationStateViolations {
+                ListRow(label: .default(title: L10n.commonPeople, icon: \.user),
+                        details: .icon(CompoundIcon(\.infoSolid).foregroundStyle(.compound.iconCriticalPrimary)),
+                        kind: .navigationLink {
+                            context.send(viewAction: .processTapPeople)
+                        })
+                        .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.people)
+                
+            } else {
+                ListRow(label: .default(title: L10n.commonPeople, icon: \.user),
+                        details: .title(String(context.viewState.joinedMembersCount)),
+                        kind: .navigationLink {
+                            context.send(viewAction: .processTapPeople)
+                        })
+                        .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.people)
+            }
+        
+            if context.viewState.canSeeKnockingRequests {
+                ListRow(label: .default(title: L10n.screenRoomDetailsRequestsToJoinTitle, icon: \.askToJoin),
+                        details: context.viewState.knockRequestsCount > 0 ? .counter(context.viewState.knockRequestsCount) : nil,
+                        kind: .navigationLink {
+                            context.send(viewAction: .processTapRequestsToJoin)
+                        })
+            }
+            
+            if context.viewState.canEditRolesOrPermissions, context.viewState.dmRecipientInfo == nil {
+                ListRow(label: .default(title: L10n.screenRoomDetailsRolesAndPermissions, icon: \.admin),
                         kind: .navigationLink {
                             context.send(viewAction: .processTapRolesAndPermissions)
                         })
             }
         }
-        .disabled(context.viewState.notificationSettingsState.isLoading)
     }
     
     private var toggleMuteButton: some View {
@@ -240,11 +274,21 @@ struct RoomDetailsScreen: View {
     }
     
     private var leaveRoomTitle: String {
-        context.viewState.dmRecipient == nil ? L10n.screenRoomDetailsLeaveRoomTitle : L10n.screenRoomDetailsLeaveConversationTitle
+        context.viewState.dmRecipientInfo == nil ? L10n.screenRoomDetailsLeaveRoomTitle : L10n.screenRoomDetailsLeaveConversationTitle
+    }
+    
+    private var reportRoomTitle: String {
+        context.viewState.dmRecipientInfo == nil ? L10n.actionReportRoom : L10n.actionReportDm
     }
 
     private var leaveRoomSection: some View {
         Section {
+            if context.viewState.reportRoomEnabled {
+                ListRow(label: .action(title: reportRoomTitle,
+                                       icon: \.chatProblem,
+                                       role: .destructive),
+                        kind: .button { context.send(viewAction: .processTapReport) })
+            }
             ListRow(label: .action(title: leaveRoomTitle,
                                    icon: \.leave,
                                    role: .destructive),
@@ -294,100 +338,156 @@ struct RoomDetailsScreen: View {
 // MARK: - Previews
 
 struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
-    static let genericRoomViewModel = {
+    static let genericRoomViewModel = makeGenericRoomViewModel()
+    static let simpleRoomViewModel = makeSimpleRoomViewModel()
+    static let dmRoomViewModel = makeDMViewModel(verificationState: .notVerified)
+    static let dmRoomVerifiedViewModel = makeDMViewModel(verificationState: .verified)
+    static let dmRoomVerificationViolationViewModel = makeDMViewModel(verificationState: .verificationViolation)
+    
+    static var previews: some View {
+        RoomDetailsScreen(context: genericRoomViewModel.context)
+            .snapshotPreferences(expect: genericRoomViewModel.context.$viewState.map { state in
+                state.shortcuts.contains(.invite)
+            })
+            .previewDisplayName("Generic Room")
+        
+        RoomDetailsScreen(context: simpleRoomViewModel.context)
+            .snapshotPreferences(expect: simpleRoomViewModel.context.$viewState.map { state in
+                state.shortcuts.contains(.invite)
+            })
+            .previewDisplayName("Simple Room")
+        
+        RoomDetailsScreen(context: dmRoomViewModel.context)
+            .snapshotPreferences(expect: dmRoomViewModel.context.$viewState.map { state in
+                state.accountOwner != nil
+            })
+            .previewDisplayName("DM Room")
+        
+        RoomDetailsScreen(context: dmRoomVerifiedViewModel.context)
+            .snapshotPreferences(expect: dmRoomVerifiedViewModel.context.$viewState.map { state in
+                state.accountOwner != nil
+            })
+            .previewDisplayName("DM Room Verified")
+        
+        RoomDetailsScreen(context: dmRoomVerificationViolationViewModel.context)
+            .snapshotPreferences(expect: dmRoomVerificationViolationViewModel.context.$viewState.map { state in
+                state.accountOwner != nil
+            })
+            .previewDisplayName("DM Room Verification Violation")
+    }
+    
+    private static func makeGenericRoomViewModel() -> RoomDetailsScreenViewModel {
+        ServiceLocator.shared.settings.knockingEnabled = true
+        let knockRequests: [KnockRequestProxyMock] = [.init()]
+        
         let members: [RoomMemberProxyMock] = [
             .mockMeAdmin,
             .mockAlice,
             .mockBob,
             .mockCharlie
         ]
-        let roomProxy = RoomProxyMock(.init(id: "room_a_id",
-                                            name: "Room A",
-                                            topic: """
-                                            Discussions about Element X iOS | https://github.com/vector-im/element-x-ios
-                                            
-                                            Feature Status: https://github.com/vector-im/element-x-ios/issues/1225
-                                            
-                                            App Store: https://apple.co/3r6LJHZ
-                                            TestFlight: https://testflight.apple.com/join/uZbeZCOi
-                                            """,
-                                            isDirect: false,
-                                            isEncrypted: true,
-                                            canonicalAlias: "#alias:domain.com",
-                                            members: members))
         
-        var notificationSettingsProxyMockConfiguration = NotificationSettingsProxyMockConfiguration()
+        let roomProxy = JoinedRoomProxyMock(.init(id: "room_a_id",
+                                                  name: "Room A",
+                                                  topic: """
+                                                  Discussions about Element X iOS | https://github.com/vector-im/element-x-ios
+                                                  
+                                                  Feature Status: https://github.com/vector-im/element-x-ios/issues/1225
+                                                  
+                                                  App Store: https://apple.co/3r6LJHZ
+                                                  TestFlight: https://testflight.apple.com/join/uZbeZCOi
+                                                  """,
+                                                  isDirect: false,
+                                                  isEncrypted: true,
+                                                  canonicalAlias: "#alias:domain.com",
+                                                  members: members,
+                                                  knockRequestsState: .loaded(knockRequests),
+                                                  joinRule: .knock))
+        
+        let notificationSettingsProxyMockConfiguration = NotificationSettingsProxyMockConfiguration()
         notificationSettingsProxyMockConfiguration.roomMode.isDefault = false
-        let notificationSettingsProxy = NotificationSettingsProxyMock(with: notificationSettingsProxyMockConfiguration)
-        let appSettings = AppSettings()
         
-        return RoomDetailsScreenViewModel(roomProxy: roomProxy,
-                                          clientProxy: ClientProxyMock(.init()),
-                                          mediaProvider: MockMediaProvider(),
-                                          analyticsService: ServiceLocator.shared.analytics,
-                                          userIndicatorController: ServiceLocator.shared.userIndicatorController,
-                                          notificationSettingsProxy: notificationSettingsProxy,
-                                          attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()))
-    }()
+        let notificationSettingsProxy = NotificationSettingsProxyMock(with: notificationSettingsProxyMockConfiguration)
+        
+        return .init(roomProxy: roomProxy,
+                     clientProxy: ClientProxyMock(.init()),
+                     mediaProvider: MediaProviderMock(configuration: .init()),
+                     analyticsService: ServiceLocator.shared.analytics,
+                     userIndicatorController: ServiceLocator.shared.userIndicatorController,
+                     notificationSettingsProxy: notificationSettingsProxy,
+                     attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()),
+                     appMediator: AppMediatorMock.default,
+                     appSettings: ServiceLocator.shared.settings)
+    }
     
-    static let dmRoomViewModel = {
+    private static func makeSimpleRoomViewModel() -> RoomDetailsScreenViewModel {
+        ServiceLocator.shared.settings.knockingEnabled = true
+        let knockRequests: [KnockRequestProxyMock] = [.init()]
+        
+        let members: [RoomMemberProxyMock] = [
+            .mockMeAdmin,
+            .mockAlice,
+            .mockBob,
+            .mockCharlie
+        ]
+        let roomProxy = JoinedRoomProxyMock(.init(id: "simple_room_id",
+                                                  name: "Room A",
+                                                  isDirect: false,
+                                                  isEncrypted: false,
+                                                  members: members,
+                                                  knockRequestsState: .loaded(knockRequests),
+                                                  joinRule: .knock))
+        
+        let notificationSettingsProxy = NotificationSettingsProxyMock(with: .init())
+        
+        return .init(roomProxy: roomProxy,
+                     clientProxy: ClientProxyMock(.init()),
+                     mediaProvider: MediaProviderMock(configuration: .init()),
+                     analyticsService: ServiceLocator.shared.analytics,
+                     userIndicatorController: ServiceLocator.shared.userIndicatorController,
+                     notificationSettingsProxy: notificationSettingsProxy,
+                     attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()),
+                     appMediator: AppMediatorMock.default,
+                     appSettings: ServiceLocator.shared.settings)
+    }
+    
+    private static func makeDMViewModel(verificationState: UserIdentityVerificationState) -> RoomDetailsScreenViewModel {
         let members: [RoomMemberProxyMock] = [
             .mockMe,
             .mockDan
         ]
         
-        let roomProxy = RoomProxyMock(.init(id: "dm_room_id",
-                                            name: "DM Room",
-                                            topic: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                                            isDirect: true,
-                                            isEncrypted: true,
-                                            canonicalAlias: "#alias:domain.com",
-                                            members: members))
-        let notificationSettingsProxy = NotificationSettingsProxyMock(with: .init())
-        let appSettings = AppSettings()
+        let roomProxy = JoinedRoomProxyMock(.init(id: "dm_room_id",
+                                                  name: "Dan",
+                                                  topic: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                                                  isDirect: true,
+                                                  isEncrypted: true,
+                                                  members: members,
+                                                  heroes: [.mockDan]))
         
-        return RoomDetailsScreenViewModel(roomProxy: roomProxy,
-                                          clientProxy: ClientProxyMock(.init()),
-                                          mediaProvider: MockMediaProvider(),
-                                          analyticsService: ServiceLocator.shared.analytics,
-                                          userIndicatorController: ServiceLocator.shared.userIndicatorController,
-                                          notificationSettingsProxy: notificationSettingsProxy,
-                                          attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()))
-    }()
-    
-    static let simpleRoomViewModel = {
-        let members: [RoomMemberProxyMock] = [
-            .mockMeAdmin,
-            .mockAlice,
-            .mockBob,
-            .mockCharlie
-        ]
-        let roomProxy = RoomProxyMock(.init(id: "simple_room_id",
-                                            name: "Room A",
-                                            isDirect: false,
-                                            isEncrypted: false,
-                                            members: members))
-        let notificationSettingsProxy = NotificationSettingsProxyMock(with: .init())
-        let appSettings = AppSettings()
+        let clientProxyMock = ClientProxyMock(.init())
         
-        return RoomDetailsScreenViewModel(roomProxy: roomProxy,
-                                          clientProxy: ClientProxyMock(.init()),
-                                          mediaProvider: MockMediaProvider(),
-                                          analyticsService: ServiceLocator.shared.analytics,
-                                          userIndicatorController: ServiceLocator.shared.userIndicatorController,
-                                          notificationSettingsProxy: notificationSettingsProxy,
-                                          attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()))
-    }()
-    
-    static var previews: some View {
-        RoomDetailsScreen(context: simpleRoomViewModel.context)
-            .previewDisplayName("Simple Room")
-            .snapshot(delay: 2)
-        RoomDetailsScreen(context: dmRoomViewModel.context)
-            .previewDisplayName("DM Room")
-            .snapshot(delay: 0.25)
-        RoomDetailsScreen(context: genericRoomViewModel.context)
-            .previewDisplayName("Generic Room")
-            .snapshot(delay: 0.25)
+        clientProxyMock.userIdentityForClosure = { userID in
+            let identity = switch userID {
+            case RoomMemberProxyMock.mockDan.userID:
+                UserIdentityProxyMock(configuration: .init(verificationState: verificationState))
+            default:
+                UserIdentityProxyMock(configuration: .init())
+            }
+            
+            return .success(identity)
+        }
+        
+        let notificationSettingsProxy = NotificationSettingsProxyMock(with: .init())
+        
+        return .init(roomProxy: roomProxy,
+                     clientProxy: clientProxyMock,
+                     mediaProvider: MediaProviderMock(configuration: .init()),
+                     analyticsService: ServiceLocator.shared.analytics,
+                     userIndicatorController: ServiceLocator.shared.userIndicatorController,
+                     notificationSettingsProxy: notificationSettingsProxy,
+                     attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()),
+                     appMediator: AppMediatorMock.default,
+                     appSettings: ServiceLocator.shared.settings)
     }
 }

@@ -1,20 +1,17 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 import XCTest
 
 class KeychainControllerTests: XCTestCase {
@@ -39,10 +36,11 @@ class KeychainControllerTests: XCTestCase {
                                                                deviceId: "deviceId",
                                                                homeserverUrl: "homeserverUrl",
                                                                oidcData: "oidcData",
-                                                               slidingSyncProxy: "https://my.sync.proxy"),
-                                                sessionDirectory: .homeDirectory.appending(component: UUID().uuidString),
+                                                               slidingSyncVersion: .native),
+                                                sessionDirectories: .init(),
                                                 passphrase: "passphrase",
-                                                pusherNotificationClientIdentifier: "pusherClientID")
+                                                pusherNotificationClientIdentifier: "pusherClientID",
+                                                slidingSyncProxyURLString: "https://my.sync.proxy")
         keychain.setRestorationToken(restorationToken, forUsername: username)
         
         // Then the restoration token should be stored in the keychain.
@@ -58,10 +56,11 @@ class KeychainControllerTests: XCTestCase {
                                                                deviceId: "deviceId",
                                                                homeserverUrl: "homeserverUrl",
                                                                oidcData: "oidcData",
-                                                               slidingSyncProxy: "https://my.sync.proxy"),
-                                                sessionDirectory: .homeDirectory.appending(component: UUID().uuidString),
+                                                               slidingSyncVersion: .native),
+                                                sessionDirectories: .init(),
                                                 passphrase: "passphrase",
-                                                pusherNotificationClientIdentifier: "pusherClientID")
+                                                pusherNotificationClientIdentifier: "pusherClientID",
+                                                slidingSyncProxyURLString: "https://my.sync.proxy")
         keychain.setRestorationToken(restorationToken, forUsername: username)
         XCTAssertEqual(keychain.restorationTokens().count, 1, "The keychain should have 1 restoration token.")
         XCTAssertEqual(keychain.restorationTokenForUsername(username), restorationToken, "The initial restoration token should match the value that was stored.")
@@ -83,10 +82,11 @@ class KeychainControllerTests: XCTestCase {
                                                                    deviceId: "deviceId",
                                                                    homeserverUrl: "homeserverUrl",
                                                                    oidcData: "oidcData",
-                                                                   slidingSyncProxy: "https://my.sync.proxy"),
-                                                    sessionDirectory: .homeDirectory.appending(component: UUID().uuidString),
+                                                                   slidingSyncVersion: .native),
+                                                    sessionDirectories: .init(),
                                                     passphrase: "passphrase",
-                                                    pusherNotificationClientIdentifier: "pusherClientID")
+                                                    pusherNotificationClientIdentifier: "pusherClientID",
+                                                    slidingSyncProxyURLString: "https://my.sync.proxy")
             keychain.setRestorationToken(restorationToken, forUsername: "@test\(index):example.com")
         }
         XCTAssertEqual(keychain.restorationTokens().count, 5, "The keychain should have 5 restoration tokens.")
@@ -107,10 +107,11 @@ class KeychainControllerTests: XCTestCase {
                                                                    deviceId: "deviceId",
                                                                    homeserverUrl: "homeserverUrl",
                                                                    oidcData: "oidcData",
-                                                                   slidingSyncProxy: "https://my.sync.proxy"),
-                                                    sessionDirectory: .homeDirectory.appending(component: UUID().uuidString),
+                                                                   slidingSyncVersion: .native),
+                                                    sessionDirectories: .init(),
                                                     passphrase: "passphrase",
-                                                    pusherNotificationClientIdentifier: "pusherClientID")
+                                                    pusherNotificationClientIdentifier: "pusherClientID",
+                                                    slidingSyncProxyURLString: "https://my.sync.proxy")
             keychain.setRestorationToken(restorationToken, forUsername: "@test\(index):example.com")
         }
         XCTAssertEqual(keychain.restorationTokens().count, 5, "The keychain should have 5 restoration tokens.")
@@ -125,6 +126,29 @@ class KeychainControllerTests: XCTestCase {
         XCTAssertNil(keychain.restorationTokenForUsername("@test2:example.com"), "The restoration token should have been deleted.")
         XCTAssertNotNil(keychain.restorationTokenForUsername("@test3:example.com"), "The restoration token should not have been deleted.")
         XCTAssertNotNil(keychain.restorationTokenForUsername("@test4:example.com"), "The restoration token should not have been deleted.")
+    }
+    
+    func testSimplifiedSlidingSyncRestorationToken() {
+        // Given an empty keychain.
+        XCTAssertTrue(keychain.restorationTokens().isEmpty, "The keychain should be empty to begin with.")
+        
+        // When adding an restoration token that doesn't contain a sliding sync proxy (e.g. for SSS).
+        let username = "@test:example.com"
+        let restorationToken = RestorationToken(session: .init(accessToken: "accessToken",
+                                                               refreshToken: "refreshToken",
+                                                               userId: "userId",
+                                                               deviceId: "deviceId",
+                                                               homeserverUrl: "homeserverUrl",
+                                                               oidcData: "oidcData",
+                                                               slidingSyncVersion: .native),
+                                                sessionDirectories: .init(),
+                                                passphrase: "passphrase",
+                                                pusherNotificationClientIdentifier: "pusherClientID",
+                                                slidingSyncProxyURLString: nil)
+        keychain.setRestorationToken(restorationToken, forUsername: username)
+        
+        // Then decoding the restoration token from the keychain should still work.
+        XCTAssertEqual(keychain.restorationTokenForUsername(username), restorationToken, "The retrieved restoration token should match the value that was stored.")
     }
     
     func testAddPINCode() throws {

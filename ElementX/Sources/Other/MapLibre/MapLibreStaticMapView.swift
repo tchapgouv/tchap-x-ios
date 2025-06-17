@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import CoreLocation
@@ -20,7 +11,7 @@ import SwiftUI
 struct MapLibreStaticMapView<PinAnnotation: View>: View {
     private let coordinates: CLLocationCoordinate2D
     private let zoomLevel: Double
-    private let mapTilerStatic: MapTilerStaticMapProtocol
+    private let mapURLBuilder: MapTilerURLBuilderProtocol
     private let mapTilerAttributionPlacement: MapTilerAttributionPlacement
     private let mapSize: CGSize
     private let pinAnnotationView: PinAnnotation
@@ -31,12 +22,12 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
     init(coordinates: CLLocationCoordinate2D,
          zoomLevel: Double,
          attributionPlacement: MapTilerAttributionPlacement,
-         mapTilerStatic: MapTilerStaticMapProtocol,
+         mapURLBuilder: MapTilerURLBuilderProtocol,
          mapSize: CGSize,
          @ViewBuilder pinAnnotationView: () -> PinAnnotation) {
         self.coordinates = coordinates
         self.zoomLevel = zoomLevel
-        self.mapTilerStatic = mapTilerStatic
+        self.mapURLBuilder = mapURLBuilder
         mapTilerAttributionPlacement = attributionPlacement
         self.mapSize = mapSize
         self.pinAnnotationView = pinAnnotationView()
@@ -44,11 +35,11 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
     
     var body: some View {
         GeometryReader { geometry in
-            if let url = mapTilerStatic.staticMapURL(for: colorScheme.mapStyle,
-                                                     coordinates: coordinates,
-                                                     zoomLevel: zoomLevel,
-                                                     size: mapSize, // temporary using a fixed size since the refresh doesn't work properly on the UITableView based timeline
-                                                     attribution: mapTilerAttributionPlacement) {
+            if let url = mapURLBuilder.staticMapURL(for: colorScheme.mapStyle,
+                                                    coordinates: coordinates,
+                                                    zoomLevel: zoomLevel,
+                                                    size: mapSize, // temporary using a fixed size since the refresh doesn't work properly on the UITableView based timeline
+                                                    attribution: mapTilerAttributionPlacement) {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .empty:
@@ -75,7 +66,7 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
     }
 
     private var placeholderImage: some View {
-        Image("mapBlurred")
+        Image(asset: Asset.Images.mapBlurred)
             .resizable()
             .scaledToFill()
     }
@@ -113,15 +104,22 @@ struct MapLibreStaticMapView_Previews: PreviewProvider, TestablePreview {
         MapLibreStaticMapView(coordinates: CLLocationCoordinate2D(),
                               zoomLevel: 15,
                               attributionPlacement: .bottomLeft,
-                              mapTilerStatic: MapTilerStaticMapMock(), mapSize: .init(width: 300, height: 200)) {
+                              mapURLBuilder: MapTilerURLBuilderMock(),
+                              mapSize: .init(width: 300, height: 200)) {
             Image(systemName: "mappin.circle.fill")
                 .padding(.bottom, 35)
         }
     }
 }
 
-private struct MapTilerStaticMapMock: MapTilerStaticMapProtocol {
-    func staticMapURL(for style: MapTilerStyle, coordinates: CLLocationCoordinate2D, zoomLevel: Double, size: CGSize, attribution: MapTilerAttributionPlacement) -> URL? {
+private struct MapTilerURLBuilderMock: MapTilerURLBuilderProtocol {
+    func dynamicMapURL(for style: MapTilerStyle) -> URL? { nil }
+    
+    func staticMapURL(for style: MapTilerStyle,
+                      coordinates: CLLocationCoordinate2D,
+                      zoomLevel: Double,
+                      size: CGSize,
+                      attribution: MapTilerAttributionPlacement) -> URL? {
         switch style {
         case .light:
             return URL(string: "https://www.maptiler.com/img/cloud/home/map5.webp")

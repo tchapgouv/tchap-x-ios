@@ -1,17 +1,8 @@
 //
-// Copyright 2021 New Vector Ltd
+// Copyright 2021-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import AnalyticsEvents
@@ -40,23 +31,15 @@ class AnalyticsService {
     /// `isRunning` state or behave any differently when `start`/`reset` are called.
     let signpost = Signposter()
     
-    /// Whether or not the object is enabled and sending events to the server.
-    private let isRunningSubject: CurrentValueSubject<Bool, Never> = .init(false)
-    var isRunningPublisher: CurrentValuePublisher<Bool, Never> {
-        isRunningSubject.asCurrentValuePublisher()
-    }
-
     init(client: AnalyticsClientProtocol, appSettings: AppSettings) {
         self.client = client
         self.appSettings = appSettings
-        
-        isRunningSubject.send(client.isRunning)
     }
     
     /// Whether to show the user the analytics opt in prompt.
     var shouldShowAnalyticsPrompt: Bool {
         // Only show the prompt once, and when analytics are enabled in BuildSettings.
-        appSettings.analyticsConsentState == .unknown && appSettings.analyticsConfiguration.isEnabled
+        appSettings.analyticsConsentState == .unknown && appSettings.canPromptForAnalytics
     }
     
     var isEnabled: Bool {
@@ -76,21 +59,19 @@ class AnalyticsService {
         // The order is important here. PostHog ignores the reset if stopped.
         reset()
         client.stop()
-        
-        isRunningSubject.send(false)
+
         MXLog.info("Stopped.")
     }
     
     /// Starts the analytics client if the user has opted in, otherwise does nothing.
     func startIfEnabled() {
-        guard isEnabled, !isRunningPublisher.value else { return }
+        guard isEnabled, !client.isRunning, let configuration = appSettings.analyticsConfiguration else { return }
         
-        client.start(analyticsConfiguration: appSettings.analyticsConfiguration)
+        client.start(analyticsConfiguration: configuration)
 
         // Sanity check in case something went wrong.
         guard client.isRunning else { return }
         
-        isRunningSubject.send(true)
         MXLog.info("Started.")
     }
     
@@ -141,19 +122,26 @@ extension AnalyticsService {
     /// - Parameter name: The name of the error
     /// - Parameter timeToDecryptMillis: The time it took to decrypt the event in milliseconds, needs to be used only to track UTD errors, otherwise if the error is nort related to UTD it should be nil.
     /// Can be found in `UnableToDecryptInfo`. In case the `UnableToDecryptInfo` contains the value as nil, pass it as `-1`
-    func trackError(context: String?, domain: AnalyticsEvent.Error.Domain, name: AnalyticsEvent.Error.Name, timeToDecryptMillis: Int? = nil) {
+    func trackError(context: String?, domain: AnalyticsEvent.Error.Domain,
+                    name: AnalyticsEvent.Error.Name,
+                    timeToDecryptMillis: Int? = nil,
+                    eventLocalAgeMillis: Int? = nil,
+                    isFederated: Bool? = nil,
+                    isMatrixDotOrg: Bool? = nil,
+                    userTrustsOwnIdentity: Bool? = nil,
+                    wasVisibleToUser: Bool? = nil) {
         // CryptoModule is deprecated
         capture(event: AnalyticsEvent.Error(context: context,
                                             cryptoModule: .Rust,
                                             cryptoSDK: .Rust,
                                             domain: domain,
-                                            eventLocalAgeMillis: nil,
-                                            isFederated: nil,
-                                            isMatrixDotOrg: nil,
+                                            eventLocalAgeMillis: eventLocalAgeMillis,
+                                            isFederated: isFederated,
+                                            isMatrixDotOrg: isMatrixDotOrg,
                                             name: name,
                                             timeToDecryptMillis: timeToDecryptMillis,
-                                            userTrustsOwnIdentity: nil,
-                                            wasVisibleToUser: nil))
+                                            userTrustsOwnIdentity: userTrustsOwnIdentity,
+                                            wasVisibleToUser: wasVisibleToUser))
     }
     
     /// Track the creation of a room
@@ -261,5 +249,9 @@ extension AnalyticsService {
     
     func updateUserProperties(_ userProperties: AnalyticsEvent.UserProperties) {
         client.updateUserProperties(userProperties)
+    }
+    
+    func trackPinUnpinEvent(_ event: AnalyticsEvent.PinUnpinAction) {
+        capture(event: event)
     }
 }

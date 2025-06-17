@@ -1,17 +1,8 @@
 //
-// Copyright 2021 New Vector Ltd
+// Copyright 2021-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -42,17 +33,21 @@ struct AnalyticsPromptScreenStrings {
     let point2 = L10n.screenAnalyticsPromptThirdPartySharing
     let point3 = L10n.screenAnalyticsPromptSettings
     
-    init(termsURL: URL) {
+    init(termsURL: URL?) {
         let content = AttributedString(L10n.screenAnalyticsPromptHelpUsImprove)
         
-        // Create the 'read terms' with a placeholder.
-        let linkPlaceholder = "{link}"
-        var readTerms = AttributedString(L10n.screenAnalyticsSettingsReadTerms(linkPlaceholder))
-        var linkString = AttributedString(L10n.screenAnalyticsSettingsReadTermsContentLink)
-        linkString.link = termsURL
-        linkString.bold()
-        readTerms.replace(linkPlaceholder, with: linkString)
-        
-        optInContent = content + "\n\n" + readTerms
+        if let termsURL {
+            // Create the 'read terms' with a placeholder.
+            let linkPlaceholder = "{link}"
+            var readTerms = AttributedString(L10n.screenAnalyticsSettingsReadTerms(linkPlaceholder))
+            var linkString = AttributedString(L10n.screenAnalyticsSettingsReadTermsContentLink)
+            linkString.link = termsURL
+            linkString.bold()
+            readTerms.replace(linkPlaceholder, with: linkString)
+            
+            optInContent = content + "\n\n" + readTerms
+        } else {
+            optInContent = content
+        }
     }
 }

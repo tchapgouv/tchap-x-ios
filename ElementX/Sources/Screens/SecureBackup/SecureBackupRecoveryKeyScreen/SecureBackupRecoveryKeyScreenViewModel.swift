@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -37,19 +28,6 @@ class SecureBackupRecoveryKeyScreenViewModel: SecureBackupRecoveryKeyScreenViewM
         super.init(initialViewState: .init(isModallyPresented: isModallyPresented,
                                            mode: secureBackupController.recoveryState.value.viewMode,
                                            bindings: .init()))
-        
-        secureBackupController.recoveryState
-            .receive(on: DispatchQueue.main)
-            .sink(receiveValue: { [weak userIndicatorController] state in
-                let loadingIndicatorIdentifier = "SecureBackupRecoveryKeyScreenLoading"
-                switch state {
-                case .settingUp:
-                    userIndicatorController?.submitIndicator(.init(id: loadingIndicatorIdentifier, type: .modal, title: L10n.commonLoading, persistent: true))
-                default:
-                    userIndicatorController?.retractIndicatorWithId(loadingIndicatorIdentifier)
-                }
-            })
-            .store(in: &cancellables)
     }
     
     // MARK: - Public
@@ -59,6 +37,8 @@ class SecureBackupRecoveryKeyScreenViewModel: SecureBackupRecoveryKeyScreenViewM
         
         switch viewAction {
         case .generateKey:
+            state.isGeneratingKey = true
+            
             Task {
                 switch await secureBackupController.generateRecoveryKey() {
                 case .success(let key):
@@ -67,6 +47,8 @@ class SecureBackupRecoveryKeyScreenViewModel: SecureBackupRecoveryKeyScreenViewM
                     MXLog.error("Failed generating recovery key with error: \(error)")
                     state.bindings.alertInfo = .init(id: .init())
                 }
+                
+                state.isGeneratingKey = false
             }
         case .copyKey:
             UIPasteboard.general.string = state.recoveryKey
@@ -76,18 +58,19 @@ class SecureBackupRecoveryKeyScreenViewModel: SecureBackupRecoveryKeyScreenViewM
             state.doneButtonEnabled = true
         case .confirmKey:
             Task {
-                let loadingIndicatorIdentifier = "SecureBackupRecoveryKeyScreen"
-                userIndicatorController.submitIndicator(.init(id: loadingIndicatorIdentifier, type: .modal, title: L10n.commonLoading, persistent: true))
+                showLoadingIndicator()
                 
                 switch await secureBackupController.confirmRecoveryKey(state.bindings.confirmationRecoveryKey) {
                 case .success:
                     actionsSubject.send(.done(mode: context.viewState.mode))
                 case .failure(let error):
                     MXLog.error("Failed confirming recovery key with error: \(error)")
-                    state.bindings.alertInfo = .init(id: .init())
+                    state.bindings.alertInfo = .init(id: .init(),
+                                                     title: L10n.screenRecoveryKeyConfirmErrorTitle,
+                                                     message: L10n.screenRecoveryKeyConfirmErrorContent)
                 }
                 
-                userIndicatorController.retractIndicatorWithId(loadingIndicatorIdentifier)
+                hideLoadingIndicator()
             }
         case .cancel:
             actionsSubject.send(.cancel)
@@ -95,14 +78,25 @@ class SecureBackupRecoveryKeyScreenViewModel: SecureBackupRecoveryKeyScreenViewM
             state.bindings.alertInfo = .init(id: .init(),
                                              title: L10n.screenRecoveryKeySetupConfirmationTitle,
                                              message: L10n.screenRecoveryKeySetupConfirmationDescription,
-                                             primaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil),
-                                             secondaryButton: .init(title: L10n.actionContinue, action: { [weak self] in
+                                             primaryButton: .init(title: L10n.actionContinue) { [weak self] in
                                                  guard let self else { return }
                                                  actionsSubject.send(.done(mode: context.viewState.mode))
-                                             }))
-        case .resetKey:
-            actionsSubject.send(.showResetKeyInfo)
+                                             },
+                                             secondaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil))
         }
+    }
+    
+    private static let loadingIndicatorIdentifier = "\(SecureBackupRecoveryKeyScreenViewModel.self)-Loading"
+    
+    private func showLoadingIndicator() {
+        userIndicatorController.submitIndicator(UserIndicator(id: Self.loadingIndicatorIdentifier,
+                                                              type: .modal,
+                                                              title: L10n.commonLoading,
+                                                              persistent: true))
+    }
+    
+    private func hideLoadingIndicator() {
+        userIndicatorController.retractIndicatorWithId(Self.loadingIndicatorIdentifier)
     }
 }
 

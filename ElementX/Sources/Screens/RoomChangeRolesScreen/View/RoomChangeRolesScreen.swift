@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -20,9 +11,7 @@ import SwiftUI
 struct RoomChangeRolesScreen: View {
     @ObservedObject var context: RoomChangeRolesScreenViewModel.Context
     
-    var showTopSection: Bool {
-        !context.viewState.membersWithRole.isEmpty || context.viewState.isSearching
-    }
+    var showTopSection: Bool { !context.viewState.membersWithRole.isEmpty }
     
     var body: some View {
         mainContent
@@ -56,14 +45,14 @@ struct RoomChangeRolesScreen: View {
                     }
                 }
                 
-                RoomChangeRolesScreenSection(members: context.viewState.administrators,
+                RoomChangeRolesScreenSection(members: context.viewState.visibleAdministrators,
                                              title: L10n.screenRoomChangeRoleSectionAdministrators,
                                              isAdministratorsSection: true,
                                              context: context)
-                RoomChangeRolesScreenSection(members: context.viewState.moderators,
+                RoomChangeRolesScreenSection(members: context.viewState.visibleModerators,
                                              title: L10n.screenRoomChangeRoleSectionModerators,
                                              context: context)
-                RoomChangeRolesScreenSection(members: context.viewState.users,
+                RoomChangeRolesScreenSection(members: context.viewState.visibleUsers,
                                              title: L10n.screenRoomChangeRoleSectionUsers,
                                              context: context)
             }
@@ -76,14 +65,14 @@ struct RoomChangeRolesScreen: View {
             ScrollViewReader { scrollView in
                 HStack(spacing: 16) {
                     ForEach(context.viewState.membersWithRole, id: \.id) { member in
-                        RoomChangeRolesScreenSelectedItem(member: member, imageProvider: context.imageProvider) {
+                        RoomChangeRolesScreenSelectedItem(member: member, mediaProvider: context.mediaProvider) {
                             context.send(viewAction: .demoteMember(member))
                         }
                         .frame(width: cellWidth)
                     }
                 }
-                .onChange(of: context.viewState.lastPromotedMember) { member in
-                    guard let member else { return }
+                .onChange(of: context.viewState.lastPromotedMember) { _, newValue in
+                    guard let member = newValue else { return }
                     withElementAnimation(.easeInOut) {
                         scrollView.scrollTo(member.id)
                     }
@@ -132,8 +121,8 @@ struct RoomChangeRolesScreen_Previews: PreviewProvider, TestablePreview {
     
     static func makeViewModel(mode: RoomMemberDetails.Role) -> RoomChangeRolesScreenViewModel {
         RoomChangeRolesScreenViewModel(mode: mode,
-                                       roomProxy: RoomProxyMock(.init(members: .allMembersAsAdmin)),
-                                       mediaProvider: MockMediaProvider(),
+                                       roomProxy: JoinedRoomProxyMock(.init(members: .allMembersAsAdmin)),
+                                       mediaProvider: MediaProviderMock(configuration: .init()),
                                        userIndicatorController: UserIndicatorControllerMock(),
                                        analytics: ServiceLocator.shared.analytics)
     }

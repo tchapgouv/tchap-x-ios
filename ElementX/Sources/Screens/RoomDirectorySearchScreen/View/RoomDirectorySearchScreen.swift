@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -25,7 +16,7 @@ struct RoomDirectorySearchScreen: View {
             List {
                 Section {
                     ForEach(context.viewState.rooms) { room in
-                        RoomDirectorySearchCell(result: room, imageProvider: context.imageProvider) {
+                        RoomDirectorySearchCell(result: room, mediaProvider: context.mediaProvider) {
                             context.send(viewAction: .select(room: room))
                         }
                     }
@@ -40,14 +31,12 @@ struct RoomDirectorySearchScreen: View {
                                 .foregroundColor(.compound.textSecondary)
                                 .frame(maxWidth: .infinity)
                                 .accessibilityIdentifier(A11yIdentifiers.startChatScreen.searchNoResults)
-                        } else {
-                            // This needs to be in the else as when you start a search, the results are cleared making the footer visible.
-                            // We only want to trigger the pagination when the state is not loading.
-                            emptyRectangle
-                                .onAppear {
-                                    context.send(viewAction: .reachedBottom)
-                                }
                         }
+                        
+                        emptyRectangle
+                            .onAppear {
+                                context.send(viewAction: .reachedBottom)
+                            }
                     }
                     .listRowSeparator(.hidden)
                 }
@@ -58,7 +47,7 @@ struct RoomDirectorySearchScreen: View {
             .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
             .isSearching($context.isSearching)
             .searchable(text: $context.searchString, placement: .navigationBarDrawer(displayMode: .always))
-            .navigationTitle(L10n.screenRoomDirectorySearchTitle)
+            .navigationTitle(TchapL10n.screenRoomDirectorySearchTitle) // Tchap: use Tchap title
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -85,13 +74,17 @@ struct RoomDirectorySearchScreen_Previews: PreviewProvider, TestablePreview {
                                                  alias: "#test_1:example.com",
                                                  name: "Test 1",
                                                  topic: "Test description 1",
-                                                 avatarURL: nil,
+                                                 avatar: .room(id: "test_1",
+                                                               name: "Test 1",
+                                                               avatarURL: nil),
                                                  canBeJoined: true),
                        RoomDirectorySearchResult(id: "test_2",
                                                  alias: "#test_2:example.com",
                                                  name: "Test 2",
                                                  topic: nil,
-                                                 avatarURL: URL.documentsDirectory,
+                                                 avatar: .room(id: "test_2",
+                                                               name: "Test 2",
+                                                               avatarURL: .mockMXCAvatar),
                                                  canBeJoined: false)]
         
         let roomDirectorySearchProxy = RoomDirectorySearchProxyMock(configuration: .init(results: results))
@@ -100,11 +93,10 @@ struct RoomDirectorySearchScreen_Previews: PreviewProvider, TestablePreview {
         
         return RoomDirectorySearchScreenViewModel(clientProxy: clientProxy,
                                                   userIndicatorController: UserIndicatorControllerMock(),
-                                                  imageProvider: MockMediaProvider())
+                                                  mediaProvider: MediaProviderMock(configuration: .init()))
     }()
     
     static var previews: some View {
         RoomDirectorySearchScreen(context: viewModel.context)
-            .snapshot(delay: 1.0)
     }
 }

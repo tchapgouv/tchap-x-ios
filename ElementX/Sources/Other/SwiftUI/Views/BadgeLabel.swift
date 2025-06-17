@@ -1,17 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd
+// Copyright 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -21,29 +12,106 @@ struct BadgeLabel: View {
     let title: String
     let icon: KeyPath<CompoundIcons, Image>
     let isHighlighted: Bool
+    let tchapUsage: TchapUsage // Tchap: Tchap usage
+    
+    // Tchap: usage of badges in Tchap, Must be defined in BadgeLabel rather then BadgeLabelStyle because BadgeLabelStyle is private.
+    public enum TchapUsage {
+        case none // By default, keep ElementX behavior.
+        case userIsExternal
+        case roomIsEncrypted
+        case roomIsNotEncrypted
+        case roomIsPublic
+        case roomIsAccessibleToExternals
+    }
+
+    // Tchap: evaluate our own icon size
+    var iconSize: CompoundIcon.Size {
+        switch tchapUsage {
+        case .none: .xSmall
+        case .userIsExternal: .xSmall
+        case .roomIsEncrypted: .xSmall
+        case .roomIsNotEncrypted: .xSmall
+        case .roomIsPublic: .xSmall
+        case .roomIsAccessibleToExternals: .xSmall
+        }
+    }
+
+    // Tchap: convenience init for tchapUsage default value.
+    init(title: String, icon: KeyPath<CompoundIcons, Image>, isHighlighted: Bool, tchapUsage: TchapUsage = .none) {
+        self.title = title
+        self.icon = icon
+        self.isHighlighted = isHighlighted
+        self.tchapUsage = tchapUsage
+    }
     
     var body: some View {
         Label(title,
               icon: icon,
-              iconSize: .xSmall,
+              iconSize: iconSize, // Tchap: use our own icon size
               relativeTo: .compound.bodySM)
-            .labelStyle(BadgeLabelStyle(isHighlighted: isHighlighted))
+            .labelStyle(BadgeLabelStyle(isHighlighted: isHighlighted, tchapUsage: tchapUsage)) // Tchap: add tchapUsage property.
     }
 }
 
 private struct BadgeLabelStyle: LabelStyle {
     let isHighlighted: Bool
-    
+    let tchapUsage: BadgeLabel.TchapUsage // Tchap: add Tchap usage
+
+    // Tchap: evaluate our own color
+//    var titleColor: Color {
+//        isHighlighted ? .compound._badgeTextSuccess : .compound._badgeTextSubtle
+//    }
     var titleColor: Color {
-        isHighlighted ? .compound._badgeTextSuccess : .compound._badgeTextSubtle
+        switch tchapUsage {
+        case .none: isHighlighted ? .compound.textBadgeAccent : .compound.textBadgeInfo
+        case .userIsExternal: CompoundCoreColorTokens.orange1200
+        case .roomIsEncrypted: CompoundCoreColorTokens.green1200
+        case .roomIsNotEncrypted: CompoundCoreColorTokens.gray1200
+        case .roomIsPublic: CompoundCoreColorTokens.gray1200
+        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange1200
+        }
     }
     
+    // Tchap: evaluate our own color
+//    var iconColor: Color {
+//        isHighlighted ? .compound.iconSuccessPrimary : .compound.iconSecondary
+//    }
     var iconColor: Color {
-        isHighlighted ? .compound.iconSuccessPrimary : .compound.iconSecondary
+        switch tchapUsage {
+        case .none: isHighlighted ? .compound.iconSuccessPrimary : .compound.iconInfoPrimary
+        case .userIsExternal: CompoundCoreColorTokens.orange1200
+        case .roomIsEncrypted: CompoundCoreColorTokens.green1200
+        case .roomIsNotEncrypted: CompoundCoreColorTokens.gray1200
+        case .roomIsPublic: CompoundCoreColorTokens.gray1200
+        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange1200
+        }
+    }
+
+    // Tchap: evaluate our own color
+//    var backgroundColor: Color {
+//        isHighlighted ? .compound._bgBadgeSuccess : .compound.bgSubtlePrimary
+//    }
+    var backgroundColor: Color {
+        switch tchapUsage {
+        case .none: isHighlighted ? .compound.bgBadgeAccent : .compound.bgBadgeInfo
+        case .userIsExternal: CompoundCoreColorTokens.orange400
+        case .roomIsEncrypted: CompoundCoreColorTokens.green400
+        case .roomIsNotEncrypted: CompoundCoreColorTokens.gray400
+        case .roomIsPublic: CompoundCoreColorTokens.gray400
+        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange400
+        }
     }
     
-    var backgroundColor: Color {
-        isHighlighted ? .compound._bgBadgeSuccess : .compound.bgSubtlePrimary
+    // Tchap: evaluate font on usage
+    var font: Font {
+        switch tchapUsage {
+        case .none: .compound.bodySM
+        case .userIsExternal: .compound.bodySMSemibold
+        case .roomIsEncrypted: .system(size: 9.0).bold()
+        case .roomIsNotEncrypted: .system(size: 9.0).bold()
+        case .roomIsPublic: .system(size: 9.0).bold()
+        case .roomIsAccessibleToExternals: .system(size: 9.0).bold()
+        }
     }
     
     func makeBody(configuration: Configuration) -> some View {
@@ -53,7 +121,7 @@ private struct BadgeLabelStyle: LabelStyle {
             configuration.title
                 .foregroundStyle(titleColor)
         }
-        .font(.compound.bodySM)
+        .font(font)
         .padding(.leading, 8)
         .padding(.trailing, 12)
         .padding(.vertical, 4)

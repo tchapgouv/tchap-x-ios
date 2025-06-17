@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -21,94 +12,50 @@ import Sentry
 import UIKit
 
 class BugReportService: NSObject, BugReportServiceProtocol {
-    private let baseURL: URL
-    private let sentryURL: URL
-    private let applicationId: String
+    private let baseURL: URL?
+    private let applicationID: String
     private let sdkGitSHA: String
     private let maxUploadSize: Int
     private let session: URLSession
-    private var lastCrashEventId: String?
+    
+    private let appHooks: AppHooks
+    
     private let progressSubject = PassthroughSubject<Double, Never>()
     private var cancellables = Set<AnyCancellable>()
     
-    init(withBaseURL baseURL: URL,
-         sentryURL: URL,
-         applicationId: String,
+    var isEnabled: Bool { baseURL != nil }
+    var lastCrashEventID: String?
+    
+    init(baseURL: URL?,
+         applicationID: String,
          sdkGitSHA: String,
          maxUploadSize: Int,
-         session: URLSession = .shared) {
+         session: URLSession = .shared,
+         appHooks: AppHooks) {
         self.baseURL = baseURL
-        self.sentryURL = sentryURL
-        self.applicationId = applicationId
+        self.applicationID = applicationID
         self.sdkGitSHA = sdkGitSHA
         self.maxUploadSize = maxUploadSize
         self.session = session
+        self.appHooks = appHooks
         super.init()
     }
 
     // MARK: - BugReportServiceProtocol
-
-    var isRunning: Bool {
-        SentrySDK.isEnabled
-    }
     
     var crashedLastRun: Bool {
         SentrySDK.crashedLastRun
-    }
-    
-    func start() {
-        guard !isRunning else { return }
-        
-        SentrySDK.start { options in
-            #if DEBUG
-            options.enabled = false
-            #endif
-            
-            options.dsn = self.sentryURL.absoluteString
-            
-            // Sentry swizzling shows up quite often as the heaviest stack trace when profiling
-            // We don't need any of the features it powers (see docs)
-            options.enableSwizzling = false
-            
-            // WatchdogTermination is currently the top issue but we've had zero complaints
-            // so it might very well just all be false positives
-            options.enableWatchdogTerminationTracking = false
-            
-            // Disabled as it seems to report a lot of false positives
-            options.enableAppHangTracking = false
-            
-            // Most of the network requests are made Rust side, this is useless
-            options.enableNetworkBreadcrumbs = false
-            
-            // Doesn't seem to work at all well with SwiftUI
-            options.enableAutoBreadcrumbTracking = false
-            
-            // Experimental. Stitches stack traces of asynchronous code together
-            options.swiftAsyncStacktraces = true
-
-            // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
-            // We recommend adjusting this value in production.
-            options.tracesSampleRate = 1.0
-            
-            // This callback is only executed once during the entire run of the program to avoid
-            // multiple callbacks if there are multiple crash events to send (see method documentation)
-            options.onCrashedLastRun = { [weak self] event in
-                MXLog.error("Sentry detected a crash in the previous run: \(event.eventId.sentryIdString)")
-                self?.lastCrashEventId = event.eventId.sentryIdString
-            }
-        }
-        MXLog.info("Started.")
-    }
-           
-    func stop() {
-        guard isRunning else { return }
-        SentrySDK.close()
-        MXLog.info("Stopped.")
     }
         
     // swiftlint:disable:next cyclomatic_complexity
     func submitBugReport(_ bugReport: BugReport,
                          progressListener: CurrentValueSubject<Double, Never>) async -> Result<SubmitBugReportResponse, BugReportServiceError> {
+        guard let baseURL else {
+            fatalError("No bug report URL set, the screen should not be shown in this case.")
+        }
+        
+        let bugReport = appHooks.bugReportHook.update(bugReport)
+        
         var params = [
             MultipartFormData(key: "text", type: .text(value: bugReport.text)),
             MultipartFormData(key: "can_contact", type: .text(value: "\(bugReport.canContact)"))
@@ -134,14 +81,14 @@ class BugReportService: NSObject, BugReportServiceProtocol {
         }
         
         if bugReport.includeLogs {
-            let logAttachments = await zipFiles(RustTracing.logFiles)
+            let logAttachments = await zipFiles(Tracing.logFiles)
             for url in logAttachments.files {
                 params.append(MultipartFormData(key: "compressed-log", type: .file(url: url)))
             }
         }
         
-        if let crashEventId = lastCrashEventId {
-            params.append(MultipartFormData(key: "crash_report", type: .text(value: "<https://sentry.tools.element.io/organizations/element/issues/?project=44&query=\(crashEventId)>")))
+        if let crashEventID = lastCrashEventID {
+            params.append(MultipartFormData(key: "crash_report", type: .text(value: "<https://sentry.tools.element.io/organizations/element/issues/?project=44&query=\(crashEventID)>")))
         }
         
         for url in bugReport.files {
@@ -175,14 +122,14 @@ class BugReportService: NSObject, BugReportServiceProtocol {
             let (data, response) = try await session.dataWithRetry(for: request, delegate: self)
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                let errorDescription = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+                let errorDescription = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "Unknown error"
                 MXLog.error("Failed to submit bug report: \(errorDescription)")
                 MXLog.error("Response: \(response)")
                 return .failure(.serverError(response, errorDescription))
             }
             
             guard httpResponse.statusCode == 200 else {
-                let errorDescription = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+                let errorDescription = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "Unknown error"
                 MXLog.error("Failed to submit bug report: \(errorDescription) (\(httpResponse.statusCode))")
                 MXLog.error("Response: \(httpResponse)")
                 return .failure(.httpError(httpResponse, errorDescription))
@@ -193,8 +140,10 @@ class BugReportService: NSObject, BugReportServiceProtocol {
             decoder.keyDecodingStrategy = .convertFromSnakeCase
             let uploadResponse = try decoder.decode(SubmitBugReportResponse.self, from: data)
             
-            if !uploadResponse.reportUrl.isEmpty {
-                lastCrashEventId = nil
+            // Tchap: allow SubmitBugReportResponse to not contains `reportUrl` value.
+//            if !uploadResponse.reportUrl.isEmpty {
+            if !(uploadResponse.reportUrl?.isEmpty ?? false) {
+                lastCrashEventID = nil
             }
             
             MXLog.info("Feedback submitted.")
@@ -209,10 +158,11 @@ class BugReportService: NSObject, BugReportServiceProtocol {
 
     private var defaultParams: [MultipartFormData] {
         let (localTime, utcTime) = localAndUTCTime(for: Date())
+        let version = "\(InfoPlistReader.main.bundleShortVersionString) (\(InfoPlistReader.main.bundleVersion))"
         return [
             MultipartFormData(key: "user_agent", type: .text(value: "iOS")),
-            MultipartFormData(key: "app", type: .text(value: applicationId)),
-            MultipartFormData(key: "version", type: .text(value: InfoPlistReader.main.bundleShortVersionString)),
+            MultipartFormData(key: "app", type: .text(value: applicationID)),
+            MultipartFormData(key: "version", type: .text(value: version)),
             MultipartFormData(key: "build", type: .text(value: InfoPlistReader.main.bundleVersion)),
             MultipartFormData(key: "sdk_sha", type: .text(value: sdkGitSHA)),
             MultipartFormData(key: "os", type: .text(value: os)),
@@ -221,8 +171,7 @@ class BugReportService: NSObject, BugReportServiceProtocol {
             MultipartFormData(key: "fallback_language", type: .text(value: Bundle.app.developmentLocalization ?? "null")),
             MultipartFormData(key: "local_time", type: .text(value: localTime)),
             MultipartFormData(key: "utc_time", type: .text(value: utcTime)),
-            MultipartFormData(key: "base_bundle_identifier", type: .text(value: InfoPlistReader.main.baseBundleIdentifier)),
-            MultipartFormData(key: "rust_tracing_filter", type: .text(value: RustTracing.currentTracingConfiguration?.filter ?? "null"))
+            MultipartFormData(key: "base_bundle_identifier", type: .text(value: InfoPlistReader.main.baseBundleIdentifier))
         ]
     }
 

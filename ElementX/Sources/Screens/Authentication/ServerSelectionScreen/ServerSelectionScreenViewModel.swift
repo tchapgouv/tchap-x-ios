@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -20,7 +11,10 @@ import SwiftUI
 typealias ServerSelectionScreenViewModelType = StateStoreViewModel<ServerSelectionScreenViewState, ServerSelectionScreenViewAction>
 
 class ServerSelectionScreenViewModel: ServerSelectionScreenViewModelType, ServerSelectionScreenViewModelProtocol {
+    private let authenticationService: AuthenticationServiceProtocol
+    private let authenticationFlow: AuthenticationFlow
     private let slidingSyncLearnMoreURL: URL
+    private let userIndicatorController: UserIndicatorControllerProtocol
     
     private var actionsSubject: PassthroughSubject<ServerSelectionScreenViewModelAction, Never> = .init()
     
@@ -28,19 +22,23 @@ class ServerSelectionScreenViewModel: ServerSelectionScreenViewModelType, Server
         actionsSubject.eraseToAnyPublisher()
     }
 
-    init(homeserverAddress: String, slidingSyncLearnMoreURL: URL, isModallyPresented: Bool) {
+    init(authenticationService: AuthenticationServiceProtocol,
+         authenticationFlow: AuthenticationFlow,
+         slidingSyncLearnMoreURL: URL,
+         userIndicatorController: UserIndicatorControllerProtocol) {
+        self.authenticationService = authenticationService
+        self.authenticationFlow = authenticationFlow
         self.slidingSyncLearnMoreURL = slidingSyncLearnMoreURL
-        let bindings = ServerSelectionScreenBindings(homeserverAddress: homeserverAddress)
+        self.userIndicatorController = userIndicatorController
         
-        super.init(initialViewState: ServerSelectionScreenViewState(slidingSyncLearnMoreURL: slidingSyncLearnMoreURL,
-                                                                    bindings: bindings,
-                                                                    isModallyPresented: isModallyPresented))
+        let bindings = ServerSelectionScreenBindings(homeserverAddress: authenticationService.homeserver.value.address)
+        super.init(initialViewState: ServerSelectionScreenViewState(slidingSyncLearnMoreURL: slidingSyncLearnMoreURL, bindings: bindings))
     }
     
     override func process(viewAction: ServerSelectionScreenViewAction) {
         switch viewAction {
         case .confirm:
-            actionsSubject.send(.confirm(homeserverAddress: state.bindings.homeserverAddress))
+            configureHomeserver()
         case .dismiss:
             actionsSubject.send(.dismiss)
         case .clearFooterError:
@@ -48,27 +46,72 @@ class ServerSelectionScreenViewModel: ServerSelectionScreenViewModelType, Server
         }
     }
     
-    func displayError(_ type: ServerSelectionScreenErrorType) {
-        switch type {
-        case .footerMessage(let message):
-            withElementAnimation {
-                state.footerErrorMessage = message
+    // MARK: - Private
+    
+    /// Updates the login flow using the supplied homeserver address, or shows an error when this isn't possible.
+    private func configureHomeserver() {
+        let homeserverAddress = state.bindings.homeserverAddress
+        startLoading()
+        
+        Task {
+            switch await authenticationService.configure(for: homeserverAddress, flow: authenticationFlow) {
+            case .success:
+                MXLog.info("Selected homeserver: \(homeserverAddress)")
+                actionsSubject.send(.updated)
+                stopLoading()
+            case .failure(let error):
+                MXLog.info("Invalid homeserver: \(homeserverAddress)")
+                stopLoading()
+                handleError(error)
             }
-        case .invalidWellKnownAlert(let error):
-            state.bindings.alertInfo = AlertInfo(id: .slidingSyncAlert,
+        }
+    }
+    
+    private func startLoading(label: String = L10n.commonLoading) {
+        userIndicatorController.submitIndicator(UserIndicator(type: .modal,
+                                                              title: label,
+                                                              persistent: true))
+    }
+    
+    private func stopLoading() {
+        userIndicatorController.retractAllIndicators()
+    }
+    
+    /// Processes an error to either update the flow or display it to the user.
+    private func handleError(_ error: AuthenticationServiceError) {
+        switch error {
+        case .invalidServer, .invalidHomeserverAddress:
+            showFooterMessage(L10n.screenChangeServerErrorInvalidHomeserver)
+        case .invalidWellKnown(let error):
+            state.bindings.alertInfo = AlertInfo(id: .invalidWellKnownAlert(error),
                                                  title: L10n.commonServerNotSupported,
                                                  message: L10n.screenChangeServerErrorInvalidWellKnown(error))
-        case .slidingSyncAlert:
+        case .slidingSyncNotAvailable:
             let openURL = { UIApplication.shared.open(self.slidingSyncLearnMoreURL) }
             state.bindings.alertInfo = AlertInfo(id: .slidingSyncAlert,
                                                  title: L10n.commonServerNotSupported,
                                                  message: L10n.screenChangeServerErrorNoSlidingSyncMessage,
                                                  primaryButton: .init(title: L10n.actionLearnMore, role: .cancel, action: openURL),
                                                  secondaryButton: .init(title: L10n.actionCancel, action: nil))
+        case .loginNotSupported:
+            state.bindings.alertInfo = AlertInfo(id: .loginAlert,
+                                                 title: L10n.commonServerNotSupported,
+                                                 message: L10n.screenLoginErrorUnsupportedAuthentication)
+        case .registrationNotSupported:
+            state.bindings.alertInfo = AlertInfo(id: .registrationAlert,
+                                                 title: L10n.commonServerNotSupported,
+                                                 message: L10n.errorAccountCreationNotPossible)
+        default:
+            showFooterMessage(L10n.errorUnknown)
         }
     }
     
-    // MARK: - Private
+    /// Set a new error message to be shown in the text field footer.
+    private func showFooterMessage(_ message: String) {
+        withElementAnimation {
+            state.footerErrorMessage = message
+        }
+    }
     
     /// Clear any errors shown in the text field footer.
     private func clearFooterError() {

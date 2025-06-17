@@ -1,52 +1,89 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Emojibase
 import Foundation
 
-@MainActor
-protocol EmojiProviderProtocol {
-    func categories(searchString: String?) async -> [EmojiCategory]
-}
-
-private enum EmojiProviderState {
-    case notLoaded
-    case inProgress(Task<[EmojiCategory], Never>)
-    case loaded([EmojiCategory])
-}
-
 class EmojiProvider: EmojiProviderProtocol {
+    private let maxFrequentEmojis = 20
     private let loader: EmojiLoaderProtocol
-    private var state: EmojiProviderState = .notLoaded
+    private let appSettings: AppSettings
     
-    init(loader: EmojiLoaderProtocol = EmojibaseDatasource()) {
+    private(set) var state: EmojiProviderState = .notLoaded
+    
+    init(loader: EmojiLoaderProtocol = EmojibaseDatasource(), appSettings: AppSettings) {
         self.loader = loader
+        self.appSettings = appSettings
+        
         Task {
             await loadIfNeeded()
         }
     }
     
     func categories(searchString: String? = nil) async -> [EmojiCategory] {
-        let emojiCategories = await loadIfNeeded()
+        var emojiCategories = await loadIfNeeded()
+        
+        let allEmojis = emojiCategories.reduce([]) { partialResult, category in
+            partialResult + category.emojis
+        }
+        
+        // Map frequently used system unicode emojis to our emoji provider ones and preserve the order
+        let frequentlyUsedEmojis = frequentlyUsedSystemEmojis().prefix(maxFrequentEmojis)
+        let emojis = allEmojis
+            .filter { frequentlyUsedEmojis.contains($0.unicode) }
+            .sorted { first, second in
+                guard let firstIndex = frequentlyUsedEmojis.firstIndex(of: first.unicode),
+                      let secondIndex = frequentlyUsedEmojis.firstIndex(of: second.unicode) else {
+                    return false
+                }
+                
+                return firstIndex < secondIndex
+            }
+        
+        if !emojis.isEmpty {
+            emojiCategories.insert(.init(id: EmojiCategory.frequentlyUsedCategoryIdentifier, emojis: emojis), at: 0)
+        }
+        
         if let searchString, searchString.isEmpty == false {
             return search(searchString: searchString, emojiCategories: emojiCategories)
         } else {
             return emojiCategories
         }
     }
+    
+    func frequentlyUsedSystemEmojis() -> [String] {
+        guard !ProcessInfo.processInfo.isiOSAppOnMac else {
+            return []
+        }
+        
+        return appSettings.frequentlyUsedSystemEmojis.map(\.key)
+    }
+    
+    func markEmojiAsFrequentlyUsed(_ emoji: String) {
+        guard !ProcessInfo.processInfo.isiOSAppOnMac else {
+            return
+        }
+        
+        let frequentlyUsed = if !frequentlyUsedSystemEmojis().contains(emoji) {
+            appSettings.frequentlyUsedSystemEmojis + [.init(count: 0, key: emoji)]
+        } else {
+            appSettings.frequentlyUsedSystemEmojis.map { frequentlyUsedEmoji in
+                if frequentlyUsedEmoji.key == emoji {
+                    return FrequentlyUsedEmoji(count: frequentlyUsedEmoji.count + 1, key: emoji)
+                }
+                
+                return frequentlyUsedEmoji
+            }
+        }
+        
+        appSettings.frequentlyUsedSystemEmojis = frequentlyUsed.sorted { $0.count > $1.count }
+    }
+    
+    // MARK: - Private
     
     private func search(searchString: String, emojiCategories: [EmojiCategory]) -> [EmojiCategory] {
         emojiCategories.compactMap { category in

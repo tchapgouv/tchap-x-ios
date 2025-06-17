@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -88,7 +79,7 @@ struct InviteUsersScreen: View {
                 ForEach(context.viewState.usersSection.users, id: \.userID) { user in
                     UserProfileListRow(user: user,
                                        membership: context.viewState.membershipState(user),
-                                       imageProvider: context.imageProvider,
+                                       mediaProvider: context.mediaProvider,
                                        kind: .multiSelection(isSelected: context.viewState.isUserSelected(user)) {
                                            context.send(viewAction: .toggleUser(user))
                                        })
@@ -111,15 +102,15 @@ struct InviteUsersScreen: View {
     private var selectedUsersSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             ScrollViewReader { scrollView in
-                HStack(spacing: 16) {
+                HStack(alignment: .top, spacing: 16) { // Tchap: align items at top
                     ForEach(context.viewState.selectedUsers, id: \.userID) { user in
-                        InviteUsersScreenSelectedItem(user: user, imageProvider: context.imageProvider) {
+                        InviteUsersScreenSelectedItem(user: user, mediaProvider: context.mediaProvider) {
                             deselect(user)
                         }
                         .frame(width: cellWidth)
                     }
                 }
-                .onChange(of: context.viewState.scrollToLastID) { lastAddedID in
+                .onChange(of: context.viewState.scrollToLastID) { _, lastAddedID in
                     guard let id = lastAddedID else { return }
                     withElementAnimation(.easeInOut) {
                         scrollView.scrollTo(id)
@@ -163,13 +154,13 @@ struct InviteUsersScreen_Previews: PreviewProvider, TestablePreview {
         return InviteUsersScreenViewModel(clientProxy: ClientProxyMock(.init()),
                                           selectedUsers: .init([]),
                                           roomType: .draft,
-                                          mediaProvider: MockMediaProvider(),
+                                          mediaProvider: MediaProviderMock(configuration: .init()),
                                           userDiscoveryService: userDiscoveryService,
                                           userIndicatorController: UserIndicatorControllerMock())
     }()
     
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             InviteUsersScreen(context: viewModel.context)
         }
     }

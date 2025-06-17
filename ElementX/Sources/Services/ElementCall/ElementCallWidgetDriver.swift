@@ -1,24 +1,15 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
-import Foundation
 import MatrixRustSDK
+import SwiftUI
 
-private struct ElementCallWidgetMessage: Codable {
+struct ElementCallWidgetMessage: Codable {
     enum Direction: String, Codable {
         case fromWidget
         case toWidget
@@ -26,19 +17,40 @@ private struct ElementCallWidgetMessage: Codable {
     
     enum Action: String, Codable {
         case hangup = "im.vector.hangup"
+        case close = "io.element.close"
+        case mediaState = "io.element.device_mute"
+    }
+    
+    struct Data: Codable {
+        var audioEnabled: Bool?
+        var videoEnabled: Bool?
+        
+        enum CodingKeys: String, CodingKey {
+            case audioEnabled = "audio_enabled"
+            case videoEnabled = "video_enabled"
+        }
     }
     
     let direction: Direction
     let action: Action
+    var data: Data = .init()
+    
+    let widgetId: String
+    var requestId = "widgetapi-\(UUID())"
     
     enum CodingKeys: String, CodingKey {
         case direction = "api"
         case action
+        case data
+        case widgetId
+        case requestId
     }
 }
 
 class ElementCallWidgetDriver: WidgetCapabilitiesProvider, ElementCallWidgetDriverProtocol {
     private let room: RoomProtocol
+    private let deviceID: String
+    
     private var widgetDriver: WidgetDriverAndHandle?
     
     let widgetID = UUID().uuidString
@@ -49,36 +61,58 @@ class ElementCallWidgetDriver: WidgetCapabilitiesProvider, ElementCallWidgetDriv
         actionsSubject.eraseToAnyPublisher()
     }
     
-    init(room: RoomProtocol) {
+    init(room: RoomProtocol, deviceID: String) {
         self.room = room
+        self.deviceID = deviceID
     }
     
-    func start(baseURL: URL, clientID: String) async -> Result<URL, ElementCallWidgetDriverError> {
+    func start(baseURL: URL,
+               clientID: String,
+               colorScheme: ColorScheme,
+               rageshakeURL: String?,
+               analyticsConfiguration: ElementCallAnalyticsConfiguration?) async -> Result<URL, ElementCallWidgetDriverError> {
         guard let room = room as? Room else {
             return .failure(.roomInvalid)
         }
         
-        let useEncryption = (try? room.isEncrypted()) ?? false
+        let useEncryption = await (try? room.latestEncryptionState() == .encrypted) ?? false
+        let widgetSettings: WidgetSettings
         
-        guard let widgetSettings = try? newVirtualElementCallWidget(props: .init(elementCallUrl: baseURL.absoluteString,
-                                                                                 widgetId: widgetID,
-                                                                                 parentUrl: nil,
-                                                                                 hideHeader: nil,
-                                                                                 preload: nil,
-                                                                                 fontScale: nil,
-                                                                                 appPrompt: false,
-                                                                                 skipLobby: true,
-                                                                                 confineToRoom: true,
-                                                                                 font: nil,
-                                                                                 analyticsId: nil,
-                                                                                 encryption: useEncryption ? .perParticipantKeys : .unencrypted)) else {
+        do {
+            widgetSettings = try newVirtualElementCallWidget(props: .init(elementCallUrl: baseURL.absoluteString,
+                                                                          widgetId: widgetID,
+                                                                          parentUrl: nil,
+                                                                          hideHeader: nil,
+                                                                          preload: nil,
+                                                                          fontScale: nil,
+                                                                          appPrompt: false,
+                                                                          confineToRoom: true,
+                                                                          font: nil,
+                                                                          encryption: useEncryption ? .perParticipantKeys : .unencrypted,
+                                                                          intent: .startCall,
+                                                                          hideScreensharing: false,
+                                                                          posthogUserId: nil,
+                                                                          posthogApiHost: analyticsConfiguration?.posthogAPIHost,
+                                                                          posthogApiKey: analyticsConfiguration?.posthogAPIKey,
+                                                                          rageshakeSubmitUrl: rageshakeURL,
+                                                                          sentryDsn: analyticsConfiguration?.sentryDSN,
+                                                                          sentryEnvironment: nil))
+        } catch {
+            MXLog.error("Failed to build widget settings: \(error)")
             return .failure(.failedBuildingWidgetSettings)
         }
         
-        guard let urlString = try? await generateWebviewUrl(widgetSettings: widgetSettings, room: room,
-                                                            props: .init(clientId: clientID,
-                                                                         languageTag: nil,
-                                                                         theme: nil)) else {
+        let languageTag = "\(Locale.current.language.languageCode ?? "en")-\(Locale.current.language.region ?? "US")"
+        let theme = colorScheme == .light ? "light" : "dark"
+        
+        let urlString: String
+        do {
+            urlString = try await generateWebviewUrl(widgetSettings: widgetSettings, room: room,
+                                                     props: .init(clientId: clientID,
+                                                                  languageTag: languageTag,
+                                                                  theme: theme))
+        } catch {
+            MXLog.error("Failed to generate web view URL: \(error)")
             return .failure(.failedBuildingCallURL)
         }
         
@@ -86,7 +120,11 @@ class ElementCallWidgetDriver: WidgetCapabilitiesProvider, ElementCallWidgetDriv
             return .failure(.failedParsingCallURL)
         }
         
-        guard let widgetDriver = try? makeWidgetDriver(settings: widgetSettings) else {
+        let widgetDriver: WidgetDriverAndHandle
+        do {
+            widgetDriver = try makeWidgetDriver(settings: widgetSettings)
+        } catch {
+            MXLog.error("Failed to build widget driver: \(error)")
             return .failure(.failedBuildingWidgetDriver)
         }
         
@@ -124,7 +162,7 @@ class ElementCallWidgetDriver: WidgetCapabilitiesProvider, ElementCallWidgetDriv
         return .success(url)
     }
     
-    func sendMessage(_ message: String) async -> Result<Bool, ElementCallWidgetDriverError> {
+    func handleMessage(_ message: String) async -> Result<Bool, ElementCallWidgetDriverError> {
         guard let widgetDriver else {
             return .failure(.driverNotSetup)
         }
@@ -140,22 +178,37 @@ class ElementCallWidgetDriver: WidgetCapabilitiesProvider, ElementCallWidgetDriv
     // MARK: - WidgetCapabilitiesProvider
     
     func acquireCapabilities(capabilities: WidgetCapabilities) -> WidgetCapabilities {
-        getElementCallRequiredPermissions(ownUserId: room.ownUserId())
+        getElementCallRequiredPermissions(ownUserId: room.ownUserId(), ownDeviceId: deviceID)
     }
     
     // MARK: - Private
     
     func handleMessageIfNeeded(_ message: String) {
-        guard let data = message.data(using: .utf8),
-              let widgetMessage = try? JSONDecoder().decode(ElementCallWidgetMessage.self, from: data) else {
+        guard let data = message.data(using: .utf8) else {
             return
         }
         
-        if widgetMessage.direction == .fromWidget {
-            switch widgetMessage.action {
-            case .hangup:
-                actionsSubject.send(.callEnded)
+        do {
+            let widgetMessage = try JSONDecoder().decode(ElementCallWidgetMessage.self, from: data)
+            if widgetMessage.direction == .fromWidget {
+                switch widgetMessage.action {
+                case .hangup:
+                    break
+                case .close:
+                    actionsSubject.send(.callEnded)
+                case .mediaState:
+                    guard let audioEnabled = widgetMessage.data.audioEnabled,
+                          let videoEnabled = widgetMessage.data.videoEnabled else {
+                        MXLog.error("Media state change messages should contain info data")
+                        return
+                    }
+                    
+                    actionsSubject.send(.mediaStateChanged(audioEnabled: audioEnabled, videoEnabled: videoEnabled))
+                }
             }
+        } catch {
+            // Not all actions are supported
+            MXLog.verbose("Failed processing widget message with error: \(error)")
         }
     }
 }

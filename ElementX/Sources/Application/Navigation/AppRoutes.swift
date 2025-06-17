@@ -1,25 +1,14 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
 import MatrixRustSDK
 
-enum AppRoute: Equatable {
-    /// The callback used to complete login with OIDC.
-    case oidcCallback(url: URL)
+enum AppRoute: Equatable, Hashable {
     /// The app's home screen.
     case roomList
     /// A room, shown as the root of the stack (popping any child rooms).
@@ -52,6 +41,8 @@ enum AppRoute: Equatable {
     case settings
     /// The setting screen for key backup.
     case chatBackupSettings
+    /// An external share request e.g. from the ShareExtension
+    case share(ShareExtensionPayload)
 }
 
 struct AppRouteURLParser {
@@ -59,9 +50,9 @@ struct AppRouteURLParser {
     
     init(appSettings: AppSettings) {
         urlParsers = [
+            AppGroupURLParser(),
             MatrixPermalinkParser(),
             ElementWebURLParser(domains: appSettings.elementWebHosts),
-            OIDCCallbackURLParser(appSettings: appSettings),
             ElementCallURLParser()
         ]
     }
@@ -85,13 +76,27 @@ protocol URLParser {
     func route(from url: URL) -> AppRoute?
 }
 
-/// The parser for the OIDC callback URL. This always returns a `.oidcCallback`.
-struct OIDCCallbackURLParser: URLParser {
-    let appSettings: AppSettings
-    
+struct AppGroupURLParser: URLParser {
     func route(from url: URL) -> AppRoute? {
-        guard url.absoluteString.starts(with: appSettings.oidcRedirectURL.absoluteString) else { return nil }
-        return .oidcCallback(url: url)
+        guard let scheme = url.scheme,
+              scheme == InfoPlistReader.app.appScheme,
+              url.pathComponents.last == ShareExtensionConstants.urlPath else {
+            return nil
+        }
+        
+        guard let query = url.query(percentEncoded: false),
+              let queryData = query.data(using: .utf8) else {
+            MXLog.error("Failed processing share parameters")
+            return nil
+        }
+        
+        do {
+            let payload = try JSONDecoder().decode(ShareExtensionPayload.self, from: queryData)
+            return .share(payload)
+        } catch {
+            MXLog.error("Failed decoding share payload with error: \(error)")
+            return nil
+        }
     }
 }
 

@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
@@ -56,8 +47,8 @@ struct RoomMembersListScreen: View {
         .autocorrectionDisabled()
         .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
         .navigationTitle(L10n.commonPeople)
-        .sheet(item: $context.memberToManage) {
-            RoomMembersListManageMemberSheet(member: $0.member, actions: $0.actions, context: context)
+        .sheet(item: $context.manageMemeberViewModel) {
+            ManageRoomMemberSheetView(context: $0.context)
         }
         .alert(item: $context.alertInfo)
         .toolbar { toolbar }
@@ -68,23 +59,23 @@ struct RoomMembersListScreen: View {
     
     var roomMembers: some View {
         LazyVStack(alignment: .leading, spacing: 12) {
-            membersSection(data: context.viewState.visibleInvitedMembers, sectionTitle: L10n.screenRoomMemberListPendingHeaderTitle)
-            membersSection(data: context.viewState.visibleJoinedMembers, sectionTitle: L10n.screenRoomMemberListHeaderTitle(Int(context.viewState.joinedMembersCount)))
+            membersSection(entries: context.viewState.visibleInvitedMembers, sectionTitle: L10n.screenRoomMemberListPendingHeaderTitle)
+            membersSection(entries: context.viewState.visibleJoinedMembers, sectionTitle: L10n.screenRoomMemberListHeaderTitle(Int(context.viewState.joinedMembersCount)))
         }
     }
     
     var bannedUsers: some View {
         LazyVStack(alignment: .leading, spacing: 12) {
-            membersSection(data: context.viewState.visibleBannedMembers)
+            membersSection(entries: context.viewState.visibleBannedMembers)
         }
     }
     
     @ViewBuilder
-    private func membersSection(data: [RoomMemberDetails], sectionTitle: String? = nil) -> some View {
-        if !data.isEmpty {
+    private func membersSection(entries: [RoomMemberListScreenEntry], sectionTitle: String? = nil) -> some View {
+        if !entries.isEmpty {
             Section {
-                ForEach(data, id: \.id) { member in
-                    RoomMembersListScreenMemberCell(member: member, context: context)
+                ForEach(entries, id: \.member.id) { entry in
+                    RoomMembersListScreenMemberCell(listEntry: entry, context: context)
                 }
             } header: {
                 if let sectionTitle {
@@ -126,31 +117,41 @@ struct RoomMembersListScreen_Previews: PreviewProvider, TestablePreview {
         NavigationStack {
             RoomMembersListScreen(context: viewModel.context)
         }
-        .snapshot(delay: 1.0)
+        .snapshotPreferences(expect: viewModel.context.$viewState.map { state in
+            !state.visibleJoinedMembers.isEmpty
+        })
         .previewDisplayName("Member")
         
         NavigationStack {
             RoomMembersListScreen(context: invitesViewModel.context)
         }
-        .snapshot(delay: 1.0)
+        .snapshotPreferences(expect: invitesViewModel.context.$viewState.map { state in
+            !state.visibleJoinedMembers.isEmpty
+        })
         .previewDisplayName("Invites")
         
         NavigationStack {
             RoomMembersListScreen(context: adminViewModel.context)
         }
-        .snapshot(delay: 1.0)
+        .snapshotPreferences(expect: adminViewModel.context.$viewState.map { state in
+            state.canBanUsers == true
+        })
         .previewDisplayName("Admin: Members")
         
         NavigationStack {
             RoomMembersListScreen(context: bannedViewModel.context)
         }
-        .snapshot(delay: 1.0)
+        .snapshotPreferences(expect: bannedViewModel.context.$viewState.map { state in
+            state.canBanUsers == true
+        })
         .previewDisplayName("Admin: Banned")
         
         NavigationStack {
             RoomMembersListScreen(context: emptyBannedViewModel.context)
         }
-        .snapshot(delay: 1.0)
+        .snapshotPreferences(expect: emptyBannedViewModel.context.$viewState.map { state in
+            state.canBanUsers == true
+        })
         .previewDisplayName("Admin: Empty Banned")
     }
     
@@ -178,12 +179,27 @@ struct RoomMembersListScreen_Previews: PreviewProvider, TestablePreview {
             members.append(.mockInvited)
         }
         
+        let clientProxyMock = ClientProxyMock(.init())
+        clientProxyMock.userIdentityForClosure = { userID in
+            let identity = switch userID {
+            case RoomMemberProxyMock.mockAlice.userID:
+                UserIdentityProxyMock(configuration: .init(verificationState: .verified))
+            case RoomMemberProxyMock.mockBob.userID:
+                UserIdentityProxyMock(configuration: .init(verificationState: .verificationViolation))
+            default:
+                UserIdentityProxyMock(configuration: .init())
+            }
+            
+            return .success(identity)
+        }
+        
         return RoomMembersListScreenViewModel(initialMode: initialMode,
-                                              roomProxy: RoomProxyMock(.init(name: "Some room",
-                                                                             members: members,
-                                                                             ownUserID: ownUserID,
-                                                                             canUserInvite: false)),
-                                              mediaProvider: MockMediaProvider(),
+                                              clientProxy: clientProxyMock,
+                                              roomProxy: JoinedRoomProxyMock(.init(name: "Some room",
+                                                                                   members: members,
+                                                                                   ownUserID: ownUserID,
+                                                                                   canUserInvite: false)),
+                                              mediaProvider: MediaProviderMock(configuration: .init()),
                                               userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                               analytics: ServiceLocator.shared.analytics)
     }

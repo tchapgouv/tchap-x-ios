@@ -1,17 +1,9 @@
 //
-// Copyright 2021 The Matrix.org Foundation C.I.C
+// Copyright 2024 New Vector Ltd.
+// Copyright 2021-2024 The Matrix.org Foundation C.I.C
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -22,32 +14,14 @@ import MatrixRustSDK
  Its purpose is to provide a common entry for customizing logging and should be used throughout the code.
  */
 enum MXLog {
-    private enum Constants {
-        static let target = "elementx"
-    }
-    
-    // Rust side crashes if invoking setupTracing multiple times
-    private static var didConfigureOnce = false
-    
     private static var rootSpan: Span!
-    private static var target: String!
+    private static var currentTarget: String!
     
-    static func configure(target: String? = nil,
-                          logLevel: TracingConfiguration.LogLevel) {
-        guard !didConfigureOnce else { return }
+    static func configure(currentTarget: String) {
+        self.currentTarget = currentTarget
         
-        RustTracing.setup(configuration: .init(logLevel: logLevel, target: target))
-        
-        if let target {
-            self.target = target
-        } else {
-            self.target = Constants.target
-        }
-        
-        rootSpan = Span(file: #file, line: #line, level: .info, target: self.target, name: "root")
+        rootSpan = Span(file: #file, line: #line, level: .info, target: self.currentTarget, name: "root")
         rootSpan.enter()
-        
-        didConfigureOnce = true
     }
     
     static func createSpan(_ name: String,
@@ -62,72 +36,79 @@ enum MXLog {
                         file: String = #file,
                         function: String = #function,
                         line: Int = #line,
-                        column: Int = #column,
-                        context: Any? = nil) {
-        log(message, level: .trace, file: file, function: function, line: line, column: column, context: context)
+                        column: Int = #column) {
+        log(message, level: .trace, file: file, function: function, line: line, column: column)
     }
     
     static func debug(_ message: Any,
                       file: String = #file,
                       function: String = #function,
                       line: Int = #line,
-                      column: Int = #column,
-                      context: Any? = nil) {
-        log(message, level: .debug, file: file, function: function, line: line, column: column, context: context)
+                      column: Int = #column) {
+        log(message, level: .debug, file: file, function: function, line: line, column: column)
     }
     
     static func info(_ message: Any,
                      file: String = #file,
                      function: String = #function,
                      line: Int = #line,
-                     column: Int = #column,
-                     context: Any? = nil) {
-        log(message, level: .info, file: file, function: function, line: line, column: column, context: context)
+                     column: Int = #column) {
+        log(message, level: .info, file: file, function: function, line: line, column: column)
     }
     
     static func warning(_ message: Any,
                         file: String = #file,
                         function: String = #function,
                         line: Int = #line,
-                        column: Int = #column,
-                        context: Any? = nil) {
-        log(message, level: .warn, file: file, function: function, line: line, column: column, context: context)
+                        column: Int = #column) {
+        log(message, level: .warn, file: file, function: function, line: line, column: column)
     }
     
-    /// Log error with additional details
+    /// Log error.
     ///
     /// - Parameters:
     ///     - message: Description of the error without any variables (this is to improve error aggregations by type)
-    ///     - context: Additional context-dependent details about the issue
     static func error(_ message: Any,
                       file: String = #file,
                       function: String = #function,
                       line: Int = #line,
-                      column: Int = #column,
-                      context: Any? = nil) {
-        log(message, level: .error, file: file, function: function, line: line, column: column, context: context)
+                      column: Int = #column) {
+        log(message, level: .error, file: file, function: function, line: line, column: column)
     }
     
-    /// Log failure with additional details
+    /// Log failure.
     ///
     /// A failure is any type of programming error which should never occur in production. In `DEBUG` configuration
     /// any failure will raise `assertionFailure`
     ///
     /// - Parameters:
     ///     - message: Description of the error without any variables (this is to improve error aggregations by type)
-    ///     - context: Additional context-dependent details about the issue
     static func failure(_ message: Any,
                         file: String = #file,
                         function: String = #function,
                         line: Int = #line,
-                        column: Int = #column,
-                        context: Any? = nil) {
-        log(message, level: .error, file: file, function: function, line: line, column: column, context: context)
+                        column: Int = #column) {
+        log(message, level: .error, file: file, function: function, line: line, column: column)
         
         #if DEBUG
         assertionFailure("\(message)")
         #endif
     }
+    
+    #if DEBUG
+    private static let devPrefix = URL.documentsDirectory.pathComponents[2].uppercased()
+    /// A helper method for print debugging, only available on debug builds.
+    ///
+    /// When running on the simulator this will log `[USERNAME] message` so that
+    /// you can easily filter the Xcode console to see only the logs you're interested in.
+    static func dev(_ message: Any,
+                    file: String = #file,
+                    function: String = #function,
+                    line: Int = #line,
+                    column: Int = #column) {
+        log("[\(devPrefix)] \(message)", level: .info, file: file, function: function, line: line, column: column)
+    }
+    #endif
     
     // MARK: - Private
     
@@ -138,26 +119,21 @@ enum MXLog {
                                    function: String = #function,
                                    line: Int = #line,
                                    column: Int = #column) -> Span {
-        guard didConfigureOnce else {
-            fatalError()
-        }
-        
         if Span.current().isNone() {
             rootSpan.enter()
         }
         
-        return Span(file: file, line: UInt32(line), level: level, target: target, name: name)
+        return Span(file: file, line: UInt32(line), level: level.rustLogLevel, target: currentTarget, name: name)
     }
     
-    // periphery:ignore:parameters function,column,context
+    // periphery:ignore:parameters function,column
     private static func log(_ message: Any,
                             level: LogLevel,
                             file: String = #file,
                             function: String = #function,
                             line: Int = #line,
-                            column: Int = #column,
-                            context: Any? = nil) {
-        guard didConfigureOnce else {
+                            column: Int = #column) {
+        guard let rootSpan else {
             return
         }
         
@@ -165,6 +141,6 @@ enum MXLog {
             rootSpan.enter()
         }
         
-        logEvent(file: (file as NSString).lastPathComponent, line: UInt32(line), level: level, target: target, message: "\(message)")
+        logEvent(file: (file as NSString).lastPathComponent, line: UInt32(line), level: level.rustLogLevel, target: currentTarget, message: "\(message)")
     }
 }

@@ -1,20 +1,14 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
+import AVKit
 import Combine
+import EmbeddedElementCall
+import SFSafeSymbols
 import SwiftUI
 import WebKit
 
@@ -22,52 +16,82 @@ struct CallScreen: View {
     @ObservedObject var context: CallScreenViewModel.Context
     
     var body: some View {
-        WebView(url: context.viewState.url, viewModelContext: context)
-            // This URL is stable, forces view reloads if this representable is ever reused for another url
-            .id(context.viewState.url)
-            .ignoresSafeArea(edges: .bottom)
-            .presentationDragIndicator(.visible)
-            .environment(\.colorScheme, .dark)
-            .alert(item: $context.alertInfo)
+        NavigationStack {
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button { context.send(viewAction: .navigateBack) } label: {
+                            Image(systemSymbol: .chevronBackward)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                }
+        }
+        .alert(item: $context.alertInfo)
+    }
+    
+    @ViewBuilder
+    var content: some View {
+        if context.viewState.url == nil {
+            ProgressView()
+        } else {
+            CallView(url: context.viewState.url, viewModelContext: context)
+                // This URL is stable, forces view reloads if this representable is ever reused for another url
+                .id(context.viewState.url)
+                .ignoresSafeArea(edges: .bottom)
+        }
     }
 }
 
-private struct WebView: UIViewRepresentable {
+private struct CallView: UIViewRepresentable {
+    /// The top-level view this representable displays. It wraps the web view when picture in picture isn't running.
+    typealias WebViewWrapper = UIView
+    
     let url: URL?
     let viewModelContext: CallScreenViewModel.Context
     
-    func makeUIView(context: Context) -> WKWebView {
-        context.coordinator.webView
+    func makeUIView(context: Context) -> WebViewWrapper {
+        context.coordinator.webViewWrapper
     }
     
     func makeCoordinator() -> Coordinator {
         Coordinator(viewModelContext: viewModelContext)
     }
     
-    func updateUIView(_ webView: WKWebView, context: Context) {
+    func updateUIView(_ callWebView: WebViewWrapper, context: Context) {
         if let url {
-            context.coordinator.url = url
-            let request = URLRequest(url: url)
-            webView.load(request)
+            context.coordinator.load(url)
         }
     }
     
     @MainActor
-    class Coordinator: NSObject, WKUIDelegate, WKNavigationDelegate {
+    class Coordinator: NSObject, WKUIDelegate, WKNavigationDelegate, AVPictureInPictureControllerDelegate {
         private weak var viewModelContext: CallScreenViewModel.Context?
+        private let certificateValidator: CertificateValidatorHookProtocol
         
-        private(set) var webView: WKWebView!
+        private var webView: WKWebView!
+        private var pictureInPictureController: AVPictureInPictureController?
+        private let pictureInPictureViewController: AVPictureInPictureVideoCallViewController
         
-        var url: URL!
+        /// The view to be shown in the app. This will contain the web view when picture in picture isn't running.
+        let webViewWrapper = WebViewWrapper(frame: .zero)
+        
+        private var url: URL!
         
         init(viewModelContext: CallScreenViewModel.Context) {
             self.viewModelContext = viewModelContext
+            certificateValidator = viewModelContext.viewState.certificateValidator
+            pictureInPictureViewController = AVPictureInPictureVideoCallViewController()
+            pictureInPictureViewController.preferredContentSize = CGSize(width: 1920, height: 1080)
             
             super.init()
             
-            DispatchQueue.main.async {
-                // Avoid `Publishing changes from within view update warnings`
-                viewModelContext.javaScriptEvaluator = self.evaluateJavaScript(_:)
+            DispatchQueue.main.async { // Avoid `Publishing changes from within view update` warnings
+                viewModelContext.javaScriptEvaluator = self.evaluateJavaScript
+                viewModelContext.requestPictureInPictureHandler = self.requestPictureInPicture
             }
             
             let configuration = WKWebViewConfiguration()
@@ -75,6 +99,8 @@ private struct WebView: UIViewRepresentable {
             let userContentController = WKUserContentController()
             userContentController.add(WKScriptMessageHandlerWrapper(self), name: viewModelContext.viewState.messageHandler)
             
+            // Required to allow a webview that uses file URL to load its own assets
+            configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
             configuration.userContentController = userContentController
             configuration.allowsInlineMediaPlayback = true
             configuration.allowsPictureInPictureMediaPlayback = true
@@ -87,11 +113,36 @@ private struct WebView: UIViewRepresentable {
             webView = WKWebView(frame: .zero, configuration: configuration)
             webView.uiDelegate = self
             webView.navigationDelegate = self
+            webView.isInspectable = true
+            
+            // https://stackoverflow.com/a/77963877/730924
+            webView.allowsLinkPreview = true
             
             // Try matching Element Call colors
             webView.isOpaque = false
             webView.backgroundColor = .compound.bgCanvasDefault
             webView.scrollView.backgroundColor = .compound.bgCanvasDefault
+            
+            webViewWrapper.addMatchedSubview(webView)
+            
+            if AVPictureInPictureController.isPictureInPictureSupported() {
+                let pictureInPictureController = AVPictureInPictureController(contentSource: .init(activeVideoCallSourceView: webViewWrapper,
+                                                                                                   contentViewController: pictureInPictureViewController))
+                pictureInPictureController.delegate = self
+                self.pictureInPictureController = pictureInPictureController
+                viewModelContext.send(viewAction: .pictureInPictureIsAvailable(pictureInPictureController))
+            }
+        }
+        
+        func load(_ url: URL) {
+            self.url = url
+            // The only file URL we allow is the one coming from our own local ElementCall bundle, so it's okay to allow read permission only to our local EC bundle
+            if url.isFileURL {
+                webView.loadFileURL(url, allowingReadAccessTo: EmbeddedElementCall.bundle.bundleURL)
+            } else {
+                let request = URLRequest(url: url)
+                webView.load(request)
+            }
         }
         
         func evaluateJavaScript(_ script: String) async throws -> Any? {
@@ -109,18 +160,15 @@ private struct WebView: UIViewRepresentable {
             }
         }
         
-        nonisolated func userContentController(_ userContentController: WKUserContentController,
-                                               didReceive message: WKScriptMessage) {
-            Task { @MainActor [weak self] in
-                self?.viewModelContext?.javaScriptMessageHandler?(message.body)
-            }
+        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            viewModelContext?.javaScriptMessageHandler?(message.body)
         }
         
         // MARK: - WKUIDelegate
         
         func webView(_ webView: WKWebView, decideMediaCapturePermissionsFor origin: WKSecurityOrigin, initiatedBy frame: WKFrameInfo, type: WKMediaCaptureType) async -> WKPermissionDecision {
-            // Don't allow permissions for domains different than what the call was started on
-            guard origin.host == url.host else {
+            // Allow if the origin is local, otherwise don't allow permissions for domains different than what the call was started on
+            guard origin.protocol == "file" || origin.host == url.host else {
                 return .deny
             }
             
@@ -129,10 +177,21 @@ private struct WebView: UIViewRepresentable {
         
         // MARK: - WKNavigationDelegate
         
+        func webView(_ webView: WKWebView, respondTo challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+            await certificateValidator.respondTo(challenge)
+        }
+        
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
-            // Allow any content from the main URL.
-            if navigationAction.request.url?.host == url.host {
-                return .allow
+            if let navigationURL = navigationAction.request.url {
+                // Do not allow navigation to a different URL scheme.
+                if navigationURL.scheme != url.scheme {
+                    return .cancel
+                }
+                
+                // Allow any content from the main URL.
+                if navigationURL.host == url.host {
+                    return .allow
+                }
             }
             
             // Additionally allow any embedded content such as captchas.
@@ -144,9 +203,70 @@ private struct WebView: UIViewRepresentable {
             return .cancel
         }
         
-        nonisolated func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            viewModelContext?.send(viewAction: .urlChanged(webView.url))
+        }
+        
+        // MARK: - Picture in Picture
+        
+        func requestPictureInPicture() async -> Result<Void, CallScreenError> {
+            guard let pictureInPictureController,
+                  pictureInPictureController.isPictureInPicturePossible,
+                  case .success(true) = await webViewCanEnterPictureInPicture() else {
+                return .failure(.pictureInPictureNotAvailable)
+            }
+            
+            pictureInPictureController.startPictureInPicture()
+            return .success(())
+        }
+        
+        func stopPictureInPicture() {
+            pictureInPictureController?.stopPictureInPicture()
+        }
+        
+        nonisolated func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
             Task { @MainActor in
-                viewModelContext?.send(viewAction: .urlChanged(webView.url))
+                // We move the view via the delegate so it works when you background the app without calling requestPictureInPicture
+                pictureInPictureViewController.view.addMatchedSubview(webView)
+                _ = try? await evaluateJavaScript("controls.enablePip()")
+            }
+        }
+        
+        nonisolated func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+            Task { @MainActor in
+                // Double check that the controller is definitely showing a page that supports picture in picture.
+                // This is necessary as it doesn't get checked when backgrounding the app or tapping a notification.
+                guard case .success(true) = await webViewCanEnterPictureInPicture() else {
+                    MXLog.error("Picture in picture started on a webpage that doesn't support it. Ending the call.")
+                    viewModelContext?.send(viewAction: .endCall)
+                    return
+                }
+            }
+        }
+        
+        nonisolated func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+            Task { await viewModelContext?.send(viewAction: .pictureInPictureWillStop) }
+        }
+        
+        nonisolated func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+            Task { @MainActor in
+                webViewWrapper.addMatchedSubview(webView)
+                _ = try? await evaluateJavaScript("controls.disablePip()")
+            }
+        }
+        
+        /// Whether the web view can do picture in picture or not (e.g. it is showing an error or the page didn't load).
+        private func webViewCanEnterPictureInPicture() async -> Result<Bool, CallScreenError> {
+            do {
+                guard let canEnterPictureInPicture = try await evaluateJavaScript("controls.canEnterPip()") as? Bool else {
+                    MXLog.error("canEnterPip returned an unexpected value, skipping picture in picture.")
+                    return .failure(.pictureInPictureNotAvailable)
+                }
+                MXLog.info("canEnterPip returned \(canEnterPictureInPicture)")
+                return .success(canEnterPictureInPicture)
+            } catch {
+                MXLog.error("Error checking canEnterPip: \(error)")
+                return .failure(.pictureInPictureNotAvailable)
             }
         }
     }
@@ -161,8 +281,7 @@ private struct WebView: UIViewRepresentable {
         
         // MARK: - WKScriptMessageHandler
         
-        nonisolated func userContentController(_ userContentController: WKUserContentController,
-                                               didReceive message: WKScriptMessage) {
+        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             coordinator?.userContentController(userContentController, didReceive: message)
         }
     }
@@ -172,19 +291,31 @@ private struct WebView: UIViewRepresentable {
 
 struct CallScreen_Previews: PreviewProvider {
     static let viewModel = {
-        let roomProxy = RoomProxyMock()
+        let clientProxy = ClientProxyMock()
+        clientProxy.deviceID = "call-device-id"
+        
+        let roomProxy = JoinedRoomProxyMock()
+        roomProxy.sendCallNotificationIfNeededReturnValue = .success(())
         
         let widgetDriver = ElementCallWidgetDriverMock()
         widgetDriver.underlyingMessagePublisher = .init()
         widgetDriver.underlyingActions = PassthroughSubject<ElementCallWidgetDriverAction, Never>().eraseToAnyPublisher()
-        widgetDriver.startBaseURLClientIDReturnValue = .success(URL.userDirectory)
+        widgetDriver.startBaseURLClientIDColorSchemeRageshakeURLAnalyticsConfigurationReturnValue = .success(URL.userDirectory)
         
-        roomProxy.elementCallWidgetDriverReturnValue = widgetDriver
+        roomProxy.elementCallWidgetDriverDeviceIDReturnValue = widgetDriver
         
-        return CallScreenViewModel(elementCallService: ElementCallServiceMock(),
-                                   roomProxy: roomProxy,
-                                   callBaseURL: "https://call.element.io",
-                                   clientID: "io.element.elementx")
+        return CallScreenViewModel(elementCallService: ElementCallServiceMock(.init()),
+                                   configuration: .init(roomProxy: roomProxy,
+                                                        clientProxy: clientProxy,
+                                                        clientID: "io.element.elementx",
+                                                        elementCallBaseURL: "https://call.element.io",
+                                                        elementCallBaseURLOverride: nil,
+                                                        colorScheme: .light,
+                                                        notifyOtherParticipants: false),
+                                   allowPictureInPicture: false,
+                                   appHooks: AppHooks(),
+                                   appSettings: ServiceLocator.shared.settings,
+                                   analyticsService: ServiceLocator.shared.analytics)
     }()
     
     static var previews: some View {

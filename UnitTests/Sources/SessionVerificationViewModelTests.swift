@@ -1,23 +1,20 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
 import XCTest
 
+// Tchap: specify target for unit tests
+// @testable import ElementX
+#if IS_TCHAP_UNIT_TESTS
+@testable import TchapX_Production
+#else
 @testable import ElementX
+#endif
 
 @MainActor
 class SessionVerificationViewModelTests: XCTestCase {
@@ -27,7 +24,10 @@ class SessionVerificationViewModelTests: XCTestCase {
     
     override func setUpWithError() throws {
         sessionVerificationController = SessionVerificationControllerProxyMock.configureMock()
-        viewModel = SessionVerificationScreenViewModel(sessionVerificationControllerProxy: sessionVerificationController)
+        viewModel = SessionVerificationScreenViewModel(sessionVerificationControllerProxy: sessionVerificationController,
+                                                       flow: .deviceInitiator,
+                                                       appSettings: AppSettings(),
+                                                       mediaProvider: MediaProviderMock(configuration: .init()))
         context = viewModel.context
     }
 
@@ -37,7 +37,7 @@ class SessionVerificationViewModelTests: XCTestCase {
         context.send(viewAction: .requestVerification)
         
         try await Task.sleep(for: .milliseconds(100))
-        XCTAssert(sessionVerificationController.requestVerificationCallsCount == 1)
+        XCTAssert(sessionVerificationController.requestDeviceVerificationCallsCount == 1)
         XCTAssertEqual(context.viewState.verificationState, .requestingVerification)
     }
     
@@ -62,7 +62,7 @@ class SessionVerificationViewModelTests: XCTestCase {
         
         XCTAssertEqual(context.viewState.verificationState, .initial)
 
-        XCTAssert(sessionVerificationController.requestVerificationCallsCount == 1)
+        XCTAssert(sessionVerificationController.requestDeviceVerificationCallsCount == 1)
         XCTAssert(sessionVerificationController.cancelVerificationCallsCount == 1)
     }
     
@@ -75,7 +75,7 @@ class SessionVerificationViewModelTests: XCTestCase {
         
         let waitForAcceptance = XCTestExpectation(description: "Wait for acceptance")
         
-        let cancellable = sessionVerificationController.callbacks
+        let cancellable = sessionVerificationController.actions
             .delay(for: .seconds(0.1), scheduler: DispatchQueue.main) // Allow the view model to process the callback first.
             .sink { callback in
                 switch callback {
@@ -103,7 +103,7 @@ class SessionVerificationViewModelTests: XCTestCase {
         
         let expectation = XCTestExpectation(description: "Wait for cancellation")
         
-        let cancellable = sessionVerificationController.callbacks
+        let cancellable = sessionVerificationController.actions
             .delay(for: .seconds(0.1), scheduler: DispatchQueue.main) // Allow the view model to process the callback first.
             .sink { callback in
                 switch callback {
@@ -133,7 +133,7 @@ class SessionVerificationViewModelTests: XCTestCase {
         let sasVerificationStartExpectation = XCTestExpectation(description: "Wait for SaS verification start")
         let verificationDataReceivalExpectation = XCTestExpectation(description: "Wait for Emoji data")
         
-        let cancellable = sessionVerificationController.callbacks
+        let cancellable = sessionVerificationController.actions
             .delay(for: .seconds(0.1), scheduler: DispatchQueue.main) // Allow the view model to process the callback first.
             .sink { callback in
                 switch callback {
@@ -163,7 +163,7 @@ class SessionVerificationViewModelTests: XCTestCase {
         wait(for: [verificationDataReceivalExpectation], timeout: 10.0)
         XCTAssertEqual(context.viewState.verificationState, .showingChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
 
-        XCTAssert(sessionVerificationController.requestVerificationCallsCount == 1)
+        XCTAssert(sessionVerificationController.requestDeviceVerificationCallsCount == 1)
         XCTAssert(sessionVerificationController.startSasVerificationCallsCount == 1)
     }
 }

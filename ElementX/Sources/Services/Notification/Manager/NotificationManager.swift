@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -38,16 +29,16 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
     // MARK: NotificationManagerProtocol
 
     weak var delegate: NotificationManagerDelegate?
-
+    
     func start() {
-        // Not implemented yet
-        // let replyAction = UNTextInputNotificationAction(identifier: NotificationConstants.Action.inlineReply,
-        // title: L10n.actionQuickReply,
-        // options: [])
+        let replyAction = UNTextInputNotificationAction(identifier: NotificationConstants.Action.inlineReply,
+                                                        title: L10n.actionQuickReply,
+                                                        options: [])
         let messageCategory = UNNotificationCategory(identifier: NotificationConstants.Category.message,
-                                                     actions: [],
+                                                     actions: [replyAction],
                                                      intentIdentifiers: [],
                                                      options: [])
+        
         let inviteCategory = UNNotificationCategory(identifier: NotificationConstants.Category.invite,
                                                     actions: [],
                                                     intentIdentifiers: [],
@@ -103,6 +94,9 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
                     self?.delegate?.registerForRemoteNotifications()
                 }
             }
+            
+            let settings = await notificationCenter.notificationSettings()
+            MXLog.info("Notification sound enabled: \(settings.soundSetting == .enabled)")
         }
     }
 
@@ -151,8 +145,8 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
                                              pusherNotificationClientIdentifier: clientProxy.pusherNotificationClientIdentifier)
 
             let configuration = try await PusherConfiguration(identifiers: .init(pushkey: deviceToken.base64EncodedString(),
-                                                                                 appId: appSettings.pusherAppId),
-                                                              kind: .http(data: .init(url: appSettings.pushGatewayBaseURL.absoluteString,
+                                                                                 appId: appSettings.pusherAppID),
+                                                              kind: .http(data: .init(url: appSettings.pushGatewayNotifyEndpoint.absoluteString,
                                                                                       format: .eventIdOnly,
                                                                                       defaultPayload: defaultPayload.toJsonString())),
                                                               appDisplayName: "\(InfoPlistReader.main.bundleDisplayName) (iOS)",

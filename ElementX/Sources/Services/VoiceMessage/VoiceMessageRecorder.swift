@@ -1,17 +1,8 @@
 //
-// Copyright 2023 New Vector Ltd
+// Copyright 2023, 2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
@@ -110,13 +101,12 @@ class VoiceMessageRecorder: VoiceMessageRecorderProtocol {
             await previewAudioPlayerState.attachAudioPlayer(audioPlayer)
         }
         
-        if audioPlayer.url == url {
+        if audioPlayer.playbackURL == url {
             audioPlayer.play()
             return .success(())
         }
         
-        let pendingMediaSource = MediaSourceProxy(url: url, mimeType: mp4accMimeType)
-        audioPlayer.load(mediaSource: pendingMediaSource, using: url, autoplay: true)
+        audioPlayer.load(sourceURL: url, playbackURL: url, autoplay: true)
         return .success(())
     }
     
@@ -154,7 +144,7 @@ class VoiceMessageRecorder: VoiceMessageRecorderProtocol {
         return .success(waveformData)
     }
     
-    func sendVoiceMessage(inRoom roomProxy: RoomProxyProtocol, audioConverter: AudioConverterProtocol) async -> Result<Void, VoiceMessageRecorderError> {
+    func sendVoiceMessage(inRoom roomProxy: JoinedRoomProxyProtocol, audioConverter: AudioConverterProtocol) async -> Result<Void, VoiceMessageRecorderError> {
         guard let url = audioRecorder.audioFileURL else {
             return .failure(VoiceMessageRecorderError.missingRecordingFile)
         }
@@ -188,8 +178,7 @@ class VoiceMessageRecorder: VoiceMessageRecorderProtocol {
         
         let result = await roomProxy.timeline.sendVoiceMessage(url: oggFile,
                                                                audioInfo: audioInfo,
-                                                               waveform: waveform,
-                                                               progressSubject: nil) { _ in }
+                                                               waveform: waveform) { _ in }
         
         if case .failure(let error) = result {
             MXLog.error("Failed to send the voice message. \(error)")
@@ -243,18 +232,15 @@ class VoiceMessageRecorder: VoiceMessageRecorderProtocol {
     
     private func finalizeRecording() async -> Result<Void, VoiceMessageRecorderError> {
         MXLog.info("finalize audio recording")
-        guard let url = audioRecorder.audioFileURL, audioRecorder.currentTime > 0 else {
+        guard audioRecorder.audioFileURL != nil, audioRecorder.currentTime > 0 else {
             return .failure(.previewNotAvailable)
         }
 
         // Build the preview audio player state
-        previewAudioPlayerState = await AudioPlayerState(id: .recorderPreview, duration: recordingDuration, waveform: EstimatedWaveform(data: []))
+        previewAudioPlayerState = await AudioPlayerState(id: .recorderPreview, title: L10n.commonVoiceMessage, duration: recordingDuration, waveform: EstimatedWaveform(data: []))
 
         // Build the preview audio player
-        let mediaSource = MediaSourceProxy(url: url, mimeType: mp4accMimeType)
-        guard case .success(let mediaPlayer) = await mediaPlayerProvider.player(for: mediaSource), let audioPlayer = mediaPlayer as? AudioPlayerProtocol else {
-            return .failure(.previewNotAvailable)
-        }
+        let audioPlayer = await mediaPlayerProvider.player
         previewAudioPlayer = audioPlayer
         
         return .success(())

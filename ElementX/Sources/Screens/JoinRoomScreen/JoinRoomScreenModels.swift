@@ -1,78 +1,125 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
 
-enum JoinRoomScreenViewModelAction {
+enum JoinRoomScreenViewModelAction: Equatable {
     case joined
-    case cancelled
+    case dismiss
+    case presentDeclineAndBlock(userID: String)
 }
 
-enum JoinRoomScreenInteractionMode {
+enum JoinRoomScreenMode: Equatable {
+    case loading
     case unknown
-    case invited
-    case join
-    case knock
+    case joinable
+    case restricted
+    case inviteRequired
+    case invited(isDM: Bool)
+    case knockable
+    case knocked
+    case banned(sender: String?, reason: String?)
+    case forbidden
+    
+    var isInvite: Bool {
+        switch self {
+        case .invited:
+            true
+        default:
+            false
+        }
+    }
+}
+
+struct JoinRoomScreenRoomDetails {
+    let name: String?
+    let topic: String?
+    let canonicalAlias: String?
+    let avatar: RoomAvatar?
+    let memberCount: Int?
+    let inviter: RoomInviterDetails?
+    let isDirect: Bool?
 }
 
 struct JoinRoomScreenViewState: BindableState {
-    // Maybe use room summary details or similar here??
     let roomID: String
     
-    var roomDetails: RoomPreviewDetails?
+    var roomDetails: JoinRoomScreenRoomDetails?
     
-    var mode: JoinRoomScreenInteractionMode {
-        guard let roomDetails else {
-            return .unknown
-        }
-        
-        if roomDetails.isInvited {
-            return .invited
-        }
-        
-        if roomDetails.isPublic {
-            return .join
-        }
-        
-        // Knocking is not supported yet, treat it as .unknown
-        // if roomDetails.canKnock {
-        //     return .knock
-        // }
-        
-        return .unknown
-    }
+    var mode: JoinRoomScreenMode = .loading
     
+    var hideInviteAvatars = false
+        
     var bindings = JoinRoomScreenViewStateBindings()
     
+    var shouldHideAvatars: Bool {
+        hideInviteAvatars && mode.isInvite
+    }
+    
     var title: String {
-        roomDetails?.name ?? L10n.screenJoinRoomTitleNoPreview
+        if isDMInvite, let inviter = roomDetails?.inviter {
+            return inviter.displayName ?? inviter.id
+        } else {
+            return roomDetails?.name ?? L10n.screenJoinRoomTitleNoPreview
+        }
+    }
+    
+    var subtitle: String? {
+        switch mode {
+        case .invited(isDM: true):
+            if let inviter = roomDetails?.inviter {
+                return inviter.displayName != nil ? inviter.id : nil
+            }
+            return nil
+        case .loading, .unknown, .knocked:
+            return nil
+        default:
+            return roomDetails?.canonicalAlias
+        }
+    }
+    
+    var avatar: RoomAvatar? {
+        // DM invites avatars are broken, this is a workaround
+        // https://github.com/matrix-org/matrix-rust-sdk/issues/4825
+        if isDMInvite, let inviter = roomDetails?.inviter {
+            .heroes([.init(userID: inviter.id, displayName: inviter.displayName, avatarURL: hideInviteAvatars ? nil : inviter.avatarURL)])
+        } else if let roomDetails, let avatar = roomDetails.avatar {
+            shouldHideAvatars ? avatar.removingAvatar : avatar
+        } else if let name = roomDetails?.name {
+            .room(id: roomID, name: name, avatarURL: nil)
+        } else {
+            nil
+        }
+    }
+    
+    var isDMInvite: Bool {
+        mode == .invited(isDM: true)
     }
 }
 
 struct JoinRoomScreenViewStateBindings {
     var alertInfo: AlertInfo<JoinRoomScreenAlertType>?
+    var knockMessage = ""
 }
 
 enum JoinRoomScreenAlertType {
     case declineInvite
+    case declineInviteAndBlock
+    case cancelKnock
+    case loadingError
 }
 
 enum JoinRoomScreenViewAction {
+    case cancelKnock
     case knock
     case join
     case acceptInvite
     case declineInvite
+    case declineInviteAndBlock(userID: String)
+    case forget
+    case dismiss
 }

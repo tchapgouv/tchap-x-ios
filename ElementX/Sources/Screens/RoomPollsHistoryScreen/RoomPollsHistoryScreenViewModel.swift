@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Algorithms
@@ -27,7 +18,7 @@ class RoomPollsHistoryScreenViewModel: RoomPollsHistoryScreenViewModelType, Room
     }
     
     private let pollInteractionHandler: PollInteractionHandlerProtocol
-    private let roomTimelineController: RoomTimelineControllerProtocol
+    private let timelineController: TimelineControllerProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     
     private var paginateBackwardsTask: Task<Void, Never>?
@@ -40,10 +31,10 @@ class RoomPollsHistoryScreenViewModel: RoomPollsHistoryScreenViewModelType, Room
     }
 
     init(pollInteractionHandler: PollInteractionHandlerProtocol,
-         roomTimelineController: RoomTimelineControllerProtocol,
+         timelineController: TimelineControllerProtocol,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.pollInteractionHandler = pollInteractionHandler
-        self.roomTimelineController = roomTimelineController
+        self.timelineController = timelineController
         self.userIndicatorController = userIndicatorController
         
         super.init(initialViewState: RoomPollsHistoryScreenViewState(title: L10n.screenPollsHistoryTitle,
@@ -74,7 +65,7 @@ class RoomPollsHistoryScreenViewModel: RoomPollsHistoryScreenViewModelType, Room
     // MARK: - Private
     
     private func setupSubscriptions() {
-        roomTimelineController.callbacks
+        timelineController.callbacks
             .receive(on: DispatchQueue.main)
             .sink { [weak self] callback in
                 guard let self else { return }
@@ -141,7 +132,7 @@ class RoomPollsHistoryScreenViewModel: RoomPollsHistoryScreenViewModelType, Room
     private func updatePollsList(filter: RoomPollsHistoryFilter) {
         // Get the poll timeline items to display
         var items: [PollRoomTimelineItem] = []
-        for timelineItem in roomTimelineController.timelineItems {
+        for timelineItem in timelineController.timelineItems {
             if let pollRoomTimelineItem = timelineItem as? PollRoomTimelineItem {
                 // Apply the filter
                 switch filter {
@@ -157,7 +148,7 @@ class RoomPollsHistoryScreenViewModel: RoomPollsHistoryScreenViewModelType, Room
         
         // Map into RoomPollsHistoryPollDetails to have both the event timestamp and the timeline item
         state.pollTimelineItems = items.map { item in
-            guard let timestamp = roomTimelineController.eventTimestamp(for: item.id) else {
+            guard let timestamp = timelineController.eventTimestamp(for: item.id) else {
                 return nil
             }
             return RoomPollsHistoryPollDetails(timestamp: timestamp, item: item)
@@ -176,7 +167,7 @@ class RoomPollsHistoryScreenViewModel: RoomPollsHistoryScreenViewModelType, Room
                 return
             }
             state.isBackPaginating = true
-            switch await roomTimelineController.paginateBackwards(requestSize: Constants.backPaginationEventLimit) {
+            switch await timelineController.paginateBackwards(requestSize: Constants.backPaginationEventLimit) {
             case .failure(let error):
                 MXLog.error("failed to back paginate. \(error)")
             default:

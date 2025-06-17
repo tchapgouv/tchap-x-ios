@@ -1,17 +1,8 @@
 //
-// Copyright 2022 New Vector Ltd
+// Copyright 2022-2024 New Vector Ltd.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
@@ -19,36 +10,33 @@ import Foundation
 enum RoomTimelineItemFixtures {
     /// The default timeline items used in Xcode previews etc.
     static var `default`: [RoomTimelineItemProtocol] = [
-        SeparatorRoomTimelineItem(id: .init(timelineID: "Yesterday"), text: "Yesterday"),
-        TextRoomTimelineItem(id: .init(timelineID: ".RoomTimelineItemFixtures.default.0",
-                                       eventID: "RoomTimelineItemFixtures.default.0"),
-                             timestamp: "10:10 AM",
+        SeparatorRoomTimelineItem(id: .virtual(uniqueID: .init("Yesterday")), timestamp: .mock),
+        TextRoomTimelineItem(id: .event(uniqueID: .init(".RoomTimelineItemFixtures.default.0"),
+                                        eventOrTransactionID: .eventID("RoomTimelineItemFixtures.default.0")),
+                             timestamp: .mock,
                              isOutgoing: false,
                              isEditable: false,
                              canBeRepliedTo: true,
-                             isThreaded: false,
                              sender: .init(id: "", displayName: "Jacob"),
                              content: .init(body: "That looks so good!"),
                              properties: RoomTimelineItemProperties(isEdited: true)),
-        TextRoomTimelineItem(id: .init(timelineID: "RoomTimelineItemFixtures.default.1",
-                                       eventID: "RoomTimelineItemFixtures.default.1"),
-                             timestamp: "10:11 AM",
+        TextRoomTimelineItem(id: .event(uniqueID: .init("RoomTimelineItemFixtures.default.1"),
+                                        eventOrTransactionID: .eventID("RoomTimelineItemFixtures.default.1")),
+                             timestamp: .mock,
                              isOutgoing: false,
                              isEditable: false,
                              canBeRepliedTo: true,
-                             isThreaded: false,
                              sender: .init(id: "", displayName: "Helena"),
                              content: .init(body: "Let’s get lunch soon! New salad place opened up 🥗. When are y’all free? 🤗"),
                              properties: RoomTimelineItemProperties(reactions: [
                                  AggregatedReaction(accountOwnerID: "me", key: "🙌", senders: [ReactionSender(id: "me", timestamp: Date())])
                              ])),
-        TextRoomTimelineItem(id: .init(timelineID: "RoomTimelineItemFixtures.default.2",
-                                       eventID: "RoomTimelineItemFixtures.default.2"),
-                             timestamp: "10:11 AM",
+        TextRoomTimelineItem(id: .event(uniqueID: .init("RoomTimelineItemFixtures.default.2"),
+                                        eventOrTransactionID: .eventID("RoomTimelineItemFixtures.default.2")),
+                             timestamp: .mock,
                              isOutgoing: false,
                              isEditable: false,
                              canBeRepliedTo: true,
-                             isThreaded: false,
                              sender: .init(id: "", displayName: "Helena"),
                              content: .init(body: "I can be around on Wednesday. How about some 🌮 instead? Like https://www.tortilla.co.uk/"),
                              properties: RoomTimelineItemProperties(reactions: [
@@ -61,33 +49,30 @@ enum RoomTimelineItemFixtures {
                                                         ReactionSender(id: "jacob", timestamp: Date())
                                                     ])
                              ])),
-        SeparatorRoomTimelineItem(id: .init(timelineID: "Today"), text: "Today"),
-        TextRoomTimelineItem(id: .init(timelineID: "RoomTimelineItemFixtures.default.3",
-                                       eventID: "RoomTimelineItemFixtures.default.3"),
-                             timestamp: "5 PM",
+        SeparatorRoomTimelineItem(id: .virtual(uniqueID: .init("Today")), timestamp: .mock),
+        TextRoomTimelineItem(id: .event(uniqueID: .init("RoomTimelineItemFixtures.default.3"),
+                                        eventOrTransactionID: .eventID("RoomTimelineItemFixtures.default.3")),
+                             timestamp: .mock,
                              isOutgoing: false,
                              isEditable: false,
                              canBeRepliedTo: true,
-                             isThreaded: false,
                              sender: .init(id: "", displayName: "Helena"),
                              content: .init(body: "Wow, cool. Ok, lets go the usual place tomorrow?! Is that too soon?  Here’s the menu, let me know what you want it’s on me!"),
                              properties: RoomTimelineItemProperties(orderedReadReceipts: [ReadReceipt(userID: "alice", formattedTimestamp: nil)])),
-        TextRoomTimelineItem(id: .init(timelineID: "RoomTimelineItemFixtures.default.4",
-                                       eventID: "RoomTimelineItemFixtures.default.4"),
-                             timestamp: "5 PM",
+        TextRoomTimelineItem(id: .event(uniqueID: .init("RoomTimelineItemFixtures.default.4"),
+                                        eventOrTransactionID: .eventID("RoomTimelineItemFixtures.default.4")),
+                             timestamp: .mock,
                              isOutgoing: true,
                              isEditable: true,
                              canBeRepliedTo: true,
-                             isThreaded: false,
                              sender: .init(id: "", displayName: "Bob"),
                              content: .init(body: "And John's speech was amazing!")),
-        TextRoomTimelineItem(id: .init(timelineID: "RoomTimelineItemFixtures.default.5",
-                                       eventID: "RoomTimelineItemFixtures.default.5"),
-                             timestamp: "5 PM",
+        TextRoomTimelineItem(id: .event(uniqueID: .init("RoomTimelineItemFixtures.default.5"),
+                                        eventOrTransactionID: .eventID("RoomTimelineItemFixtures.default.5")),
+                             timestamp: .mock,
                              isOutgoing: true,
                              isEditable: true,
                              canBeRepliedTo: true,
-                             isThreaded: false,
                              sender: .init(id: "", displayName: "Bob"),
                              content: .init(body: "New home office set up!"),
                              properties: RoomTimelineItemProperties(reactions: AggregatedReaction.mockReactions,
@@ -95,13 +80,12 @@ enum RoomTimelineItemFixtures {
                                                                                           ReadReceipt(userID: "bob", formattedTimestamp: nil),
                                                                                           ReadReceipt(userID: "charlie", formattedTimestamp: nil),
                                                                                           ReadReceipt(userID: "dan", formattedTimestamp: nil)])),
-        TextRoomTimelineItem(id: .init(timelineID: "RoomTimelineItemFixtures.default.6",
-                                       eventID: "RoomTimelineItemFixtures.default.6"),
-                             timestamp: "5 PM",
+        TextRoomTimelineItem(id: .event(uniqueID: .init("RoomTimelineItemFixtures.default.6"),
+                                        eventOrTransactionID: .eventID("RoomTimelineItemFixtures.default.6")),
+                             timestamp: .mock,
                              isOutgoing: false,
                              isEditable: false,
                              canBeRepliedTo: true,
-                             isThreaded: false,
                              sender: .init(id: "", displayName: "Helena"),
                              content: .init(body: "",
                                             formattedBody: AttributedStringBuilder(mentionBuilder: MentionBuilder())
@@ -251,30 +235,131 @@ enum RoomTimelineItemFixtures {
     
     static var permalinkChunk: [RoomTimelineItemProtocol] {
         (1...20).map { index in
-            TextRoomTimelineItem(id: .init(timelineID: "\(index)", eventID: "$\(index)"),
+            TextRoomTimelineItem(id: .event(uniqueID: .init("\(index)"), eventOrTransactionID: .eventID("$\(index)")),
                                  text: "Message ID \(index)",
                                  senderDisplayName: index > 10 ? "Alice" : "Bob")
         }
+    }
+    
+    static var mediaChunk: [RoomTimelineItemProtocol] {
+        [
+            AudioRoomTimelineItem(isOutgoing: false, caption: "Listen to this!"),
+            AudioRoomTimelineItem(isOutgoing: true),
+            FileRoomTimelineItem(isOutgoing: false),
+            FileRoomTimelineItem(isOutgoing: true, caption: "Please check this ASAP!"),
+            ImageRoomTimelineItem(isOutgoing: false),
+            ImageRoomTimelineItem(isOutgoing: true, caption: "Isn't this pretty!"),
+            VideoRoomTimelineItem(isOutgoing: false, caption: "Woah, it was incredible!"),
+            VideoRoomTimelineItem(isOutgoing: true),
+            VoiceMessageRoomTimelineItem(isOutgoing: false),
+            VoiceMessageRoomTimelineItem(isOutgoing: true)
+        ]
+    }
+    
+    static var separator: SeparatorRoomTimelineItem {
+        SeparatorRoomTimelineItem(id: .virtual(uniqueID: .init(UUID().uuidString)),
+                                  timestamp: .now)
     }
 }
 
 private extension TextRoomTimelineItem {
     init(id: TimelineItemIdentifier? = nil, text: String, senderDisplayName: String) {
-        self.init(id: id ?? .random,
-                  timestamp: "10:47 am",
+        self.init(id: id ?? .randomEvent,
+                  timestamp: .mock,
                   isOutgoing: senderDisplayName == "Alice",
                   isEditable: false,
                   canBeRepliedTo: true,
-                  isThreaded: false,
                   sender: .init(id: "", displayName: senderDisplayName),
                   content: .init(body: text))
     }
-}
-
-private extension TextRoomTimelineItem {
+    
     func withReadReceipts(_ receipts: [ReadReceipt]) -> TextRoomTimelineItem {
         var newSelf = self
         newSelf.properties.orderedReadReceipts = receipts
         return newSelf
+    }
+}
+
+private extension AudioRoomTimelineItem {
+    init(isOutgoing: Bool, caption: String? = nil) {
+        self.init(id: .randomEvent,
+                  timestamp: .mock,
+                  isOutgoing: isOutgoing,
+                  isEditable: isOutgoing,
+                  canBeRepliedTo: true,
+                  sender: .init(id: isOutgoing ? "@alice:matrix.org" : "@bob:matrix.org"),
+                  content: .init(filename: "audio.mp3",
+                                 caption: caption,
+                                 duration: 60,
+                                 waveform: nil,
+                                 source: try? .init(url: .mockMXCAudio, mimeType: nil),
+                                 fileSize: nil,
+                                 contentType: .mp3))
+    }
+}
+
+private extension FileRoomTimelineItem {
+    init(isOutgoing: Bool, caption: String? = nil) {
+        self.init(id: .randomEvent,
+                  timestamp: .mock,
+                  isOutgoing: isOutgoing,
+                  isEditable: isOutgoing,
+                  canBeRepliedTo: true,
+                  sender: .init(id: isOutgoing ? "@alice:matrix.org" : "@bob:matrix.org"),
+                  content: .init(filename: "file.pdf",
+                                 caption: caption,
+                                 source: try? .init(url: .mockMXCFile, mimeType: nil),
+                                 fileSize: nil,
+                                 thumbnailSource: nil,
+                                 contentType: .pdf))
+    }
+}
+
+private extension ImageRoomTimelineItem {
+    init(isOutgoing: Bool, caption: String? = nil) {
+        self.init(id: .randomEvent,
+                  timestamp: .mock,
+                  isOutgoing: isOutgoing,
+                  isEditable: isOutgoing,
+                  canBeRepliedTo: true,
+                  sender: .init(id: isOutgoing ? "@alice:matrix.org" : "@bob:matrix.org"),
+                  content: .init(filename: "image.jpg",
+                                 caption: caption,
+                                 imageInfo: .mockImage,
+                                 thumbnailInfo: nil,
+                                 blurhash: "KpE4oyayR5|GbHb];3j@of"))
+    }
+}
+
+private extension VideoRoomTimelineItem {
+    init(isOutgoing: Bool, caption: String? = nil) {
+        self.init(id: .randomEvent,
+                  timestamp: .mock,
+                  isOutgoing: isOutgoing,
+                  isEditable: isOutgoing,
+                  canBeRepliedTo: true,
+                  sender: .init(id: isOutgoing ? "@alice:matrix.org" : "@bob:matrix.org"),
+                  content: .init(filename: "video.mp4",
+                                 caption: caption,
+                                 videoInfo: .mockVideo,
+                                 thumbnailInfo: .mockVideoThumbnail,
+                                 blurhash: "KtI~70X5V?yss9oyrYs:t6"))
+    }
+}
+
+private extension VoiceMessageRoomTimelineItem {
+    init(isOutgoing: Bool) {
+        self.init(id: .randomEvent,
+                  timestamp: .mock,
+                  isOutgoing: isOutgoing,
+                  isEditable: isOutgoing,
+                  canBeRepliedTo: true,
+                  sender: .init(id: isOutgoing ? "@alice:matrix.org" : "@bob:matrix.org"),
+                  content: .init(filename: "message.ogg",
+                                 duration: 10,
+                                 waveform: .mockWaveform,
+                                 source: try? .init(url: .mockMXCAudio, mimeType: nil),
+                                 fileSize: nil,
+                                 contentType: .audio))
     }
 }
