@@ -137,7 +137,10 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private var requiresAnalyticsSetup: Bool {
-        analyticsService.shouldShowAnalyticsPrompt
+        // Tchap: skip analytics opt-in.
+        // Will force Onboarding flow from `nextSkippingIdentityConfirmed` to `finished`.
+//        analyticsService.shouldShowAnalyticsPrompt
+        false
     }
     
     private var requiresNotificationsSetup: Bool {
