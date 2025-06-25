@@ -78,7 +78,13 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 
                 switch action {
                 case .loginManually:
-                    showServerConfirmationScreen(authenticationFlow: .login)
+                    // Tchap: [Beta DINUM] - Shortcut HomeServer confirmation screen.
+//                    showServerConfirmationScreen(authenticationFlow: .login)
+                    let homeserver = authenticationService.homeserver.value
+                    Task {
+                        _ = await self.authenticationService.configure(for: homeserver.address, flow: .login)
+                        self.showLoginScreen()
+                    }
                 case .loginWithQR:
                     startQRCodeLogin()
                 case .register:
