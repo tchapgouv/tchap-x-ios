@@ -12,7 +12,9 @@ import Sentry
 import UIKit
 
 class BugReportService: NSObject, BugReportServiceProtocol {
-    private let baseURL: URL?
+    // Tchap: Make BugReportService baseURL updatable and nullable (on logout)
+//    private let baseURL: URL?
+    private(set) var baseURL: URL?
     private let applicationID: String
     private let sdkGitSHA: String
     private let maxUploadSize: Int
@@ -47,6 +49,11 @@ class BugReportService: NSObject, BugReportServiceProtocol {
         SentrySDK.crashedLastRun
     }
         
+    // Tchap: Make BugReportService baseURL updatable and nullable (on logout)
+    func updateBaseURL(_ baseURL: URL?) {
+        self.baseURL = baseURL
+    }
+
     // swiftlint:disable:next cyclomatic_complexity
     func submitBugReport(_ bugReport: BugReport,
                          progressListener: CurrentValueSubject<Double, Never>) async -> Result<SubmitBugReportResponse, BugReportServiceError> {

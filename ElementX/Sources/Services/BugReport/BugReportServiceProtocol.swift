@@ -51,6 +51,9 @@ protocol BugReportServiceProtocol: AnyObject {
     
     var lastCrashEventID: String? { get set }
     
+    // Tchap: Make BugReportService baseURL updatable and nullable (on logout)
+    func updateBaseURL(_ baseURL: URL?)
+    
     func submitBugReport(_ bugReport: BugReport,
                          progressListener: CurrentValueSubject<Double, Never>) async -> Result<SubmitBugReportResponse, BugReportServiceError>
 }
