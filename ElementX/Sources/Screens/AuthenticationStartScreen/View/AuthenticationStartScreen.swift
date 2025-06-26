@@ -67,11 +67,15 @@ struct AuthenticationStartScreen: View {
             Spacer()
             
             VStack(spacing: 8) {
-                Text(L10n.screenOnboardingWelcomeTitle)
+                // Tchap: Change Title on Start screen
+//                Text(L10n.screenOnboardingWelcomeTitle)
+                Text(TchapL10n.screenOnboardingWelcomeTitle)
                     .font(.compound.headingLGBold)
                     .foregroundColor(.compound.textPrimary)
                     .multilineTextAlignment(.center)
-                Text(L10n.screenOnboardingWelcomeMessage(InfoPlistReader.main.productionAppName))
+                // Tchap: Change message on Start screen
+//                Text(L10n.screenOnboardingWelcomeMessage(InfoPlistReader.main.productionAppName))
+                Text(TchapL10n.screenOnboardingWelcomeMessage)
                     .font(.compound.bodyLG)
                     .foregroundColor(.compound.textSecondary)
                     .multilineTextAlignment(.center)
@@ -90,11 +94,23 @@ struct AuthenticationStartScreen: View {
     var buttons: some View {
         VStack(spacing: 16) {
             if context.viewState.isQRCodeLoginEnabled {
+                // Tchap: Add QRCode button header
+                Text(TchapL10n.screenOnboardingWelcomeQrcodeHeader)
+                    .font(.compound.bodyLG)
+                    .foregroundColor(.compound.textSecondary)
+                    .multilineTextAlignment(.center)
+
                 Button { context.send(viewAction: .loginWithQR) } label: {
                     Label(L10n.screenOnboardingSignInWithQrCode, icon: \.qrCode)
                 }
                 .buttonStyle(.compound(.primary))
                 .accessibilityIdentifier(A11yIdentifiers.authenticationStartScreen.signInWithQr)
+
+                // Tchap: Add in between buttons text "or"
+                Text(TchapL10n.screenOnboardingWelcomeOrBetweenButtons)
+                    .font(.compound.bodyLG)
+                    .foregroundColor(.compound.textSecondary)
+                    .multilineTextAlignment(.center)
             }
             
             Button { context.send(viewAction: .loginManually) } label: {

@@ -71,6 +71,14 @@ internal enum TchapL10n {
   internal static var screenCreateRoomRoomVisibilitySectionTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_visibility_section_title") }
   /// Members
   internal static var screenCreateRoomSelectedUsersLabel: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_selected_users_label") }
+  /// The civil servants instant messaging system
+  internal static var screenOnboardingWelcomeMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_message") }
+  /// or
+  internal static var screenOnboardingWelcomeOrBetweenButtons: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_or_between_buttons") }
+  /// Already logged on a computer?
+  internal static var screenOnboardingWelcomeQrcodeHeader: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_qrcode_header") }
+  /// Welcome to Tchap
+  internal static var screenOnboardingWelcomeTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_title") }
   /// Join a public room
   internal static var screenRoomDirectorySearchTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_room_directory_search_title") }
   /// Join a public room

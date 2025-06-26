@@ -35,8 +35,12 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                 configureNotificationManager()
                 observeUserSessionChanges()
                 // Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
-                setupServiceLocatorBugReport(appSettings: appSettings)
+                let homeServerBaseURL = URL(string: userSession!.clientProxy.homeserver) // swiftlint:disable:this force_unwrapping
+                updateBugReportServiceBaseURL(homeServerBaseURL?.appendingPathComponent("bugreports"))
                 startSync()
+            } else {
+                // Tchap: nullify BugReportService baseURL after user is logged out.
+                updateBugReportServiceBaseURL(nil)
             }
         }
     }
@@ -368,12 +372,13 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private static func setupServiceLocator(appSettings: AppSettings, appHooks: AppHooks) {
         ServiceLocator.shared.register(userIndicatorController: UserIndicatorController())
         ServiceLocator.shared.register(appSettings: appSettings)
-        // Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
+        // Tchap: set up BugReportService  baseURL to nil because user is not yet logged Its HomeServere is not known.
 //        ServiceLocator.shared.register(bugReportService: BugReportService(baseURL: appSettings.bugReportServiceBaseURL,
-//                                                                          applicationID: appSettings.bugReportApplicationID,
-//                                                                          sdkGitSHA: sdkGitSha(),
-//                                                                          maxUploadSize: appSettings.bugReportMaxUploadSize,
-//                                                                          appHooks: appHooks))
+        ServiceLocator.shared.register(bugReportService: BugReportService(baseURL: nil,
+                                                                          applicationID: appSettings.bugReportApplicationID,
+                                                                          sdkGitSHA: sdkGitSha(),
+                                                                          maxUploadSize: appSettings.bugReportMaxUploadSize,
+                                                                          appHooks: appHooks))
         let posthogAnalyticsClient = PostHogAnalyticsClient()
         posthogAnalyticsClient.updateSuperProperties(AnalyticsEvent.SuperProperties(appPlatform: .EXI, cryptoSDK: .Rust, cryptoSDKVersion: sdkGitSha()))
         ServiceLocator.shared.register(analytics: AnalyticsService(client: posthogAnalyticsClient,
@@ -381,14 +386,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     }
 
     // Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
-    private func setupServiceLocatorBugReport(appSettings: AppSettings) {
-        // Tchap: we can force unwrap and value here because user session is initialized.
-        // swiftlint:disable:next force_unwrapping
-        ServiceLocator.shared.register(bugReportService: BugReportService(baseURL: URL(string: userSession!.clientProxy.homeserver)?.appendingPathComponent("bugreports"),
-                                                                          applicationID: appSettings.bugReportApplicationID,
-                                                                          sdkGitSHA: sdkGitSha(),
-                                                                          maxUploadSize: appSettings.bugReportMaxUploadSize,
-                                                                          appHooks: appHooks))
+    private func updateBugReportServiceBaseURL(_ baseURL: URL?) {
+        ServiceLocator.shared.bugReportService?.updateBaseURL(baseURL)
     }
     
     /// Perform any required migrations for the app to function correctly.

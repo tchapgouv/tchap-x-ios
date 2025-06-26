@@ -1,0 +1,36 @@
+{
+  "images" : [
+    {
+      "filename" : "iphone-light.png",
+      "idiom" : "iphone"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "iphone-dark.png",
+      "idiom" : "iphone"
+    },
+    {
+      "filename" : "ipad-light.png",
+      "idiom" : "ipad"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "ipad-dark.png",
+      "idiom" : "ipad"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

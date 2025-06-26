@@ -15,9 +15,7 @@ protocol AuthenticationFlowCoordinatorDelegate: AnyObject {
 
 class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     private let authenticationService: AuthenticationServiceProtocol
-    // Tchap: set `bugReportService` optional because it can be nil before user is logged.
-//    private let bugReportService: BugReportServiceProtocol
-    private let bugReportService: BugReportServiceProtocol?
+    private let bugReportService: BugReportServiceProtocol
     private let navigationRootCoordinator: NavigationRootCoordinator
     private let navigationStackCoordinator: NavigationStackCoordinator
     private let appMediator: AppMediatorProtocol
@@ -37,9 +35,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     
     init(authenticationService: AuthenticationServiceProtocol,
          qrCodeLoginService: QRCodeLoginServiceProtocol,
-         // Tchap: set `bugReportService` optional because it can be nil before user is logged.
-//         bugReportService: BugReportServiceProtocol,
-         bugReportService: BugReportServiceProtocol?,
+         bugReportService: BugReportServiceProtocol,
          navigationRootCoordinator: NavigationRootCoordinator,
          appMediator: AppMediatorProtocol,
          appSettings: AppSettings,
@@ -72,11 +68,8 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     // MARK: - Private
     
     private func showStartScreen() {
-        // Tchap: set `bugReportService` optional because it can be nil before user is logged.
-//        let parameters = AuthenticationStartScreenParameters(showCreateAccountButton: appSettings.showCreateAccountButton,
-//                                                             isBugReportServiceEnabled: bugReportService.isEnabled)
         let parameters = AuthenticationStartScreenParameters(showCreateAccountButton: appSettings.showCreateAccountButton,
-                                                             isBugReportServiceEnabled: bugReportService?.isEnabled ?? false)
+                                                             isBugReportServiceEnabled: bugReportService.isEnabled)
         let coordinator = AuthenticationStartScreenCoordinator(parameters: parameters)
         
         coordinator.actions
@@ -85,7 +78,13 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 
                 switch action {
                 case .loginManually:
-                    showServerConfirmationScreen(authenticationFlow: .login)
+                    // Tchap: [Beta DINUM] - Shortcut HomeServer confirmation screen.
+//                    showServerConfirmationScreen(authenticationFlow: .login)
+                    let homeserver = authenticationService.homeserver.value
+                    Task {
+                        _ = await self.authenticationService.configure(for: homeserver.address, flow: .login)
+                        self.showLoginScreen()
+                    }
                 case .loginWithQR:
                     startQRCodeLogin()
                 case .register:
@@ -129,12 +128,6 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private func showReportProblemScreen() {
-        // Tchap: verify `bugReportService` is instantiated. It can be nil in Tchap on Authentication screen while user is not logged.
-        guard let bugReportService else {
-            MXLog.warning("Can't launch `BugReportFlowCoordinator` from `AuthenticationFlowCoordinator`: `bugReportService` is nil.")
-            return
-        }
-        
         bugReportFlowCoordinator = BugReportFlowCoordinator(parameters: .init(presentationMode: .sheet(navigationStackCoordinator),
                                                                               userIndicatorController: userIndicatorController,
                                                                               bugReportService: bugReportService,
