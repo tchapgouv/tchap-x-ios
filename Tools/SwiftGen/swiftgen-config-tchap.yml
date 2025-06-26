@@ -7,7 +7,7 @@ xcassets:
     templateName: swift5
     output: TchapAssets.swift
     params:
-      enumName: TchapAssets # To not conflict with ElementX/Assets.swift
+      enumName: TchapAsset # To not conflict with ElementX/Assets.swift
       colorTypeName: TchapColor # To not conflict with ElementX/Assets.swift
       colorAliasName: TchapAssetColorTypeAlias # To not conflict with ElementX/Assets.swift
       imageTypeName: TchapImage # To not conflict with ElementX/Assets.swift
