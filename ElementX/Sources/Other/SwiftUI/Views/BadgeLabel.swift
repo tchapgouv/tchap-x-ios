@@ -17,22 +17,22 @@ struct BadgeLabel: View {
     // Tchap: usage of badges in Tchap, Must be defined in BadgeLabel rather then BadgeLabelStyle because BadgeLabelStyle is private.
     public enum TchapUsage {
         case none // By default, keep ElementX behavior.
-        case userIsExternal
-        case roomIsEncrypted
-        case roomIsNotEncrypted
-        case roomIsPublic
-        case roomIsAccessibleToExternals
+        case userIsExternal(inRoomHeaderView: Bool = false)
+        case roomIsEncrypted(inRoomHeaderView: Bool = false)
+        case roomIsNotEncrypted(inRoomHeaderView: Bool = false)
+        case roomIsPublic(inRoomHeaderView: Bool = false)
+        case roomIsAccessibleToExternals(inRoomHeaderView: Bool = false)
     }
 
     // Tchap: evaluate our own icon size
     var iconSize: CompoundIcon.Size {
         switch tchapUsage {
         case .none: .xSmall
-        case .userIsExternal: .xSmall
-        case .roomIsEncrypted: .xSmall
-        case .roomIsNotEncrypted: .xSmall
-        case .roomIsPublic: .xSmall
-        case .roomIsAccessibleToExternals: .xSmall
+        case .userIsExternal(let inRoomHeaderView): inRoomHeaderView ? .custom(9.0) : .xSmall
+        case .roomIsEncrypted(let inRoomHeaderView): inRoomHeaderView ? .custom(9.0) : .xSmall
+        case .roomIsNotEncrypted(let inRoomHeaderView): inRoomHeaderView ? .custom(89.0) : .xSmall
+        case .roomIsPublic(let inRoomHeaderView): inRoomHeaderView ? .custom(9.0) : .xSmall
+        case .roomIsAccessibleToExternals(let inRoomHeaderView): inRoomHeaderView ? .custom(8.0) : .xSmall
         }
     }
 
@@ -105,12 +105,18 @@ private struct BadgeLabelStyle: LabelStyle {
     // Tchap: evaluate font on usage
     var font: Font {
         switch tchapUsage {
-        case .none: .compound.bodySM
-        case .userIsExternal: .compound.bodySMSemibold
-        case .roomIsEncrypted: .system(size: 9.0).bold()
-        case .roomIsNotEncrypted: .system(size: 9.0).bold()
-        case .roomIsPublic: .system(size: 9.0).bold()
-        case .roomIsAccessibleToExternals: .system(size: 9.0).bold()
+        case .none:
+            .compound.bodySM
+        case .userIsExternal:
+            .compound.bodySMSemibold
+        case .roomIsEncrypted(let inRoomHeaderView):
+            if inRoomHeaderView == true { .system(size: 7.0).bold() } else { .system(size: 9.0).bold() }
+        case .roomIsNotEncrypted(let inRoomHeaderView):
+            if inRoomHeaderView == true { .system(size: 7.0).bold() } else { .system(size: 9.0).bold() }
+        case .roomIsPublic(let inRoomHeaderView):
+            if inRoomHeaderView == true { .system(size: 7.0).bold() } else { .system(size: 9.0).bold() }
+        case .roomIsAccessibleToExternals(let inRoomHeaderView):
+            if inRoomHeaderView == true { .system(size: 7.0).bold() } else { .system(size: 9.0).bold() }
         }
     }
     
