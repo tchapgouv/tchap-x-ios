@@ -39,7 +39,7 @@ struct TchapRoomHeaderViewRoomPropertiesBadgesView: View {
     @Binding var externalCount: Int
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 3.0) {
             if let isEncrypted = isEncrypted,
                isEncrypted == true {
                 BadgeLabel(title: TchapL10n.roomHeaderBadgeEncrypted, icon: \.lockSolid, isHighlighted: false, tchapUsage: .roomIsEncrypted(inRoomHeaderView: true))
