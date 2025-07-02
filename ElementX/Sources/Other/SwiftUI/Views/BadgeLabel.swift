@@ -65,9 +65,7 @@ private struct BadgeLabelStyle: LabelStyle {
     }
     
     func makeBody(configuration: Configuration) -> some View {
-        // Tchap: customize spacing between icon and label
-        //        HStack(spacing: 4) {
-        HStack(spacing: tchapUsage?.spaceBetweenIconAndLabel ?? 4.0) {
+        HStack(spacing: 4) {
             configuration.icon
                 .foregroundStyle(iconColor)
             configuration.title
