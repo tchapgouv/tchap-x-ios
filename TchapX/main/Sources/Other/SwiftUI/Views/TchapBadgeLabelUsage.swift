@@ -8,15 +8,14 @@
 import Compound
 import SwiftUI
 
-// Tchap: usage of badges in Tchap.
+// Tchap: custom display of badges in Tchap.
 public enum TchapBadgeLabelUsage {
     case userIsExternal(inRoomHeaderView: Bool = false)
     case roomIsEncrypted(inRoomHeaderView: Bool = false)
     case roomIsNotEncrypted(inRoomHeaderView: Bool = false)
     case roomIsPublic(inRoomHeaderView: Bool = false)
     case roomIsAccessibleToExternals(inRoomHeaderView: Bool = false)
-
-    // Tchap: evaluate our own icon size
+    
     var iconSize: CompoundIcon.Size {
         switch self {
         case .userIsExternal(let inRoomHeaderView): inRoomHeaderView ? .custom(9.0) : .xSmall
@@ -26,7 +25,7 @@ public enum TchapBadgeLabelUsage {
         case .roomIsAccessibleToExternals(let inRoomHeaderView): inRoomHeaderView ? .custom(8.0) : .xSmall
         }
     }
-
+    
     var titleColor: Color {
         switch self {
         case .userIsExternal: CompoundCoreColorTokens.orange1200
@@ -36,7 +35,7 @@ public enum TchapBadgeLabelUsage {
         case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange1200
         }
     }
-
+    
     var iconColor: Color {
         switch self {
         case .userIsExternal: CompoundCoreColorTokens.orange1200
@@ -46,7 +45,7 @@ public enum TchapBadgeLabelUsage {
         case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange1200
         }
     }
-
+    
     var backgroundColor: Color {
         switch self {
         case .userIsExternal: CompoundCoreColorTokens.orange400
@@ -56,7 +55,7 @@ public enum TchapBadgeLabelUsage {
         case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange400
         }
     }
-
+    
     var font: Font {
         switch self {
         case .userIsExternal(let inRoomHeaderView):
@@ -103,5 +102,9 @@ public enum TchapBadgeLabelUsage {
              .roomIsAccessibleToExternals(let inRoomHeaderView):
             if inRoomHeaderView == true { 2.0 } else { 4.0 }
         }
+    }
+    
+    var spaceBetweenIconAndLabel: CGFloat {
+        6.0
     }
 }
