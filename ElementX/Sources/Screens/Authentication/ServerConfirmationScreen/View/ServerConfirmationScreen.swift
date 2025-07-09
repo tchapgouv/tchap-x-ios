@@ -9,7 +9,7 @@ import Compound
 import SwiftUI
 
 struct ServerConfirmationScreen: View {
-    @ObservedObject var context: ServerConfirmationScreenViewModel.Context
+    @Bindable var context: ServerConfirmationScreenViewModel.Context
     
     var body: some View {
         FullscreenDialog(topPadding: UIConstants.iconTopPaddingToNavigationBar) {
@@ -88,7 +88,6 @@ struct ServerConfirmationScreen_Previews: PreviewProvider, TestablePreview {
     static func makeViewModel(flow: AuthenticationFlow) -> ServerConfirmationScreenViewModel {
         ServerConfirmationScreenViewModel(authenticationService: AuthenticationService.mock,
                                           authenticationFlow: flow,
-                                          slidingSyncLearnMoreURL: ServiceLocator.shared.settings.slidingSyncLearnMoreURL,
                                           userIndicatorController: UserIndicatorControllerMock())
     }
 }

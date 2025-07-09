@@ -8,7 +8,8 @@
 import Combine
 import Foundation
 
-/// A common ViewModel implementation for handling of `State` and `ViewAction`s
+/// A common ViewModel implementation for handling of `State` and `ViewAction`s. This original version
+/// is implemented using SwiftUI's original `ObservableObject` and `@Published` pattern.
 ///
 /// Generic type State is constrained to the BindableState protocol in that it may contain (but doesn't have to)
 /// a specific portion of state that can be safely bound to.

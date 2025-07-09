@@ -117,7 +117,6 @@ class MockScreen: Identifiable {
             let navigationStackCoordinator = NavigationStackCoordinator()
             let coordinator = ServerSelectionScreenCoordinator(parameters: .init(authenticationService: AuthenticationService.mock,
                                                                                  authenticationFlow: .login,
-                                                                                 slidingSyncLearnMoreURL: ServiceLocator.shared.settings.slidingSyncLearnMoreURL,
                                                                                  userIndicatorController: ServiceLocator.shared.userIndicatorController))
             navigationStackCoordinator.setRootCoordinator(coordinator)
             return navigationStackCoordinator
@@ -133,11 +132,6 @@ class MockScreen: Identifiable {
             flowCoordinator.start()
             retainedState.append(flowCoordinator)
             return nil
-        case .templateScreen:
-            let navigationStackCoordinator = NavigationStackCoordinator()
-            let coordinator = TemplateScreenCoordinator(parameters: .init())
-            navigationStackCoordinator.setRootCoordinator(coordinator)
-            return navigationStackCoordinator
         case .appLockFlow, .appLockFlowDisabled:
             // The tested coordinator is setup below in the alternate window.
             // Here we just return a blank screen to snapshot as the unlocked app.
@@ -648,7 +642,7 @@ class MockScreen: Identifiable {
             return navigationStackCoordinator
         case .createPoll:
             let navigationStackCoordinator = NavigationStackCoordinator()
-            let coordinator = PollFormScreenCoordinator(parameters: .init(mode: .new))
+            let coordinator = PollFormScreenCoordinator(parameters: .init(mode: .new, maxNumberOfOptions: 10))
             navigationStackCoordinator.setRootCoordinator(coordinator)
             return navigationStackCoordinator
         case .encryptionSettings, .encryptionSettingsOutOfSync:

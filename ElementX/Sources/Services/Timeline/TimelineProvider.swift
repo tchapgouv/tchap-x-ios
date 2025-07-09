@@ -57,7 +57,7 @@ class TimelineProvider: TimelineProviderProtocol {
             .store(in: &cancellables)
         
         Task {
-            roomTimelineObservationToken = await timeline.addListener(listener: RoomTimelineListener { [weak self] timelineDiffs in
+            roomTimelineObservationToken = await timeline.addListener(listener: SDKListener { [weak self] timelineDiffs in
                 self?.serialDispatchQueue.sync {
                     self?.updateItemsWithDiffs(timelineDiffs)
                 }
@@ -215,18 +215,6 @@ private extension VirtualTimelineItem {
         case .scanStateChanged(eventId: let eventId, newScanState: let newScanState):
             return "Scan state changed for event \(eventId) to \(newScanState)"
         }
-    }
-}
-
-private final class RoomTimelineListener: TimelineListener {
-    private let onUpdateClosure: ([TimelineDiff]) -> Void
-   
-    init(_ onUpdateClosure: @escaping ([TimelineDiff]) -> Void) {
-        self.onUpdateClosure = onUpdateClosure
-    }
-    
-    func onUpdate(diff: [TimelineDiff]) {
-        onUpdateClosure(diff)
     }
 }
 

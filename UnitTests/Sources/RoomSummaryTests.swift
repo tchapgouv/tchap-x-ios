@@ -68,7 +68,7 @@ class RoomSummaryTests: XCTestCase {
                     avatarURL: hasRoomAvatar ? roomDetails.avatarURL : nil,
                     heroes: heroes,
                     lastMessage: nil,
-                    lastMessageFormattedTimestamp: nil,
+                    lastMessageDate: nil,
                     unreadMessagesCount: 0,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 0,

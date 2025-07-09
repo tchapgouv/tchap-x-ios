@@ -16,6 +16,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
     private let userSession: UserSessionProtocol
     private let analyticsService: AnalyticsService
     private let appSettings: AppSettings
+    private let notificationManager: NotificationManagerProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     
     private let roomSummaryProvider: RoomSummaryProviderProtocol?
@@ -26,18 +27,20 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
     }
     
     init(userSession: UserSessionProtocol,
-         analyticsService: AnalyticsService,
-         appSettings: AppSettings,
          selectedRoomPublisher: CurrentValuePublisher<String?, Never>,
+         appSettings: AppSettings,
+         analyticsService: AnalyticsService,
+         notificationManager: NotificationManagerProtocol,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.userSession = userSession
         self.analyticsService = analyticsService
         self.appSettings = appSettings
+        self.notificationManager = notificationManager
         self.userIndicatorController = userIndicatorController
         
         roomSummaryProvider = userSession.clientProxy.roomSummaryProvider
         
-        super.init(initialViewState: .init(userID: userSession.clientProxy.userID),
+        super.init(initialViewState: .init(userID: userSession.clientProxy.userID, isNewBloomEnabled: appSettings.isNewBloomEnabled),
                    mediaProvider: userSession.mediaProvider)
         
         userSession.clientProxy.userAvatarURLPublisher
@@ -105,9 +108,9 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             .weakAssign(to: \.state.hideInviteAvatars, on: self)
             .store(in: &cancellables)
         
-        appSettings.$reportRoomEnabled
-            .weakAssign(to: \.state.reportRoomEnabled, on: self)
-            .store(in: &cancellables)
+        Task {
+            state.reportRoomEnabled = await userSession.clientProxy.isReportRoomSupported
+        }
         
         let isSearchFieldFocused = context.$viewState.map(\.bindings.isSearchFieldFocused)
         let searchQuery = context.$viewState.map(\.bindings.searchQuery)
@@ -205,7 +208,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                 await acceptInvite(roomID: roomIdentifier)
             }
         case .declineInvite(let roomIdentifier):
-            showDeclineInviteConfirmationAlert(roomID: roomIdentifier)
+            Task { await showDeclineInviteConfirmationAlert(roomID: roomIdentifier) }
         }
     }
     
@@ -416,7 +419,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         }
     }
     
-    private func showDeclineInviteConfirmationAlert(roomID: String) {
+    private func showDeclineInviteConfirmationAlert(roomID: String) async {
         guard let room = state.rooms.first(where: { $0.id == roomID }) else {
             displayError()
             return
@@ -426,7 +429,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         let title = room.isDirect ? L10n.screenInvitesDeclineDirectChatTitle : L10n.screenInvitesDeclineChatTitle
         let message = room.isDirect ? L10n.screenInvitesDeclineDirectChatMessage(roomPlaceholder) : L10n.screenInvitesDeclineChatMessage(roomPlaceholder)
         
-        if appSettings.reportInviteEnabled, let userID = room.inviter?.id {
+        if await userSession.clientProxy.isReportRoomSupported, let userID = room.inviter?.id {
             state.bindings.alertInfo = .init(id: UUID(),
                                              title: title,
                                              message: message,
@@ -462,6 +465,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         
         switch result {
         case .success:
+            await notificationManager.removeDeliveredMessageNotifications(for: roomID) // Normally handled by the room flow, but that's never presented in this case.
             appSettings.seenInvites.remove(roomID)
         case .failure:
             displayError()

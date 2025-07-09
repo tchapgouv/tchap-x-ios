@@ -2002,8 +2002,8 @@ class AuthenticationClientBuilderMock: AuthenticationClientBuilderProtocol, @unc
     var buildWithQRCodeQrCodeDataOidcConfigurationProgressListenerCalled: Bool {
         return buildWithQRCodeQrCodeDataOidcConfigurationProgressListenerCallsCount > 0
     }
-    var buildWithQRCodeQrCodeDataOidcConfigurationProgressListenerReceivedArguments: (qrCodeData: QrCodeData, oidcConfiguration: OIDCConfigurationProxy, progressListener: QrLoginProgressListenerProxy)?
-    var buildWithQRCodeQrCodeDataOidcConfigurationProgressListenerReceivedInvocations: [(qrCodeData: QrCodeData, oidcConfiguration: OIDCConfigurationProxy, progressListener: QrLoginProgressListenerProxy)] = []
+    var buildWithQRCodeQrCodeDataOidcConfigurationProgressListenerReceivedArguments: (qrCodeData: QrCodeData, oidcConfiguration: OIDCConfigurationProxy, progressListener: SDKListener<QrLoginProgress>)?
+    var buildWithQRCodeQrCodeDataOidcConfigurationProgressListenerReceivedInvocations: [(qrCodeData: QrCodeData, oidcConfiguration: OIDCConfigurationProxy, progressListener: SDKListener<QrLoginProgress>)] = []
 
     var buildWithQRCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingReturnValue: ClientProtocol!
     var buildWithQRCodeQrCodeDataOidcConfigurationProgressListenerReturnValue: ClientProtocol! {
@@ -2029,9 +2029,9 @@ class AuthenticationClientBuilderMock: AuthenticationClientBuilderProtocol, @unc
             }
         }
     }
-    var buildWithQRCodeQrCodeDataOidcConfigurationProgressListenerClosure: ((QrCodeData, OIDCConfigurationProxy, QrLoginProgressListenerProxy) async throws -> ClientProtocol)?
+    var buildWithQRCodeQrCodeDataOidcConfigurationProgressListenerClosure: ((QrCodeData, OIDCConfigurationProxy, SDKListener<QrLoginProgress>) async throws -> ClientProtocol)?
 
-    func buildWithQRCode(qrCodeData: QrCodeData, oidcConfiguration: OIDCConfigurationProxy, progressListener: QrLoginProgressListenerProxy) async throws -> ClientProtocol {
+    func buildWithQRCode(qrCodeData: QrCodeData, oidcConfiguration: OIDCConfigurationProxy, progressListener: SDKListener<QrLoginProgress>) async throws -> ClientProtocol {
         if let error = buildWithQRCodeQrCodeDataOidcConfigurationProgressListenerThrowableError {
             throw error
         }
@@ -2142,6 +2142,47 @@ class BugReportServiceMock: BugReportServiceProtocol, @unchecked Sendable {
     var underlyingCrashedLastRun: Bool!
     var lastCrashEventID: String?
 
+    //MARK: - updateBaseURL
+
+    var updateBaseURLUnderlyingCallsCount = 0
+    var updateBaseURLCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return updateBaseURLUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = updateBaseURLUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                updateBaseURLUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    updateBaseURLUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var updateBaseURLCalled: Bool {
+        return updateBaseURLCallsCount > 0
+    }
+    var updateBaseURLReceivedBaseURL: URL?
+    var updateBaseURLReceivedInvocations: [URL?] = []
+    var updateBaseURLClosure: ((URL?) -> Void)?
+
+    func updateBaseURL(_ baseURL: URL?) {
+        updateBaseURLCallsCount += 1
+        updateBaseURLReceivedBaseURL = baseURL
+        DispatchQueue.main.async {
+            self.updateBaseURLReceivedInvocations.append(baseURL)
+        }
+        updateBaseURLClosure?(baseURL)
+    }
     //MARK: - submitBugReport
 
     var submitBugReportProgressListenerUnderlyingCallsCount = 0
@@ -2303,6 +2344,23 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     }
     var underlyingSecureBackupController: SecureBackupControllerProtocol!
     var sessionVerificationController: SessionVerificationControllerProxyProtocol?
+    var isReportRoomSupportedCallsCount = 0
+    var isReportRoomSupportedCalled: Bool {
+        return isReportRoomSupportedCallsCount > 0
+    }
+
+    var isReportRoomSupported: Bool {
+        get async {
+            isReportRoomSupportedCallsCount += 1
+            if let isReportRoomSupportedClosure = isReportRoomSupportedClosure {
+                return await isReportRoomSupportedClosure()
+            } else {
+                return underlyingIsReportRoomSupported
+            }
+        }
+    }
+    var underlyingIsReportRoomSupported: Bool!
+    var isReportRoomSupportedClosure: (() async -> Bool)?
 
     //MARK: - isOnlyDeviceLeft
 
@@ -8593,6 +8651,76 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
     }
     //MARK: - canUser
 
+    var canUserUserIDSendMessageUnderlyingCallsCount = 0
+    var canUserUserIDSendMessageCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return canUserUserIDSendMessageUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = canUserUserIDSendMessageUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                canUserUserIDSendMessageUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    canUserUserIDSendMessageUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var canUserUserIDSendMessageCalled: Bool {
+        return canUserUserIDSendMessageCallsCount > 0
+    }
+    var canUserUserIDSendMessageReceivedArguments: (userID: String, messageType: MessageLikeEventType)?
+    var canUserUserIDSendMessageReceivedInvocations: [(userID: String, messageType: MessageLikeEventType)] = []
+
+    var canUserUserIDSendMessageUnderlyingReturnValue: Result<Bool, RoomProxyError>!
+    var canUserUserIDSendMessageReturnValue: Result<Bool, RoomProxyError>! {
+        get {
+            if Thread.isMainThread {
+                return canUserUserIDSendMessageUnderlyingReturnValue
+            } else {
+                var returnValue: Result<Bool, RoomProxyError>? = nil
+                DispatchQueue.main.sync {
+                    returnValue = canUserUserIDSendMessageUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                canUserUserIDSendMessageUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    canUserUserIDSendMessageUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    var canUserUserIDSendMessageClosure: ((String, MessageLikeEventType) async -> Result<Bool, RoomProxyError>)?
+
+    func canUser(userID: String, sendMessage messageType: MessageLikeEventType) async -> Result<Bool, RoomProxyError> {
+        canUserUserIDSendMessageCallsCount += 1
+        canUserUserIDSendMessageReceivedArguments = (userID: userID, messageType: messageType)
+        DispatchQueue.main.async {
+            self.canUserUserIDSendMessageReceivedInvocations.append((userID: userID, messageType: messageType))
+        }
+        if let canUserUserIDSendMessageClosure = canUserUserIDSendMessageClosure {
+            return await canUserUserIDSendMessageClosure(userID, messageType)
+        } else {
+            return canUserUserIDSendMessageReturnValue
+        }
+    }
+    //MARK: - canUser
+
     var canUserUserIDSendStateEventUnderlyingCallsCount = 0
     var canUserUserIDSendStateEventCallsCount: Int {
         get {
@@ -12026,17 +12154,17 @@ class NotificationManagerMock: NotificationManagerProtocol, @unchecked Sendable 
         }
         await removeDeliveredMessageNotificationsForClosure?(roomID)
     }
-    //MARK: - removeDeliveredInviteNotifications
+    //MARK: - removeDeliveredNotificationsForFullyReadRooms
 
-    var removeDeliveredInviteNotificationsUnderlyingCallsCount = 0
-    var removeDeliveredInviteNotificationsCallsCount: Int {
+    var removeDeliveredNotificationsForFullyReadRoomsUnderlyingCallsCount = 0
+    var removeDeliveredNotificationsForFullyReadRoomsCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return removeDeliveredInviteNotificationsUnderlyingCallsCount
+                return removeDeliveredNotificationsForFullyReadRoomsUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = removeDeliveredInviteNotificationsUnderlyingCallsCount
+                    returnValue = removeDeliveredNotificationsForFullyReadRoomsUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -12044,22 +12172,28 @@ class NotificationManagerMock: NotificationManagerProtocol, @unchecked Sendable 
         }
         set {
             if Thread.isMainThread {
-                removeDeliveredInviteNotificationsUnderlyingCallsCount = newValue
+                removeDeliveredNotificationsForFullyReadRoomsUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    removeDeliveredInviteNotificationsUnderlyingCallsCount = newValue
+                    removeDeliveredNotificationsForFullyReadRoomsUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    var removeDeliveredInviteNotificationsCalled: Bool {
-        return removeDeliveredInviteNotificationsCallsCount > 0
+    var removeDeliveredNotificationsForFullyReadRoomsCalled: Bool {
+        return removeDeliveredNotificationsForFullyReadRoomsCallsCount > 0
     }
-    var removeDeliveredInviteNotificationsClosure: (() async -> Void)?
+    var removeDeliveredNotificationsForFullyReadRoomsReceivedRooms: [RoomSummary]?
+    var removeDeliveredNotificationsForFullyReadRoomsReceivedInvocations: [[RoomSummary]] = []
+    var removeDeliveredNotificationsForFullyReadRoomsClosure: (([RoomSummary]) async -> Void)?
 
-    func removeDeliveredInviteNotifications() async {
-        removeDeliveredInviteNotificationsCallsCount += 1
-        await removeDeliveredInviteNotificationsClosure?()
+    func removeDeliveredNotificationsForFullyReadRooms(_ rooms: [RoomSummary]) async {
+        removeDeliveredNotificationsForFullyReadRoomsCallsCount += 1
+        removeDeliveredNotificationsForFullyReadRoomsReceivedRooms = rooms
+        DispatchQueue.main.async {
+            self.removeDeliveredNotificationsForFullyReadRoomsReceivedInvocations.append(rooms)
+        }
+        await removeDeliveredNotificationsForFullyReadRoomsClosure?(rooms)
     }
 }
 class NotificationSettingsProxyMock: NotificationSettingsProxyProtocol, @unchecked Sendable {
@@ -14154,15 +14288,15 @@ class SecureBackupControllerMock: SecureBackupControllerProtocol, @unchecked Sen
     }
     //MARK: - waitForKeyBackupUpload
 
-    var waitForKeyBackupUploadUnderlyingCallsCount = 0
-    var waitForKeyBackupUploadCallsCount: Int {
+    var waitForKeyBackupUploadUploadStateSubjectUnderlyingCallsCount = 0
+    var waitForKeyBackupUploadUploadStateSubjectCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return waitForKeyBackupUploadUnderlyingCallsCount
+                return waitForKeyBackupUploadUploadStateSubjectUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = waitForKeyBackupUploadUnderlyingCallsCount
+                    returnValue = waitForKeyBackupUploadUploadStateSubjectUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -14170,27 +14304,29 @@ class SecureBackupControllerMock: SecureBackupControllerProtocol, @unchecked Sen
         }
         set {
             if Thread.isMainThread {
-                waitForKeyBackupUploadUnderlyingCallsCount = newValue
+                waitForKeyBackupUploadUploadStateSubjectUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    waitForKeyBackupUploadUnderlyingCallsCount = newValue
+                    waitForKeyBackupUploadUploadStateSubjectUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    var waitForKeyBackupUploadCalled: Bool {
-        return waitForKeyBackupUploadCallsCount > 0
+    var waitForKeyBackupUploadUploadStateSubjectCalled: Bool {
+        return waitForKeyBackupUploadUploadStateSubjectCallsCount > 0
     }
+    var waitForKeyBackupUploadUploadStateSubjectReceivedUploadStateSubject: CurrentValueSubject<SecureBackupSteadyState, Never>?
+    var waitForKeyBackupUploadUploadStateSubjectReceivedInvocations: [CurrentValueSubject<SecureBackupSteadyState, Never>] = []
 
-    var waitForKeyBackupUploadUnderlyingReturnValue: Result<Void, SecureBackupControllerError>!
-    var waitForKeyBackupUploadReturnValue: Result<Void, SecureBackupControllerError>! {
+    var waitForKeyBackupUploadUploadStateSubjectUnderlyingReturnValue: Result<Void, SecureBackupControllerError>!
+    var waitForKeyBackupUploadUploadStateSubjectReturnValue: Result<Void, SecureBackupControllerError>! {
         get {
             if Thread.isMainThread {
-                return waitForKeyBackupUploadUnderlyingReturnValue
+                return waitForKeyBackupUploadUploadStateSubjectUnderlyingReturnValue
             } else {
                 var returnValue: Result<Void, SecureBackupControllerError>? = nil
                 DispatchQueue.main.sync {
-                    returnValue = waitForKeyBackupUploadUnderlyingReturnValue
+                    returnValue = waitForKeyBackupUploadUploadStateSubjectUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -14198,22 +14334,26 @@ class SecureBackupControllerMock: SecureBackupControllerProtocol, @unchecked Sen
         }
         set {
             if Thread.isMainThread {
-                waitForKeyBackupUploadUnderlyingReturnValue = newValue
+                waitForKeyBackupUploadUploadStateSubjectUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    waitForKeyBackupUploadUnderlyingReturnValue = newValue
+                    waitForKeyBackupUploadUploadStateSubjectUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-    var waitForKeyBackupUploadClosure: (() async -> Result<Void, SecureBackupControllerError>)?
+    var waitForKeyBackupUploadUploadStateSubjectClosure: ((CurrentValueSubject<SecureBackupSteadyState, Never>) async -> Result<Void, SecureBackupControllerError>)?
 
-    func waitForKeyBackupUpload() async -> Result<Void, SecureBackupControllerError> {
-        waitForKeyBackupUploadCallsCount += 1
-        if let waitForKeyBackupUploadClosure = waitForKeyBackupUploadClosure {
-            return await waitForKeyBackupUploadClosure()
+    func waitForKeyBackupUpload(uploadStateSubject: CurrentValueSubject<SecureBackupSteadyState, Never>) async -> Result<Void, SecureBackupControllerError> {
+        waitForKeyBackupUploadUploadStateSubjectCallsCount += 1
+        waitForKeyBackupUploadUploadStateSubjectReceivedUploadStateSubject = uploadStateSubject
+        DispatchQueue.main.async {
+            self.waitForKeyBackupUploadUploadStateSubjectReceivedInvocations.append(uploadStateSubject)
+        }
+        if let waitForKeyBackupUploadUploadStateSubjectClosure = waitForKeyBackupUploadUploadStateSubjectClosure {
+            return await waitForKeyBackupUploadUploadStateSubjectClosure(uploadStateSubject)
         } else {
-            return waitForKeyBackupUploadReturnValue
+            return waitForKeyBackupUploadUploadStateSubjectReturnValue
         }
     }
 }

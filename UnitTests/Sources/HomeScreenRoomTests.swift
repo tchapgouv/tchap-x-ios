@@ -34,7 +34,7 @@ class HomeScreenRoomTests: XCTestCase {
                                   avatarURL: nil,
                                   heroes: [],
                                   lastMessage: nil,
-                                  lastMessageFormattedTimestamp: nil,
+                                  lastMessageDate: nil,
                                   unreadMessagesCount: unreadMessagesCount,
                                   unreadMentionsCount: unreadMentionsCount,
                                   unreadNotificationsCount: unreadNotificationsCount,

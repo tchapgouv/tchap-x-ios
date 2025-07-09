@@ -13,9 +13,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%1$d digit entered</string>
+			<string>%1$d رقم وارد شده</string>
 			<key>other</key>
-			<string>%1$d digits entered</string>
+			<string>%1$d رقم وارد شده</string>
 		</dict>
 	</dict>
 	<key>a11y_read_receipts_multiple_with_others</key>
@@ -61,9 +61,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%d vote</string>
+			<string>%d رأی</string>
 			<key>other</key>
-			<string>%d votes</string>
+			<string>%d رأی</string>
 		</dict>
 	</dict>
 	<key>notification_compat_summary_line_for_room</key>
@@ -125,9 +125,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%d new message</string>
+			<string>%d پیام جدید</string>
 			<key>other</key>
-			<string>%d new messages</string>
+			<string>%d پیام جدید</string>
 		</dict>
 	</dict>
 	<key>notification_unread_notified_messages</key>

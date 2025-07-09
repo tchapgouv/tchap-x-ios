@@ -49,7 +49,7 @@ class ServerSelectionScreenViewModelTests: XCTestCase {
         
         // When selecting a server that doesn't support login.
         context.homeserverAddress = "server.net"
-        let deferred = deferFulfillment(context.$viewState) { $0.bindings.alertInfo != nil }
+        let deferred = deferFulfillment(context.observe(\.alertInfo)) { $0 != nil }
         context.send(viewAction: .confirm)
         try await deferred.fulfill()
         
@@ -84,7 +84,7 @@ class ServerSelectionScreenViewModelTests: XCTestCase {
         
         // When selecting a server that doesn't support registration.
         context.homeserverAddress = "example.com"
-        let deferred = deferFulfillment(context.$viewState) { $0.bindings.alertInfo != nil }
+        let deferred = deferFulfillment(context.observe(\.alertInfo)) { $0 != nil }
         context.send(viewAction: .confirm)
         try await deferred.fulfill()
         
@@ -98,11 +98,11 @@ class ServerSelectionScreenViewModelTests: XCTestCase {
         setupViewModel(authenticationFlow: .login)
         XCTAssertFalse(context.viewState.isShowingFooterError, "There should not be an error message for a new view model.")
         XCTAssertNil(context.viewState.footerErrorMessage, "There should not be an error message for a new view model.")
-        XCTAssertEqual(String(context.viewState.footerMessage.characters), L10n.screenChangeServerFormNotice(L10n.actionLearnMore),
+        XCTAssertEqual(String(context.viewState.footerMessage), L10n.screenChangeServerFormNotice,
                        "The standard footer message should be shown.")
         
         // When attempting to discover an invalid server
-        var deferred = deferFulfillment(context.$viewState) { $0.isShowingFooterError }
+        var deferred = deferFulfillment(context.observe(\.viewState.isShowingFooterError)) { $0 }
         context.homeserverAddress = "idontexist"
         context.send(viewAction: .confirm)
         try await deferred.fulfill()
@@ -110,18 +110,18 @@ class ServerSelectionScreenViewModelTests: XCTestCase {
         // Then the footer should now be showing an error.
         XCTAssertTrue(context.viewState.isShowingFooterError, "The error message should be stored.")
         XCTAssertNotNil(context.viewState.footerErrorMessage, "The error message should be stored.")
-        XCTAssertNotEqual(String(context.viewState.footerMessage.characters), L10n.screenChangeServerFormNotice(L10n.actionLearnMore),
+        XCTAssertNotEqual(String(context.viewState.footerMessage), L10n.screenChangeServerFormNotice,
                           "The error message should be shown.")
         
         // And when clearing the error.
-        deferred = deferFulfillment(context.$viewState) { !$0.isShowingFooterError }
+        deferred = deferFulfillment(context.observe(\.viewState.isShowingFooterError)) { !$0 }
         context.homeserverAddress = ""
         context.send(viewAction: .clearFooterError)
         try await deferred.fulfill()
         
         // Then the error message should now be removed.
         XCTAssertNil(context.viewState.footerErrorMessage, "The error message should have been cleared.")
-        XCTAssertEqual(String(context.viewState.footerMessage.characters), L10n.screenChangeServerFormNotice(L10n.actionLearnMore),
+        XCTAssertEqual(String(context.viewState.footerMessage), L10n.screenChangeServerFormNotice,
                        "The standard footer message should be shown again.")
     }
     
@@ -137,7 +137,6 @@ class ServerSelectionScreenViewModelTests: XCTestCase {
         
         viewModel = ServerSelectionScreenViewModel(authenticationService: service,
                                                    authenticationFlow: authenticationFlow,
-                                                   slidingSyncLearnMoreURL: ServiceLocator.shared.settings.slidingSyncLearnMoreURL,
                                                    userIndicatorController: UserIndicatorControllerMock())
     }
 }
