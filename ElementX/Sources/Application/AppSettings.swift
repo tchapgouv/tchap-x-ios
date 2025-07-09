@@ -48,6 +48,7 @@ final class AppSettings {
         case hideUnreadMessagesBadge
         case hideInviteAvatars
         case timelineMediaVisibility
+        case isNewBloomEnabled
         
         case elementCallBaseURLOverride
         
@@ -56,8 +57,8 @@ final class AppSettings {
         case fuzzyRoomListSearchEnabled
         case enableOnlySignedDeviceIsolationMode
         case knockingEnabled
-        case reportRoomEnabled
-        case reportInviteEnabled
+        case threadsEnabled
+        case developerOptionsEnabled
     }
     
     private static var suiteName: String = InfoPlistReader.main.appGroupIdentifier
@@ -99,7 +100,6 @@ final class AppSettings {
                   copyrightURL: URL,
                   acceptableUseURL: URL,
                   privacyURL: URL,
-                  supportEmailAddress: String,
                   encryptionURL: URL,
                   chatBackupDetailsURL: URL,
                   identityPinningViolationDetailsURL: URL,
@@ -115,7 +115,6 @@ final class AppSettings {
         self.copyrightURL = copyrightURL
         self.acceptableUseURL = acceptableUseURL
         self.privacyURL = privacyURL
-        self.supportEmailAddress = supportEmailAddress
         self.encryptionURL = encryptionURL
         self.chatBackupDetailsURL = chatBackupDetailsURL
         self.identityPinningViolationDetailsURL = identityPinningViolationDetailsURL
@@ -215,9 +214,6 @@ final class AppSettings {
     
     // MARK: - Authentication
     
-    /// The URL that is opened when tapping the Learn more button on the sliding sync alert during authentication.
-    let slidingSyncLearnMoreURL: URL = "https://github.com/matrix-org/sliding-sync/blob/main/docs/Landing.md"
-    
     /// Any pre-defined static client registrations for OIDC issuers.
     let oidcStaticRegistrations: [URL: String] = ["https://id.thirdroom.io/realms/thirdroom": "elementx"]
     /// The redirect URL used for OIDC. This no longer uses universal links so we don't need the bundle ID to avoid conflicts between Element X, Nightly and PR builds.
@@ -229,7 +225,6 @@ final class AppSettings {
                                                                      logoURI: logoURL,
                                                                      tosURI: acceptableUseURL,
                                                                      policyURI: privacyURL,
-                                                                     contacts: [supportEmailAddress],
                                                                      staticRegistrations: oidcStaticRegistrations.mapKeys { $0.absoluteString })
     
     /// Whether or not the Create Account button is shown on the start screen.
@@ -391,10 +386,11 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.knockingEnabled, defaultValue: false, storageType: .userDefaults(store))
     var knockingEnabled
     
-    @UserPreference(key: UserDefaultsKeys.reportRoomEnabled, defaultValue: false, storageType: .userDefaults(store)) var reportRoomEnabled
+    @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var threadsEnabled
     
-    @UserPreference(key: UserDefaultsKeys.reportInviteEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var reportInviteEnabled
+    @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
+    var developerOptionsEnabled
     
     #endif
     
@@ -415,6 +411,9 @@ final class AppSettings {
     
     @UserPreference(key: UserDefaultsKeys.timelineMediaVisibility, defaultValue: TimelineMediaVisibility.always, storageType: .userDefaults(store))
     var timelineMediaVisibility
+    
+    @UserPreference(key: UserDefaultsKeys.isNewBloomEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var isNewBloomEnabled
 }
 
 extension AppSettings: CommonSettingsProtocol { }

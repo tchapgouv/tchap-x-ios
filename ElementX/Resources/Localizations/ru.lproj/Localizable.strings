@@ -22,10 +22,10 @@
 "a11y_show_password" = "Показать пароль";
 "a11y_start_call" = "Начать звонок";
 "a11y_user_menu" = "Меню пользователя";
+"a11y_view_details" = "Подробнее";
 "a11y_voice_message" = "Голосовое сообщение, продолжительность: %1$@";
 "a11y_voice_message_record" = "Записать голосовое сообщение.";
 "a11y_voice_message_stop_recording" = "Остановить запись";
-"a11y.view_details" = "Подробнее";
 "action_accept" = "Разрешить";
 "action_add_caption" = "Добавить подпись";
 "action_add_to_timeline" = "Добавить в хронологию";
@@ -99,6 +99,7 @@
 "action_report" = "Отчет";
 "action_report_bug" = "Сообщить об ошибке";
 "action_report_content" = "Пожаловаться на содержание";
+"action_report_dm" = "Report conversation";
 "action_report_room" = "Комната отчетов";
 "action_reset" = "Сбросить";
 "action_reset_identity" = "Сбросить идентификацию";
@@ -145,6 +146,7 @@
 "common_bubbles" = "Пузыри";
 "common_call_started" = "Звонок начат";
 "common_chat_backup" = "Резервная копия чатов";
+"common_copied_to_clipboard" = "Скопировано в буфер обмена";
 "common_copyright" = "Авторское право";
 "common_creating_room" = "Создание комнаты…";
 "common_current_user_canceled_knock" = "Запрос отменен";
@@ -157,12 +159,14 @@
 "common_developer_options" = "Для разработчика";
 "common_device_id" = "Идентификатор устройства";
 "common_direct_chat" = "Личный чат";
+"common_do_not_show_this_again" = "Не показывать больше";
 "common_download_failed" = "Ошибка скачивания";
 "common_downloading" = "Загрузка";
 "common_edited_suffix" = "(изменено)";
 "common_editing" = "Редактирование";
 "common_editing_caption" = "Редактирование подписи";
 "common_emote" = "%1$@%2$@";
+"common_empty_file" = "Пустой файл";
 "common_encryption" = "Шифрование";
 "common_encryption_enabled" = "Шифрование включено";
 "common_enter_your_pin" = "Введите свой PIN-код";
@@ -183,6 +187,7 @@
 "common_invite_unknown_profile" = "Идентификатор Matrix ID не найден, приглашение может быть не получено.";
 "common_leaving_room" = "Покидание комнаты";
 "common_light" = "Светлое";
+"common_line_copied_to_clipboard" = "Строка скопирована в буфер обмена";
 "common_link_copied_to_clipboard" = "Ссылка скопирована в буфер обмена";
 "common_loading" = "Загрузка…";
 "common_loading_more" = "Загрузить больше...";
@@ -197,12 +202,14 @@
 "common_no_room_name" = "Название комнаты отсутствует";
 "common_not_encrypted" = "Не зашифровано";
 "common_offline" = "Не в сети";
+"common_open_source_licenses" = "Лицензии с открытым исходным кодом";
 "common_optic_id_ios" = "Оптический идентификатор";
 "common_or" = "или";
 "common_password" = "Пароль";
 "common_people" = "Пользователи";
 "common_permalink" = "Постоянная ссылка";
 "common_permission" = "Разрешение";
+"common_pinned" = "Закрепленный";
 "common_please_check_internet_connection" = "Пожалуйста, проверьте подключение к Интернету";
 "common_please_wait" = "Подождите...";
 "common_poll_end_confirmation" = "Вы действительно хотите завершить данный опрос?";
@@ -230,6 +237,7 @@
 "common_search_results" = "Результаты поиска";
 "common_security" = "Безопасность";
 "common_seen_by" = "Просмотрено";
+"common_send_to" = "Отправить";
 "common_sending" = "Отправка…";
 "common_sending_failed" = "Сбой отправки";
 "common_sent" = "Отправлено";
@@ -239,6 +247,7 @@
 "common_shared_location" = "Поделился местоположением";
 "common_signing_out" = "Выход…";
 "common_something_went_wrong" = "Что-то пошло не так";
+"common_something_went_wrong_message" = "We encountered an issue. Please try again.";
 "common_starting_chat" = "Чат запускается…";
 "common_sticker" = "Стикер";
 "common_success" = "Успешно";
@@ -272,13 +281,6 @@
 "common_waiting" = "Ожидание…";
 "common_waiting_for_decryption_key" = "Ожидание ключа расшифровки";
 "common_you" = "Вы";
-"common.copied_to_clipboard" = "Скопировано в буфер обмена";
-"common.do_not_show_this_again" = "Не показывать больше";
-"common.empty_file" = "Пустой файл";
-"common.line_copied_to_clipboard" = "Строка скопирована в буфер обмена";
-"common.open_source_licenses" = "Лицензии с открытым исходным кодом";
-"common.pinned" = "Закрепленный";
-"common.send_to" = "Отправить";
 "common_unable_to_decrypt_insecure_device" = "Отправлено с незащищенного устройства";
 "common_unable_to_decrypt_verification_violation" = "Подтвержденная личность отправителя была сброшена";
 "confirm_recovery_key_banner_message" = "Подтвердите ключ восстановления, чтобы сохранить доступ к хранилищу ключей и истории сообщений.";
@@ -404,7 +406,6 @@
 "screen_advanced_settings_show_media_timeline_private_rooms" = "В личных комнатах";
 "screen_advanced_settings_show_media_timeline_subtitle" = "Скрытый медиафайл всегда можно отобразить, нажав на него.";
 "screen_advanced_settings_show_media_timeline_title" = "Show media in timeline";
-"screen_bottom_sheet,manage_room_member_remove" = "Удалить участника из комнаты";
 "screen_bottom_sheet_create_dm_confirmation_button_title" = "Отправить приглашение";
 "screen_bottom_sheet_create_dm_message" = "Хотите начать чат с %1$@?";
 "screen_bottom_sheet_create_dm_title" = "Отправить приглашение?";
@@ -417,6 +418,7 @@
 "screen_bottom_sheet_manage_room_member_kick_member_confirmation_description" = "They will be able to join this room again if invited.";
 "screen_bottom_sheet_manage_room_member_kick_member_confirmation_title" = "Вы действительно хотите удалить этого участника?";
 "screen_bottom_sheet_manage_room_member_member_user_info" = "Посмотреть профиль";
+"screen_bottom_sheet_manage_room_member_remove" = "Удалить участника из комнаты";
 "screen_bottom_sheet_manage_room_member_remove_confirmation_title" = "Удалить участника и запретить присоединяться в будущем?";
 "screen_bottom_sheet_manage_room_member_removing_user" = "Удаление %1$@…";
 "screen_create_room_room_access_section_anyone_option_description" = "Любой желающий может присоединиться к этой комнате";
@@ -609,14 +611,14 @@
 "screen_change_account_provider_title" = "Сменить поставщика учетной записи";
 "screen_change_server_error_invalid_homeserver" = "Нам не удалось связаться с этим домашним сервером. Убедитесь, что вы правильно ввели URL-адрес домашнего сервера. Если URL-адрес указан правильно, обратитесь к администратору домашнего сервера за дополнительной помощью.";
 "screen_change_server_error_invalid_well_known" = "Sliding sync недоступен из-за проблемы в известном файле:\n%1$@";
-"screen_change_server_error_no_sliding_sync_message" = "К сожалению данный сервер не поддерживает sliding sync.";
+"screen_change_server_error_no_sliding_sync_message" = "The selected account provider does not support sliding sync. An upgrade to the server is needed to use %1$@.";
 "screen_change_server_form_header" = "URL-адрес домашнего сервера";
-"screen_change_server_form_notice" = "Вы можете подключиться только к существующему серверу, поддерживающему sliding sync. Администратору домашнего сервера потребуется настроить его. %1$@";
+"screen_change_server_form_notice" = "Enter a domain address.";
 "screen_change_server_subtitle" = "Какой адрес у вашего сервера?";
 "screen_change_server_title" = "Выберите свой сервер";
 "screen_chat_backup_key_backup_action_disable" = "Удалить хранилище ключей";
 "screen_chat_backup_key_backup_action_enable" = "Включить резервное копирование";
-"screen_chat_backup_key_backup_description" = "Сохраните вашу криптографическую идентификацию и ключи сообщений в безопасности на сервере. Это позволит вам просматривать историю сообщений на любых новых устройствах.%1$@ .";
+"screen_chat_backup_key_backup_description" = "Сохраните вашу криптографическую идентификацию и ключи сообщений в безопасности на сервере. Это позволит вам просматривать историю сообщений на любых новых устройствах.%1$@.";
 "screen_chat_backup_key_backup_title" = "Хранилище ключей";
 "screen_chat_backup_key_storage_disabled_error" = "Для настройки восстановления необходимо включить хранилище ключей.";
 "screen_chat_backup_key_storage_toggle_description" = "Загрузить ключи с этого устройства";
@@ -684,7 +686,7 @@
 "screen_invites_decline_direct_chat_title" = "Отклонить чат";
 "screen_invites_empty_list" = "Нет приглашений";
 "screen_invites_invited_you" = "%1$@ (%2$@) пригласил вас";
-"screen_join_room_ban_by_message" = "Вам был запрещен доступ в комнату %1$@ .";
+"screen_join_room_ban_by_message" = "Вам был запрещен доступ в комнату %1$@.";
 "screen_join_room_ban_message" = "Вам был запрещен доступ в эту комнату";
 "screen_join_room_ban_reason" = "Причина: %1$@.";
 "screen_join_room_fail_message" = "Не удалось присоединиться к комнате.";
@@ -1072,6 +1074,8 @@
 "state_event_room_avatar_removed_by_you" = "Вы удалили изображение комнаты";
 "state_event_room_ban" = "%1$@ заблокировал %2$@";
 "state_event_room_ban_by_you" = "Вы заблокировали %1$@";
+"state_event_room_ban_by_you_with_reason" = "You banned %1$@: %2$@";
+"state_event_room_ban_with_reason" = "%1$@ banned %2$@: %3$@";
 "state_event_room_created" = "%1$@ создал комнату";
 "state_event_room_created_by_you" = "Вы создали комнату";
 "state_event_room_invite" = "%1$@ пригласил %2$@";
@@ -1108,6 +1112,8 @@
 "state_event_room_reject_by_you" = "Вы отклонили приглашение";
 "state_event_room_remove" = "%1$@ удалил %2$@";
 "state_event_room_remove_by_you" = "Вы удалили %1$@";
+"state_event_room_remove_by_you_with_reason" = "You removed %1$@: %2$@";
+"state_event_room_remove_with_reason" = "%1$@ removed %2$@: %3$@";
 "state_event_room_third_party_invite" = "%1$@ отправила приглашение %2$@ присоединиться к комнате";
 "state_event_room_third_party_invite_by_you" = "Вы отправили приглашение присоединиться к комнате %1$@";
 "state_event_room_third_party_revoked_invite" = "%1$@ отозвал приглашение %2$@ присоединиться к комнате";

@@ -22,10 +22,10 @@
 "a11y_show_password" = "Passwort anzeigen";
 "a11y_start_call" = "Anruf starten";
 "a11y_user_menu" = "Benutzermenü";
+"a11y_view_details" = "Details anzeigen";
 "a11y_voice_message" = "Sprachnachricht, Dauer: %1$@";
 "a11y_voice_message_record" = "Sprachnachricht aufnehmen.";
 "a11y_voice_message_stop_recording" = "Aufnahme beenden";
-"a11y.view_details" = "Details anzeigen";
 "action_accept" = "Akzeptieren";
 "action_add_caption" = "Bildunterschrift hinzufügen";
 "action_add_to_timeline" = "Zum Nachrichtenverlauf hinzufügen";
@@ -76,7 +76,7 @@
 "action_leave" = "Verlassen";
 "action_leave_conversation" = "Unterhaltung verlassen";
 "action_leave_room" = "Verlassen";
-"action_load_more" = "Mehr laden ...";
+"action_load_more" = "Mehr laden...";
 "action_manage_account" = "Konto verwalten";
 "action_manage_devices" = "Geräte verwalten";
 "action_message" = "Nachricht";
@@ -99,6 +99,7 @@
 "action_report" = "Bericht";
 "action_report_bug" = "Fehler melden";
 "action_report_content" = "Inhalt melden";
+"action_report_dm" = "Konversation melden";
 "action_report_room" = "Chatroom melden";
 "action_reset" = "Zurücksetzen";
 "action_reset_identity" = "Identität zurücksetzen";
@@ -145,6 +146,7 @@
 "common_bubbles" = "Sprechblasen";
 "common_call_started" = "Aufruf gestartet";
 "common_chat_backup" = "Chat-Backup";
+"common_copied_to_clipboard" = "In die Zwischenablage kopiert";
 "common_copyright" = "Copyright";
 "common_creating_room" = "Raum wird erstellt...";
 "common_current_user_canceled_knock" = "Anfrage storniert";
@@ -157,12 +159,14 @@
 "common_developer_options" = "Entwickleroptionen";
 "common_device_id" = "Geräte-ID";
 "common_direct_chat" = "Direktnachricht";
+"common_do_not_show_this_again" = "Nicht mehr anzeigen";
 "common_download_failed" = "Download fehlgeschlagen";
 "common_downloading" = "Herunterladen";
 "common_edited_suffix" = "(bearbeitet)";
 "common_editing" = "Bearbeitung";
 "common_editing_caption" = "Bearbeitung der Bildunterschrift";
 "common_emote" = "* %1$@ %2$@";
+"common_empty_file" = "Leere Datei";
 "common_encryption" = "Verschlüsselung";
 "common_encryption_enabled" = "Verschlüsselung aktiviert";
 "common_enter_your_pin" = "PIN eingeben";
@@ -183,6 +187,7 @@
 "common_invite_unknown_profile" = "Diese Matrix-ID kann nicht gefunden werden, daher wird die Einladung möglicherweise nicht empfangen.";
 "common_leaving_room" = "Raum verlassen";
 "common_light" = "Hell";
+"common_line_copied_to_clipboard" = "Zeile in die Zwischenablage kopiert";
 "common_link_copied_to_clipboard" = "Link in die Zwischenablage kopiert";
 "common_loading" = "Laden...";
 "common_loading_more" = "Mehr wird geladen...";
@@ -197,14 +202,16 @@
 "common_no_room_name" = "Kein Raumname";
 "common_not_encrypted" = "Nicht verschlüsselt";
 "common_offline" = "Offline";
+"common_open_source_licenses" = "Open-Source-Lizenzen";
 "common_optic_id_ios" = "Optic ID";
 "common_or" = "oder";
 "common_password" = "Passwort";
 "common_people" = "Personen";
 "common_permalink" = "Permalink";
 "common_permission" = "Erlaubnis";
+"common_pinned" = "Fixiert";
 "common_please_check_internet_connection" = "Bitte überprüfen Sie Ihre Internetverbindung";
-"common_please_wait" = "Bitte warten ...";
+"common_please_wait" = "Bitte warten...";
 "common_poll_end_confirmation" = "Bist du sicher, dass du diese Umfrage beenden möchtest?";
 "common_poll_summary" = "Umfrage: %1$@";
 "common_poll_total_votes" = "Stimmen insgesamt: %1$@";
@@ -230,6 +237,7 @@
 "common_search_results" = "Suchergebnisse";
 "common_security" = "Sicherheit";
 "common_seen_by" = "Gesehen von";
+"common_send_to" = "Senden an";
 "common_sending" = "Wird gesendet...";
 "common_sending_failed" = "Senden fehlgeschlagen";
 "common_sent" = "Gesendet";
@@ -239,6 +247,7 @@
 "common_shared_location" = "Geteilter Standort";
 "common_signing_out" = "Abmelden";
 "common_something_went_wrong" = "Es ist ein Fehler aufgetreten.";
+"common_something_went_wrong_message" = "Wir sind auf ein Problem gestoßen. Bitte versuchen Sie es erneut.";
 "common_starting_chat" = "Chat wird gestartet...";
 "common_sticker" = "Sticker";
 "common_success" = "Erfolg";
@@ -272,13 +281,6 @@
 "common_waiting" = "Warten…";
 "common_waiting_for_decryption_key" = "Warte auf diese Nachricht";
 "common_you" = "Sie";
-"common.copied_to_clipboard" = "In die Zwischenablage kopiert";
-"common.do_not_show_this_again" = "Nicht mehr anzeigen";
-"common.empty_file" = "Leere Datei";
-"common.line_copied_to_clipboard" = "Zeile in die Zwischenablage kopiert";
-"common.open_source_licenses" = "Open-Source-Lizenzen";
-"common.pinned" = "Fixiert";
-"common.send_to" = "Senden an";
 "common_unable_to_decrypt_insecure_device" = "Von einem ungesicherten Gerät gesendet";
 "common_unable_to_decrypt_verification_violation" = "Die verifizierte Identität des Senders hat sich geändert";
 "confirm_recovery_key_banner_message" = "Bestätigen Sie die Validität Ihres Wiederherstellungsschlüssels, um weiterhin auf Ihren Schlüsselspeicher und den Nachrichtenverlauf zugreifen zu können.";
@@ -404,7 +406,6 @@
 "screen_advanced_settings_show_media_timeline_private_rooms" = "In privaten Chatrooms";
 "screen_advanced_settings_show_media_timeline_subtitle" = "Ein verstecktes Medium kann jederzeit durch Antippen angezeigt werden";
 "screen_advanced_settings_show_media_timeline_title" = "Medien in der Zeitleiste anzeigen";
-"screen_bottom_sheet,manage_room_member_remove" = "Mitglied entfernen";
 "screen_bottom_sheet_create_dm_confirmation_button_title" = "Einladung senden";
 "screen_bottom_sheet_create_dm_message" = "Möchten Sie einen Chat mit %1$@ starten?";
 "screen_bottom_sheet_create_dm_title" = "Einladung senden?";
@@ -417,6 +418,7 @@
 "screen_bottom_sheet_manage_room_member_kick_member_confirmation_description" = "Sie können diesen Raum wieder betreten, wenn sie eingeladen werden.";
 "screen_bottom_sheet_manage_room_member_kick_member_confirmation_title" = "Möchten Sie dieses Mitglied wirklich entfernen?";
 "screen_bottom_sheet_manage_room_member_member_user_info" = "Benutzerinformationen anzeigen";
+"screen_bottom_sheet_manage_room_member_remove" = "Mitglied entfernen";
 "screen_bottom_sheet_manage_room_member_remove_confirmation_title" = "Mitglied entfernen und den erneuten Beitritt sperren?";
 "screen_bottom_sheet_manage_room_member_removing_user" = "%1$@ wird entfernt.";
 "screen_create_room_room_access_section_anyone_option_description" = "Jeder kann diesem Chatroom beitreten";
@@ -558,7 +560,7 @@
 "screen_advanced_settings_view_source_description" = "Option aktiveren, um Nachrichtenquelle in der Zeitleiste anzuzeigen.";
 "screen_analytics_prompt_data_usage" = "Wir zeichnen keine persönlichen Daten auf und erstellen keine Profile.";
 "screen_analytics_prompt_help_us_improve" = "Teile anonyme Nutzungsdaten, um uns bei der Identifizierung von Problemen zu helfen.";
-"screen_analytics_prompt_read_terms" = "Weitere Informationen findest du %1$@ .";
+"screen_analytics_prompt_read_terms" = "Weitere Informationen findest du %1$@.";
 "screen_analytics_prompt_read_terms_content_link" = "hier";
 "screen_analytics_prompt_settings" = "Du kannst diese Funktion jederzeit deaktivieren";
 "screen_analytics_prompt_third_party_sharing" = "Wir geben deine Daten nicht an Dritte weiter";
@@ -608,10 +610,10 @@
 "screen_change_account_provider_subtitle" = "Verwende einen anderen Kontoanbieter, z. B. deinen eigenen privaten Server oder ein Geschäftskonto.";
 "screen_change_account_provider_title" = "Kontoanbieter wechseln";
 "screen_change_server_error_invalid_homeserver" = "Wir konnten diesen Homeserver nicht erreichen. Bitte überprüfe, ob du die Homeserver-URL korrekt eingegeben hast. Wenn die URL korrekt ist, wende dich an deinen Homeserver-Administrator, um weitere Hilfe zu erhalten.";
-"screen_change_server_error_invalid_well_known" = "Sliding Sync ist aufgrund eines Problems im \"well-known file\" nicht verfügbar:\n%1$@";
-"screen_change_server_error_no_sliding_sync_message" = "Dieser Server unterstützt derzeit kein Sliding Sync.";
+"screen_change_server_error_invalid_well_known" = "Der Server ist aufgrund eines Problems im \"well-known file\" nicht verfügbar:\n%1$@";
+"screen_change_server_error_no_sliding_sync_message" = "Der gewählte Kontoanbieter unterstützt Sliding Sync nicht. Für die Verwendung von %1$@ ist ein Upgrade des Servers erforderlich.";
 "screen_change_server_form_header" = "Homeserver-URL";
-"screen_change_server_form_notice" = "Du kannst nur eine Verbindung zu einem vorhandenen Server herstellen, der Sliding Sync unterstützt. Dein Homeserver-Administrator muss das konfigurieren. %1$@";
+"screen_change_server_form_notice" = "Geben Sie eine Domainadresse ein.";
 "screen_change_server_subtitle" = "Wie lautet die Adresse deines Servers?";
 "screen_change_server_title" = "Wähle deinen Server aus";
 "screen_chat_backup_key_backup_action_disable" = "Backup deaktivieren";
@@ -704,7 +706,7 @@
 "screen_key_backup_disable_confirmation_description" = "Du verlierst deine verschlüsselten Nachrichten, wenn du auf allen Geräten abgemeldet bist.";
 "screen_key_backup_disable_confirmation_title" = "Bist du sicher, dass du das Backup deaktivieren willst?";
 "screen_key_backup_disable_description" = "Wenn du das Backup deaktivierst, wird dein aktuelles Schlüssel Backup für die Verschlüsselung entfernt und andere Sicherheitsfunktionen werden deaktiviert. Das bedeutet:";
-"screen_key_backup_disable_description_point_1" = "Keinen Nachrichtenverlauf für verschlüsselte Nachrichten auf neuen Geräten .";
+"screen_key_backup_disable_description_point_1" = "Keinen Nachrichtenverlauf für verschlüsselte Nachrichten auf neuen Geräten.";
 "screen_key_backup_disable_description_point_2" = "Verlust des Zugriffs auf Deine verschlüsselten Nachrichten, wenn Du Dich überall von %1$@ abmeldest";
 "screen_key_backup_disable_title" = "Bist du sicher, dass du das Backup deaktivieren willst?";
 "screen_login_error_deactivated_account" = "Dieses Konto wurde deaktiviert.";
@@ -1072,6 +1074,8 @@
 "state_event_room_avatar_removed_by_you" = "Du hast den Raum-Avatar entfernt";
 "state_event_room_ban" = "%1$@ hat %2$@ gesperrt";
 "state_event_room_ban_by_you" = "Du hast %1$@ gesperrt";
+"state_event_room_ban_by_you_with_reason" = "Sie haben gesperrt %1$@: %2$@";
+"state_event_room_ban_with_reason" = "%1$@verboten%2$@: %3$@";
 "state_event_room_created" = "%1$@ hat den Raum erstellt";
 "state_event_room_created_by_you" = "Du hast den Raum erstellt";
 "state_event_room_invite" = "%1$@ hat %2$@ eingeladen";
@@ -1108,6 +1112,8 @@
 "state_event_room_reject_by_you" = "Du hast die Einladung abgelehnt";
 "state_event_room_remove" = "%1$@ hat %2$@ entfernt";
 "state_event_room_remove_by_you" = "Du hast %1$@ entfernt";
+"state_event_room_remove_by_you_with_reason" = "Sie haben %1$@ entfernt: %2$@";
+"state_event_room_remove_with_reason" = "%1$@entfernt%2$@: %3$@";
 "state_event_room_third_party_invite" = "%1$@ hat eine Einladung an %2$@ gesendet, dem Raum beizutreten";
 "state_event_room_third_party_invite_by_you" = "Du hast eine Einladung an %1$@ gesendet, dem Raum beizutreten";
 "state_event_room_third_party_revoked_invite" = "%1$@ hat die Einladung an %2$@ zum Betreten des Raums zurückgezogen";
@@ -1196,7 +1202,7 @@
 "screen_account_provider_signin_subtitle" = "Hier werden deine Gespräche gespeichert - so wie du deine E-Mails bei einem E-Mail-Anbieter aufbewahren würden.";
 "screen_account_provider_signup_subtitle" = "Hier werden deine Gespräche gespeichert - so wie du deine E-Mails bei einem E-Mail-Anbieter aufbewahren würden.";
 "screen_analytics_settings_help_us_improve" = "Teile anonyme Nutzungsdaten, um uns bei der Identifizierung von Problemen zu helfen.";
-"screen_analytics_settings_read_terms" = "Weitere Informationen findest du %1$@ .";
+"screen_analytics_settings_read_terms" = "Weitere Informationen findest du %1$@.";
 "screen_analytics_settings_read_terms_content_link" = "hier";
 "screen_blocked_users_unblock_alert_action" = "Blockierung aufheben";
 "screen_blocked_users_unblock_alert_description" = "Der Nutzer kann dir wieder Nachrichten senden & alle Nachrichten des Nutzers werden wieder angezeigt.";

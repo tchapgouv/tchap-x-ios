@@ -119,6 +119,13 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                     // Workaround to stop the message long press stealing the touch from the reaction buttons
                     .onTapGesture { }
             }
+            
+            if let threadSummary = timelineItem.properties.threadSummary {
+                TimelineThreadSummaryView(threadSummary: threadSummary) {
+                    context.send(viewAction: .displayThread(itemID: timelineItem.id))
+                }
+                .padding(5)
+            }
         }
     }
     
@@ -342,8 +349,12 @@ struct TimelineItemBubbledStylerView_Previews: PreviewProvider, TestablePreview 
             .padding(.bottom, 20)
         replies
             .previewDisplayName("Replies")
-        threads
+        threadDecorator
             .previewDisplayName("Thread decorator")
+            .previewLayout(.fixed(width: 390, height: 1700))
+            .padding(.bottom, 20)
+        threadSummary
+            .previewDisplayName("Thread summary")
             .previewLayout(.fixed(width: 390, height: 1700))
             .padding(.bottom, 20)
         encryptionAuthenticity
@@ -397,11 +408,23 @@ struct TimelineItemBubbledStylerView_Previews: PreviewProvider, TestablePreview 
         .environment(\.timelineContext, viewModel.context)
     }
     
-    static var threads: some View {
+    static var threadDecorator: some View {
         ScrollView {
             MockTimelineContent(isThreaded: true)
         }
         .environmentObject(viewModel.context)
+        .environment(\.timelineContext, viewModel.context)
+    }
+    
+    static var threadSummary: some View {
+        ScrollView {
+            let threadSummary = TimelineItemThreadSummary.loaded(senderID: "@alice:matrix.org",
+                                                                 sender: .init(id: "@alice:matrix.org", displayName: "Alice"),
+                                                                 latestEventContent: .message(.text(.init(body: "This is a threaded message"))))
+            
+            MockTimelineContent(threadSummary: threadSummary)
+        }
+        .environmentObject(viewModelWithPins.context)
         .environment(\.timelineContext, viewModel.context)
     }
       
@@ -495,6 +518,7 @@ struct TimelineItemBubbledStylerView_Previews: PreviewProvider, TestablePreview 
 private struct MockTimelineContent: View {
     var isThreaded = false
     var isPinned = false
+    var threadSummary: TimelineItemThreadSummary?
     
     var body: some View {
         RoomTimelineItemView(viewState: .init(item: TextRoomTimelineItem(id: makeItemIdentifier(),
@@ -504,7 +528,9 @@ private struct MockTimelineContent: View {
                                                                          canBeRepliedTo: true,
                                                                          sender: .init(id: "whoever"),
                                                                          content: .init(body: "A long message that should be on multiple lines."),
-                                                                         properties: .init(replyDetails: replyDetails, isThreaded: isThreaded)),
+                                                                         properties: .init(replyDetails: replyDetails,
+                                                                                           isThreaded: isThreaded,
+                                                                                           threadSummary: threadSummary)),
                                               groupStyle: .single))
 
         AudioRoomTimelineView(timelineItem: .init(id: makeItemIdentifier(),
@@ -519,7 +545,9 @@ private struct MockTimelineContent: View {
                                                                  source: nil,
                                                                  fileSize: nil,
                                                                  contentType: nil),
-                                                  properties: .init(replyDetails: replyDetails, isThreaded: isThreaded)))
+                                                  properties: .init(replyDetails: replyDetails,
+                                                                    isThreaded: isThreaded,
+                                                                    threadSummary: threadSummary)))
         
         FileRoomTimelineView(timelineItem: .init(id: makeItemIdentifier(),
                                                  timestamp: .mock,
@@ -533,7 +561,9 @@ private struct MockTimelineContent: View {
                                                                 fileSize: nil,
                                                                 thumbnailSource: nil,
                                                                 contentType: nil),
-                                                 properties: .init(replyDetails: replyDetails, isThreaded: isThreaded)))
+                                                 properties: .init(replyDetails: replyDetails,
+                                                                   isThreaded: isThreaded,
+                                                                   threadSummary: threadSummary)))
         
         ImageRoomTimelineView(timelineItem: .init(id: makeItemIdentifier(),
                                                   timestamp: .mock,
@@ -544,7 +574,9 @@ private struct MockTimelineContent: View {
                                                   content: .init(filename: "image.jpg",
                                                                  imageInfo: .mockImage,
                                                                  thumbnailInfo: nil),
-                                                  properties: .init(replyDetails: replyDetails, isThreaded: isThreaded)))
+                                                  properties: .init(replyDetails: replyDetails,
+                                                                    isThreaded: isThreaded,
+                                                                    threadSummary: threadSummary)))
         
         LocationRoomTimelineView(timelineItem: .init(id: makeItemIdentifier(),
                                                      timestamp: .mock,
@@ -556,7 +588,9 @@ private struct MockTimelineContent: View {
                                                                     geoURI: .init(latitude: 41.902782,
                                                                                   longitude: 12.496366),
                                                                     description: "Location description description description description description description description description"),
-                                                     properties: .init(replyDetails: replyDetails, isThreaded: isThreaded)))
+                                                     properties: .init(replyDetails: replyDetails,
+                                                                       isThreaded: isThreaded,
+                                                                       threadSummary: threadSummary)))
         
         LocationRoomTimelineView(timelineItem: .init(id: makeItemIdentifier(),
                                                      timestamp: .mock,
@@ -566,7 +600,9 @@ private struct MockTimelineContent: View {
                                                      sender: .init(id: "Bob"),
                                                      content: .init(body: "Fallback geo uri description",
                                                                     geoURI: .init(latitude: 41.902782, longitude: 12.496366), description: nil),
-                                                     properties: .init(replyDetails: replyDetails, isThreaded: isThreaded)))
+                                                     properties: .init(replyDetails: replyDetails,
+                                                                       isThreaded: isThreaded,
+                                                                       threadSummary: threadSummary)))
         
         VoiceMessageRoomTimelineView(timelineItem: .init(id: makeItemIdentifier(),
                                                          timestamp: .mock,
@@ -580,7 +616,9 @@ private struct MockTimelineContent: View {
                                                                         source: nil,
                                                                         fileSize: nil,
                                                                         contentType: nil),
-                                                         properties: .init(replyDetails: replyDetails, isThreaded: isThreaded)),
+                                                         properties: .init(replyDetails: replyDetails,
+                                                                           isThreaded: isThreaded,
+                                                                           threadSummary: threadSummary)),
                                      playerState: AudioPlayerState(id: .timelineItemIdentifier(.randomEvent),
                                                                    title: L10n.commonVoiceMessage,
                                                                    duration: 10,

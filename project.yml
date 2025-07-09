@@ -40,7 +40,7 @@ settings:
   ENABLE_BITCODE: false
   APP_NAME: ElementX
   KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).$(BASE_BUNDLE_IDENTIFIER)"
-  MARKETING_VERSION: 25.04.4
+  MARKETING_VERSION: 25.05.0
   CURRENT_PROJECT_VERSION: 1
   SUPPORTS_MACCATALYST: false
 
@@ -61,7 +61,7 @@ packages:
 #    url: https://github.com/element-hq/matrix-rust-components-swift
 #    exactVersion: 25.03.13
     url: https://github.com/tchapgouv/matrix-rust-components-swift
-    branch: 25.05.19-bwi-0-8-1
+    branch: 25.04.30-bwi-0-8-1
 #     path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
   Compound:
 #    url: https://github.com/element-hq/compound-ios

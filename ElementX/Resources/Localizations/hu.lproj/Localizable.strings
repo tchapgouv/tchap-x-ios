@@ -22,10 +22,10 @@
 "a11y_show_password" = "Jelszó megjelenítése";
 "a11y_start_call" = "Hanghívás indítása";
 "a11y_user_menu" = "Felhasználói menü";
+"a11y_view_details" = "Részletek megtekintése";
 "a11y_voice_message" = "Hangüzenet, időtartam: %1$@";
 "a11y_voice_message_record" = "Hangüzenet felvétele.";
 "a11y_voice_message_stop_recording" = "Rögzítés leállítása";
-"a11y.view_details" = "Részletek megtekintése";
 "action_accept" = "Elfogadás";
 "action_add_caption" = "Felirat hozzáadása";
 "action_add_to_timeline" = "Hozzáadás az idővonalhoz";
@@ -99,6 +99,7 @@
 "action_report" = "Jelentés";
 "action_report_bug" = "Hiba jelentése";
 "action_report_content" = "Tartalom jelentése";
+"action_report_dm" = "Beszélgetés jelentése";
 "action_report_room" = "Szoba jelentése";
 "action_reset" = "Visszaállítás";
 "action_reset_identity" = "Személyazonosság visszaállítása";
@@ -145,6 +146,7 @@
 "common_bubbles" = "Buborékok";
 "common_call_started" = "A hívás elindult";
 "common_chat_backup" = "Csevegés biztonsági mentése";
+"common_copied_to_clipboard" = "A vágólapra másolva";
 "common_copyright" = "Szerzői jogok";
 "common_creating_room" = "Szoba létrehozása…";
 "common_current_user_canceled_knock" = "Kérés megszakítva";
@@ -157,12 +159,14 @@
 "common_developer_options" = "Fejlesztői beállítások";
 "common_device_id" = "Eszközazonosító";
 "common_direct_chat" = "Közvetlen csevegés";
+"common_do_not_show_this_again" = "Ne jelenjen meg többé";
 "common_download_failed" = "Letöltés sikertelen";
 "common_downloading" = "Letöltés";
 "common_edited_suffix" = "(szerkesztve)";
 "common_editing" = "Szerkesztés";
 "common_editing_caption" = "Felirat szerkesztése";
 "common_emote" = "* %1$@ %2$@";
+"common_empty_file" = "Üres fájl";
 "common_encryption" = "Titkosítás";
 "common_encryption_enabled" = "Titkosítás engedélyezve";
 "common_enter_your_pin" = "Adja meg a PIN-kódját";
@@ -183,6 +187,7 @@
 "common_invite_unknown_profile" = "Ez a Matrix-azonosító nem található, ezért előfordulhat, hogy a meghívó nem érkezik meg.";
 "common_leaving_room" = "Szoba elhagyása";
 "common_light" = "Világos";
+"common_line_copied_to_clipboard" = "A sor a vágólapra másolva";
 "common_link_copied_to_clipboard" = "Hivatkozás a vágólapra másolva";
 "common_loading" = "Betöltés…";
 "common_loading_more" = "Továbbiak betöltése…";
@@ -197,12 +202,14 @@
 "common_no_room_name" = "Nincs szobanév";
 "common_not_encrypted" = "Nincs titkosítva";
 "common_offline" = "Kapcsolat nélkül";
+"common_open_source_licenses" = "Nyílt forráskódú licencek";
 "common_optic_id_ios" = "Optic ID";
 "common_or" = "vagy";
 "common_password" = "Jelszó";
 "common_people" = "Emberek";
 "common_permalink" = "Állandó hivatkozás";
 "common_permission" = "Engedély";
+"common_pinned" = "Kitűzve";
 "common_please_check_internet_connection" = "Ellenőrizze az internetkapcsolatát";
 "common_please_wait" = "Kis türelmet…";
 "common_poll_end_confirmation" = "Biztos, hogy befejezi ezt a szavazást?";
@@ -230,6 +237,7 @@
 "common_search_results" = "Keresési találatok";
 "common_security" = "Biztonság";
 "common_seen_by" = "Látta";
+"common_send_to" = "Címzett";
 "common_sending" = "Küldés…";
 "common_sending_failed" = "A küldés sikertelen";
 "common_sent" = "Elküldve";
@@ -239,6 +247,7 @@
 "common_shared_location" = "Megosztott tartózkodási hely";
 "common_signing_out" = "Kijelentkezés";
 "common_something_went_wrong" = "Valamilyen hiba történt";
+"common_something_went_wrong_message" = "Problémába ütköztünk. Próbálja újra.";
 "common_starting_chat" = "Csevegés megkezdése…";
 "common_sticker" = "Matrica";
 "common_success" = "Sikeres";
@@ -272,13 +281,6 @@
 "common_waiting" = "Várakozás…";
 "common_waiting_for_decryption_key" = "Várakozás a visszafejtési kulcsra";
 "common_you" = "Ön";
-"common.copied_to_clipboard" = "A vágólapra másolva";
-"common.do_not_show_this_again" = "Ne jelenjen meg többé";
-"common.empty_file" = "Üres fájl";
-"common.line_copied_to_clipboard" = "A sor a vágólapra másolva";
-"common.open_source_licenses" = "Nyílt forráskódú licencek";
-"common.pinned" = "Kitűzve";
-"common.send_to" = "Címzett";
 "common_unable_to_decrypt_insecure_device" = "Nem biztonságos eszközről küldve";
 "common_unable_to_decrypt_verification_violation" = "A feladó ellenőrzött személyazonossága megváltozott";
 "confirm_recovery_key_banner_message" = "Erősítse meg a helyreállítási kulcsát, hogy továbbra is hozzáférjen a kulcstárolójához és az üzenetelőzményekhez.";
@@ -404,7 +406,6 @@
 "screen_advanced_settings_show_media_timeline_private_rooms" = "Privát szobákban";
 "screen_advanced_settings_show_media_timeline_subtitle" = "A rejtett médiatartalmak koppintással jeleníthetők meg";
 "screen_advanced_settings_show_media_timeline_title" = "Média megjelenítése az idővonalon";
-"screen_bottom_sheet,manage_room_member_remove" = "Eltávolítás a szobából";
 "screen_bottom_sheet_create_dm_confirmation_button_title" = "Meghívó küldése";
 "screen_bottom_sheet_create_dm_message" = "Csevegést kezd vele: %1$@?";
 "screen_bottom_sheet_create_dm_title" = "Meghívó küldése?";
@@ -417,6 +418,7 @@
 "screen_bottom_sheet_manage_room_member_kick_member_confirmation_description" = "Ehhez a szobához is csatlakozhat, ha meghívják.";
 "screen_bottom_sheet_manage_room_member_kick_member_confirmation_title" = "Biztos, hogy eltávolítja ezt a tagot?";
 "screen_bottom_sheet_manage_room_member_member_user_info" = "Profil megtekintése";
+"screen_bottom_sheet_manage_room_member_remove" = "Eltávolítás a szobából";
 "screen_bottom_sheet_manage_room_member_remove_confirmation_title" = "Eltávolítja a tagot, és megtiltja a jövőbeni csatlakozást?";
 "screen_bottom_sheet_manage_room_member_removing_user" = "%1$@ eltávolítása…";
 "screen_create_room_room_access_section_anyone_option_description" = "Bárki csatlakozhat ehhez a szobához";
@@ -429,7 +431,7 @@
 "screen_decline_and_block_block_user_option_description" = "Ettől a felhasználótól nem fog többé üzeneteket vagy meghívásokat látni.";
 "screen_decline_and_block_block_user_option_title" = "Felhasználó letiltása";
 "screen_decline_and_block_report_user_option_description" = "A szoba jelentése a fiókszolgáltatójának.";
-"screen_decline_and_block_report_user_reason_placeholder" = "Describe the reason to report…";
+"screen_decline_and_block_report_user_reason_placeholder" = "Írja le a jelentés okát...";
 "screen_decline_and_block_title" = "Elutasítás és blokkolás";
 "screen_edit_room_address_room_address_section_footer" = "Szüksége lesz egy szobacímre, hogy láthatóvá tegye a szobakatalógusban.";
 "screen_edit_room_address_title" = "A szoba címe";
@@ -481,7 +483,7 @@
 "screen_media_upload_preview_error_failed_sending" = "Nem sikerült a média feltöltése, próbálja újra.";
 "screen_pinned_timeline_empty_state_description" = "Nyomjon hosszan az üzenetre, és válassza a „%1$@” lehetőséget, hogy itt szerepeljen.";
 "screen_pinned_timeline_empty_state_headline" = "Tűzze ki a fontos üzeneteket, hogy könnyen felfedezhetők legyenek";
-"screen_push_history_title" = "Push history";
+"screen_push_history_title" = "Leküldési értesítés előzmények";
 "screen_report_room_leave_failed_alert_message" = "A jelentése sikeresen el lett küldve, de hibát találtunk a szoba elhagyása során. Próbálja újra.";
 "screen_report_room_leave_failed_alert_title" = "Nem tudja elhagyni a szobát";
 "screen_report_room_reason_footer" = "A szoba jelentése a rendszergazdának. Ha az üzenetek titkosítva vannak, akkor a rendszergazda nem fogja tudni elolvasni őket.";
@@ -609,9 +611,9 @@
 "screen_change_account_provider_title" = "Fiókszolgáltató módosítása";
 "screen_change_server_error_invalid_homeserver" = "Nem sikerült elérni ezt a Matrix-kiszolgálót. Ellenőrizze, hogy helyesen adta-e meg a Matrix-kiszolgáló webcímét. Ha a webcím helyes, akkor további segítségért lépjen kapcsolatba a Matrix-kiszolgáló adminisztrátorával.";
 "screen_change_server_error_invalid_well_known" = "A Sliding sync protokoll a well-known fájl problémája miatt nem érhető el:\n%1$@";
-"screen_change_server_error_no_sliding_sync_message" = "A kiszolgáló jelenleg nem támogatja a Sliding sync protokollt.";
+"screen_change_server_error_no_sliding_sync_message" = "A kiválasztott fiókszolgáltató nem támogatja a csúszóablakos szinkronizálást. Az %1$@ használatához kiszolgálófrissítés szükséges.";
 "screen_change_server_form_header" = "Matrix-kiszolgáló webcíme";
-"screen_change_server_form_notice" = "Csak olyan meglévő kiszolgálóhoz csatlakozhat, amely támogatja a Sliding sync protokollt. Ezt a Matrix-kiszolgáló adminisztrátorának kell beállítania. %1$@";
+"screen_change_server_form_notice" = "Adjon meg egy domaincímet.";
 "screen_change_server_subtitle" = "Mi a kiszolgálója címe?";
 "screen_change_server_title" = "Válassza ki a kiszolgálóját";
 "screen_chat_backup_key_backup_action_disable" = "Biztonsági mentés kikapcsolása";
@@ -1072,6 +1074,8 @@
 "state_event_room_avatar_removed_by_you" = "Eltávolította a szoba profilképét";
 "state_event_room_ban" = "%1$@ kitiltotta: %2$@";
 "state_event_room_ban_by_you" = "Kitiltotta: %1$@";
+"state_event_room_ban_by_you_with_reason" = "Kitiltotta %1$@ felhasználót: %2$@";
+"state_event_room_ban_with_reason" = "%1$@ kitiltotta %2$@ felhasználót: %3$@";
 "state_event_room_created" = "%1$@ létrehozta a szobát";
 "state_event_room_created_by_you" = "Létrehozta a szobát";
 "state_event_room_invite" = "%1$@ meghívta: %2$@";
@@ -1108,6 +1112,8 @@
 "state_event_room_reject_by_you" = "Elutasította a meghívást";
 "state_event_room_remove" = "%1$@ eltávolította: %2$@";
 "state_event_room_remove_by_you" = "Eltávolította: %1$@";
+"state_event_room_remove_by_you_with_reason" = "Eltávolította %1$@ felhasználót: %2$@";
+"state_event_room_remove_with_reason" = "%1$@ eltávolította %2$@ felhasználót: %3$@";
 "state_event_room_third_party_invite" = "%1$@ meghívót küldött %2$@ számára, hogy csatlakozzon a szobához";
 "state_event_room_third_party_invite_by_you" = "Meghívót küldött %1$@ számára, hogy csatlakozzon a szobához";
 "state_event_room_third_party_revoked_invite" = "%1$@ visszavonta %2$@ meghívását, hogy csatlakozzon a szobához";
@@ -1126,7 +1132,7 @@
 "timeline_decryption_failure_historical_event_user_not_joined" = "Nincs hozzáférése ehhez az üzenethez";
 "timeline_decryption_failure_unable_to_decrypt" = "Nem sikerült visszafejteni az üzenetet";
 "timeline_decryption_failure_withheld_unverified" = "Ez az üzenet azért lett blokkolva, mert vagy nem ellenőrizte az eszközt, vagy a feladónak ellenőriznie kell az Ön személyazonosságát.";
-"troubleshoot_notifications_entry_point_push_history_title" = "Push history";
+"troubleshoot_notifications_entry_point_push_history_title" = "Leküldéses értesítés előzmények";
 "troubleshoot_notifications_entry_point_section" = "Hibaelhárítás";
 "troubleshoot_notifications_screen_action" = "Tesztek futtatása";
 "troubleshoot_notifications_screen_action_again" = "Tesztek újbóli futtatása";

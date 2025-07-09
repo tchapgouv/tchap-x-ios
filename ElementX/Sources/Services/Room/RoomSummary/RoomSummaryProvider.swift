@@ -89,7 +89,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         self.roomList = roomList
         
         do {
-            listUpdatesSubscriptionResult = roomList.entriesWithDynamicAdapters(pageSize: UInt32(roomListPageSize), listener: RoomListEntriesListenerProxy { [weak self] updates in
+            listUpdatesSubscriptionResult = roomList.entriesWithDynamicAdapters(pageSize: UInt32(roomListPageSize), listener: SDKListener { [weak self] updates in
                 guard let self else { return }
                 diffsPublisher.send(updates)
             })
@@ -97,7 +97,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
             // Forces the listener above to be called with the current state
             setFilter(.all(filters: []))
             
-            let stateUpdatesSubscriptionResult = try roomList.loadingState(listener: RoomListStateObserver { [weak self] state in
+            let stateUpdatesSubscriptionResult = try roomList.loadingState(listener: SDKListener { [weak self] state in
                 guard let self else { return }
                 MXLog.info("\(name): Received state update: \(state)")
                 stateSubject.send(RoomSummaryProviderState(roomListState: state))
@@ -242,11 +242,11 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         }
         
         var attributedLastMessage: AttributedString?
-        var lastMessageFormattedTimestamp: String?
+        var lastMessageDate: Date?
         
         if let latestRoomMessage = roomDetails.latestEvent {
             let lastMessage = EventTimelineItemProxy(item: latestRoomMessage, uniqueID: .init("0"))
-            lastMessageFormattedTimestamp = lastMessage.timestamp.formattedMinimal()
+            lastMessageDate = lastMessage.timestamp
             attributedLastMessage = eventStringBuilder.buildAttributedString(for: lastMessage)
         }
         
@@ -271,7 +271,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
                            avatarURL: roomInfo.avatarUrl.flatMap(URL.init(string:)),
                            heroes: roomInfo.heroes.map(UserProfileProxy.init),
                            lastMessage: attributedLastMessage,
-                           lastMessageFormattedTimestamp: lastMessageFormattedTimestamp,
+                           lastMessageDate: lastMessageDate,
                            unreadMessagesCount: UInt(roomInfo.numUnreadMessages),
                            unreadMentionsCount: UInt(roomInfo.numUnreadMentions),
                            unreadNotificationsCount: UInt(roomInfo.numUnreadNotifications),
@@ -381,29 +381,5 @@ extension RoomSummaryProviderState {
         case .loaded(let maximumNumberOfRooms):
             self = .loaded(totalNumberOfRooms: UInt(maximumNumberOfRooms ?? 0))
         }
-    }
-}
-
-private class RoomListEntriesListenerProxy: RoomListEntriesListener {
-    private let onUpdateClosure: ([RoomListEntriesUpdate]) -> Void
-   
-    init(_ onUpdateClosure: @escaping ([RoomListEntriesUpdate]) -> Void) {
-        self.onUpdateClosure = onUpdateClosure
-    }
-    
-    func onUpdate(roomEntriesUpdate: [RoomListEntriesUpdate]) {
-        onUpdateClosure(roomEntriesUpdate)
-    }
-}
-
-private class RoomListStateObserver: RoomListLoadingStateListener {
-    private let onUpdateClosure: (RoomListLoadingState) -> Void
-   
-    init(_ onUpdateClosure: @escaping (RoomListLoadingState) -> Void) {
-        self.onUpdateClosure = onUpdateClosure
-    }
-    
-    func onUpdate(state: RoomListLoadingState) {
-        onUpdateClosure(state)
     }
 }

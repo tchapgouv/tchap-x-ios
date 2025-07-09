@@ -24,6 +24,7 @@ class HomeScreenViewModelTests: XCTestCase {
     var clientProxy: ClientProxyMock!
     var roomSummaryProvider: RoomSummaryProviderMock!
     var appSettings: AppSettings!
+    var notificationManager: NotificationManagerMock!
     
     var cancellables = Set<AnyCancellable>()
     
@@ -304,11 +305,11 @@ class HomeScreenViewModelTests: XCTestCase {
         try await deferred.fulfill()
         
         XCTAssertEqual(appSettings.seenInvites, [invitedRoomIDs[1]])
+        XCTAssertFalse(notificationManager.removeDeliveredMessageNotificationsForCalled, "The notification will be dismissed when opening the room.")
     }
     
     func testDeclineInvite() async throws {
         setupViewModel(withInvites: true)
-        
         let invitedRoomIDs = context.viewState.rooms.invites.compactMap(\.roomID)
         appSettings.seenInvites = Set(invitedRoomIDs)
         XCTAssertEqual(invitedRoomIDs.count, 2)
@@ -327,10 +328,27 @@ class HomeScreenViewModelTests: XCTestCase {
             
             return .invited(roomProxy)
         }
-        context.viewState.bindings.alertInfo?.secondaryButton?.action?()
+        context.viewState.bindings.alertInfo?.verticalButtons?[0].action?()
         await fulfillment(of: [rejectExpectation], timeout: 1.0)
         
         XCTAssertEqual(appSettings.seenInvites, [invitedRoomIDs[1]])
+        XCTAssertTrue(notificationManager.removeDeliveredMessageNotificationsForCalled)
+        XCTAssertEqual(notificationManager.removeDeliveredMessageNotificationsForReceivedInvocations, [invitedRoomIDs[0]])
+    }
+    
+    func testDeclineAndBlockInvite() async throws {
+        setupViewModel(withInvites: true)
+        let invitedRoomIDs = context.viewState.rooms.invites.compactMap(\.roomID)
+        appSettings.seenInvites = Set(invitedRoomIDs)
+        XCTAssertEqual(invitedRoomIDs.count, 2)
+        
+        let deferred = deferFulfillment(context.$viewState) { $0.bindings.alertInfo != nil }
+        context.send(viewAction: .declineInvite(roomIdentifier: invitedRoomIDs[0]))
+        try await deferred.fulfill()
+        
+        let deferredAction = deferFulfillment(viewModel.actions) { $0 == .presentDeclineAndBlock(userID: RoomMemberProxyMock.mockCharlie.userID, roomID: invitedRoomIDs[0]) }
+        context.viewState.bindings.alertInfo?.secondaryButton?.action?()
+        try await deferredAction.fulfill()
     }
     
     // MARK: - Helpers
@@ -356,10 +374,13 @@ class HomeScreenViewModelTests: XCTestCase {
             userSession.sessionSecurityStatePublisher = securityStatePublisher
         }
         
+        notificationManager = NotificationManagerMock()
+        
         viewModel = HomeScreenViewModel(userSession: userSession,
-                                        analyticsService: ServiceLocator.shared.analytics,
-                                        appSettings: appSettings,
                                         selectedRoomPublisher: CurrentValueSubject<String?, Never>(nil).asCurrentValuePublisher(),
+                                        appSettings: appSettings,
+                                        analyticsService: ServiceLocator.shared.analytics,
+                                        notificationManager: notificationManager,
                                         userIndicatorController: ServiceLocator.shared.userIndicatorController)
     }
 }

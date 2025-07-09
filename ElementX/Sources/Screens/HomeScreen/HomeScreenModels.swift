@@ -105,6 +105,10 @@ struct HomeScreenViewState: BindableState {
     
     var reportRoomEnabled = false
     
+    // Intentionally not mutable so that we don't have to reset the navigation bar's
+    // appearance whenever the feature flag is toggled (requires a restart).
+    let isNewBloomEnabled: Bool
+    
     var visibleRooms: [HomeScreenRoom] {
         if roomListMode == .skeletons {
             return placeholderRooms
@@ -239,7 +243,7 @@ extension HomeScreenRoom {
                   isDirect: summary.isDirect,
                   isHighlighted: isHighlighted,
                   isFavourite: summary.isFavourite,
-                  timestamp: summary.lastMessageFormattedTimestamp,
+                  timestamp: summary.lastMessageDate?.formattedMinimal(),
                   lastMessage: summary.lastMessage,
                   avatar: summary.avatar,
                   canonicalAlias: summary.canonicalAlias)

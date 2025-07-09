@@ -156,7 +156,7 @@ class ServerConfirmationScreenViewModelTests: XCTestCase {
         XCTAssertNil(context.alertInfo)
         
         // When continuing from the confirmation screen.
-        let deferred = deferFulfillment(context.$viewState) { $0.bindings.alertInfo != nil }
+        let deferred = deferFulfillment(context.observe(\.alertInfo)) { $0 != nil }
         context.send(viewAction: .confirm)
         try await deferred.fulfill()
         
@@ -173,7 +173,7 @@ class ServerConfirmationScreenViewModelTests: XCTestCase {
         XCTAssertNil(context.alertInfo)
         
         // When continuing from the confirmation screen.
-        let deferred = deferFulfillment(context.$viewState) { $0.bindings.alertInfo != nil }
+        let deferred = deferFulfillment(context.observe(\.alertInfo)) { $0 != nil }
         context.send(viewAction: .confirm)
         try await deferred.fulfill()
         
@@ -201,7 +201,6 @@ class ServerConfirmationScreenViewModelTests: XCTestCase {
         
         viewModel = ServerConfirmationScreenViewModel(authenticationService: service,
                                                       authenticationFlow: authenticationFlow,
-                                                      slidingSyncLearnMoreURL: ServiceLocator.shared.settings.slidingSyncLearnMoreURL,
                                                       userIndicatorController: UserIndicatorControllerMock())
         
         // Add a fake window in order for the OIDC flow to continue

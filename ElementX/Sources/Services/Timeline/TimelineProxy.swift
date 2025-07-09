@@ -233,7 +233,7 @@ final class TimelineProxy: TimelineProxyProtocol {
         MXLog.info("Sending audio")
         
         do {
-            let handle = try timeline.sendAudio(params: .init(filename: url.path(percentEncoded: false),
+            let handle = try timeline.sendAudio(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                               caption: caption,
                                                               formattedCaption: nil, // Rust will build this from the caption's markdown.
                                                               mentions: nil,
@@ -261,7 +261,7 @@ final class TimelineProxy: TimelineProxyProtocol {
         MXLog.info("Sending file")
         
         do {
-            let handle = try timeline.sendFile(params: .init(filename: url.path(percentEncoded: false),
+            let handle = try timeline.sendFile(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                              caption: caption,
                                                              formattedCaption: nil, // Rust will build this from the caption's markdown.
                                                              mentions: nil,
@@ -290,7 +290,7 @@ final class TimelineProxy: TimelineProxyProtocol {
         MXLog.info("Sending image")
         
         do {
-            let handle = try timeline.sendImage(params: .init(filename: url.path(percentEncoded: false),
+            let handle = try timeline.sendImage(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                               caption: caption,
                                                               formattedCaption: nil, // Rust will build this from the caption's markdown.
                                                               mentions: nil,
@@ -338,7 +338,7 @@ final class TimelineProxy: TimelineProxyProtocol {
         MXLog.info("Sending video")
         
         do {
-            let handle = try timeline.sendVideo(params: .init(filename: url.path(percentEncoded: false),
+            let handle = try timeline.sendVideo(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                               caption: caption,
                                                               formattedCaption: nil,
                                                               mentions: nil,
@@ -367,7 +367,7 @@ final class TimelineProxy: TimelineProxyProtocol {
         MXLog.info("Sending voice message")
         
         do {
-            let handle = try timeline.sendVoiceMessage(params: .init(filename: url.path(percentEncoded: false),
+            let handle = try timeline.sendVoiceMessage(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                                      caption: nil,
                                                                      formattedCaption: nil,
                                                                      mentions: nil,
@@ -577,7 +577,7 @@ final class TimelineProxy: TimelineProxyProtocol {
     private func subscribeToPagination() async {
         switch kind {
         case .live:
-            let backPaginationListener = RoomPaginationStatusListener { [weak self] status in
+            let backPaginationListener = SDKListener<RoomPaginationStatus> { [weak self] status in
                 guard let self else {
                     return
                 }
@@ -606,32 +606,6 @@ final class TimelineProxy: TimelineProxyProtocol {
         case .pinned:
             backPaginationStatusSubject.send(.timelineEndReached)
             forwardPaginationStatusSubject.send(.timelineEndReached)
-        }
-    }
-}
-
-private final class RoomPaginationStatusListener: PaginationStatusListener {
-    private let onUpdateClosure: (RoomPaginationStatus) -> Void
-
-    init(_ onUpdateClosure: @escaping (RoomPaginationStatus) -> Void) {
-        self.onUpdateClosure = onUpdateClosure
-    }
-
-    func onUpdate(status: RoomPaginationStatus) {
-        onUpdateClosure(status)
-    }
-}
-
-private final class UploadProgressListener: ProgressWatcher {
-    private let onUpdateClosure: (Double) -> Void
-    
-    init(_ onUpdateClosure: @escaping (Double) -> Void) {
-        self.onUpdateClosure = onUpdateClosure
-    }
-    
-    func transmissionProgress(progress: TransmissionProgress) {
-        DispatchQueue.main.async { [weak self] in
-            self?.onUpdateClosure(Double(progress.current) / Double(progress.total))
         }
     }
 }
