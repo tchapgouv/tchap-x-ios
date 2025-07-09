@@ -10,7 +10,7 @@ import SFSafeSymbols
 import SwiftUI
 
 struct SettingsScreen: View {
-    @ObservedObject var context: SettingsScreenViewModel.Context
+    let context: SettingsScreenViewModel.Context
     // Tchap: `openURL` needed to open FAQ page.
     @Environment(\.openURL) private var openURL
     

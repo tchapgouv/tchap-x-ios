@@ -2142,6 +2142,47 @@ class BugReportServiceMock: BugReportServiceProtocol, @unchecked Sendable {
     var underlyingCrashedLastRun: Bool!
     var lastCrashEventID: String?
 
+    //MARK: - updateBaseURL
+
+    var updateBaseURLUnderlyingCallsCount = 0
+    var updateBaseURLCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return updateBaseURLUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = updateBaseURLUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                updateBaseURLUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    updateBaseURLUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var updateBaseURLCalled: Bool {
+        return updateBaseURLCallsCount > 0
+    }
+    var updateBaseURLReceivedBaseURL: URL?
+    var updateBaseURLReceivedInvocations: [URL?] = []
+    var updateBaseURLClosure: ((URL?) -> Void)?
+
+    func updateBaseURL(_ baseURL: URL?) {
+        updateBaseURLCallsCount += 1
+        updateBaseURLReceivedBaseURL = baseURL
+        DispatchQueue.main.async {
+            self.updateBaseURLReceivedInvocations.append(baseURL)
+        }
+        updateBaseURLClosure?(baseURL)
+    }
     //MARK: - submitBugReport
 
     var submitBugReportProgressListenerUnderlyingCallsCount = 0

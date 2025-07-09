@@ -451,7 +451,7 @@ class ClientProxy: ClientProxyProtocol {
             await waitForRoomToSync(roomID: roomID, timeout: .seconds(30))
             
             return .success(())
-        } catch ClientError.MatrixApi(.forbidden, _, _) { // Tchap
+        } catch ClientError.MatrixApi(.forbidden, _, _, _) {
             MXLog.error("Failed joining roomAlias: \(roomID) forbidden")
             return .failure(.forbiddenAccess)
         } catch {
@@ -467,7 +467,7 @@ class ClientProxy: ClientProxyProtocol {
             await waitForRoomToSync(roomID: room.id(), timeout: .seconds(30))
             
             return .success(())
-        } catch ClientError.MatrixApi(.forbidden, _, _) { // Tchap
+        } catch ClientError.MatrixApi(.forbidden, _, _, _) {
             MXLog.error("Failed joining roomAlias: \(roomAlias) forbidden")
             return .failure(.forbiddenAccess)
         } catch {
@@ -508,7 +508,7 @@ class ClientProxy: ClientProxyProtocol {
             let data = try Data(contentsOf: media.url)
             let matrixUrl = try await client.uploadMedia(mimeType: mimeType, data: data, progressWatcher: nil)
             return .success(matrixUrl)
-        } catch let ClientError.MatrixApi(errorKind, _, _) { // Tchap
+        } catch let ClientError.MatrixApi(errorKind, _, _, _) {
             MXLog.error("Failed uploading media with error kind: \(errorKind)")
             return .failure(ClientProxyError.failedUploadingMedia(errorKind))
         } catch {
@@ -540,7 +540,7 @@ class ClientProxy: ClientProxyProtocol {
         do {
             let roomPreview = try await client.getRoomPreviewFromRoomId(roomId: identifier, viaServers: via)
             return try .success(RoomPreviewProxy(roomPreview: roomPreview))
-        } catch ClientError.MatrixApi(.forbidden, _, _) { // Tchap
+        } catch ClientError.MatrixApi(.forbidden, _, _, _) {
             MXLog.error("Failed retrieving preview for room: \(identifier) is private")
             return .failure(.roomPreviewIsPrivate)
         } catch {
