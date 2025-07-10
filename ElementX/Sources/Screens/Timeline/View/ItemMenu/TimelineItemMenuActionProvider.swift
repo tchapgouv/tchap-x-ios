@@ -111,7 +111,7 @@ struct TimelineItemMenuActionProvider {
             actions.append(.save)
             actions = actions.filter(\.canAppearInMediaDetails)
             secondaryActions = secondaryActions.filter(\.canAppearInMediaDetails)
-        case .live, .detached:
+        case .live, .detached, .thread:
             break // viewInRoomTimeline is the only non-room item and was added conditionally.
         }
         
@@ -125,7 +125,7 @@ struct TimelineItemMenuActionProvider {
             secondaryActions = secondaryActions.filter(\.canAppearInRedacted)
         }
         
-        let isReactable = timelineKind == .live || timelineKind == .detached ? item.isReactable : false
+        let isReactable = timelineKind == .live || timelineKind == .detached || timelineKind == .thread ? item.isReactable : false
 
         return .init(isReactable: isReactable, actions: actions, secondaryActions: secondaryActions, emojiProvider: emojiProvider)
     }

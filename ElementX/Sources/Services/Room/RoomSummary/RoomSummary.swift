@@ -29,7 +29,7 @@ struct RoomSummary {
         }
     }
 
-    let roomListItem: RoomListItem
+    let room: Room
     
     let id: String
     
@@ -38,7 +38,10 @@ struct RoomSummary {
     let name: String
     let isDirect: Bool
     let avatarURL: URL?
+    
     let heroes: [UserProfileProxy]
+    let activeMembersCount: UInt
+    
     let lastMessage: AttributedString?
     let lastMessageDate: Date?
     let unreadMessagesCount: UInt
@@ -81,19 +84,33 @@ extension RoomSummary: CustomStringConvertible {
             return alias
         }
         
-        return heroes.compactMap(\.displayName).formatted(.list(type: .and))
+        guard heroes.count > 0 else {
+            return ""
+        }
+        
+        var heroComponents = heroes.compactMap(\.displayName)
+        
+        let othersCount = Int(activeMembersCount) - heroes.count
+        if othersCount > 0 {
+            heroComponents.append(L10n.commonManyMembers(othersCount))
+        }
+        
+        return heroComponents.formatted(.list(type: .and))
     }
 }
 
 extension RoomSummary {
-    init(roomListItem: RoomListItem, id: String, settingsMode: RoomNotificationModeProxy, hasUnreadMessages: Bool, hasUnreadMentions: Bool, hasUnreadNotifications: Bool) {
-        self.roomListItem = roomListItem
+    init(room: Room, id: String, settingsMode: RoomNotificationModeProxy, hasUnreadMessages: Bool, hasUnreadMentions: Bool, hasUnreadNotifications: Bool) {
+        self.room = room
         self.id = id
         let string = "\(settingsMode) - messages: \(hasUnreadMessages) - mentions: \(hasUnreadMentions) - notifications: \(hasUnreadNotifications)"
         name = string
         isDirect = true
         avatarURL = nil
+        
         heroes = []
+        activeMembersCount = 0
+        
         lastMessage = AttributedString(string)
         lastMessageDate = .mock
         unreadMessagesCount = hasUnreadMessages ? 1 : 0

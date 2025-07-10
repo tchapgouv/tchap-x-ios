@@ -30,7 +30,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private var userSession: UserSessionProtocol? {
         didSet {
             userSessionObserver?.cancel()
-            if userSession != nil {
+            if let userSession {
                 configureElementCallService()
                 configureNotificationManager()
                 observeUserSessionChanges()
@@ -38,6 +38,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                 let homeServerBaseURL = URL(string: userSession!.clientProxy.homeserver) // swiftlint:disable:this force_unwrapping
                 updateBugReportServiceBaseURL(homeServerBaseURL?.appendingPathComponent("bugreports"))
                 startSync()
+                performSettingsToAccountDataMigration(userSession: userSession)
             } else {
                 // Tchap: nullify BugReportService baseURL after user is logged out.
                 updateBugReportServiceBaseURL(nil)
@@ -61,7 +62,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
 
     private let appRouteURLParser: AppRouteURLParser
     
-    @Consumable private var storedAppRoute: AppRoute?
+    private var storedAppRoute: AppRoute?
     @Consumable private var storedInlineReply: (roomID: String, message: String)?
     @Consumable private var storedRoomsToAwait: Set<String>?
 
@@ -78,7 +79,9 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         let appSettings = appHooks.appSettingsHook.configure(AppSettings())
         
-        Target.mainApp.configure(logLevel: appSettings.logLevel, traceLogPacks: appSettings.traceLogPacks)
+        Target.mainApp.configure(logLevel: appSettings.logLevel,
+                                 traceLogPacks: appSettings.traceLogPacks,
+                                 sentryURL: appSettings.bugReportSentryRustURL)
         
         let appName = InfoPlistReader.main.bundleDisplayName
         let appVersion = InfoPlistReader.main.bundleShortVersionString
@@ -225,6 +228,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         if let route = appRouteURLParser.route(from: url) {
             switch route {
+            case .accountProvisioningLink:
+                handleAppRoute(route)
             case .genericCallLink(let url):
                 if let userSessionFlowCoordinator {
                     userSessionFlowCoordinator.handleAppRoute(route, animated: true)
@@ -408,17 +413,54 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             Tracing.deleteLogFiles()
             MXLog.info("Migrating to v1.6.7, log files have been wiped")
         }
+    }
+    
+    // This could be removed once the adotpion of 25.06.x is widespread.
+    private func performSettingsToAccountDataMigration(userSession: UserSessionProtocol) {
+        guard let userDefaults = UserDefaults(suiteName: InfoPlistReader.main.appGroupIdentifier) else {
+            return
+        }
         
-        if oldVersion < Version(25, 4, 2) {
-            MXLog.info("Migrating to v25.04.2, checking if hideTimelineMedia flag can be migrated to timelineMediaVisibility")
-            // Migration for the old `hideTimelineMedia` flag.
-            if let userDefaults = UserDefaults(suiteName: InfoPlistReader.main.appGroupIdentifier),
-               let hideTimelineMedia = userDefaults.value(forKey: "hideTimelineMedia") as? Bool {
-                appSettings.timelineMediaVisibility = hideTimelineMedia ? .never : .always
+        let hideInviteAvatars = userDefaults.value(forKey: "hideInviteAvatars") as? Bool
+        let timelineMediaVisibility = userDefaults
+            .data(forKey: "timelineMediaVisibility")
+            .flatMap {
+                try? JSONDecoder().decode(TimelineMediaVisibility.self, from: $0)
+            }
+        let hideTimelineMedia = userDefaults.value(forKey: "hideTimelineMedia") as? Bool
+        
+        guard hideInviteAvatars != nil || timelineMediaVisibility != nil || hideTimelineMedia != nil else {
+            // No migration needed, no local settings found.
+            return
+        }
+        
+        Task {
+            switch await userSession.clientProxy.fetchMediaPreviewConfiguration() {
+            case let .success(config):
+                guard config == nil else {
+                    // Found a server configuration, no need to migrate.
+                    userDefaults.removeObject(forKey: "hideInviteAvatars")
+                    userDefaults.removeObject(forKey: "timelineMediaVisibility")
+                    userDefaults.removeObject(forKey: "hideTimelineMedia")
+                    return
+                }
+                
+                if let hideInviteAvatars, case .success = await userSession.clientProxy.setHideInviteAvatars(hideInviteAvatars) {
+                    userDefaults.removeObject(forKey: "hideInviteAvatars")
+                }
+                
+                if let timelineMediaVisibility, case .success = await userSession.clientProxy.setTimelineMediaVisibility(timelineMediaVisibility) {
+                    userDefaults.removeObject(forKey: "timelineMediaVisibility")
+                } else if let hideTimelineMedia, case .success = await userSession.clientProxy.setTimelineMediaVisibility(hideTimelineMedia ? .never : .always) {
+                    userDefaults.removeObject(forKey: "hideTimelineMedia")
+                }
+            case let .failure(error):
+                MXLog.error("Could not perform migration, failed to fetch media preview config: \(error)")
+                return
             }
         }
     }
-    
+        
     /// Clears the keychain, app support directory etc ready for a fresh use.
     /// - Parameter includingSettings: Whether to additionally wipe the user's app settings too.
     private func wipeUserData(includingSettings: Bool = false) {
@@ -520,17 +562,23 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                                                     appSettings: appSettings,
                                                     appHooks: appHooks)
         
-        authenticationFlowCoordinator = AuthenticationFlowCoordinator(authenticationService: authenticationService,
-                                                                      qrCodeLoginService: qrCodeLoginService,
-                                                                      bugReportService: ServiceLocator.shared.bugReportService,
-                                                                      navigationRootCoordinator: navigationRootCoordinator,
-                                                                      appMediator: appMediator,
-                                                                      appSettings: appSettings,
-                                                                      analytics: ServiceLocator.shared.analytics,
-                                                                      userIndicatorController: ServiceLocator.shared.userIndicatorController)
-        authenticationFlowCoordinator?.delegate = self
+        let coordinator = AuthenticationFlowCoordinator(authenticationService: authenticationService,
+                                                        qrCodeLoginService: qrCodeLoginService,
+                                                        bugReportService: ServiceLocator.shared.bugReportService,
+                                                        navigationRootCoordinator: navigationRootCoordinator,
+                                                        appMediator: appMediator,
+                                                        appSettings: appSettings,
+                                                        analytics: ServiceLocator.shared.analytics,
+                                                        userIndicatorController: ServiceLocator.shared.userIndicatorController)
+        coordinator.delegate = self
         
-        authenticationFlowCoordinator?.start()
+        authenticationFlowCoordinator = coordinator
+        coordinator.start()
+        
+        if storedAppRoute?.isAuthenticationRoute == true,
+           let storedAppRoute = storedAppRoute.take() {
+            coordinator.handleAppRoute(storedAppRoute, animated: false)
+        }
     }
     
     private func runPostSessionSetupTasks() async {
@@ -542,7 +590,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             userSession.clientProxy.roomsToAwait = storedRoomsToAwait
         }
         
-        if let storedAppRoute {
+        if storedAppRoute?.isAuthenticationRoute == false,
+           let storedAppRoute = storedAppRoute.take() {
             userSessionFlowCoordinator.handleAppRoute(storedAppRoute, animated: false)
         }
         
@@ -808,9 +857,22 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     }
     
     private func handleAppRoute(_ appRoute: AppRoute) {
-        if let userSessionFlowCoordinator {
-            userSessionFlowCoordinator.handleAppRoute(appRoute, animated: appMediator.appState == .active)
-        } else {
+        var handled = false
+        
+        switch appRoute {
+        case .accountProvisioningLink:
+            if let authenticationFlowCoordinator {
+                authenticationFlowCoordinator.handleAppRoute(appRoute, animated: appMediator.appState == .active)
+                handled = true
+            }
+        default:
+            if let userSessionFlowCoordinator {
+                userSessionFlowCoordinator.handleAppRoute(appRoute, animated: appMediator.appState == .active)
+                handled = true
+            }
+        }
+        
+        if !handled {
             storedAppRoute = appRoute
         }
     }
@@ -894,9 +956,10 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             ServiceLocator.shared.bugReportService.lastCrashEventID = event.eventId.sentryIdString
         }
         
-        SentrySDK.start(options: options)
+        SentrySDK.start(options: options) // Swift
+        enableSentryLogging(enabled: options.enabled) // Rust
         
-        MXLog.info("SentrySDK started")
+        MXLog.info("Sentry configured (enabled: \(options.enabled))")
     }
     
     private func teardownSentry() {

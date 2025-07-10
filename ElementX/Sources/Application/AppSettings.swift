@@ -17,8 +17,7 @@ protocol CommonSettingsProtocol {
     var logLevel: LogLevel { get }
     var traceLogPacks: Set<TraceLogPack> { get }
     var enableOnlySignedDeviceIsolationMode: Bool { get }
-    var hideInviteAvatars: Bool { get }
-    var timelineMediaVisibility: TimelineMediaVisibility { get }
+    var hideQuietNotificationAlerts: Bool { get }
 }
 
 /// Store Element specific app settings.
@@ -45,9 +44,6 @@ final class AppSettings {
         case optimizeMediaUploads
         case appAppearance
         case sharePresence
-        case hideUnreadMessagesBadge
-        case hideInviteAvatars
-        case timelineMediaVisibility
         case isNewBloomEnabled
         
         case elementCallBaseURLOverride
@@ -59,6 +55,10 @@ final class AppSettings {
         case knockingEnabled
         case threadsEnabled
         case developerOptionsEnabled
+        
+        // Doug's tweaks 🔧
+        case hideUnreadMessagesBadge
+        case hideQuietNotificationAlerts
     }
     
     private static var suiteName: String = InfoPlistReader.main.appGroupIdentifier
@@ -92,7 +92,8 @@ final class AppSettings {
     // MARK: - Hooks
     
     // swiftlint:disable:next function_parameter_count
-    func override(defaultHomeserverAddress: String,
+    func override(accountProviders: [String],
+                  allowOtherAccountProviders: Bool,
                   pushGatewayBaseURL: URL,
                   oidcRedirectURL: URL,
                   websiteURL: URL,
@@ -101,13 +102,16 @@ final class AppSettings {
                   acceptableUseURL: URL,
                   privacyURL: URL,
                   encryptionURL: URL,
+                  deviceVerificationURL: URL,
                   chatBackupDetailsURL: URL,
                   identityPinningViolationDetailsURL: URL,
                   elementWebHosts: [String],
+                  accountProvisioningHost: String,
                   bugReportApplicationID: String,
                   analyticsTermsURL: URL?,
                   mapTilerConfiguration: MapTilerConfiguration) {
-        self.defaultHomeserverAddress = defaultHomeserverAddress
+        self.accountProviders = accountProviders
+        self.allowOtherAccountProviders = allowOtherAccountProviders
         self.pushGatewayBaseURL = pushGatewayBaseURL
         self.oidcRedirectURL = oidcRedirectURL
         self.websiteURL = websiteURL
@@ -116,9 +120,11 @@ final class AppSettings {
         self.acceptableUseURL = acceptableUseURL
         self.privacyURL = privacyURL
         self.encryptionURL = encryptionURL
+        self.deviceVerificationURL = deviceVerificationURL
         self.chatBackupDetailsURL = chatBackupDetailsURL
         self.identityPinningViolationDetailsURL = identityPinningViolationDetailsURL
         self.elementWebHosts = elementWebHosts
+        self.accountProvisioningHost = accountProvisioningHost
         self.bugReportApplicationID = bugReportApplicationID
         self.analyticsTermsURL = analyticsTermsURL
         self.mapTilerConfiguration = mapTilerConfiguration
@@ -149,17 +155,22 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.seenInvites, defaultValue: [], storageType: .userDefaults(store))
     var seenInvites: Set<String>
     
-    /// The default homeserver address used. This is intentionally a string without a scheme
-    /// so that it can be passed to Rust as a ServerName for well-known discovery.
+    /// The initial set of account providers shown to the user in the authentication flow.
+    ///
+    /// Account provider is the friendly term for the server name. It should not contain an `https` prefix and should
+    /// match the last part of the user ID. For example `example.com` and not `https://matrix.example.com`.
     #if IS_TCHAP_DEVELOPMENT
-    private(set) var defaultHomeserverAddress = "matrix.dev01.tchap.incubateur.net"
+    private(set) var defaultHomeserverAddress = ""
+    private(set) var accountProviders = ["matrix.dev01.tchap.incubateur.ne"]
     #elseif IS_TCHAP_STAGING
-    private(set) var defaultHomeserverAddress = "matrix.i.tchap.gouv.fr"
+    private(set) var accountProviders = ["matrix.i.tchap.gouv.fr"]
     #elseif IS_TCHAP_PRODUCTION
-    private(set) var defaultHomeserverAddress = "matrix.agent.dinum.tchap.gouv.fr"
+    private(set) var accountProviders = ["matrix.agent.dinum.tchap.gouv.fr"]
     #else
-    private(set) var defaultHomeserverAddress = "matrix.org"
+    private(set) var accountProviders = ["matrix.org"]
     #endif
+    /// Whether or not the user is allowed to manually enter their own account provider or must select from one of `defaultAccountProviders`.
+    private(set) var allowOtherAccountProviders = true
     
     /// The task identifier used for background app refresh. Also used in main target's the Info.plist
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
@@ -190,12 +201,16 @@ final class AppSettings {
     private(set) var supportEmailAddress = "support@element.io"
     /// A URL where users can go read more about encryption in general.
     private(set) var encryptionURL: URL = "https://element.io/help#encryption"
+    /// A URL where users can go read more about device verification..
+    private(set) var deviceVerificationURL: URL = "https://element.io/help#encryption-device-verification"
     /// A URL where users can go read more about the chat backup.
     private(set) var chatBackupDetailsURL: URL = "https://element.io/help#encryption5"
     /// A URL where users can go read more about identity pinning violations
     private(set) var identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
     /// Any domains that Element web may be hosted on - used for handling links.
     private(set) var elementWebHosts = ["app.element.io", "staging.element.io", "develop.element.io"]
+    /// The domain that account provisioning links will be hosted on - used for handling the links.
+    private(set) var accountProvisioningHost = "mobile.element.io"
     
     @UserPreference(key: UserDefaultsKeys.appAppearance, defaultValue: .system, storageType: .userDefaults(store))
     var appAppearance: AppAppearance
@@ -271,6 +286,8 @@ final class AppSettings {
 
     let bugReportServiceBaseURL: URL? = Secrets.rageshakeServerURL.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
     let bugReportSentryURL: URL? = Secrets.sentryDSN.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
+    let bugReportSentryRustURL: URL? = Secrets.sentryRustDSN.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
+
     // Tchap: customize bug report application id to TchapX.
 //    private(set) var bugReportApplicationID = "element-x-ios"
     /// The name allocated by the bug report server
@@ -392,6 +409,9 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
     var developerOptionsEnabled
     
+    @UserPreference(key: UserDefaultsKeys.isNewBloomEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var isNewBloomEnabled
+    
     #endif
     
     // MARK: - Shared
@@ -406,20 +426,8 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.enableOnlySignedDeviceIsolationMode, defaultValue: false, storageType: .userDefaults(store))
     var enableOnlySignedDeviceIsolationMode
     
-    @UserPreference(key: UserDefaultsKeys.hideInviteAvatars, defaultValue: false, storageType: .userDefaults(store))
-    var hideInviteAvatars
-    
-    @UserPreference(key: UserDefaultsKeys.timelineMediaVisibility, defaultValue: TimelineMediaVisibility.always, storageType: .userDefaults(store))
-    var timelineMediaVisibility
-    
-    @UserPreference(key: UserDefaultsKeys.isNewBloomEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var isNewBloomEnabled
+    @UserPreference(key: UserDefaultsKeys.hideQuietNotificationAlerts, defaultValue: false, storageType: .userDefaults(store))
+    var hideQuietNotificationAlerts
 }
 
 extension AppSettings: CommonSettingsProtocol { }
-
-enum TimelineMediaVisibility: Codable {
-    case always
-    case privateOnly
-    case never
-}

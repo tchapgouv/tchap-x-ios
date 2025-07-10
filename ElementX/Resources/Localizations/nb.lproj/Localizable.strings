@@ -421,6 +421,11 @@
 "screen_bottom_sheet_manage_room_member_remove" = "Fjern fra rommet";
 "screen_bottom_sheet_manage_room_member_remove_confirmation_title" = "Fjerne medlem og utestenge fra å bli med i fremtiden?";
 "screen_bottom_sheet_manage_room_member_removing_user" = "Fjerner %1$@...";
+"screen_bottom_sheet_manage_room_member_unban" = "Fjern utestengelsen fra rommet";
+"screen_bottom_sheet_manage_room_member_unban_member_confirmation_action" = "Opphev utestengelsen";
+"screen_bottom_sheet_manage_room_member_unban_member_confirmation_description" = "De vil kunne bli med i rommet igjen hvis de blir invitert";
+"screen_bottom_sheet_manage_room_member_unban_member_confirmation_title" = "Er du sikker på at du vil oppheve utestengelsen av dette medlemmet?";
+"screen_bottom_sheet_manage_room_member_unbanning_user" = "Oppheve utestengelsen av %1$@";
 "screen_create_room_room_access_section_anyone_option_description" = "Alle kan bli med i dette rommet";
 "screen_create_room_room_access_section_anyone_option_title" = "Alle";
 "screen_create_room_room_access_section_header" = "Tilgang til rom";
@@ -612,6 +617,9 @@
 "screen_change_server_error_invalid_homeserver" = "Vi kunne ikke nå denne hjemmeserveren. Kontroller at du har skrevet inn hjemmeserverens URL riktig. Hvis URL-en er riktig, kontakt administratoren for hjemmeserveren din for å få mer hjelp.";
 "screen_change_server_error_invalid_well_known" = "Serveren er ikke tilgjengelig på grunn av et problem i den velkjente filen:\n%1$@";
 "screen_change_server_error_no_sliding_sync_message" = "Den valgte kontoleverandøren støtter ikke sliding sync. En oppgradering av serveren er nødvendig for å bruke %1$@.";
+"screen_change_server_error_unauthorized_homeserver" = "%1$@ har ikke lov til å koble seg til %2$@.";
+"screen_change_server_error_unauthorized_homeserver_content" = "Denne appen er konfigurert til å tillate: %1$@.";
+"screen_change_server_error_unauthorized_homeserver_title" = "Kontoleverandør %1$@ er ikke tillatt.";
 "screen_change_server_form_header" = "URL til hjemmeserver";
 "screen_change_server_form_notice" = "Skriv inn en domeneadresse.";
 "screen_change_server_subtitle" = "Hva er adressen til serveren din?";
@@ -759,6 +767,7 @@
 "screen_notification_settings_system_notifications_turned_off" = "Systemvarsler er slått av";
 "screen_notification_settings_title" = "Varslinger";
 "screen_onboarding_sign_in_manually" = "Logg på manuelt";
+"screen_onboarding_sign_in_to" = "Logg inn på %1$@";
 "screen_onboarding_sign_in_with_qr_code" = "Logg inn med QR-kode";
 "screen_onboarding_sign_up" = "Opprett konto";
 "screen_onboarding_welcome_message" = "Velkommen til den raskeste %1$@ noensinne. Superladet for hastighet og enkelhet.";
@@ -984,6 +993,7 @@
 "screen_server_confirmation_message_login_matrix_dot_org" = "Matrix er et åpent nettverk for sikker, desentralisert kommunikasjon.";
 "screen_server_confirmation_message_register" = "Det er her samtalene dine vil ligge - akkurat som du ville brukt en e-postleverandør til å oppbevare e-postene dine.";
 "screen_server_confirmation_title_login" = "Du er i ferd med å logge inn på %1$@";
+"screen_server_confirmation_title_picker_mode" = "Choose account provider";
 "screen_server_confirmation_title_register" = "Du er i ferd med å opprette en konto på %1$@";
 "screen_session_verification_cancelled_subtitle" = "Noe virker ikke riktig. Enten ble forespørselen tidsavbrutt eller forespørselen ble avslått.";
 "screen_session_verification_compare_emojis_subtitle" = "Bekreft at emojiene nedenfor samsvarer med de som vises på den andre sesjonen din.";
