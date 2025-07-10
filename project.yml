@@ -67,7 +67,7 @@ packages:
 #    url: https://github.com/element-hq/matrix-rust-components-swift
 #    exactVersion: 25.03.13
     url: https://github.com/tchapgouv/matrix-rust-components-swift
-    exactVersion: 25.04.30-bwi-0-8-1
+    revision: ed928b5c07006cb64b99584bdfe3b9ea9f0c7c4d
 #    path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
   Compound:
 #    url: https://github.com/element-hq/compound-ios

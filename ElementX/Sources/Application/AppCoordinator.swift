@@ -35,7 +35,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                 configureNotificationManager()
                 observeUserSessionChanges()
                 // Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
-                let homeServerBaseURL = URL(string: userSession!.clientProxy.homeserver) // swiftlint:disable:this force_unwrapping
+                let homeServerBaseURL = URL(string: userSession.clientProxy.homeserver) // swiftlint:disable:this force_unwrapping
                 updateBugReportServiceBaseURL(homeServerBaseURL?.appendingPathComponent("bugreports"))
                 startSync()
                 performSettingsToAccountDataMigration(userSession: userSession)

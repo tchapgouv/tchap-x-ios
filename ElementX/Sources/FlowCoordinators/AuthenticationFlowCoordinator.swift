@@ -273,14 +273,6 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 guard let self else { return }
                 
                 switch action {
-                case .loginManually:
-                    // Tchap: [Beta DINUM] - Shortcut HomeServer confirmation screen.
-//                    showServerConfirmationScreen(authenticationFlow: .login)
-                    let homeserver = authenticationService.homeserver.value
-                    Task {
-                        _ = await self.authenticationService.configure(for: homeserver.address, flow: .login)
-                        self.showLoginScreen()
-                    }
                 case .loginWithQR:
                     stateMachine.tryEvent(.loginWithQR)
                 case .login:
@@ -289,7 +281,6 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                     stateMachine.tryEvent(.confirmServer(.register))
                 case .reportProblem:
                     stateMachine.tryEvent(.reportProblem)
-                    
                 case .loginDirectlyWithOIDC(let oidcData, let window):
                     stateMachine.tryEvent(.continueWithOIDC, userInfo: (oidcData, window))
                 case .loginDirectlyWithPassword(let loginHint):
