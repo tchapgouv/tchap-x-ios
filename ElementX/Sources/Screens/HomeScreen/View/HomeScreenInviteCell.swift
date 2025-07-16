@@ -202,13 +202,14 @@ private extension HomeScreenRoom {
         inviter.displayName = "Some Guy"
         inviter.userID = "@someone:somewhere.com"
         
-        let summary = RoomSummary(roomListItem: RoomListItemSDKMock(),
+        let summary = RoomSummary(room: RoomSDKMock(),
                                   id: "@someone:somewhere.com",
                                   joinRequestType: .invite(inviter: inviter),
                                   name: "Some Guy",
                                   isDirect: true,
                                   avatarURL: nil,
                                   heroes: [.init(userID: "@someone:somewhere.com")],
+                                  activeMembersCount: 0,
                                   lastMessage: nil,
                                   lastMessageDate: nil,
                                   unreadMessagesCount: 0,
@@ -230,13 +231,14 @@ private extension HomeScreenRoom {
         inviter.userID = "@jack:somewhi.nl"
         inviter.avatarURL = avatarURL.map { _ in .mockMXCUserAvatar }
         
-        let summary = RoomSummary(roomListItem: RoomListItemSDKMock(),
+        let summary = RoomSummary(room: RoomSDKMock(),
                                   id: "@someone:somewhere.com",
                                   joinRequestType: .invite(inviter: inviter),
                                   name: "Awesome Room",
                                   isDirect: false,
                                   avatarURL: avatarURL,
                                   heroes: [.init(userID: "@someone:somewhere.com")],
+                                  activeMembersCount: 0,
                                   lastMessage: nil,
                                   lastMessageDate: nil,
                                   unreadMessagesCount: 0,

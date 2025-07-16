@@ -46,9 +46,7 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
                                                             userSession: userSession,
                                                             notificationSettingsProxy: notificationSettingsProxy)
 
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.defaultMode != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
@@ -87,9 +85,7 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
                                                             userSession: userSession,
                                                             notificationSettingsProxy: notificationSettingsProxy)
 
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.defaultMode != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
@@ -117,15 +113,14 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
         viewModel = NotificationSettingsEditScreenViewModel(chatType: .groupChat,
                                                             userSession: userSession,
                                                             notificationSettingsProxy: notificationSettingsProxy)
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.defaultMode != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
         try await deferred.fulfill()
         
-        var deferredViewState = deferFulfillment(viewModel.context.$viewState, keyPath: \.pendingMode, transitionValues: [nil, .allMessages, nil])
+        var deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.pendingMode),
+                                                 transitionValues: [nil, .allMessages, nil])
 
         context.send(viewAction: .setMode(.allMessages))
         
@@ -143,8 +138,7 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
         XCTAssertEqual(invocations[1].isOneToOne, false)
         XCTAssertEqual(invocations[1].mode, .allMessages)
         
-        deferredViewState = deferFulfillment(viewModel.context.$viewState,
-                                             keyPath: \.defaultMode,
+        deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode),
                                              transitionValues: [.allMessages])
         
         try await deferredViewState.fulfill()
@@ -158,16 +152,13 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
                                                             userSession: userSession,
                                                             notificationSettingsProxy: notificationSettingsProxy)
         
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.defaultMode != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
         try await deferred.fulfill()
         
-        var deferredViewState = deferFulfillment(viewModel.context.$viewState,
-                                                 keyPath: \.pendingMode,
+        var deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.pendingMode),
                                                  transitionValues: [nil, .mentionsAndKeywordsOnly, nil])
                 
         context.send(viewAction: .setMode(.mentionsAndKeywordsOnly))
@@ -186,8 +177,7 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
         XCTAssertEqual(invocations[1].isOneToOne, false)
         XCTAssertEqual(invocations[1].mode, .mentionsAndKeywordsOnly)
         
-        deferredViewState = deferFulfillment(viewModel.context.$viewState,
-                                             keyPath: \.defaultMode,
+        deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode),
                                              transitionValues: [.mentionsAndKeywordsOnly])
         
         try await deferredViewState.fulfill()
@@ -203,16 +193,13 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
                                                             userSession: userSession,
                                                             notificationSettingsProxy: notificationSettingsProxy)
         
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.defaultMode != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
         try await deferred.fulfill()
         
-        let deferredViewState = deferFulfillment(viewModel.context.$viewState,
-                                                 keyPath: \.pendingMode,
+        let deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.pendingMode),
                                                  transitionValues: [nil, .allMessages, nil])
         
         context.send(viewAction: .setMode(.allMessages))
@@ -239,16 +226,13 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
                                                             userSession: userSession,
                                                             notificationSettingsProxy: notificationSettingsProxy)
         
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.defaultMode != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
         try await deferred.fulfill()
         
-        let deferredViewState = deferFulfillment(viewModel.context.$viewState,
-                                                 keyPath: \.pendingMode,
+        let deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.pendingMode),
                                                  transitionValues: [nil, .allMessages, nil])
 
         context.send(viewAction: .setMode(.allMessages))

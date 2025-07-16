@@ -23,24 +23,6 @@ class LoginScreenViewModelTests: XCTestCase {
     var clientBuilderFactory: AuthenticationClientBuilderFactoryMock!
     var service: AuthenticationServiceProtocol!
     
-    private func setupViewModel(homeserverAddress: String = "example.com") async {
-        clientBuilderFactory = AuthenticationClientBuilderFactoryMock(configuration: .init())
-        service = AuthenticationService(userSessionStore: UserSessionStoreMock(configuration: .init()),
-                                        encryptionKeyProvider: EncryptionKeyProvider(),
-                                        clientBuilderFactory: clientBuilderFactory,
-                                        appSettings: ServiceLocator.shared.settings,
-                                        appHooks: AppHooks())
-        
-        guard case .success = await service.configure(for: homeserverAddress, flow: .login) else {
-            XCTFail("A valid server should be configured for the test.")
-            return
-        }
-        
-        viewModel = LoginScreenViewModel(authenticationService: service,
-                                         userIndicatorController: UserIndicatorControllerMock(),
-                                         analytics: ServiceLocator.shared.analytics)
-    }
-    
     func testBasicServer() async {
         // Given the view model configured for a basic server example.com that only supports password authentication.
         await setupViewModel()
@@ -110,7 +92,7 @@ class LoginScreenViewModelTests: XCTestCase {
         XCTAssertFalse(context.viewState.canSubmit, "The form should not be submittable.")
         
         // When updating the view model whilst loading a homeserver.
-        let deferred = deferFulfillment(context.$viewState, keyPath: \.isLoading, transitionValues: [true, false])
+        let deferred = deferFulfillment(context.observe(\.viewState.isLoading), transitionValues: [true, false])
         context.send(viewAction: .parseUsername)
         
         // Then the view state should represent the loading but never allow submitting to occur.
@@ -129,7 +111,7 @@ class LoginScreenViewModelTests: XCTestCase {
         XCTAssertTrue(context.viewState.canSubmit, "The form should be ready to submit.")
         
         // When updating the view model whilst loading a homeserver.
-        let deferred = deferFulfillment(context.$viewState, keyPath: \.canSubmit, transitionValues: [false, true])
+        let deferred = deferFulfillment(context.observe(\.viewState.canSubmit), transitionValues: [false, true])
         context.send(viewAction: .parseUsername)
         
         // Then the view should be blocked from submitting while loading and then become unblocked again.
@@ -158,12 +140,44 @@ class LoginScreenViewModelTests: XCTestCase {
         XCTAssertNil(context.alertInfo, "There shouldn't be an alert when the screen loads.")
         
         // When entering a username for an unsupported homeserver.
-        let deferred = deferFulfillment(context.$viewState) { $0.bindings.alertInfo != nil }
+        let deferred = deferFulfillment(context.observe(\.viewState.bindings.alertInfo)) { $0 != nil }
         context.username = "@bob:server.net"
         context.send(viewAction: .parseUsername)
         try await deferred.fulfill()
 
         // Then the view state should be updated to show an alert.
         XCTAssertEqual(context.alertInfo?.id, .unknown, "An alert should be shown to the user.")
+    }
+    
+    func testLoginHint() async throws {
+        await setupViewModel(loginHint: "")
+        XCTAssertEqual(context.username, "")
+        
+        await setupViewModel(loginHint: "alice")
+        XCTAssertEqual(context.username, "alice")
+        
+        await setupViewModel(loginHint: "mxid:@alice:example.com")
+        XCTAssertEqual(context.username, "@alice:example.com")
+    }
+    
+    // MARK: - Helpers
+    
+    private func setupViewModel(homeserverAddress: String = "example.com", loginHint: String? = nil) async {
+        clientBuilderFactory = AuthenticationClientBuilderFactoryMock(configuration: .init())
+        service = AuthenticationService(userSessionStore: UserSessionStoreMock(configuration: .init()),
+                                        encryptionKeyProvider: EncryptionKeyProvider(),
+                                        clientBuilderFactory: clientBuilderFactory,
+                                        appSettings: ServiceLocator.shared.settings,
+                                        appHooks: AppHooks())
+        
+        guard case .success = await service.configure(for: homeserverAddress, flow: .login) else {
+            XCTFail("A valid server should be configured for the test.")
+            return
+        }
+        
+        viewModel = LoginScreenViewModel(authenticationService: service,
+                                         loginHint: loginHint,
+                                         userIndicatorController: UserIndicatorControllerMock(),
+                                         analytics: ServiceLocator.shared.analytics)
     }
 }

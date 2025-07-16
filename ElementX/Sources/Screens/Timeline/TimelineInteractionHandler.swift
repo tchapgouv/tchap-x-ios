@@ -26,6 +26,8 @@ enum TimelineInteractionHandlerAction {
     case viewInRoomTimeline(eventID: String)
 }
 
+/// The interaction handler groups logic for dealing with various actions the user can take on a timeline's
+/// view that would've normally been part of the ``TimelineViewModel``
 @MainActor
 class TimelineInteractionHandler {
     private let roomProxy: JoinedRoomProxyProtocol
@@ -554,7 +556,7 @@ class TimelineInteractionHandler {
         case .pinned:
             newTimelineFocus = .pinned
             newTimelinePresentation = .pinnedEventsScreen
-        case .media:
+        case .media, .thread:
             break // We don't need to create a new timeline as it is already filtered.
         }
         

@@ -43,7 +43,10 @@ struct JoinedRoomProxyMockConfiguration {
     var canUserPin = true
     
     var shouldUseAutoUpdatingTimeline = false
+    
     var joinRule: JoinRule?
+    var membership: Membership = .joined
+    
     var isVisibleInPublicDirectory = false
 }
 
@@ -56,6 +59,8 @@ extension JoinedRoomProxyMock {
 
         timeline = TimelineProxyMock(.init(isAutoUpdating: configuration.shouldUseAutoUpdatingTimeline,
                                            timelineStartReached: configuration.timelineStartReached))
+        
+        pinnedEventsTimelineReturnValue = .failure(.failedCreatingPinnedTimeline)
 
         ownUserID = configuration.ownUserID
         
@@ -147,11 +152,11 @@ extension RoomInfo {
                   isDirect: configuration.isDirect,
                   isPublic: configuration.isPublic,
                   isSpace: configuration.isSpace,
-                  isTombstoned: false,
+                  successorRoom: nil,
                   isFavourite: false,
                   canonicalAlias: configuration.canonicalAlias,
                   alternativeAliases: configuration.alternativeAliases,
-                  membership: .joined,
+                  membership: configuration.membership,
                   inviter: configuration.inviter.map { RoomMember(userId: $0.userID,
                                                                   displayName: $0.displayName,
                                                                   avatarUrl: $0.avatarURL?.absoluteString,

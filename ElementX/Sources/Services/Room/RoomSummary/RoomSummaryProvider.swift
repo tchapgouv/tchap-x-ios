@@ -63,7 +63,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
          notificationSettings: NotificationSettingsProxyProtocol,
          appSettings: AppSettings) {
         self.roomListService = roomListService
-        serialDispatchQueue = DispatchQueue(label: "io.element.elementx.roomsummaryprovider", qos: .default)
+        serialDispatchQueue = DispatchQueue(label: "io.element.elementx.room_summary_provider", qos: .default)
         self.eventStringBuilder = eventStringBuilder
         self.name = name
         self.shouldUpdateVisibleRange = shouldUpdateVisibleRange
@@ -121,14 +121,14 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
             _ = listUpdatesSubscriptionResult?.controller().setFilter(kind: .none)
         case let .search(query):
             let filters: [RoomListEntriesDynamicFilterKind] = if appSettings.fuzzyRoomListSearchEnabled {
-                [.fuzzyMatchRoomName(pattern: query), .nonLeft]
+                [.fuzzyMatchRoomName(pattern: query), .nonLeft, .deduplicateVersions]
             } else {
-                [.normalizedMatchRoomName(pattern: query), .nonLeft]
+                [.normalizedMatchRoomName(pattern: query), .nonLeft, .deduplicateVersions]
             }
             _ = listUpdatesSubscriptionResult?.controller().setFilter(kind: .all(filters: filters))
         case let .all(filters):
             var filters = filters.map(\.rustFilter)
-            filters.append(.nonLeft)
+            filters.append(contentsOf: [.nonLeft, .deduplicateVersions])
             _ = listUpdatesSubscriptionResult?.controller().setFilter(kind: .all(filters: filters))
         }
     }
@@ -212,7 +212,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         return updatedItems
     }
 
-    private func fetchRoomDetails(from roomListItem: RoomListItem) -> (roomInfo: RoomInfo?, latestEvent: EventTimelineItem?) {
+    private func fetchRoomDetails(from room: Room) -> (roomInfo: RoomInfo?, latestEvent: EventTimelineItem?) {
         class FetchResult {
             var roomInfo: RoomInfo?
             var latestEvent: EventTimelineItem?
@@ -223,8 +223,8 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         
         Task {
             do {
-                result.latestEvent = await roomListItem.latestEvent()
-                result.roomInfo = try await roomListItem.roomInfo()
+                result.latestEvent = await room.latestEvent()
+                result.roomInfo = try await room.roomInfo()
             } catch {
                 MXLog.error("Failed fetching room info with error: \(error)")
             }
@@ -234,11 +234,11 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         return (result.roomInfo, result.latestEvent)
     }
     
-    private func buildRoomSummary(from roomListItem: RoomListItem) -> RoomSummary {
-        let roomDetails = fetchRoomDetails(from: roomListItem)
+    private func buildRoomSummary(from room: Room) -> RoomSummary {
+        let roomDetails = fetchRoomDetails(from: room)
         
         guard let roomInfo = roomDetails.roomInfo else {
-            fatalError("Missing room info for \(roomListItem.id())")
+            fatalError("Missing room info for \(room.id())")
         }
         
         var attributedLastMessage: AttributedString?
@@ -263,13 +263,14 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         default: nil
         }
         
-        return RoomSummary(roomListItem: roomListItem,
+        return RoomSummary(room: room,
                            id: roomInfo.id,
                            joinRequestType: joinRequestType,
                            name: roomInfo.displayName ?? roomInfo.id,
                            isDirect: roomInfo.isDirect,
                            avatarURL: roomInfo.avatarUrl.flatMap(URL.init(string:)),
                            heroes: roomInfo.heroes.map(UserProfileProxy.init),
+                           activeMembersCount: UInt(roomInfo.activeMembersCount),
                            lastMessage: attributedLastMessage,
                            lastMessageDate: lastMessageDate,
                            unreadMessagesCount: UInt(roomInfo.numUnreadMessages),
@@ -366,7 +367,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         MXLog.info("\(name): Rebuilding room summaries for \(rooms.count) rooms")
         
         rooms = rooms.map {
-            self.buildRoomSummary(from: $0.roomListItem)
+            self.buildRoomSummary(from: $0.room)
         }
         
         MXLog.info("\(name): Finished rebuilding room summaries (\(rooms.count) rooms)")

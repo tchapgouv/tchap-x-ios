@@ -421,6 +421,11 @@
 "screen_bottom_sheet_manage_room_member_remove" = "Odstrániť z miestnosti";
 "screen_bottom_sheet_manage_room_member_remove_confirmation_title" = "Odstrániť člena a zakázať vstup v budúcnosti?";
 "screen_bottom_sheet_manage_room_member_removing_user" = "Odstraňuje sa %1$@…";
+"screen_bottom_sheet_manage_room_member_unban" = "Zrušiť zákaz prístupu do miestnosti";
+"screen_bottom_sheet_manage_room_member_unban_member_confirmation_action" = "Zrušiť zákaz";
+"screen_bottom_sheet_manage_room_member_unban_member_confirmation_description" = "V prípade pozvania by sa mohli opäť pripojiť k miestnosti";
+"screen_bottom_sheet_manage_room_member_unban_member_confirmation_title" = "Naozaj chcete zrušiť zablokovanie tohto člena?";
+"screen_bottom_sheet_manage_room_member_unbanning_user" = "Zrušenie zákazu pre %1$@";
 "screen_create_room_room_access_section_anyone_option_description" = "Do tejto miestnosti sa môže pripojiť ktokoľvek";
 "screen_create_room_room_access_section_anyone_option_title" = "Ktokoľvek";
 "screen_create_room_room_access_section_header" = "Prístup do miestnosti";
@@ -612,6 +617,9 @@
 "screen_change_server_error_invalid_homeserver" = "Nemohli sme sa spojiť s týmto domovským serverom. Skontrolujte prosím, či ste zadali URL adresu domovského servera správne. Ak je adresa URL správna, kontaktujte svoj domovský server pre ďalšiu pomoc.";
 "screen_change_server_error_invalid_well_known" = "Server nie je k dispozícii kvôli problému v známom súbore:\n%1$@";
 "screen_change_server_error_no_sliding_sync_message" = "Vybraný poskytovateľ účtu nepodporuje kĺzavú synchronizáciu. Na používanie aplikácie %1$@ je potrebná aktualizácia servera,";
+"screen_change_server_error_unauthorized_homeserver" = "%1$@ nemá dovolené pripojiť sa k %2$@.";
+"screen_change_server_error_unauthorized_homeserver_content" = "Táto aplikácia bola nastavená tak, aby povoľovala: %1$@.";
+"screen_change_server_error_unauthorized_homeserver_title" = "Poskytovateľ účtu %1$@ nie je povolený.";
 "screen_change_server_form_header" = "Adresa URL domovského servera";
 "screen_change_server_form_notice" = "Zadajte adresu domény.";
 "screen_change_server_subtitle" = "Aká je adresa vášho servera?";
@@ -759,6 +767,7 @@
 "screen_notification_settings_system_notifications_turned_off" = "Systémové oznámenia sú vypnuté";
 "screen_notification_settings_title" = "Oznámenia";
 "screen_onboarding_sign_in_manually" = "Prihlásiť sa manuálne";
+"screen_onboarding_sign_in_to" = "Prihlásiť sa do %1$@";
 "screen_onboarding_sign_in_with_qr_code" = "Prihlásiť sa pomocou QR kódu";
 "screen_onboarding_sign_up" = "Vytvoriť účet";
 "screen_onboarding_welcome_message" = "Vitajte v najrýchlejšom %1$@ vôbec. Nadupaný pre rýchlosť a jednoduchosť.";
@@ -984,6 +993,7 @@
 "screen_server_confirmation_message_login_matrix_dot_org" = "Matrix je otvorená sieť pre bezpečnú a decentralizovanú komunikáciu.";
 "screen_server_confirmation_message_register" = "Tu budú žiť vaše konverzácie - podobne ako používate poskytovateľa e-mailových služieb na uchovávanie e-mailov.";
 "screen_server_confirmation_title_login" = "Chystáte sa prihlásiť do %1$@";
+"screen_server_confirmation_title_picker_mode" = "Vyberte poskytovateľa účtu";
 "screen_server_confirmation_title_register" = "Chystáte sa vytvoriť účet na %1$@";
 "screen_session_verification_cancelled_subtitle" = "Zdá sa, že niečo nie je v poriadku. Časový limit žiadosti vypršal alebo bola žiadosť zamietnutá.";
 "screen_session_verification_compare_emojis_subtitle" = "Skontrolujte, či sa emotikony uvedené nižšie zhodujú s emotikonmi zobrazenými vo vašej druhej relácii.";

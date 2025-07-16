@@ -421,6 +421,11 @@
 "screen_bottom_sheet_manage_room_member_remove" = "Tynnu o'r ystafell";
 "screen_bottom_sheet_manage_room_member_remove_confirmation_title" = "Dileu aelod a'u gwahardd rhag ymuno yn y dyfodol?";
 "screen_bottom_sheet_manage_room_member_removing_user" = "Wrthi'n dileu %1$@…";
+"screen_bottom_sheet_manage_room_member_unban" = "Dad-wahardd o'r ystafell";
+"screen_bottom_sheet_manage_room_member_unban_member_confirmation_action" = "Dad-wahardd";
+"screen_bottom_sheet_manage_room_member_unban_member_confirmation_description" = "Bydden nhw'n gallu ymuno â'r ystafell eto os fydd rhywun yn eu gwahodd";
+"screen_bottom_sheet_manage_room_member_unban_member_confirmation_title" = "Ydych chi'n siŵr eich bod chi eisiau dadwahardd yr aelod hwn?";
+"screen_bottom_sheet_manage_room_member_unbanning_user" = "Dad-wahardd %1$@";
 "screen_create_room_room_access_section_anyone_option_description" = "Gall unrhyw un ymuno â'r ystafell hon";
 "screen_create_room_room_access_section_anyone_option_title" = "Unrhyw un";
 "screen_create_room_room_access_section_header" = "Mynediad i'r Ystafell";
@@ -610,8 +615,11 @@
 "screen_change_account_provider_subtitle" = "Defnyddiwch ddarparwr cyfrif gwahanol, fel eich gweinydd preifat eich hun neu gyfrif gwaith.";
 "screen_change_account_provider_title" = "Newid darparwr cyfrif";
 "screen_change_server_error_invalid_homeserver" = "Doedd dim modd i ni gyrraedd y gweinydd cartref hwn. Gwiriwch eich bod wedi rhoi URL y gweinydd cartref yn gywir. Os yw'r URL yn gywir, cysylltwch â gweinyddwr eich gweinydd cartref am ragor o help.";
-"screen_change_server_error_invalid_well_known" = "Nid yw cydweddu llithrig ar gael oherwydd problem yn y ffeil adnabyddus:\n%1$@";
+"screen_change_server_error_invalid_well_known" = "Dyw cydweddu llithrig ddim ar gael oherwydd problem yn y ffeil .well-known:\n%1$@";
 "screen_change_server_error_no_sliding_sync_message" = "Dyw'r darparwr cyfrif hwn ddim yn cefnogi cydweddu llithro. Mae angen uwchraddio'r gweinydd i ddefnyddio %1$@.";
+"screen_change_server_error_unauthorized_homeserver" = "Does dim caniatâd i %1$@ gysylltu â %2$@.";
+"screen_change_server_error_unauthorized_homeserver_content" = "Mae'r ap hwn wedi'i ffurfweddu i ganiatáu: %1$@.";
+"screen_change_server_error_unauthorized_homeserver_title" = "Dyw darparwr cyfrif %1$@ dddim yn cael ei ganiatáu.";
 "screen_change_server_form_header" = "URL y Gweinydd Cartref";
 "screen_change_server_form_notice" = "Rhowch gyfeiriad parth.";
 "screen_change_server_subtitle" = "Beth yw cyfeiriad eich gweinydd?";
@@ -759,6 +767,7 @@
 "screen_notification_settings_system_notifications_turned_off" = "Hysbysiadau system wedi'u diffodd";
 "screen_notification_settings_title" = "Hysbysiadau";
 "screen_onboarding_sign_in_manually" = "Mewngofnodwch â llaw";
+"screen_onboarding_sign_in_to" = "Mewngofnodi i %1$@";
 "screen_onboarding_sign_in_with_qr_code" = "Mewngofnodwch gyda chod QR";
 "screen_onboarding_sign_up" = "Creu cyfrif";
 "screen_onboarding_welcome_message" = "Croeso i'r %1$@ cyflymaf erioed. Yn nodedig am gyflymder a symlrwydd.";
@@ -984,6 +993,7 @@
 "screen_server_confirmation_message_login_matrix_dot_org" = "Mae Matrix yn rhwydwaith agored ar gyfer cyfathrebu diogel, datganoledig.";
 "screen_server_confirmation_message_register" = "Dyma lle bydd eich sgyrsiau'n byw - yn union fel y byddech chi'n defnyddio darparwr e-bost i gadw'ch e-byst.";
 "screen_server_confirmation_title_login" = "Rydych ar fin mewngofnodi i %1$@";
+"screen_server_confirmation_title_picker_mode" = "Dewiswch ddarparwr cyfrif";
 "screen_server_confirmation_title_register" = "Rydych chi ar fin creu cyfrif ar %1$@";
 "screen_session_verification_cancelled_subtitle" = "Mae rhywbeth i weld o'i le. Naill ai daeth y cais i ben neu cafodd y cais ei wrthod.";
 "screen_session_verification_compare_emojis_subtitle" = "Cadarnhewch fod yr emojis isod yn cyd-fynd â'r rhai sy'n cael eu dangos ar eich sesiwn arall.";
@@ -1128,7 +1138,7 @@
 "test_language_identifier" = "cy";
 "test_untranslated_default_language_identifier" = "cy";
 "timeline_decryption_failure_historical_event_no_key_backup" = "Nid yw negeseuon hanesyddol ar gael ar y ddyfais hon";
-"timeline_decryption_failure_historical_event_unverified_device" = "Mae angen i chi wirio'r ddyfais hon ar gyfer mynediad i negeseuon hanesyddol";
+"timeline_decryption_failure_historical_event_unverified_device" = "Mae angen i chi wirio'r ddyfais hon i gael mynediad at negeseuon hanesyddol";
 "timeline_decryption_failure_historical_event_user_not_joined" = "Does gennych chi ddim mynediad i'r neges hon";
 "timeline_decryption_failure_unable_to_decrypt" = "Methu dadgryptio'r neges";
 "timeline_decryption_failure_withheld_unverified" = "Cafodd y neges hon ei rhwystro naill ai oherwydd nad ydych wedi ddilysu'ch dyfais neu oherwydd bod angen i'r anfonwr ddilysu'ch hunaniaeth chi.";

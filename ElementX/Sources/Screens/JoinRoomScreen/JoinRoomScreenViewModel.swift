@@ -41,7 +41,9 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
         
         super.init(initialViewState: JoinRoomScreenViewState(roomID: roomID), mediaProvider: mediaProvider)
         
-        appSettings.$hideInviteAvatars
+        clientProxy.hideInviteAvatarsPublisher
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
             .weakAssign(to: \.state.hideInviteAvatars, on: self)
             .store(in: &cancellables)
         
@@ -149,7 +151,7 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
                 .roomListPublisher
                 .compactMap { summaries -> Void? in
                     guard let roomSummary = summaries.first(where: { $0.id == roomInfo?.id }),
-                          roomSummary.roomListItem.membership() != .knocked else {
+                          roomSummary.room.membership() != .knocked else {
                         return nil
                     }
                     return ()

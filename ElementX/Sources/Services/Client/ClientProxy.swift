@@ -39,6 +39,9 @@ class ClientProxy: ClientProxyProtocol {
     // periphery:ignore - required for instance retention in the rust codebase
     private var sendQueueListenerTaskHandle: TaskHandle?
     
+    // periphery:ignore - required for instance retention in the rust codebase
+    private var mediaPreviewConfigListenerTaskHandle: TaskHandle?
+    
     private var delegateHandle: TaskHandle?
     
     // These following summary providers both operate on the same allRooms() list but
@@ -132,6 +135,16 @@ class ClientProxy: ClientProxyProtocol {
         verificationStateSubject.asCurrentValuePublisher()
     }
     
+    private let timelineMediaVisibilitySubject = CurrentValueSubject<TimelineMediaVisibility, Never>(.always)
+    var timelineMediaVisibilityPublisher: CurrentValuePublisher<TimelineMediaVisibility, Never> {
+        timelineMediaVisibilitySubject.asCurrentValuePublisher()
+    }
+    
+    private let hideInviteAvatarsSubject = CurrentValueSubject<Bool, Never>(false)
+    var hideInviteAvatarsPublisher: CurrentValuePublisher<Bool, Never> {
+        hideInviteAvatarsSubject.asCurrentValuePublisher()
+    }
+    
     var roomsToAwait: Set<String> = []
     
     private let sendQueueStatusSubject = CurrentValueSubject<Bool, Never>(false)
@@ -169,10 +182,12 @@ class ClientProxy: ClientProxyProtocol {
         roomListStateUpdateTaskHandle = createRoomListServiceObserver(roomListService)
         roomListStateLoadingStateUpdateTaskHandle = createRoomListLoadingStateUpdateObserver(roomListService)
                 
-        delegateHandle = client.setDelegate(delegate: ClientDelegateWrapper { [weak self] isSoftLogout in
+        delegateHandle = try client.setDelegate(delegate: ClientDelegateWrapper { [weak self] isSoftLogout in
             self?.hasEncounteredAuthError = true
             self?.actionsSubject.send(.receivedAuthError(isSoftLogout: isSoftLogout))
         })
+        
+        try await client.setUtdDelegate(utdDelegate: ClientDecryptionErrorDelegate(actionsSubject: actionsSubject))
         
         networkMonitor.reachabilityPublisher
             .removeDuplicates()
@@ -227,6 +242,10 @@ class ClientProxy: ClientProxyProtocol {
             } catch {
                 MXLog.error("Failed setting media retention policy with error: \(error)")
             }
+        }
+        
+        Task {
+            mediaPreviewConfigListenerTaskHandle = await createMediaPreviewConfigObserver()
         }
     }
     
@@ -725,6 +744,16 @@ class ClientProxy: ClientProxyProtocol {
             return .failure(.sdkError(error))
         }
     }
+    
+    func fetchMediaPreviewConfiguration() async -> Result<MediaPreviewConfig?, ClientProxyError> {
+        do {
+            let config = try await client.fetchMediaPreviewConfig()
+            return .success(config)
+        } catch {
+            MXLog.error("Failed fetching media preview config with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
         
     // MARK: Ignored users
     
@@ -799,6 +828,28 @@ class ClientProxy: ClientProxyProtocol {
         return users.elements
     }
     
+    // MARK: Moderation & Safety
+    
+    func setTimelineMediaVisibility(_ value: TimelineMediaVisibility) async -> Result<Void, ClientProxyError> {
+        do {
+            try await client.setMediaPreviewDisplayPolicy(policy: value.rustValue)
+            return .success(())
+        } catch {
+            MXLog.error("Failed to set timeline media visibility: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func setHideInviteAvatars(_ value: Bool) async -> Result<Void, ClientProxyError> {
+        do {
+            try await client.setInviteAvatarsDisplayPolicy(policy: value ? .off : .on)
+            return .success(())
+        } catch {
+            MXLog.error("Failed to set hide invite avatars: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
     // MARK: - Private
     
     private func cacheAccountURL() async {
@@ -868,6 +919,26 @@ class ClientProxy: ClientProxyProtocol {
             }
         })
     }
+    
+    private func createMediaPreviewConfigObserver() async -> TaskHandle? {
+        do {
+            return try await client.subscribeToMediaPreviewConfig(listener: SDKListener { [weak self] config in
+                guard let self else { return }
+                
+                if let config {
+                    timelineMediaVisibilitySubject.send(config.mediaPreviewVisibility)
+                    hideInviteAvatarsSubject.send(config.hideInviteAvatars)
+                } else {
+                    // return default values
+                    timelineMediaVisibilitySubject.send(.always)
+                    hideInviteAvatarsSubject.send(false)
+                }
+            })
+        } catch {
+            MXLog.error("Failed creating media preview config observer: \(error)")
+            return nil
+        }
+    }
 
     private func createRoomListServiceObserver(_ roomListService: RoomListService) -> TaskHandle {
         roomListService.state(listener: SDKListener { [weak self] state in
@@ -903,56 +974,30 @@ class ClientProxy: ClientProxyProtocol {
         })
     }
     
-    private let eventFilters: TimelineEventTypeFilter = {
-        var stateEventFilters: [StateEventType] = [.roomAliases,
-                                                   .roomCanonicalAlias,
-                                                   .roomGuestAccess,
-                                                   .roomHistoryVisibility,
-                                                   .roomJoinRules,
-                                                   .roomPinnedEvents,
-                                                   .roomPowerLevels,
-                                                   .roomServerAcl,
-                                                   .roomTombstone,
-                                                   .spaceChild,
-                                                   .spaceParent,
-                                                   .policyRuleRoom,
-                                                   .policyRuleServer,
-                                                   .policyRuleUser]
-        return .exclude(eventTypes: stateEventFilters.map { FilterTimelineEventType.state(eventType: $0) })
-    }()
-    
     private func buildRoomForIdentifier(_ roomID: String) async -> RoomProxyType? {
         do {
-            let roomListItem = try roomListService.room(roomId: roomID)
-            
-            switch roomListItem.membership() {
-            case .invited:
-                return try await .invited(InvitedRoomProxy(roomListItem: roomListItem,
-                                                           roomPreview: roomListItem.previewRoom(via: []),
-                                                           ownUserID: userID))
-            case .knocked:
-                if appSettings.knockingEnabled {
-                    return try await .knocked(KnockedRoomProxy(roomListItem: roomListItem,
-                                                               roomPreview: roomListItem.previewRoom(via: []),
-                                                               ownUserID: userID))
-                }
+            guard let room = try client.getRoom(roomId: roomID) else {
                 return nil
-            case .joined:
-                if roomListItem.isTimelineInitialized() == false {
-                    try await roomListItem.initTimeline(eventTypeFilter: eventFilters, internalIdPrefix: nil)
+            }
+            
+            switch room.membership() {
+            case .invited:
+                return try await .invited(InvitedRoomProxy(room: room))
+            case .knocked:
+                guard appSettings.knockingEnabled else {
+                    return nil
                 }
                 
+                return try await .knocked(KnockedRoomProxy(room: room))
+            case .joined:
                 let roomProxy = try await JoinedRoomProxy(roomListService: roomListService,
-                                                          roomListItem: roomListItem,
-                                                          room: roomListItem.fullRoom())
+                                                          room: room)
                 
                 return .joined(roomProxy)
             case .left:
                 return .left
             case .banned:
-                return try await .banned(BannedRoomProxy(roomListItem: roomListItem,
-                                                         roomPreview: roomListItem.previewRoom(via: []),
-                                                         ownUserID: userID))
+                return try await .banned(BannedRoomProxy(room: room))
             }
         } catch {
             MXLog.error("Failed retrieving room: \(roomID), with error: \(error)")
@@ -1122,7 +1167,6 @@ private struct ClientProxyServices {
         let syncService = try await client
             .syncService()
             .withCrossProcessLock()
-            .withUtdHook(delegate: ClientDecryptionErrorDelegate(actionsSubject: actionsSubject))
             .finish()
         
         let roomListService = syncService.roomListService()
@@ -1159,5 +1203,40 @@ private struct ClientProxyServices {
         
         self.syncService = syncService
         self.roomListService = roomListService
+    }
+}
+
+private extension MediaPreviewConfig {
+    var mediaPreviewVisibility: TimelineMediaVisibility {
+        switch mediaPreviews {
+        case .on:
+            .always
+        case .private:
+            .privateOnly
+        case .off:
+            .never
+        }
+    }
+    
+    var hideInviteAvatars: Bool {
+        switch inviteAvatars {
+        case .off:
+            true
+        case .on:
+            false
+        }
+    }
+}
+
+private extension TimelineMediaVisibility {
+    var rustValue: MediaPreviews {
+        switch self {
+        case .always:
+            .on
+        case .never:
+            .off
+        case .privateOnly:
+            .private
+        }
     }
 }

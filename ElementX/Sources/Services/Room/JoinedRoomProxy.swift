@@ -12,51 +12,7 @@ import UIKit
 
 class JoinedRoomProxy: JoinedRoomProxyProtocol {
     private let roomListService: RoomListServiceProtocol
-    private let roomListItem: RoomListItemProtocol
     private let room: RoomProtocol
-    let timeline: TimelineProxyProtocol
-    
-    private var innerPinnedEventsTimeline: TimelineProxyProtocol?
-    private var innerPinnedEventsTimelineTask: Task<TimelineProxyProtocol?, Never>?
-    var pinnedEventsTimeline: TimelineProxyProtocol? {
-        get async {
-            // Check if is already available.
-            if let innerPinnedEventsTimeline {
-                return innerPinnedEventsTimeline
-                // Otherwise check if there is already a task loading it, and wait for it.
-            } else if let innerPinnedEventsTimelineTask,
-                      let value = await innerPinnedEventsTimelineTask.value {
-                return value
-                // Else create and store a new task to load it and wait for it.
-            } else {
-                let task = Task<TimelineProxyProtocol?, Never> { [weak self] in
-                    guard let self else {
-                        return nil
-                    }
-                    
-                    do {
-                        let sdkTimeline = try await room.timelineWithConfiguration(configuration: .init(focus: .pinnedEvents(maxEventsToLoad: 100, maxConcurrentRequests: 10),
-                                                                                                        filter: .all,
-                                                                                                        internalIdPrefix: nil,
-                                                                                                        dateDividerMode: .daily,
-                                                                                                        trackReadReceipts: false))
-                        
-                        let timeline = TimelineProxy(timeline: sdkTimeline, kind: .pinned)
-                        
-                        await timeline.subscribeForUpdates()
-                        innerPinnedEventsTimeline = timeline
-                        return timeline
-                    } catch {
-                        MXLog.error("Failed creating pinned events timeline with error: \(error)")
-                        return nil
-                    }
-                }
-                
-                innerPinnedEventsTimelineTask = task
-                return await task.value
-            }
-        }
-    }
     
     // periphery:ignore - required for instance retention in the rust codebase
     private var roomInfoObservationToken: TaskHandle?
@@ -67,7 +23,18 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     // periphery:ignore - required for instance retention in the rust codebase
     private var knockRequestsChangesObservationToken: TaskHandle?
     
+    private var innerPinnedEventsTimeline: TimelineProxyProtocol?
+    private var innerPinnedEventsTimelineTask: Task<Result<TimelineProxyProtocol, RoomProxyError>, Never>?
+    
     private var subscribedForUpdates = false
+    
+    // A room identifier is constant and lazy stops it from being fetched
+    // multiple times over FFI
+    lazy var id: String = room.id()
+    
+    var ownUserID: String { room.ownUserId() }
+    
+    let timeline: TimelineProxyProtocol
     
     private let infoSubject: CurrentValueSubject<RoomInfoProxy, Never>
     var infoPublisher: CurrentValuePublisher<RoomInfoProxy, Never> {
@@ -94,21 +61,20 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         knockRequestsStateSubject.asCurrentValuePublisher()
     }
     
-    // A room identifier is constant and lazy stops it from being fetched
-    // multiple times over FFI
-    lazy var id: String = room.id()
-    var ownUserID: String { room.ownUserId() }
-    var info: RoomInfoProxy { infoSubject.value }
-    
     init(roomListService: RoomListServiceProtocol,
-         roomListItem: RoomListItemProtocol,
          room: RoomProtocol) async throws {
         self.roomListService = roomListService
-        self.roomListItem = roomListItem
         self.room = room
         
         infoSubject = try await .init(RoomInfoProxy(roomInfo: room.roomInfo()))
-        timeline = try await TimelineProxy(timeline: room.timeline(), kind: .live)
+        
+        timeline = try await TimelineProxy(timeline: room.timelineWithConfiguration(configuration: .init(focus: .live,
+                                                                                                         filter: .eventTypeFilter(filter: excludedEventsFilter),
+                                                                                                         internalIdPrefix: nil,
+                                                                                                         dateDividerMode: .daily,
+                                                                                                         trackReadReceipts: true,
+                                                                                                         reportUtds: true)),
+                                           kind: .live)
         
         Task {
             await updateMembers()
@@ -169,7 +135,8 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                                                                                             filter: .all,
                                                                                             internalIdPrefix: UUID().uuidString,
                                                                                             dateDividerMode: .daily,
-                                                                                            trackReadReceipts: false))
+                                                                                            trackReadReceipts: false,
+                                                                                            reportUtds: true))
             
             return .success(TimelineProxy(timeline: sdkTimeline, kind: .detached))
         } catch let error as FocusEventError {
@@ -190,6 +157,25 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         }
     }
     
+    func threadTimeline(eventID: String) async -> Result<TimelineProxyProtocol, RoomProxyError> {
+        do {
+            let sdkTimeline = try await room.timelineWithConfiguration(configuration: .init(focus: .thread(rootEventId: eventID, numEvents: 20),
+                                                                                            filter: .all,
+                                                                                            internalIdPrefix: UUID().uuidString,
+                                                                                            dateDividerMode: .daily,
+                                                                                            trackReadReceipts: true,
+                                                                                            reportUtds: true))
+            
+            let timeline = TimelineProxy(timeline: sdkTimeline, kind: .thread)
+            await timeline.subscribeForUpdates()
+            
+            return .success(timeline)
+        } catch {
+            MXLog.error("Unexpected error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
     func messageFilteredTimeline(focus: TimelineFocus,
                                  allowedMessageTypes: [TimelineAllowedMessageType],
                                  presentation: TimelineKind.MediaPresentation) async -> Result<any TimelineProxyProtocol, RoomProxyError> {
@@ -197,6 +183,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             let rustFocus: MatrixRustSDK.TimelineFocus = switch focus {
             case .live: .live
             case .eventID(let eventID): .event(eventId: eventID, numContextEvents: 100)
+            case .thread(let eventID): .thread(rootEventId: eventID, numEvents: 20)
             case .pinned: .pinnedEvents(maxEventsToLoad: 100, maxConcurrentRequests: 10)
             }
             
@@ -213,7 +200,8 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                                                                                             filter: .onlyMessage(types: rustMessageTypes),
                                                                                             internalIdPrefix: nil,
                                                                                             dateDividerMode: .monthly,
-                                                                                            trackReadReceipts: false))
+                                                                                            trackReadReceipts: false,
+                                                                                            reportUtds: true))
             
             let timeline = TimelineProxy(timeline: sdkTimeline, kind: .media(presentation))
             await timeline.subscribeForUpdates()
@@ -222,6 +210,43 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         } catch {
             MXLog.error("Failed retrieving media events timeline with error: \(error)")
             return .failure(.sdkError(error))
+        }
+    }
+    
+    func pinnedEventsTimeline() async -> Result<TimelineProxyProtocol, RoomProxyError> {
+        // Check if is already available.
+        if let innerPinnedEventsTimeline {
+            return .success(innerPinnedEventsTimeline)
+            // Otherwise check if there is already a task loading it, and wait for it.
+        } else if let innerPinnedEventsTimelineTask {
+            return await innerPinnedEventsTimelineTask.value
+        } else { // Else create and store a new task to load it and wait for it.
+            let task = Task<Result<TimelineProxyProtocol, RoomProxyError>, Never> { [weak self] in
+                guard let self else {
+                    return .failure(.failedCreatingPinnedTimeline)
+                }
+                
+                do {
+                    let sdkTimeline = try await room.timelineWithConfiguration(configuration: .init(focus: .pinnedEvents(maxEventsToLoad: 100, maxConcurrentRequests: 10),
+                                                                                                    filter: .all,
+                                                                                                    internalIdPrefix: nil,
+                                                                                                    dateDividerMode: .daily,
+                                                                                                    trackReadReceipts: false,
+                                                                                                    reportUtds: true))
+                    
+                    let timeline = TimelineProxy(timeline: sdkTimeline, kind: .pinned)
+                    
+                    await timeline.subscribeForUpdates()
+                    innerPinnedEventsTimeline = timeline
+                    return .success(timeline)
+                } catch {
+                    MXLog.error("Failed creating pinned events timeline with error: \(error)")
+                    return .failure(.sdkError(error))
+                }
+            }
+            
+            innerPinnedEventsTimelineTask = task
+            return await task.value
         }
     }
     
@@ -808,6 +833,24 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             MXLog.error("Failed observing requests to join with error: \(error)")
         }
     }
+    
+    private let excludedEventsFilter: TimelineEventTypeFilter = {
+        var stateEventFilters: [StateEventType] = [.roomAliases,
+                                                   .roomCanonicalAlias,
+                                                   .roomGuestAccess,
+                                                   .roomHistoryVisibility,
+                                                   .roomJoinRules,
+                                                   .roomPinnedEvents,
+                                                   .roomPowerLevels,
+                                                   .roomServerAcl,
+                                                   .roomTombstone,
+                                                   .spaceChild,
+                                                   .spaceParent,
+                                                   .policyRuleRoom,
+                                                   .policyRuleServer,
+                                                   .policyRuleUser]
+        return .exclude(eventTypes: stateEventFilters.map { FilterTimelineEventType.state(eventType: $0) })
+    }()
 }
 
 private final class RoomTypingNotificationUpdateListener: TypingNotificationsListener {

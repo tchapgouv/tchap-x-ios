@@ -36,7 +36,7 @@ class NotificationHandler {
                                                                destination: .notification)
         
         notificationContentBuilder = NotificationContentBuilder(messageEventStringBuilder: eventStringBuilder,
-                                                                settings: settings)
+                                                                userSession: userSession)
     }
     
     func processEvent(_ eventID: String, roomID: String) async {
@@ -87,6 +87,10 @@ class NotificationHandler {
     }
     
     private func preprocessNotification(_ itemProxy: NotificationItemProxyProtocol) async -> NotificationProcessingResult {
+        if settings.hideQuietNotificationAlerts, !itemProxy.isNoisy {
+            return .processedShouldDiscard
+        }
+        
         guard case let .timeline(event) = itemProxy.event else {
             return .shouldDisplay
         }

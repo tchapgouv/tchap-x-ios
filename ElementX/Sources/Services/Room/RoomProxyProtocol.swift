@@ -16,6 +16,7 @@ enum RoomProxyError: Error {
     case invalidMedia
     case eventNotFound
     case missingTransactionID
+    case failedCreatingPinnedTimeline
 }
 
 /// An enum that describes the relationship between the current user and the room, and contains a reference to the specific implementation of the `RoomProxy`.
@@ -75,17 +76,19 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     var timeline: TimelineProxyProtocol { get }
     
-    var pinnedEventsTimeline: TimelineProxyProtocol? { get async }
-    
     func subscribeForUpdates() async
     
     func subscribeToRoomInfoUpdates()
     
     func timelineFocusedOnEvent(eventID: String, numberOfEvents: UInt16) async -> Result<TimelineProxyProtocol, RoomProxyError>
     
+    func threadTimeline(eventID: String) async -> Result<TimelineProxyProtocol, RoomProxyError>
+    
     func messageFilteredTimeline(focus: TimelineFocus,
                                  allowedMessageTypes: [TimelineAllowedMessageType],
                                  presentation: TimelineKind.MediaPresentation) async -> Result<TimelineProxyProtocol, RoomProxyError>
+    
+    func pinnedEventsTimeline() async -> Result<TimelineProxyProtocol, RoomProxyError>
     
     func enableEncryption() async -> Result<Void, RoomProxyError>
     
