@@ -22,17 +22,11 @@ struct BugReport: Equatable {
 }
 
 struct SubmitBugReportResponse: Decodable {
-<<<<<<< HEAD
-    // Tchap: allow SubmitBugReportResponse to not contains `reportUrl` value.
-//    var reportUrl: String
-    var reportUrl: String?
-=======
     var reportURL: String?
     
     enum CodingKeys: String, CodingKey {
         case reportURL = "report_url"
     }
->>>>>>> release/25.07.0
 }
 
 enum BugReportServiceError: LocalizedError {
@@ -68,12 +62,7 @@ protocol BugReportServiceProtocol: AnyObject {
     
     var lastCrashEventID: String? { get set }
     
-<<<<<<< HEAD
-    // Tchap: Make BugReportService baseURL updatable and nullable (on logout)
-    func updateBaseURL(_ baseURL: URL?)
-=======
     func applyConfiguration(_ configuration: RageshakeConfiguration)
->>>>>>> release/25.07.0
     
     func submitBugReport(_ bugReport: BugReport,
                          progressListener: CurrentValueSubject<Double, Never>) async -> Result<SubmitBugReportResponse, BugReportServiceError>

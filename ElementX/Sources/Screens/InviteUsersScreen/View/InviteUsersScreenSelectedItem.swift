@@ -30,12 +30,9 @@ struct InviteUsersScreenSelectedItem: View {
                     .lineLimit(1)
             }
         }
-<<<<<<< HEAD
         .frame(maxWidth: 100.0)
-=======
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: L10n.actionRemove, dismissAction)
->>>>>>> release/25.07.0
     }
     
     // MARK: - Private

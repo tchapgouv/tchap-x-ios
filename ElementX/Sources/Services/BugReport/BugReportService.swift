@@ -12,16 +12,10 @@ import Sentry
 import UIKit
 
 class BugReportService: NSObject, BugReportServiceProtocol {
-<<<<<<< HEAD
-    // Tchap: Make BugReportService baseURL updatable and nullable (on logout)
-//    private let baseURL: URL?
-    private(set) var baseURL: URL?
-=======
     /// The rageshake URL as provided in the init.
     private let defaultRageshakeURL: URL?
     /// The rageshake URL currently being used by the service.
     private var rageshakeURL: URL?
->>>>>>> release/25.07.0
     private let applicationID: String
     private let sdkGitSHA: String
     private let maxUploadSize: Int
@@ -55,14 +49,6 @@ class BugReportService: NSObject, BugReportServiceProtocol {
     var crashedLastRun: Bool {
         SentrySDK.crashedLastRun
     }
-<<<<<<< HEAD
-        
-    // Tchap: Make BugReportService baseURL updatable and nullable (on logout)
-    func updateBaseURL(_ baseURL: URL?) {
-        self.baseURL = baseURL
-    }
-
-=======
     
     func applyConfiguration(_ configuration: RageshakeConfiguration) {
         switch configuration {
@@ -75,7 +61,6 @@ class BugReportService: NSObject, BugReportServiceProtocol {
         }
     }
     
->>>>>>> release/25.07.0
     // swiftlint:disable:next cyclomatic_complexity
     func submitBugReport(_ bugReport: BugReport,
                          progressListener: CurrentValueSubject<Double, Never>) async -> Result<SubmitBugReportResponse, BugReportServiceError> {
@@ -168,15 +153,7 @@ class BugReportService: NSObject, BugReportServiceProtocol {
             let decoder = JSONDecoder()
             let uploadResponse = try decoder.decode(SubmitBugReportResponse.self, from: data)
             
-<<<<<<< HEAD
-            // Tchap: allow SubmitBugReportResponse to not contains `reportUrl` value.
-//            if !uploadResponse.reportUrl.isEmpty {
-            if !(uploadResponse.reportUrl?.isEmpty ?? false) {
-                lastCrashEventID = nil
-            }
-=======
             lastCrashEventID = nil
->>>>>>> release/25.07.0
             
             MXLog.info("Feedback submitted.")
             

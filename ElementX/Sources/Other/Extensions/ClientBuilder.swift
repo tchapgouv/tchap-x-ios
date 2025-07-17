@@ -47,15 +47,10 @@ extension ClientBuilder {
                     .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .crossSignedOrLegacy))
             } else {
                 builder = builder
-<<<<<<< HEAD
                     // Tchap: [Beta DINUM] - allow sending messages even if non-verified device is present on the account.
 //                    .roomKeyRecipientStrategy(strategy: .errorOnVerifiedUserProblem)
                     .roomKeyRecipientStrategy(strategy: .allDevices)
-                    .roomDecryptionTrustRequirement(trustRequirement: .untrusted)
-=======
-                    .roomKeyRecipientStrategy(strategy: .errorOnVerifiedUserProblem)
                     .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .untrusted))
->>>>>>> release/25.07.0
             }
         }
         

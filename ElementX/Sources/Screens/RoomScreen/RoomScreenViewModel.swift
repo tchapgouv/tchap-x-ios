@@ -333,21 +333,6 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         default:
             state.isKnockableRoom = false
         }
-<<<<<<< HEAD
-        
-        let ownUserID = roomProxy.ownUserID
-        state.canSendMessage = await (try? roomProxy.canUser(userID: ownUserID, sendMessage: .roomMessage).get()) == true
-        state.canJoinCall = await (try? roomProxy.canUserJoinCall(userID: ownUserID).get()) == true
-        state.canAcceptKnocks = await (try? roomProxy.canUserInvite(userID: ownUserID).get()) == true
-        state.canDeclineKnocks = await (try? roomProxy.canUserKick(userID: ownUserID).get()) == true
-        state.canBan = await (try? roomProxy.canUserBan(userID: ownUserID).get()) == true
-        
-        // Tchap: fill room properties
-        state.bindings.isEncrypted = roomProxy.infoPublisher.value.isEncrypted
-        state.bindings.isPublic = roomProxy.infoPublisher.value.isPublic
-        // Tchap: Tchap should read the `external` valu in the `accessRules` of the room.
-        state.bindings.externalCount = roomProxy.membersPublisher.value.filter { MatrixIdFromString($0.userID).isExternalTchapUser }.count
-=======
 
         if let powerLevels = roomInfo.powerLevels {
             state.canSendMessage = powerLevels.canOwnUser(sendMessage: .roomMessage)
@@ -355,8 +340,13 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
             state.canAcceptKnocks = powerLevels.canOwnUserInvite()
             state.canDeclineKnocks = powerLevels.canOwnUserKick()
             state.canBan = powerLevels.canOwnUserBan()
+        
+        // Tchap: fill room properties
+        state.bindings.isEncrypted = roomProxy.infoPublisher.value.isEncrypted
+        state.bindings.isPublic = roomProxy.infoPublisher.value.isPublic
+        // Tchap: Tchap should read the `external` valu in the `accessRules` of the room.
+        state.bindings.externalCount = roomProxy.membersPublisher.value.filter { MatrixIdFromString($0.userID).isExternalTchapUser }.count
         }
->>>>>>> release/25.07.0
     }
     
     private func setupPinnedEventsTimelineItemProviderIfNeeded() {

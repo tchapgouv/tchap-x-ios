@@ -39,13 +39,10 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                 updateBugReportServiceBaseURL(homeServerBaseURL?.appendingPathComponent("bugreports"))
                 startSync()
                 performSettingsToAccountDataMigration(userSession: userSession)
-<<<<<<< HEAD
+                Task { await appHooks.configure(with: userSession) }
             } else {
                 // Tchap: nullify BugReportService baseURL after user is logged out.
                 updateBugReportServiceBaseURL(nil)
-=======
-                Task { await appHooks.configure(with: userSession) }
->>>>>>> release/25.07.0
             }
         }
     }
@@ -381,13 +378,9 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private static func setupServiceLocator(appSettings: AppSettings, appHooks: AppHooks) {
         ServiceLocator.shared.register(userIndicatorController: UserIndicatorController())
         ServiceLocator.shared.register(appSettings: appSettings)
-<<<<<<< HEAD
         // Tchap: set up BugReportService  baseURL to nil because user is not yet logged Its HomeServere is not known.
 //        ServiceLocator.shared.register(bugReportService: BugReportService(baseURL: appSettings.bugReportServiceBaseURL,
         ServiceLocator.shared.register(bugReportService: BugReportService(baseURL: nil,
-=======
-        ServiceLocator.shared.register(bugReportService: BugReportService(rageshakeURL: appSettings.bugReportRageshakeURL,
->>>>>>> release/25.07.0
                                                                           applicationID: appSettings.bugReportApplicationID,
                                                                           sdkGitSHA: sdkGitSha(),
                                                                           maxUploadSize: appSettings.bugReportMaxUploadSize,

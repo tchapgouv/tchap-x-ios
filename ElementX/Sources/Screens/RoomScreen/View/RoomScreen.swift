@@ -159,7 +159,6 @@ struct RoomScreen: View {
         // .principal + .primaryAction works better than .navigation leading + trailing
         // as the latter disables interaction in the action button for rooms with long names
         ToolbarItem(placement: .principal) {
-<<<<<<< HEAD
             RoomHeaderView(roomName: roomContext.viewState.roomTitle,
                            roomAvatar: roomContext.viewState.roomAvatar,
                            dmRecipientVerificationState: roomContext.viewState.dmRecipientVerificationState,
@@ -167,12 +166,6 @@ struct RoomScreen: View {
                            // Tchap: add badges
                            TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: $roomContext.isEncrypted, isPublic: $roomContext.isPublic, externalCount: $roomContext.externalCount),
                            mediaProvider: roomContext.mediaProvider)
-=======
-            RoomHeaderView(roomName: context.viewState.roomTitle,
-                           roomAvatar: context.viewState.roomAvatar,
-                           dmRecipientVerificationState: context.viewState.dmRecipientVerificationState,
-                           mediaProvider: context.mediaProvider)
->>>>>>> release/25.07.0
                 // Using a button stops it from getting truncated in the navigation bar
                 .contentShape(.rect)
                 .onTapGesture {

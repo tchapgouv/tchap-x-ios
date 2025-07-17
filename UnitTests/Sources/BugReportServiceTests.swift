@@ -43,14 +43,8 @@ class BugReportServiceTests: XCTestCase {
                                   files: [])
         let progressSubject = CurrentValueSubject<Double, Never>(0.0)
         let response = try await bugReportService.submitBugReport(bugReport, progressListener: progressSubject).get()
-<<<<<<< HEAD
-        // Tchap: BugReport.reportUrl is now optional.
-//        XCTAssertFalse(response.reportUrl.isEmpty)
-        XCTAssertFalse(response.reportUrl?.isEmpty ?? true)
-=======
         let reportURL = try XCTUnwrap(response.reportURL)
         XCTAssertFalse(reportURL.isEmpty)
->>>>>>> release/25.07.0
     }
     
     func testInitialStateWithRealService() throws {

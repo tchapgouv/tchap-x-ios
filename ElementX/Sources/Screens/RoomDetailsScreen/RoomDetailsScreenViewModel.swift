@@ -297,7 +297,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         }
     }
     
-<<<<<<< HEAD
     private func updatePowerLevelPermissions() async {
         // Tchap: if user is external user, don't allow any modification power level.
         if MatrixIdFromString(clientProxy.userID).isExternalTchapUser {
@@ -319,8 +318,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         }
     }
     
-=======
->>>>>>> release/25.07.0
     private func setupNotificationSettingsSubscription() {
         notificationSettingsProxy.callbacks
             .receive(on: DispatchQueue.main)
