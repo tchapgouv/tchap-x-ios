@@ -16,21 +16,10 @@ struct CallScreen: View {
     @ObservedObject var context: CallScreenViewModel.Context
     
     var body: some View {
-        NavigationStack {
-            content
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button { context.send(viewAction: .navigateBack) } label: {
-                            Image(systemSymbol: .chevronBackward)
-                                .fontWeight(.semibold)
-                        }
-                    }
-                }
-        }
-        .alert(item: $context.alertInfo)
+        content
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
+            .alert(item: $context.alertInfo)
     }
     
     @ViewBuilder
@@ -75,6 +64,7 @@ private struct CallView: UIViewRepresentable {
         private var webView: WKWebView!
         private var pictureInPictureController: AVPictureInPictureController?
         private let pictureInPictureViewController: AVPictureInPictureVideoCallViewController
+        private var routePickerView: AVRoutePickerView!
         
         /// The view to be shown in the app. This will contain the web view when picture in picture isn't running.
         let webViewWrapper = WebViewWrapper(frame: .zero)
@@ -97,7 +87,9 @@ private struct CallView: UIViewRepresentable {
             let configuration = WKWebViewConfiguration()
             
             let userContentController = WKUserContentController()
-            userContentController.add(WKScriptMessageHandlerWrapper(self), name: viewModelContext.viewState.messageHandler)
+            CallScreenJavaScriptMessageName.allCases.forEach {
+                userContentController.add(WKScriptMessageHandlerWrapper(self), name: $0.rawValue)
+            }
             
             // Required to allow a webview that uses file URL to load its own assets
             configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
@@ -122,6 +114,12 @@ private struct CallView: UIViewRepresentable {
             webView.isOpaque = false
             webView.backgroundColor = .compound.bgCanvasDefault
             webView.scrollView.backgroundColor = .compound.bgCanvasDefault
+            
+            // This button is always hidden and is only used to be programmaticaly tapped
+            routePickerView = AVRoutePickerView(frame: .zero)
+            routePickerView.isHidden = true
+            routePickerView.isUserInteractionEnabled = false
+            webView.addSubview(routePickerView)
             
             webViewWrapper.addMatchedSubview(webView)
             
@@ -161,7 +159,34 @@ private struct CallView: UIViewRepresentable {
         }
         
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-            viewModelContext?.javaScriptMessageHandler?(message.body)
+            guard let handlerID = CallScreenJavaScriptMessageName(rawValue: message.name) else {
+                return
+            }
+            
+            switch handlerID {
+            case .widgetAction:
+                guard let message = message.body as? String else { return }
+                viewModelContext?.send(viewAction: .widgetAction(message: message))
+            case .showNativeOutputDevicePicker:
+                DispatchQueue.main.async {
+                    self.tapRoutePickerView()
+                }
+            case .onOutputDeviceSelect:
+                guard let deviceID = message.body as? String else { return }
+                viewModelContext?.send(viewAction: .outputDeviceSelected(deviceID: deviceID))
+            case .onBackButtonPressed:
+                viewModelContext?.send(viewAction: .navigateBack)
+            }
+        }
+        
+        // This function is called by the webview output routing button
+        // it allows to open the OS output selector using the hidden button.
+        private func tapRoutePickerView() {
+            guard let button = routePickerView.subviews.first(where: { $0 is UIButton }) as? UIButton else {
+                return
+            }
+            
+            button.sendActions(for: .touchUpInside)
         }
         
         // MARK: - WKUIDelegate
@@ -172,6 +197,7 @@ private struct CallView: UIViewRepresentable {
                 return .deny
             }
             
+            viewModelContext?.send(viewAction: .mediaCapturePermissionGranted)
             return .grant
         }
         
@@ -319,8 +345,6 @@ struct CallScreen_Previews: PreviewProvider {
     }()
     
     static var previews: some View {
-        NavigationStack {
-            CallScreen(context: viewModel.context)
-        }
+        CallScreen(context: viewModel.context)
     }
 }

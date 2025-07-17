@@ -55,6 +55,7 @@ struct RoomSummary {
     
     let isMarkedUnread: Bool
     let isFavourite: Bool
+    let isTombstoned: Bool
     
     var hasUnreadMessages: Bool { unreadMessagesCount > 0 }
     var hasUnreadMentions: Bool { unreadMentionsCount > 0 }
@@ -124,14 +125,19 @@ extension RoomSummary {
         joinRequestType = nil
         isMarkedUnread = false
         isFavourite = false
+        isTombstoned = false
     }
     
     // This doesn't have to work properly for DM invites, the heroes are always empty
     var avatar: RoomAvatar {
+        guard !isTombstoned else {
+            return .tombstoned
+        }
+        
         if isDirect, avatarURL == nil, heroes.count == 1 {
-            .heroes(heroes)
+            return .heroes(heroes)
         } else {
-            .room(id: id, name: name, avatarURL: avatarURL)
+            return .room(id: id, name: name, avatarURL: avatarURL)
         }
     }
 }

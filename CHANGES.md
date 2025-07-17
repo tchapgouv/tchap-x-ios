@@ -1,3 +1,161 @@
+## Changes in 25.06.5 (2025-06-19)
+
+### What's Changed
+
+🐛 Bugfixes
+* Stop failing bug reports when the reportURL is omitted. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4221
+* Hide timeline item actions that the user's power level does not allow by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4227
+* Fix thread summaries being shown when the thread feature flag was disabled. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4228
+* Fix MediaTimeline screen header iOS 26 crash, update remaining version predicates. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4229
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4225
+
+🧱 Build
+* Add a section for pr-a11y in the release notes. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4223
+* Run Xcode select on the Translations and CalVer workflows. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4224
+
+Others
+* Update ui tests for the poll form screen by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4226
+* Bump various dependencies by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4216
+* Move all Introspect VersionPredicates into Compound to have them all in the same place. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4230
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.06.4...release/25.06.5
+
+## Changes in 25.06.4 (2025-06-18)
+
+### What's Changed
+
+✨ Features
+* Thread aware drafting by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4197
+
+🐛 Bugfixes
+* Fixes #4180 - Prevent room header autolayout crashes on iOS 26. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4191
+* Bump Compound and prevent Introspect from breaking on newer OS versions. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4203
+* Fix OS 26 crashes when not running a development build by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4217
+
+🚧 In development 🚧
+* Allow sending locations within threads and render the number of replies in their summaries. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4192
+
+Others
+* Update dependency jpsim/Yams to from: "6.0.1" by @renovate in https://github.com/element-hq/element-x-ios/pull/4189
+* Add state to the accessibility label of RTE formatting buttons by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4194
+* Exclude protocol files from code coverage checks. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4196
+* Improved the accessibility in PollFormScreen by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4200
+* Focus voice over automatically when focussing a timeline event by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4206
+* Improved a11y in `CollapsibleRoomTimelineView` by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4208
+* Improved reactions a11y by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4215
+* Flip the timeline for voice over users by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4212
+* Update the SDK. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4220
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.06.3...release/25.06.4
+
+## Changes in 25.06.3 (2025-06-11)
+
+### What's Changed
+
+✨ Features
+* Add a developer option for history sharing on invite by @richvdh in https://github.com/element-hq/element-x-ios/pull/4172
+
+🐛 Bugfixes
+* Send .`fullyRead` marker when navigating out of the room by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4177
+* Correct the bug report service submission URL after updating how secrets are configured by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4186
+
+🚧 In development 🚧
+* Threaded timeline composer by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4168
+* Support for sending media in threads by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4183
+
+Others
+* Update dependency fastlane to v2.228.0 by @renovate in https://github.com/element-hq/element-x-ios/pull/4181
+* Add a RoomScreenHook. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4175
+* Hide accesibility for decorative onboarding image by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4178
+* Various thread tweaks by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4182
+* update SDK to 25.06.11 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4187
+
+### New Contributors
+* @richvdh made their first contribution in https://github.com/element-hq/element-x-ios/pull/4172
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.06.2...release/25.06.3
+
+## Changes in 25.06.2 (2025-06-06)
+
+### What's Changed
+
+🐛 Bugfixes
+* Fix subsequent media upload dialogue presentations  by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4176
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.06.1...release/25.06.2
+
+## Changes in 25.06.1 (2025-06-06)
+
+### What's Changed
+
+✨ Features
+* EC: Native switch for audio outputs/inputs and earpiece by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4136
+* Tombstoned and upgraded rooms implementation by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4169
+
+🙌 Improvements
+* Allow multiple room info updates when receiving a call before deciding the room doesn't have an active call anymore by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4171
+
+🧱 Build
+* Automatically open a PR to bump the calver by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4167
+
+Others
+* updated EC to 0.12.2 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4174
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.06.0...release/25.06.1
+
+## Changes in 25.06.0 (2025-06-03)
+
+### What's Changed
+
+✨ Features
+* Setup the new RustSDK sentry integration by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4145
+* Handle media previews and invite avatars through the account data by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4142
+* Adopt the new deduplicate room versions room list filter. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4160
+* Support for experimental MSC4286 to not render external payment details by @hughns in https://github.com/element-hq/element-x-ios/pull/4099
+
+🙌 Improvements
+* Fetching room tweaks by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4146
+
+🐛 Bugfixes
+* Fix a couple of crashes on macOS from a missing environment object. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4153
+
+⚠️ API Changes
+* Adopt StateStoreViewModelV2 in the remaining settings screens. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4158
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4150
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4162
+
+🧱 Build
+* Make sure UI tests are run to completion on the remaining device, even if the other one fails. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4164
+* Bump the version to 25.06 for the next release. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4165
+
+🚧 In development 🚧
+* Setup threaded timeline actions by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4157
+
+Others
+* Adopt latest timeline API changes by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4140
+* Update codecov/test-results-action action to v1.1.1 by @renovate in https://github.com/element-hq/element-x-ios/pull/4143
+* Various timeline code improvements by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4144
+* Add a developer option that hides notification alerts when a sound wouldn't be played. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4147
+* Bump the SDK to v25.05.26-2 and update the breaking changes following the RoomListItem removal by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4148
+* Update SDK to 25.05.27 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4151
+* Update the enterprise submodule by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4152
+* Updated EC and Sentry by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4154
+* Update dependency apple/swift-argument-parser to from: "1.5.1" by @renovate in https://github.com/element-hq/element-x-ios/pull/4156
+* Run the 'Prevent blocked' check whenever a PR branch is updated by @robintown in https://github.com/element-hq/element-x-ios/pull/4155
+* Update the enterprise submodule. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4161
+* Add a placeholder association for localhost in developer mode. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4163
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.05.2...release/25.06.0
+
 ## Changes in 25.05.2 (2025-05-21)
 
 ### What's Changed

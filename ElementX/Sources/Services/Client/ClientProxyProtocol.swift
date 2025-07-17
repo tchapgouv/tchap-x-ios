@@ -39,6 +39,7 @@ enum ClientProxyError: Error {
     case failedRetrievingUserIdentity
     case failedResolvingRoomAlias
     case roomNotInLocalStore
+    case invalidInvite
 }
 
 enum SlidingSyncConstants {
@@ -125,6 +126,8 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     var sessionVerificationController: SessionVerificationControllerProxyProtocol? { get }
     
     var isReportRoomSupported: Bool { get async }
+    
+    var isLiveKitRTCSupported: Bool { get async }
     
     func isOnlyDeviceLeft() async -> Result<Bool, ClientProxyError>
     

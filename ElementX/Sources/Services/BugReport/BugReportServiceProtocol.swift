@@ -15,16 +15,18 @@ struct BugReport: Equatable {
     let ed25519: String?
     let curve25519: String?
     let text: String
-    let includeLogs: Bool
+    let logFiles: [URL]?
     let canContact: Bool
     var githubLabels: [String]
     let files: [URL]
 }
 
 struct SubmitBugReportResponse: Decodable {
-    // Tchap: allow SubmitBugReportResponse to not contains `reportUrl` value.
-//    var reportUrl: String
-    var reportUrl: String?
+    var reportURL: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case reportURL = "report_url"
+    }
 }
 
 enum BugReportServiceError: LocalizedError {
@@ -44,6 +46,15 @@ enum BugReportServiceError: LocalizedError {
     }
 }
 
+enum RageshakeConfiguration {
+    /// Rageshakes should be sent to the provided URL
+    case url(URL)
+    /// Rageshakes are disabled.
+    case disabled
+    /// No customisations are made, use the default configuration.
+    case `default`
+}
+
 // sourcery: AutoMockable
 protocol BugReportServiceProtocol: AnyObject {
     var isEnabled: Bool { get }
@@ -51,8 +62,7 @@ protocol BugReportServiceProtocol: AnyObject {
     
     var lastCrashEventID: String? { get set }
     
-    // Tchap: Make BugReportService baseURL updatable and nullable (on logout)
-    func updateBaseURL(_ baseURL: URL?)
+    func applyConfiguration(_ configuration: RageshakeConfiguration)
     
     func submitBugReport(_ bugReport: BugReport,
                          progressListener: CurrentValueSubject<Double, Never>) async -> Result<SubmitBugReportResponse, BugReportServiceError>

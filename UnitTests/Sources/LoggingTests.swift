@@ -102,7 +102,8 @@ class LoggingTests: XCTestCase {
                                       alternativeAliases: [],
                                       hasOngoingCall: false,
                                       isMarkedUnread: false,
-                                      isFavourite: false)
+                                      isFavourite: false,
+                                      isTombstoned: false)
         
         // When logging that value
         MXLog.info(roomSummary)

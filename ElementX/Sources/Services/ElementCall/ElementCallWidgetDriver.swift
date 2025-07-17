@@ -82,7 +82,8 @@ class ElementCallWidgetDriver: WidgetCapabilitiesProvider, ElementCallWidgetDriv
             widgetSettings = try newVirtualElementCallWidget(props: .init(elementCallUrl: baseURL.absoluteString,
                                                                           widgetId: widgetID,
                                                                           parentUrl: nil,
-                                                                          hideHeader: nil,
+                                                                          header: .appBar,
+                                                                          hideHeader: true,
                                                                           preload: nil,
                                                                           fontScale: nil,
                                                                           appPrompt: false,
@@ -97,8 +98,7 @@ class ElementCallWidgetDriver: WidgetCapabilitiesProvider, ElementCallWidgetDriv
                                                                           rageshakeSubmitUrl: rageshakeURL,
                                                                           sentryDsn: analyticsConfiguration?.sentryDSN,
                                                                           sentryEnvironment: nil,
-                                                                          // Set this to false until we have the full implementation otherwise should be false only on macOS
-                                                                          controlledMediaDevices: false))
+                                                                          controlledMediaDevices: !ProcessInfo.processInfo.isiOSAppOnMac))
         } catch {
             MXLog.error("Failed to build widget settings: \(error)")
             return .failure(.failedBuildingWidgetSettings)
@@ -164,6 +164,7 @@ class ElementCallWidgetDriver: WidgetCapabilitiesProvider, ElementCallWidgetDriv
         return .success(url)
     }
     
+    @discardableResult
     func handleMessage(_ message: String) async -> Result<Bool, ElementCallWidgetDriverError> {
         guard let widgetDriver else {
             return .failure(.driverNotSetup)

@@ -12,29 +12,30 @@ import Sentry
 import UIKit
 
 class BugReportService: NSObject, BugReportServiceProtocol {
-    // Tchap: Make BugReportService baseURL updatable and nullable (on logout)
-//    private let baseURL: URL?
-    private(set) var baseURL: URL?
+    /// The rageshake URL as provided in the init.
+    private let defaultRageshakeURL: URL?
+    /// The rageshake URL currently being used by the service.
+    private var rageshakeURL: URL?
     private let applicationID: String
     private let sdkGitSHA: String
     private let maxUploadSize: Int
     private let session: URLSession
-    
     private let appHooks: AppHooks
     
     private let progressSubject = PassthroughSubject<Double, Never>()
     private var cancellables = Set<AnyCancellable>()
     
-    var isEnabled: Bool { baseURL != nil }
+    var isEnabled: Bool { rageshakeURL != nil }
     var lastCrashEventID: String?
     
-    init(baseURL: URL?,
+    init(rageshakeURL: URL?,
          applicationID: String,
          sdkGitSHA: String,
          maxUploadSize: Int,
          session: URLSession = .shared,
          appHooks: AppHooks) {
-        self.baseURL = baseURL
+        defaultRageshakeURL = rageshakeURL
+        self.rageshakeURL = rageshakeURL
         self.applicationID = applicationID
         self.sdkGitSHA = sdkGitSHA
         self.maxUploadSize = maxUploadSize
@@ -48,16 +49,22 @@ class BugReportService: NSObject, BugReportServiceProtocol {
     var crashedLastRun: Bool {
         SentrySDK.crashedLastRun
     }
-        
-    // Tchap: Make BugReportService baseURL updatable and nullable (on logout)
-    func updateBaseURL(_ baseURL: URL?) {
-        self.baseURL = baseURL
+    
+    func applyConfiguration(_ configuration: RageshakeConfiguration) {
+        switch configuration {
+        case .url(let url):
+            rageshakeURL = url
+        case .disabled:
+            rageshakeURL = nil
+        case .default:
+            rageshakeURL = defaultRageshakeURL
+        }
     }
-
+    
     // swiftlint:disable:next cyclomatic_complexity
     func submitBugReport(_ bugReport: BugReport,
                          progressListener: CurrentValueSubject<Double, Never>) async -> Result<SubmitBugReportResponse, BugReportServiceError> {
-        guard let baseURL else {
+        guard let rageshakeURL else {
             fatalError("No bug report URL set, the screen should not be shown in this case.")
         }
         
@@ -87,8 +94,8 @@ class BugReportService: NSObject, BugReportServiceProtocol {
             params.append(MultipartFormData(key: "label", type: .text(value: label)))
         }
         
-        if bugReport.includeLogs {
-            let logAttachments = await zipFiles(Tracing.logFiles)
+        if let logFiles = bugReport.logFiles {
+            let logAttachments = await zipFiles(logFiles)
             for url in logAttachments.files {
                 params.append(MultipartFormData(key: "compressed-log", type: .file(url: url)))
             }
@@ -114,7 +121,7 @@ class BugReportService: NSObject, BugReportServiceProtocol {
         }
         body.appendString(string: "--\(boundary)--\r\n")
 
-        var request = URLRequest(url: baseURL.appendingPathComponent("submit"))
+        var request = URLRequest(url: rageshakeURL)
         request.addValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
         request.httpMethod = "POST"
@@ -144,14 +151,9 @@ class BugReportService: NSObject, BugReportServiceProtocol {
             
             // Parse the JSON data
             let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
             let uploadResponse = try decoder.decode(SubmitBugReportResponse.self, from: data)
             
-            // Tchap: allow SubmitBugReportResponse to not contains `reportUrl` value.
-//            if !uploadResponse.reportUrl.isEmpty {
-            if !(uploadResponse.reportUrl?.isEmpty ?? false) {
-                lastCrashEventID = nil
-            }
+            lastCrashEventID = nil
             
             MXLog.info("Feedback submitted.")
             

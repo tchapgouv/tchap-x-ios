@@ -74,7 +74,7 @@ class ComposerToolbarViewModelTests: XCTestCase {
     }
 
     func testHandleKeyCommand() {
-        XCTAssertTrue(viewModel.keyCommands.count == 1)
+        XCTAssertTrue(viewModel.context.viewState.keyCommands.count == 1)
     }
 
     func testComposerFocusAfterEnablingRTE() {
@@ -794,7 +794,7 @@ class ComposerToolbarViewModelTests: XCTestCase {
     private func setUpViewModel(initialText: String? = nil, loadDraftClosure: (() async -> Result<ComposerDraftProxy?, ComposerDraftServiceError>)? = nil) {
         wysiwygViewModel = WysiwygComposerViewModel()
         completionSuggestionServiceMock = CompletionSuggestionServiceMock(configuration: .init())
-        draftServiceMock = ComposerDraftServiceMock()
+        draftServiceMock = ComposerDraftServiceMock(.init())
         if let loadDraftClosure {
             draftServiceMock.loadDraftClosure = loadDraftClosure
         }

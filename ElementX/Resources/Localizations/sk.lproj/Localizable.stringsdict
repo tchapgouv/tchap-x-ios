@@ -20,6 +20,24 @@
 			<string>%1$d zadaných číslic</string>
 		</dict>
 	</dict>
+	<key>a11y_polls_percent_of_total</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d percento z celkového počtu hlasov</string>
+			<key>few</key>
+			<string>%1$d percentá z celkového počtu hlasov</string>
+			<key>other</key>
+			<string>%1$d percent z celkového počtu hlasov</string>
+		</dict>
+	</dict>
 	<key>a11y_read_receipts_multiple_with_others</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -90,6 +108,24 @@
 			<string>%d hlasy</string>
 			<key>other</key>
 			<string>%d hlasov</string>
+		</dict>
+	</dict>
+	<key>common_replies</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d odpoveď</string>
+			<key>few</key>
+			<string>%1$d odpovede</string>
+			<key>other</key>
+			<string>%1$d odpovedí</string>
 		</dict>
 	</dict>
 	<key>notification_compat_summary_line_for_room</key>
@@ -288,6 +324,42 @@
 			<string>%1$@ +%2$d ďalší chcú vstúpiť do tejto miestnosti</string>
 			<key>other</key>
 			<string>%1$@ +%2$d ďalších chce vstúpiť do tejto miestnosti</string>
+		</dict>
+	</dict>
+	<key>screen_room_timeline_reaction_a11y</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d člen reagoval s %2$@</string>
+			<key>few</key>
+			<string>%1$d členovia reagovali s %2$@</string>
+			<key>other</key>
+			<string>%1$d členov reagovalo s %2$@</string>
+		</dict>
+	</dict>
+	<key>screen_room_timeline_reaction_including_you_a11y</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Vy a %1$d člen reagoval s %2$@</string>
+			<key>few</key>
+			<string>Vy a %1$d členovia reagovali s %2$@</string>
+			<key>other</key>
+			<string>Vy a %1$d členov reagovalo s %2$@</string>
 		</dict>
 	</dict>
 	<key>screen_room_timeline_state_changes</key>

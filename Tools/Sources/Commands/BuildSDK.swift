@@ -16,8 +16,8 @@ enum Target: String, ExpressibleByArgument, CaseIterable {
     case macIntel = "x86_64-apple-darwin"
 }
 
-struct BuildSDK: ParsableCommand {
-    static var configuration = CommandConfiguration(abstract: "A tool to checkout and build MatrixRustSDK locally for development.")
+struct BuildSDK: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(abstract: "A tool to checkout and build MatrixRustSDK locally for development.")
     
     @Argument(help: "An optional argument to specify a branch of the SDK.")
     var branch: String?
@@ -55,13 +55,13 @@ struct BuildSDK: ParsableCommand {
         }
     }
     
-    func run() throws {
+    func run() async throws {
         try checkRustupTargets()
         try cloneSDKIfNeeded()
         try checkoutBranchIfSupplied()
         try buildFramework()
         try updateXcodeProject()
-        try generateSDKMocks()
+        try await generateSDKMocks()
     }
     
     /// Checks that all of the required targets have been added through rustup
@@ -134,9 +134,9 @@ struct BuildSDK: ParsableCommand {
         try updatedYAMLString.write(to: yamlURL, atomically: true, encoding: .utf8)
     }
 
-    func generateSDKMocks() throws {
+    func generateSDKMocks() async throws {
         var command = GenerateSDKMocks()
         command.version = "local"
-        try command.run()
+        try await command.run()
     }
 }

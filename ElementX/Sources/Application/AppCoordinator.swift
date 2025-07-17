@@ -34,14 +34,15 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                 configureElementCallService()
                 configureNotificationManager()
                 observeUserSessionChanges()
-                // Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
-                let homeServerBaseURL = URL(string: userSession.clientProxy.homeserver) // swiftlint:disable:this force_unwrapping
-                updateBugReportServiceBaseURL(homeServerBaseURL?.appendingPathComponent("bugreports"))
                 startSync()
                 performSettingsToAccountDataMigration(userSession: userSession)
+                Task { await appHooks.configure(with: userSession) }
+                // Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
+                let homeServerBaseURL = URL(string: userSession.clientProxy.homeserver)! // swiftlint:disable:this force_unwrapping
+                ServiceLocator.shared.bugReportService?.applyConfiguration(.url(homeServerBaseURL.appendingPathComponent("bugreports")))
             } else {
                 // Tchap: nullify BugReportService baseURL after user is logged out.
-                updateBugReportServiceBaseURL(nil)
+                ServiceLocator.shared.bugReportService?.applyConfiguration(.disabled)
             }
         }
     }
@@ -377,9 +378,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private static func setupServiceLocator(appSettings: AppSettings, appHooks: AppHooks) {
         ServiceLocator.shared.register(userIndicatorController: UserIndicatorController())
         ServiceLocator.shared.register(appSettings: appSettings)
-        // Tchap: set up BugReportService  baseURL to nil because user is not yet logged Its HomeServere is not known.
-//        ServiceLocator.shared.register(bugReportService: BugReportService(baseURL: appSettings.bugReportServiceBaseURL,
-        ServiceLocator.shared.register(bugReportService: BugReportService(baseURL: nil,
+        ServiceLocator.shared.register(bugReportService: BugReportService(rageshakeURL: nil,
                                                                           applicationID: appSettings.bugReportApplicationID,
                                                                           sdkGitSHA: sdkGitSha(),
                                                                           maxUploadSize: appSettings.bugReportMaxUploadSize,
@@ -388,11 +387,6 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         posthogAnalyticsClient.updateSuperProperties(AnalyticsEvent.SuperProperties(appPlatform: .EXI, cryptoSDK: .Rust, cryptoSDKVersion: sdkGitSha()))
         ServiceLocator.shared.register(analytics: AnalyticsService(client: posthogAnalyticsClient,
                                                                    appSettings: appSettings))
-    }
-
-    // Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
-    private func updateBugReportServiceBaseURL(_ baseURL: URL?) {
-        ServiceLocator.shared.bugReportService?.updateBaseURL(baseURL)
     }
     
     /// Perform any required migrations for the app to function correctly.
@@ -979,6 +973,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         switch await roomProxy.timeline.sendMessage(replyText,
                                                     html: nil,
+                                                    threadRootEventID: nil,
                                                     inReplyToEventID: nil,
                                                     intentionalMentions: .empty) {
         case .success:

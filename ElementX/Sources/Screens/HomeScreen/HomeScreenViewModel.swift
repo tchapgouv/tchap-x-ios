@@ -364,7 +364,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                 return
             }
             
-            if roomProxy.infoPublisher.value.isPublic {
+            if !(roomProxy.infoPublisher.value.isPrivate ?? true) {
                 state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomID, isDM: roomProxy.isDirectOneToOneRoom, state: .public)
             } else {
                 state.bindings.leaveRoomAlertItem = if roomProxy.infoPublisher.value.joinedMembersCount > 1 {
@@ -416,8 +416,13 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                                              isSpace: roomProxy.info.isSpace,
                                              activeMemberCount: UInt(roomProxy.info.activeMembersCount))
             appSettings.seenInvites.remove(roomID)
-        case .failure:
-            displayError()
+        case .failure(let error):
+            switch error {
+            case .invalidInvite:
+                displayError(title: L10n.dialogTitleError, message: L10n.errorInvalidInvite)
+            default:
+                displayError()
+            }
         }
     }
     
@@ -474,9 +479,9 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         }
     }
     
-    private func displayError() {
+    private func displayError(title: String? = nil, message: String? = nil) {
         state.bindings.alertInfo = .init(id: UUID(),
-                                         title: L10n.commonError,
-                                         message: L10n.errorUnknown)
+                                         title: title ?? L10n.commonError,
+                                         message: message ?? L10n.errorUnknown)
     }
 }

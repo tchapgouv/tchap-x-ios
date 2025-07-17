@@ -104,7 +104,7 @@ class NotificationHandler {
                 return .shouldDisplay
             case .roomMessage(let messageType, _):
                 switch messageType {
-                case .emote, .image, .audio, .video, .file, .notice, .text, .location:
+                case .emote, .image, .audio, .video, .file, .notice, .text, .location, .gallery:
                     return .shouldDisplay
                 case .other:
                     return .unsupportedShouldDiscard
@@ -176,9 +176,13 @@ class NotificationHandler {
             if !room.hasActiveRoomCall() { // If I don't have an active call wait a bit and make sure
                 let expiringTask = ExpiringTaskRunner {
                     await withCheckedContinuation { [weak self] continuation in
-                        self?.roomInfoObservationToken = room.subscribeToRoomInfoUpdates(listener: SDKListener { _ in
-                            MXLog.info("Received room info update")
-                            continuation.resume()
+                        self?.roomInfoObservationToken = room.subscribeToRoomInfoUpdates(listener: SDKListener { info in
+                            if info.hasRoomCall {
+                                MXLog.info("Received room info update and the room has an active call now.")
+                                continuation.resume()
+                            } else {
+                                MXLog.info("Received a room info update but the room still doesn't have an ongoing call.")
+                            }
                         })
                     }
                 }

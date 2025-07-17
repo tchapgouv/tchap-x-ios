@@ -13,9 +13,9 @@ import WysiwygComposer
 protocol ComposerToolbarViewModelProtocol {
     var actions: AnyPublisher<ComposerToolbarViewModelAction, Never> { get }
     var context: ComposerToolbarViewModelType.Context { get }
-    var keyCommands: [WysiwygKeyCommand] { get }
+    
+    func start()
+    func stop()
 
     func process(timelineAction: TimelineComposerAction)
-    func loadDraft() async
-    func saveDraft()
 }

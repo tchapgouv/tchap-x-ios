@@ -64,7 +64,7 @@ enum KnockRequestsState {
 
 // sourcery: AutoMockable
 protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
-    var infoPublisher: CurrentValuePublisher<RoomInfoProxy, Never> { get }
+    var infoPublisher: CurrentValuePublisher<RoomInfoProxyProtocol, Never> { get }
 
     var membersPublisher: CurrentValuePublisher<[RoomMemberProxyProtocol], Never> { get }
     
@@ -75,6 +75,10 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     var knockRequestsStatePublisher: CurrentValuePublisher<KnockRequestsState, Never> { get }
     
     var timeline: TimelineProxyProtocol { get }
+    
+    var predecessorRoom: PredecessorRoom? { get }
+    
+    var successorRoom: SuccessorRoom? { get }
     
     func subscribeForUpdates() async
     
@@ -148,20 +152,11 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     // MARK: - Power Levels
     
-    func powerLevels() async -> Result<RoomPowerLevels, RoomProxyError>
+    func powerLevels() async -> Result<RoomPowerLevelsProxyProtocol?, RoomProxyError>
     func applyPowerLevelChanges(_ changes: RoomPowerLevelChanges) async -> Result<Void, RoomProxyError>
-    func resetPowerLevels() async -> Result<RoomPowerLevels, RoomProxyError>
+    func resetPowerLevels() async -> Result<Void, RoomProxyError>
     func suggestedRole(for userID: String) async -> Result<RoomMemberRole, RoomProxyError>
     func updatePowerLevelsForUsers(_ updates: [(userID: String, powerLevel: Int64)]) async -> Result<Void, RoomProxyError>
-    func canUser(userID: String, sendMessage messageType: MessageLikeEventType) async -> Result<Bool, RoomProxyError>
-    func canUser(userID: String, sendStateEvent event: StateEventType) async -> Result<Bool, RoomProxyError>
-    func canUserInvite(userID: String) async -> Result<Bool, RoomProxyError>
-    func canUserRedactOther(userID: String) async -> Result<Bool, RoomProxyError>
-    func canUserRedactOwn(userID: String) async -> Result<Bool, RoomProxyError>
-    func canUserKick(userID: String) async -> Result<Bool, RoomProxyError>
-    func canUserBan(userID: String) async -> Result<Bool, RoomProxyError>
-    func canUserTriggerRoomNotification(userID: String) async -> Result<Bool, RoomProxyError>
-    func canUserPinOrUnpin(userID: String) async -> Result<Bool, RoomProxyError>
     
     // MARK: - Moderation
     
@@ -171,9 +166,7 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     // MARK: - Element Call
     
-    func canUserJoinCall(userID: String) async -> Result<Bool, RoomProxyError>
     func elementCallWidgetDriver(deviceID: String) -> ElementCallWidgetDriverProtocol
-    
     func sendCallNotificationIfNeeded() async -> Result<Void, RoomProxyError>
     
     // MARK: - Permalinks
@@ -183,9 +176,9 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     // MARK: - Drafts
     
-    func saveDraft(_ draft: ComposerDraft) async -> Result<Void, RoomProxyError>
-    func loadDraft() async -> Result<ComposerDraft?, RoomProxyError>
-    func clearDraft() async -> Result<Void, RoomProxyError>
+    func saveDraft(_ draft: ComposerDraft, threadRootEventID: String?) async -> Result<Void, RoomProxyError>
+    func loadDraft(threadRootEventID: String?) async -> Result<ComposerDraft?, RoomProxyError>
+    func clearDraft(threadRootEventID: String?) async -> Result<Void, RoomProxyError>
 }
 
 extension JoinedRoomProxyProtocol {
@@ -195,7 +188,7 @@ extension JoinedRoomProxyProtocol {
                     avatar: infoPublisher.value.avatar,
                     canonicalAlias: infoPublisher.value.canonicalAlias,
                     isEncrypted: infoPublisher.value.isEncrypted,
-                    isPublic: infoPublisher.value.isPublic,
+                    isPublic: !(infoPublisher.value.isPrivate ?? false),
                     isDirect: infoPublisher.value.isDirect)
     }
     

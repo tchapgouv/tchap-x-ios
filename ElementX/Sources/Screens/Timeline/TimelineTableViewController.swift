@@ -168,6 +168,11 @@ class TimelineTableViewController: UIViewController {
     /// Whether or not the view has been shown on screen yet.
     private var hasAppearedOnce = false
     
+    /// Value that determines if the table view is flipped or not according to the VoiceOver status.
+    private var scaleY: CGFloat {
+        UIAccessibility.isVoiceOverRunning ? 1 : -1
+    }
+    
     init(coordinator: TimelineViewRepresentable.Coordinator,
          isScrolledToBottom: Binding<Bool>,
          scrollToBottomPublisher: PassthroughSubject<Void, Never>) {
@@ -182,7 +187,10 @@ class TimelineTableViewController: UIViewController {
         tableView.allowsSelection = false
         tableView.keyboardDismissMode = .onDrag
         tableView.backgroundColor = .compound.bgCanvasDefault
-        tableView.transform = CGAffineTransform(scaleX: 1, y: -1)
+        
+        // The tableview should be flipped to display the newest items at the top
+        // the only exception is VoiceOver, where we want to keep the latest item at the top as Android.
+        tableView.transform = CGAffineTransform(scaleX: 1, y: scaleY)
         view.addSubview(tableView)
         
         // Prevents XCUITest from invoking the diffable dataSource's cellProvider
@@ -213,6 +221,15 @@ class TimelineTableViewController: UIViewController {
         NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
             .sink { [weak self] _ in
                 self?.sendLastVisibleItemReadReceipt()
+            }
+            .store(in: &cancellables)
+        
+        // Observe voice over status changes to flip the table view accordingly
+        NotificationCenter.default.publisher(for: UIAccessibility.voiceOverStatusDidChangeNotification)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                tableView.transform = CGAffineTransform(scaleX: 1, y: scaleY)
+                tableView.reloadData()
             }
             .store(in: &cancellables)
         
@@ -261,7 +278,8 @@ class TimelineTableViewController: UIViewController {
                 .background(Color.clear)
                 
                 // Flipping the cell can create some issues with cell resizing, so flip the content View
-                cell.contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
+                cell.contentView.transform = CGAffineTransform(scaleX: 1, y: scaleY)
+                cell.accessibilityElements = [cell.contentView] // Ensure VoiceOver reads the content view only
                 
                 return cell
             default:
@@ -287,7 +305,7 @@ class TimelineTableViewController: UIViewController {
                 .background(Color.clear)
                 
                 // Flipping the cell can create some issues with cell resizing, so flip the content View
-                cell.contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
+                cell.contentView.transform = CGAffineTransform(scaleX: 1, y: scaleY)
                 return cell
             }
         }
@@ -378,6 +396,12 @@ class TimelineTableViewController: UIViewController {
                let indexPath = dataSource?.indexPath(for: kvPair.key) {
                 tableView.scrollToRow(at: indexPath, at: .middle, animated: animated)
                 coordinator.send(viewAction: .scrolledToFocussedItem)
+                // Ensure VoiceOver focus happens after the scroll animation (if any)
+                DispatchQueue.main.asyncAfter(deadline: .now() + (animated ? 0.5 : 0.0)) {
+                    if let cell = self.tableView.cellForRow(at: indexPath) {
+                        UIAccessibility.post(notification: .layoutChanged, argument: cell)
+                    }
+                }
             }
         }
     }
