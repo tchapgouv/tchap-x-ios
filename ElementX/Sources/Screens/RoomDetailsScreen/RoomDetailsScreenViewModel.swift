@@ -253,7 +253,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 state.canJoinCall = powerLevels.canOwnUserJoinCall()
             }
         }
-        
     }
     
     private func fetchMembersIfNeeded() async {

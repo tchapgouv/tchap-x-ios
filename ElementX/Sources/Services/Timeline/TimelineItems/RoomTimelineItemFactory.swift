@@ -701,7 +701,6 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                            sender: sender,
                            latestEventContent: latestEventContent,
                            numberOfReplies: Int(threadSummary.numReplies()))
-            
         case .error(let message):
             return .error(message: message)
         }
