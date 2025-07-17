@@ -225,15 +225,35 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         }
         
         if let powerLevels = roomInfo.powerLevels {
-            state.canEditRoomName = powerLevels.canOwnUser(sendStateEvent: .roomName)
-            state.canEditRoomTopic = powerLevels.canOwnUser(sendStateEvent: .roomTopic)
-            state.canEditRoomAvatar = powerLevels.canOwnUser(sendStateEvent: .roomAvatar)
-            state.canInviteUsers = powerLevels.canOwnUserInvite()
-            state.canKickUsers = powerLevels.canOwnUserKick()
-            state.canBanUsers = powerLevels.canOwnUserBan()
-            state.canJoinCall = powerLevels.canOwnUserJoinCall()
+            // Tchap: if user is external user, don't allow any modification power level.
+//            state.canEditRoomName = powerLevels.canOwnUser(sendStateEvent: .roomName)
+//            state.canEditRoomTopic = powerLevels.canOwnUser(sendStateEvent: .roomTopic)
+//            state.canEditRoomAvatar = powerLevels.canOwnUser(sendStateEvent: .roomAvatar)
+//            state.canInviteUsers = powerLevels.canOwnUserInvite()
+//            state.canKickUsers = powerLevels.canOwnUserKick()
+//            state.canBanUsers = powerLevels.canOwnUserBan()
+//            state.canJoinCall = powerLevels.canOwnUserJoinCall()
             state.canEditRolesOrPermissions = powerLevels.suggestedRole(forUser: roomProxy.ownUserID) == .administrator
+            if MatrixIdFromString(clientProxy.userID).isExternalTchapUser {
+                state.canEditRoomName = false
+                state.canEditRoomTopic = false
+                state.canEditRoomAvatar = false
+                state.canInviteUsers = false
+                state.canKickUsers = false
+                state.canBanUsers = false
+                state.canJoinCall = powerLevels.canOwnUserJoinCall()
+                state.canEditRolesOrPermissions = false
+            } else {
+                state.canEditRoomName = powerLevels.canOwnUser(sendStateEvent: .roomName)
+                state.canEditRoomTopic = powerLevels.canOwnUser(sendStateEvent: .roomTopic)
+                state.canEditRoomAvatar = powerLevels.canOwnUser(sendStateEvent: .roomAvatar)
+                state.canInviteUsers = powerLevels.canOwnUserInvite()
+                state.canKickUsers = powerLevels.canOwnUserKick()
+                state.canBanUsers = powerLevels.canOwnUserBan()
+                state.canJoinCall = powerLevels.canOwnUserJoinCall()
+            }
         }
+        
     }
     
     private func fetchMembersIfNeeded() async {
@@ -294,27 +314,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             }
             
             state.hasMemberIdentityVerificationStateViolations = false
-        }
-    }
-    
-    private func updatePowerLevelPermissions() async {
-        // Tchap: if user is external user, don't allow any modification power level.
-        if MatrixIdFromString(clientProxy.userID).isExternalTchapUser {
-            state.canEditRoomName = false
-            state.canEditRoomTopic = false
-            state.canEditRoomAvatar = false
-            state.canEditRolesOrPermissions = false
-            state.canInviteUsers = false
-            state.canKickUsers = false
-            state.canBanUsers = false
-        } else {
-            state.canEditRoomName = await (try? roomProxy.canUser(userID: roomProxy.ownUserID, sendStateEvent: .roomName).get()) == true
-            state.canEditRoomTopic = await (try? roomProxy.canUser(userID: roomProxy.ownUserID, sendStateEvent: .roomTopic).get()) == true
-            state.canEditRoomAvatar = await (try? roomProxy.canUser(userID: roomProxy.ownUserID, sendStateEvent: .roomAvatar).get()) == true
-            state.canEditRolesOrPermissions = await (try? roomProxy.suggestedRole(for: roomProxy.ownUserID).get()) == .administrator
-            state.canInviteUsers = await ((try? roomProxy.canUserInvite(userID: roomProxy.ownUserID).get()) == true)
-            state.canKickUsers = await (try? roomProxy.canUserKick(userID: roomProxy.ownUserID).get()) == true
-            state.canBanUsers = await (try? roomProxy.canUserBan(userID: roomProxy.ownUserID).get()) == true
         }
     }
     

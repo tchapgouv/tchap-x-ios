@@ -39,3 +39,6 @@ delete_if_exists ./Package.resolved
 # Regenerate TchapX Xcode project
 echo "Generating TchapX Xcode project…"
 xcodegen generate --spec ./project-tchap-x.yml
+
+# Remove ElementX Xcode project
+delete_if_exists ./ElementX.xcodeproj
