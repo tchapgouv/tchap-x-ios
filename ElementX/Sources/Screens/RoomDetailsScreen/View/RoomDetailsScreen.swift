@@ -266,6 +266,7 @@ struct RoomDetailsScreen: View {
                                         icon: \.lock,
                                         iconAlignment: .top),
                         kind: .label)
+                    .accessibilityAddTraits(.isHeader)
             } header: {
                 Text(L10n.commonSecurity)
                     .compoundListSectionHeader()
@@ -339,13 +340,13 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
         RoomDetailsScreen(context: genericRoomViewModel.context)
             .snapshotPreferences(expect: genericRoomViewModel.context.$viewState.map { state in
-                state.shortcuts.contains(.invite)
+                state.permalink != nil
             })
             .previewDisplayName("Generic Room")
         
         RoomDetailsScreen(context: simpleRoomViewModel.context)
             .snapshotPreferences(expect: simpleRoomViewModel.context.$viewState.map { state in
-                state.shortcuts.contains(.invite)
+                state.permalink != nil
             })
             .previewDisplayName("Simple Room")
         
@@ -357,7 +358,7 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
         
         RoomDetailsScreen(context: dmRoomVerifiedViewModel.context)
             .snapshotPreferences(expect: dmRoomVerifiedViewModel.context.$viewState.map { state in
-                state.accountOwner != nil
+                state.dmRecipientInfo?.verificationState == .verified
             })
             .previewDisplayName("DM Room Verified")
         

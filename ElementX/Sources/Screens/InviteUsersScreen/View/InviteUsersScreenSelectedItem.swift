@@ -15,6 +15,7 @@ struct InviteUsersScreenSelectedItem: View {
     var body: some View {
         VStack(spacing: 0) {
             avatar
+                .accessibilityHidden(true)
             
             // Tchap: calculate displayname from userId if necessary and displays it in badge if user is external..
             //            Text(user.displayName ?? user.userID)
@@ -29,7 +30,12 @@ struct InviteUsersScreenSelectedItem: View {
                     .lineLimit(1)
             }
         }
+<<<<<<< HEAD
         .frame(maxWidth: 100.0)
+=======
+        .accessibilityElement(children: .combine)
+        .accessibilityAction(named: L10n.actionRemove, dismissAction)
+>>>>>>> release/25.07.0
     }
     
     // MARK: - Private

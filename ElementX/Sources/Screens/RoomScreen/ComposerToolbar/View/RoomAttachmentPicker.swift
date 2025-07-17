@@ -40,12 +40,14 @@ struct RoomAttachmentPicker: View {
             }
             .accessibilityIdentifier(A11yIdentifiers.roomScreen.attachmentPickerTextFormatting)
             
-            Button {
-                context.send(viewAction: .attach(.poll))
-            } label: {
-                Label(L10n.screenRoomAttachmentSourcePoll, icon: \.polls)
+            if !context.viewState.isInThread {
+                Button {
+                    context.send(viewAction: .attach(.poll))
+                } label: {
+                    Label(L10n.screenRoomAttachmentSourcePoll, icon: \.polls)
+                }
+                .accessibilityIdentifier(A11yIdentifiers.roomScreen.attachmentPickerPoll)
             }
-            .accessibilityIdentifier(A11yIdentifiers.roomScreen.attachmentPickerPoll)
             
             if context.viewState.isLocationSharingEnabled {
                 Button {
@@ -95,7 +97,7 @@ struct RoomAttachmentPicker_Previews: PreviewProvider, TestablePreview {
                                                     mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                     appSettings: ServiceLocator.shared.settings,
                                                     analyticsService: ServiceLocator.shared.analytics,
-                                                    composerDraftService: ComposerDraftServiceMock())
+                                                    composerDraftService: ComposerDraftServiceMock(.init()))
 
     static var previews: some View {
         RoomAttachmentPicker(context: viewModel.context)

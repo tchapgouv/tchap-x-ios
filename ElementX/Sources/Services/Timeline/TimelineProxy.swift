@@ -229,15 +229,22 @@ final class TimelineProxy: TimelineProxyProtocol {
     func sendAudio(url: URL,
                    audioInfo: AudioInfo,
                    caption: String?,
+                   threadRootEventID: String?,
                    requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError> {
         MXLog.info("Sending audio")
+        
+        let replyParameters: ReplyParameters? = if let threadRootEventID {
+            ReplyParameters(eventId: threadRootEventID, enforceThread: true, replyWithinThread: false)
+        } else {
+            nil
+        }
         
         do {
             let handle = try timeline.sendAudio(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                               caption: caption,
                                                               formattedCaption: nil, // Rust will build this from the caption's markdown.
                                                               mentions: nil,
-                                                              replyParams: nil,
+                                                              replyParams: replyParameters,
                                                               useSendQueue: true),
                                                 audioInfo: audioInfo,
                                                 progressWatcher: nil)
@@ -257,15 +264,22 @@ final class TimelineProxy: TimelineProxyProtocol {
     func sendFile(url: URL,
                   fileInfo: FileInfo,
                   caption: String?,
+                  threadRootEventID: String?,
                   requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError> {
         MXLog.info("Sending file")
+        
+        let replyParameters: ReplyParameters? = if let threadRootEventID {
+            ReplyParameters(eventId: threadRootEventID, enforceThread: true, replyWithinThread: false)
+        } else {
+            nil
+        }
         
         do {
             let handle = try timeline.sendFile(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                              caption: caption,
                                                              formattedCaption: nil, // Rust will build this from the caption's markdown.
                                                              mentions: nil,
-                                                             replyParams: nil,
+                                                             replyParams: replyParameters,
                                                              useSendQueue: true),
                                                fileInfo: fileInfo,
                                                progressWatcher: nil)
@@ -286,15 +300,22 @@ final class TimelineProxy: TimelineProxyProtocol {
                    thumbnailURL: URL,
                    imageInfo: ImageInfo,
                    caption: String?,
+                   threadRootEventID: String?,
                    requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError> {
         MXLog.info("Sending image")
+        
+        let replyParameters: ReplyParameters? = if let threadRootEventID {
+            ReplyParameters(eventId: threadRootEventID, enforceThread: true, replyWithinThread: false)
+        } else {
+            nil
+        }
         
         do {
             let handle = try timeline.sendImage(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                               caption: caption,
                                                               formattedCaption: nil, // Rust will build this from the caption's markdown.
                                                               mentions: nil,
-                                                              replyParams: nil,
+                                                              replyParams: replyParameters,
                                                               useSendQueue: true),
                                                 thumbnailPath: thumbnailURL.path(percentEncoded: false),
                                                 imageInfo: imageInfo,
@@ -316,16 +337,29 @@ final class TimelineProxy: TimelineProxyProtocol {
                       geoURI: GeoURI,
                       description: String?,
                       zoomLevel: UInt8?,
-                      assetType: AssetType?) async -> Result<Void, TimelineProxyError> {
+                      assetType: AssetType?,
+                      threadRootEventID: String?) async -> Result<Void, TimelineProxyError> {
         MXLog.info("Sending location")
         
-        await timeline.sendLocation(body: body,
-                                    geoUri: geoURI.string,
-                                    description: description,
-                                    zoomLevel: zoomLevel,
-                                    assetType: assetType)
+        let replyParameters: ReplyParameters? = if let threadRootEventID {
+            ReplyParameters(eventId: threadRootEventID, enforceThread: true, replyWithinThread: false)
+        } else {
+            nil
+        }
         
-        MXLog.info("Finished sending location")
+        do {
+            try await timeline.sendLocation(body: body,
+                                            geoUri: geoURI.string,
+                                            description: description,
+                                            zoomLevel: zoomLevel,
+                                            assetType: assetType,
+                                            replyParams: replyParameters)
+            
+            MXLog.info("Finished sending location")
+        } catch {
+            MXLog.error("Failed sending location with error: \(error)")
+            return .failure(.sdkError(error))
+        }
         
         return .success(())
     }
@@ -334,15 +368,22 @@ final class TimelineProxy: TimelineProxyProtocol {
                    thumbnailURL: URL,
                    videoInfo: VideoInfo,
                    caption: String?,
+                   threadRootEventID: String?,
                    requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError> {
         MXLog.info("Sending video")
+        
+        let replyParameters: ReplyParameters? = if let threadRootEventID {
+            ReplyParameters(eventId: threadRootEventID, enforceThread: true, replyWithinThread: false)
+        } else {
+            nil
+        }
         
         do {
             let handle = try timeline.sendVideo(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                               caption: caption,
                                                               formattedCaption: nil,
                                                               mentions: nil,
-                                                              replyParams: nil,
+                                                              replyParams: replyParameters,
                                                               useSendQueue: true),
                                                 thumbnailPath: thumbnailURL.path(percentEncoded: false),
                                                 videoInfo: videoInfo,
@@ -363,15 +404,22 @@ final class TimelineProxy: TimelineProxyProtocol {
     func sendVoiceMessage(url: URL,
                           audioInfo: AudioInfo,
                           waveform: [UInt16],
+                          threadRootEventID: String?,
                           requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError> {
         MXLog.info("Sending voice message")
+        
+        let replyParameters: ReplyParameters? = if let threadRootEventID {
+            ReplyParameters(eventId: threadRootEventID, enforceThread: true, replyWithinThread: false)
+        } else {
+            nil
+        }
         
         do {
             let handle = try timeline.sendVoiceMessage(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                                      caption: nil,
                                                                      formattedCaption: nil,
                                                                      mentions: nil,
-                                                                     replyParams: nil,
+                                                                     replyParams: replyParameters,
                                                                      useSendQueue: true),
                                                        audioInfo: audioInfo,
                                                        waveform: waveform,
@@ -389,8 +437,15 @@ final class TimelineProxy: TimelineProxyProtocol {
         return .success(())
     }
     
+    /// Send a message within a room. If `inReplyToEventID` is specified then it will be sent as a reply
+    /// to that particular message. If the `threadRootEventID` is also specified then it will be sent
+    /// as a reply to the given `inReplyToEventID` within the thread rooted in `threadRootEventID`
+    ///
+    /// Internally `enforceThread` is set to true whenever `threadRootEventID` is specified
+    /// and `replyWithinThread` when `inReplyToEventID` is.
     func sendMessage(_ message: String,
                      html: String?,
+                     threadRootEventID: String?,
                      inReplyToEventID: String? = nil,
                      intentionalMentions: IntentionalMentions) async -> Result<Void, TimelineProxyError> {
         if let inReplyToEventID {
@@ -405,14 +460,18 @@ final class TimelineProxy: TimelineProxyProtocol {
         
         do {
             if let inReplyToEventID {
-                // `enforceThread` will force send the message a thread with `inReplyToEventID` while
-                // `replyWithinThread` will create an in-reply-to associated field *within* that same thread
                 try await timeline.sendReply(msg: messageContent, replyParams: .init(eventId: inReplyToEventID,
-                                                                                     enforceThread: false,
-                                                                                     replyWithinThread: false))
+                                                                                     enforceThread: threadRootEventID != nil,
+                                                                                     replyWithinThread: threadRootEventID != nil))
                 MXLog.info("Finished sending reply to eventID: \(inReplyToEventID)")
             } else {
-                _ = try await timeline.send(msg: messageContent)
+                if let threadRootEventID {
+                    try await timeline.sendReply(msg: messageContent, replyParams: .init(eventId: threadRootEventID,
+                                                                                         enforceThread: true,
+                                                                                         replyWithinThread: false))
+                } else {
+                    _ = try await timeline.send(msg: messageContent)
+                }
                 MXLog.info("Finished sending message")
             }
         } catch {
@@ -470,7 +529,9 @@ final class TimelineProxy: TimelineProxyProtocol {
     
     // MARK: - Polls
 
-    func createPoll(question: String, answers: [String], pollKind: Poll.Kind) async -> Result<Void, TimelineProxyError> {
+    func createPoll(question: String, answers: [String],
+                    pollKind: Poll.Kind,
+                    threadRootEventID: String? = nil) async -> Result<Void, TimelineProxyError> {
         MXLog.info("Creating poll")
         
         do {

@@ -197,6 +197,16 @@ struct HomeScreenRoom: Identifiable, Equatable {
         
     let canonicalAlias: String?
     
+    let isTombstoned: Bool
+    
+    var displayedLastMessage: AttributedString? {
+        // If the room is tombstoned, show a specific message, regardless of any last message.
+        guard !isTombstoned else {
+            return AttributedString(L10n.screenRoomlistTombstonedRoomDescription)
+        }
+        return lastMessage
+    }
+    
     static func placeholder() -> HomeScreenRoom {
         HomeScreenRoom(id: UUID().uuidString,
                        roomID: nil,
@@ -209,7 +219,8 @@ struct HomeScreenRoom: Identifiable, Equatable {
                        timestamp: "Now",
                        lastMessage: placeholderLastMessage,
                        avatar: .room(id: "", name: "", avatarURL: nil),
-                       canonicalAlias: nil)
+                       canonicalAlias: nil,
+                       isTombstoned: false)
     }
 }
 
@@ -246,6 +257,7 @@ extension HomeScreenRoom {
                   timestamp: summary.lastMessageDate?.formattedMinimal(),
                   lastMessage: summary.lastMessage,
                   avatar: summary.avatar,
-                  canonicalAlias: summary.canonicalAlias)
+                  canonicalAlias: summary.canonicalAlias,
+                  isTombstoned: summary.isTombstoned)
     }
 }

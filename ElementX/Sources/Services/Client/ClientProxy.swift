@@ -299,6 +299,17 @@ class ClientProxy: ClientProxyProtocol {
             }
         }
     }
+    
+    var isLiveKitRTCSupported: Bool {
+        get async {
+            do {
+                return try await client.isLivekitRtcSupported()
+            } catch {
+                MXLog.error("Failed checking LiveKit RTC support with error: \(error)")
+                return false
+            }
+        }
+    }
 
     private(set) lazy var pusherNotificationClientIdentifier: String? = {
         // NOTE: The result is stored as part of the restoration token. Any changes
@@ -470,8 +481,11 @@ class ClientProxy: ClientProxyProtocol {
             await waitForRoomToSync(roomID: roomID, timeout: .seconds(30))
             
             return .success(())
+        } catch ClientError.MatrixApi(.unknown, _, _, _) {
+            MXLog.error("Failed joining roomID: \(roomID) invalid invite")
+            return .failure(.invalidInvite)
         } catch ClientError.MatrixApi(.forbidden, _, _, _) {
-            MXLog.error("Failed joining roomAlias: \(roomID) forbidden")
+            MXLog.error("Failed joining roomID: \(roomID) forbidden")
             return .failure(.forbiddenAccess)
         } catch {
             MXLog.error("Failed joining roomID: \(roomID) with error: \(error)")
@@ -486,6 +500,9 @@ class ClientProxy: ClientProxyProtocol {
             await waitForRoomToSync(roomID: room.id(), timeout: .seconds(30))
             
             return .success(())
+        } catch ClientError.MatrixApi(.unknown, _, _, _) {
+            MXLog.error("Failed joining roomAlias: \(roomAlias) invalid invite")
+            return .failure(.invalidInvite)
         } catch ClientError.MatrixApi(.forbidden, _, _, _) {
             MXLog.error("Failed joining roomAlias: \(roomAlias) forbidden")
             return .failure(.forbiddenAccess)
@@ -738,7 +755,7 @@ class ClientProxy: ClientProxyProtocol {
     
     func clearCaches() async -> Result<Void, ClientProxyError> {
         do {
-            return try await .success(client.clearCaches())
+            return try await .success(client.clearCaches(syncService: syncService))
         } catch {
             MXLog.error("Failed clearing client caches with error: \(error)")
             return .failure(.sdkError(error))
@@ -991,7 +1008,8 @@ class ClientProxy: ClientProxyProtocol {
                 return try await .knocked(KnockedRoomProxy(room: room))
             case .joined:
                 let roomProxy = try await JoinedRoomProxy(roomListService: roomListService,
-                                                          room: room)
+                                                          room: room,
+                                                          appSettings: appSettings)
                 
                 return .joined(roomProxy)
             case .left:

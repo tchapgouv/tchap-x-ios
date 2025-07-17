@@ -25,6 +25,7 @@ struct RoomScreenCoordinatorParameters {
     let ongoingCallRoomIDPublisher: CurrentValuePublisher<String?, Never>
     let appMediator: AppMediatorProtocol
     let appSettings: AppSettings
+    let appHooks: AppHooks
     let composerDraftService: ComposerDraftServiceProtocol
     let timelineControllerFactory: TimelineControllerFactoryProtocol
 }
@@ -45,13 +46,13 @@ enum RoomScreenCoordinatorAction {
     case presentResolveSendFailure(failure: TimelineItemSendFailure.VerifiedUser, sendHandle: SendHandleProxy)
     case presentKnockRequestsList
     case presentThread(itemID: TimelineItemIdentifier)
+    case presentRoom(roomID: String)
 }
 
 final class RoomScreenCoordinator: CoordinatorProtocol {
     private var roomViewModel: RoomScreenViewModelProtocol
     private var timelineViewModel: TimelineViewModelProtocol
     private var composerViewModel: ComposerToolbarViewModelProtocol
-    private var wysiwygViewModel: WysiwygComposerViewModel
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -73,6 +74,7 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                                             ongoingCallRoomIDPublisher: parameters.ongoingCallRoomIDPublisher,
                                             appMediator: parameters.appMediator,
                                             appSettings: parameters.appSettings,
+                                            appHooks: parameters.appHooks,
                                             analyticsService: ServiceLocator.shared.analytics,
                                             userIndicatorController: ServiceLocator.shared.userIndicatorController)
         
@@ -89,13 +91,14 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                                               emojiProvider: parameters.emojiProvider,
                                               timelineControllerFactory: parameters.timelineControllerFactory,
                                               clientProxy: parameters.clientProxy)
-
-        wysiwygViewModel = WysiwygComposerViewModel(minHeight: ComposerConstant.minHeight,
-                                                    maxCompressedHeight: ComposerConstant.maxHeight,
-                                                    maxExpandedHeight: ComposerConstant.maxHeight,
-                                                    parserStyle: .elementX)
+        
+        let wysiwygViewModel = WysiwygComposerViewModel(minHeight: ComposerConstant.minHeight,
+                                                        maxCompressedHeight: ComposerConstant.maxHeight,
+                                                        maxExpandedHeight: ComposerConstant.maxHeight,
+                                                        parserStyle: .elementX)
         let composerViewModel = ComposerToolbarViewModel(initialText: parameters.sharedText,
                                                          roomProxy: parameters.roomProxy,
+                                                         isInThread: false,
                                                          wysiwygViewModel: wysiwygViewModel,
                                                          completionSuggestionService: parameters.completionSuggestionService,
                                                          mediaProvider: parameters.mediaProvider,
@@ -104,11 +107,6 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                                                          analyticsService: ServiceLocator.shared.analytics,
                                                          composerDraftService: parameters.composerDraftService)
         self.composerViewModel = composerViewModel
-        
-        NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification).sink { _ in
-            composerViewModel.saveDraft()
-        }
-        .store(in: &cancellables)
     }
     
     // MARK: - Public
@@ -151,6 +149,8 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                     composerViewModel.process(timelineAction: action)
                 case .hasScrolled(direction: let direction):
                     roomViewModel.timelineHasScrolled(direction: direction)
+                case .displayRoom(let roomID):
+                    actionsSubject.send(.presentRoom(roomID: roomID))
                 case .viewInRoomTimeline:
                     fatalError("The action: \(action) should not be sent to this coordinator")
                 }
@@ -182,12 +182,15 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                     composerViewModel.process(timelineAction: .removeFocus)
                 case .displayKnockRequests:
                     actionsSubject.send(.presentKnockRequestsList)
+                case .displayRoom(let roomID):
+                    actionsSubject.send(.presentRoom(roomID: roomID))
                 }
             }
             .store(in: &cancellables)
         
-        // Loading the draft requires the subscriptions to be set up first otherwise the room won't be be able to propagate the information to the composer.
-        Task { await composerViewModel.loadDraft() }
+        // Loading the draft requires the subscriptions to be set up first otherwise
+        // the room won't be be able to propagate the information to the composer.
+        composerViewModel.start()
     }
     
     func focusOnEvent(_ focussedEvent: FocusEvent) {
@@ -205,21 +208,16 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
     }
     
     func stop() {
-        composerViewModel.saveDraft()
+        composerViewModel.stop()
         roomViewModel.stop()
     }
     
     func toPresentable() -> AnyView {
-        let composerToolbar = ComposerToolbar(context: composerViewModel.context,
-                                              wysiwygViewModel: wysiwygViewModel,
-                                              keyCommands: composerViewModel.keyCommands)
+        let composerToolbar = ComposerToolbar(context: composerViewModel.context)
 
-        return AnyView(RoomScreen(roomViewModel: roomViewModel,
-                                  timelineViewModel: timelineViewModel,
-                                  composerToolbar: composerToolbar)
-                .onDisappear { [weak self] in
-                    self?.composerViewModel.saveDraft()
-                })
+        return AnyView(RoomScreen(context: roomViewModel.context,
+                                  timelineContext: timelineViewModel.context,
+                                  composerToolbar: composerToolbar))
     }
 }
 
@@ -228,21 +226,4 @@ enum ComposerConstant {
     static let maxHeight: CGFloat = 250
     static let allowedHeightRange = minHeight...maxHeight
     static let translationThreshold: CGFloat = 60
-}
-
-private extension HTMLParserStyle {
-    static let elementX = HTMLParserStyle(textColor: UIColor.label,
-                                          linkColor: UIColor.link,
-                                          codeBlockStyle: BlockStyle(backgroundColor: UIColor.compound._bgCodeBlock,
-                                                                     borderColor: UIColor.compound.borderInteractiveSecondary,
-                                                                     borderWidth: 1.0,
-                                                                     cornerRadius: 2.0,
-                                                                     padding: BlockStyle.Padding(horizontal: 10, vertical: 12),
-                                                                     type: .background),
-                                          quoteBlockStyle: BlockStyle(backgroundColor: UIColor.compound.iconTertiary,
-                                                                      borderColor: UIColor.compound.borderInteractiveSecondary,
-                                                                      borderWidth: 0.0,
-                                                                      cornerRadius: 0.0,
-                                                                      padding: BlockStyle.Padding(horizontal: 25, vertical: 12),
-                                                                      type: .side(offset: 5, width: 4)))
 }

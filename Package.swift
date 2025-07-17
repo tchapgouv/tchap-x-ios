@@ -1,4 +1,4 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -6,16 +6,16 @@ import PackageDescription
 let package = Package(
     name: "Element Swift",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v14)
     ],
     products: [
         .executable(name: "tools", targets: ["Tools"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMinor(from: "1.5.1")),
+        .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMinor(from: "1.6.0")),
         .package(url: "https://github.com/element-hq/swift-command-line-tools.git", revision: "e5eaab1558ef664e6cd80493f64259381670fb3a"),
         // .package(path: "../../../swift-command-line-tools"),
-        .package(url: "https://github.com/jpsim/Yams", .upToNextMinor(from: "6.0.0"))
+        .package(url: "https://github.com/jpsim/Yams", .upToNextMinor(from: "6.0.2"))
     ],
     targets: [
         .executableTarget(name: "Tools",

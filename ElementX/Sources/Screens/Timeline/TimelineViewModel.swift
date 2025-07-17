@@ -92,7 +92,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         case .always:
             false
         case .privateOnly:
-            !roomProxy.infoPublisher.value.isPrivate
+            !(roomProxy.infoPublisher.value.isPrivate ?? true)
         case .never:
             true
         }
@@ -104,6 +104,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                                                        isViewSourceEnabled: appSettings.viewSourceEnabled,
                                                        areThreadsEnabled: appSettings.threadsEnabled,
                                                        hideTimelineMedia: hideTimelineMedia,
+                                                       hasPredecessor: roomProxy.predecessorRoom != nil,
                                                        pinnedEventIDs: roomProxy.infoPublisher.value.pinnedEventIDs,
                                                        emojiProvider: emojiProvider,
                                                        mapTilerConfiguration: appSettings.mapTilerConfiguration,
@@ -118,9 +119,6 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         setupSubscriptions()
         setupDirectRoomSubscriptionsIfNeeded()
         
-        // Set initial values for redacting from the macOS context menu.
-        Task { await updatePermissions() }
-
         state.audioPlayerStateProvider = { [weak self] itemID -> AudioPlayerState? in
             guard let self else {
                 return nil
@@ -144,6 +142,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         state.timelineState.paginationState = timelineController.paginationState
         buildTimelineViews(timelineItems: timelineController.timelineItems)
         
+        updateRoomInfo(roomProxy.infoPublisher.value)
         updateMembers(roomProxy.membersPublisher.value)
 
         // Note: beware if we get to e.g. restore a reply / edit,
@@ -211,6 +210,11 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             actionsSubject.send(.hasScrolled(direction: direction))
         case .setOpenURLAction(let action):
             state.openURL = action
+        case .displayPredecessorRoom:
+            guard let predecessorID = roomProxy.predecessorRoom?.roomId else {
+                fatalError("Predecessor room should exist if this action is triggered.")
+            }
+            actionsSubject.send(.displayRoom(roomID: predecessorID))
         }
     }
 
@@ -397,35 +401,16 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         }
     }
     
-    private func updatePermissions() async {
-        if case let .success(value) = await roomProxy.canUserRedactOther(userID: roomProxy.ownUserID) {
-            state.canCurrentUserRedactOthers = value
-        } else {
-            state.canCurrentUserRedactOthers = false
-        }
+    private func updateRoomInfo(_ roomInfo: RoomInfoProxyProtocol) {
+        state.pinnedEventIDs = roomInfo.pinnedEventIDs
         
-        if case let .success(value) = await roomProxy.canUserRedactOwn(userID: roomProxy.ownUserID) {
-            state.canCurrentUserRedactSelf = value
-        } else {
-            state.canCurrentUserRedactSelf = false
-        }
-        
-        if case let .success(value) = await roomProxy.canUserPinOrUnpin(userID: roomProxy.ownUserID) {
-            state.canCurrentUserPin = value
-        } else {
-            state.canCurrentUserPin = false
-        }
-        
-        if case let .success(value) = await roomProxy.canUserKick(userID: roomProxy.ownUserID) {
-            state.canCurrentUserKick = value
-        } else {
-            state.canCurrentUserKick = false
-        }
-        
-        if case let .success(value) = await roomProxy.canUserBan(userID: roomProxy.ownUserID) {
-            state.canCurrentUserBan = value
-        } else {
-            state.canCurrentUserBan = false
+        if let powerLevels = roomInfo.powerLevels {
+            state.canCurrentUserSendMessage = powerLevels.canOwnUser(sendMessage: .roomMessage)
+            state.canCurrentUserRedactOthers = powerLevels.canOwnUserRedactOther()
+            state.canCurrentUserRedactSelf = powerLevels.canOwnUserRedactOwn()
+            state.canCurrentUserPin = powerLevels.canOwnUserPinOrUnpin()
+            state.canCurrentUserKick = powerLevels.canOwnUserKick()
+            state.canCurrentUserBan = powerLevels.canOwnUserBan()
         }
     }
     
@@ -455,17 +440,12 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             }
             .store(in: &cancellables)
 
-        let roomInfoSubscription = roomProxy.infoPublisher
-        Task { [weak self] in
-            for await roomInfo in roomInfoSubscription.receive(on: DispatchQueue.main).values {
-                guard !Task.isCancelled else {
-                    return
-                }
-                self?.state.pinnedEventIDs = roomInfo.pinnedEventIDs
-                await self?.updatePermissions()
+        roomProxy.infoPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] roomInfo in
+                self?.updateRoomInfo(roomInfo)
             }
-        }
-        .store(in: &cancellables)
+            .store(in: &cancellables)
         
         setupAppSettingsSubscriptions()
         
@@ -503,14 +483,13 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                 case .displayMediaUploadPreviewScreen(let url):
                     actionsSubject.send(.displayMediaUploadPreviewScreen(url: url))
                 case .showActionMenu(let actionMenuInfo):
-                    Task {
-                        await self.updatePermissions()
-                        self.state.bindings.actionMenuInfo = actionMenuInfo
-                    }
+                    self.state.bindings.actionMenuInfo = actionMenuInfo
                 case .showDebugInfo(let debugInfo):
                     state.bindings.debugInfo = debugInfo
                 case .viewInRoomTimeline(let eventID):
                     actionsSubject.send(.viewInRoomTimeline(eventID: eventID))
+                case .displayThread(let itemID):
+                    actionsSubject.send(.displayThread(itemID: itemID))
                 }
             }
             .store(in: &cancellables)
@@ -525,6 +504,10 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             .weakAssign(to: \.state.isViewSourceEnabled, on: self)
             .store(in: &cancellables)
         
+        appSettings.$threadsEnabled
+            .weakAssign(to: \.state.areThreadsEnabled, on: self)
+            .store(in: &cancellables)
+        
         clientProxy.timelineMediaVisibilityPublisher
             .removeDuplicates()
             .flatMap { [weak self] timelineMediaVisibility -> AnyPublisher<Bool, Never> in
@@ -536,7 +519,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                 case .privateOnly:
                     guard let self else { return Just(false).eraseToAnyPublisher() }
                     return roomProxy.infoPublisher
-                        .map { !$0.isPrivate }
+                        .map { !($0.isPrivate ?? false) }
                         .removeDuplicates()
                         .eraseToAnyPublisher()
                 }
@@ -1006,23 +989,17 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     }
 }
 
-private extension RoomInfoProxy {
-    /// Checks if the other person left the room in a direct chat
-    var isUserAloneInDirectRoom: Bool {
-        isDirect && activeMembersCount == 1
-    }
-}
-
 // MARK: - Mocks
 
 extension TimelineViewModel {
     static let mock = mock(timelineKind: .live)
     
-    static func mock(timelineKind: TimelineKind = .live, timelineController: MockTimelineController? = nil) -> TimelineViewModel {
+    static func mock(timelineKind: TimelineKind = .live, timelineController: MockTimelineController? = nil, hasPredecessor: Bool = false) -> TimelineViewModel {
         let clientProxyMock = ClientProxyMock(.init())
         clientProxyMock.roomSummaryForAliasReturnValue = .mock(id: "!room:matrix.org", name: "Room")
         clientProxyMock.roomSummaryForIdentifierReturnValue = .mock(id: "!room:matrix.org", name: "Room", canonicalAlias: "#room:matrix.org")
-        return TimelineViewModel(roomProxy: JoinedRoomProxyMock(.init(name: "Preview room")),
+        let roomProxy = JoinedRoomProxyMock(.init(name: "Preview room", predecessor: hasPredecessor ? .init(roomId: UUID().uuidString, lastEventId: UUID().uuidString) : nil))
+        return TimelineViewModel(roomProxy: roomProxy,
                                  focussedEventID: nil,
                                  timelineController: timelineController ?? MockTimelineController(timelineKind: timelineKind),
                                  mediaProvider: MediaProviderMock(configuration: .init()),

@@ -140,12 +140,14 @@ class TimelineMediaPreviewViewModel: TimelineMediaPreviewViewModelType {
         state.currentItemActions = switch state.currentItem {
         case .media(let mediaItem):
             TimelineItemMenuActionProvider(timelineItem: mediaItem.timelineItem,
+                                           canCurrentUserSendMessage: timelineContext.viewState.canCurrentUserSendMessage,
                                            canCurrentUserRedactSelf: timelineContext.viewState.canCurrentUserRedactSelf,
                                            canCurrentUserRedactOthers: timelineContext.viewState.canCurrentUserRedactOthers,
                                            canCurrentUserPin: timelineContext.viewState.canCurrentUserPin,
                                            pinnedEventIDs: timelineContext.viewState.pinnedEventIDs,
                                            isDM: timelineContext.viewState.isDirectOneToOneRoom,
                                            isViewSourceEnabled: timelineContext.viewState.isViewSourceEnabled,
+                                           areThreadsEnabled: timelineContext.viewState.areThreadsEnabled,
                                            timelineKind: timelineContext.viewState.timelineKind,
                                            emojiProvider: timelineContext.viewState.emojiProvider)
                 .makeActions()
