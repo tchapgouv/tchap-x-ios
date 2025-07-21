@@ -19,7 +19,7 @@ screen_onboarding_welcome_message = "The civil servants instant messaging system
 screen_onboarding_welcome_qrcode_header = "Already logged on a computer?";
 screen_onboarding_welcome_or_between_buttons = "or";
 
-screen_login_title_with_tchap = "Connect to Tchap";
+screen_login_title_with_tchap = "Sign in to Tchap";
 screen_login_description_with_tchap = "Instant messaging of public sector";
 
 screen_create_room_selected_users_label = "Members";
