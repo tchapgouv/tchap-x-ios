@@ -268,7 +268,10 @@ struct AttributedStringBuilder: AttributedStringBuilderProtocol {
         attributedString.enumerateAttribute(.link, in: .init(location: 0, length: attributedString.length), options: []) { value, range, _ in
             if value != nil {
                 if let url = value as? URL,
-                   let matrixEntity = parseMatrixEntityFrom(uri: url.absoluteString) {
+                   // Tchap: handle permalinks
+                   //                   let matrixEntity = parseMatrixEntityFrom(uri: url.absoluteString) {
+                   let tchapPermalink = TchapPermalinks.convert(permalinkUri: url),
+                   let matrixEntity = parseMatrixEntityFrom(uri: tchapPermalink.absoluteString) {
                     switch matrixEntity.id {
                     case .user(let userID):
                         mentionBuilder.handleUserMention(for: attributedString, in: range, url: url, userID: userID, userDisplayName: nil)

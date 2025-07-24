@@ -27,30 +27,59 @@ class PermalinkTests: XCTestCase {
     
     func testPermalinkDetection() {
         var url: URL = "https://www.matrix.org"
-        XCTAssertNil(parseMatrixEntityFrom(uri: url.absoluteString))
-        
+        // Tchap: handle permalinks
+//        XCTAssertNil(parseMatrixEntityFrom(uri: url.absoluteString))
+        let tchapNilUrl = URL(string: "")! // swiftlint:disable:this force_unwrapping
+        var tchapPermalink = TchapPermalinks.convert(permalinkUri: url) ?? tchapNilUrl
+        XCTAssert(parseMatrixEntityFrom(uri: tchapPermalink.absoluteString) == nil)
+
         url = "https://matrix.to/#/@bob:matrix.org?via=matrix.org"
-        XCTAssertEqual(parseMatrixEntityFrom(uri: url.absoluteString),
+        // Tchap: handle permalinks
+//        XCTAssertEqual(parseMatrixEntityFrom(uri: url.absoluteString),
+//                       MatrixEntity(id: .user(id: "@bob:matrix.org"),
+//                                    via: ["matrix.org"]))
+        tchapPermalink = TchapPermalinks.convert(permalinkUri: url) ?? tchapNilUrl
+        XCTAssertEqual(parseMatrixEntityFrom(uri: tchapPermalink.absoluteString),
                        MatrixEntity(id: .user(id: "@bob:matrix.org"),
                                     via: ["matrix.org"]))
         
         url = "https://matrix.to/#/!roomidentifier:matrix.org?via=matrix.org"
-        XCTAssertEqual(parseMatrixEntityFrom(uri: url.absoluteString),
+        // Tchap: handle permalinks
+//        XCTAssertEqual(parseMatrixEntityFrom(uri: url.absoluteString),
+//                       MatrixEntity(id: .room(id: "!roomidentifier:matrix.org"),
+//                                    via: ["matrix.org"]))
+        tchapPermalink = TchapPermalinks.convert(permalinkUri: url) ?? tchapNilUrl
+        XCTAssertEqual(parseMatrixEntityFrom(uri: tchapPermalink.absoluteString),
                        MatrixEntity(id: .room(id: "!roomidentifier:matrix.org"),
                                     via: ["matrix.org"]))
-        
+
         url = "https://matrix.to/#/%23roomalias:matrix.org?via=matrix.org"
-        XCTAssertEqual(parseMatrixEntityFrom(uri: url.absoluteString),
+        // Tchap: handle permalinks
+//        XCTAssertEqual(parseMatrixEntityFrom(uri: url.absoluteString),
+//                       MatrixEntity(id: .roomAlias(alias: "#roomalias:matrix.org"),
+//                                    via: ["matrix.org"]))
+        tchapPermalink = TchapPermalinks.convert(permalinkUri: url) ?? tchapNilUrl
+        XCTAssertEqual(parseMatrixEntityFrom(uri: tchapPermalink.absoluteString),
                        MatrixEntity(id: .roomAlias(alias: "#roomalias:matrix.org"),
                                     via: ["matrix.org"]))
-        
+
         url = "https://matrix.to/#/!roomidentifier:matrix.org/$eventidentifier?via=matrix.org"
-        XCTAssertEqual(parseMatrixEntityFrom(uri: url.absoluteString),
+        // Tchap: handle permalinks
+//        XCTAssertEqual(parseMatrixEntityFrom(uri: url.absoluteString),
+//                       MatrixEntity(id: .eventOnRoomId(roomId: "!roomidentifier:matrix.org", eventId: "$eventidentifier"),
+//                                    via: ["matrix.org"]))
+        tchapPermalink = TchapPermalinks.convert(permalinkUri: url) ?? tchapNilUrl
+        XCTAssertEqual(parseMatrixEntityFrom(uri: tchapPermalink.absoluteString),
                        MatrixEntity(id: .eventOnRoomId(roomId: "!roomidentifier:matrix.org", eventId: "$eventidentifier"),
                                     via: ["matrix.org"]))
-        
+
         url = "https://matrix.to/#/#roomalias:matrix.org/$eventidentifier?via=matrix.org"
-        XCTAssertEqual(parseMatrixEntityFrom(uri: url.absoluteString),
+        // Tchap: handle permalinks
+//        XCTAssertEqual(parseMatrixEntityFrom(uri: url.absoluteString),
+//                       MatrixEntity(id: .eventOnRoomAlias(alias: "#roomalias:matrix.org", eventId: "$eventidentifier"),
+//                                    via: ["matrix.org"]))
+        tchapPermalink = TchapPermalinks.convert(permalinkUri: url) ?? tchapNilUrl
+        XCTAssertEqual(parseMatrixEntityFrom(uri: tchapPermalink.absoluteString),
                        MatrixEntity(id: .eventOnRoomAlias(alias: "#roomalias:matrix.org", eventId: "$eventidentifier"),
                                     via: ["matrix.org"]))
     }

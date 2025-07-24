@@ -616,8 +616,10 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
     
     private func parseUserMentionsMarkdown(_ text: String, callback: (NSRange, URL) -> Void) {
         // Define the regex pattern
-        let pattern = "\\[(.*?)\\]\\(https://matrix\\.to/#/(@.*?)\\)"
-        
+        // Tchap: handle Tchap permalinks
+//        let pattern = "\\[(.*?)\\]\\(https://matrix\\.to/#/(@.*?)\\)"
+        let pattern = "\\[(.*?)\\]\\(https://tchap\\.gouv\\.fr/#/(@.*?)\\)"
+
         // Create the regex
         guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
             return
@@ -636,8 +638,10 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
             let fullRange = match.range(at: 0)
             
             let userID = nsText.substring(with: userIDRange)
-            let fullURLString = "https://matrix.to/#/\(userID)"
-            
+            // Tchap: handfle Tchap permalinks
+//            let fullURLString = "https://matrix.to/#/\(userID)"
+            let fullURLString = "\(TchapPermalinks.TCHAP_PERMALINK_BASE_URL)\(userID)"
+
             if let url = URL(string: fullURLString) {
                 callback(fullRange, url)
             }
