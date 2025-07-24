@@ -62,7 +62,10 @@ enum PhishingDetector {
     
     private static func isMatrixUserIDPhishingAttempt(internalURL: URL, identifier: String) -> Bool {
         // if is not a matrix entity then is a phishing attempt
-        guard let internalMatrixEntity = parseMatrixEntityFrom(uri: internalURL.absoluteString) else {
+        // Tchap: handle permalinks
+//        guard let internalMatrixEntity = parseMatrixEntityFrom(uri: internalURL.absoluteString) else {
+        guard let tchapPermalink = TchapPermalinks.convert(permalinkUri: internalURL),
+              let internalMatrixEntity = parseMatrixEntityFrom(uri: tchapPermalink.absoluteString) else {
             return true
         }
         
@@ -79,7 +82,10 @@ enum PhishingDetector {
     
     private static func isRoomAliasPhishingAttempt(internalURL: URL, alias: String) -> Bool {
         // if is not a matrix entity then is a phishing attempt
-        guard let internalMatrixEntity = parseMatrixEntityFrom(uri: internalURL.absoluteString) else {
+        // Tchap: handle permalinks
+//        guard let internalMatrixEntity = parseMatrixEntityFrom(uri: internalURL.absoluteString) else {
+        guard let tchapPermalink = TchapPermalinks.convert(permalinkUri: internalURL),
+              let internalMatrixEntity = parseMatrixEntityFrom(uri: tchapPermalink.absoluteString) else {
             return true
         }
         

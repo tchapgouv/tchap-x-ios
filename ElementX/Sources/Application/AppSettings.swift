@@ -209,8 +209,17 @@ final class AppSettings {
     private(set) var chatBackupDetailsURL: URL = "https://element.io/help#encryption5"
     /// A URL where users can go read more about identity pinning violations
     private(set) var identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
+    // Tchap: handle Tchap permalinks
     /// Any domains that Element web may be hosted on - used for handling links.
+    #if IS_MAIN_APP
+    private(set) var elementWebHosts = ["www.tchap.gouv.fr", "tchap.gouv.fr"]
+    #elseif IS_STAGING_APP
+    private(set) var elementWebHosts = ["app.preprod.tchap.gouv.fr"]
+    #elseif IS_DEVELOPMENT_APP
+    private(set) var elementWebHosts = ["https://www.tchap.incubateur.net"]
+    #else
     private(set) var elementWebHosts = ["app.element.io", "staging.element.io", "develop.element.io"]
+    #endif
     /// The domain that account provisioning links will be hosted on - used for handling the links.
     private(set) var accountProvisioningHost = "mobile.element.io"
     

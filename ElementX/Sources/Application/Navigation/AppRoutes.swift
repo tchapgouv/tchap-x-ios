@@ -169,8 +169,11 @@ private struct ElementCallURLParser: URLParser {
 
 private struct MatrixPermalinkParser: URLParser {
     func route(from url: URL) -> AppRoute? {
-        guard let entity = parseMatrixEntityFrom(uri: url.absoluteString) else { return nil }
-        
+        // Tchap: handle permalinks
+//        guard let entity = parseMatrixEntityFrom(uri: url.absoluteString) else { return nil }
+        guard let tchapPermalink = TchapPermalinks.convert(permalinkUri: url),
+              let entity = parseMatrixEntityFrom(uri: tchapPermalink.absoluteString) else { return nil }
+
         switch entity.id {
         case .room(let id):
             return .room(roomID: id, via: entity.via)
@@ -203,7 +206,9 @@ private struct ElementWebURLParser: URLParser {
         }
         
         for domain in domains where domain == url.host {
-            components.host = "matrix.to"
+            // Tchap: handle Tchap permalinks here because we don't call Rust-SDK.
+//            components.host = "matrix.to"
+            components.host = "tchap.gouv.fr"
             for path in paths {
                 components.fragment?.replace("/\(path)", with: "")
             }

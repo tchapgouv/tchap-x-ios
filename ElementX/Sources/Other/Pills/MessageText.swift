@@ -132,7 +132,10 @@ struct MessageText: UIViewRepresentable {
                 return false
             case .preview:
                 // We don't want to show a URL preview for permalinks
-                return parseMatrixEntityFrom(uri: URL.absoluteString) == nil
+                // Tchap: handle permalinks
+//                return parseMatrixEntityFrom(uri: URL.absoluteString) == nil
+                let tchapPermalink = TchapPermalinks.convert(permalinkUri: URL)
+                return tchapPermalink == nil || parseMatrixEntityFrom(uri: tchapPermalink!.absoluteString) == nil // swiftlint:disable:this force_unwrapping
             default:
                 return true
             }
@@ -146,7 +149,10 @@ struct MessageText: UIViewRepresentable {
                     return nil
                 }
                 // We don't want to show a URL preview for permalinks
-                let isPermalink = parseMatrixEntityFrom(uri: url.absoluteString) != nil
+                // Tchap: handle permalinks
+//                let isPermalink = parseMatrixEntityFrom(uri: url.absoluteString) != nil
+                let tchapPermalink = TchapPermalinks.convert(permalinkUri: url)
+                let isPermalink = tchapPermalink != nil && parseMatrixEntityFrom(uri: tchapPermalink!.absoluteString) != nil // swiftlint:disable:this force_unwrapping
                 return .init(preview: isPermalink ? nil : .default, menu: defaultMenu)
             default:
                 return nil
