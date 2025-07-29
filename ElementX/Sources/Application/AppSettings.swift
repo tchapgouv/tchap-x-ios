@@ -19,6 +19,7 @@ protocol CommonSettingsProtocol {
     var enableOnlySignedDeviceIsolationMode: Bool { get }
     var enableKeyShareOnInvite: Bool { get }
     var hideQuietNotificationAlerts: Bool { get }
+    var threadsEnabled: Bool { get }
 }
 
 /// Store Element specific app settings.
@@ -45,7 +46,6 @@ final class AppSettings {
         case optimizeMediaUploads
         case appAppearance
         case sharePresence
-        case isNewBloomEnabled
         
         case elementCallBaseURLOverride
         
@@ -57,6 +57,7 @@ final class AppSettings {
         case knockingEnabled
         case threadsEnabled
         case developerOptionsEnabled
+        case sharePosEnabled
         
         // Doug's tweaks 🔧
         case hideUnreadMessagesBadge
@@ -414,14 +415,11 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.knockingEnabled, defaultValue: false, storageType: .userDefaults(store))
     var knockingEnabled
     
-    @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var threadsEnabled
-    
     @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
     var developerOptionsEnabled
     
-    @UserPreference(key: UserDefaultsKeys.isNewBloomEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var isNewBloomEnabled
+    @UserPreference(key: UserDefaultsKeys.sharePosEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var sharePosEnabled
     
     #endif
     
@@ -443,6 +441,9 @@ final class AppSettings {
 
     @UserPreference(key: UserDefaultsKeys.hideQuietNotificationAlerts, defaultValue: false, storageType: .userDefaults(store))
     var hideQuietNotificationAlerts
+    
+    @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var threadsEnabled
 }
 
 extension AppSettings: CommonSettingsProtocol { }

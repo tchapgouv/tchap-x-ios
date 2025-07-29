@@ -9,8 +9,15 @@ import Compound
 import SwiftUI
 
 struct BadgeLabel: View {
+    enum Style {
+        case accent
+        case info
+        case `default`
+    }
+    
     let title: String
     let icon: KeyPath<CompoundIcons, Image>
+<<<<<<< HEAD
     let isHighlighted: Bool
     let tchapUsage: TchapBadgeLabelUsage? // Tchap: Tchap usage, nil if use ElementX default design.
 
@@ -26,12 +33,16 @@ struct BadgeLabel: View {
         self.isHighlighted = isHighlighted
         self.tchapUsage = tchapUsage
     }
+=======
+    let style: Style
+>>>>>>> release/25.07.2
     
     var body: some View {
         Label(title,
               icon: icon,
               iconSize: iconSize, // Tchap: use our own icon size
               relativeTo: .compound.bodySM)
+<<<<<<< HEAD
             .labelStyle(BadgeLabelStyle(isHighlighted: isHighlighted, tchapUsage: tchapUsage)) // Tchap: add tchapUsage property.
     }
 }
@@ -82,6 +93,51 @@ private struct BadgeLabelStyle: LabelStyle {
         // Tchap: use RoundedRectangle rather than capsule. It is more DSFR friendly.
 //        .background(Capsule().fill(backgroundColor))
         .background(RoundedRectangle(cornerSize: CGSize(width: 4.0, height: 4.0)).fill(backgroundColor))
+=======
+            .labelStyle(LabelStyle(style: style))
+    }
+    
+    private struct LabelStyle: SwiftUI.LabelStyle {
+        let style: Style
+        
+        var titleColor: Color {
+            switch style {
+            case .accent: .compound.textBadgeAccent
+            case .info: .compound.textBadgeInfo
+            case .default: .compound.textPrimary
+            }
+        }
+        
+        var iconColor: Color {
+            switch style {
+            case .accent: .compound.iconAccentPrimary
+            case .info: .compound.iconInfoPrimary
+            case .default: .compound.iconPrimary
+            }
+        }
+        
+        var backgroundColor: Color {
+            switch style {
+            case .accent: .compound.bgBadgeAccent
+            case .info: .compound.bgBadgeInfo
+            case .default: .compound.bgBadgeDefault
+            }
+        }
+        
+        func makeBody(configuration: Configuration) -> some View {
+            HStack(spacing: 4) {
+                configuration.icon
+                    .foregroundStyle(iconColor)
+                configuration.title
+                    .foregroundStyle(titleColor)
+            }
+            .font(.compound.bodySM)
+            .padding(.leading, 8)
+            .padding(.trailing, 12)
+            .padding(.vertical, 4)
+            .background(Capsule().fill(backgroundColor))
+        }
+>>>>>>> release/25.07.2
     }
 }
 
@@ -90,10 +146,13 @@ struct BadgeLabel_Previews: PreviewProvider, TestablePreview {
         VStack(spacing: 10) {
             BadgeLabel(title: "Encrypted",
                        icon: \.lockSolid,
-                       isHighlighted: true)
+                       style: .accent)
             BadgeLabel(title: "Not encrypted",
                        icon: \.lockSolid,
-                       isHighlighted: false)
+                       style: .info)
+            BadgeLabel(title: "1234",
+                       icon: \.userProfile,
+                       style: .default)
         }
     }
 }
