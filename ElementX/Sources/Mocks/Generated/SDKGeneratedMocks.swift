@@ -3031,6 +3031,52 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         try await loginWithOidcCallbackCallbackUrlClosure?(callbackUrl)
     }
 
+    //MARK: - loginWithQrCode
+
+    open var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerThrowableError: Error?
+    var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount = 0
+    open var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerCalled: Bool {
+        return loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerCallsCount > 0
+    }
+    open var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerReceivedArguments: (qrCodeData: QrCodeData, oidcConfiguration: OidcConfiguration, progressListener: QrLoginProgressListener)?
+    open var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerReceivedInvocations: [(qrCodeData: QrCodeData, oidcConfiguration: OidcConfiguration, progressListener: QrLoginProgressListener)] = []
+    open var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerClosure: ((QrCodeData, OidcConfiguration, QrLoginProgressListener) async throws -> Void)?
+
+    open override func loginWithQrCode(qrCodeData: QrCodeData, oidcConfiguration: OidcConfiguration, progressListener: QrLoginProgressListener) async throws {
+        if let error = loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerThrowableError {
+            throw error
+        }
+        loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerCallsCount += 1
+        loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerReceivedArguments = (qrCodeData: qrCodeData, oidcConfiguration: oidcConfiguration, progressListener: progressListener)
+        DispatchQueue.main.async {
+            self.loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerReceivedInvocations.append((qrCodeData: qrCodeData, oidcConfiguration: oidcConfiguration, progressListener: progressListener))
+        }
+        try await loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerClosure?(qrCodeData, oidcConfiguration, progressListener)
+    }
+
     //MARK: - logout
 
     open var logoutThrowableError: Error?
@@ -5062,16 +5108,16 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
 
     //MARK: - urlForOidc
 
-    open var urlForOidcOidcConfigurationPromptLoginHintThrowableError: Error?
-    var urlForOidcOidcConfigurationPromptLoginHintUnderlyingCallsCount = 0
-    open var urlForOidcOidcConfigurationPromptLoginHintCallsCount: Int {
+    open var urlForOidcOidcConfigurationPromptLoginHintDeviceIdThrowableError: Error?
+    var urlForOidcOidcConfigurationPromptLoginHintDeviceIdUnderlyingCallsCount = 0
+    open var urlForOidcOidcConfigurationPromptLoginHintDeviceIdCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return urlForOidcOidcConfigurationPromptLoginHintUnderlyingCallsCount
+                return urlForOidcOidcConfigurationPromptLoginHintDeviceIdUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = urlForOidcOidcConfigurationPromptLoginHintUnderlyingCallsCount
+                    returnValue = urlForOidcOidcConfigurationPromptLoginHintDeviceIdUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -5079,29 +5125,29 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                urlForOidcOidcConfigurationPromptLoginHintUnderlyingCallsCount = newValue
+                urlForOidcOidcConfigurationPromptLoginHintDeviceIdUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    urlForOidcOidcConfigurationPromptLoginHintUnderlyingCallsCount = newValue
+                    urlForOidcOidcConfigurationPromptLoginHintDeviceIdUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    open var urlForOidcOidcConfigurationPromptLoginHintCalled: Bool {
-        return urlForOidcOidcConfigurationPromptLoginHintCallsCount > 0
+    open var urlForOidcOidcConfigurationPromptLoginHintDeviceIdCalled: Bool {
+        return urlForOidcOidcConfigurationPromptLoginHintDeviceIdCallsCount > 0
     }
-    open var urlForOidcOidcConfigurationPromptLoginHintReceivedArguments: (oidcConfiguration: OidcConfiguration, prompt: OidcPrompt?, loginHint: String?)?
-    open var urlForOidcOidcConfigurationPromptLoginHintReceivedInvocations: [(oidcConfiguration: OidcConfiguration, prompt: OidcPrompt?, loginHint: String?)] = []
+    open var urlForOidcOidcConfigurationPromptLoginHintDeviceIdReceivedArguments: (oidcConfiguration: OidcConfiguration, prompt: OidcPrompt?, loginHint: String?, deviceId: String?)?
+    open var urlForOidcOidcConfigurationPromptLoginHintDeviceIdReceivedInvocations: [(oidcConfiguration: OidcConfiguration, prompt: OidcPrompt?, loginHint: String?, deviceId: String?)] = []
 
-    var urlForOidcOidcConfigurationPromptLoginHintUnderlyingReturnValue: OAuthAuthorizationData!
-    open var urlForOidcOidcConfigurationPromptLoginHintReturnValue: OAuthAuthorizationData! {
+    var urlForOidcOidcConfigurationPromptLoginHintDeviceIdUnderlyingReturnValue: OAuthAuthorizationData!
+    open var urlForOidcOidcConfigurationPromptLoginHintDeviceIdReturnValue: OAuthAuthorizationData! {
         get {
             if Thread.isMainThread {
-                return urlForOidcOidcConfigurationPromptLoginHintUnderlyingReturnValue
+                return urlForOidcOidcConfigurationPromptLoginHintDeviceIdUnderlyingReturnValue
             } else {
                 var returnValue: OAuthAuthorizationData? = nil
                 DispatchQueue.main.sync {
-                    returnValue = urlForOidcOidcConfigurationPromptLoginHintUnderlyingReturnValue
+                    returnValue = urlForOidcOidcConfigurationPromptLoginHintDeviceIdUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -5109,29 +5155,29 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                urlForOidcOidcConfigurationPromptLoginHintUnderlyingReturnValue = newValue
+                urlForOidcOidcConfigurationPromptLoginHintDeviceIdUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    urlForOidcOidcConfigurationPromptLoginHintUnderlyingReturnValue = newValue
+                    urlForOidcOidcConfigurationPromptLoginHintDeviceIdUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-    open var urlForOidcOidcConfigurationPromptLoginHintClosure: ((OidcConfiguration, OidcPrompt?, String?) async throws -> OAuthAuthorizationData)?
+    open var urlForOidcOidcConfigurationPromptLoginHintDeviceIdClosure: ((OidcConfiguration, OidcPrompt?, String?, String?) async throws -> OAuthAuthorizationData)?
 
-    open override func urlForOidc(oidcConfiguration: OidcConfiguration, prompt: OidcPrompt?, loginHint: String?) async throws -> OAuthAuthorizationData {
-        if let error = urlForOidcOidcConfigurationPromptLoginHintThrowableError {
+    open override func urlForOidc(oidcConfiguration: OidcConfiguration, prompt: OidcPrompt?, loginHint: String?, deviceId: String?) async throws -> OAuthAuthorizationData {
+        if let error = urlForOidcOidcConfigurationPromptLoginHintDeviceIdThrowableError {
             throw error
         }
-        urlForOidcOidcConfigurationPromptLoginHintCallsCount += 1
-        urlForOidcOidcConfigurationPromptLoginHintReceivedArguments = (oidcConfiguration: oidcConfiguration, prompt: prompt, loginHint: loginHint)
+        urlForOidcOidcConfigurationPromptLoginHintDeviceIdCallsCount += 1
+        urlForOidcOidcConfigurationPromptLoginHintDeviceIdReceivedArguments = (oidcConfiguration: oidcConfiguration, prompt: prompt, loginHint: loginHint, deviceId: deviceId)
         DispatchQueue.main.async {
-            self.urlForOidcOidcConfigurationPromptLoginHintReceivedInvocations.append((oidcConfiguration: oidcConfiguration, prompt: prompt, loginHint: loginHint))
+            self.urlForOidcOidcConfigurationPromptLoginHintDeviceIdReceivedInvocations.append((oidcConfiguration: oidcConfiguration, prompt: prompt, loginHint: loginHint, deviceId: deviceId))
         }
-        if let urlForOidcOidcConfigurationPromptLoginHintClosure = urlForOidcOidcConfigurationPromptLoginHintClosure {
-            return try await urlForOidcOidcConfigurationPromptLoginHintClosure(oidcConfiguration, prompt, loginHint)
+        if let urlForOidcOidcConfigurationPromptLoginHintDeviceIdClosure = urlForOidcOidcConfigurationPromptLoginHintDeviceIdClosure {
+            return try await urlForOidcOidcConfigurationPromptLoginHintDeviceIdClosure(oidcConfiguration, prompt, loginHint, deviceId)
         } else {
-            return urlForOidcOidcConfigurationPromptLoginHintReturnValue
+            return urlForOidcOidcConfigurationPromptLoginHintDeviceIdReturnValue
         }
     }
 
@@ -5634,81 +5680,6 @@ open class ClientBuilderSDKMock: MatrixRustSDK.ClientBuilder, @unchecked Sendabl
             return try await buildClosure()
         } else {
             return buildReturnValue
-        }
-    }
-
-    //MARK: - buildWithQrCode
-
-    open var buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerThrowableError: Error?
-    var buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount = 0
-    open var buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerCallsCount: Int {
-        get {
-            if Thread.isMainThread {
-                return buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount
-            } else {
-                var returnValue: Int? = nil
-                DispatchQueue.main.sync {
-                    returnValue = buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount = newValue
-                }
-            }
-        }
-    }
-    open var buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerCalled: Bool {
-        return buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerCallsCount > 0
-    }
-    open var buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerReceivedArguments: (qrCodeData: QrCodeData, oidcConfiguration: OidcConfiguration, progressListener: QrLoginProgressListener)?
-    open var buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerReceivedInvocations: [(qrCodeData: QrCodeData, oidcConfiguration: OidcConfiguration, progressListener: QrLoginProgressListener)] = []
-
-    var buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingReturnValue: Client!
-    open var buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerReturnValue: Client! {
-        get {
-            if Thread.isMainThread {
-                return buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingReturnValue
-            } else {
-                var returnValue: Client? = nil
-                DispatchQueue.main.sync {
-                    returnValue = buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingReturnValue
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingReturnValue = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingReturnValue = newValue
-                }
-            }
-        }
-    }
-    open var buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerClosure: ((QrCodeData, OidcConfiguration, QrLoginProgressListener) async throws -> Client)?
-
-    open override func buildWithQrCode(qrCodeData: QrCodeData, oidcConfiguration: OidcConfiguration, progressListener: QrLoginProgressListener) async throws -> Client {
-        if let error = buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerThrowableError {
-            throw error
-        }
-        buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerCallsCount += 1
-        buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerReceivedArguments = (qrCodeData: qrCodeData, oidcConfiguration: oidcConfiguration, progressListener: progressListener)
-        DispatchQueue.main.async {
-            self.buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerReceivedInvocations.append((qrCodeData: qrCodeData, oidcConfiguration: oidcConfiguration, progressListener: progressListener))
-        }
-        if let buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerClosure = buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerClosure {
-            return try await buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerClosure(qrCodeData, oidcConfiguration, progressListener)
-        } else {
-            return buildWithQrCodeQrCodeDataOidcConfigurationProgressListenerReturnValue
         }
     }
 
@@ -7170,6 +7141,77 @@ open class ClientBuilderSDKMock: MatrixRustSDK.ClientBuilder, @unchecked Sendabl
             return systemIsMemoryConstrainedClosure()
         } else {
             return systemIsMemoryConstrainedReturnValue
+        }
+    }
+
+    //MARK: - threadsEnabled
+
+    var threadsEnabledEnabledUnderlyingCallsCount = 0
+    open var threadsEnabledEnabledCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return threadsEnabledEnabledUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = threadsEnabledEnabledUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                threadsEnabledEnabledUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    threadsEnabledEnabledUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var threadsEnabledEnabledCalled: Bool {
+        return threadsEnabledEnabledCallsCount > 0
+    }
+    open var threadsEnabledEnabledReceivedEnabled: Bool?
+    open var threadsEnabledEnabledReceivedInvocations: [Bool] = []
+
+    var threadsEnabledEnabledUnderlyingReturnValue: ClientBuilder!
+    open var threadsEnabledEnabledReturnValue: ClientBuilder! {
+        get {
+            if Thread.isMainThread {
+                return threadsEnabledEnabledUnderlyingReturnValue
+            } else {
+                var returnValue: ClientBuilder? = nil
+                DispatchQueue.main.sync {
+                    returnValue = threadsEnabledEnabledUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                threadsEnabledEnabledUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    threadsEnabledEnabledUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var threadsEnabledEnabledClosure: ((Bool) -> ClientBuilder)?
+
+    open override func threadsEnabled(enabled: Bool) -> ClientBuilder {
+        threadsEnabledEnabledCallsCount += 1
+        threadsEnabledEnabledReceivedEnabled = enabled
+        DispatchQueue.main.async {
+            self.threadsEnabledEnabledReceivedInvocations.append(enabled)
+        }
+        if let threadsEnabledEnabledClosure = threadsEnabledEnabledClosure {
+            return threadsEnabledEnabledClosure(enabled)
+        } else {
+            return threadsEnabledEnabledReturnValue
         }
     }
 
@@ -10011,13 +10053,13 @@ open class NotificationClientSDKMock: MatrixRustSDK.NotificationClient, @uncheck
     open var getNotificationRoomIdEventIdReceivedArguments: (roomId: String, eventId: String)?
     open var getNotificationRoomIdEventIdReceivedInvocations: [(roomId: String, eventId: String)] = []
 
-    var getNotificationRoomIdEventIdUnderlyingReturnValue: NotificationItem?
-    open var getNotificationRoomIdEventIdReturnValue: NotificationItem? {
+    var getNotificationRoomIdEventIdUnderlyingReturnValue: NotificationStatus!
+    open var getNotificationRoomIdEventIdReturnValue: NotificationStatus! {
         get {
             if Thread.isMainThread {
                 return getNotificationRoomIdEventIdUnderlyingReturnValue
             } else {
-                var returnValue: NotificationItem?? = nil
+                var returnValue: NotificationStatus? = nil
                 DispatchQueue.main.sync {
                     returnValue = getNotificationRoomIdEventIdUnderlyingReturnValue
                 }
@@ -10035,9 +10077,9 @@ open class NotificationClientSDKMock: MatrixRustSDK.NotificationClient, @uncheck
             }
         }
     }
-    open var getNotificationRoomIdEventIdClosure: ((String, String) async throws -> NotificationItem?)?
+    open var getNotificationRoomIdEventIdClosure: ((String, String) async throws -> NotificationStatus)?
 
-    open override func getNotification(roomId: String, eventId: String) async throws -> NotificationItem? {
+    open override func getNotification(roomId: String, eventId: String) async throws -> NotificationStatus {
         if let error = getNotificationRoomIdEventIdThrowableError {
             throw error
         }
@@ -10086,13 +10128,13 @@ open class NotificationClientSDKMock: MatrixRustSDK.NotificationClient, @uncheck
     open var getNotificationsRequestsReceivedRequests: [NotificationItemsRequest]?
     open var getNotificationsRequestsReceivedInvocations: [[NotificationItemsRequest]] = []
 
-    var getNotificationsRequestsUnderlyingReturnValue: [String: NotificationItem]!
-    open var getNotificationsRequestsReturnValue: [String: NotificationItem]! {
+    var getNotificationsRequestsUnderlyingReturnValue: [String: BatchNotificationResult]!
+    open var getNotificationsRequestsReturnValue: [String: BatchNotificationResult]! {
         get {
             if Thread.isMainThread {
                 return getNotificationsRequestsUnderlyingReturnValue
             } else {
-                var returnValue: [String: NotificationItem]? = nil
+                var returnValue: [String: BatchNotificationResult]? = nil
                 DispatchQueue.main.sync {
                     returnValue = getNotificationsRequestsUnderlyingReturnValue
                 }
@@ -10110,9 +10152,9 @@ open class NotificationClientSDKMock: MatrixRustSDK.NotificationClient, @uncheck
             }
         }
     }
-    open var getNotificationsRequestsClosure: (([NotificationItemsRequest]) async throws -> [String: NotificationItem])?
+    open var getNotificationsRequestsClosure: (([NotificationItemsRequest]) async throws -> [String: BatchNotificationResult])?
 
-    open override func getNotifications(requests: [NotificationItemsRequest]) async throws -> [String: NotificationItem] {
+    open override func getNotifications(requests: [NotificationItemsRequest]) async throws -> [String: BatchNotificationResult] {
         if let error = getNotificationsRequestsThrowableError {
             throw error
         }
@@ -18054,9 +18096,9 @@ open class RoomListServiceSDKMock: MatrixRustSDK.RoomListService, @unchecked Sen
     }
     open var subscribeToRoomsRoomIdsReceivedRoomIds: [String]?
     open var subscribeToRoomsRoomIdsReceivedInvocations: [[String]] = []
-    open var subscribeToRoomsRoomIdsClosure: (([String]) throws -> Void)?
+    open var subscribeToRoomsRoomIdsClosure: (([String]) async throws -> Void)?
 
-    open override func subscribeToRooms(roomIds: [String]) throws {
+    open override func subscribeToRooms(roomIds: [String]) async throws {
         if let error = subscribeToRoomsRoomIdsThrowableError {
             throw error
         }
@@ -18065,7 +18107,7 @@ open class RoomListServiceSDKMock: MatrixRustSDK.RoomListService, @unchecked Sen
         DispatchQueue.main.async {
             self.subscribeToRoomsRoomIdsReceivedInvocations.append(roomIds)
         }
-        try subscribeToRoomsRoomIdsClosure?(roomIds)
+        try await subscribeToRoomsRoomIdsClosure?(roomIds)
     }
 
     //MARK: - syncIndicator
@@ -21590,6 +21632,77 @@ open class SyncServiceBuilderSDKMock: MatrixRustSDK.SyncServiceBuilder, @uncheck
             return withOfflineModeClosure()
         } else {
             return withOfflineModeReturnValue
+        }
+    }
+
+    //MARK: - withSharePos
+
+    var withSharePosEnableUnderlyingCallsCount = 0
+    open var withSharePosEnableCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return withSharePosEnableUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = withSharePosEnableUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                withSharePosEnableUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    withSharePosEnableUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var withSharePosEnableCalled: Bool {
+        return withSharePosEnableCallsCount > 0
+    }
+    open var withSharePosEnableReceivedEnable: Bool?
+    open var withSharePosEnableReceivedInvocations: [Bool] = []
+
+    var withSharePosEnableUnderlyingReturnValue: SyncServiceBuilder!
+    open var withSharePosEnableReturnValue: SyncServiceBuilder! {
+        get {
+            if Thread.isMainThread {
+                return withSharePosEnableUnderlyingReturnValue
+            } else {
+                var returnValue: SyncServiceBuilder? = nil
+                DispatchQueue.main.sync {
+                    returnValue = withSharePosEnableUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                withSharePosEnableUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    withSharePosEnableUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var withSharePosEnableClosure: ((Bool) -> SyncServiceBuilder)?
+
+    open override func withSharePos(enable: Bool) -> SyncServiceBuilder {
+        withSharePosEnableCallsCount += 1
+        withSharePosEnableReceivedEnable = enable
+        DispatchQueue.main.async {
+            self.withSharePosEnableReceivedInvocations.append(enable)
+        }
+        if let withSharePosEnableClosure = withSharePosEnableClosure {
+            return withSharePosEnableClosure(enable)
+        } else {
+            return withSharePosEnableReturnValue
         }
     }
 }

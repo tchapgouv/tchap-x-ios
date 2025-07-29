@@ -13,6 +13,7 @@ struct RoomScreen: View {
     @ObservedObject private var context: RoomScreenViewModelType.Context
     @ObservedObject private var timelineContext: TimelineViewModelType.Context
     let composerToolbar: ComposerToolbar
+    @Environment(\.accessibilityVoiceOverEnabled) private var isVoiceOverEnabled
 
     init(context: RoomScreenViewModelType.Context,
          timelineContext: TimelineViewModelType.Context,
@@ -32,11 +33,21 @@ struct RoomScreen: View {
             }
             .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
             .overlay(alignment: .top) {
-                pinnedItemsBanner
+                if !isVoiceOverEnabled {
+                    pinnedItemsBanner
+                }
             }
             // This can overlay on top of the pinnedItemsBanner
             .overlay(alignment: .top) {
                 knockRequestsBanner
+            }
+            .safeAreaInset(edge: .top) {
+                // When voice over is on the table view is not reversed
+                // and the scroll gestures are not intercepted
+                // so we render the pinned banner on top.
+                if isVoiceOverEnabled {
+                    pinnedItemsBanner
+                }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 VStack(spacing: 0) {
@@ -137,9 +148,9 @@ struct RoomScreen: View {
         .padding(.top, 16)
         .padding(.horizontal, 16)
         .padding(.bottom, 12)
-        .highlight(borderColor: .compound.borderInfoSubtle,
-                   primaryColor: .compound.bgInfoSubtle,
-                   secondaryColor: .compound.bgCanvasDefault)
+        .highlight(gradient: .compound.info,
+                   borderColor: .compound.borderInfoSubtle,
+                   backgroundColor: .compound.bgCanvasDefault)
     }
     
     @ViewBuilder

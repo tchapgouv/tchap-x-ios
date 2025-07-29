@@ -63,7 +63,8 @@ final class NSEUserSession {
                          enableOnlySignedDeviceIsolationMode: appSettings.enableOnlySignedDeviceIsolationMode,
                          enableKeyShareOnInvite: appSettings.enableKeyShareOnInvite,
                          requestTimeout: 15000,
-                         maxRequestRetryTime: 5000)
+                         maxRequestRetryTime: 5000,
+                         threadsEnabled: appSettings.threadsEnabled)
             .systemIsMemoryConstrained()
             .sessionPaths(dataPath: credentials.restorationToken.sessionDirectories.dataPath,
                           cachePath: credentials.restorationToken.sessionDirectories.cachePath)
@@ -82,15 +83,21 @@ final class NSEUserSession {
     
     func notificationItemProxy(roomID: String, eventID: String) async -> NotificationItemProxyProtocol? {
         do {
-            let notification = try await notificationClient.getNotification(roomId: roomID, eventId: eventID)
+            let notificationStatus = try await notificationClient.getNotification(roomId: roomID, eventId: eventID)
                 
-            guard let notification else {
+            switch notificationStatus {
+            case .event(let notification):
+                return NotificationItemProxy(notificationItem: notification,
+                                             eventID: eventID,
+                                             receiverID: userID,
+                                             roomID: roomID)
+            case .eventNotFound:
+                MXLog.error("Notification event not found - roomID: \(roomID) eventID: \(eventID)")
+                return nil
+            case .eventFilteredOut:
+                MXLog.warning("Notification event filtered out - roomID: \(roomID) eventID: \(eventID)")
                 return nil
             }
-            return NotificationItemProxy(notificationItem: notification,
-                                         eventID: eventID,
-                                         receiverID: userID,
-                                         roomID: roomID)
         } catch {
             MXLog.error("Could not get notification's content creating an empty notification instead, error: \(error)")
             return EmptyNotificationItemProxy(eventID: eventID, roomID: roomID, receiverID: userID)

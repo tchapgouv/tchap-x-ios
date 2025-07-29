@@ -21,6 +21,7 @@ options:
     - UnitTests
     - PreviewTests
     - UITests
+    - AccessibilityTests
     - IntegrationTests
     - DevelopmentAssets
     - Secrets
@@ -39,6 +40,7 @@ options:
     - Screens
     - Other
     - UITests
+    - AccessibilityTests
   postGenCommand: cd Tools/XcodeGen && sh postGenCommand.sh
 
 settings:
@@ -46,7 +48,7 @@ settings:
   ENABLE_BITCODE: false
   APP_NAME: ElementX
   KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).$(BASE_BUNDLE_IDENTIFIER)"
-  MARKETING_VERSION: 25.07.0
+  MARKETING_VERSION: 25.07.2
   CURRENT_PROJECT_VERSION: 1
   SUPPORTS_MACCATALYST: false
 
@@ -59,6 +61,7 @@ include:
 - path: IntegrationTests/SupportingFiles/target.yml
 - path: NSE/SupportingFiles/target.yml
 - path: ShareExtension/SupportingFiles/target.yml
+- path: AccessibilityTests/SupportingFiles/target.yml
 # - path: MyAppVariant/override.yml
 
 packages:
@@ -66,9 +69,9 @@ packages:
   MatrixRustSDK:
 #    url: https://github.com/element-hq/matrix-rust-components-swift
 #    exactVersion: 25.03.13
-#    url: https://github.com/tchapgouv/matrix-rust-components-swift
-#   exactVersion: 25.07.01-bwi-0-8-1
-    path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
+    url: https://github.com/tchapgouv/matrix-rust-components-swift
+    exactVersion: 25.07.15-bwi-0-8-1
+#    path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
   Compound:
 #    url: https://github.com/element-hq/compound-ios
 #    revision: 9325643cb4d22150881c5bf79e1e6e3c5a87ea89
@@ -81,7 +84,7 @@ packages:
     # path: ../matrix-analytics-events
   EmbeddedElementCall:
     url: https://github.com/element-hq/element-call-swift
-    exactVersion: 0.13.0-rc.1
+    exactVersion: 0.13.1
   Emojibase:
     url: https://github.com/matrix-org/emojibase-bindings
     minorVersion: 1.4.2
@@ -99,6 +102,9 @@ packages:
   Algorithms:
     url: https://github.com/apple/swift-algorithms
     minorVersion: 1.2.1
+  AsyncAlgorithms:
+    url: https://github.com/apple/swift-async-algorithms
+    minorVersion: 1.0.0
   Collections:
     url: https://github.com/apple/swift-collections
     minorVersion: 1.2.0
