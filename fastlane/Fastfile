@@ -24,14 +24,9 @@ lane :unit_tests do |options|
   )
   
   run_tests(
-<<<<<<< HEAD
     project: "TchapX.xcodeproj",
     scheme: "TchapX-UnitTests",
-    device: "iPhone 16 (18.1)",
-=======
-    scheme: "UnitTests",
     device: "iPhone 16 (18.5)",
->>>>>>> release/25.07.2
     ensure_devices_found: true,
     result_bundle: true,
     number_of_retries: 3,
@@ -42,11 +37,7 @@ lane :unit_tests do |options|
     run_tests(
       project: TchapX.xcodeproj,
       scheme: "PreviewTests",
-<<<<<<< HEAD
-      device: "iPhone SE (3rd generation) (18.1)",
-=======
       device: "iPhone SE (3rd generation) (18.5)",
->>>>>>> release/25.07.2
       ensure_devices_found: true,
       result_bundle: true,
       number_of_retries: 3,

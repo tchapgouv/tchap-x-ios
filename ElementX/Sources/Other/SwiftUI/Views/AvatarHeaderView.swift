@@ -149,43 +149,31 @@ struct AvatarHeaderView<Footer: View>: View {
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgeEncrypted,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgeEncrypted,
                                icon: \.lockSolid,
-<<<<<<< HEAD
+                               style: .accent,
                                isHighlighted: true,
                                tchapUsage: .roomIsEncrypted(inRoomHeaderView: false))
-=======
-                               style: .accent)
->>>>>>> release/25.07.2
                 case .encrypted(false):
                     // Tchap: use Tchap label
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgeNotEncrypted,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgeNotEncrypted,
                                icon: \.lockOff,
-<<<<<<< HEAD
+                               style: .info,
                                isHighlighted: false,
                                tchapUsage: .roomIsNotEncrypted(inRoomHeaderView: false))
-=======
-                               style: .info)
->>>>>>> release/25.07.2
                 case .public:
                     // Tchap: use Tchap label
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgePublic,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgePublic,
                                icon: \.public,
-<<<<<<< HEAD
+                               style: .info,
                                isHighlighted: false,
                                tchapUsage: .roomIsPublic(inRoomHeaderView: false))
                 case .verified:
                     BadgeLabel(title: L10n.commonVerified,
                                icon: \.verified,
+                               style: .accent,
                                isHighlighted: true,
                                tchapUsage: .none)
-=======
-                               style: .info)
-                case .verified:
-                    BadgeLabel(title: L10n.commonVerified,
-                               icon: \.verified,
-                               style: .accent)
->>>>>>> release/25.07.2
                 }
             }
             

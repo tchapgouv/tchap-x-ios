@@ -17,8 +17,7 @@ struct BadgeLabel: View {
     
     let title: String
     let icon: KeyPath<CompoundIcons, Image>
-<<<<<<< HEAD
-    let isHighlighted: Bool
+    let style: Style
     let tchapUsage: TchapBadgeLabelUsage? // Tchap: Tchap usage, nil if use ElementX default design.
 
     // Tchap: evaluate our own icon size
@@ -27,80 +26,28 @@ struct BadgeLabel: View {
     }
 
     // Tchap: convenience init for tchapUsage default value.
-    init(title: String, icon: KeyPath<CompoundIcons, Image>, isHighlighted: Bool, tchapUsage: TchapBadgeLabelUsage? = nil) {
+    init(title: String, icon: KeyPath<CompoundIcons, Image>, style: Style, tchapUsage: TchapBadgeLabelUsage? = nil) {
         self.title = title
         self.icon = icon
-        self.isHighlighted = isHighlighted
+		self.style = style
         self.tchapUsage = tchapUsage
     }
-=======
-    let style: Style
->>>>>>> release/25.07.2
     
     var body: some View {
         Label(title,
               icon: icon,
               iconSize: iconSize, // Tchap: use our own icon size
               relativeTo: .compound.bodySM)
-<<<<<<< HEAD
-            .labelStyle(BadgeLabelStyle(isHighlighted: isHighlighted, tchapUsage: tchapUsage)) // Tchap: add tchapUsage property.
-    }
-}
-
-private struct BadgeLabelStyle: LabelStyle {
-    let isHighlighted: Bool
-    let tchapUsage: TchapBadgeLabelUsage? // Tchap: add Tchap usage, nil if use ElementX default design.
-
-    var titleColor: Color {
-        // Tchap: evaluate our own color
-//        isHighlighted ? .compound._badgeTextSuccess : .compound._badgeTextSubtle
-        tchapUsage?.titleColor ?? (isHighlighted ? .compound.textBadgeAccent : .compound.textBadgeInfo)
-    }
-    
-    var iconColor: Color {
-        // Tchap: evaluate our own color
-//        isHighlighted ? .compound.iconSuccessPrimary : .compound.iconSecondary
-        tchapUsage?.iconColor ?? (isHighlighted ? .compound.iconSuccessPrimary : .compound.iconInfoPrimary)
-    }
-
-    var backgroundColor: Color {
-        // Tchap: evaluate our own color
-//        isHighlighted ? .compound._bgBadgeSuccess : .compound.bgSubtlePrimary
-        tchapUsage?.backgroundColor ?? (isHighlighted ? .compound.bgBadgeAccent : .compound.bgBadgeInfo)
-    }
-    
-    var font: Font {
-        // Tchap: evaluate font on usage
-//        .compound.bodySM
-        tchapUsage?.font ?? .compound.bodySM
-    }
-    
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: 4) {
-            configuration.icon
-                .foregroundStyle(iconColor)
-            configuration.title
-                .foregroundStyle(titleColor)
-        }
-        .font(font)
-        // Tchap: evaluate padding
-//        .padding(.leading, 8)
-//        .padding(.trailing, 12)
-//        .padding(.vertical, 4)
-        .padding(.leading, tchapUsage?.leadingPadding ?? 8)
-        .padding(.trailing, tchapUsage?.trailingPadding ?? 12)
-        .padding(.vertical, tchapUsage?.verticalPadding ?? 4)
-        // Tchap: use RoundedRectangle rather than capsule. It is more DSFR friendly.
-//        .background(Capsule().fill(backgroundColor))
-        .background(RoundedRectangle(cornerSize: CGSize(width: 4.0, height: 4.0)).fill(backgroundColor))
-=======
-            .labelStyle(LabelStyle(style: style))
+            .labelStyle(LabelStyle(style: style, tchapUsage: tchapUsage)) // Tchap: add tchapUsage property
     }
     
     private struct LabelStyle: SwiftUI.LabelStyle {
         let style: Style
+        let tchapUsage: TchapBadgeLabelUsage? // Tchap: add Tchap usage, nil if use ElementX default design.
         
         var titleColor: Color {
+        	// Tchap: evaluate our own color
+			tchapUsage?.titleColor ?? 
             switch style {
             case .accent: .compound.textBadgeAccent
             case .info: .compound.textBadgeInfo
@@ -109,6 +56,8 @@ private struct BadgeLabelStyle: LabelStyle {
         }
         
         var iconColor: Color {
+	       // Tchap: evaluate our own color
+	        tchapUsage?.iconColor ??
             switch style {
             case .accent: .compound.iconAccentPrimary
             case .info: .compound.iconInfoPrimary
@@ -117,6 +66,8 @@ private struct BadgeLabelStyle: LabelStyle {
         }
         
         var backgroundColor: Color {
+ 	        // Tchap: evaluate our own color
+        	tchapUsage?.backgroundColor ??
             switch style {
             case .accent: .compound.bgBadgeAccent
             case .info: .compound.bgBadgeInfo
@@ -124,6 +75,12 @@ private struct BadgeLabelStyle: LabelStyle {
             }
         }
         
+	    // Tchap: evaluate font on usage
+    	var font: Font {
+//        .compound.bodySM
+	        tchapUsage?.font ?? .compound.bodySM
+	    }
+    
         func makeBody(configuration: Configuration) -> some View {
             HStack(spacing: 4) {
                 configuration.icon
@@ -132,12 +89,17 @@ private struct BadgeLabelStyle: LabelStyle {
                     .foregroundStyle(titleColor)
             }
             .font(.compound.bodySM)
-            .padding(.leading, 8)
-            .padding(.trailing, 12)
-            .padding(.vertical, 4)
-            .background(Capsule().fill(backgroundColor))
+//            .padding(.leading, 8)
+//            .padding(.trailing, 12)
+//            .padding(.vertical, 4)
+            .padding(.leading, tchapUsage?.leadingPadding ?? 8)
+            .padding(.trailing, tchapUsage?.trailingPadding ?? 12)
+            .padding(.vertical, tchapUsage?.verticalPadding ?? 4)
+            // Tchap: use RoundedRectangle rather than capsule. It is more DSFR friendly.
+//            .background(Capsule().fill(backgroundColor))
+            .background(RoundedRectangle(cornerSize: CGSize(width: 4.0, height: 4.0)).fill(backgroundColor))
+
         }
->>>>>>> release/25.07.2
     }
 }
 
