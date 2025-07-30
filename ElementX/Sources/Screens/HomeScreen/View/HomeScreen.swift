@@ -25,7 +25,8 @@ struct HomeScreen: View {
             .toolbar { toolbar }
             .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
             .track(screen: .Home)
-            .bloom()
+            // Tchap: no bloom (green gradient at top of the view) for the moment (20250730).
+//            .bloom()
             .sentryTrace("\(Self.self)")
     }
 
