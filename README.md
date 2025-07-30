@@ -21,7 +21,7 @@ Tchap X leverages the [Matrix Rust SDK](https://github.com/matrix-org/matrix-rus
 
 ## Status
 
-This project is in an early rollout & migration phase.
+This project is actively developed and supported. New users are recommended to use Element X instead of the previous-generation app.
 
 ## Contributing
 

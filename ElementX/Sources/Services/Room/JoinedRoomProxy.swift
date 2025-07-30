@@ -110,7 +110,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         subscribedForUpdates = true
 
         do {
-            try roomListService.subscribeToRooms(roomIds: [id])
+            try await roomListService.subscribeToRooms(roomIds: [id])
         } catch {
             MXLog.error("Failed subscribing to room with error: \(error)")
         }
@@ -173,7 +173,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     func threadTimeline(eventID: String) async -> Result<TimelineProxyProtocol, RoomProxyError> {
         do {
-            let sdkTimeline = try await room.timelineWithConfiguration(configuration: .init(focus: .thread(rootEventId: eventID, numEvents: 20),
+            let sdkTimeline = try await room.timelineWithConfiguration(configuration: .init(focus: .thread(rootEventId: eventID),
                                                                                             filter: .all,
                                                                                             internalIdPrefix: UUID().uuidString,
                                                                                             dateDividerMode: .daily,
@@ -197,7 +197,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             let rustFocus: MatrixRustSDK.TimelineFocus = switch focus {
             case .live: .live(hideThreadedEvents: false)
             case .eventID(let eventID): .event(eventId: eventID, numContextEvents: 100, hideThreadedEvents: false)
-            case .thread(let eventID): .thread(rootEventId: eventID, numEvents: 20)
+            case .thread(let eventID): .thread(rootEventId: eventID)
             case .pinned: .pinnedEvents(maxEventsToLoad: 100, maxConcurrentRequests: 10)
             }
             
@@ -402,14 +402,16 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             return .failure(.sdkError(error))
         }
     }
-        
+    
     func markAsRead(receiptType: ReceiptType) async -> Result<Void, RoomProxyError> {
-        do {
-            try await room.markAsRead(receiptType: receiptType)
-            return .success(())
-        } catch {
-            MXLog.error("Failed marking room \(id) as read with error: \(error)")
-            return .failure(.sdkError(error))
+        // Defer to the timeline here as room.markAsRead will build a fresh timeline.
+        switch await timeline.markAsRead(receiptType: receiptType) {
+        case .success:
+            .success(())
+        case .failure(.sdkError(let error)):
+            .failure(.sdkError(error))
+        case .failure(let error):
+            .failure(.timelineError(error))
         }
     }
     

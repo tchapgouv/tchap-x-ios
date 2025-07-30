@@ -19,6 +19,7 @@ protocol CommonSettingsProtocol {
     var enableOnlySignedDeviceIsolationMode: Bool { get }
     var enableKeyShareOnInvite: Bool { get }
     var hideQuietNotificationAlerts: Bool { get }
+    var threadsEnabled: Bool { get }
 }
 
 /// Store Element specific app settings.
@@ -45,7 +46,6 @@ final class AppSettings {
         case optimizeMediaUploads
         case appAppearance
         case sharePresence
-        case isNewBloomEnabled
         
         case elementCallBaseURLOverride
         
@@ -57,6 +57,7 @@ final class AppSettings {
         case knockingEnabled
         case threadsEnabled
         case developerOptionsEnabled
+        case sharePosEnabled
         
         // Doug's tweaks 🔧
         case hideUnreadMessagesBadge
@@ -162,8 +163,7 @@ final class AppSettings {
     /// Account provider is the friendly term for the server name. It should not contain an `https` prefix and should
     /// match the last part of the user ID. For example `example.com` and not `https://matrix.example.com`.
     #if IS_TCHAP_DEVELOPMENT
-    private(set) var defaultHomeserverAddress = ""
-    private(set) var accountProviders = ["matrix.dev01.tchap.incubateur.ne"]
+    private(set) var accountProviders = ["matrix.dev01.tchap.incubateur.net"]
     #elseif IS_TCHAP_STAGING
     private(set) var accountProviders = ["matrix.i.tchap.gouv.fr"]
     #elseif IS_TCHAP_PRODUCTION
@@ -211,12 +211,12 @@ final class AppSettings {
     private(set) var identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
     // Tchap: handle Tchap permalinks
     /// Any domains that Element web may be hosted on - used for handling links.
-    #if IS_MAIN_APP
-    private(set) var elementWebHosts = ["www.tchap.gouv.fr", "tchap.gouv.fr"]
-    #elseif IS_STAGING_APP
-    private(set) var elementWebHosts = ["app.preprod.tchap.gouv.fr"]
-    #elseif IS_DEVELOPMENT_APP
+    #if IS_TCHAP_DEVELOPMENT
     private(set) var elementWebHosts = ["https://www.tchap.incubateur.net"]
+    #elseif IS_TCHAP_STAGING
+    private(set) var elementWebHosts = ["app.preprod.tchap.gouv.fr"]
+    #elseif IS_TCHAP_PRODUCTION
+    private(set) var elementWebHosts = ["www.tchap.gouv.fr", "tchap.gouv.fr"]
     #else
     private(set) var elementWebHosts = ["app.element.io", "staging.element.io", "develop.element.io"]
     #endif
@@ -414,14 +414,11 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.knockingEnabled, defaultValue: false, storageType: .userDefaults(store))
     var knockingEnabled
     
-    @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var threadsEnabled
-    
     @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
     var developerOptionsEnabled
     
-    @UserPreference(key: UserDefaultsKeys.isNewBloomEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var isNewBloomEnabled
+    @UserPreference(key: UserDefaultsKeys.sharePosEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var sharePosEnabled
     
     #endif
     
@@ -443,6 +440,9 @@ final class AppSettings {
 
     @UserPreference(key: UserDefaultsKeys.hideQuietNotificationAlerts, defaultValue: false, storageType: .userDefaults(store))
     var hideQuietNotificationAlerts
+    
+    @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var threadsEnabled
 }
 
 extension AppSettings: CommonSettingsProtocol { }

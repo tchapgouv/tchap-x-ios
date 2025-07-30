@@ -149,33 +149,33 @@ struct AvatarHeaderView<Footer: View>: View {
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgeEncrypted,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgeEncrypted,
                                icon: \.lockSolid,
-                               isHighlighted: true,
+                               style: .accent,
                                tchapUsage: .roomIsEncrypted(inRoomHeaderView: false))
                 case .encrypted(false):
                     // Tchap: use Tchap label
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgeNotEncrypted,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgeNotEncrypted,
                                icon: \.lockOff,
-                               isHighlighted: false,
+                               style: .info,
                                tchapUsage: .roomIsNotEncrypted(inRoomHeaderView: false))
                 case .public:
                     // Tchap: use Tchap label
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgePublic,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgePublic,
                                icon: \.public,
-                               isHighlighted: false,
+                               style: .info,
                                tchapUsage: .roomIsPublic(inRoomHeaderView: false))
                 case .verified:
                     BadgeLabel(title: L10n.commonVerified,
                                icon: \.verified,
-                               isHighlighted: true,
+                               style: .accent,
                                tchapUsage: .none)
                 }
             }
             
             // Tchap: add `External` badge if necessary.
             if externalCount.wrappedValue > 0 {
-                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, isHighlighted: false, tchapUsage: .userIsExternal())
+                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal())
             }
         }
     }
