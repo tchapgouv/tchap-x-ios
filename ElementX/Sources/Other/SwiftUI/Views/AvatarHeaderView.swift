@@ -150,7 +150,6 @@ struct AvatarHeaderView<Footer: View>: View {
                     BadgeLabel(title: TchapL10n.roomHeaderBadgeEncrypted,
                                icon: \.lockSolid,
                                style: .accent,
-                               isHighlighted: true,
                                tchapUsage: .roomIsEncrypted(inRoomHeaderView: false))
                 case .encrypted(false):
                     // Tchap: use Tchap label
@@ -158,7 +157,6 @@ struct AvatarHeaderView<Footer: View>: View {
                     BadgeLabel(title: TchapL10n.roomHeaderBadgeNotEncrypted,
                                icon: \.lockOff,
                                style: .info,
-                               isHighlighted: false,
                                tchapUsage: .roomIsNotEncrypted(inRoomHeaderView: false))
                 case .public:
                     // Tchap: use Tchap label
@@ -166,20 +164,18 @@ struct AvatarHeaderView<Footer: View>: View {
                     BadgeLabel(title: TchapL10n.roomHeaderBadgePublic,
                                icon: \.public,
                                style: .info,
-                               isHighlighted: false,
                                tchapUsage: .roomIsPublic(inRoomHeaderView: false))
                 case .verified:
                     BadgeLabel(title: L10n.commonVerified,
                                icon: \.verified,
                                style: .accent,
-                               isHighlighted: true,
                                tchapUsage: .none)
                 }
             }
             
             // Tchap: add `External` badge if necessary.
             if externalCount.wrappedValue > 0 {
-                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, isHighlighted: false, tchapUsage: .userIsExternal())
+                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal())
             }
         }
     }
