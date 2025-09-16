@@ -17,7 +17,7 @@ class ClientProxy: ClientProxyProtocol {
     private let networkMonitor: NetworkMonitorProtocol
     private let appSettings: AppSettings
     
-    private let mediaLoader: MediaLoaderProtocol
+    let mediaLoader: MediaLoaderProtocol
     private let clientQueue: DispatchQueue
     
     private var roomListService: RoomListService
@@ -56,6 +56,8 @@ class ClientProxy: ClientProxyProtocol {
     let secureBackupController: SecureBackupControllerProtocol
     
     private(set) var sessionVerificationController: SessionVerificationControllerProxyProtocol?
+    
+    let spaceService: SpaceServiceProxyProtocol
     
     private static var roomCreationPowerLevelOverrides: PowerLevels {
         .init(usersDefault: nil,
@@ -135,6 +137,11 @@ class ClientProxy: ClientProxyProtocol {
         verificationStateSubject.asCurrentValuePublisher()
     }
     
+    private let homeserverReachabilitySubject = CurrentValueSubject<NetworkMonitorReachability, Never>(.reachable)
+    var homeserverReachabilityPublisher: CurrentValuePublisher<NetworkMonitorReachability, Never> {
+        homeserverReachabilitySubject.asCurrentValuePublisher()
+    }
+    
     private let timelineMediaVisibilitySubject = CurrentValueSubject<TimelineMediaVisibility, Never>(.always)
     var timelineMediaVisibilityPublisher: CurrentValuePublisher<TimelineMediaVisibility, Never> {
         timelineMediaVisibilitySubject.asCurrentValuePublisher()
@@ -150,7 +157,6 @@ class ClientProxy: ClientProxyProtocol {
     private let sendQueueStatusSubject = CurrentValueSubject<Bool, Never>(false)
     
     init(client: ClientProtocol,
-         needsSlidingSyncMigration: Bool,
          networkMonitor: NetworkMonitorProtocol,
          appSettings: AppSettings) async throws {
         self.client = client
@@ -165,7 +171,7 @@ class ClientProxy: ClientProxyProtocol {
         
         secureBackupController = SecureBackupController(encryption: client.encryption())
         
-        self.needsSlidingSyncMigration = needsSlidingSyncMigration
+        spaceService = SpaceServiceProxy(spaceService: client.spaceService())
         
         let configuredAppService = try await ClientProxyServices(client: client,
                                                                  actionsSubject: actionsSubject,
@@ -217,10 +223,10 @@ class ClientProxy: ClientProxyProtocol {
         })
         
         sendQueueStatusSubject
-            .combineLatest(networkMonitor.reachabilityPublisher)
+            .combineLatest(homeserverReachabilityPublisher)
             .debounce(for: 1.0, scheduler: DispatchQueue.main)
             .sink { enabled, reachability in
-                MXLog.info("Send queue status changed to enabled: \(enabled), reachability: \(reachability)")
+                MXLog.info("Send queue status changed to enabled: \(enabled), homeserver reachability: \(reachability)")
                 
                 if enabled == false, reachability == .reachable {
                     MXLog.info("Enabling all send queues")
@@ -271,11 +277,6 @@ class ClientProxy: ClientProxyProtocol {
         client.homeserver()
     }
     
-    let needsSlidingSyncMigration: Bool
-    var slidingSyncVersion: SlidingSyncVersion {
-        client.slidingSyncVersion()
-    }
-    
     var canDeactivateAccount: Bool {
         client.canDeactivateAccount()
     }
@@ -310,6 +311,17 @@ class ClientProxy: ClientProxyProtocol {
             }
         }
     }
+    
+    var maxMediaUploadSize: Result<UInt, ClientProxyError> {
+        get async {
+            do {
+                return try await .success(UInt(client.getMaxMediaUploadSize()))
+            } catch {
+                MXLog.error("Failed checking the max media upload size with error: \(error)")
+                return .failure(.sdkError(error))
+            }
+        }
+    }
 
     private(set) lazy var pusherNotificationClientIdentifier: String? = {
         // NOTE: The result is stored as part of the restoration token. Any changes
@@ -330,11 +342,6 @@ class ClientProxy: ClientProxyProtocol {
     }
 
     func startSync() {
-        guard !needsSlidingSyncMigration else {
-            MXLog.warning("Ignoring request, this client needs to be migrated to native sliding sync.")
-            return
-        }
-        
         guard !hasEncounteredAuthError else {
             MXLog.warning("Ignoring request, this client has an unknown token.")
             return
@@ -401,6 +408,10 @@ class ClientProxy: ClientProxyProtocol {
             await syncService.stop()
             MXLog.info("Sync stopped")
         }
+    }
+    
+    func expireSyncSessions() async {
+        await syncService.expireSessions()
     }
     
     func accountURL(action: AccountManagementAction) async -> URL? {
@@ -534,6 +545,17 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
     
+    func canJoinRoom(with rules: [AllowRule]) -> Bool {
+        for rule in rules {
+            if case let .roomMembership(roomID) = rule,
+               let room = try? client.getRoom(roomId: roomID),
+               room.membership() == .joined {
+                return true
+            }
+        }
+        return false
+    }
+    
     func uploadMedia(_ media: MediaInfo) async -> Result<String, ClientProxyError> {
         guard let mimeType = media.mimeType else {
             MXLog.error("Failed uploading media, invalid mime type: \(media)")
@@ -575,7 +597,7 @@ class ClientProxy: ClientProxyProtocol {
     func roomPreviewForIdentifier(_ identifier: String, via: [String]) async -> Result<RoomPreviewProxyProtocol, ClientProxyError> {
         do {
             let roomPreview = try await client.getRoomPreviewFromRoomId(roomId: identifier, viaServers: via)
-            return try .success(RoomPreviewProxy(roomPreview: roomPreview))
+            return .success(RoomPreviewProxy(roomPreview: roomPreview))
         } catch ClientError.MatrixApi(.forbidden, _, _, _) {
             MXLog.error("Failed retrieving preview for room: \(identifier) is private")
             return .failure(.roomPreviewIsPrivate)
@@ -593,7 +615,7 @@ class ClientProxy: ClientProxyProtocol {
         staticRoomSummaryProvider.roomListPublisher.value.first { $0.canonicalAlias == alias || $0.alternativeAliases.contains(alias) }
     }
     
-    func reportRoomForIdentifier(_ identifier: String, reason: String?) async -> Result<Void, ClientProxyError> {
+    func reportRoomForIdentifier(_ identifier: String, reason: String) async -> Result<Void, ClientProxyError> {
         do {
             guard let room = try client.getRoom(roomId: identifier) else {
                 MXLog.error("Failed reporting room with identifier: \(identifier), room not in local store")
@@ -927,12 +949,11 @@ class ClientProxy: ClientProxyProtocol {
             
             switch state {
             case .running, .terminated, .idle:
-                break
+                homeserverReachabilitySubject.send(.reachable)
+            case .offline:
+                homeserverReachabilitySubject.send(.unreachable)
             case .error:
                 restartSync()
-            case .offline:
-                // This needs to be enabled in the client builder first to be actually used
-                break
             }
         })
     }
@@ -1024,11 +1045,23 @@ class ClientProxy: ClientProxyProtocol {
     }
     
     private func waitForRoomToSync(roomID: String, timeout: Duration = .seconds(10)) async {
+        MXLog.info("Wait for \(roomID)")
         let runner = ExpiringTaskRunner { [weak self] in
-            try await self?.client.awaitRoomRemoteEcho(roomId: roomID)
+            guard let self else { return }
+            
+            do {
+                _ = try await client.awaitRoomRemoteEcho(roomId: roomID)
+                MXLog.info("Wait for \(roomID) got remote echo.")
+            } catch {
+                MXLog.info("Failed waiting for remote echo in \(roomID): \(error)")
+            }
         }
         
-        _ = try? await runner.run(timeout: timeout)
+        do {
+            try await runner.run(timeout: timeout)
+        } catch {
+            MXLog.info("Wait for \(roomID) failed: \(error)")
+        }
     }
 
     private func updateIgnoredUsers() {
@@ -1102,20 +1135,6 @@ class ClientProxy: ClientProxyProtocol {
     }
 }
 
-extension ClientProxy: MediaLoaderProtocol {
-    func loadMediaContentForSource(_ source: MediaSourceProxy) async throws -> Data {
-        try await mediaLoader.loadMediaContentForSource(source)
-    }
-
-    func loadMediaThumbnailForSource(_ source: MediaSourceProxy, width: UInt, height: UInt) async throws -> Data {
-        try await mediaLoader.loadMediaThumbnailForSource(source, width: width, height: height)
-    }
-    
-    func loadMediaFileForSource(_ source: MediaSourceProxy, filename: String?) async throws -> MediaFileHandleProxy {
-        try await mediaLoader.loadMediaFileForSource(source, filename: filename)
-    }
-}
-
 private class ClientDelegateWrapper: ClientDelegate {
     private let authErrorCallback: (Bool) -> Void
     
@@ -1185,7 +1204,8 @@ private struct ClientProxyServices {
         let syncService = try await client
             .syncService()
             .withCrossProcessLock()
-            .withSharePos(enable: appSettings.sharePosEnabled)
+            .withOfflineMode()
+            .withSharePos(enable: true)
             .finish()
         
         let roomListService = syncService.roomListService()
@@ -1234,6 +1254,8 @@ private extension MediaPreviewConfig {
             .privateOnly
         case .off:
             .never
+        case .none:
+            .always
         }
     }
     
@@ -1243,6 +1265,8 @@ private extension MediaPreviewConfig {
             true
         case .on:
             false
+        case .none:
+            true
         }
     }
 }

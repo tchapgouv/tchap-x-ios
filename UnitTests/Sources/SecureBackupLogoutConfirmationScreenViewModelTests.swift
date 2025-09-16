@@ -29,14 +29,9 @@ class SecureBackupLogoutConfirmationScreenViewModelTests: XCTestCase {
         secureBackupController.underlyingKeyBackupState = CurrentValueSubject<SecureBackupKeyBackupState, Never>(.enabled).asCurrentValuePublisher()
         
         reachabilitySubject = CurrentValueSubject<NetworkMonitorReachability, Never>(.reachable)
-        let networkMonitor = NetworkMonitorMock()
-        networkMonitor.underlyingReachabilityPublisher = reachabilitySubject.asCurrentValuePublisher()
-        
-        let appMediator = AppMediatorMock()
-        appMediator.underlyingNetworkMonitor = networkMonitor
         
         viewModel = SecureBackupLogoutConfirmationScreenViewModel(secureBackupController: secureBackupController,
-                                                                  appMediator: appMediator)
+                                                                  homeserverReachabilityPublisher: reachabilitySubject.asCurrentValuePublisher())
     }
     
     func testInitialState() {

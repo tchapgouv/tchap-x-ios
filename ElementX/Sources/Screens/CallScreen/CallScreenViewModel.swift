@@ -50,7 +50,7 @@ class CallScreenViewModel: CallScreenViewModelType, CallScreenViewModelProtocol 
         switch configuration.kind {
         case .genericCallLink(let url):
             widgetDriver = GenericCallLinkWidgetDriver(url: url)
-        case .roomCall(let roomProxy, let clientProxy, _, _, _, _, _):
+        case .roomCall(let roomProxy, let clientProxy, _, _, _, _):
             guard let deviceID = clientProxy.deviceID else { fatalError("Missing device ID for the call.") }
             widgetDriver = roomProxy.elementCallWidgetDriver(deviceID: deviceID)
         }
@@ -112,17 +112,6 @@ class CallScreenViewModel: CallScreenViewModelType, CallScreenViewModelProtocol 
             .store(in: &cancellables)
         
         setupCall()
-        
-        timeoutTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(10))
-            guard !Task.isCancelled, let self else { return }
-            MXLog.error("Failed to join Element Call: Timeout")
-            state.bindings.alertInfo = .init(id: UUID(),
-                                             title: L10n.commonError,
-                                             message: L10n.errorUnknown,
-                                             primaryButton: .init(title: L10n.actionDismiss) { [weak self] in self?.actionsSubject.send(.dismiss) })
-            timeoutTask = nil
-        }
     }
     
     override func process(viewAction: CallScreenViewAction) {
@@ -174,7 +163,7 @@ class CallScreenViewModel: CallScreenViewModelType, CallScreenViewModelProtocol 
             state.url = url
             // We need widget messaging to work before enabling CallKit, otherwise mute, hangup etc do nothing.
             
-        case .roomCall(let roomProxy, _, let clientID, let elementCallBaseURL, let elementCallBaseURLOverride, let colorScheme, let notifyOtherParticipants):
+        case .roomCall(let roomProxy, _, let clientID, let elementCallBaseURL, let elementCallBaseURLOverride, let colorScheme):
             Task { [weak self] in
                 guard let self else { return }
                 
@@ -185,13 +174,23 @@ class CallScreenViewModel: CallScreenViewModelType, CallScreenViewModelProtocol 
                 }
                 
                 // We only set the analytics configuration if analytics are enabled
-                let analyticsConfiguration = analyticsService.isEnabled ? ElementCallAnalyticsConfiguration(posthogAPIHost: appSettings.elementCallPosthogAPIHost,
-                                                                                                            posthogAPIKey: appSettings.elementCallPosthogAPIKey,
-                                                                                                            sentryDSN: appSettings.elementCallPosthogSentryDSN) : nil
+                let analyticsConfiguration: ElementCallAnalyticsConfiguration? = if analyticsService.isEnabled {
+                    .init(posthogAPIHost: appSettings.elementCallPosthogAPIHost,
+                          posthogAPIKey: appSettings.elementCallPosthogAPIKey,
+                          sentryDSN: appSettings.elementCallPosthogSentryDSN)
+                } else {
+                    nil
+                }
+                let rageshakeURL: String? = if case let .url(baseURL) = appSettings.bugReportRageshakeURL.publisher.value {
+                    baseURL.absoluteString
+                } else {
+                    nil
+                }
+                
                 switch await widgetDriver.start(baseURL: baseURL,
                                                 clientID: clientID,
                                                 colorScheme: colorScheme,
-                                                rageshakeURL: appSettings.bugReportRageshakeURL?.absoluteString,
+                                                rageshakeURL: rageshakeURL,
                                                 analyticsConfiguration: analyticsConfiguration) {
                 case .success(let url):
                     state.url = url
@@ -207,10 +206,17 @@ class CallScreenViewModel: CallScreenViewModelType, CallScreenViewModelProtocol 
                 
                 await elementCallService.setupCallSession(roomID: roomProxy.id,
                                                           roomDisplayName: roomProxy.infoPublisher.value.displayName ?? roomProxy.id)
-                
-                if notifyOtherParticipants {
-                    _ = await roomProxy.sendCallNotificationIfNeeded()
-                }
+            }
+            
+            timeoutTask = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(10))
+                guard !Task.isCancelled, let self else { return }
+                MXLog.error("Failed to join Element Call: Timeout")
+                state.bindings.alertInfo = .init(id: UUID(),
+                                                 title: L10n.commonError,
+                                                 message: L10n.errorUnknown,
+                                                 primaryButton: .init(title: L10n.actionDismiss) { [weak self] in self?.actionsSubject.send(.dismiss) })
+                timeoutTask = nil
             }
         }
     }
@@ -220,7 +226,7 @@ class CallScreenViewModel: CallScreenViewModelType, CallScreenViewModelProtocol 
     
     private func handleOutputDeviceSelected(deviceID: String) {
         let isEarpiece = deviceID == Self.earpieceID
-        MXLog.info("[handleOutputDeviceSelected] is earpiece: \(isEarpiece)")
+        MXLog.info("Is earpiece: \(isEarpiece)")
         UIDevice.current.isProximityMonitoringEnabled = isEarpiece
     }
     

@@ -7,15 +7,9 @@
 
 import Foundation
 
-extension URL: @retroactive ExpressibleByStringLiteral {
-    public init(stringLiteral value: StaticString) {
-        guard let url = URL(string: "\(value)") else {
-            fatalError("The static string used to create this URL is invalid")
-        }
+// MARK: - Custom URLs
 
-        self = url
-    }
-
+extension URL {
     /// The URL of the primary app group container.
     static var appGroupContainerDirectory: URL {
         guard let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: InfoPlistReader.main.appGroupIdentifier) else {
@@ -29,10 +23,17 @@ extension URL: @retroactive ExpressibleByStringLiteral {
         
         return url
     }
+    
+    static var appGroupLogsDirectory: URL {
+        appGroupContainerDirectory
+            .appending(component: "Library", directoryHint: .isDirectory)
+            .appending(component: "Logs", directoryHint: .isDirectory)
+            .appending(component: InfoPlistReader.main.baseBundleIdentifier, directoryHint: .isDirectory)
+    }
 
     /// The base directory where all session data is stored.
     static var sessionsBaseDirectory: URL {
-        let applicationSupportSessionsURL = applicationSupportBaseDirectory.appendingPathComponent("Sessions", isDirectory: true)
+        let applicationSupportSessionsURL = applicationSupportBaseDirectory.appending(component: "Sessions", directoryHint: .isDirectory)
         
         try? FileManager.default.createDirectoryIfNeeded(at: applicationSupportSessionsURL)
 
@@ -42,9 +43,9 @@ extension URL: @retroactive ExpressibleByStringLiteral {
     /// The base directory where all application support data is stored.
     static var applicationSupportBaseDirectory: URL {
         var url = appGroupContainerDirectory
-            .appendingPathComponent("Library", isDirectory: true)
-            .appendingPathComponent("Application Support", isDirectory: true)
-            .appendingPathComponent(InfoPlistReader.main.baseBundleIdentifier, isDirectory: true)
+            .appending(component: "Library", directoryHint: .isDirectory)
+            .appending(component: "Application Support", directoryHint: .isDirectory)
+            .appending(component: InfoPlistReader.main.baseBundleIdentifier, directoryHint: .isDirectory)
 
         try? FileManager.default.createDirectoryIfNeeded(at: url)
         
@@ -62,10 +63,10 @@ extension URL: @retroactive ExpressibleByStringLiteral {
     /// The base directory where all application support data is stored.
     static var sessionCachesBaseDirectory: URL {
         let url = appGroupContainerDirectory
-            .appendingPathComponent("Library", isDirectory: true)
-            .appendingPathComponent("Caches", isDirectory: true)
-            .appendingPathComponent(InfoPlistReader.main.baseBundleIdentifier, isDirectory: true)
-            .appendingPathComponent("Sessions", isDirectory: true)
+            .appending(component: "Library", directoryHint: .isDirectory)
+            .appending(component: "Caches", directoryHint: .isDirectory)
+            .appending(component: InfoPlistReader.main.baseBundleIdentifier, directoryHint: .isDirectory)
+            .appending(component: "Sessions", directoryHint: .isDirectory)
 
         try? FileManager.default.createDirectoryIfNeeded(at: url)
         
@@ -81,7 +82,7 @@ extension URL: @retroactive ExpressibleByStringLiteral {
     /// Make sure to manually tidy up any files you place in here once you've transferred them from one bundle to another.
     static var appGroupTemporaryDirectory: URL {
         let url = appGroupContainerDirectory
-            .appendingPathComponent("tmp", isDirectory: true)
+            .appending(component: "tmp", directoryHint: .isDirectory)
 
         try? FileManager.default.createDirectoryIfNeeded(at: url)
         
@@ -92,18 +93,84 @@ extension URL: @retroactive ExpressibleByStringLiteral {
     }
     
     var globalProxy: String? {
-        if let proxySettingsUnmanaged = CFNetworkCopySystemProxySettings() {
-            let proxySettings = proxySettingsUnmanaged.takeRetainedValue()
-            let proxiesUnmanaged = CFNetworkCopyProxiesForURL(self as CFURL, proxySettings)
-            if let proxy = (proxiesUnmanaged.takeRetainedValue() as? [[AnyHashable: Any]])?.first,
-               let hostname = proxy[kCFProxyHostNameKey] as? String,
-               let port = proxy[kCFProxyPortNumberKey] as? Int {
-                return "\(hostname):\(port)"
-            }
+        let span = MXLog.createSpan("Global proxy")
+        span.enter()
+        defer {
+            span.exit()
         }
-        return nil
+        
+        guard let proxySettings = CFNetworkCopySystemProxySettings()?.takeRetainedValue() else {
+            MXLog.error("Failed retrieving proxy settings")
+            return nil
+        }
+        
+        let proxies = CFNetworkCopyProxiesForURL(self as CFURL, proxySettings).takeRetainedValue() as? [[CFString: Any]]
+        
+        guard let firstProxy = proxies?.first,
+              let proxyType = firstProxy[kCFProxyTypeKey] as? String,
+              proxyType != kCFProxyTypeNone as String else {
+            MXLog.info("No global proxy configured.")
+            return nil
+        }
+        
+        MXLog.info("Found \(String(describing: proxies?.count)) proxies, using the first one.")
+        MXLog.info("Proxy type is \(proxyType)")
+            
+        guard let host = firstProxy[kCFProxyHostNameKey] as? String else {
+            MXLog.error("Found proxy with invalid host name")
+            return nil
+        }
+        
+        let port = firstProxy[kCFProxyPortNumberKey] as? Int
+        
+        MXLog.info("Found proxy host: \(host), port: \(String(describing: port))")
+        
+        if let port {
+            return "\(host):\(port)"
+        } else {
+            return host
+        }
     }
     
+    // MARK: Mocks
+    
+    static var mockMXCAudio: URL { "mxc://matrix.org/1234567890AuDiO" }
+    static var mockMXCFile: URL { "mxc://matrix.org/1234567890FiLe" }
+    static var mockMXCImage: URL { "mxc://matrix.org/1234567890ImAgE" }
+    static var mockMXCVideo: URL { "mxc://matrix.org/1234567890ViDeO" }
+    static var mockMXCAvatar: URL { "mxc://matrix.org/1234567890AvAtAr" }
+    static var mockMXCUserAvatar: URL { "mxc://matrix.org/1234567890AvAtArUsEr" }
+}
+
+// MARK: - Helpers
+
+extension URL: @retroactive ExpressibleByStringLiteral {
+    public init(stringLiteral value: StaticString) {
+        guard let url = URL(string: "\(value)") else {
+            fatalError("The static string used to create this URL is invalid")
+        }
+        
+        self = url
+    }
+    
+    /// Sanitises the URL for use as the name of a directory.
+    func asDirectoryName() -> String {
+        absoluteString.asURLDirectoryName()
+    }
+}
+
+extension String {
+    /// Assumes that the string is a URL and sanitises it for use as the name of a directory.
+    func asURLDirectoryName() -> String {
+        replacingOccurrences(of: "https://", with: "")
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            .replacing(/[:\/\p{C}]/, with: "-")
+    }
+}
+
+// MARK: - Phishing Confirmation URL
+
+extension URL {
     static let confirmationScheme = "confirm"
     
     var requiresConfirmation: Bool {
@@ -117,15 +184,6 @@ extension URL: @retroactive ExpressibleByStringLiteral {
         }
         return ConfirmURLParameters(queryItems: queryItems)
     }
-    
-    // MARK: Mocks
-    
-    static var mockMXCAudio: URL { "mxc://matrix.org/1234567890AuDiO" }
-    static var mockMXCFile: URL { "mxc://matrix.org/1234567890FiLe" }
-    static var mockMXCImage: URL { "mxc://matrix.org/1234567890ImAgE" }
-    static var mockMXCVideo: URL { "mxc://matrix.org/1234567890ViDeO" }
-    static var mockMXCAvatar: URL { "mxc://matrix.org/1234567890AvAtAr" }
-    static var mockMXCUserAvatar: URL { "mxc://matrix.org/1234567890AvAtArUsEr" }
 }
 
 struct ConfirmURLParameters {

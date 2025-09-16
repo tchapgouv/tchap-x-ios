@@ -72,12 +72,14 @@ struct JoinRoomScreen: View {
                                 avatarSize: .room(on: .joinRoom),
                                 mediaProvider: context.mediaProvider)
                     .dynamicTypeSize(dynamicTypeSize < .accessibility1 ? dynamicTypeSize : .accessibility1)
+                    .accessibilityHidden(true)
             } else {
                 RoomAvatarImage(avatar: .room(id: "", name: nil, avatarURL: nil),
                                 avatarSize: .room(on: .joinRoom),
                                 mediaProvider: context.mediaProvider)
                     .dynamicTypeSize(dynamicTypeSize < .accessibility1 ? dynamicTypeSize : .accessibility1)
                     .hidden()
+                    .accessibilityHidden(true)
             }
             
             VStack(spacing: 8) {
@@ -129,19 +131,12 @@ struct JoinRoomScreen: View {
             }
         }
     }
-    
-    private var knockMessageFooterString: String {
-        guard !context.knockMessage.isEmpty else {
-            return L10n.screenJoinRoomKnockMessageDescription
-        }
-        return "\(context.knockMessage.count)/\(maxKnockMessageLength)"
-    }
         
     @ViewBuilder
     private var knockMessage: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 0) {
-                TextField("", text: $context.knockMessage, axis: .vertical)
+                TextField(L10n.screenJoinRoomKnockMessageDescription, text: $context.knockMessage, axis: .vertical)
                     .focused($focus, equals: .knockMessage)
                     .onChange(of: context.knockMessage) { _, newValue in
                         context.knockMessage = String(newValue.prefix(maxKnockMessageLength))
@@ -151,6 +146,7 @@ struct JoinRoomScreen: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .id(Focus.knockMessage)
+                    .accessibilityHint(L10n.screenJoinRoomKnockMessageCharactersCount(context.knockMessage.count, maxKnockMessageLength))
             }
             .background(.compound.bgCanvasDefault)
             .cornerRadius(8)
@@ -158,11 +154,14 @@ struct JoinRoomScreen: View {
                 RoundedRectangle(cornerRadius: 8)
                     .inset(by: 0.5)
                     .stroke(.compound.borderInteractivePrimary)
+                    .accessibilityHidden(true)
             }
             
-            Text(knockMessageFooterString)
+            Text("\(context.knockMessage.count)/\(maxKnockMessageLength)")
                 .font(.compound.bodySM)
                 .foregroundStyle(.compound.textSecondary)
+                // We will have a hint for this in voice over mode
+                .accessibilityHidden(true)
         }
     }
     
@@ -308,7 +307,8 @@ struct JoinRoomScreen: View {
 struct JoinRoomScreen_Previews: PreviewProvider, TestablePreview {
     static let unknownViewModel = makeViewModel(mode: .unknown)
     static let joinableViewModel = makeViewModel(mode: .joinable)
-    static let restrictedViewModel = makeViewModel(mode: .restricted)
+    static let restrictedViewModel = makeViewModel(mode: .restricted, canJoinRoom: false)
+    static let restrictedJoinableViewModel = makeViewModel(mode: .restricted)
     static let inviteRequiredViewModel = makeViewModel(mode: .inviteRequired)
     static let invitedViewModel = makeViewModel(mode: .invited(isDM: false))
     static let invitedDMViewModel = makeViewModel(mode: .invited(isDM: true))
@@ -323,6 +323,8 @@ struct JoinRoomScreen_Previews: PreviewProvider, TestablePreview {
         makePreview(viewModel: unknownViewModel, mode: .unknown)
         makePreview(viewModel: joinableViewModel, mode: .joinable)
         makePreview(viewModel: restrictedViewModel, mode: .restricted)
+        makePreview(viewModel: restrictedJoinableViewModel, mode: .restricted,
+                    customPreviewName: "RestrictedJoinable")
         makePreview(viewModel: inviteRequiredViewModel, mode: .inviteRequired)
         makePreview(viewModel: invitedViewModel, mode: .invited(isDM: false))
         makePreview(viewModel: invitedDMViewModel, mode: .invited(isDM: true))
@@ -361,11 +363,14 @@ struct JoinRoomScreen_Previews: PreviewProvider, TestablePreview {
         }
     }
     
-    static func makeViewModel(mode: JoinRoomScreenMode, hideInviteAvatars: Bool = false) -> JoinRoomScreenViewModel {
+    static func makeViewModel(mode: JoinRoomScreenMode,
+                              canJoinRoom: Bool = true,
+                              hideInviteAvatars: Bool = false) -> JoinRoomScreenViewModel {
         let appSettings = AppSettings()
         appSettings.knockingEnabled = true
         
         let clientProxy = ClientProxyMock(.init(hideInviteAvatars: hideInviteAvatars))
+        clientProxy.canJoinRoomWithReturnValue = canJoinRoom
         
         switch mode {
         case .unknown:
@@ -418,8 +423,7 @@ struct JoinRoomScreen_Previews: PreviewProvider, TestablePreview {
         return JoinRoomScreenViewModel(roomID: "1",
                                        via: [],
                                        appSettings: appSettings,
-                                       clientProxy: clientProxy,
-                                       mediaProvider: MediaProviderMock(configuration: .init()),
+                                       userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                        userIndicatorController: ServiceLocator.shared.userIndicatorController)
     }
 }

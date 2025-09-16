@@ -6,6 +6,7 @@
 //
 
 import Combine
+import MatrixRustSDK
 import SwiftUI
 
 typealias JoinRoomScreenViewModelType = StateStoreViewModel<JoinRoomScreenViewState, JoinRoomScreenViewAction>
@@ -30,16 +31,15 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
     init(roomID: String,
          via: [String],
          appSettings: AppSettings,
-         clientProxy: ClientProxyProtocol,
-         mediaProvider: MediaProviderProtocol,
+         userSession: UserSessionProtocol,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.roomID = roomID
         self.via = via
         self.appSettings = appSettings
-        self.clientProxy = clientProxy
+        clientProxy = userSession.clientProxy
         self.userIndicatorController = userIndicatorController
         
-        super.init(initialViewState: JoinRoomScreenViewState(roomID: roomID), mediaProvider: mediaProvider)
+        super.init(initialViewState: JoinRoomScreenViewState(roomID: roomID), mediaProvider: userSession.mediaProvider)
         
         clientProxy.hideInviteAvatarsPublisher
             .removeDuplicates()
@@ -212,8 +212,8 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
                     state.mode = .inviteRequired
                 case .knock, .knockRestricted:
                     state.mode = appSettings.knockingEnabled ? .knockable : .joinable
-                case .restricted:
-                    state.mode = .restricted
+                case .restricted(let rules):
+                    state.mode = clientProxy.canJoinRoom(with: rules) ? .joinable : .restricted
                 default:
                     state.mode = .joinable
                 }

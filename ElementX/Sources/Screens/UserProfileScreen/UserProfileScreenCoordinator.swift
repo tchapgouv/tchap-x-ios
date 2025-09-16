@@ -11,15 +11,14 @@ import SwiftUI
 struct UserProfileScreenCoordinatorParameters {
     let userID: String
     let isPresentedModally: Bool
-    let clientProxy: ClientProxyProtocol
-    let mediaProvider: MediaProviderProtocol
+    let userSession: UserSessionProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
     let analytics: AnalyticsService
 }
 
 enum UserProfileScreenCoordinatorAction {
     case openDirectChat(roomID: String)
-    case startCall(roomID: String)
+    case startCall(roomProxy: JoinedRoomProxyProtocol)
     case dismiss
 }
 
@@ -36,8 +35,7 @@ final class UserProfileScreenCoordinator: CoordinatorProtocol {
     init(parameters: UserProfileScreenCoordinatorParameters) {
         viewModel = UserProfileScreenViewModel(userID: parameters.userID,
                                                isPresentedModally: parameters.isPresentedModally,
-                                               clientProxy: parameters.clientProxy,
-                                               mediaProvider: parameters.mediaProvider,
+                                               userSession: parameters.userSession,
                                                userIndicatorController: parameters.userIndicatorController,
                                                analytics: parameters.analytics)
     }
@@ -49,8 +47,8 @@ final class UserProfileScreenCoordinator: CoordinatorProtocol {
             switch action {
             case .openDirectChat(let roomID):
                 actionsSubject.send(.openDirectChat(roomID: roomID))
-            case .startCall(let roomID):
-                actionsSubject.send(.startCall(roomID: roomID))
+            case .startCall(let roomProxy):
+                actionsSubject.send(.startCall(roomProxy: roomProxy))
             case .dismiss:
                 actionsSubject.send(.dismiss)
             }

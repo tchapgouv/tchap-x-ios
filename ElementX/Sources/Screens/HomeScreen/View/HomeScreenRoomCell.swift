@@ -14,8 +14,9 @@ struct HomeScreenRoomCell: View {
     @Environment(\.redactionReasons) private var redactionReasons
     
     let room: HomeScreenRoom
-    let context: HomeScreenViewModel.Context
     let isSelected: Bool
+    let mediaProvider: MediaProviderProtocol!
+    let action: (HomeScreenViewAction) -> Void
     
     private let verticalInsets = 12.0
     private let horizontalInsets = 16.0
@@ -23,7 +24,7 @@ struct HomeScreenRoomCell: View {
     var body: some View {
         Button {
             if let roomID = room.roomID {
-                context.send(viewAction: .selectRoom(roomIdentifier: roomID))
+                action(.selectRoom(roomIdentifier: roomID))
             }
         } label: {
             HStack(spacing: 16.0) {
@@ -43,14 +44,15 @@ struct HomeScreenRoomCell: View {
         }
         .buttonStyle(HomeScreenRoomCellButtonStyle(isSelected: isSelected))
         .accessibilityIdentifier(A11yIdentifiers.homeScreen.roomName(room.name))
+        .accessibilityHidden(redactionReasons.contains(.placeholder) ? true : false)
     }
     
     @ViewBuilder @MainActor
     private var avatar: some View {
         if dynamicTypeSize < .accessibility3 {
             RoomAvatarImage(avatar: room.avatar,
-                            avatarSize: .room(on: .home),
-                            mediaProvider: context.mediaProvider)
+                            avatarSize: .room(on: .chats),
+                            mediaProvider: mediaProvider)
                 .dynamicTypeSize(dynamicTypeSize < .accessibility1 ? dynamicTypeSize : .accessibility1)
                 .accessibilityHidden(true)
         }
@@ -166,27 +168,25 @@ private extension View {
 
 struct HomeScreenRoomCell_Previews: PreviewProvider, TestablePreview {
     static let summaryProviderGeneric = RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))
-    static let viewModelGeneric = makeViewModel(roomSummaryProvider: summaryProviderGeneric)
     static let genericRooms = summaryProviderGeneric.roomListPublisher.value.compactMap(mockRoom)
     
     static let summaryProviderForNotificationsState = RoomSummaryProviderMock(.init(state: .loaded(.mockRoomsWithNotificationsState)))
-    static let viewModelForNotificationsState = makeViewModel(roomSummaryProvider: summaryProviderForNotificationsState)
     static let notificationsStateRooms = summaryProviderForNotificationsState.roomListPublisher.value.compactMap(mockRoom)
     
     static var previews: some View {
         VStack(spacing: 0) {
             ForEach(genericRooms) { room in
-                HomeScreenRoomCell(room: room, context: viewModelGeneric.context, isSelected: false)
+                HomeScreenRoomCell(room: room, isSelected: false, mediaProvider: MediaProviderMock(configuration: .init())) { _ in }
             }
             
-            HomeScreenRoomCell(room: .placeholder(), context: viewModelGeneric.context, isSelected: false)
+            HomeScreenRoomCell(room: .placeholder(), isSelected: false, mediaProvider: MediaProviderMock(configuration: .init())) { _ in }
                 .redacted(reason: .placeholder)
         }
         .previewDisplayName("Generic")
         
         VStack(spacing: 0) {
             ForEach(notificationsStateRooms) { room in
-                HomeScreenRoomCell(room: room, context: viewModelForNotificationsState.context, isSelected: false)
+                HomeScreenRoomCell(room: room, isSelected: false, mediaProvider: MediaProviderMock(configuration: .init())) { _ in }
             }
         }
         .previewLayout(.sizeThatFits)

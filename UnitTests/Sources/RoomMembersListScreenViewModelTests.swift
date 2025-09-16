@@ -218,7 +218,7 @@ class RoomMembersListScreenViewModelTests: XCTestCase {
         
         // When tapping on another administrator in the list.
         deferred = deferFulfillment(context.$viewState) { $0.bindings.manageMemeberViewModel != nil }
-        guard let admin = viewModel.state.visibleJoinedMembers.first(where: { $0.member.role == .administrator && $0.member.id != RoomMemberProxyMock.mockMe.userID })?.member else {
+        guard let admin = viewModel.state.visibleJoinedMembers.first(where: { $0.member.role.isAdminOrHigher && $0.member.id != RoomMemberProxyMock.mockMe.userID })?.member else {
             XCTFail("Expected to find another admin.")
             return
         }
@@ -280,9 +280,8 @@ class RoomMembersListScreenViewModelTests: XCTestCase {
     
     private func setup(with members: [RoomMemberProxyMock]) {
         roomProxy = JoinedRoomProxyMock(.init(name: "test", members: members))
-        viewModel = .init(clientProxy: ClientProxyMock(.init()),
+        viewModel = .init(userSession: UserSessionMock(.init()),
                           roomProxy: roomProxy,
-                          mediaProvider: MediaProviderMock(configuration: .init()),
                           userIndicatorController: ServiceLocator.shared.userIndicatorController,
                           analytics: ServiceLocator.shared.analytics)
     }

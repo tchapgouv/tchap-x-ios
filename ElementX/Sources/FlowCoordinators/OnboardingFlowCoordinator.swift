@@ -10,6 +10,8 @@ import Foundation
 import SwiftState
 
 enum OnboardingFlowCoordinatorAction {
+    case requestPresentation(animated: Bool)
+    case dismiss
     case logout
 }
 
@@ -19,7 +21,6 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
     private let analyticsService: AnalyticsService
     private let appSettings: AppSettings
     private let notificationManager: NotificationManagerProtocol
-    private let rootNavigationStackCoordinator: NavigationStackCoordinator
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let windowManager: WindowManagerProtocol
     private let isNewLogin: Bool
@@ -56,26 +57,20 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
     
     private var verificationStateCancellable: AnyCancellable?
     
-    init(userSession: UserSessionProtocol,
+    init(isNewLogin: Bool,
          appLockService: AppLockServiceProtocol,
-         analyticsService: AnalyticsService,
-         appSettings: AppSettings,
-         notificationManager: NotificationManagerProtocol,
          navigationStackCoordinator: NavigationStackCoordinator,
-         userIndicatorController: UserIndicatorControllerProtocol,
-         windowManager: WindowManagerProtocol,
-         isNewLogin: Bool) {
-        self.userSession = userSession
-        self.appLockService = appLockService
-        self.analyticsService = analyticsService
-        self.appSettings = appSettings
-        self.notificationManager = notificationManager
-        self.userIndicatorController = userIndicatorController
-        self.windowManager = windowManager
+         flowParameters: CommonFlowParameters) {
         self.isNewLogin = isNewLogin
+        userSession = flowParameters.userSession
+        self.appLockService = appLockService
+        analyticsService = flowParameters.analytics
+        appSettings = flowParameters.appSettings
+        notificationManager = flowParameters.notificationManager
+        userIndicatorController = flowParameters.userIndicatorController
+        windowManager = flowParameters.windowManager
         
-        rootNavigationStackCoordinator = navigationStackCoordinator
-        self.navigationStackCoordinator = NavigationStackCoordinator()
+        self.navigationStackCoordinator = navigationStackCoordinator
         
         stateMachine = .init(state: .initial)
         
@@ -112,7 +107,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
             fatalError("This flow coordinator shouldn't have been started")
         }
         
-        rootNavigationStackCoordinator.setFullScreenCoverCoordinator(navigationStackCoordinator, animated: !isNewLogin)
+        actionsSubject.send(.requestPresentation(animated: !isNewLogin))
 
         stateMachine.tryEvent(.next)
     }
@@ -227,7 +222,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
             case (_, _, .notificationPermissions):
                 presentNotificationPermissionsScreen()
             case (_, _, .finished):
-                rootNavigationStackCoordinator.setFullScreenCoverCoordinator(nil)
+                actionsSubject.send(.dismiss)
                 stateMachine.tryState(.initial)
             case (.finished, _, .initial):
                 break
@@ -301,7 +296,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
     
     private func presentRecoveryKeyScreen() {
         let parameters = SecureBackupRecoveryKeyScreenCoordinatorParameters(secureBackupController: userSession.clientProxy.secureBackupController,
-                                                                            userIndicatorController: ServiceLocator.shared.userIndicatorController,
+                                                                            userIndicatorController: userIndicatorController,
                                                                             isModallyPresented: false)
         
         let coordinator = SecureBackupRecoveryKeyScreenCoordinator(parameters: parameters)
@@ -321,6 +316,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
     private func startEncryptionResetFlow() {
         let resetNavigationStackCoordinator = NavigationStackCoordinator()
         let coordinator = EncryptionResetFlowCoordinator(parameters: .init(userSession: userSession,
+                                                                           appSettings: appSettings,
                                                                            userIndicatorController: userIndicatorController,
                                                                            navigationStackCoordinator: resetNavigationStackCoordinator,
                                                                            windowManger: windowManager))

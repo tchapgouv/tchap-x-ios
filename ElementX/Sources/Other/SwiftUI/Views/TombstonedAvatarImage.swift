@@ -25,6 +25,7 @@ struct TombstonedAvatarImage: View {
                     .font(.system(size: geometry.size.width * 0.5625, weight: .semibold))
                     .minimumScaleFactor(0.001)
                     .frame(alignment: .center)
+                    .accessibilityLabel(L10n.a11yTombstonedRoom)
             }
         }
         .aspectRatio(1, contentMode: .fill)
@@ -36,7 +37,7 @@ struct TombstonedAvatarImage: View {
 
 struct TombstonedAvatarImage_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
-        TombstonedAvatarImage(avatarSize: .room(on: .home))
+        TombstonedAvatarImage(avatarSize: .room(on: .chats))
             .previewLayout(.sizeThatFits)
     }
 }

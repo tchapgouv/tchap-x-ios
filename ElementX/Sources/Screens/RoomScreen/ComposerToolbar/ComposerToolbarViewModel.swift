@@ -46,7 +46,6 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
 
     init(initialText: String? = nil,
          roomProxy: JoinedRoomProxyProtocol,
-         isInThread: Bool = false,
          wysiwygViewModel: WysiwygComposerViewModel,
          completionSuggestionService: CompletionSuggestionServiceProtocol,
          mediaProvider: MediaProviderProtocol,
@@ -69,7 +68,6 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
                                                               audioRecorderState: .init(),
                                                               isRoomEncrypted: roomProxy.infoPublisher.value.isEncrypted,
                                                               isLocationSharingEnabled: appSettings.mapTilerConfiguration.isEnabled,
-                                                              isInThread: isInThread,
                                                               bindings: .init()),
                    mediaProvider: mediaProvider)
         
@@ -218,8 +216,8 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
         case .attach(let attachment):
             state.bindings.composerFocused = false
             actionsSubject.send(.attach(attachment))
-        case .handlePasteOrDrop(let provider):
-            actionsSubject.send(.handlePasteOrDrop(provider: provider))
+        case .handlePasteOrDrop(let providers):
+            actionsSubject.send(.handlePasteOrDrop(providers: providers))
         case .enableTextFormatting:
             state.bindings.composerFormattingEnabled = true
             state.bindings.composerFocused = true
@@ -495,7 +493,7 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
                 attributedString = NSMutableAttributedString(string: string, attributes: [.link: URL(string: urlString) as Any])
             }
             
-            attributedStringBuilder.detectPermalinks(attributedString)
+            attributedStringBuilder.addMatrixEntityPermalinkAttributesTo(attributedString)
             
             // In RTE mentions don't need to be handled as links
             attributedString.removeAttribute(.link, range: NSRange(location: 0, length: attributedString.length))
@@ -608,7 +606,7 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
                 attributedString.addAttribute(.MatrixAllUsersMention, value: true, range: match.range)
             }
             
-            attributedStringBuilder.detectPermalinks(attributedString)
+            attributedStringBuilder.addMatrixEntityPermalinkAttributesTo(attributedString)
             
             state.bindings.plainComposerText = attributedString
         }

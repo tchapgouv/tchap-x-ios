@@ -1,13 +1,13 @@
 {
-  "originHash" : "f573b0754209479f46b77206f67033b0073bb2df38ede53b3289703615c5a48f",
+  "originHash" : "9d89a9320c29b16ca97c3b4c1dce15f8ab13ae1a66da50c98eec015db72c30d1",
   "pins" : [
     {
       "identity" : "compound-design-tokens",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/element-hq/compound-design-tokens",
       "state" : {
-        "revision" : "9da344135825e0a949e41b7a68987ec9205b1d27",
-        "version" : "5.0.2"
+        "revision" : "be5d26dfd4ad659b0d3b3aec1ad1cccd0dc8d063",
+        "version" : "6.0.0"
       }
     },
     {
@@ -15,7 +15,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/element-hq/compound-ios",
       "state" : {
-        "revision" : "089904dc1aeb3bacce3b7bb757b7637274e46008"
+        "revision" : "4ad0bd0acd825a905bb4955b32979fe34cc538eb"
       }
     },
     {
@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/element-hq/element-call-swift",
       "state" : {
-        "revision" : "dc273bd1fbb08c41ab517574b39c23ef667718c9",
-        "version" : "0.13.1"
+        "revision" : "deab02926b07c276514149e1a63e60d284f31878",
+        "version" : "0.15.0"
       }
     },
     {
@@ -158,8 +158,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/element-hq/matrix-rust-components-swift",
       "state" : {
-        "revision" : "1c896dcca3bd302b492a71b3d020f50d8407fea0",
-        "version" : "25.7.15"
+        "revision" : "37730751af3a42569677b04d3458629a4b8dc347",
+        "version" : "25.9.1"
       }
     },
     {
@@ -244,6 +244,15 @@
       }
     },
     {
+      "identity" : "swift-mutex",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swhitty/swift-mutex",
+      "state" : {
+        "revision" : "1770152df756b54c28ef1787df1e957d93cc62d5",
+        "version" : "0.0.6"
+      }
+    },
+    {
       "identity" : "swift-numerics",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-numerics",
@@ -266,8 +275,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-snapshot-testing",
       "state" : {
-        "revision" : "37230a37e83f1b7023be08e1b1a2603fcb1567fb",
-        "version" : "1.18.4"
+        "revision" : "1be8144023c367c5de701a6313ed29a3a10bf59b",
+        "version" : "1.18.3"
       }
     },
     {
@@ -277,6 +286,15 @@
       "state" : {
         "revision" : "74203046135342e4a4a627476dd6caf8b28fe11b",
         "version" : "509.0.0"
+      }
+    },
+    {
+      "identity" : "swiftsoup",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/scinfu/SwiftSoup.git",
+      "state" : {
+        "revision" : "aa85ee96017a730031bafe411cde24a08a17a9c9",
+        "version" : "2.8.8"
       }
     },
     {

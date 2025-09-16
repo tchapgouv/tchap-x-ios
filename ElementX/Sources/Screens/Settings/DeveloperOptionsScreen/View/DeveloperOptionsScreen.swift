@@ -36,6 +36,14 @@ struct DeveloperOptionsScreen: View {
                 Toggle(isOn: $context.threadsEnabled) {
                     Text("Threads")
                 }
+
+                Toggle(isOn: $context.spacesEnabled) {
+                    Text("Spaces")
+                }
+                
+                Toggle(isOn: $context.nextGenHTMLParserEnabled) {
+                    Text("Next gen HTML parsing")
+                }
             }
             
             Section("Room List") {
@@ -50,19 +58,16 @@ struct DeveloperOptionsScreen: View {
                 Toggle(isOn: $context.fuzzyRoomListSearchEnabled) {
                     Text("Fuzzy searching")
                 }
+                
+                Toggle(isOn: $context.lowPriorityFilterEnabled) {
+                    Text("Low priority filter")
+                }
             }
-            
+                        
             Section("Join rules") {
                 Toggle(isOn: $context.knockingEnabled) {
                     Text("Knocking")
                     Text("Ask to join rooms")
-                }
-            }
-            
-            Section("Sync") {
-                Toggle(isOn: $context.sharePosEnabled) {
-                    Text("Share pos")
-                    Text("Keep the sliding sync pos to make initial syncs faster. Requires an app restart to take effect. Might make the sync unstable.")
                 }
             }
             
@@ -118,13 +123,6 @@ struct DeveloperOptionsScreen: View {
                     Text("🥳")
                         .frame(maxWidth: .infinity)
                         .alignmentGuide(.listRowSeparatorLeading) { _ in 0 } // Fix separator alignment
-                }
-                
-                Button {
-                    fatalError("This crash is a test.")
-                } label: {
-                    Text("💥")
-                        .frame(maxWidth: .infinity)
                 }
             }
 

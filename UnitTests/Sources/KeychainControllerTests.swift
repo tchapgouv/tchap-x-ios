@@ -11,7 +11,11 @@
 @testable import TchapX_Production
 #else
 @testable import ElementX
+<<<<<<< HEAD
 #endif
+=======
+import KeychainAccess
+>>>>>>> release/25.09.4
 import XCTest
 
 class KeychainControllerTests: XCTestCase {
@@ -39,8 +43,7 @@ class KeychainControllerTests: XCTestCase {
                                                                slidingSyncVersion: .native),
                                                 sessionDirectories: .init(),
                                                 passphrase: "passphrase",
-                                                pusherNotificationClientIdentifier: "pusherClientID",
-                                                slidingSyncProxyURLString: "https://my.sync.proxy")
+                                                pusherNotificationClientIdentifier: "pusherClientID")
         keychain.setRestorationToken(restorationToken, forUsername: username)
         
         // Then the restoration token should be stored in the keychain.
@@ -59,8 +62,7 @@ class KeychainControllerTests: XCTestCase {
                                                                slidingSyncVersion: .native),
                                                 sessionDirectories: .init(),
                                                 passphrase: "passphrase",
-                                                pusherNotificationClientIdentifier: "pusherClientID",
-                                                slidingSyncProxyURLString: "https://my.sync.proxy")
+                                                pusherNotificationClientIdentifier: "pusherClientID")
         keychain.setRestorationToken(restorationToken, forUsername: username)
         XCTAssertEqual(keychain.restorationTokens().count, 1, "The keychain should have 1 restoration token.")
         XCTAssertEqual(keychain.restorationTokenForUsername(username), restorationToken, "The initial restoration token should match the value that was stored.")
@@ -85,8 +87,7 @@ class KeychainControllerTests: XCTestCase {
                                                                    slidingSyncVersion: .native),
                                                     sessionDirectories: .init(),
                                                     passphrase: "passphrase",
-                                                    pusherNotificationClientIdentifier: "pusherClientID",
-                                                    slidingSyncProxyURLString: "https://my.sync.proxy")
+                                                    pusherNotificationClientIdentifier: "pusherClientID")
             keychain.setRestorationToken(restorationToken, forUsername: "@test\(index):example.com")
         }
         XCTAssertEqual(keychain.restorationTokens().count, 5, "The keychain should have 5 restoration tokens.")
@@ -110,8 +111,7 @@ class KeychainControllerTests: XCTestCase {
                                                                    slidingSyncVersion: .native),
                                                     sessionDirectories: .init(),
                                                     passphrase: "passphrase",
-                                                    pusherNotificationClientIdentifier: "pusherClientID",
-                                                    slidingSyncProxyURLString: "https://my.sync.proxy")
+                                                    pusherNotificationClientIdentifier: "pusherClientID")
             keychain.setRestorationToken(restorationToken, forUsername: "@test\(index):example.com")
         }
         XCTAssertEqual(keychain.restorationTokens().count, 5, "The keychain should have 5 restoration tokens.")
@@ -128,27 +128,37 @@ class KeychainControllerTests: XCTestCase {
         XCTAssertNotNil(keychain.restorationTokenForUsername("@test4:example.com"), "The restoration token should not have been deleted.")
     }
     
-    func testSimplifiedSlidingSyncRestorationToken() {
-        // Given an empty keychain.
-        XCTAssertTrue(keychain.restorationTokens().isEmpty, "The keychain should be empty to begin with.")
+    func testUnsupportedRestorationToken() {
+        // Given a keychain with an unsupported restoration token with a sliding sync proxy URL value.
+        let underlyingKeychain = Keychain(service: KeychainControllerService.tests.restorationTokenID,
+                                          accessGroup: InfoPlistReader.main.keychainAccessGroupIdentifier)
+        // Note: We assert with this underlying keychain's keys as keychain.restorationTokens() triggers the deletion that we're testing.
+        XCTAssertTrue(underlyingKeychain.allKeys().isEmpty, "The keychain should be empty to begin with.")
         
-        // When adding an restoration token that doesn't contain a sliding sync proxy (e.g. for SSS).
-        let username = "@test:example.com"
-        let restorationToken = RestorationToken(session: .init(accessToken: "accessToken",
-                                                               refreshToken: "refreshToken",
-                                                               userId: "userId",
-                                                               deviceId: "deviceId",
-                                                               homeserverUrl: "homeserverUrl",
-                                                               oidcData: "oidcData",
-                                                               slidingSyncVersion: .native),
-                                                sessionDirectories: .init(),
-                                                passphrase: "passphrase",
-                                                pusherNotificationClientIdentifier: "pusherClientID",
-                                                slidingSyncProxyURLString: nil)
-        keychain.setRestorationToken(restorationToken, forUsername: username)
+        do {
+            let unsupportedToken = RestorationTokenV4(session: SessionV1(accessToken: "1234",
+                                                                         refreshToken: nil,
+                                                                         userId: "@test:example.com",
+                                                                         deviceId: "D3V1C3",
+                                                                         homeserverUrl: "https://matrix.example.com",
+                                                                         oidcData: nil,
+                                                                         slidingSyncVersion: .proxy(url: "https://sync.example.com")),
+                                                      sessionDirectory: .sessionsBaseDirectory.appending(component: UUID().uuidString),
+                                                      passphrase: "passphrase",
+                                                      pusherNotificationClientIdentifier: "pusherClientID")
+            let tokenData = try JSONEncoder().encode(unsupportedToken)
+            try underlyingKeychain.set(tokenData, key: "@test:example.com")
+            XCTAssertEqual(underlyingKeychain.allKeys().count, 1)
+        } catch {
+            XCTFail("Failed storing user restore token with error: \(error)")
+        }
         
-        // Then decoding the restoration token from the keychain should still work.
-        XCTAssertEqual(keychain.restorationTokenForUsername(username), restorationToken, "The retrieved restoration token should match the value that was stored.")
+        // When attempting to retrieve the unsupported token.
+        let retrievedToken = keychain.restorationTokenForUsername("@test:example.com")
+        
+        // Then nothing should be returned and the restoration token should be automatically removed.
+        XCTAssertNil(retrievedToken, "The token should not be decoded.")
+        XCTAssertTrue(underlyingKeychain.allKeys().isEmpty, "The keychain should be empty again.")
     }
     
     func testAddPINCode() throws {

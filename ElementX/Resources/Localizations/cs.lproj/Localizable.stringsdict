@@ -124,6 +124,42 @@
 			<string>%1$d odpovědí</string>
 		</dict>
 	</dict>
+	<key>common_rooms</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d místnost</string>
+			<key>few</key>
+			<string>%1$d místnosti</string>
+			<key>other</key>
+			<string>%1$d místností</string>
+		</dict>
+	</dict>
+	<key>common_spaces</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d prostor</string>
+			<key>few</key>
+			<string>%1$d prostory</string>
+			<key>other</key>
+			<string>%1$d prostorů</string>
+		</dict>
+	</dict>
 	<key>notification_compat_summary_line_for_room</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>

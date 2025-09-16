@@ -16,7 +16,6 @@ typealias RoomScreenViewModelType = StateStoreViewModel<RoomScreenViewState, Roo
 class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol {
     private let clientProxy: ClientProxyProtocol
     private let roomProxy: JoinedRoomProxyProtocol
-    private let appMediator: AppMediatorProtocol
     private let appSettings: AppSettings
     private let analyticsService: AnalyticsService
     private let userIndicatorController: UserIndicatorControllerProtocol
@@ -50,19 +49,16 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         }
     }
     
-    init(clientProxy: ClientProxyProtocol,
+    init(userSession: UserSessionProtocol,
          roomProxy: JoinedRoomProxyProtocol,
          initialSelectedPinnedEventID: String?,
-         mediaProvider: MediaProviderProtocol,
          ongoingCallRoomIDPublisher: CurrentValuePublisher<String?, Never>,
-         appMediator: AppMediatorProtocol,
          appSettings: AppSettings,
          appHooks: AppHooks,
          analyticsService: AnalyticsService,
          userIndicatorController: UserIndicatorControllerProtocol) {
-        self.clientProxy = clientProxy
+        clientProxy = userSession.clientProxy
         self.roomProxy = roomProxy
-        self.appMediator = appMediator
         self.appSettings = appSettings
         self.analyticsService = analyticsService
         self.userIndicatorController = userIndicatorController
@@ -75,7 +71,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
                                             hasOngoingCall: roomProxy.infoPublisher.value.hasRoomCall,
                                             hasSuccessor: roomProxy.infoPublisher.value.successor != nil)
         super.init(initialViewState: appHooks.roomScreenHook.update(viewState),
-                   mediaProvider: mediaProvider)
+                   mediaProvider: userSession.mediaProvider)
         
         updateRoomInfo(roomProxy.infoPublisher.value)
         setupSubscriptions(ongoingCallRoomIDPublisher: ongoingCallRoomIDPublisher)
@@ -117,7 +113,8 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
             actionsSubject.send(.displayKnockRequests)
         case .displaySuccessorRoom:
             guard let successorID = roomProxy.infoPublisher.value.successor?.roomId else { return }
-            actionsSubject.send(.displayRoom(roomID: successorID))
+            let serverNames = roomProxy.knownServerNames(maxCount: 50) // Limit to the same number used by ClientProxy.resolveRoomAlias(_:)
+            actionsSubject.send(.displayRoom(roomID: successorID, via: Array(serverNames)))
         }
     }
     
@@ -179,7 +176,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         }
         .store(in: &cancellables)
         
-        appMediator.networkMonitor.reachabilityPublisher
+        clientProxy.homeserverReachabilityPublisher
             .filter { $0 == .reachable }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -419,14 +416,12 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
 
 extension RoomScreenViewModel {
     static func mock(roomProxyMock: JoinedRoomProxyMock,
-                     clientProxyMock: ClientProxyMock = ClientProxyMock(),
+                     clientProxyMock: ClientProxyMock = ClientProxyMock(.init()),
                      appHooks: AppHooks = AppHooks()) -> RoomScreenViewModel {
-        RoomScreenViewModel(clientProxy: clientProxyMock,
+        RoomScreenViewModel(userSession: UserSessionMock(.init(clientProxy: clientProxyMock)),
                             roomProxy: roomProxyMock,
                             initialSelectedPinnedEventID: nil,
-                            mediaProvider: MediaProviderMock(configuration: .init()),
                             ongoingCallRoomIDPublisher: .init(.init(nil)),
-                            appMediator: AppMediatorMock.default,
                             appSettings: ServiceLocator.shared.settings,
                             appHooks: appHooks,
                             analyticsService: ServiceLocator.shared.analytics,

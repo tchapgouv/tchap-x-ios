@@ -11,6 +11,7 @@ import Foundation
 import LRUCache
 import MatrixRustSDK
 
+<<<<<<< HEAD
 struct AttributedStringBuilder: AttributedStringBuilderProtocol {
     private let cacheKey: String
     private let temporaryBlockquoteMarkingColor = UIColor.magenta
@@ -376,6 +377,15 @@ extension UIColor {
         
         return NSString(format: "#%06x", rgb) as String
     }
+=======
+protocol MentionBuilderProtocol {
+    func handleUserMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, userID: String, userDisplayName: String?)
+    func handleRoomIDMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, roomID: String)
+    func handleRoomAliasMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, roomAlias: String, roomDisplayName: String?)
+    func handleEventOnRoomAliasMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, eventID: String, roomAlias: String)
+    func handleEventOnRoomIDMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, eventID: String, roomID: String)
+    func handleAllUsersMention(for attributedString: NSMutableAttributedString, in range: NSRange)
+>>>>>>> release/25.09.4
 }
 
 extension NSAttributedString.Key {
@@ -389,37 +399,38 @@ extension NSAttributedString.Key {
     static let MatrixEventOnRoomID: NSAttributedString.Key = .init(rawValue: EventOnRoomIDAttribute.name)
     static let MatrixEventOnRoomAlias: NSAttributedString.Key = .init(rawValue: EventOnRoomAliasAttribute.name)
     static let MatrixAllUsersMention: NSAttributedString.Key = .init(rawValue: AllUsersMentionAttribute.name)
+    static let CodeBlock: NSAttributedString.Key = .init(rawValue: CodeBlockAttribute.name)
 }
 
-protocol MentionBuilderProtocol {
-    func handleUserMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, userID: String, userDisplayName: String?)
-    func handleRoomIDMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, roomID: String)
-    func handleRoomAliasMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, roomAlias: String, roomDisplayName: String?)
-    func handleEventOnRoomAliasMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, eventID: String, roomAlias: String)
-    func handleEventOnRoomIDMention(for attributedString: NSMutableAttributedString, in range: NSRange, url: URL, eventID: String, roomID: String)
-    func handleAllUsersMention(for attributedString: NSMutableAttributedString, in range: NSRange)
-}
-
-private struct TextParsingMatch {
-    enum MatchType {
-        case userID(identifier: String)
-        case roomAlias(alias: String)
-        case matrixURI(uri: String)
-        case link(urlString: String)
-        case atRoom
+struct AttributedStringBuilder: AttributedStringBuilderProtocol {
+    private static let defaultKey = "default"
+    
+    private let builder: AttributedStringBuilderProtocol
+    
+    static var useNextGenHTMLParser = false
+    
+    static func invalidateCaches() {
+        AttributedStringBuilderV1.invalidateCaches()
+        AttributedStringBuilderV2.invalidateCaches()
     }
     
-    let type: MatchType
-    let range: NSRange
-    
-    var link: URL? {
-        switch type {
-        case .userID(let identifier):
-            return try? URL(string: matrixToUserPermalink(userId: identifier))
-        case .link(let urlString):
-            return URL(string: urlString)
-        default:
-            return nil
+    init(cacheKey: String = defaultKey, mentionBuilder: MentionBuilderProtocol) {
+        if Self.useNextGenHTMLParser {
+            builder = AttributedStringBuilderV2(cacheKey: cacheKey, mentionBuilder: mentionBuilder)
+        } else {
+            builder = AttributedStringBuilderV1(cacheKey: cacheKey, mentionBuilder: mentionBuilder)
         }
+    }
+    
+    func fromPlain(_ string: String?) -> AttributedString? {
+        builder.fromPlain(string)
+    }
+    
+    func fromHTML(_ htmlString: String?) -> AttributedString? {
+        builder.fromHTML(htmlString)
+    }
+    
+    func addMatrixEntityPermalinkAttributesTo(_ attributedString: NSMutableAttributedString) {
+        builder.addMatrixEntityPermalinkAttributesTo(attributedString)
     }
 }

@@ -24,6 +24,7 @@ enum HomeScreenCoordinatorAction {
     case presentReportRoom(roomIdentifier: String)
     case presentDeclineAndBlock(userID: String, roomID: String)
     case roomLeft(roomIdentifier: String)
+    case transferOwnership(roomIdentifier: String)
     case presentSettingsScreen
     case presentFeedbackScreen
     case presentSecureBackupSettings
@@ -31,7 +32,6 @@ enum HomeScreenCoordinatorAction {
     case presentEncryptionResetScreen
     case presentStartChatScreen
     case presentGlobalSearch
-    case logoutWithoutConfirmation
     case logout
 }
 
@@ -83,12 +83,12 @@ final class HomeScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.presentStartChatScreen)
                 case .presentGlobalSearch:
                     actionsSubject.send(.presentGlobalSearch)
-                case .logoutWithoutConfirmation:
-                    actionsSubject.send(.logoutWithoutConfirmation)
                 case .logout:
                     actionsSubject.send(.logout)
                 case .presentDeclineAndBlock(let userID, let roomID):
                     actionsSubject.send(.presentDeclineAndBlock(userID: userID, roomID: roomID))
+                case .transferOwnership(let roomIdentifier):
+                    actionsSubject.send(.transferOwnership(roomIdentifier: roomIdentifier))
                 }
             }
             .store(in: &cancellables)

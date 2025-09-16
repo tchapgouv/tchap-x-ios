@@ -128,6 +128,42 @@
 			<string>%1$d відповідей</string>
 		</dict>
 	</dict>
+	<key>common_rooms</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d кімната</string>
+			<key>few</key>
+			<string>%1$d кімнати</string>
+			<key>many</key>
+			<string>%1$d кімнат</string>
+		</dict>
+	</dict>
+	<key>common_spaces</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d простір</string>
+			<key>few</key>
+			<string>%1$d простори</string>
+			<key>many</key>
+			<string>%1$d просторів</string>
+		</dict>
+	</dict>
 	<key>notification_compat_summary_line_for_room</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>

@@ -10,6 +10,7 @@ import SwiftUI
 
 struct MediaEventsTimelineScreen: View {
     @ObservedObject var context: MediaEventsTimelineScreenViewModel.Context
+    @State private var sheetHeight = CGFloat.zero
     
     var body: some View {
         mainContent
@@ -24,6 +25,15 @@ struct MediaEventsTimelineScreen: View {
                 context.send(viewAction: .changedScreenMode)
             }
             .timelineMediaPreview(viewModel: $context.mediaPreviewViewModel)
+            .sheet(item: $context.mediaPreviewSheetViewModel) { sheet in
+                if case let .media(media) = sheet.state.currentItem {
+                    TimelineMediaPreviewDetailsView(item: media,
+                                                    context: sheet.context,
+                                                    preferredColorScheme: nil,
+                                                    sheetHeight: $sheetHeight)
+                        .presentationDetents([.height(sheetHeight)])
+                }
+            }
     }
     
     // The scale effects do the following:
@@ -66,6 +76,9 @@ struct MediaEventsTimelineScreen: View {
                             viewForTimelineItem(item)
                                 .scaleEffect(CGSize(width: -1, height: -1))
                         }
+                        .accessibleLongPress(named: L10n.actionOpenContextMenu) {
+                            context.send(viewAction: .longPressedItem(item: item))
+                        }
                     }
                 } footer: {
                     // Use a footer as the header because the scrollView is flipped
@@ -85,6 +98,7 @@ struct MediaEventsTimelineScreen: View {
                     ForEach(group.items) { item in
                         VStack(spacing: 20) {
                             Divider()
+                                .accessibilityHidden(true)
                             
                             Button {
                                 tappedItem(item)
@@ -92,7 +106,14 @@ struct MediaEventsTimelineScreen: View {
                                 viewForTimelineItem(item)
                                     .scaleEffect(CGSize(width: 1, height: -1))
                             }
+                            .accessibilityRepresentation {
+                                viewForTimelineItem(item)
+                            }
+                            .accessibleLongPress(named: L10n.actionOpenContextMenu) {
+                                context.send(viewAction: .longPressedItem(item: item))
+                            }
                         }
+                        .accessibilityElement(children: .combine)
                         .padding(.horizontal, 16)
                     }
                 } footer: {
@@ -225,6 +246,10 @@ struct MediaEventsTimelineScreen: View {
     }
 }
 
+extension TimelineMediaPreviewViewModel: Identifiable {
+    var id: UUID { instanceID }
+}
+
 // MARK: - Previews
 
 struct MediaEventsTimelineScreen_Previews: PreviewProvider, TestablePreview {
@@ -274,15 +299,13 @@ struct MediaEventsTimelineScreen_Previews: PreviewProvider, TestablePreview {
         
         return TimelineViewModel(roomProxy: JoinedRoomProxyMock(.init(name: "Preview room")),
                                  timelineController: timelineController,
-                                 mediaProvider: MediaProviderMock(configuration: .init()),
+                                 userSession: UserSessionMock(.init()),
                                  mediaPlayerProvider: MediaPlayerProviderMock(),
-                                 voiceMessageMediaManager: VoiceMessageMediaManagerMock(),
                                  userIndicatorController: UserIndicatorControllerMock(),
                                  appMediator: AppMediatorMock.default,
                                  appSettings: ServiceLocator.shared.settings,
                                  analyticsService: ServiceLocator.shared.analytics,
                                  emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
-                                 timelineControllerFactory: TimelineControllerFactoryMock(.init()),
-                                 clientProxy: ClientProxyMock(.init()))
+                                 timelineControllerFactory: TimelineControllerFactoryMock(.init()))
     }
 }
