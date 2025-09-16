@@ -145,15 +145,12 @@ class ChatsFlowCoordinatorStateMachine {
 
             case (.roomList, .deselectRoom):
                 return .roomList(roomListSelectedRoomID: nil)
-<<<<<<< HEAD:ElementX/Sources/FlowCoordinators/UserSessionFlowCoordinatorStateMachine.swift
 
             case (.roomList(let roomListSelectedRoomID), .showSettingsScreen):
                 return .settingsScreen(roomListSelectedRoomID: roomListSelectedRoomID)
 
             case (.settingsScreen(let roomListSelectedRoomID), .dismissedSettingsScreen):
                 return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
-=======
->>>>>>> release/25.09.4:ElementX/Sources/FlowCoordinators/ChatsFlowCoordinatorStateMachine.swift
                 
             case (.roomList(let roomListSelectedRoomID), .feedbackScreen):
                 return .feedbackScreen(roomListSelectedRoomID: roomListSelectedRoomID)
@@ -178,15 +175,12 @@ class ChatsFlowCoordinatorStateMachine {
 
             case (.startChatScreen(let roomListSelectedRoomID), .dismissedStartChatScreen):
                 return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
-<<<<<<< HEAD:ElementX/Sources/FlowCoordinators/UserSessionFlowCoordinatorStateMachine.swift
                             
             case (.roomList(let roomListSelectedRoomID), .showLogoutConfirmationScreen):
                 return .logoutConfirmationScreen(roomListSelectedRoomID: roomListSelectedRoomID)
 
             case (.logoutConfirmationScreen(let roomListSelectedRoomID), .dismissedLogoutConfirmationScreen):
                 return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
-=======
->>>>>>> release/25.09.4:ElementX/Sources/FlowCoordinators/ChatsFlowCoordinatorStateMachine.swift
                 
             case (.roomList(let roomListSelectedRoomID), .showRoomDirectorySearchScreen):
                 return .roomDirectorySearchScreen(roomListSelectedRoomID: roomListSelectedRoomID)

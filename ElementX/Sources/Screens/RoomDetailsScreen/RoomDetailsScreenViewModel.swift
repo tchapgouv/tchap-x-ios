@@ -249,7 +249,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         }
         
         if let powerLevels = roomInfo.powerLevels {
-<<<<<<< HEAD
             // Tchap: if user is external user, don't allow any modification power level.
 //            state.canEditRoomName = powerLevels.canOwnUser(sendStateEvent: .roomName)
 //            state.canEditRoomTopic = powerLevels.canOwnUser(sendStateEvent: .roomTopic)
@@ -277,52 +276,15 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 state.canBanUsers = powerLevels.canOwnUserBan()
                 state.canJoinCall = powerLevels.canOwnUserJoinCall()
             }
-=======
-            state.canEditRoomName = powerLevels.canOwnUser(sendStateEvent: .roomName)
-            state.canEditRoomTopic = powerLevels.canOwnUser(sendStateEvent: .roomTopic)
-            state.canEditRoomAvatar = powerLevels.canOwnUser(sendStateEvent: .roomAvatar)
-            state.canInviteUsers = powerLevels.canOwnUserInvite()
-            state.canKickUsers = powerLevels.canOwnUserKick()
-            state.canBanUsers = powerLevels.canOwnUserBan()
-            state.canJoinCall = powerLevels.canOwnUserJoinCall()
-            state.canEditRolesOrPermissions = powerLevels.canOwnUserEditRolesAndPermissions()
->>>>>>> release/25.09.4
         }
     }
     
     private func fetchMembersIfNeeded() async {
-<<<<<<< HEAD
-        // We need to fetch members just in 1-to-1 chat to get the member object for the other person
-        // Tchap: always fetch members because we need it to display `external` badge on RoomDetailScreen.
-//        guard roomProxy.isDirectOneToOneRoom else {
-//            return
-//        }
-        
-=======
->>>>>>> release/25.09.4
         roomProxy.membersPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self, ownUserID = roomProxy.ownUserID] members in
-                guard let self else { return }
-                
-                // Tchap: add this condition since we don't bypass anymore the members fetching
-                // and the following properties must not be filled if we are not in a Direct 1-to-1 Room.
-                if roomProxy.isDirectOneToOneRoom {
-                    if let accountOwner = members.first(where: { $0.userID == ownUserID }) {
-                        self.state.accountOwner = .init(withProxy: accountOwner)
-                    }
-                
-                    if let dmRecipient = members.first(where: { $0.userID != ownUserID }) {
-                        self.state.dmRecipientInfo = .init(member: .init(withProxy: dmRecipient))
-                    
-                        Task { await self.updateMemberIdentityVerificationStates() }
-                    }
-                }
-                
-<<<<<<< HEAD
-                // Tchap: update `externalCount` to display `external` badge on RoomDetailsScreen if necessary.
-                self.state.bindings.externalCount = members.filter { MatrixIdFromString($0.userID).isExternalTchapUser }.count
-=======
+                guard let self else { return }       
+               
                 guard roomProxy.isDirectOneToOneRoom else {
                     return
                 }
@@ -332,7 +294,9 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                     
                     Task { await self.updateMemberIdentityVerificationStates() }
                 }
->>>>>>> release/25.09.4
+
+                // Tchap: update `externalCount` to display `external` badge on RoomDetailsScreen if necessary.
+                self.state.bindings.externalCount = members.filter { MatrixIdFromString($0.userID).isExternalTchapUser }.count
             }
             .store(in: &cancellables)
         

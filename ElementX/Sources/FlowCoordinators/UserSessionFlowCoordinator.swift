@@ -171,7 +171,6 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
     
     // MARK: - Private
     
-<<<<<<< HEAD
     func asyncHandleAppRoute(_ appRoute: AppRoute, animated: Bool) async {
         showLoadingIndicator(delay: .seconds(0.5))
         defer { hideLoadingIndicator() }
@@ -350,15 +349,6 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             default:
                 fatalError("Unknown transition: \(context)")
             }
-=======
-    private func configureStateMachine() {
-        stateMachine.addRoutes(event: .start, transitions: [.initial => .tabBar]) { [weak self] _ in
-            guard let self else { return }
-            
-            chatsFlowCoordinator.start()
-            spaceExplorerFlowCoordinator.start()
-            attemptStartingOnboarding()
->>>>>>> release/25.09.4
         }
         
         stateMachine.addRoutes(event: .showSettingsScreen, transitions: [.tabBar => .settingsScreen]) { [weak self] _ in
@@ -575,7 +565,6 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         navigationTabCoordinator.setSheetCoordinator(navigationStackCoordinator)
     }
     
-<<<<<<< HEAD
     private func presentHomeScreen() {
         let parameters = HomeScreenCoordinatorParameters(userSession: userSession,
                                                          bugReportService: bugReportService,
@@ -834,9 +823,6 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
     }
         
     // MARK: Calls
-=======
-    // MARK: - Calls
->>>>>>> release/25.09.4
     
     private func presentCallScreen(genericCallLink url: URL) {
         presentCallScreen(configuration: .init(genericCallLink: url))
@@ -990,208 +976,6 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             }
             .store(in: &cancellables)
         
-<<<<<<< HEAD
-        navigationSplitCoordinator.setSheetCoordinator(coordinator, animated: true)
-    }
-    
-    // MARK: Global search
-    
-    private func presentGlobalSearch() {
-        let roomSummaryProvider = userSession.clientProxy.alternateRoomSummaryProvider
-        
-        let coordinator = GlobalSearchScreenCoordinator(parameters: .init(roomSummaryProvider: roomSummaryProvider,
-                                                                          mediaProvider: userSession.mediaProvider))
-        
-        globalSearchScreenCoordinator = coordinator
-        
-        coordinator.actions
-            .sink { [weak self] action in
-                guard let self else { return }
-                
-                switch action {
-                case .dismiss:
-                    dismissGlobalSearch()
-                case .select(let roomID):
-                    dismissGlobalSearch()
-                    handleAppRoute(.room(roomID: roomID, via: []), animated: true)
-                }
-            }
-            .store(in: &cancellables)
-        
-        let hostingController = UIHostingController(rootView: coordinator.toPresentable())
-        hostingController.view.backgroundColor = .clear
-        appMediator.windowManager.globalSearchWindow.rootViewController = hostingController
-
-        appMediator.windowManager.showGlobalSearch()
-    }
-    
-    private func dismissGlobalSearch() {
-        appMediator.windowManager.globalSearchWindow.rootViewController = nil
-        appMediator.windowManager.hideGlobalSearch()
-        
-        globalSearchScreenCoordinator = nil
-    }
-    
-    // MARK: Room Directory Search
-    
-    // Tchap: add a flag to present the view fullscreen or in sheet.
-    // Because in Tchap, it is called from am already fullScreenCover view.
-    // And the system can't stack 2 fullScreenCover views.
-    // Sp, present it in a sheet for Tchap "Start Chat" view.
-//    private func presentRoomDirectorySearch() {
-    private func presentRoomDirectorySearch(inFullScreenMode: Bool = true) {
-        let coordinator = RoomDirectorySearchScreenCoordinator(parameters: .init(clientProxy: userSession.clientProxy,
-                                                                                 mediaProvider: userSession.mediaProvider,
-                                                                                 userIndicatorController: ServiceLocator.shared.userIndicatorController))
-        
-        coordinator.actionsPublisher.sink { [weak self] action in
-            guard let self else { return }
-            
-            switch action {
-            case .selectAlias(let alias):
-                // Tchap: handle presentation mode to dismiss the view in the correct way.
-//                stateMachine.processEvent(.dismissedRoomDirectorySearchScreen)
-                stateMachine.processEvent(.dismissedRoomDirectorySearchScreen(isPresentedInFullScreenMode: inFullScreenMode))
-                handleAppRoute(.roomAlias(alias), animated: true)
-            case .selectRoomID(let roomID):
-                // Tchap: handle presentation mode to dismiss the view in the correct way.
-//                stateMachine.processEvent(.dismissedRoomDirectorySearchScreen)
-                stateMachine.processEvent(.dismissedRoomDirectorySearchScreen(isPresentedInFullScreenMode: inFullScreenMode))
-                handleAppRoute(.room(roomID: roomID, via: []), animated: true)
-            case .dismiss:
-                // Tchap: handle presentation mode to dismiss the view in the correct way.
-//                stateMachine.processEvent(.dismissedRoomDirectorySearchScreen)
-                stateMachine.processEvent(.dismissedRoomDirectorySearchScreen(isPresentedInFullScreenMode: inFullScreenMode))
-            }
-        }
-        .store(in: &cancellables)
-        
-        // Tchap: handle presentation mode.
-//        navigationSplitCoordinator.setFullScreenCoverCoordinator(coordinator)
-        if inFullScreenMode {
-            navigationSplitCoordinator.setFullScreenCoverCoordinator(coordinator)
-        } else {
-            navigationSplitCoordinator.setSheetCoordinator(coordinator)
-        }
-    }
-    
-    // Tchap: add a flag to dismiss the view in correct presentation mode: fullscreen or in sheet.
-//    private func dismissRoomDirectorySearch() {
-//        navigationSplitCoordinator.setFullScreenCoverCoordinator(nil)
-//    }
-//
-    private func dismissRoomDirectorySearch(isPresentedInFullScreenMode: Bool = true) {
-        if isPresentedInFullScreenMode {
-            navigationSplitCoordinator.setFullScreenCoverCoordinator(nil)
-        } else {
-            navigationSplitCoordinator.setSheetCoordinator(nil)
-        }
-    }
-
-    // MARK: User Profile
-    
-    private func presentUserProfileScreen(userID: String, animated: Bool) {
-        clearRoute(animated: animated)
-        
-        let navigationStackCoordinator = NavigationStackCoordinator()
-        let parameters = UserProfileScreenCoordinatorParameters(userID: userID,
-                                                                isPresentedModally: true,
-                                                                clientProxy: userSession.clientProxy,
-                                                                mediaProvider: userSession.mediaProvider,
-                                                                userIndicatorController: ServiceLocator.shared.userIndicatorController,
-                                                                analytics: analytics)
-        let coordinator = UserProfileScreenCoordinator(parameters: parameters)
-        coordinator.actionsPublisher.sink { [weak self] action in
-            guard let self else { return }
-            
-            switch action {
-            case .openDirectChat(let roomID):
-                navigationSplitCoordinator.setSheetCoordinator(nil)
-                stateMachine.processEvent(.selectRoom(roomID: roomID, via: [], entryPoint: .room))
-            case .startCall(let roomID):
-                Task { await self.presentCallScreen(roomID: roomID, notifyOtherParticipants: false) }
-            case .dismiss:
-                navigationSplitCoordinator.setSheetCoordinator(nil)
-            }
-        }
-        .store(in: &cancellables)
-        
-        navigationStackCoordinator.setRootCoordinator(coordinator, animated: false)
-        navigationSplitCoordinator.setSheetCoordinator(navigationStackCoordinator, animated: animated) { [weak self] in
-            self?.stateMachine.processEvent(.dismissedUserProfileScreen)
-        }
-    }
-    
-    // MARK: Sharing
-    
-    private func presentRoomSelectionScreen(sharePayload: ShareExtensionPayload, animated: Bool) {
-        let roomSummaryProvider = userSession.clientProxy.alternateRoomSummaryProvider
-        
-        let stackCoordinator = NavigationStackCoordinator()
-        
-        let coordinator = RoomSelectionScreenCoordinator(parameters: .init(clientProxy: userSession.clientProxy,
-                                                                           roomSummaryProvider: roomSummaryProvider,
-                                                                           mediaProvider: userSession.mediaProvider))
-        
-        coordinator.actionsPublisher.sink { [weak self] action in
-            guard let self else { return }
-            
-            switch action {
-            case .dismiss:
-                navigationSplitCoordinator.setSheetCoordinator(nil)
-            case .confirm(let roomID):
-                let sharePayload = switch sharePayload {
-                case .mediaFile(_, let mediaFile):
-                    ShareExtensionPayload.mediaFile(roomID: roomID, mediaFile: mediaFile)
-                case .text(_, let text):
-                    ShareExtensionPayload.text(roomID: roomID, text: text)
-                }
-                
-                navigationSplitCoordinator.setSheetCoordinator(nil)
-                
-                stateMachine.processEvent(.selectRoom(roomID: roomID,
-                                                      via: [],
-                                                      entryPoint: .share(sharePayload)),
-                                          userInfo: .init(animated: animated))
-            }
-        }
-        .store(in: &cancellables)
-        
-        stackCoordinator.setRootCoordinator(coordinator)
-        
-        navigationSplitCoordinator.setSheetCoordinator(stackCoordinator, animated: animated) { [weak self] in
-            self?.stateMachine.processEvent(.dismissedShareExtensionRoomList)
-        }
-    }
-    
-    private func dismissRoomSelectionScreen() {
-        navigationSplitCoordinator.setSheetCoordinator(nil)
-    }
-    
-    // MARK: Toasts and loading indicators
-    
-    private static let loadingIndicatorIdentifier = "\(UserSessionFlowCoordinator.self)-Loading"
-    private static let failureIndicatorIdentifier = "\(UserSessionFlowCoordinator.self)-Failure"
-    
-    private func showLoadingIndicator(delay: Duration? = nil) {
-        ServiceLocator.shared.userIndicatorController.submitIndicator(UserIndicator(id: Self.loadingIndicatorIdentifier,
-                                                                                    type: .modal,
-                                                                                    title: L10n.commonLoading,
-                                                                                    persistent: true),
-                                                                      delay: delay)
-    }
-    
-    private func hideLoadingIndicator() {
-        ServiceLocator.shared.userIndicatorController.retractIndicatorWithId(Self.loadingIndicatorIdentifier)
-    }
-    
-    private func showFailureIndicator() {
-        ServiceLocator.shared.userIndicatorController.submitIndicator(UserIndicator(id: Self.failureIndicatorIdentifier,
-                                                                                    type: .toast,
-                                                                                    title: L10n.errorUnknown,
-                                                                                    iconName: "xmark"))
-=======
         navigationTabCoordinator.setSheetCoordinator(coordinator, animated: true)
->>>>>>> release/25.09.4
     }
 }

@@ -78,8 +78,10 @@ final class AppSettings {
         #if DEBUG
         true
         #else
-        let apps = ["io.element.elementx.nightly", "io.element.elementx.pr"]
-        return apps.contains(InfoPlistReader.main.baseBundleIdentifier)
+        // Tchap: set Development Build flag to false if not in DEBUG mode
+//        let apps = ["io.element.elementx.nightly", "io.element.elementx.pr"]
+//        return apps.contains(InfoPlistReader.main.baseBundleIdentifier)
+        return false
         #endif
     }()
         
@@ -146,21 +148,6 @@ final class AppSettings {
     
     // MARK: - Application
     
-<<<<<<< HEAD:ElementX/Sources/Application/AppSettings.swift
-    /// Whether or not the app is a development build that isn't in production.
-    static var isDevelopmentBuild: Bool = {
-        #if DEBUG
-        true
-        #else
-        // Tchap: set Development Build flag to false if not in DEBUG mode
-//        let apps = ["io.element.elementx.nightly", "io.element.elementx.pr"]
-//        return apps.contains(InfoPlistReader.main.baseBundleIdentifier)
-        return false
-        #endif
-    }()
-    
-=======
->>>>>>> release/25.09.4:ElementX/Sources/Application/Settings/AppSettings.swift
     /// The last known version of the app that was launched on this device, which is
     /// used to detect when migrations should be run. When `nil` the app may have been
     /// deleted between runs so should clear data in the shared container and keychain.

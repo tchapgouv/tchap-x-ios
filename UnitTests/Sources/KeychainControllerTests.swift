@@ -11,11 +11,8 @@
 @testable import TchapX_Production
 #else
 @testable import ElementX
-<<<<<<< HEAD
 #endif
-=======
 import KeychainAccess
->>>>>>> release/25.09.4
 import XCTest
 
 class KeychainControllerTests: XCTestCase {

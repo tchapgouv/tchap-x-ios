@@ -395,12 +395,8 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
             // Other
                                     
             case (_, .startChildFlow(let roomID, let via, let entryPoint), .presentingChild):
-<<<<<<< HEAD
                 Task { await self.startChildFlow(for: roomID, via: via, entryPoint: entryPoint) }
 
-=======
-                startChildFlow(for: roomID, via: via, entryPoint: entryPoint)
->>>>>>> release/25.09.4
             case (.presentingChild, .dismissChildFlow, _):
                 childRoomFlowCoordinator = nil
                 
