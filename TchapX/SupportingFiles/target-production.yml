@@ -203,8 +203,6 @@ targets:
     dependencies:
     - target: TchapX-Production-NSE
     - target: TchapX-Production-ShareExtension
-    # not used yet
-    # - target: NCE
     - package: MatrixRustSDK
       embed: true
     - package: Compound
@@ -220,6 +218,7 @@ targets:
     - package: LoremSwiftum
     - package: LRUCache
     - package: Mapbox
+    - package: Mutex
     - package: PostHog
     - package: SwiftState
     - package: GZIP
@@ -231,6 +230,7 @@ targets:
     - package: Emojibase
     - package: WysiwygComposer
     - package: SwiftOGG
+    - package: SwiftSoup
     - package: DSWaveformImage
       product: DSWaveformImageViews
 
