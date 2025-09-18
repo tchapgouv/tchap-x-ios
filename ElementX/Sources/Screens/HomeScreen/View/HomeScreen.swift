@@ -25,8 +25,7 @@ struct HomeScreen: View {
             .toolbar { toolbar }
             .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
             .track(screen: .Home)
-            // Tchap: no bloom (green gradient at top of the view) for the moment (20250730).
-//            .bloom()
+            .bloom()
             .sentryTrace("\(Self.self)")
     }
 
@@ -67,7 +66,9 @@ struct HomeScreen: View {
             } label: {
                 CompoundIcon(\.plus)
             }
-            .buttonStyle(.compound(.super, size: .toolbarIcon))
+            // Tchap: don't use `super` button style
+//            .buttonStyle(.compound(.super, size: .toolbarIcon))
+            .buttonStyle(.compound(.secondary, size: .toolbarIcon))
             .accessibilityLabel(L10n.actionStartChat)
             .accessibilityIdentifier(A11yIdentifiers.homeScreen.startChat)
         default:
