@@ -144,12 +144,6 @@ class ChatsFlowCoordinatorStateMachine {
 
             case (.roomList, .deselectRoom):
                 return .roomList(roomListSelectedRoomID: nil)
-
-            case (.roomList(let roomListSelectedRoomID), .showSettingsScreen):
-                return .settingsScreen(roomListSelectedRoomID: roomListSelectedRoomID)
-
-            case (.settingsScreen(let roomListSelectedRoomID), .dismissedSettingsScreen):
-                return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
                 
             case (.roomList(let roomListSelectedRoomID), .feedbackScreen):
                 return .feedbackScreen(roomListSelectedRoomID: roomListSelectedRoomID)
@@ -173,12 +167,6 @@ class ChatsFlowCoordinatorStateMachine {
                 return .startChatScreen(roomListSelectedRoomID: roomListSelectedRoomID)
 
             case (.startChatScreen(let roomListSelectedRoomID), .dismissedStartChatScreen):
-                return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
-                            
-            case (.roomList(let roomListSelectedRoomID), .showLogoutConfirmationScreen):
-                return .logoutConfirmationScreen(roomListSelectedRoomID: roomListSelectedRoomID)
-
-            case (.logoutConfirmationScreen(let roomListSelectedRoomID), .dismissedLogoutConfirmationScreen):
                 return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
                 
             case (.roomList(let roomListSelectedRoomID), .showRoomDirectorySearchScreen):
