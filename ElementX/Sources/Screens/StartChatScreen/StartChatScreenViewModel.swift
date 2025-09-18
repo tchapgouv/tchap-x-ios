@@ -78,8 +78,6 @@ class StartChatScreenViewModel: StartChatScreenViewModelType, StartChatScreenVie
             joinRoomByAddress()
         case .openRoomDirectorySearch:
             actionsSubject.send(.openRoomDirectorySearch)
-        case .joinForum: // Tchap: handle `joinForum` action
-            actionsSubject.send(.joinForum)
         }
     }
     

@@ -104,10 +104,9 @@ class ChatsFlowCoordinatorStateMachine {
         
         /// Request presentation of the room directory search screen.
         case showRoomDirectorySearchScreen
-        // Tchap: add a flag to present the view fullscreen or in sheet.
-//        case dismissedRoomDirectorySearchScreen
+
         /// The room directory search screen has been dismissed.
-        case dismissedRoomDirectorySearchScreen(isPresentedInFullScreenMode: Bool)
+        case dismissedRoomDirectorySearchScreen
 
         /// Request presentation of the user profile screen.
         case showUserProfileScreen(userID: String)
@@ -187,10 +186,6 @@ class ChatsFlowCoordinatorStateMachine {
 
             case (.roomDirectorySearchScreen(let roomListSelectedRoomID), .dismissedRoomDirectorySearchScreen):
                 return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
-            
-            // Tchap: handle presentation mode for dismissedRoomDirectorySearchScreen.
-            case (.roomList(let selectedRoomID), .dismissedRoomDirectorySearchScreen):
-                return .roomList(roomListSelectedRoomID: selectedRoomID)
             
             case (_, .showUserProfileScreen):
                 return .userProfileScreen

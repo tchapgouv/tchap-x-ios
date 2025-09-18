@@ -23,7 +23,6 @@ enum StartChatScreenCoordinatorAction {
     case close
     case openRoom(withIdentifier: String)
     case openRoomDirectorySearch
-    case joinForum // Tchap: add `join Forum` action to `StartChat` screen
 }
 
 final class StartChatScreenCoordinator: CoordinatorProtocol {
@@ -69,8 +68,6 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
                 actionsSubject.send(.openRoom(withIdentifier: identifier))
             case .openRoomDirectorySearch:
                 actionsSubject.send(.openRoomDirectorySearch)
-            case .joinForum: // Tchap: add `join Forum` action to `StartChat` screen
-                actionsSubject.send(.joinForum)
             }
         }
         .store(in: &cancellables)
