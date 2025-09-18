@@ -280,7 +280,7 @@ struct JoinRoomScreen: View {
             Button(L10n.screenJoinRoomDeclineAndBlockButtonTitle, role: .destructive) {
                 context.send(viewAction: .declineInviteAndBlock(userID: inviter.id))
             }
-            .buttonStyle(.compound(.tertiary))
+            .buttonStyle(.compound(.secondary))
         }
     }
     
