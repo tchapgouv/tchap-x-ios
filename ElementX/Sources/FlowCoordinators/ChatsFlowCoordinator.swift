@@ -115,7 +115,6 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             case .success(let resolved): await asyncHandleAppRoute(.childRoom(roomID: resolved.roomId, via: resolved.servers), animated: animated)
             case .failure: showFailureIndicator()
             }
-            
         case .roomDetails(let roomID):
             if stateMachine.state.roomListSelectedRoomID == roomID {
                 roomFlowCoordinator?.handleAppRoute(appRoute, animated: animated)
@@ -133,7 +132,6 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             case .success(let resolved): await asyncHandleAppRoute(.event(eventID: eventID, roomID: resolved.roomId, via: resolved.servers), animated: animated)
             case .failure: showFailureIndicator()
             }
-            
         case .childEvent:
             roomFlowCoordinator?.handleAppRoute(appRoute, animated: animated)
         case .childEventOnRoomAlias(let eventID, let alias):
@@ -141,7 +139,6 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             case .success(let resolved): await asyncHandleAppRoute(.childEvent(eventID: eventID, roomID: resolved.roomId, via: resolved.servers), animated: animated)
             case .failure: showFailureIndicator()
             }
-            
         case .userProfile(let userID):
             stateMachine.processEvent(.showUserProfileScreen(userID: userID), userInfo: .init(animated: animated))
         case .share(let payload):
@@ -200,7 +197,6 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                 actionsSubject.send(.hideCallScreenOverlay) // Turn any active call into a PiP so that navigation from a notification is visible to the user.
             case(.roomList, .deselectRoom, .roomList):
                 dismissRoomFlow(animated: animated)
-                
             case (.roomList, .feedbackScreen, .feedbackScreen):
                 bugReportFlowCoordinator = BugReportFlowCoordinator(parameters: .init(presentationMode: .sheet(sidebarNavigationStackCoordinator),
                                                                                       userIndicatorController: flowParameters.userIndicatorController,
@@ -209,42 +205,34 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                 bugReportFlowCoordinator?.start()
             case (.feedbackScreen, .dismissedFeedbackScreen, .roomList):
                 break
-                
             case (.roomList, .showRecoveryKeyScreen, .recoveryKeyScreen):
                 presentRecoveryKeyScreen(animated: animated)
             case (.recoveryKeyScreen, .dismissedRecoveryKeyScreen, .roomList):
                 break
-                
             case (.roomList, .startEncryptionResetFlow, .encryptionResetFlow):
                 startEncryptionResetFlow(animated: animated)
             case (.encryptionResetFlow, .finishedEncryptionResetFlow, .roomList):
                 break
-                
             case (.roomList, .showStartChatScreen, .startChatScreen):
                 presentStartChat(animated: animated)
             case (.startChatScreen, .dismissedStartChatScreen, .roomList):
                 break
-                
             case (.roomList, .showRoomDirectorySearchScreen, .roomDirectorySearchScreen):
                 presentRoomDirectorySearch()
             case (.roomDirectorySearchScreen, .dismissedRoomDirectorySearchScreen, .roomList):
                 dismissRoomDirectorySearch()
-            
             case (_, .showUserProfileScreen(let userID), .userProfileScreen):
                 presentUserProfileScreen(userID: userID, animated: animated)
             case (.userProfileScreen, .dismissedUserProfileScreen, .roomList):
                 break
-                
             case (.roomList, .presentReportRoomScreen(let roomID), .reportRoomScreen):
                 Task { await self.presentReportRoom(for: roomID) }
             case (.reportRoomScreen, .dismissedReportRoomScreen, .roomList):
                 break
-                
             case (.roomList, .presentDeclineAndBlockScreen(let userID, let roomID), .declineAndBlockUserScreen):
                 presentDeclineAndBlockScreen(userID: userID, roomID: roomID)
             case (.declineAndBlockUserScreen, .dismissedDeclineAndBlockScreen, .roomList):
                 break
-                
             case (.roomList(let roomListSelectedRoomID), .showShareExtensionRoomList, .shareExtensionRoomList(let sharePayload)):
                 Task {
                     if roomListSelectedRoomID != nil {
@@ -256,7 +244,6 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                 }
             case (.shareExtensionRoomList, .dismissedShareExtensionRoomList, .roomList):
                 dismissRoomSelectionScreen()
-                
             default:
                 fatalError("Unknown transition: \(context)")
             }
