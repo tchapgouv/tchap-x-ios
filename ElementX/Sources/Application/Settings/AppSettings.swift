@@ -318,11 +318,11 @@ final class AppSettings {
 //    private(set) var bugReportApplicationID = "element-x-ios"
     /// The name allocated by the bug report server
     #if IS_TCHAP_DEVELOPMENT
-    private(set) var bugReportApplicationID = "tchax-development-ios"
+    private(set) var bugReportApplicationID = "tchap-x-development-ios"
     #elseif IS_TCHAP_STAGING
-    private(set) var bugReportApplicationID = "tchax-staging-ios"
+    private(set) var bugReportApplicationID = "tchap-x-staging-ios"
     #elseif IS_TCHAP_PRODUCTION
-    private(set) var bugReportApplicationID = "tchax-production-ios"
+    private(set) var bugReportApplicationID = "tchap-x-production-ios"
     #else
     private(set) var bugReportApplicationID = "element-x-ios"
     #endif
