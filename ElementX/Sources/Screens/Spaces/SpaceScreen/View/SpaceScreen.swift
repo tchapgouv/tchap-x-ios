@@ -48,6 +48,7 @@ struct SpaceScreen: View {
         ToolbarItem(placement: .principal) {
             RoomHeaderView(roomName: context.viewState.spaceName,
                            roomAvatar: context.viewState.space.avatar,
+                           roomPropertiesBadgesView: nil, // Tchap addition
                            mediaProvider: context.mediaProvider)
         }
     }

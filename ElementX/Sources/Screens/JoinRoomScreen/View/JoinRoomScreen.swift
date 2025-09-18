@@ -298,7 +298,7 @@ struct JoinRoomScreen: View {
                 if let avatar = context.viewState.avatar {
                     RoomHeaderView(roomName: context.viewState.title,
                                    roomAvatar: avatar,
-                                   roomPropertiesBadgesView: .sample, // Tchap addition
+                                   roomPropertiesBadgesView: nil, // Tchap addition
                                    mediaProvider: context.mediaProvider)
                 }
             }

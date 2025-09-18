@@ -13,8 +13,8 @@ struct RoomHeaderView: View {
     let roomName: String
     let roomAvatar: RoomAvatar
     var dmRecipientVerificationState: UserIdentityVerificationState?
-    // Tchap:
-    let roomPropertiesBadgesView: TchapRoomHeaderViewRoomPropertiesBadgesView
+    // Tchap: optional badge reporting room configuration.
+    let roomPropertiesBadgesView: TchapRoomHeaderViewRoomPropertiesBadgesView?
     
     let mediaProvider: MediaProviderProtocol?
     
@@ -50,9 +50,11 @@ struct RoomHeaderView: View {
                     }
                 }
                 // Tchap: additional room info
-                roomPropertiesBadgesView
-                    .zIndex(-1)
-                Spacer(minLength: 2.0)
+                if let roomPropertiesBadgesView {
+                    roomPropertiesBadgesView
+                        .zIndex(-1)
+                    Spacer(minLength: 2.0)
+                }
             }
             // Take up as much space as possible, with a leading alignment for use in the principal toolbar position.
             // Tchap: allowing `idealWidth` to grow to `infinity` crash the rendering in some conditions (redraw triggered by bindings in roomPropertiesBadgesView).
