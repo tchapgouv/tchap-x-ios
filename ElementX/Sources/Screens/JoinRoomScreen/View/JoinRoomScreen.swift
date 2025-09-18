@@ -180,9 +180,7 @@ struct JoinRoomScreen: View {
             }
         case .knockable:
             Button(L10n.screenJoinRoomKnockAction) { context.send(viewAction: .knock) }
-                // Tchap: don't use `super` button style
-//                .buttonStyle(.compound(.super))
-                .buttonStyle(.compound(.secondary))
+                .buttonStyle(.compound(.super))
         case .knocked:
             Button(L10n.screenJoinRoomCancelKnockAction) { context.send(viewAction: .cancelKnock) }
                 .buttonStyle(.compound(.secondary))
@@ -286,9 +284,7 @@ struct JoinRoomScreen: View {
     
     var joinButton: some View {
         Button(L10n.screenJoinRoomJoinAction) { context.send(viewAction: .join) }
-            // Tchap: don't use `super` button style
-//                .buttonStyle(.compound(.super))
-            .buttonStyle(.compound(.secondary))
+            .buttonStyle(.compound(.super))
     }
     
     @ToolbarContentBuilder
