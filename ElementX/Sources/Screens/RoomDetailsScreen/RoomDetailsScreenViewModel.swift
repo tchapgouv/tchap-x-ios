@@ -257,8 +257,8 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
 //            state.canKickUsers = powerLevels.canOwnUserKick()
 //            state.canBanUsers = powerLevels.canOwnUserBan()
 //            state.canJoinCall = powerLevels.canOwnUserJoinCall()
-            state.canEditRolesOrPermissions = powerLevels.suggestedRole(forUser: roomProxy.ownUserID) == .administrator
-            if MatrixIdFromString(clientProxy.userID).isExternalTchapUser {
+//            state.canEditRolesOrPermissions = powerLevels.canOwnUserEditRolesAndPermissions()
+            if MatrixIdFromString(userSession.clientProxy.userID).isExternalTchapUser {
                 state.canEditRoomName = false
                 state.canEditRoomTopic = false
                 state.canEditRoomAvatar = false
@@ -275,6 +275,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 state.canKickUsers = powerLevels.canOwnUserKick()
                 state.canBanUsers = powerLevels.canOwnUserBan()
                 state.canJoinCall = powerLevels.canOwnUserJoinCall()
+                state.canEditRolesOrPermissions = powerLevels.canOwnUserEditRolesAndPermissions()
             }
         }
     }
@@ -283,7 +284,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         roomProxy.membersPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self, ownUserID = roomProxy.ownUserID] members in
-                guard let self else { return }       
+                guard let self else { return }
                
                 guard roomProxy.isDirectOneToOneRoom else {
                     return
