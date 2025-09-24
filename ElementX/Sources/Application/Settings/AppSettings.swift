@@ -444,10 +444,14 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.knockingEnabled, defaultValue: false, storageType: .userDefaults(store))
     var knockingEnabled
     
-    @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: false, storageType: .userDefaults(store))
+    // Tchap: enable `threadsEnabled` feature flag by default.
+//    @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: false, storageType: .userDefaults(store))
+    @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: true, storageType: .userDefaults(store))
     var threadsEnabled
     
-    @UserPreference(key: UserDefaultsKeys.spacesEnabled, defaultValue: false, storageType: .userDefaults(store))
+    // Tchap: enable `spacesEnabled` feature flag by default.
+//    @UserPreference(key: UserDefaultsKeys.spacesEnabled, defaultValue: false, storageType: .userDefaults(store))
+    @UserPreference(key: UserDefaultsKeys.spacesEnabled, defaultValue: true, storageType: .userDefaults(store))
     var spacesEnabled
     
     @UserPreference(key: UserDefaultsKeys.nextGenHTMLParserEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
