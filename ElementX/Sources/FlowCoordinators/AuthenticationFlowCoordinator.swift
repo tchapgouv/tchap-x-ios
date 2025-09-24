@@ -218,7 +218,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         stateMachine.addRoutes(event: .continueWithPassword, transitions: [.serverConfirmationScreen => .loginScreen,
                                                                            .startScreen => .loginScreen]) { [weak self] context in
             let loginHint = context.userInfo as? String
-           // Tchap: as we skip the homeServer confirmation screen, we have to configure it now before showing login screen.
+            // Tchap: as we skip the homeServer confirmation screen, we have to configure it now before showing login screen.
 //            self?.showLoginScreen(loginHint: loginHint, fromState: context.fromState)
             if let homeserver = self?.authenticationService.homeserver.value {
                 Task {
