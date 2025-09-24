@@ -218,7 +218,14 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         stateMachine.addRoutes(event: .continueWithPassword, transitions: [.serverConfirmationScreen => .loginScreen,
                                                                            .startScreen => .loginScreen]) { [weak self] context in
             let loginHint = context.userInfo as? String
-            self?.showLoginScreen(loginHint: loginHint, fromState: context.fromState)
+           // Tchap: as we skip the homeServer confirmation screen, we have to configure it now before showing login screen.
+//            self?.showLoginScreen(loginHint: loginHint, fromState: context.fromState)
+            if let homeserver = self?.authenticationService.homeserver.value {
+                Task {
+                    _ = await self?.authenticationService.configure(for: homeserver.address, flow: .login)
+                    self?.showLoginScreen(loginHint: loginHint, fromState: context.fromState)
+                }
+            }
         }
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .serverConfirmationScreen), transitions: [.loginScreen => .serverConfirmationScreen])
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .startScreen), transitions: [.loginScreen => .startScreen])
@@ -273,7 +280,9 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 case .loginWithQR:
                     stateMachine.tryEvent(.loginWithQR)
                 case .login:
-                    stateMachine.tryEvent(.confirmServer(.login))
+                    // Tchap: skip confirm server screen
+//                    stateMachine.tryEvent(.confirmServer(.login))
+                    stateMachine.tryEvent(.continueWithPassword)
                 case .register:
                     stateMachine.tryEvent(.confirmServer(.register))
                 case .reportProblem:
