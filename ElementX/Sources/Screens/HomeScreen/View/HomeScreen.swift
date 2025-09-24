@@ -25,8 +25,7 @@ struct HomeScreen: View {
             .toolbar { toolbar }
             .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
             .track(screen: .Home)
-            // Tchap: no bloom (green gradient at top of the view) for the moment (20250730).
-//            .bloom()
+            .bloom()
             .sentryTrace("\(Self.self)")
     }
 
@@ -41,7 +40,7 @@ struct HomeScreen: View {
                 LoadableAvatarImage(url: context.viewState.userAvatarURL,
                                     name: context.viewState.userDisplayName,
                                     contentID: context.viewState.userID,
-                                    avatarSize: .user(on: .home),
+                                    avatarSize: .user(on: .chats),
                                     mediaProvider: context.mediaProvider)
                     .accessibilityIdentifier(A11yIdentifiers.homeScreen.userAvatar)
                     .overlayBadge(10, isBadged: context.viewState.requiresExtraAccountSetup)

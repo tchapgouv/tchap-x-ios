@@ -16,7 +16,7 @@ final class NSEUserSession {
     private let userID: String
     private(set) lazy var mediaProvider: MediaProviderProtocol = MediaProvider(mediaLoader: MediaLoader(client: baseClient),
                                                                                imageCache: .onlyOnDisk,
-                                                                               networkMonitor: nil)
+                                                                               homeserverReachabilityPublisher: nil)
     private let delegateHandle: TaskHandle?
     
     var mediaPreviewVisibility: MediaPreviews {
@@ -47,11 +47,7 @@ final class NSEUserSession {
          appHooks: AppHooks,
          appSettings: CommonSettingsProtocol) async throws {
         sessionDirectories = credentials.restorationToken.sessionDirectories
-        
         userID = credentials.userID
-        if credentials.restorationToken.passphrase != nil {
-            MXLog.info("Restoring client with encrypted store.")
-        }
         
         let homeserverURL = credentials.restorationToken.session.homeserverUrl
         let clientBuilder = ClientBuilder

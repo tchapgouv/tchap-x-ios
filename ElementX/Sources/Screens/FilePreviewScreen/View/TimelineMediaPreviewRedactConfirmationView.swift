@@ -13,7 +13,8 @@ struct TimelineMediaPreviewRedactConfirmationView: View {
     
     let item: TimelineMediaPreviewItem.Media
     @ObservedObject var context: TimelineMediaPreviewViewModel.Context
-    
+    var preferredColorScheme: ColorScheme? = .dark
+
     @State private var sheetHeight: CGFloat = .zero
     private let topPadding: CGFloat = 19
     
@@ -31,7 +32,7 @@ struct TimelineMediaPreviewRedactConfirmationView: View {
         .presentationDetents([.height(sheetHeight + topPadding)])
         .presentationDragIndicator(.visible)
         .presentationBackground(.compound.bgCanvasDefault)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(preferredColorScheme)
     }
     
     private var header: some View {
@@ -71,6 +72,7 @@ struct TimelineMediaPreviewRedactConfirmationView: View {
                         .aspectRatio(contentMode: .fill)
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .accessibilityHidden(true)
             }
                 
             VStack(alignment: .leading, spacing: 4) {

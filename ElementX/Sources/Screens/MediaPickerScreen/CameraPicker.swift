@@ -23,7 +23,8 @@ struct CameraPicker: UIViewControllerRepresentable {
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let callback: (CameraPickerAction) -> Void
     
-    init(userIndicatorController: UserIndicatorControllerProtocol, callback: @escaping (CameraPickerAction) -> Void) {
+    init(userIndicatorController: UserIndicatorControllerProtocol,
+         callback: @escaping (CameraPickerAction) -> Void) {
         self.userIndicatorController = userIndicatorController
         self.callback = callback
     }
@@ -33,6 +34,7 @@ struct CameraPicker: UIViewControllerRepresentable {
         imagePicker.sourceType = .camera
         imagePicker.allowsEditing = false
         imagePicker.delegate = context.coordinator
+        imagePicker.videoQuality = .typeHigh
         
         if let mediaTypes = UIImagePickerController.availableMediaTypes(for: .camera) {
             imagePicker.mediaTypes = mediaTypes

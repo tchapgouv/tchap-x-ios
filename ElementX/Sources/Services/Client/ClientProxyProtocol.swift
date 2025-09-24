@@ -34,6 +34,7 @@ enum ClientProxyError: Error {
     
     case invalidMedia
     case invalidServerName
+    case invalidResponse
     case failedUploadingMedia(ErrorKind)
     case roomPreviewIsPrivate
     case failedRetrievingUserIdentity
@@ -72,23 +73,20 @@ enum TimelineMediaVisibility: Decodable {
 }
 
 // sourcery: AutoMockable
-protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
+protocol ClientProxyProtocol: AnyObject {
     var actionsPublisher: AnyPublisher<ClientProxyAction, Never> { get }
     
     var loadingStatePublisher: CurrentValuePublisher<ClientProxyLoadingState, Never> { get }
     
     var verificationStatePublisher: CurrentValuePublisher<SessionVerificationState, Never> { get }
     
+    var homeserverReachabilityPublisher: CurrentValuePublisher<NetworkMonitorReachability, Never> { get }
+    
     var userID: String { get }
 
     var deviceID: String? { get }
 
     var homeserver: String { get }
-    
-    // TODO: This is a temporary value, in the future we should throw a migration error
-    // when decoding a session that contains a sliding sync proxy URL instead of restoring it.
-    var needsSlidingSyncMigration: Bool { get }
-    var slidingSyncVersion: SlidingSyncVersion { get }
     
     var canDeactivateAccount: Bool { get }
     
@@ -106,6 +104,8 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     var hideInviteAvatarsPublisher: CurrentValuePublisher<Bool, Never> { get }
     
     var pusherNotificationClientIdentifier: String? { get }
+    
+    var mediaLoader: MediaLoaderProtocol { get }
     
     var roomSummaryProvider: RoomSummaryProviderProtocol { get }
     
@@ -125,9 +125,13 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     
     var sessionVerificationController: SessionVerificationControllerProxyProtocol? { get }
     
+    var spaceService: SpaceServiceProxyProtocol { get }
+    
     var isReportRoomSupported: Bool { get async }
     
     var isLiveKitRTCSupported: Bool { get async }
+    
+    var maxMediaUploadSize: Result<UInt, ClientProxyError> { get async }
     
     func isOnlyDeviceLeft() async -> Result<Bool, ClientProxyError>
     
@@ -136,6 +140,8 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func stopSync()
     
     func stopSync(completion: (() -> Void)?) // Hopefully this will become async once we get SE-0371.
+    
+    func expireSyncSessions() async
         
     func accountURL(action: AccountManagementAction) async -> URL?
     
@@ -161,6 +167,8 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     
     func knockRoomAlias(_ roomAlias: String, message: String?) async -> Result<Void, ClientProxyError>
     
+    func canJoinRoom(with rules: [AllowRule]) -> Bool
+    
     func uploadMedia(_ media: MediaInfo) async -> Result<String, ClientProxyError>
     
     func roomForIdentifier(_ identifier: String) async -> RoomProxyType?
@@ -172,7 +180,7 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func roomSummaryForAlias(_ alias: String) -> RoomSummary?
     
     /// Will only work for rooms that are in our room list/local store
-    func reportRoomForIdentifier(_ identifier: String, reason: String?) async -> Result<Void, ClientProxyError>
+    func reportRoomForIdentifier(_ identifier: String, reason: String) async -> Result<Void, ClientProxyError>
     
     @discardableResult func loadUserDisplayName() async -> Result<Void, ClientProxyError>
     

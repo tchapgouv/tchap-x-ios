@@ -11,6 +11,7 @@ import SwiftUI
 struct TimelineMediaPreviewDetailsView: View {
     let item: TimelineMediaPreviewItem.Media
     @ObservedObject var context: TimelineMediaPreviewViewModel.Context
+    var preferredColorScheme: ColorScheme? = .dark
     
     @Binding var sheetHeight: CGFloat
     private let topPadding: CGFloat = 19
@@ -29,9 +30,11 @@ struct TimelineMediaPreviewDetailsView: View {
         .presentationDetents([.height(sheetHeight + topPadding)])
         .presentationDragIndicator(.visible)
         .presentationBackground(.compound.bgCanvasDefault)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(preferredColorScheme)
         .sheet(item: $context.redactConfirmationItem) { item in
-            TimelineMediaPreviewRedactConfirmationView(item: item, context: context)
+            TimelineMediaPreviewRedactConfirmationView(item: item,
+                                                       context: context,
+                                                       preferredColorScheme: preferredColorScheme)
         }
     }
     
@@ -44,6 +47,7 @@ struct TimelineMediaPreviewDetailsView: View {
                                         contentID: item.sender.id,
                                         avatarSize: .user(on: .mediaPreviewDetails),
                                         mediaProvider: context.mediaProvider)
+                        .accessibilityHidden(true)
                     
                     VStack(alignment: .leading, spacing: 0) {
                         if let displayName = item.sender.displayName {

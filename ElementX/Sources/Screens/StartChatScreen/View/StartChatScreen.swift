@@ -52,7 +52,6 @@ struct StartChatScreen: View {
         if context.viewState.isRoomDirectoryEnabled {
             roomDirectorySearch
         }
-        joinForumSection // Tchap: Join a forum
         inviteFriendsSection
         joinRoomByAddressSection
         usersSection
@@ -70,7 +69,9 @@ struct StartChatScreen: View {
     
     private var roomDirectorySearch: some View {
         Section {
-            ListRow(label: .default(title: L10n.screenRoomDirectorySearchTitle,
+            // Use Tchap "join a forum" label
+//            ListRow(label: .default(title: L10n.screenRoomDirectorySearchTitle,
+            ListRow(label: .default(title: TchapL10n.startChatActionJoinForum,
                                     icon: \.listBulleted),
                     kind: .navigationLink {
                         context.send(viewAction: .openRoomDirectorySearch)
@@ -106,16 +107,6 @@ struct StartChatScreen: View {
                 }
             })
             .accessibilityIdentifier(A11yIdentifiers.startChatScreen.inviteFriends)
-        }
-    }
-    
-    // Tchap: Join a forum (add section without chevron)
-    private var joinForumSection: some View {
-        Section {
-            ListRow(label: .default(title: TchapL10n.startChatActionJoinForum,
-                                    icon: \.listBulleted),
-                    kind: .button { context.send(viewAction: .joinForum) })
-                .accessibilityIdentifier(TchapA11yIdentifiers.startChatScreen.joinForum)
         }
     }
     

@@ -294,7 +294,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         }
     }
     
-    func reportRoom(reason: String?) async -> Result<Void, RoomProxyError> {
+    func reportRoom(reason: String) async -> Result<Void, RoomProxyError> {
         do {
             try await room.reportRoom(reason: reason)
             return .success(())
@@ -313,7 +313,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                 membersSubject.value = members.map(RoomMemberProxy.init)
             }
         } catch {
-            MXLog.error("[RoomProxy] Failed updating members using no sync API: \(error)")
+            MXLog.error("Failed updating members using no sync API: \(error)")
         }
         
         do {
@@ -323,7 +323,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                 membersSubject.value = members.map(RoomMemberProxy.init)
             }
         } catch {
-            MXLog.error("[RoomProxy] Failed updating members using sync API: \(error)")
+            MXLog.error("Failed updating members using sync API: \(error)")
         }
     }
 
@@ -637,16 +637,6 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     func elementCallWidgetDriver(deviceID: String) -> ElementCallWidgetDriverProtocol {
         ElementCallWidgetDriver(room: room, deviceID: deviceID)
-    }
-    
-    func sendCallNotificationIfNeeded() async -> Result<Void, RoomProxyError> {
-        do {
-            _ = try await room.sendCallNotificationIfNeeded()
-            return .success(())
-        } catch {
-            MXLog.error("Failed room call notification with error: \(error)")
-            return .failure(.sdkError(error))
-        }
     }
     
     // MARK: - Permalinks

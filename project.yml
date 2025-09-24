@@ -11,8 +11,8 @@ options:
   groupSortPosition: bottom
   createIntermediateGroups: true
   deploymentTarget:
-    iOS: '17.6'
-    macOS: '14.6'
+    iOS: '17.5'
+    macOS: '14.5'
   groupOrdering:
   - order:
     - ElementX
@@ -48,7 +48,7 @@ settings:
   ENABLE_BITCODE: false
   APP_NAME: ElementX
   KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).$(BASE_BUNDLE_IDENTIFIER)"
-  MARKETING_VERSION: 25.07.2
+  MARKETING_VERSION: 25.09.4
   CURRENT_PROJECT_VERSION: 1
   SUPPORTS_MACCATALYST: false
 
@@ -84,7 +84,7 @@ packages:
     # path: ../matrix-analytics-events
   EmbeddedElementCall:
     url: https://github.com/element-hq/element-call-swift
-    exactVersion: 0.13.1
+    exactVersion: 0.15.0
   Emojibase:
     url: https://github.com/matrix-org/emojibase-bindings
     minorVersion: 1.4.2
@@ -138,6 +138,9 @@ packages:
   Mapbox:
     url: https://github.com/maplibre/maplibre-gl-native-distribution
     minorVersion: 5.13.0
+  Mutex: # Backports Swift's built in Mutex so we can use it on iOS 17.
+    url: https://github.com/swhitty/swift-mutex
+    minorVersion: 0.0.6
   PostHog:
     url: https://github.com/PostHog/posthog-ios
     minorVersion: 3.27.0
@@ -147,6 +150,9 @@ packages:
   SnapshotTesting:
     url: https://github.com/pointfreeco/swift-snapshot-testing
     minorVersion: 1.18.3
+  SwiftSoup:
+    url: https://github.com/scinfu/SwiftSoup.git
+    minorVersion: 2.8.8
   SwiftState:
     url: https://github.com/ReactKit/SwiftState
     minorVersion: 6.0.0

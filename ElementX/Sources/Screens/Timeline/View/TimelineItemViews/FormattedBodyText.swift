@@ -134,65 +134,44 @@ struct FormattedBodyText: View {
 
 struct FormattedBodyText_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
-        body
+        body(AttributedStringBuilderV1(cacheKey: "v1", mentionBuilder: MentionBuilder()))
+            .previewLayout(.sizeThatFits)
+            .previewDisplayName("v1")
+        
+        body(AttributedStringBuilderV2(cacheKey: "v2", mentionBuilder: MentionBuilder()))
+            .previewLayout(.sizeThatFits)
+            .previewDisplayName("v2")
     }
     
     @ViewBuilder
-    static var body: some View {
-        let htmlStrings = [
-            """
-            Plain text\n
-            !room:matrix.org\n
-            https://www.matrix.org\n
-            www.matrix.org\n
-            matrix.org
-            """,
-            """
-            Text before blockquote
-            <blockquote>
-            <b>bold</b> <i>italic</i>
-            </blockquote>Text after blockquote
-            """,
-            """
-            <blockquote>First blockquote with a <a href=\"https://www.matrix.org/\">link</a> in it</blockquote>
-            <blockquote>Second blockquote with a <a href=\"https://www.matrix.org/\">link</a> in it</blockquote>
-            <blockquote>Third blockquote with a <a href=\"https://www.matrix.org/\">link</a> in it</blockquote>
-            """,
-            """
-            <blockquote>A blockquote that is long and goes onto multiple lines as the first item in the message</blockquote>
-            <p>Then another line of text here to reply to the blockquote, which is also a multiline component.</p>
-            <blockquote>Short line here.</blockquote>
-            <p>And a simple reply here.</p>
-            """,
-            """
-            <code>Hello world</code>
-            <p>Text</p>
-            <code><b>Hello</b> <i>world</i></code>
-            <p>Text</p>
-            <code>Hello world</code>
-            <p>Text</p>
-            <code><a href="https://www.matrix.org">matrix.org</a> https://www.matrix.org</code>
-            """,
-            "<p>This is a list</p>\n<ul>\n<li>One</li>\n<li>Two</li>\n<li>And number 3</li>\n</ul>\n",
-            "<ul><li>First item</li><li>Second item</li><li>Third item</li></ul>",
-            "<p>test</p>\n<p>test</p>"
-        ]
-        
-        let attributedStringBuilder = AttributedStringBuilder(mentionBuilder: MentionBuilder())
+    static func body(_ attributedStringBuilder: AttributedStringBuilderProtocol) -> some View {
+        let htmlStrings = HTMLFixtures.allCases.map(\.rawValue)
         
         ScrollView {
-            VStack(alignment: .leading, spacing: 24.0) {
+            VStack(alignment: .leading, spacing: 4.0) {
                 ForEach(htmlStrings, id: \.self) { htmlString in
-                    if let attributedString = attributedStringBuilder.fromHTML(htmlString) {
-                        FormattedBodyText(attributedString: attributedString)
-                            .bubbleBackground()
+                    HStack(alignment: .top, spacing: 0) {
+                        Text(htmlString)
+                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                            .padding(4.0)
+                        
+                        Divider()
+                            .background(.black)
+                        
+                        if let attributedString = attributedStringBuilder.fromHTML(htmlString) {
+                            FormattedBodyText(attributedString: attributedString)
+                                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                                .bubbleBackground()
+                                .padding(4.0)
+                        }
                     }
+                    .border(.black)
                 }
+                
                 FormattedBodyText(attributedString: AttributedString("Some plain text wrapped in an AttributedString."))
                     .bubbleBackground()
+                
                 FormattedBodyText(text: "Some plain text that's not an attributed component.")
-                    .bubbleBackground()
-                FormattedBodyText(text: "Some plain text that's not an attributed component. This one is really long.")
                     .bubbleBackground()
                 
                 FormattedBodyText(text: "❤️", boostFontSize: true)
@@ -200,6 +179,5 @@ struct FormattedBodyText_Previews: PreviewProvider, TestablePreview {
             }
             .padding()
         }
-        .previewLayout(.sizeThatFits)
     }
 }

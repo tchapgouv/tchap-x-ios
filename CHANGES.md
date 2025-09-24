@@ -1,3 +1,346 @@
+## Changes in 25.09.3 (2025-09-11)
+
+### What's Changed
+
+🐛 Bugfixes
+* Fix stripping location data away from raw images when processing them for upload by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4497
+* Await user session migrations rather than launching a task. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4502
+
+🚧 In development 🚧
+* Tweak attributed string formatting by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4496
+
+Others
+* Update the Enterprise submodule. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4495
+* Add intent system to widget url creation. by @Copilot in https://github.com/element-hq/element-x-ios/pull/4427
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.09.2...release/25.09.3
+
+## Changes in 25.09.2 (2025-09-09)
+
+### What's Changed
+
+✨ Features
+* MediaTimelinePreviewDetails can now be opened by long pressing in the media timeline by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4474
+
+🙌 Improvements
+* Increase line limit for name in FileRoomTimelineView by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4470
+
+🐛 Bugfixes
+* Fix some retain cycles that could keep the Client(Proxy) alive when clearing the cache. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4462
+* Address the real lifetime issue of the SDK's `Client` by making `Context.mediaProvider` weak. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4466
+* Use the SDK's offline detection everywhere (except for restarting the sync loop). by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4472
+
+⚠️ API Changes
+* Introduce flow parameters to simplify dependencies for child flows. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4448
+* Dependency Refactor by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4450
+* Use the Emoji/Map/Poll view models. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4458
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4454
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4479
+
+🦻 Accessibility
+* A11y audit improvements and fixes by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4457
+* A11y timeout announcement for verification request, hardcoded to 1 minute by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4467
+
+🚧 In development 🚧
+* Hide the tab bar when pushing screens on iPhone as requested by the designs. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4444
+* Use the SDK's SpaceService, SpaceRoom and SpaceRoomList. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4455
+* Fix a bug where invites would be hidden when the Low Priority feature is enabled. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4461
+* Allow joined rooms to be pushed within a space. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4460
+* Add a migration to expire sync sessions so that m.space.* state is up to date. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4482
+
+Others
+* Tweaks discovered when using Compound overrides. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4456
+* Move call presentation from the chats flow into the user session flow. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4459
+* Update actions/github-script action to v8 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/4471
+* Fix proxies by reverting the change that introduced schemes. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4481
+* Revert weak media provider by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4483
+* Add a new way of parsing HTML data and generating AttributedStrings by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4449
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.09.0...release/25.09.2
+
+## Changes in 25.09.0 (2025-08-27)
+
+### What's Changed
+
+✨ Features
+* Fix document picker tint colors, remove multi-selection feature flag by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4424
+
+🙌 Improvements
+* Make the room list filters smaller. by @amshakal in https://github.com/element-hq/element-x-ios/pull/4432
+* Improve global proxy detection, building and logging. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4440
+
+🐛 Bugfixes
+* Only use the Element Call timeoutTask for room calls. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4417
+* Configure the video camera picker to record in high quality by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4423
+* Improve supported share types by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4428
+* Preserve the user chosen order when uploading multiple media files by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4436
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4422
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4438
+
+🧱 Build
+* Bump the calendar version ready for the next release by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4441
+
+🚧 In development 🚧
+* Add a Low Priority room filter behind a feature flag. by @Copilot in https://github.com/element-hq/element-x-ios/pull/4394
+* Add a feature flag for spaces. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4429
+* Space flow improvements. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4430
+
+Others
+* Update the SDK, handle API breaks. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4418
+* Add a couple of logs to debug badge counts. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4425
+* Remove unnecessary awaits on RoomFlowCoordinator.init. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4434
+* Tidy up some logs that have a prefix. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4443
+* Update the SDK. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4445
+* Update Element Call to 0.15.0. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4446
+
+### New Contributors
+* @amshakal made their first contribution in https://github.com/element-hq/element-x-ios/pull/4432
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.08.5...release/25.09.0
+
+## Changes in 25.08.5 (2025-08-15)
+
+### What's Changed
+
+🐛 Bugfixes
+* Fix a bug when a compact split view doesn't react to a change of root coordinator in the sidebar. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4393
+* Add a workaround to include some via parameters for room v12 tombstone links. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4413
+* Fix a bug where the image upload screen was unintentionally dismissed for some failures. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4414
+* Fix some app route navigation bugs. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4415
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4398
+
+🚧 In development 🚧
+* Add a SpaceExplorerFlowCoordinator. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4383
+* Move the Settings flow from the Chats flow up one level to the UserSession flow. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4390
+* Add `SpaceRoomCell` & `Space…ProxyProtocols` and use them on the `SpaceListScreen`. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4404
+* Add a SpaceScreen for listing rooms and subspaces within a space. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4412
+
+Others
+* Label rageshakes from macOS and report the right operating system. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4392
+* Remove unreachable guard condition in String.asciified() by @Copilot in https://github.com/element-hq/element-x-ios/pull/4395
+* Update dependency jpsim/Yams to from: "6.1.0" by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/4397
+* Update Roles & Permissions UI test snapshots. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4399
+* Update actions/checkout action to v5 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/4401
+* Update the SDK. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4405
+* Remove the share_pos developer option. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4406
+
+### New Contributors
+* @Copilot made their first contribution in https://github.com/element-hq/element-x-ios/pull/4395
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.08.3...release/25.08.5
+
+## Changes in 25.08.4 (2025-08-12)
+
+### What's Changed
+
+🐛 Bugfixes
+* Fix a bug when a compact split view doesn't react to a change of root coordinator in the sidebar. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4393
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4398
+
+🚧 In development 🚧
+* Add a SpaceExplorerFlowCoordinator. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4383
+* Move the Settings flow from the Chats flow up one level to the UserSession flow. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4390
+
+Others
+* Label rageshakes from macOS and report the right operating system. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4392
+* Remove unreachable guard condition in String.asciified() by @Copilot in https://github.com/element-hq/element-x-ios/pull/4395
+* Update dependency jpsim/Yams to from: "6.1.0" by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/4397
+* Update Roles & Permissions UI test snapshots. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4399
+* Update actions/checkout action to v5 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/4401
+
+### New Contributors
+* @Copilot made their first contribution in https://github.com/element-hq/element-x-ios/pull/4395
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.08.3...release/25.08.4
+
+## Changes in 25.08.3 (2025-08-07)
+
+### What's Changed
+
+✨ Features
+* Last Owner should edit admins, and not leave when is last by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4372
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.08.2...release/25.08.3
+
+## Changes in 25.08.2 (2025-08-05)
+
+### What's Changed
+
+🐛 Bugfixes
+* Fix filtering of non spaces by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4384
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.08.1...release/25.08.2
+
+## Changes in 25.08.1 (2025-08-05)
+
+### What's Changed
+
+🙌 Improvements
+* Re-enable share_pos persistance. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4355
+* Update message composer design for unencrypted rooms by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4361
+* Use the maxUploadSize in the media upload screen. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4359
+* SDK Update + PowerLevels API update by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4366
+* Restore permissions to creator and display them as owners in the list by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4369
+
+🐛 Bugfixes
+* Fix the user defaults key used for the developer options. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4328
+* Delegate the sending of call notifications to Element Call by @robintown in https://github.com/element-hq/element-x-ios/pull/4370
+* Update EC and the SDK to fix call notification issues by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4382
+
+⚠️ API Changes
+* Refactor Rageshake URL overrides and Target configuration. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4337
+* Update the default logs directory and allow collection from elsewhere. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4352
+* Stop showing the sliding sync proxy alert to any remaining proxy users. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4367
+* Handle `TimelineDiff` as an enum with associated values. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4379
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4334
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4357
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4381
+
+🦻 Accessibility
+* A11y test detected improvements by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4340
+
+🧱 Build
+* Fix the flakey preview tests. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4329
+* Accessibiliy Tests part 2 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4325
+* Bump the calendar version ready for the next release by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4363
+
+🚧 In development 🚧
+* Adopt new thread sending APIs by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4344
+* Add support for Space avatars. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4362
+* Multi file uploads by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4358
+* Add a TabView to the root of the UserSession flow and refactor out a new Chats flow. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4368
+* Implement tab bar badges, visibility and selection. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4373
+* Initial setup for the SpaceListScreen. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4380
+
+Others
+* Use a Task instead of a DispatchQueue to help fix the flakey observation tests. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4321
+* Merge the AuthenticationService with the QRCodeLoginService. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4323
+* Show an alert when entering an account provider that requires Element Pro. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4326
+* Make the remote settings hook usable within the app extensions. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4342
+* Add a TracingHook. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4345
+* Refactor LoggingTests utilising Rust's new ability to redirect log files at runtime. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4353
+* Add some logs to help debug waiting for rooms. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4360
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.07.2...release/25.08.1
+
+## Changes in 25.08.0 (2025-07-31)
+
+### What's Changed
+
+🙌 Improvements
+* Re-enable share_pos persistance. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4355
+* Update message composer design for unencrypted rooms by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4361
+* Use the maxUploadSize in the media upload screen. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4359
+* SDK Update + PowerLevels API update by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4366
+
+🐛 Bugfixes
+* Fix the user defaults key used for the developer options. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4328
+
+⚠️ API Changes
+* Refactor Rageshake URL overrides and Target configuration. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4337
+* Update the default logs directory and allow collection from elsewhere. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4352
+* Stop showing the sliding sync proxy alert to any remaining proxy users. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4367
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4334
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4357
+
+🦻 Accessibility
+* A11y test detected improvements by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4340
+
+🧱 Build
+* Fix the flakey preview tests. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4329
+* Accessibiliy Tests part 2 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4325
+* Bump the calendar version ready for the next release by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4363
+
+🚧 In development 🚧
+* Adopt new thread sending APIs by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4344
+* Add support for Space avatars. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4362
+* Multi file uploads by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4358
+
+Others
+* Use a Task instead of a DispatchQueue to help fix the flakey observation tests. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4321
+* Merge the AuthenticationService with the QRCodeLoginService. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4323
+* Show an alert when entering an account provider that requires Element Pro. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4326
+* Make the remote settings hook usable within the app extensions. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4342
+* Add a TracingHook. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4345
+* Refactor LoggingTests utilising Rust's new ability to redirect log files at runtime. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4353
+* Add some logs to help debug waiting for rooms. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4360
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.07.2...release/25.08.0
+
+## Changes in 25.07.2 (2025-07-15)
+
+### What's Changed
+
+🙌 Improvements
+* Update and enable the new bloom style on the home screen. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4291
+* Change the order of timeline media visibility UI by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4294
+
+🐛 Bugfixes
+* Fix some panics caused by SDK order assertions. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4281
+* Fix a bug with switching to bluetooth earphones during a call. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4285
+* Fix the contrast on mention pills. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4313
+* Fix a sync performance regression. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4324
+
+⚠️ API Changes
+* Adopt StateStoreViewModelV2 in more screens. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4275
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4290
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4293
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4318
+
+🦻 Accessibility
+* Group emojis accessibility in session verification screen by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4296
+* Added a11y labels to the home screen cell notification symbols by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4298
+* A11y pinned items improvement by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4300
+* Hide accessibility of empty section by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4302
+* Accessibility label for editing the avatar by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4304
+* Add the sender name to VoiceOver for poll titles by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4306
+* A11y: added a hint to inform the user that max selections have been reached by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4308
+* Announce session verification request as time limited by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4310
+
+🧱 Build
+* Update the project for Xcode 16.4 by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4277
+* Automatic Accessibility Audits on previews part 1 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4322
+
+📄 Documentation
+* Update to the status and clarifications with respect to the legacy app. by @mxandreas in https://github.com/element-hq/element-x-ios/pull/4316
+
+🚧 In development 🚧
+* Add support for threaded read receipts by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4288
+
+Others
+* Update dependency apple/swift-argument-parser to from: "1.6.1" by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/4278
+* Update Element Call to the actual release of 0.13.0. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4279
+* Add a few more labels when sending a rageshake. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4284
+* Update the SDK. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4286
+* Update Compound and add some new snapshot tests. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4311
+* FF for enabling share pos and defaults to `false` by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4312
+* Use the timeline when marking a room as read by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4319
+* Update the SDK and build a client before logging in with a QR code. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4320
+
+### New Contributors
+* @mxandreas made their first contribution in https://github.com/element-hq/element-x-ios/pull/4316
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.07.0...release/25.07.2
+
 ## Changes in 25.07.1 (2025-07-04)
 
 ### What's Changed

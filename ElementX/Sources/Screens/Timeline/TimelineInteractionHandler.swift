@@ -14,7 +14,7 @@ enum TimelineInteractionHandlerAction {
     case displayEmojiPicker(itemID: TimelineItemIdentifier, selectedEmojis: Set<String>)
     case displayReportContent(itemID: TimelineItemIdentifier, senderID: String)
     case displayMessageForwarding(itemID: TimelineItemIdentifier)
-    case displayMediaUploadPreviewScreen(url: URL)
+    case displayMediaUploadPreviewScreen(mediaURLs: [URL])
     case displayPollForm(mode: PollFormMode)
     
     case showActionMenu(TimelineItemActionMenuInfo)
@@ -33,10 +33,9 @@ enum TimelineInteractionHandlerAction {
 class TimelineInteractionHandler {
     private let roomProxy: JoinedRoomProxyProtocol
     private let timelineController: TimelineControllerProtocol
-    private let mediaProvider: MediaProviderProtocol
+    private let userSession: UserSessionProtocol
     private let mediaPlayerProvider: MediaPlayerProviderProtocol
     private let voiceMessageRecorder: VoiceMessageRecorderProtocol
-    private let voiceMessageMediaManager: VoiceMessageMediaManagerProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let appMediator: AppMediatorProtocol
     private let appSettings: AppSettings
@@ -44,7 +43,6 @@ class TimelineInteractionHandler {
     private let emojiProvider: EmojiProviderProtocol
     private let timelineControllerFactory: TimelineControllerFactoryProtocol
     private let pollInteractionHandler: PollInteractionHandlerProtocol
-    private let clientProxy: ClientProxyProtocol
     
     private let actionsSubject: PassthroughSubject<TimelineInteractionHandlerAction, Never> = .init()
     var actions: AnyPublisher<TimelineInteractionHandlerAction, Never> {
@@ -61,22 +59,19 @@ class TimelineInteractionHandler {
     
     init(roomProxy: JoinedRoomProxyProtocol,
          timelineController: TimelineControllerProtocol,
-         mediaProvider: MediaProviderProtocol,
+         userSession: UserSessionProtocol,
          mediaPlayerProvider: MediaPlayerProviderProtocol,
-         voiceMessageMediaManager: VoiceMessageMediaManagerProtocol,
          voiceMessageRecorder: VoiceMessageRecorderProtocol,
          userIndicatorController: UserIndicatorControllerProtocol,
          appMediator: AppMediatorProtocol,
          appSettings: AppSettings,
          analyticsService: AnalyticsService,
          emojiProvider: EmojiProviderProtocol,
-         timelineControllerFactory: TimelineControllerFactoryProtocol,
-         clientProxy: ClientProxyProtocol) {
+         timelineControllerFactory: TimelineControllerFactoryProtocol) {
         self.roomProxy = roomProxy
         self.timelineController = timelineController
-        self.mediaProvider = mediaProvider
+        self.userSession = userSession
         self.mediaPlayerProvider = mediaPlayerProvider
-        self.voiceMessageMediaManager = voiceMessageMediaManager
         self.voiceMessageRecorder = voiceMessageRecorder
         self.userIndicatorController = userIndicatorController
         self.appMediator = appMediator
@@ -84,8 +79,9 @@ class TimelineInteractionHandler {
         self.analyticsService = analyticsService
         self.emojiProvider = emojiProvider
         self.timelineControllerFactory = timelineControllerFactory
-        self.clientProxy = clientProxy
-        pollInteractionHandler = PollInteractionHandler(analyticsService: analyticsService, roomProxy: roomProxy)
+        
+        pollInteractionHandler = PollInteractionHandler(analyticsService: analyticsService,
+                                                        timelineController: timelineController)
     }
     
     // MARK: Timeline Item Action Menu
@@ -275,7 +271,7 @@ class TimelineInteractionHandler {
     
     // MARK: Pasting and dropping
     
-    func handlePasteOrDrop(_ provider: NSItemProvider) {
+    func handlePasteOrDrop(_ providers: [NSItemProvider]) {
         Task {
             let loadingIndicatorIdentifier = UUID().uuidString
             self.userIndicatorController.submitIndicator(UserIndicator(id: loadingIndicatorIdentifier, type: .modal, title: L10n.commonLoading, persistent: true))
@@ -283,13 +279,19 @@ class TimelineInteractionHandler {
                 self.userIndicatorController.retractIndicatorWithId(loadingIndicatorIdentifier)
             }
             
-            guard let fileURL = await provider.storeData() else {
-                MXLog.error("Failed storing NSItemProvider data \(provider)")
-                self.actionsSubject.send(.displayErrorToast(L10n.screenRoomErrorFailedProcessingMedia))
-                return
+            var mediaURLs = [URL]()
+            for provider in providers {
+                if let fileURL = await provider.storeData() {
+                    mediaURLs.append(fileURL)
+                } else {
+                    MXLog.error("Failed storing NSItemProvider data \(provider)")
+                    self.actionsSubject.send(.displayErrorToast(L10n.screenRoomErrorFailedProcessingMedia))
+                }
             }
             
-            self.actionsSubject.send(.displayMediaUploadPreviewScreen(url: fileURL))
+            if !mediaURLs.isEmpty {
+                self.actionsSubject.send(.displayMediaUploadPreviewScreen(mediaURLs: mediaURLs))
+            }
         }
     }
     
@@ -362,9 +364,8 @@ class TimelineInteractionHandler {
 
         actionsSubject.send(.composer(action: .setMode(mode: .previewVoiceMessage(state: audioPlayerState, waveform: .url(recordingURL), isUploading: true))))
         await voiceMessageRecorder.stopPlayback()
-        switch await voiceMessageRecorder.sendVoiceMessage(inRoom: roomProxy,
-                                                           audioConverter: AudioConverter(),
-                                                           threadRootEventID: timelineController.timelineKind.threadRootEventID) {
+        
+        switch await voiceMessageRecorder.sendVoiceMessage(timelineController: timelineController, audioConverter: AudioConverter()) {
         case .success:
             await deleteCurrentVoiceMessage()
         case .failure(let error):
@@ -447,7 +448,7 @@ class TimelineInteractionHandler {
             // Load content
             do {
                 MXLog.info("Loading voice message audio content from source for itemID \(itemID)")
-                let url = try await voiceMessageMediaManager.loadVoiceMessageFromSource(source, body: nil)
+                let url = try await userSession.voiceMessageMediaManager.loadVoiceMessageFromSource(source, body: nil)
 
                 // Make sure that the player is still attached, as it may have been detached while waiting for the voice message to be loaded.
                 if audioPlayerState.isAttached {
@@ -575,23 +576,21 @@ class TimelineInteractionHandler {
                                                                                                                                  presentation: newTimelinePresentation,
                                                                                                                                  roomProxy: roomProxy,
                                                                                                                                  timelineItemFactory: timelineItemFactory,
-                                                                                                                                 mediaProvider: mediaProvider) else {
+                                                                                                                                 mediaProvider: userSession.mediaProvider) else {
                 MXLog.error("Failed presenting media timeline")
                 return .none
             }
             
             let timelineViewModel = TimelineViewModel(roomProxy: roomProxy,
                                                       timelineController: timelineController,
-                                                      mediaProvider: mediaProvider,
+                                                      userSession: userSession,
                                                       mediaPlayerProvider: mediaPlayerProvider,
-                                                      voiceMessageMediaManager: voiceMessageMediaManager,
                                                       userIndicatorController: userIndicatorController,
                                                       appMediator: appMediator,
                                                       appSettings: appSettings,
                                                       analyticsService: analyticsService,
                                                       emojiProvider: emojiProvider,
-                                                      timelineControllerFactory: timelineControllerFactory,
-                                                      clientProxy: clientProxy)
+                                                      timelineControllerFactory: timelineControllerFactory)
             
             return .displayMediaPreview(item: item, timelineViewModel: .new(timelineViewModel))
         } else {

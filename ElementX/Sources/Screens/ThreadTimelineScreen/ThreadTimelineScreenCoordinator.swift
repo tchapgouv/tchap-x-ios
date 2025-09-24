@@ -11,26 +11,26 @@ import SwiftUI
 import WysiwygComposer
 
 struct ThreadTimelineScreenCoordinatorParameters {
-    let clientProxy: ClientProxyProtocol
+    let userSession: UserSessionProtocol
     let roomProxy: JoinedRoomProxyProtocol
     let timelineController: TimelineControllerProtocol
-    let mediaProvider: MediaProviderProtocol
     let mediaPlayerProvider: MediaPlayerProviderProtocol
-    let voiceMessageMediaManager: VoiceMessageMediaManagerProtocol
     let emojiProvider: EmojiProviderProtocol
     let completionSuggestionService: CompletionSuggestionServiceProtocol
     let appMediator: AppMediatorProtocol
     let appSettings: AppSettings
+    let analytics: AnalyticsService
     let composerDraftService: ComposerDraftServiceProtocol
     let timelineControllerFactory: TimelineControllerFactoryProtocol
+    let userIndicatorController: UserIndicatorControllerProtocol
 }
 
 enum ThreadTimelineScreenCoordinatorAction {
     case presentReportContent(itemID: TimelineItemIdentifier, senderID: String)
-    case presentMediaUploadPicker(MediaPickerScreenSource, threadRootEventID: String?)
-    case presentMediaUploadPreviewScreen(url: URL, threadRootEventID: String?)
-    case presentLocationPicker(threadRootEventID: String?)
-    case presentLocationViewer(body: String, geoURI: GeoURI, description: String?, threadRootEventID: String?)
+    case presentMediaUploadPicker(mode: MediaPickerScreenMode)
+    case presentMediaUploadPreviewScreen(mediaURLs: [URL])
+    case presentLocationPicker
+    case presentLocationViewer(body: String, geoURI: GeoURI, description: String?)
     case presentPollForm(mode: PollFormMode)
     case presentEmojiPicker(itemID: TimelineItemIdentifier, selectedEmojis: Set<String>)
     case presentRoomMemberDetails(userID: String)
@@ -58,16 +58,14 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
         
         timelineViewModel = TimelineViewModel(roomProxy: parameters.roomProxy,
                                               timelineController: parameters.timelineController,
-                                              mediaProvider: parameters.mediaProvider,
+                                              userSession: parameters.userSession,
                                               mediaPlayerProvider: parameters.mediaPlayerProvider,
-                                              voiceMessageMediaManager: parameters.voiceMessageMediaManager,
-                                              userIndicatorController: ServiceLocator.shared.userIndicatorController,
+                                              userIndicatorController: parameters.userIndicatorController,
                                               appMediator: parameters.appMediator,
                                               appSettings: parameters.appSettings,
-                                              analyticsService: ServiceLocator.shared.analytics,
+                                              analyticsService: parameters.analytics,
                                               emojiProvider: parameters.emojiProvider,
-                                              timelineControllerFactory: parameters.timelineControllerFactory,
-                                              clientProxy: parameters.clientProxy)
+                                              timelineControllerFactory: parameters.timelineControllerFactory)
         
         let wysiwygViewModel = WysiwygComposerViewModel(minHeight: ComposerConstant.minHeight,
                                                         maxCompressedHeight: ComposerConstant.maxHeight,
@@ -76,13 +74,12 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
         
         composerViewModel = ComposerToolbarViewModel(initialText: nil,
                                                      roomProxy: parameters.roomProxy,
-                                                     isInThread: true,
                                                      wysiwygViewModel: wysiwygViewModel,
                                                      completionSuggestionService: parameters.completionSuggestionService,
-                                                     mediaProvider: parameters.mediaProvider,
+                                                     mediaProvider: parameters.userSession.mediaProvider,
                                                      mentionDisplayHelper: ComposerMentionDisplayHelper(timelineContext: timelineViewModel.context),
                                                      appSettings: parameters.appSettings,
-                                                     analyticsService: ServiceLocator.shared.analytics,
+                                                     analyticsService: parameters.analytics,
                                                      composerDraftService: parameters.composerDraftService)
     }
     
@@ -97,27 +94,23 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
                 case .displayReportContent(let itemID, let senderID):
                     actionsSubject.send(.presentReportContent(itemID: itemID, senderID: senderID))
                 case .displayCameraPicker:
-                    actionsSubject.send(.presentMediaUploadPicker(.camera,
-                                                                  threadRootEventID: parameters.timelineController.timelineKind.threadRootEventID))
+                    actionsSubject.send(.presentMediaUploadPicker(mode: .init(source: .camera, selectionType: .multiple)))
                 case .displayMediaPicker:
-                    actionsSubject.send(.presentMediaUploadPicker(.photoLibrary,
-                                                                  threadRootEventID: parameters.timelineController.timelineKind.threadRootEventID))
+                    actionsSubject.send(.presentMediaUploadPicker(mode: .init(source: .photoLibrary, selectionType: .multiple)))
                 case .displayDocumentPicker:
-                    actionsSubject.send(.presentMediaUploadPicker(.documents,
-                                                                  threadRootEventID: parameters.timelineController.timelineKind.threadRootEventID))
+                    actionsSubject.send(.presentMediaUploadPicker(mode: .init(source: .documents, selectionType: .multiple)))
                 case .displayMediaPreview(let mediaPreviewViewModel):
                     viewModel.displayMediaPreview(mediaPreviewViewModel)
                 case .displayLocationPicker:
-                    actionsSubject.send(.presentLocationPicker(threadRootEventID: parameters.timelineController.timelineKind.threadRootEventID))
+                    actionsSubject.send(.presentLocationPicker)
                 case .displayLocation(let body, let geoURI, let description):
                     actionsSubject.send(.presentLocationViewer(body: body,
                                                                geoURI: geoURI,
-                                                               description: description, threadRootEventID: parameters.timelineController.timelineKind.threadRootEventID))
+                                                               description: description))
                 case .displayPollForm(let mode):
                     actionsSubject.send(.presentPollForm(mode: mode))
-                case .displayMediaUploadPreviewScreen(let url):
-                    actionsSubject.send(.presentMediaUploadPreviewScreen(url: url,
-                                                                         threadRootEventID: parameters.timelineController.timelineKind.threadRootEventID))
+                case .displayMediaUploadPreviewScreen(let mediaURLs):
+                    actionsSubject.send(.presentMediaUploadPreviewScreen(mediaURLs: mediaURLs))
                 case .displaySenderDetails(userID: let userID):
                     actionsSubject.send(.presentRoomMemberDetails(userID: userID))
                 case .displayMessageForwarding(let forwardingItem):
@@ -125,7 +118,7 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
                 case .displayResolveSendFailure(let failure, let sendHandle):
                     actionsSubject.send(.presentResolveSendFailure(failure: failure,
                                                                    sendHandle: sendHandle))
-                case .hasScrolled, .displayRoom:
+                case .hasScrolled, .displayRoom, .displayMediaDetails:
                     break
                 case .composer(let action):
                     composerViewModel.process(timelineAction: action)

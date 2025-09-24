@@ -55,12 +55,13 @@ struct TimelineView: View {
                     .environmentObject(timelineContext)
             }
             .onDrop(of: ["public.item", "public.file-url"], isTargeted: $dragOver) { providers -> Bool in
-                guard let provider = providers.first,
-                      provider.isSupportedForPasteOrDrop else {
+                let supportedProviders = providers.filter(\.isSupportedForPasteOrDrop)
+                
+                guard !supportedProviders.isEmpty else {
                     return false
                 }
                 
-                timelineContext.send(viewAction: .handlePasteOrDrop(provider: provider))
+                timelineContext.send(viewAction: .handlePasteOrDrop(providers: supportedProviders))
                 return true
             }
     }
@@ -69,16 +70,11 @@ struct TimelineView: View {
 /// A table view wrapper that displays the timeline of a room.
 struct TimelineViewRepresentable: UIViewControllerRepresentable {
     @EnvironmentObject private var viewModelContext: TimelineViewModel.Context
-    @Environment(\.openURL) var openURL
 
     func makeUIViewController(context: Context) -> TimelineTableViewController {
         let tableViewController = TimelineTableViewController(coordinator: context.coordinator,
                                                               isScrolledToBottom: $viewModelContext.isScrolledToBottom,
                                                               scrollToBottomPublisher: viewModelContext.viewState.timelineState.scrollToBottomPublisher)
-        // Needs to be dispatched on main asynchronously otherwise we get a runtime warning
-        DispatchQueue.main.async {
-            viewModelContext.send(viewAction: .setOpenURLAction(openURL))
-        }
         return tableViewController
     }
     
@@ -141,16 +137,14 @@ struct TimelineView_Previews: PreviewProvider, TestablePreview {
     static let roomViewModel = RoomScreenViewModel.mock(roomProxyMock: roomProxyMock)
     static let timelineViewModel = TimelineViewModel(roomProxy: roomProxyMock,
                                                      timelineController: MockTimelineController(),
-                                                     mediaProvider: MediaProviderMock(configuration: .init()),
+                                                     userSession: UserSessionMock(.init()),
                                                      mediaPlayerProvider: MediaPlayerProviderMock(),
-                                                     voiceMessageMediaManager: VoiceMessageMediaManagerMock(),
                                                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                      appMediator: AppMediatorMock.default,
                                                      appSettings: ServiceLocator.shared.settings,
                                                      analyticsService: ServiceLocator.shared.analytics,
                                                      emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
-                                                     timelineControllerFactory: TimelineControllerFactoryMock(.init()),
-                                                     clientProxy: ClientProxyMock(.init()))
+                                                     timelineControllerFactory: TimelineControllerFactoryMock(.init()))
 
     static var previews: some View {
         NavigationStack {

@@ -23,9 +23,7 @@ protocol RoomMemberProxyProtocol: AnyObject {
     
     var isIgnored: Bool { get }
     
-    var powerLevel: Int { get }
-    
-    var role: RoomMemberRole { get }
+    var powerLevel: RoomPowerLevel { get }
 }
 
 extension RoomMemberProxyProtocol {
@@ -57,4 +55,8 @@ extension [RoomMemberProxyProtocol] {
             }
         }
     }
+}
+
+extension RoomMemberProxyProtocol {
+    var role: RoomRole { .init(powerLevel: powerLevel) }
 }

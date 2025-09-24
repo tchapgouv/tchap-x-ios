@@ -12,10 +12,7 @@ import Sentry
 import UIKit
 
 class BugReportService: NSObject, BugReportServiceProtocol {
-    /// The rageshake URL as provided in the init.
-    private let defaultRageshakeURL: URL?
-    /// The rageshake URL currently being used by the service.
-    private var rageshakeURL: URL?
+    private var rageshakeURL: RageshakeConfiguration
     private let applicationID: String
     private let sdkGitSHA: String
     private let maxUploadSize: Int
@@ -25,23 +22,27 @@ class BugReportService: NSObject, BugReportServiceProtocol {
     private let progressSubject = PassthroughSubject<Double, Never>()
     private var cancellables = Set<AnyCancellable>()
     
-    var isEnabled: Bool { rageshakeURL != nil }
+    var isEnabled: Bool { rageshakeURL != .disabled }
     var lastCrashEventID: String?
     
-    init(rageshakeURL: URL?,
+    init(rageshakeURLPublisher: CurrentValuePublisher<RageshakeConfiguration, Never>,
          applicationID: String,
          sdkGitSHA: String,
          maxUploadSize: Int,
          session: URLSession = .shared,
          appHooks: AppHooks) {
-        defaultRageshakeURL = rageshakeURL
-        self.rageshakeURL = rageshakeURL
+        rageshakeURL = rageshakeURLPublisher.value
         self.applicationID = applicationID
         self.sdkGitSHA = sdkGitSHA
         self.maxUploadSize = maxUploadSize
         self.session = session
         self.appHooks = appHooks
+        
         super.init()
+        
+        rageshakeURLPublisher
+            .weakAssign(to: \.rageshakeURL, on: self)
+            .store(in: &cancellables)
     }
 
     // MARK: - BugReportServiceProtocol
@@ -50,21 +51,10 @@ class BugReportService: NSObject, BugReportServiceProtocol {
         SentrySDK.crashedLastRun
     }
     
-    func applyConfiguration(_ configuration: RageshakeConfiguration) {
-        switch configuration {
-        case .url(let url):
-            rageshakeURL = url
-        case .disabled:
-            rageshakeURL = nil
-        case .default:
-            rageshakeURL = defaultRageshakeURL
-        }
-    }
-    
     // swiftlint:disable:next cyclomatic_complexity
     func submitBugReport(_ bugReport: BugReport,
                          progressListener: CurrentValueSubject<Double, Never>) async -> Result<SubmitBugReportResponse, BugReportServiceError> {
-        guard let rageshakeURL else {
+        guard case let .url(rageshakeURL) = rageshakeURL else {
             fatalError("No bug report URL set, the screen should not be shown in this case.")
         }
         
@@ -99,6 +89,10 @@ class BugReportService: NSObject, BugReportServiceProtocol {
         
         if InfoPlistReader.main.baseBundleIdentifier == "io.element.elementx.nightly" {
             bugReport.githubLabels.append("Nightly")
+        }
+        
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            bugReport.githubLabels.append("macOS")
         }
         
         for label in bugReport.githubLabels {
@@ -201,7 +195,12 @@ class BugReportService: NSObject, BugReportServiceProtocol {
     }
 
     private var os: String {
-        "\(UIDevice.current.systemName) \(UIDevice.current.systemVersion)"
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            // The other APIs report macOS's equivalent iOS version, so lets use the right one to get the macOS version.
+            "macOS \(ProcessInfo.processInfo.operatingSystemVersionString)"
+        } else {
+            "\(UIDevice.current.systemName) \(UIDevice.current.systemVersion)"
+        }
     }
 
     private func zipFiles(_ logFiles: [URL]) async -> Logs {

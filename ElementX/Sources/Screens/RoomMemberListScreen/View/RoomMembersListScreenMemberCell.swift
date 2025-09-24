@@ -61,6 +61,8 @@ struct RoomMembersListScreenMemberCell: View {
     
     var role: String? {
         switch listEntry.member.role {
+        case .creator, .owner:
+            L10n.screenRoomMemberListRoleOwner
         case .administrator:
             L10n.screenRoomMemberListRoleAdministrator
         case .moderator:
@@ -122,9 +124,8 @@ struct RoomMembersListMemberCell_Previews: PreviewProvider, TestablePreview {
         verificationState: .verificationViolation)
     ]
     
-    static let viewModel = RoomMembersListScreenViewModel(clientProxy: ClientProxyMock(.init()),
+    static let viewModel = RoomMembersListScreenViewModel(userSession: UserSessionMock(.init()),
                                                           roomProxy: JoinedRoomProxyMock(.init(name: "Some room", members: [])),
-                                                          mediaProvider: MediaProviderMock(configuration: .init()),
                                                           userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                           analytics: ServiceLocator.shared.analytics)
     static var previews: some View {
