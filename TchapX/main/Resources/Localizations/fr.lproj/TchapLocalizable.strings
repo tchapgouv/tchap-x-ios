@@ -19,6 +19,9 @@ screen_onboarding_welcome_message = "La messagerie instantanée du secteur publi
 screen_onboarding_welcome_qrcode_header = "Déjà connecté sur un ordinateur ?";
 screen_onboarding_welcome_or_between_buttons = "ou";
 
+screen_login_title_with_tchap = "Se connecter à Tchap";
+screen_login_description_with_tchap = "La messagerie instantanée du secteur public";
+
 screen_create_room_selected_users_label = "Membres";
 screen_create_room_private_encrypted_option_title = "Salon privé sécurisé";
 screen_create_room_private_encrypted_option_description = "• Chiffré de bout en bout\n• Accessible uniquement sur invitation\n• Conseillé jusqu'à 500 membres";
