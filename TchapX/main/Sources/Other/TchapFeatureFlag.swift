@@ -97,7 +97,9 @@ extension TchapFeatureFlag {
     enum Configuration { // Use empty Enum rather than empty Struct. (Linter advice)
         #if IS_TCHAP_PRODUCTION
         // certificatePinning can only be activated for .all or none because it is used before any activae session.
-        static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
+//        static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
+        // Tchap: don't use pinning for v0.7.0
+        static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
         #elseif IS_TCHAP_STAGING
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [.agriculture, .agent])
