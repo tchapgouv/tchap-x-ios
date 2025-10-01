@@ -400,14 +400,14 @@ final class AppSettings {
     // Tchap: customize map tiler url for Tchap.
     #if IS_TCHAP_DEVELOPMENT || IS_TCHAP_STAGING || IS_TCHAP_PRODUCTION
     private enum TchapMapProvider: String {
-        case geoDataGouv = "https://openmaptiles.geo.data.gouv.fr/styles/osm-bright/style.json"
+        case geoDataGouv = "https://openmaptiles.geo.data.gouv.fr/styles"
         case ign = "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"
     }
 
     private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
                                                                    apiKey: Secrets.mapLibreAPIKey,
-                                                                   lightStyleID: "",
-                                                                   darkStyleID: "")
+                                                                   lightStyleID: "osm-bright",
+                                                                   darkStyleID: "dark-matter")
     #else
     private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
                                                                    apiKey: Secrets.mapLibreAPIKey,
