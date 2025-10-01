@@ -20,9 +20,9 @@ import SwiftUI
     }
     
     private let snapshotter: MGLMapSnapshotter?
+    private let backgroundQueue = DispatchQueue.global(qos: .background)
     private let cache: TchapStaticMapDiskCache?
     private let cacheKey: URL?
-    
     var state = StaticMapLoaderPhase.inited
     
     init(mapUrlBuilder: MapTilerURLBuilderProtocol, style: MapTilerStyle, location: CLLocationCoordinate2D, zoom: Double, size: CGSize, attribution: MapTilerAttributionPlacement) {
@@ -48,16 +48,16 @@ import SwiftUI
                 self.state = .success(cachedImage)
             }
         } else {
-            snapshotter?.start { [weak self] snapshot, error in
+            // Start Snapshotter on background queue to avoid blocking UI.
+            // It seems to be faster and more reliable too.
+            snapshotter?.start(with: backgroundQueue) { [weak self] snapshot, error in
                 if error != nil {
                     self?.state = .failure(error!)
                 } else if let snapshot {
                     self?.state = .success(snapshot.image)
-                    Task {
-                        if let cacheKey = self?.cacheKey,
-                           let pngData = snapshot.image.dataForPNGRepresentation() {
-                            try? self?.cache?.store(data: pngData, for: cacheKey)
-                        }
+                    if let cacheKey = self?.cacheKey,
+                       let pngData = snapshot.image.dataForPNGRepresentation() {
+                        try? self?.cache?.store(data: pngData, for: cacheKey)
                     }
                 }
             }
