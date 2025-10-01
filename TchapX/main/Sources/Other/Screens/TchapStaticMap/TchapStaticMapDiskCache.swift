@@ -10,6 +10,7 @@ import Foundation
 
 public struct TchapStaticMapDiskCache {
     private let rootDirectory: URL
+    private let maxAge: TimeInterval = 60 * 60 * 24 * 30 // 1 month
     
     init?() {
         let rootDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
@@ -19,6 +20,9 @@ public struct TchapStaticMapDiskCache {
         do {
             try FileManager.default.createDirectoryIfNeeded(at: rootDirectory)
             self.rootDirectory = rootDirectory
+            
+            // Try to clear cache at each call.
+            removeFiles(olderThan: maxAge)
         } catch {
             return nil
         }
@@ -30,6 +34,21 @@ public struct TchapStaticMapDiskCache {
     
     func store(data: Data, for url: URL) throws {
         try writeToCache(key: url, value: data)
+    }
+    
+    func removeFiles(olderThan age: TimeInterval) {
+        let now = Date.now
+        
+        try? FileManager.default.contentsOfDirectory(at: rootDirectory, includingPropertiesForKeys: [.creationDateKey]).forEach { fileUrl in
+            if let fileCreationDate = try? fileUrl.resourceValues(forKeys: [.creationDateKey]).creationDate,
+               now.timeIntervalSince(fileCreationDate) > age {
+                try? FileManager.default.removeItem(at: fileUrl)
+            }
+        }
+    }
+    
+    func removeAll() {
+        removeFiles(olderThan: 0.0)
     }
     
     // MARK: - Private
