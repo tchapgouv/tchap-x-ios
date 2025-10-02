@@ -12,9 +12,13 @@ public struct TchapStaticMapDiskCache {
     private let rootDirectory: URL
     private let maxAge: TimeInterval = 60 * 60 * 24 * 30 // 1 month
     
+    enum TchapStaticMapDiskCacheError: Error {
+        case writeToCacheError
+    }
+    
     init?() {
-        let rootDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-            .appendingPathComponent(Bundle.main.bundleIdentifier!)
+        let rootDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first! // swiftlint:disable:this force_unwrapping
+            .appendingPathComponent(Bundle.main.bundleIdentifier!) // swiftlint:disable:this force_unwrapping
             .appendingPathComponent("map-snapshot-cache", isDirectory: true)
         
         do {
@@ -57,19 +61,31 @@ public struct TchapStaticMapDiskCache {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
     
-    private func hashString(for url: URL) -> String {
-        hashString(data: url.absoluteString.data(using: .utf8)!)
+    private func hashString(for url: URL) -> String? {
+        guard let urlData = url.absoluteString.data(using: .utf8) else {
+            return nil
+        }
+        return hashString(data: urlData)
     }
     
-    private func fileUrl(for url: URL) -> URL {
-        rootDirectory.appendingPathComponent(hashString(for: url))
+    private func fileUrl(for url: URL) -> URL? {
+        guard let hashString = hashString(for: url) else {
+            return nil
+        }
+        return rootDirectory.appendingPathComponent(hashString)
     }
     
     private func cachedData(for url: URL) -> Data? {
-        FileManager.default.contents(atPath: fileUrl(for: url).path)
+        guard let fileUrl = fileUrl(for: url) else {
+            return nil
+        }
+        return FileManager.default.contents(atPath: fileUrl.path)
     }
     
     private func writeToCache(key: URL, value: Data) throws {
-        try value.write(to: fileUrl(for: key), options: .atomic)
+        guard let fileUrlForKey = fileUrl(for: key) else {
+            throw TchapStaticMapDiskCacheError.writeToCacheError
+        }
+        try value.write(to: fileUrlForKey, options: .atomic)
     }
 }
