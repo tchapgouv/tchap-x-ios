@@ -19,9 +19,12 @@ extension View {
 private struct BloomModifier: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
     
-    @State private var standardAppearance = UINavigationBarAppearance()
-    @State private var scrollEdgeAppearance = UINavigationBarAppearance()
-    
+    // Tchap: add title's font customization.
+//    @State private var standardAppearance = UINavigationBarAppearance()
+//    @State private var scrollEdgeAppearance = UINavigationBarAppearance()
+    @State private var standardAppearance = UINavigationBarAppearance().withTchapFonts()
+    @State private var scrollEdgeAppearance = UINavigationBarAppearance().withTchapFonts()
+
     @State private var bloom = Bloom()
     
     func body(content: Content) -> some View {
