@@ -42,7 +42,9 @@ struct RoomHeaderView: View {
                 HStack(spacing: 4) {
                     Text(roomName)
                         .lineLimit(1)
-                        .font(.compound.bodyLGSemibold)
+                        // Tchap: use Tchap custom font (Marianne font) in Room header view.
+//                        .font(.compound.bodyLGSemibold)
+                        .tchapNavigationBarTitleFont()
                         .accessibilityIdentifier(A11yIdentifiers.roomScreen.name)
                     
                     if let dmRecipientVerificationState {
