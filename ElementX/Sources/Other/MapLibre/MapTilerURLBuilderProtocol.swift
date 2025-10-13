@@ -15,4 +15,6 @@ protocol MapTilerURLBuilderProtocol {
                       zoomLevel: Double,
                       size: CGSize,
                       attribution: MapTilerAttributionPlacement) -> URL?
+    // Tchap: addition for static map
+    func staticMapStyleURL(for style: MapTilerStyle, attribution: MapTilerAttributionPlacement) -> URL
 }

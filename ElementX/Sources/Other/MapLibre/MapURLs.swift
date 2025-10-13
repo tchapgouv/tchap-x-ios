@@ -31,6 +31,16 @@ extension MapTilerConfiguration: MapTilerURLBuilderProtocol {
         return url
     }
     
+    // Tchap: addition for static map
+    func staticMapStyleURL(for style: MapTilerStyle, attribution: MapTilerAttributionPlacement) -> URL {
+        var url: URL = baseURL
+        url.appendPathComponent(styleID(for: style), conformingTo: .item)
+        url.appendPathComponent("style.json")
+        url.append(queryItems: [URLQueryItem(name: "key", value: apiKey)])
+        url.append(queryItems: [.init(name: "attribution", value: attribution.rawValue)])
+        return url
+    }
+    
     // MARK: Private
     
     private func makeNewURL(for style: MapTilerStyle) -> URL? {

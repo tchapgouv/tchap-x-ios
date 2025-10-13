@@ -35,33 +35,46 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
     
     var body: some View {
         GeometryReader { geometry in
-            if let url = mapURLBuilder.staticMapURL(for: colorScheme.mapStyle,
-                                                    coordinates: coordinates,
-                                                    zoomLevel: zoomLevel,
-                                                    size: mapSize, // temporary using a fixed size since the refresh doesn't work properly on the UITableView based timeline
-                                                    attribution: mapTilerAttributionPlacement) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
-                        placeholderImage
-                    case .success(let image):
-                        ZStack {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                            pinAnnotationView
-                        }
-                    case .failure:
-                        errorView
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
+            // Tchap: use MapTiler Snapshotter to request bitmap rendering of preview maps.
+            //            if let url = mapURLBuilder.staticMapURL(for: colorScheme.mapStyle,
+            //                                                    coordinates: coordinates,
+            //                                                    zoomLevel: zoomLevel,
+            //                                                    size: mapSize, // temporary using a fixed size since the refresh doesn't work properly on the UITableView based timeline
+            //                                                    attribution: mapTilerAttributionPlacement) {
+            //                AsyncImage(url: url) { phase in
+            //                    switch phase {
+            //                    case .empty:
+            //                        placeholderImage
+            //                    case .success(let image):
+            //                        ZStack {
+            //                            image
+            //                                .resizable()
+            //                                .aspectRatio(contentMode: .fill)
+            //                            pinAnnotationView
+            //                        }
+            //                    case .failure:
+            //                        errorView
+            //                    @unknown default:
+            //                        EmptyView()
+            //                    }
+            //                }
+            //                .position(x: geometry.frame(in: .local).midX, y: geometry.frame(in: .local).midY)
+            //                .id(fetchAttempt)
+            //            } else {
+            //                placeholderImage
+            //            }
+            let mapLoader = TchapStaticMapLoader(mapUrlBuilder: mapURLBuilder,
+                                                 style: colorScheme.mapStyle,
+                                                 location: coordinates,
+                                                 zoom: zoomLevel,
+                                                 size: mapSize,
+                                                 attribution: mapTilerAttributionPlacement)
+            TchapStaticMapView(mapLoader: mapLoader,
+                               placeholderView: placeholderImage,
+                               pinAnnotationView: pinAnnotationView,
+                               errorView: errorView)
                 .position(x: geometry.frame(in: .local).midX, y: geometry.frame(in: .local).midY)
                 .id(fetchAttempt)
-            } else {
-                placeholderImage
-            }
         }
     }
 
@@ -125,6 +138,16 @@ private struct MapTilerURLBuilderMock: MapTilerURLBuilderProtocol {
             return URL(string: "https://www.maptiler.com/img/cloud/home/map5.webp")
         case .dark:
             return URL(string: "https://www.maptiler.com/img/cloud/home/map6.webp")
+        }
+    }
+    
+    // Tchap: static map addition
+    func staticMapStyleURL(for style: MapTilerStyle, attribution: MapTilerAttributionPlacement) -> URL {
+        switch style {
+        case .light:
+            return URL(string: "https://www.maptiler.com/img/cloud/home/map5.webp")! // swiftlint:disable:this force_unwrapping
+        case .dark:
+            return URL(string: "https://www.maptiler.com/img/cloud/home/map6.webp")! // swiftlint:disable:this force_unwrapping
         }
     }
 }
