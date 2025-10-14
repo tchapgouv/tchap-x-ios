@@ -205,8 +205,6 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                 actionsSubject.send(.hideCallScreenOverlay) // Turn any active call into a PiP so that navigation from a notification is visible to the user.
             case(.roomList, .deselectRoom, .roomList):
                 dismissRoomFlow(animated: animated)
-<<<<<<< HEAD
-=======
             
             case(.roomList, .startSpaceFlow, .roomList):
                 guard let spaceRoomListProxy = userInfo?.spaceRoomListProxy else { fatalError("A space room list proxy is required.") }
@@ -214,7 +212,6 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             case (.roomList, .finishedSpaceFlow, .roomList):
                 dismissSpaceFlow(animated: animated)
                 
->>>>>>> release/25.10.0
             case (.roomList, .feedbackScreen, .feedbackScreen):
                 bugReportFlowCoordinator = BugReportFlowCoordinator(parameters: .init(presentationMode: .sheet(sidebarNavigationStackCoordinator),
                                                                                       userIndicatorController: flowParameters.userIndicatorController,

@@ -43,8 +43,8 @@ struct HomeScreen: View {
             ToolbarItem(placement: .primaryAction) {
                 newRoomButton
             }
+            .backportSharedBackgroundVisibility(.hidden)
         }
-        .backportSharedBackgroundVisibility(.hidden)
     }
     
     private var settingsButton: some View {

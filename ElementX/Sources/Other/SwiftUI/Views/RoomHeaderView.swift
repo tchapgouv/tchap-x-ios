@@ -35,7 +35,6 @@ struct RoomHeaderView: View {
         HStack(spacing: 8) {
             avatarImage
                 .accessibilityHidden(true)
-<<<<<<< HEAD
             // Tchap: embedd in a VStack to add badges.
             VStack(alignment: .leading, spacing: 4.0) {
                 HStack(spacing: 4) {
@@ -45,6 +44,12 @@ struct RoomHeaderView: View {
 //                        .font(.compound.bodyLGSemibold)
                         .tchapNavigationBarTitleFont()
                         .accessibilityIdentifier(A11yIdentifiers.roomScreen.name)
+                    if let roomSubtitle {
+                        Text(roomSubtitle)
+                            .lineLimit(1)
+                            .font(.compound.bodyXS)
+                            .foregroundStyle(.compound.textSecondary)
+                    }
                     
                     if let dmRecipientVerificationState {
                         VerificationBadge(verificationState: dmRecipientVerificationState)
@@ -55,25 +60,6 @@ struct RoomHeaderView: View {
                     roomPropertiesBadgesView
                         .zIndex(-1)
                     Spacer(minLength: 2.0)
-=======
-            
-            HStack(spacing: 4) {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(roomName)
-                        .lineLimit(1)
-                        .font(.compound.bodyLGSemibold)
-                        .accessibilityIdentifier(A11yIdentifiers.roomScreen.name)
-                    if let roomSubtitle {
-                        Text(roomSubtitle)
-                            .lineLimit(1)
-                            .font(.compound.bodyXS)
-                            .foregroundStyle(.compound.textSecondary)
-                    }
-                }
-                
-                if let dmRecipientVerificationState {
-                    VerificationBadge(verificationState: dmRecipientVerificationState)
->>>>>>> release/25.10.0
                 }
             }
             // Take up as much space as possible, with a leading alignment for use in the principal toolbar position.

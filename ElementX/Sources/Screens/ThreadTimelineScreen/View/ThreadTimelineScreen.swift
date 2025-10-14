@@ -63,6 +63,7 @@ struct ThreadTimelineScreen: View {
                            roomSubtitle: context.viewState.roomTitle,
                            roomAvatar: context.viewState.roomAvatar,
                            dmRecipientVerificationState: context.viewState.dmRecipientVerificationState,
+                           roomPropertiesBadgesView: .sample, // Tchap addition
                            mediaProvider: context.mediaProvider)
                 // Using a button stops it from getting truncated in the navigation bar
                 .contentShape(.rect)

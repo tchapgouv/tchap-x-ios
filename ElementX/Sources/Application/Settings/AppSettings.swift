@@ -463,16 +463,7 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: true, storageType: .userDefaults(store))
     var threadsEnabled
     
-<<<<<<< HEAD
-    // Tchap: enable `spacesEnabled` feature flag by default.
-//    @UserPreference(key: UserDefaultsKeys.spacesEnabled, defaultValue: false, storageType: .userDefaults(store))
-    @UserPreference(key: UserDefaultsKeys.spacesEnabled, defaultValue: true, storageType: .userDefaults(store))
-    var spacesEnabled
-    
-    @UserPreference(key: UserDefaultsKeys.nextGenHTMLParserEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
-=======
     @UserPreference(key: UserDefaultsKeys.nextGenHTMLParserEnabled, defaultValue: true, storageType: .userDefaults(store))
->>>>>>> release/25.10.0
     var nextGenHTMLParserEnabled
     
     @UserPreference(key: UserDefaultsKeys.linkPreviewsEnabled, defaultValue: false, storageType: .userDefaults(store))

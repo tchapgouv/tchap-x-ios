@@ -53,20 +53,14 @@ private struct BloomModifier: ViewModifier {
 private struct OldBloomModifier: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
     
-<<<<<<< HEAD
+    let hasSearchBar: Bool
+    
     // Tchap: add title's font customization.
 //    @State private var standardAppearance = UINavigationBarAppearance()
 //    @State private var scrollEdgeAppearance = UINavigationBarAppearance()
     @State private var standardAppearance = UINavigationBarAppearance().withTchapFonts()
     @State private var scrollEdgeAppearance = UINavigationBarAppearance().withTchapFonts()
 
-=======
-    let hasSearchBar: Bool
-    
-    @State private var standardAppearance = UINavigationBarAppearance()
-    @State private var scrollEdgeAppearance = UINavigationBarAppearance()
-    
->>>>>>> release/25.10.0
     @State private var bloom = Bloom()
     
     func body(content: Content) -> some View {

@@ -137,25 +137,9 @@ struct MessageText: UIViewRepresentable {
             self.openURLAction = openURLAction
         }
         
-<<<<<<< HEAD
-        func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-            switch interaction {
-            case .invokeDefaultAction:
-                openURLAction.callAsFunction(URL)
-                return false
-            case .preview:
-                // We don't want to show a URL preview for permalinks
-                // Tchap: handle permalinks
-//                return parseMatrixEntityFrom(uri: URL.absoluteString) == nil
-                let tchapPermalink = TchapPermalinks.convert(permalinkUri: URL)
-                return tchapPermalink == nil || parseMatrixEntityFrom(uri: tchapPermalink!.absoluteString) == nil // swiftlint:disable:this force_unwrapping
-            default:
-                return true
-=======
         func textViewDidChangeSelection(_ textView: UITextView) {
             guard !ProcessInfo.processInfo.isiOSAppOnMac else {
                 return
->>>>>>> release/25.10.0
             }
             textView.selectedTextRange = nil
         }

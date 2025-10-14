@@ -5,11 +5,8 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-<<<<<<< HEAD
-import MatrixRustSDK // Tchap
-=======
 import Algorithms
->>>>>>> release/25.10.0
+import MatrixRustSDK // Tchap
 import UIKit
 
 struct TextRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
@@ -34,10 +31,6 @@ struct TextRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
         .text(content)
     }
     
-<<<<<<< HEAD
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .trusted
-=======
     var links: [URL] {
         guard let attributedString = content.formattedBody else {
             return []
@@ -61,5 +54,7 @@ struct TextRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
         
         return Array(links.uniqued())
     }
->>>>>>> release/25.10.0
+
+    // Tchap: BWI content-scanner scan state
+    var scanState: BwiScanState = .trusted
 }

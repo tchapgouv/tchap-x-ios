@@ -67,7 +67,7 @@ struct AuthenticationStartScreen: View {
             
             Spacer()
             
-<<<<<<< HEAD
+            if !context.viewState.hideBrandChrome {
             VStack(spacing: 8) {
                 // Tchap: Change Title on Start screen
 //                Text(L10n.screenOnboardingWelcomeTitle)
@@ -81,21 +81,9 @@ struct AuthenticationStartScreen: View {
                     .font(.compound.bodyLG)
                     .foregroundColor(.compound.textSecondary)
                     .multilineTextAlignment(.center)
-=======
-            if !context.viewState.hideBrandChrome {
-                VStack(spacing: 8) {
-                    Text(L10n.screenOnboardingWelcomeTitle)
-                        .font(.compound.headingLGBold)
-                        .foregroundColor(.compound.textPrimary)
-                        .multilineTextAlignment(.center)
-                    Text(L10n.screenOnboardingWelcomeMessage(InfoPlistReader.main.productionAppName))
-                        .font(.compound.bodyLG)
-                        .foregroundColor(.compound.textSecondary)
-                        .multilineTextAlignment(.center)
                 }
                 .padding()
                 .fixedSize(horizontal: false, vertical: true)
->>>>>>> release/25.10.0
             }
             
             Spacer()

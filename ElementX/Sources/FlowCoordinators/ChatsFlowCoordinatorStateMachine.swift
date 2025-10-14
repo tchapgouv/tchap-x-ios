@@ -153,12 +153,7 @@ class ChatsFlowCoordinatorStateMachine {
         stateMachine.addRouteMapping { event, fromState, _ in
             switch (fromState, event) {
             case (.roomList, .selectRoom(let roomID, _, _)):
-<<<<<<< HEAD
-                return .roomList(roomListSelectedRoomID: roomID)
-
-=======
                 return .roomList(detailState: .room(roomID: roomID))
->>>>>>> release/25.10.0
             case (.roomList, .deselectRoom):
                 return .roomList(detailState: nil)
             
@@ -167,37 +162,6 @@ class ChatsFlowCoordinatorStateMachine {
             case (.roomList, .finishedSpaceFlow):
                 return .roomList(detailState: nil)
                 
-<<<<<<< HEAD
-            case (.roomList(let roomListSelectedRoomID), .feedbackScreen):
-                return .feedbackScreen(roomListSelectedRoomID: roomListSelectedRoomID)
-
-            case (.feedbackScreen(let roomListSelectedRoomID), .dismissedFeedbackScreen):
-                return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
-                
-            case (.roomList(let roomListSelectedRoomID), .showRecoveryKeyScreen):
-                return .recoveryKeyScreen(roomListSelectedRoomID: roomListSelectedRoomID)
-
-            case (.recoveryKeyScreen(let roomListSelectedRoomID), .dismissedRecoveryKeyScreen):
-                return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
-                
-            case (.roomList(let roomListSelectedRoomID), .startEncryptionResetFlow):
-                return .encryptionResetFlow(roomListSelectedRoomID: roomListSelectedRoomID)
-
-            case (.encryptionResetFlow(let roomListSelectedRoomID), .finishedEncryptionResetFlow):
-                return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
-                
-            case (.roomList(let roomListSelectedRoomID), .showStartChatScreen):
-                return .startChatScreen(roomListSelectedRoomID: roomListSelectedRoomID)
-
-            case (.startChatScreen(let roomListSelectedRoomID), .dismissedStartChatScreen):
-                return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
-                
-            case (.roomList(let roomListSelectedRoomID), .showRoomDirectorySearchScreen):
-                return .roomDirectorySearchScreen(roomListSelectedRoomID: roomListSelectedRoomID)
-
-            case (.roomDirectorySearchScreen(let roomListSelectedRoomID), .dismissedRoomDirectorySearchScreen):
-                return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
-=======
             case (.roomList(let detailState), .feedbackScreen):
                 return .feedbackScreen(detailState: detailState)
             case (.feedbackScreen(let detailState), .dismissedFeedbackScreen):
@@ -222,7 +186,6 @@ class ChatsFlowCoordinatorStateMachine {
                 return .roomDirectorySearchScreen(detailState: detailState)
             case (.roomDirectorySearchScreen(let detailState), .dismissedRoomDirectorySearchScreen):
                 return .roomList(detailState: detailState)
->>>>>>> release/25.10.0
             
             case (_, .showUserProfileScreen):
                 return .userProfileScreen
@@ -236,19 +199,6 @@ class ChatsFlowCoordinatorStateMachine {
             case (.shareExtensionRoomList, .dismissedShareExtensionRoomList):
                 return .roomList(detailState: nil)
                 
-<<<<<<< HEAD
-            case (.roomList(let roomListSelectedRoomID), .presentReportRoomScreen):
-                return .reportRoomScreen(roomListSelectedRoomID: roomListSelectedRoomID)
-
-            case (.reportRoomScreen(let roomListSelectedRoomID), .dismissedReportRoomScreen):
-                return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
-                
-            case(.roomList(let roomListSelectedRoomID), .presentDeclineAndBlockScreen):
-                return .declineAndBlockUserScreen(roomListSelectedRoomID: roomListSelectedRoomID)
-
-            case (.declineAndBlockUserScreen(let roomListSelectedRoomID), .dismissedDeclineAndBlockScreen):
-                return .roomList(roomListSelectedRoomID: roomListSelectedRoomID)
-=======
             case (.roomList(let detailState), .presentReportRoomScreen):
                 return .reportRoomScreen(detailState: detailState)
             case (.reportRoomScreen(let detailState), .dismissedReportRoomScreen):
@@ -258,7 +208,6 @@ class ChatsFlowCoordinatorStateMachine {
                 return .declineAndBlockUserScreen(detailState: detailState)
             case (.declineAndBlockUserScreen(let detailState), .dismissedDeclineAndBlockScreen):
                 return .roomList(detailState: detailState)
->>>>>>> release/25.10.0
                 
             default:
                 return nil

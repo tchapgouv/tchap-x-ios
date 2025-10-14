@@ -227,20 +227,12 @@ extension RoomFlowCoordinator {
                 return previousState
                 
             // Thread
-<<<<<<< HEAD
-            case (.room, .presentThread(let itemID)):
-                return .thread(itemID: itemID)
-
-            case (.thread, .dismissThread):
-                return .room
-=======
             case (.room, .presentThread(let threadRootEventID, _)):
                 return .thread(threadRootEventID: threadRootEventID, previousState: fromState)
             case (.thread, .presentThread(let threadRootEventID, _)):
                 return .thread(threadRootEventID: threadRootEventID, previousState: fromState)
             case (.thread(_, let previousState), .dismissThread):
                 return previousState
->>>>>>> release/25.10.0
                 
             case (.thread, .presentReportContent(let itemID, let senderID)):
                 return .reportContent(itemID: itemID, senderID: senderID, previousState: fromState)
