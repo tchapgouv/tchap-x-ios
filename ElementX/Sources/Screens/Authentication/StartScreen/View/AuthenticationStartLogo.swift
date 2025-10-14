@@ -12,7 +12,7 @@ struct AuthenticationStartLogo: View {
     @Environment(\.colorScheme) private var colorScheme
     
     /// Set to `true` when using on top of `Asset.Images.launchBackground`
-    let isOnGradient: Bool
+    let hideBrandChrome: Bool
     
     /// Extra padding needed to avoid cropping the shadows.
     private let extra: CGFloat = 64
@@ -22,6 +22,14 @@ struct AuthenticationStartLogo: View {
     private var isLight: Bool { colorScheme == .light }
     
     var body: some View {
+        if hideBrandChrome {
+            Image(asset: Asset.Images.appLogo)
+        } else {
+            brandLogo
+        }
+    }
+    
+    private var brandLogo: some View {
         Image(asset: Asset.Images.appLogo)
             // Tchap: remove background around App logo.
 //            .background {

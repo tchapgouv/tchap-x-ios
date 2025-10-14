@@ -9,6 +9,7 @@ import AVFoundation
 import CallKit
 import Combine
 import Foundation
+import MatrixRustSDK
 import PushKit
 import UIKit
 
@@ -16,6 +17,7 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
     private struct CallID: Equatable {
         let callKitID: UUID
         let roomID: String
+        let rtcNotificationID: String?
     }
     
     private let pushRegistry: PKPushRegistry
@@ -40,14 +42,14 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
             // There's a race condition where a call starts when the app has been killed and the
             // observation set in `incomingCallID` occurs *before* the user session is restored.
             // So observe when the client proxy is set to fix this (the method guards for the call).
-            Task { await observeIncomingCallRoomInfo() }
+            Task { await observeIncomingCall() }
         }
     }
     
     private var incomingCallRoomInfoCancellable: AnyCancellable?
     private var incomingCallID: CallID? {
         didSet {
-            Task { await observeIncomingCallRoomInfo() }
+            Task { await observeIncomingCall() }
         }
     }
     
@@ -66,6 +68,8 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
     var actions: AnyPublisher<ElementCallServiceAction, Never> {
         actionsSubject.eraseToAnyPublisher()
     }
+    
+    private var declineListenerHandle: TaskHandle?
     
     override init() {
         pushRegistry = PKPushRegistry(queue: nil)
@@ -93,7 +97,7 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
         let callID = if let incomingCallID, incomingCallID.roomID == roomID {
             incomingCallID
         } else {
-            CallID(callKitID: UUID(), roomID: roomID)
+            CallID(callKitID: UUID(), roomID: roomID, rtcNotificationID: nil)
         }
         
         incomingCallID = nil
@@ -146,12 +150,17 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
             return
         }
         
+        guard let rtcNotificationID = payload.dictionaryPayload[ElementCallServiceNotificationKey.rtcNotifyEventID.rawValue] as? String else {
+            MXLog.error("Something went wrong, missing rtc notification event identifier for incoming voip call: \(payload)")
+            return
+        }
+        
         guard ongoingCallID?.roomID != roomID else {
             MXLog.warning("Call already ongoing for room \(roomID), ignoring incoming push")
             return
         }
         
-        let callID = CallID(callKitID: UUID(), roomID: roomID)
+        let callID = CallID(callKitID: UUID(), roomID: roomID, rtcNotificationID: rtcNotificationID)
         incomingCallID = callID
         
         let roomDisplayName = payload.dictionaryPayload[ElementCallServiceNotificationKey.roomDisplayName.rawValue] as? String
@@ -253,6 +262,12 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
             actionsSubject.send(.endCall(roomID: ongoingCallID.roomID))
         }
         
+        if let incomingCallID {
+            Task {
+                await sendDeclineCallEvent(incomingCallID)
+            }
+        }
+        
         tearDownCallSession(sendEndCallAction: false)
         
         action.fulfill()
@@ -274,7 +289,26 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
         ongoingCallID = nil
     }
     
-    private func observeIncomingCallRoomInfo() async {
+    private func sendDeclineCallEvent(_ incomingCallID: CallID) async {
+        guard let rtcNotificationID = incomingCallID.rtcNotificationID else {
+            MXLog.info("No rtc notification event to decline.")
+            return
+        }
+        
+        guard let clientProxy else {
+            MXLog.warning("A ClientProxy is needed to fetch the room.")
+            return
+        }
+        
+        guard case let .joined(roomProxy) = await clientProxy.roomForIdentifier(incomingCallID.roomID) else {
+            MXLog.warning("Failed to fetch a joined room for the incoming call.")
+            return
+        }
+        
+        _ = await roomProxy.declineCall(notificationID: rtcNotificationID)
+    }
+    
+    private func observeIncomingCall() async {
         incomingCallRoomInfoCancellable = nil
         
         guard let incomingCallID else {
@@ -310,17 +344,44 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
                 
                 if !hasOngoingCall {
                     MXLog.info("Call cancelled by remote")
-                    
-                    incomingCallRoomInfoCancellable = nil
-                    endUnansweredCallTask?.cancel()
-                    callProvider.reportCall(with: incomingCallID.callKitID, endedAt: nil, reason: .remoteEnded)
+                    reportEndedCall(incomingCallID: incomingCallID, reason: .remoteEnded)
                 } else if participants.contains(roomProxy.ownUserID) {
                     MXLog.info("Call answered elsewhere")
-                    
-                    incomingCallRoomInfoCancellable = nil
-                    endUnansweredCallTask?.cancel()
-                    callProvider.reportCall(with: incomingCallID.callKitID, endedAt: nil, reason: .answeredElsewhere)
+                    reportEndedCall(incomingCallID: incomingCallID, reason: .answeredElsewhere)
                 }
             }
+        
+        guard let rtcNotificationID = incomingCallID.rtcNotificationID else {
+            MXLog.warning("Decline: No RTC notification ID found for the incoming call.")
+            return
+        }
+        
+        MXLog.info("Observe decline events for notification \(rtcNotificationID)")
+        
+        let listener: CallDeclineListener = SDKListener { [weak self] senderID in
+            guard let self else { return }
+            
+            MXLog.debug("Call declined event received from \(senderID)")
+            
+            if senderID == roomProxy.ownUserID {
+                // Stop ringing!
+                MXLog.debug("Call declined elsewhere")
+                reportEndedCall(incomingCallID: incomingCallID, reason: .declinedElsewhere)
+            }
+        }
+        
+        guard case let .success(handle) = roomProxy.subscribeToCallDeclineEvents(rtcNotificationEventID: rtcNotificationID, listener: listener) else {
+            MXLog.error("Unable to listen for decline events.")
+            return
+        }
+        
+        declineListenerHandle = handle
+    }
+    
+    private func reportEndedCall(incomingCallID: CallID, reason: CXCallEndedReason) {
+        declineListenerHandle?.cancel()
+        declineListenerHandle = nil
+        endUnansweredCallTask?.cancel()
+        callProvider.reportCall(with: incomingCallID.callKitID, endedAt: nil, reason: reason)
     }
 }

@@ -17,6 +17,7 @@ class SpaceScreenViewModelTests: XCTestCase {
     let mockSpaceRooms = [SpaceRoomProxyProtocol].mockSpaceList
     var clientProxy: ClientProxyMock!
     var paginationStateSubject: CurrentValueSubject<SpaceRoomListPaginationState, Never> = .init(.idle(endReached: true))
+    var rustLeaveHandle: LeaveSpaceHandleSDKMock!
     
     var viewModel: SpaceScreenViewModelProtocol!
     
@@ -93,13 +94,29 @@ class SpaceScreenViewModelTests: XCTestCase {
     func testSelectingSpace() async throws {
         setupViewModel()
         
-        let selectedSpace = try XCTUnwrap(mockSpaceRooms.first { $0.isSpace }, "There should be a space to select.")
+        let selectedSpace = try XCTUnwrap(mockSpaceRooms.first { $0.isSpace && $0.state == .joined }, "There should be a space to select.")
         let deferred = deferFulfillment(viewModel.actionsPublisher) { _ in true }
         viewModel.context.send(viewAction: .spaceAction(.select(selectedSpace)))
         let action = try await deferred.fulfill()
         
         switch action {
         case .selectSpace(let spaceRoomListProxy) where spaceRoomListProxy.spaceRoomProxy.id == selectedSpace.id:
+            break
+        default:
+            XCTFail("The action should select the space.")
+        }
+    }
+    
+    func testSelectingUnjoinedSpace() async throws {
+        setupViewModel()
+        
+        let selectedSpace = try XCTUnwrap(mockSpaceRooms.first { $0.isSpace && $0.state != .joined }, "There should be a space to select.")
+        let deferred = deferFulfillment(viewModel.actionsPublisher) { _ in true }
+        viewModel.context.send(viewAction: .spaceAction(.select(selectedSpace)))
+        let action = try await deferred.fulfill()
+        
+        switch action {
+        case .selectUnjoinedSpace(let spaceRoomProxy) where spaceRoomProxy.id == selectedSpace.id:
             break
         default:
             XCTFail("The action should select the space.")
@@ -125,7 +142,7 @@ class SpaceScreenViewModelTests: XCTestCase {
     func testJoiningSpace() async throws {
         setupViewModel()
         
-        let selectedSpace = try XCTUnwrap(mockSpaceRooms.first { $0.isSpace }, "There should be a space to select.")
+        let selectedSpace = try XCTUnwrap(mockSpaceRooms.first { $0.isSpace && $0.state != .joined }, "There should be a space to select.")
         
         let expectation = XCTestExpectation(description: "Join room")
         clientProxy.joinRoomViaClosure = { _, _ in
@@ -176,6 +193,37 @@ class SpaceScreenViewModelTests: XCTestCase {
         }
     }
     
+    func testLeavingSpace() async throws {
+        setupViewModel()
+        XCTAssertNil(context.leaveHandle)
+        
+        let deferredHandle = deferFulfillment(context.observe(\.leaveHandle)) { $0 != nil }
+        context.send(viewAction: .leaveSpace)
+        try await deferredHandle.fulfill()
+        XCTAssertNotNil(context.leaveHandle, "The leave action should show the leave view.")
+        
+        let handle = try XCTUnwrap(context.leaveHandle)
+        let selectedCount = handle.selectedCount
+        let firstSelectedRoom = try XCTUnwrap(handle.rooms.first { $0.isSelected })
+        XCTAssertGreaterThan(selectedCount, 0, "The leave view should have selected rooms to begin with")
+        
+        context.send(viewAction: .deselectAllLeaveRoomDetails)
+        XCTAssertEqual(handle.selectedCount, 0, "Deselecting all should result in no selected rooms.")
+        
+        context.send(viewAction: .toggleLeaveSpaceRoomDetails(id: firstSelectedRoom.spaceRoomProxy.id))
+        XCTAssertEqual(handle.selectedCount, 1, "Toggling a room should result in 1 selected room")
+        
+        // Confirming the leave should leave the selected room and then the space.
+        let deferredAction = deferFulfillment(viewModel.actionsPublisher) { $0.isLeftSpace }
+        context.send(viewAction: .confirmLeaveSpace)
+        try await deferredAction.fulfill()
+        XCTAssertNil(context.leaveHandle)
+        XCTAssertTrue(rustLeaveHandle.leaveRoomIdsCalled)
+        XCTAssertEqual(rustLeaveHandle.leaveRoomIdsReceivedRoomIds,
+                       [firstSelectedRoom.spaceRoomProxy.id, spaceRoomListProxy.spaceRoomProxy.id],
+                       "Confirming the leave should first leave the selected room and then the space.")
+    }
+    
     // MARK: - Helpers
     
     private func setupViewModel(paginationResponses: [[SpaceRoomProxyProtocol]] = []) {
@@ -184,7 +232,15 @@ class SpaceScreenViewModelTests: XCTestCase {
                                                           paginationResponses: paginationResponses))
         
         let spaceServiceProxy = SpaceServiceProxyMock(.init())
-        spaceServiceProxy.spaceRoomListForClosure = { .success(SpaceRoomListProxyMock(.init(spaceRoomProxy: $0))) }
+        spaceServiceProxy.spaceRoomListSpaceIDParentClosure = { [mockSpaceRooms] spaceID, _ in
+            guard let spaceRoomProxy = mockSpaceRooms.first(where: { $0.id == spaceID }) else { return .failure(.missingSpace) }
+            return .success(SpaceRoomListProxyMock(.init(spaceRoomProxy: spaceRoomProxy)))
+        }
+        let rustLeaveHandle = LeaveSpaceHandleSDKMock(.init())
+        spaceServiceProxy.leaveSpaceSpaceIDClosure = { spaceID in
+            .success(LeaveSpaceHandleProxy(spaceID: spaceID, leaveHandle: rustLeaveHandle))
+        }
+        self.rustLeaveHandle = rustLeaveHandle
         
         clientProxy = ClientProxyMock(.init())
         
@@ -193,5 +249,14 @@ class SpaceScreenViewModelTests: XCTestCase {
                                          selectedSpaceRoomPublisher: .init(nil),
                                          userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                          userIndicatorController: UserIndicatorControllerMock())
+    }
+}
+
+private extension SpaceScreenViewModelAction {
+    var isLeftSpace: Bool {
+        switch self {
+        case .leftSpace: true
+        default: false
+        }
     }
 }

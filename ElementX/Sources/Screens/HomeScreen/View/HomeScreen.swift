@@ -25,7 +25,7 @@ struct HomeScreen: View {
             .toolbar { toolbar }
             .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
             .track(screen: .Home)
-            .bloom()
+            .toolbarBloom(hasSearchBar: true)
             .sentryTrace("\(Self.self)")
     }
 
@@ -34,27 +34,34 @@ struct HomeScreen: View {
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            Button {
-                context.send(viewAction: .showSettings)
-            } label: {
-                LoadableAvatarImage(url: context.viewState.userAvatarURL,
-                                    name: context.viewState.userDisplayName,
-                                    contentID: context.viewState.userID,
-                                    avatarSize: .user(on: .chats),
-                                    mediaProvider: context.mediaProvider)
-                    .accessibilityIdentifier(A11yIdentifiers.homeScreen.userAvatar)
-                    .overlayBadge(10, isBadged: context.viewState.requiresExtraAccountSetup)
-                    .compositingGroup()
-            }
-            .accessibilityLabel(L10n.commonSettings)
+            settingsButton
         }
+        .backportSharedBackgroundVisibility(.hidden)
         
         // Tchap: display `new room` button only if user is NOT external.
         if !MatrixIdFromString(context.viewState.userID).isExternalTchapUser {
             ToolbarItem(placement: .primaryAction) {
                 newRoomButton
             }
+            .backportSharedBackgroundVisibility(.hidden)
         }
+    }
+    
+    private var settingsButton: some View {
+        Button {
+            context.send(viewAction: .showSettings)
+        } label: {
+            LoadableAvatarImage(url: context.viewState.userAvatarURL,
+                                name: context.viewState.userDisplayName,
+                                contentID: context.viewState.userID,
+                                avatarSize: .user(on: .chats),
+                                mediaProvider: context.mediaProvider)
+                .accessibilityIdentifier(A11yIdentifiers.homeScreen.userAvatar)
+                .clipShape(.circle)
+                .overlayBadge(10, isBadged: context.viewState.requiresExtraAccountSetup)
+                .compositingGroup()
+        }
+        .accessibilityLabel(L10n.commonSettings)
     }
     
     @ViewBuilder

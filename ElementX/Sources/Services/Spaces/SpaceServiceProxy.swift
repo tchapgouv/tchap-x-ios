@@ -30,11 +30,20 @@ class SpaceServiceProxy: SpaceServiceProxyProtocol {
         })
     }
     
-    func spaceRoomList(for spaceRoomProxy: SpaceRoomProxyProtocol) async -> Result<SpaceRoomListProxyProtocol, SpaceServiceProxyError> {
+    func spaceRoomList(spaceID: String, parent: SpaceRoomProxyProtocol?) async -> Result<SpaceRoomListProxyProtocol, SpaceServiceProxyError> {
         do {
-            return try await .success(SpaceRoomListProxy(spaceService.spaceRoomList(spaceId: spaceRoomProxy.id), spaceRoomProxy: spaceRoomProxy))
+            return try await .success(SpaceRoomListProxy(spaceService.spaceRoomList(spaceId: spaceID)))
         } catch {
-            MXLog.error("Failed creating space room list for \(spaceRoomProxy.id): \(error)")
+            MXLog.error("Failed creating space room list for \(spaceID): \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func leaveSpace(spaceID: String) async -> Result<LeaveSpaceHandleProxy, SpaceServiceProxyError> {
+        do {
+            return try await .success(.init(spaceID: spaceID, leaveHandle: spaceService.leaveSpace(spaceId: spaceID)))
+        } catch {
+            MXLog.error("Failed to get leave handle for \(spaceID): \(error)")
             return .failure(.sdkError(error))
         }
     }

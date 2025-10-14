@@ -23,6 +23,9 @@ struct SpaceScreen: View {
         .navigationTitle(context.viewState.spaceName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
+        .sheet(item: $context.leaveHandle) { leaveHandle in
+            LeaveSpaceView(context: context, leaveHandle: leaveHandle)
+        }
     }
     
     @ViewBuilder
@@ -42,6 +45,7 @@ struct SpaceScreen: View {
         }
     }
     
+    @ToolbarContentBuilder
     var toolbar: some ToolbarContent {
         // Use the same trick as the RoomScreen for a leading title view that
         // also hides the navigation title.
@@ -50,6 +54,30 @@ struct SpaceScreen: View {
                            roomAvatar: context.viewState.space.avatar,
                            roomPropertiesBadgesView: nil, // Tchap addition
                            mediaProvider: context.mediaProvider)
+        }
+        
+        // This should really use a ToolbarItemGroup(placement: .secondaryAction), however it
+        // was crashing on iOS 26.0 when tapping the ShareLink as the popover presentation
+        // controller attempts to anchor itself to the button that is no longer visible.
+        ToolbarItem(placement: .primaryAction) {
+            Menu {
+                if let permalink = context.viewState.permalink {
+                    Section {
+                        ShareLink(item: permalink) {
+                            Label(L10n.actionShare, icon: \.shareIos)
+                        }
+                    }
+                }
+                
+                Section {
+                    Button(role: .destructive) { context.send(viewAction: .leaveSpace) } label: {
+                        Label(L10n.actionLeaveSpace, icon: \.leave)
+                    }
+                }
+            } label: {
+                // Use an SF Symbol to match what ToolbarItemGroup(placement: .secondaryAction) would give us.
+                Image(systemSymbol: .ellipsis)
+            }
         }
     }
 }

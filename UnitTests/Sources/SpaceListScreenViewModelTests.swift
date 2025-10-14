@@ -14,17 +14,26 @@ import XCTest
 class SpaceListScreenViewModelTests: XCTestCase {
     var joinedSpacesSubject: CurrentValueSubject<[SpaceRoomProxyProtocol], Never>!
     var spaceServiceProxy: SpaceServiceProxyMock!
+    var appSettings: AppSettings!
     
     var viewModel: SpaceListScreenViewModelProtocol!
     
     var context: SpaceListScreenViewModelType.Context {
         viewModel.context
     }
+    
+    override func setUp() {
+        AppSettings.resetAllSettings()
+        appSettings = AppSettings()
+    }
+    
+    override func tearDown() {
+        AppSettings.resetAllSettings()
+    }
 
     func testInitialState() {
         setupViewModel()
         XCTAssertEqual(context.viewState.joinedSpaces.count, 3)
-        XCTAssertEqual(context.viewState.joinedRoomsCount, 0)
     }
     
     func testJoinedSpacesSubscription() async throws {
@@ -59,6 +68,27 @@ class SpaceListScreenViewModelTests: XCTestCase {
         }
     }
     
+    func testFeatureAnnouncement() async throws {
+        setupViewModel()
+        XCTAssertFalse(appSettings.hasSeenSpacesAnnouncement)
+        XCTAssertFalse(context.isPresentingFeatureAnnouncement)
+        
+        let deferred = deferFulfillment(context.observe(\.isPresentingFeatureAnnouncement)) { $0 == true }
+        viewModel.context.send(viewAction: .screenAppeared)
+        try await deferred.fulfill()
+        XCTAssertTrue(context.isPresentingFeatureAnnouncement)
+        
+        viewModel.context.send(viewAction: .featureAnnouncementAppeared)
+        XCTAssertTrue(appSettings.hasSeenSpacesAnnouncement)
+        
+        context.isPresentingFeatureAnnouncement = false
+        
+        let deferredFailure = deferFailure(context.observe(\.isPresentingFeatureAnnouncement), timeout: 1) { $0 == true }
+        viewModel.context.send(viewAction: .screenAppeared)
+        try await deferredFailure.fulfill()
+        XCTAssertFalse(context.isPresentingFeatureAnnouncement)
+    }
+    
     // MARK: - Helpers
     
     private func setupViewModel() {
@@ -72,11 +102,15 @@ class SpaceListScreenViewModelTests: XCTestCase {
         ])
         spaceServiceProxy = SpaceServiceProxyMock(.init())
         spaceServiceProxy.joinedSpacesPublisher = joinedSpacesSubject.asCurrentValuePublisher()
-        spaceServiceProxy.spaceRoomListForClosure = { .success(SpaceRoomListProxyMock(.init(spaceRoomProxy: $0))) }
+        spaceServiceProxy.spaceRoomListSpaceIDParentClosure = { [joinedSpacesSubject] spaceID, _ in
+            guard let spaceRoomProxy = joinedSpacesSubject?.value.first(where: { $0.id == spaceID }) else { return .failure(.missingSpace) }
+            return .success(SpaceRoomListProxyMock(.init(spaceRoomProxy: spaceRoomProxy)))
+        }
         clientProxy.spaceService = spaceServiceProxy
         
         viewModel = SpaceListScreenViewModel(userSession: userSession,
                                              selectedSpacePublisher: .init(nil),
+                                             appSettings: ServiceLocator.shared.settings,
                                              userIndicatorController: UserIndicatorControllerMock())
     }
 }

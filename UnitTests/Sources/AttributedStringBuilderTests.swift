@@ -41,7 +41,7 @@ class AttributedStringBuilderV1Tests: XCTestCase {
         }
         
         if AttributedStringBuilder.useNextGenHTMLParser {
-            XCTAssertEqual(String(attributedString.characters), "H1 Header\n\nH2 Header\n\nH3 Header\n\nH4 Header\n\nH5 Header\n\nH6 Header\n")
+            XCTAssertEqual(String(attributedString.characters), "H1 Header\n\nH2 Header\n\nH3 Header\n\nH4 Header\n\nH5 Header\n\nH6 Header")
             
             XCTAssertEqual(attributedString.runs.count, 11) // newlines hold no attributes
 
@@ -178,32 +178,21 @@ class AttributedStringBuilderV1Tests: XCTestCase {
             return
         }
         
+        XCTAssertEqual(String(h1AttributedString.characters), "Matrix.org")
+        XCTAssertEqual(String(h2AttributedString.characters), "Matrix.org")
+        XCTAssertEqual(String(h3AttributedString.characters), "Matrix.org")
+        
+        XCTAssertEqual(h1AttributedString.runs.count, 1)
+        XCTAssertEqual(h2AttributedString.runs.count, 1)
+        XCTAssertEqual(h3AttributedString.runs.count, 1)
+        
+        XCTAssertEqual(h1Font, h2Font)
+        XCTAssertEqual(h2Font, h3Font)
+        
         if AttributedStringBuilder.useNextGenHTMLParser {
-            XCTAssertEqual(String(h1AttributedString.characters), "Matrix.org\n")
-            XCTAssertEqual(String(h2AttributedString.characters), "Matrix.org\n")
-            XCTAssertEqual(String(h3AttributedString.characters), "Matrix.org\n")
-            
-            XCTAssertEqual(h1AttributedString.runs.count, 2)
-            XCTAssertEqual(h2AttributedString.runs.count, 2)
-            XCTAssertEqual(h3AttributedString.runs.count, 2)
-            
-            XCTAssertEqual(h1Font, h2Font)
-            XCTAssertEqual(h2Font, h3Font)
-            
             XCTAssert(h1Font.pointSize > UIFont.preferredFont(forTextStyle: .body).pointSize)
             XCTAssert(h1Font.pointSize <= 23)
         } else {
-            XCTAssertEqual(String(h1AttributedString.characters), "Matrix.org")
-            XCTAssertEqual(String(h2AttributedString.characters), "Matrix.org")
-            XCTAssertEqual(String(h3AttributedString.characters), "Matrix.org")
-            
-            XCTAssertEqual(h1AttributedString.runs.count, 1)
-            XCTAssertEqual(h2AttributedString.runs.count, 1)
-            XCTAssertEqual(h3AttributedString.runs.count, 1)
-            
-            XCTAssertEqual(h1Font, h2Font)
-            XCTAssertEqual(h2Font, h3Font)
-            
             XCTAssert(h1Font.pointSize > UIFont.preferredFont(forTextStyle: .body).pointSize)
             XCTAssert(h1Font.pointSize <= maxHeaderPointSize)
         }
@@ -273,11 +262,9 @@ class AttributedStringBuilderV1Tests: XCTestCase {
             return
         }
         
-        if AttributedStringBuilder.useNextGenHTMLParser {
-            XCTAssertEqual(attributedString.runs.count, 4)
-        } else {
-            XCTAssertEqual(attributedString.runs.count, 3)
-            
+        XCTAssertEqual(attributedString.runs.count, 3)
+        
+        if !AttributedStringBuilder.useNextGenHTMLParser {
             for run in attributedString.runs {
                 XCTAssertEqual(run.uiKit.font?.familyName, UIFont.preferredFont(forTextStyle: .body).familyName)
             }
@@ -740,6 +727,51 @@ class AttributedStringBuilderV1Tests: XCTestCase {
         }
         XCTAssertEqual(foundLink, url)
         XCTAssertEqual(foundAttachments, 2)
+    }
+    
+    func testImageTags() {
+        let htmlString = "Hey <img src=\"smiley.gif\" alt=\"Smiley face\">! How's work<img src=\"workplace.jpg\">?"
+        
+        guard let attributedString = attributedStringBuilder.fromHTML(htmlString) else {
+            XCTFail("Could not build the attributed string")
+            return
+        }
+        
+        if AttributedStringBuilder.useNextGenHTMLParser {
+            XCTAssertEqual(String(attributedString.characters), "Hey [img: Smiley face]! How's work[img]?")
+        } else {
+            XCTAssertEqual(String(attributedString.characters), "Hey ￼! How's work￼?") // No bueno
+        }
+    }
+    
+    func testListTags() {
+        let htmlString = "<p>like</p>\n<ul>\n<li>this<br />\ntest</li>\n</ul>\n"
+        
+        guard let attributedString = attributedStringBuilder.fromHTML(htmlString) else {
+            XCTFail("Could not build the attributed string")
+            return
+        }
+        
+        if AttributedStringBuilder.useNextGenHTMLParser {
+            XCTAssertEqual(String(attributedString.characters), "like\n\n • this\ntest")
+        } else {
+            XCTAssertEqual(String(attributedString.characters), "like\n\t•\tthis\u{2028}test")
+        }
+    }
+    
+    func testOutOfOrderListNubmering() {
+        let htmlString = "<ol start=\"2\">\n<li>this is a two</li>\n</ol>"
+        
+        guard let attributedString = attributedStringBuilder.fromHTML(htmlString) else {
+            XCTFail("Could not build the attributed string")
+            return
+        }
+        
+        if AttributedStringBuilder.useNextGenHTMLParser {
+            XCTAssertEqual(String(attributedString.characters), " 2. this is a two")
+        } else {
+            XCTAssertEqual(String(attributedString.characters), "\t2.\tthis is a two")
+        }
     }
     
     // MARK: - Phishing prevention

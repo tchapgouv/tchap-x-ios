@@ -9,11 +9,12 @@ import Combine
 import Foundation
 import UIKit
 
-enum HomeScreenViewModelAction: Equatable {
+enum HomeScreenViewModelAction {
     case presentRoom(roomIdentifier: String)
     case presentRoomDetails(roomIdentifier: String)
     case presentReportRoom(roomIdentifier: String)
     case presentDeclineAndBlock(userID: String, roomID: String)
+    case presentSpace(SpaceRoomListProxyProtocol)
     case roomLeft(roomIdentifier: String)
     case transferOwnership(roomIdentifier: String)
     case presentSecureBackupSettings
@@ -38,6 +39,7 @@ enum HomeScreenViewAction {
     case confirmRecoveryKey
     case resetEncryption
     case skipRecoveryKeyConfirmation
+    case dismissNewSoundBanner
     case updateVisibleItemRange(Range<Int>)
     case globalSearch
     case markRoomAsUnread(roomIdentifier: String)
@@ -91,6 +93,7 @@ struct HomeScreenViewState: BindableState {
     var userAvatarURL: URL?
     
     var securityBannerMode = HomeScreenSecurityBannerMode.none
+    var shouldShowNewSoundBanner = false
     
     var requiresExtraAccountSetup = false
         
@@ -132,6 +135,10 @@ struct HomeScreenViewState: BindableState {
     
     var shouldShowFilters: Bool {
         !bindings.isSearchFieldFocused && roomListMode == .rooms
+    }
+    
+    var shouldShowBanner: Bool {
+        securityBannerMode.isShown || shouldShowNewSoundBanner
     }
 }
 

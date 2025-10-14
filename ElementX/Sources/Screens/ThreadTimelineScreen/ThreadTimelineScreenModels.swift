@@ -7,10 +7,15 @@
 
 import Foundation
 
-enum ThreadTimelineScreenViewModelAction { }
+enum ThreadTimelineScreenViewModelAction {
+    case displayMessageForwarding(MessageForwardingItem)
+}
 
 struct ThreadTimelineScreenViewState: BindableState {
+    var roomTitle: String
+    var roomAvatar: RoomAvatar
     var canSendMessage = true
+    var dmRecipientVerificationState: UserIdentityVerificationState?
     
     var bindings = ThreadTimelineScreenViewStateBindings()
 }

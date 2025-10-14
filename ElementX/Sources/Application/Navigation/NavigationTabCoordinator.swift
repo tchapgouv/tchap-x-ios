@@ -38,7 +38,10 @@ import SwiftUI
         }
         
         func barVisibility(in horizontalSizeClass: UserInterfaceSizeClass?) -> Visibility {
-            if let barVisibilityOverride {
+            if #unavailable(iOS 18.0) {
+                // There are glitches with the tab bar on iPadOS 17, so disable the tab bar until we have fixed it.
+                .hidden
+            } else if let barVisibilityOverride {
                 barVisibilityOverride
             } else if horizontalSizeClass == .compact, navigationSplitCoordinator?.detailCoordinator != nil {
                 // Whilst we support pushing screens on the stack in the sidebarCoordinator, in practice
@@ -307,6 +310,7 @@ private struct NavigationTabCoordinatorView<Tag: Hashable>: View {
                     .toolbar(module.details.barVisibility(in: horizontalSizeClass), for: .tabBar)
             }
         }
+        .backportTabBarMinimizeBehaviorOnScrollDown()
         .introspect(.tabView, on: .supportedVersions, customize: configureAppearance)
         .sheet(item: $navigationTabCoordinator.sheetModule) { module in
             module.coordinator?.toPresentable()

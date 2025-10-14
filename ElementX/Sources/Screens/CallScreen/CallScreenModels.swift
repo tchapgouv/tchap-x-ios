@@ -18,6 +18,7 @@ enum CallScreenViewModelAction {
 struct CallScreenViewState: BindableState {
     let script: String?
     var url: URL?
+    let isGenericCallLink: Bool
     
     let certificateValidator: CertificateValidatorHookProtocol
     
@@ -105,7 +106,7 @@ enum CallScreenJavaScriptMessageName: String, CaseIterable {
 
 struct DecodedWidgetMessage: Decodable {
     private static let decoder = JSONDecoder()
-    private static let joinAction = "io.element.join"
+    private static let contentLoadedAction = "content_loaded"
     private static let fromWidget = "fromWidget"
     
     let action: String?
@@ -118,7 +119,7 @@ struct DecodedWidgetMessage: Decodable {
         return try decoder.decode(DecodedWidgetMessage.self, from: data)
     }
     
-    var hasJoined: Bool {
-        action == Self.joinAction && api == Self.fromWidget
+    var hasLoaded: Bool {
+        action == Self.contentLoadedAction && api == Self.fromWidget
     }
 }

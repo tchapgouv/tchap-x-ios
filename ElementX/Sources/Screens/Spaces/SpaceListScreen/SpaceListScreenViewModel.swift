@@ -12,6 +12,7 @@ typealias SpaceListScreenViewModelType = StateStoreViewModelV2<SpaceListScreenVi
 
 class SpaceListScreenViewModel: SpaceListScreenViewModelType, SpaceListScreenViewModelProtocol {
     private let spaceServiceProxy: SpaceServiceProxyProtocol
+    private let appSettings: AppSettings
     private let userIndicatorController: UserIndicatorControllerProtocol
     
     private let actionsSubject: PassthroughSubject<SpaceListScreenViewModelAction, Never> = .init()
@@ -21,8 +22,10 @@ class SpaceListScreenViewModel: SpaceListScreenViewModelType, SpaceListScreenVie
 
     init(userSession: UserSessionProtocol,
          selectedSpacePublisher: CurrentValuePublisher<String?, Never>,
+         appSettings: AppSettings,
          userIndicatorController: UserIndicatorControllerProtocol) {
         spaceServiceProxy = userSession.clientProxy.spaceService
+        self.appSettings = appSettings
         self.userIndicatorController = userIndicatorController
         
         super.init(initialViewState: SpaceListScreenViewState(userID: userSession.clientProxy.userID,
@@ -58,17 +61,24 @@ class SpaceListScreenViewModel: SpaceListScreenViewModelType, SpaceListScreenVie
         switch viewAction {
         case .spaceAction(.select(let spaceRoomProxy)):
             Task { await selectSpace(spaceRoomProxy) }
-        case .spaceAction(.join(let spaceRoomProxy)):
-            #warning("Implement joining.")
+        case .spaceAction(.join):
+            fatalError("There shouldn't be any unjoined spaces in the joined spaces list.")
         case .showSettings:
             actionsSubject.send(.showSettings)
+        case .screenAppeared:
+            if !appSettings.hasSeenSpacesAnnouncement {
+                // Use a task otherwise the presentation isn't animated.
+                Task { state.bindings.isPresentingFeatureAnnouncement = true }
+            }
+        case .featureAnnouncementAppeared:
+            appSettings.hasSeenSpacesAnnouncement = true
         }
     }
     
     // MARK: - Private
     
     private func selectSpace(_ spaceRoomProxy: SpaceRoomProxyProtocol) async {
-        switch await spaceServiceProxy.spaceRoomList(for: spaceRoomProxy) {
+        switch await spaceServiceProxy.spaceRoomList(spaceID: spaceRoomProxy.id, parent: nil) {
         case .success(let spaceRoomListProxy):
             actionsSubject.send(.selectSpace(spaceRoomListProxy))
         case .failure(let error):

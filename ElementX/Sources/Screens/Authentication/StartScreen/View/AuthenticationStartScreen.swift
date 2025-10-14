@@ -62,11 +62,12 @@ struct AuthenticationStartScreen: View {
             if verticalSizeClass == .regular {
                 Spacer()
                 
-                AuthenticationStartLogo(isOnGradient: true)
+                AuthenticationStartLogo(hideBrandChrome: context.viewState.hideBrandChrome)
             }
             
             Spacer()
             
+            if !context.viewState.hideBrandChrome {
             VStack(spacing: 8) {
                 // Tchap: Change Title on Start screen
 //                Text(L10n.screenOnboardingWelcomeTitle)
@@ -80,9 +81,10 @@ struct AuthenticationStartScreen: View {
                     .font(.compound.bodyLG)
                     .foregroundColor(.compound.textSecondary)
                     .multilineTextAlignment(.center)
+                }
+                .padding()
+                .fixedSize(horizontal: false, vertical: true)
             }
-            .padding()
-            .fixedSize(horizontal: false, vertical: true)
             
             Spacer()
         }

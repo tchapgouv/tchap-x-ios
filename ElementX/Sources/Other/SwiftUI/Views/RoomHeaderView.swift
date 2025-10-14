@@ -11,6 +11,7 @@ import SwiftUI
 
 struct RoomHeaderView: View {
     let roomName: String
+    var roomSubtitle: String?
     let roomAvatar: RoomAvatar
     var dmRecipientVerificationState: UserIdentityVerificationState?
     // Tchap: optional badge reporting room configuration.
@@ -19,12 +20,9 @@ struct RoomHeaderView: View {
     let mediaProvider: MediaProviderProtocol?
     
     var body: some View {
-        if #available(iOS 19, *) {
-            // https://github.com/element-hq/element-x-ios/issues/4180
-            // Terminating app due to uncaught exception 'NSInternalInconsistencyException', reason: 'NSLayoutConstraint constant is not finite!
-            content
-        } else if ProcessInfo.isRunningAccessibilityTests {
-            // Accessibility tests scale up the dynamic size in real time which may break the view
+        if ProcessInfo.isRunningAccessibilityTests || ProcessInfo.processInfo.isiOSAppOnMac {
+            // Accessibility tests scale up the dynamic size in real time which may break the view.
+            // macOS really doesn't like the greedy size and does weird things to it.
             content
         } else {
             content
@@ -46,6 +44,12 @@ struct RoomHeaderView: View {
 //                        .font(.compound.bodyLGSemibold)
                         .tchapNavigationBarTitleFont()
                         .accessibilityIdentifier(A11yIdentifiers.roomScreen.name)
+                    if let roomSubtitle {
+                        Text(roomSubtitle)
+                            .lineLimit(1)
+                            .font(.compound.bodyXS)
+                            .foregroundStyle(.compound.textSecondary)
+                    }
                     
                     if let dmRecipientVerificationState {
                         VerificationBadge(verificationState: dmRecipientVerificationState)
@@ -80,13 +84,18 @@ struct RoomHeaderView_Previews: PreviewProvider, TestablePreview {
             makeHeader(avatarURL: .mockMXCAvatar, verificationState: .notVerified)
             makeHeader(avatarURL: .mockMXCAvatar, verificationState: .verified)
             makeHeader(avatarURL: .mockMXCAvatar, verificationState: .verificationViolation)
+            makeHeader(avatarURL: .mockMXCAvatar,
+                       roomSubtitle: "Subtitle",
+                       verificationState: .verified)
         }
         .previewLayout(.sizeThatFits)
     }
     
     static func makeHeader(avatarURL: URL?,
+                           roomSubtitle: String? = nil,
                            verificationState: UserIdentityVerificationState) -> some View {
         RoomHeaderView(roomName: "Some Room name",
+                       roomSubtitle: roomSubtitle,
                        roomAvatar: .room(id: "1",
                                          name: "Some Room Name",
                                          avatarURL: avatarURL),

@@ -175,13 +175,19 @@ struct SettingsScreen: View {
                         })
                         .accessibilityIdentifier(A11yIdentifiers.settingsScreen.analytics)
             }
-            
+
             ListRow(label: .default(title: L10n.commonAdvancedSettings,
                                     icon: \.settings),
                     kind: .navigationLink {
                         context.send(viewAction: .advancedSettings)
                     })
                     .accessibilityIdentifier(A11yIdentifiers.settingsScreen.advancedSettings)
+            
+            ListRow(label: .default(title: L10n.screenAdvancedSettingsLabs,
+                                    icon: \.labs),
+                    kind: .navigationLink {
+                        context.send(viewAction: .labs)
+                    })
         }
     }
     

@@ -41,8 +41,6 @@ protocol DeveloperOptionsProtocol: AnyObject {
     
     var enableOnlySignedDeviceIsolationMode: Bool { get set }
     var enableKeyShareOnInvite: Bool { get set }
-    var threadsEnabled: Bool { get set }
-    var spacesEnabled: Bool { get set }
     var hideQuietNotificationAlerts: Bool { get set }
     
     var hideUnreadMessagesBadge: Bool { get set }
@@ -52,8 +50,10 @@ protocol DeveloperOptionsProtocol: AnyObject {
     var fuzzyRoomListSearchEnabled: Bool { get set }
     var lowPriorityFilterEnabled: Bool { get set }
     var knockingEnabled: Bool { get set }
+    var latestEventSorterEnabled: Bool { get set }
     
     var nextGenHTMLParserEnabled: Bool { get set }
+    var linkPreviewsEnabled: Bool { get set }
 }
 
 extension AppSettings: DeveloperOptionsProtocol { }

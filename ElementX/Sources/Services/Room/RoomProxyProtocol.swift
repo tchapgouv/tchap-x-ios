@@ -64,6 +64,13 @@ enum KnockRequestsState {
     case loaded([KnockRequestProxyProtocol])
 }
 
+struct RTCDeclinedEvent {
+    /// The sender of the decline event
+    let sender: String
+    /// The rtc.notification event that is beeing declined
+    let notificationEventID: String
+}
+
 // sourcery: AutoMockable
 protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     var infoPublisher: CurrentValuePublisher<RoomInfoProxyProtocol, Never> { get }
@@ -89,6 +96,8 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func timelineFocusedOnEvent(eventID: String, numberOfEvents: UInt16) async -> Result<TimelineProxyProtocol, RoomProxyError>
     
     func threadTimeline(eventID: String) async -> Result<TimelineProxyProtocol, RoomProxyError>
+    
+    func loadOrFetchEventDetails(for eventID: String) async -> Result<TimelineEvent, RoomProxyError>
     
     func messageFilteredTimeline(focus: TimelineFocus,
                                  allowedMessageTypes: [TimelineAllowedMessageType],
@@ -169,6 +178,8 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     // MARK: - Element Call
     
     func elementCallWidgetDriver(deviceID: String) -> ElementCallWidgetDriverProtocol
+    func declineCall(notificationID: String) async -> Result<Void, RoomProxyError>
+    func subscribeToCallDeclineEvents(rtcNotificationEventID: String, listener: CallDeclineListener) -> Result<TaskHandle, RoomProxyError>
     
     // MARK: - Permalinks
     
