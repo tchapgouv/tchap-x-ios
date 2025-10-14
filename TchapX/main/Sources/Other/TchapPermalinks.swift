@@ -12,7 +12,7 @@ import Foundation
  */
 enum TchapPermalinks {
     private static let MATRIX_TO_PERMALINK_BASE_URL = "https://matrix.to/#/"
-    public static let TCHAP_PERMALINK_BASE_URL = "https://tchap.gouv.fr/#/"
+    static let TCHAP_PERMALINK_BASE_URL = "https://tchap.gouv.fr/#/"
     private static let SUPPORTED_PATHS: [String] = ["/#/room/",
                                                     "/#/user/",
                                                     "/#/group/"]

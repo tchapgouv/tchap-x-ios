@@ -68,19 +68,19 @@ struct AuthenticationStartScreen: View {
             Spacer()
             
             if !context.viewState.hideBrandChrome {
-            VStack(spacing: 8) {
-                // Tchap: Change Title on Start screen
-//                Text(L10n.screenOnboardingWelcomeTitle)
-                Text(TchapL10n.screenOnboardingWelcomeTitle)
-                    .font(.compound.headingLGBold)
-                    .foregroundColor(.compound.textPrimary)
-                    .multilineTextAlignment(.center)
-                // Tchap: Change message on Start screen
-//                Text(L10n.screenOnboardingWelcomeMessage(InfoPlistReader.main.productionAppName))
-                Text(TchapL10n.screenOnboardingWelcomeMessage)
-                    .font(.compound.bodyLG)
-                    .foregroundColor(.compound.textSecondary)
-                    .multilineTextAlignment(.center)
+                VStack(spacing: 8) {
+                    // Tchap: Change Title on Start screen
+                    //                Text(L10n.screenOnboardingWelcomeTitle)
+                    Text(TchapL10n.screenOnboardingWelcomeTitle)
+                        .font(.compound.headingLGBold)
+                        .foregroundColor(.compound.textPrimary)
+                        .multilineTextAlignment(.center)
+                    // Tchap: Change message on Start screen
+                    //                Text(L10n.screenOnboardingWelcomeMessage(InfoPlistReader.main.productionAppName))
+                    Text(TchapL10n.screenOnboardingWelcomeMessage)
+                        .font(.compound.bodyLG)
+                        .foregroundColor(.compound.textSecondary)
+                        .multilineTextAlignment(.center)
                 }
                 .padding()
                 .fixedSize(horizontal: false, vertical: true)
@@ -102,13 +102,13 @@ struct AuthenticationStartScreen: View {
                     .font(.compound.bodyLG)
                     .foregroundColor(.compound.textSecondary)
                     .multilineTextAlignment(.center)
-
+                
                 Button { context.send(viewAction: .loginWithQR) } label: {
                     Label(L10n.screenOnboardingSignInWithQrCode, icon: \.qrCode)
                 }
                 .buttonStyle(.compound(.primary))
                 .accessibilityIdentifier(A11yIdentifiers.authenticationStartScreen.signInWithQr)
-
+                
                 // Tchap: Add in between buttons text "or"
                 Text(TchapL10n.screenOnboardingWelcomeOrBetweenButtons)
                     .font(.compound.bodyLG)

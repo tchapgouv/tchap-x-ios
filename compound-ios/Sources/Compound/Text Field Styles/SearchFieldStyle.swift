@@ -68,7 +68,7 @@ struct SearchStyle_Previews: PreviewProvider, TestablePreview {
                 }
             }
             .listStyle(.plain)
-            .searchable(text: .constant(""), placement: .navigationBarDrawer(displayMode: .always))
+            .searchable(text: .constant(""))
             .compoundSearchField()
         }
         .tint(.compound.textActionPrimary)
@@ -93,7 +93,7 @@ struct SearchStyle_Previews: PreviewProvider, TestablePreview {
                 }
             }
             .compoundList()
-            .searchable(text: .constant(""), placement: .navigationBarDrawer(displayMode: .always))
+            .searchable(text: .constant(""))
             .compoundSearchField()
         }
         .tint(.compound.textActionPrimary)

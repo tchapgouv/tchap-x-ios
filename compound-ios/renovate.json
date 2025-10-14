@@ -1,0 +1,18 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommitsDisabled"
+  ],
+  "ignoreDeps": ["pointfreeco/swift-snapshot-testing"],
+  "packageRules" : [
+    {
+      "matchManagers": ["github-actions"],
+      "groupName" : "GitHub Actions"
+    },
+    {
+      "matchManagers": ["swift", "cocoapods"],
+      "groupName" : "Swift"
+    }
+  ]
+}
