@@ -10,9 +10,6 @@ DerivedData/
 .nova
 node_modules
 
-# Make sure the IDETemplateMacros.plist is committed.
-!.swiftpm
-
 # Cocoapods in Inspector app
 Inspector/Pods
 
