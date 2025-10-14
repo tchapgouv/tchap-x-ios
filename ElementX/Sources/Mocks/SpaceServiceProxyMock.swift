@@ -13,18 +13,23 @@ extension SpaceServiceProxyMock {
     struct Configuration {
         var joinedSpaces: [SpaceRoomProxyProtocol] = []
         var spaceRoomLists: [String: SpaceRoomListProxyMock] = [:]
+        var leaveSpaceRooms: [LeaveSpaceRoom] = []
     }
     
     convenience init(_ configuration: Configuration) {
         self.init()
         
         joinedSpacesPublisher = .init(configuration.joinedSpaces)
-        spaceRoomListForClosure = { spaceRoomProxy in
-            if let spaceRoomList = configuration.spaceRoomLists[spaceRoomProxy.id] {
+        spaceRoomListSpaceIDParentClosure = { spaceID, _ in
+            if let spaceRoomList = configuration.spaceRoomLists[spaceID] {
                 .success(spaceRoomList)
             } else {
                 .failure(.sdkError(ClientProxyMockError.generic))
             }
+        }
+        leaveSpaceSpaceIDClosure = { spaceID in
+            .success(LeaveSpaceHandleProxy(spaceID: spaceID,
+                                           leaveHandle: LeaveSpaceHandleSDKMock(.init(rooms: configuration.leaveSpaceRooms))))
         }
     }
 }

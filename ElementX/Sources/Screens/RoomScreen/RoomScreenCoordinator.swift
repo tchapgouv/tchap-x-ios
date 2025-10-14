@@ -19,6 +19,7 @@ struct RoomScreenCoordinatorParameters {
     let timelineController: TimelineControllerProtocol
     let mediaPlayerProvider: MediaPlayerProviderProtocol
     let emojiProvider: EmojiProviderProtocol
+    let linkMetadataProvider: LinkMetadataProviderProtocol
     let completionSuggestionService: CompletionSuggestionServiceProtocol
     let ongoingCallRoomIDPublisher: CurrentValuePublisher<String?, Never>
     let appMediator: AppMediatorProtocol
@@ -86,6 +87,7 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                                               appSettings: parameters.appSettings,
                                               analyticsService: parameters.analytics,
                                               emojiProvider: parameters.emojiProvider,
+                                              linkMetadataProvider: parameters.linkMetadataProvider,
                                               timelineControllerFactory: parameters.timelineControllerFactory)
         
         let wysiwygViewModel = WysiwygComposerViewModel(minHeight: ComposerConstant.minHeight,
@@ -179,6 +181,8 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.presentKnockRequestsList)
                 case .displayRoom(let roomID, let via):
                     actionsSubject.send(.presentRoom(roomID: roomID, via: via))
+                case .displayMessageForwarding(let forwardingItem):
+                    actionsSubject.send(.presentMessageForwarding(forwardingItem: forwardingItem))
                 }
             }
             .store(in: &cancellables)

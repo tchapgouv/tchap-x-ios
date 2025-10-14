@@ -55,6 +55,8 @@ struct RoomEventStringBuilder {
                 default: L10n.commonWaitingForDecryptionKey
                 }
                 return prefix(errorMessage, with: displayName, isOutgoing: isOutgoing)
+            case .other:
+                return nil // We shouldn't receive these without asking for custom event types.
             }
         case .failedToParseMessageLike, .failedToParseState:
             return prefix(L10n.commonUnsupportedEvent, with: displayName, isOutgoing: isOutgoing)
@@ -77,7 +79,7 @@ struct RoomEventStringBuilder {
                 .map(AttributedString.init)
         case .callInvite:
             return prefix(L10n.commonUnsupportedCall, with: displayName, isOutgoing: isOutgoing)
-        case .callNotify:
+        case .rtcNotification:
             return prefix(L10n.commonCallStarted, with: displayName, isOutgoing: isOutgoing)
         }
     }

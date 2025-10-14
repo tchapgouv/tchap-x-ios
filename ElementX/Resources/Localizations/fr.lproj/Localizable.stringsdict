@@ -274,6 +274,22 @@
 			<string>Code PIN incorrect. Il reste %1$d tentatives</string>
 		</dict>
 	</dict>
+	<key>screen_leave_space_submit</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Quitter %1$d salon et l'espace</string>
+			<key>other</key>
+			<string>Quitter %1$d salons et l'espace</string>
+		</dict>
+	</dict>
 	<key>screen_pinned_timeline_screen_title</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -400,6 +416,22 @@
 			<string>%1$@ écrit</string>
 			<key>other</key>
 			<string>%1$@ écrivent</string>
+		</dict>
+	</dict>
+	<key>troubleshoot_notifications_test_blocked_users_result_some</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Vous avez bloqué %1$d utilisateur. Vous ne recevrez pas de notifications pour cet utilisateur.</string>
+			<key>other</key>
+			<string>Vous avez bloqué %1$d utilisateurs. Vous ne recevrez pas de notifications pour ces utilisateurs.</string>
 		</dict>
 	</dict>
 	<key>troubleshoot_notifications_test_detect_push_provider_success</key>

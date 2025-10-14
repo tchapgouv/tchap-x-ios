@@ -15,8 +15,13 @@ import XCTest
 @MainActor
 class PreviewTests: XCTestCase {
     private let deviceConfig: ViewImageConfig = .iPhoneX
+<<<<<<< HEAD
     private let simulatorDevice: String? = "iPhone17,3" // iPhone 16 // Tchap: adjustement
     private let requiredOSVersion = (major: 18, minor: 5)
+=======
+    private let simulatorDevice: String? = "iPhone14,6" // iPhone SE 3rd Generation
+    private let requiredOSVersion = (major: 26, minor: 0)
+>>>>>>> release/25.10.0
     private let snapshotDevices = ["iPhone 16", "iPad"]
     private var recordMode: SnapshotTestingConfiguration.Record = .missing
 

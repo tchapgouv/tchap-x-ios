@@ -81,6 +81,7 @@ class LoggingTests: XCTestCase {
                                       joinRequestType: nil,
                                       name: roomName,
                                       isDirect: true,
+                                      isSpace: false,
                                       avatarURL: nil,
                                       heroes: [.init(userID: "", displayName: heroName)],
                                       activeMembersCount: 0,

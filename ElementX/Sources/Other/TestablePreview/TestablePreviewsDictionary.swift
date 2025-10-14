@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.7 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.3.0 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 // swiftlint:disable all
@@ -23,6 +23,7 @@ enum TestablePreviewsDictionary {
         "BadgeLabel_Previews" : BadgeLabel_Previews.self,
         "BigIcon_Previews" : BigIcon_Previews.self,
         "BlockedUsersScreen_Previews" : BlockedUsersScreen_Previews.self,
+        "BloomModifier_Previews" : BloomModifier_Previews.self,
         "BugReportScreen_Previews" : BugReportScreen_Previews.self,
         "CallInviteRoomTimelineView_Previews" : CallInviteRoomTimelineView_Previews.self,
         "CallNotificationRoomTimelineView_Previews" : CallNotificationRoomTimelineView_Previews.self,
@@ -53,6 +54,7 @@ enum TestablePreviewsDictionary {
         "HomeScreenEmptyStateView_Previews" : HomeScreenEmptyStateView_Previews.self,
         "HomeScreenInviteCell_Previews" : HomeScreenInviteCell_Previews.self,
         "HomeScreenKnockedCell_Previews" : HomeScreenKnockedCell_Previews.self,
+        "HomeScreenNewSoundBanner_Previews" : HomeScreenNewSoundBanner_Previews.self,
         "HomeScreenRecoveryKeyConfirmationBanner_Previews" : HomeScreenRecoveryKeyConfirmationBanner_Previews.self,
         "HomeScreenRoomCell_Previews" : HomeScreenRoomCell_Previews.self,
         "HomeScreen_Previews" : HomeScreen_Previews.self,
@@ -63,11 +65,16 @@ enum TestablePreviewsDictionary {
         "InviteUsersScreenSelectedItem_Previews" : InviteUsersScreenSelectedItem_Previews.self,
         "InviteUsersScreen_Previews" : InviteUsersScreen_Previews.self,
         "JoinRoomByAddressView_Previews" : JoinRoomByAddressView_Previews.self,
+        "JoinRoomScreenSpace_Previews" : JoinRoomScreenSpace_Previews.self,
         "JoinRoomScreen_Previews" : JoinRoomScreen_Previews.self,
+        "JoinedMembersBadgeView_Previews" : JoinedMembersBadgeView_Previews.self,
         "KnockRequestCell_Previews" : KnockRequestCell_Previews.self,
         "KnockRequestsBannerView_Previews" : KnockRequestsBannerView_Previews.self,
         "KnockRequestsListEmptyStateView_Previews" : KnockRequestsListEmptyStateView_Previews.self,
         "KnockRequestsListScreen_Previews" : KnockRequestsListScreen_Previews.self,
+        "LabsScreen_Previews" : LabsScreen_Previews.self,
+        "LeaveSpaceRoomDetailsCell_Previews" : LeaveSpaceRoomDetailsCell_Previews.self,
+        "LeaveSpaceView_Previews" : LeaveSpaceView_Previews.self,
         "LegalInformationScreen_Previews" : LegalInformationScreen_Previews.self,
         "LoadableImage_Previews" : LoadableImage_Previews.self,
         "LocationMarkerView_Previews" : LocationMarkerView_Previews.self,
@@ -158,6 +165,7 @@ enum TestablePreviewsDictionary {
         "SpaceListScreen_Previews" : SpaceListScreen_Previews.self,
         "SpaceRoomCell_Previews" : SpaceRoomCell_Previews.self,
         "SpaceScreen_Previews" : SpaceScreen_Previews.self,
+        "SpacesAnnouncementSheetView_Previews" : SpacesAnnouncementSheetView_Previews.self,
         "SplashScreen_Previews" : SplashScreen_Previews.self,
         "StackedAvatarsView_Previews" : StackedAvatarsView_Previews.self,
         "StartChatScreen_Previews" : StartChatScreen_Previews.self,

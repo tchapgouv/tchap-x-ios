@@ -20,8 +20,15 @@ ignore:
   - "**/*Mock.swift"
   - "**/*Proxy.swift"
   - "**/*Protocol.swift"
+<<<<<<< HEAD
 # Tchap: add TchapX generated files to exclusion list.
   - "TchapX/Sources/main/Generated"
+=======
+  - "compound-ios/Inspector"
+  - "compound-ios/Tests"
+  - "compound-ios/Sources/Previews"
+  - "compound-ios/Tools"
+>>>>>>> release/25.10.0
 
 flag_management:
   default_rules:

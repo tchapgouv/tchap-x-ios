@@ -33,14 +33,6 @@ struct DeveloperOptionsScreen: View {
             }
             
             Section("General") {
-                Toggle(isOn: $context.threadsEnabled) {
-                    Text("Threads")
-                }
-
-                Toggle(isOn: $context.spacesEnabled) {
-                    Text("Spaces")
-                }
-                
                 Toggle(isOn: $context.nextGenHTMLParserEnabled) {
                     Text("Next gen HTML parsing")
                 }
@@ -61,6 +53,20 @@ struct DeveloperOptionsScreen: View {
                 
                 Toggle(isOn: $context.lowPriorityFilterEnabled) {
                     Text("Low priority filter")
+                }
+                
+                Toggle(isOn: $context.latestEventSorterEnabled) {
+                    Text("Latest event sorter")
+                    Text("Requires app reboot")
+                }
+            }
+            
+            Section("Timeline") {
+                Toggle(isOn: $context.linkPreviewsEnabled) {
+                    Text("Link previews")
+                    Text("Follows the timeline media visibility settings.")
+                    Text("Can leak the device IP address when loading link metadata.")
+                        .foregroundStyle(.compound.textCriticalPrimary)
                 }
             }
                         

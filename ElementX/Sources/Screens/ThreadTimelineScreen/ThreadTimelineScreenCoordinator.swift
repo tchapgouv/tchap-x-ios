@@ -13,9 +13,11 @@ import WysiwygComposer
 struct ThreadTimelineScreenCoordinatorParameters {
     let userSession: UserSessionProtocol
     let roomProxy: JoinedRoomProxyProtocol
+    let focussedEventID: String?
     let timelineController: TimelineControllerProtocol
     let mediaPlayerProvider: MediaPlayerProviderProtocol
     let emojiProvider: EmojiProviderProtocol
+    let linkMetadataProvider: LinkMetadataProviderProtocol
     let completionSuggestionService: CompletionSuggestionServiceProtocol
     let appMediator: AppMediatorProtocol
     let appSettings: AppSettings
@@ -54,9 +56,10 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
     init(parameters: ThreadTimelineScreenCoordinatorParameters) {
         self.parameters = parameters
         
-        viewModel = ThreadTimelineScreenViewModel(roomProxy: parameters.roomProxy)
+        viewModel = ThreadTimelineScreenViewModel(roomProxy: parameters.roomProxy, userSession: parameters.userSession)
         
         timelineViewModel = TimelineViewModel(roomProxy: parameters.roomProxy,
+                                              focussedEventID: parameters.focussedEventID,
                                               timelineController: parameters.timelineController,
                                               userSession: parameters.userSession,
                                               mediaPlayerProvider: parameters.mediaPlayerProvider,
@@ -65,6 +68,7 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
                                               appSettings: parameters.appSettings,
                                               analyticsService: parameters.analytics,
                                               emojiProvider: parameters.emojiProvider,
+                                              linkMetadataProvider: parameters.linkMetadataProvider,
                                               timelineControllerFactory: parameters.timelineControllerFactory)
         
         let wysiwygViewModel = WysiwygComposerViewModel(minHeight: ComposerConstant.minHeight,
@@ -84,6 +88,16 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
     }
     
     func start() {
+        viewModel.actionsPublisher
+            .sink { [weak self] action in
+                guard let self else { return }
+                switch action {
+                case .displayMessageForwarding(let forwardingItem):
+                    actionsSubject.send(.presentMessageForwarding(forwardingItem: forwardingItem))
+                }
+            }
+            .store(in: &cancellables)
+        
         timelineViewModel.actions
             .sink { [weak self] action in
                 guard let self else { return }
@@ -152,5 +166,9 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
         return AnyView(ThreadTimelineScreen(context: viewModel.context,
                                             timelineContext: timelineViewModel.context,
                                             composerToolbar: composerToolbar))
+    }
+    
+    func focusOnEvent(eventID: String) {
+        Task { await timelineViewModel.focusOnEvent(eventID: eventID) }
     }
 }

@@ -48,7 +48,7 @@ extension RoomFlowCoordinator {
         case initial
         case joinRoomScreen
         case room
-        case thread(itemID: TimelineItemIdentifier)
+        case thread(threadRootEventID: String, previousState: State)
         case roomDetails(isRoot: Bool)
         case roomDetailsEditScreen
         case notificationSettings
@@ -79,22 +79,30 @@ extension RoomFlowCoordinator {
         case presentingChild(childRoomID: String, previousState: State)
         /// The flow is complete and is handing control of the stack back to its parent.
         case complete
+        
+        /// A space flow is in progress
+        case spaceFlow(previousState: State)
     }
     
     struct EventUserInfo {
         let animated: Bool
         var timelineController: TimelineControllerProtocol?
+        var spaceRoomListProxy: SpaceRoomListProxyProtocol?
     }
 
     enum Event: EventType {
         case presentJoinRoomScreen(via: [String])
         case dismissJoinRoomScreen
+        case joinedSpace
         
         case presentRoom(presentationAction: PresentationAction?)
         case dismissFlow
         
-        case presentThread(itemID: TimelineItemIdentifier)
+        case presentThread(threadRootEventID: String, focusEventID: String?)
         case dismissThread
+        
+        case startSpaceFlow
+        case finishedSpaceFlow
         
         case presentReportContent(itemID: TimelineItemIdentifier, senderID: String)
         case dismissReportContent
@@ -197,6 +205,8 @@ extension RoomFlowCoordinator {
             
             case (.room, .presentMessageForwarding(let forwardingItem)):
                 return .messageForwarding(forwardingItem: forwardingItem, previousState: fromState)
+            case (.mediaEventsTimeline, .presentMessageForwarding(forwardingItem: let forwardingItem)):
+                return .messageForwarding(forwardingItem: forwardingItem, previousState: fromState)
 
             case (.room, .presentMapNavigator(_)):
                 return .mapNavigator(previousState: fromState)
@@ -217,11 +227,20 @@ extension RoomFlowCoordinator {
                 return previousState
                 
             // Thread
+<<<<<<< HEAD
             case (.room, .presentThread(let itemID)):
                 return .thread(itemID: itemID)
 
             case (.thread, .dismissThread):
                 return .room
+=======
+            case (.room, .presentThread(let threadRootEventID, _)):
+                return .thread(threadRootEventID: threadRootEventID, previousState: fromState)
+            case (.thread, .presentThread(let threadRootEventID, _)):
+                return .thread(threadRootEventID: threadRootEventID, previousState: fromState)
+            case (.thread(_, let previousState), .dismissThread):
+                return previousState
+>>>>>>> release/25.10.0
                 
             case (.thread, .presentReportContent(let itemID, let senderID)):
                 return .reportContent(itemID: itemID, senderID: senderID, previousState: fromState)
@@ -336,6 +355,8 @@ extension RoomFlowCoordinator {
 
             case (_, .dismissJoinRoomScreen):
                 return .complete
+            case (_, .joinedSpace):
+                return .complete
                 
             case (.joinRoomScreen, .presentDeclineAndBlockScreen):
                 return .declineAndBlockScreen
@@ -349,6 +370,11 @@ extension RoomFlowCoordinator {
                 return .presentingChild(childRoomID: roomID, previousState: fromState)
 
             case (.presentingChild(_, let previousState), .dismissChildFlow):
+                return previousState
+                
+            case (.presentingChild(_, let previousState), .startSpaceFlow):
+                return .spaceFlow(previousState: previousState)
+            case (.spaceFlow(let previousState), .finishedSpaceFlow):
                 return previousState
                     
             case (_, .presentRoomMemberDetails(userID: let userID)):

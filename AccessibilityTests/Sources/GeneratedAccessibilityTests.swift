@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.7 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.3.0 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 // swiftlint:disable all
@@ -61,6 +61,10 @@ extension AccessibilityTests {
 
     func testBlockedUsersScreen() async throws {
         try await performAccessibilityAudit(named: "BlockedUsersScreen_Previews")
+    }
+
+    func testBloomModifier() async throws {
+        try await performAccessibilityAudit(named: "BloomModifier_Previews")
     }
 
     func testBugReportScreen() async throws {
@@ -183,6 +187,10 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "HomeScreenKnockedCell_Previews")
     }
 
+    func testHomeScreenNewSoundBanner() async throws {
+        try await performAccessibilityAudit(named: "HomeScreenNewSoundBanner_Previews")
+    }
+
     func testHomeScreenRecoveryKeyConfirmationBanner() async throws {
         try await performAccessibilityAudit(named: "HomeScreenRecoveryKeyConfirmationBanner_Previews")
     }
@@ -223,8 +231,16 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "JoinRoomByAddressView_Previews")
     }
 
+    func testJoinRoomScreenSpace() async throws {
+        try await performAccessibilityAudit(named: "JoinRoomScreenSpace_Previews")
+    }
+
     func testJoinRoomScreen() async throws {
         try await performAccessibilityAudit(named: "JoinRoomScreen_Previews")
+    }
+
+    func testJoinedMembersBadgeView() async throws {
+        try await performAccessibilityAudit(named: "JoinedMembersBadgeView_Previews")
     }
 
     func testKnockRequestCell() async throws {
@@ -241,6 +257,18 @@ extension AccessibilityTests {
 
     func testKnockRequestsListScreen() async throws {
         try await performAccessibilityAudit(named: "KnockRequestsListScreen_Previews")
+    }
+
+    func testLabsScreen() async throws {
+        try await performAccessibilityAudit(named: "LabsScreen_Previews")
+    }
+
+    func testLeaveSpaceRoomDetailsCell() async throws {
+        try await performAccessibilityAudit(named: "LeaveSpaceRoomDetailsCell_Previews")
+    }
+
+    func testLeaveSpaceView() async throws {
+        try await performAccessibilityAudit(named: "LeaveSpaceView_Previews")
     }
 
     func testLegalInformationScreen() async throws {
@@ -601,6 +629,10 @@ extension AccessibilityTests {
 
     func testSpaceScreen() async throws {
         try await performAccessibilityAudit(named: "SpaceScreen_Previews")
+    }
+
+    func testSpacesAnnouncementSheetView() async throws {
+        try await performAccessibilityAudit(named: "SpacesAnnouncementSheetView_Previews")
     }
 
     func testSplashScreen() async throws {

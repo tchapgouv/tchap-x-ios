@@ -18,7 +18,11 @@ excluded:
   - "*/Sources/Generated/*"
   - Tools/Sources # Our command-line tools use a lot of print commands.
   - Secrets
+<<<<<<< HEAD
   - TchapX/Sources/main/Generated
+=======
+  - compound-ios/Inspector
+>>>>>>> release/25.10.0
 
 line_length:
   warning: 250

@@ -17,6 +17,7 @@ struct PinnedEventsTimelineScreenCoordinatorParameters {
     let appSettings: AppSettings
     let analytics: AnalyticsService
     let emojiProvider: EmojiProviderProtocol
+    let linkMetadataProvider: LinkMetadataProviderProtocol
     let timelineControllerFactory: TimelineControllerFactoryProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
 }
@@ -54,6 +55,7 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
                                               appSettings: parameters.appSettings,
                                               analyticsService: parameters.analytics,
                                               emojiProvider: parameters.emojiProvider,
+                                              linkMetadataProvider: parameters.linkMetadataProvider,
                                               timelineControllerFactory: parameters.timelineControllerFactory)
     }
     
@@ -63,6 +65,8 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
             
             guard let self else { return }
             switch action {
+            case .displayMessageForwarding(let forwardingItem):
+                actionsSubject.send(.displayMessageForwarding(forwardingItem: forwardingItem))
             case .viewInRoomTimeline(let itemID):
                 guard let eventID = itemID.eventID else { fatalError("A pinned event must have an event ID.") }
                 actionsSubject.send(.displayRoomScreenWithFocussedPin(eventID: eventID))

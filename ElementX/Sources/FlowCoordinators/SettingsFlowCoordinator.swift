@@ -102,6 +102,8 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
                     presentNotificationSettings()
                 case .advancedSettings:
                     presentAdvancedSettings()
+                case .labs:
+                    presentLabs()
                 case .developerOptions:
                     presentDeveloperOptions()
                 case .deactivateAccount:
@@ -111,6 +113,20 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
             .store(in: &cancellables)
         
         navigationStackCoordinator.setRootCoordinator(settingsScreenCoordinator, animated: animated)
+    }
+    
+    private func presentLabs() {
+        let coordinator = LabsScreenCoordinator(parameters: .init(appSettings: flowParameters.appSettings))
+        coordinator.actions
+            .sink { [weak self] action in
+                switch action {
+                case .clearCache:
+                    self?.actionsSubject.send(.clearCache)
+                }
+            }
+            .store(in: &cancellables)
+        
+        navigationStackCoordinator.push(coordinator)
     }
     
     private func startEncryptionSettingsFlow(animated: Bool) {

@@ -31,6 +31,7 @@ class HomeScreenRoomTests: XCTestCase {
                                   joinRequestType: nil,
                                   name: "Test room",
                                   isDirect: false,
+                                  isSpace: false,
                                   avatarURL: nil,
                                   heroes: [],
                                   activeMembersCount: 0,

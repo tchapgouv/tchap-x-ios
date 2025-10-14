@@ -29,6 +29,8 @@ final class AppSettings {
     private enum UserDefaultsKeys: String {
         case lastVersionLaunched
         case seenInvites
+        case hasSeenSpacesAnnouncement
+        case hasSeenNewSoundBanner
         case appLockNumberOfPINAttempts
         case appLockNumberOfBiometricAttempts
         case timelineStyle
@@ -59,9 +61,10 @@ final class AppSettings {
         case enableKeyShareOnInvite
         case knockingEnabled
         case threadsEnabled
-        case spacesEnabled
         case developerOptionsEnabled
         case nextGenHTMLParserEnabled
+        case linkPreviewsEnabled
+        case latestEventSorterEnabled
         
         // Doug's tweaks 🔧
         case hideUnreadMessagesBadge
@@ -110,6 +113,7 @@ final class AppSettings {
     // swiftlint:disable:next function_parameter_count
     func override(accountProviders: [String],
                   allowOtherAccountProviders: Bool,
+                  hideBrandChrome: Bool,
                   pushGatewayBaseURL: URL,
                   oidcRedirectURL: URL,
                   websiteURL: URL,
@@ -128,6 +132,7 @@ final class AppSettings {
                   mapTilerConfiguration: MapTilerConfiguration) {
         self.accountProviders = accountProviders
         self.allowOtherAccountProviders = allowOtherAccountProviders
+        self.hideBrandChrome = hideBrandChrome
         self.pushGatewayBaseURL = pushGatewayBaseURL
         self.oidcRedirectURL = oidcRedirectURL
         self.websiteURL = websiteURL
@@ -159,6 +164,13 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.seenInvites, defaultValue: [], storageType: .userDefaults(store))
     var seenInvites: Set<String>
     
+    @UserPreference(key: UserDefaultsKeys.hasSeenSpacesAnnouncement, defaultValue: false, storageType: .userDefaults(store))
+    var hasSeenSpacesAnnouncement
+    
+    /// Defaults to `true` for new users, and we use a migration to set it to `false` for existing users.
+    @UserPreference(key: UserDefaultsKeys.hasSeenNewSoundBanner, defaultValue: true, storageType: .userDefaults(store))
+    var hasSeenNewSoundBanner
+    
     /// The initial set of account providers shown to the user in the authentication flow.
     ///
     /// Account provider is the friendly term for the server name. It should not contain an `https` prefix and should
@@ -174,6 +186,8 @@ final class AppSettings {
     #endif
     /// Whether or not the user is allowed to manually enter their own account provider or must select from one of `defaultAccountProviders`.
     private(set) var allowOtherAccountProviders = true
+    /// Whether the components surrounding the app brand/logo should be hidden or not
+    private(set) var hideBrandChrome = false
     
     /// The task identifier used for background app refresh. Also used in main target's the Info.plist
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
@@ -449,13 +463,23 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: true, storageType: .userDefaults(store))
     var threadsEnabled
     
+<<<<<<< HEAD
     // Tchap: enable `spacesEnabled` feature flag by default.
 //    @UserPreference(key: UserDefaultsKeys.spacesEnabled, defaultValue: false, storageType: .userDefaults(store))
     @UserPreference(key: UserDefaultsKeys.spacesEnabled, defaultValue: true, storageType: .userDefaults(store))
     var spacesEnabled
     
     @UserPreference(key: UserDefaultsKeys.nextGenHTMLParserEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
+=======
+    @UserPreference(key: UserDefaultsKeys.nextGenHTMLParserEnabled, defaultValue: true, storageType: .userDefaults(store))
+>>>>>>> release/25.10.0
     var nextGenHTMLParserEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.linkPreviewsEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var linkPreviewsEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.latestEventSorterEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var latestEventSorterEnabled
     
     @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
     var developerOptionsEnabled

@@ -104,6 +104,7 @@ class SpaceExplorerFlowCoordinator: FlowCoordinatorProtocol {
             return .spaceList(selectedSpaceID: nil)
         } handler: { [weak self] _ in
             guard let self else { return }
+            navigationSplitCoordinator.setDetailCoordinator(nil) // If we forget to do this, the tab bar remains hidden.
             selectedSpaceSubject.send(nil)
             spaceFlowCoordinator = nil
         }
@@ -116,6 +117,7 @@ class SpaceExplorerFlowCoordinator: FlowCoordinatorProtocol {
     private func presentSpaceList() {
         let parameters = SpaceListScreenCoordinatorParameters(userSession: userSession,
                                                               selectedSpacePublisher: selectedSpaceSubject.asCurrentValuePublisher(),
+                                                              appSettings: flowParameters.appSettings,
                                                               userIndicatorController: flowParameters.userIndicatorController)
         let coordinator = SpaceListScreenCoordinator(parameters: parameters)
         coordinator.actionsPublisher
@@ -134,7 +136,7 @@ class SpaceExplorerFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private func startSpaceFlow(spaceRoomListProxy: SpaceRoomListProxyProtocol) {
-        let coordinator = SpaceFlowCoordinator(spaceRoomListProxy: spaceRoomListProxy,
+        let coordinator = SpaceFlowCoordinator(entryPoint: .space(spaceRoomListProxy),
                                                spaceServiceProxy: userSession.clientProxy.spaceService,
                                                isChildFlow: false,
                                                navigationStackCoordinator: detailNavigationStackCoordinator,

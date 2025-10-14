@@ -16,10 +16,12 @@ class SpaceRoomProxy: SpaceRoomProxyProtocol {
     }
     
     lazy var id = spaceRoom.roomId
-    var name: String? { spaceRoom.name }
+    var name: String { spaceRoom.displayName }
+    var rawName: String? { spaceRoom.rawName }
     var avatarURL: URL? { spaceRoom.avatarUrl.flatMap(URL.init) }
     
     var isSpace: Bool { spaceRoom.roomType == .space }
+    var isDirect: Bool? { spaceRoom.isDirect }
     var childrenCount: Int { Int(spaceRoom.childrenCount) }
     
     var joinedMembersCount: Int { Int(spaceRoom.numJoinedMembers) }
@@ -31,4 +33,5 @@ class SpaceRoomProxy: SpaceRoomProxyProtocol {
     var worldReadable: Bool? { spaceRoom.worldReadable }
     var guestCanJoin: Bool { spaceRoom.guestCanJoin }
     var state: Membership? { spaceRoom.state }
+    var via: [String] { spaceRoom.via }
 }
