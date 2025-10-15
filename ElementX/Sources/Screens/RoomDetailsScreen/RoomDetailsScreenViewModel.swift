@@ -286,6 +286,9 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             .sink { [weak self, ownUserID = roomProxy.ownUserID] members in
                 guard let self else { return }
                
+                // Tchap: update `externalCount` to display `external` badge on RoomDetailsScreen if necessary.
+                self.state.bindings.externalCount = members.filter { MatrixIdFromString($0.userID).isExternalTchapUser }.count
+
                 guard roomProxy.isDirectOneToOneRoom else {
                     return
                 }
@@ -295,9 +298,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                     
                     Task { await self.updateMemberIdentityVerificationStates() }
                 }
-
-                // Tchap: update `externalCount` to display `external` badge on RoomDetailsScreen if necessary.
-                self.state.bindings.externalCount = members.filter { MatrixIdFromString($0.userID).isExternalTchapUser }.count
             }
             .store(in: &cancellables)
         
