@@ -1,4 +1,4 @@
-input_dir: ../../TchapX/development/
+input_dir: ../../TchapX/%TARGET%/
 output_dir: ../../TchapX/main/Sources/Generated/
 xcassets:
   inputs:
