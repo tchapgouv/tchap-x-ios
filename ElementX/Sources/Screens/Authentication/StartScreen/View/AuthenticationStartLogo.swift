@@ -23,14 +23,18 @@ struct AuthenticationStartLogo: View {
     
     var body: some View {
         if hideBrandChrome {
-            Image(asset: Asset.Images.appLogo)
+            // Tchap: use Tchap Logo
+//            Image(asset: Asset.Images.appLogo)
+            Image(asset: TchapAsset.TargetAssets.Images.appLogo)
         } else {
             brandLogo
         }
     }
     
     private var brandLogo: some View {
-        Image(asset: Asset.Images.appLogo)
+        // Tchap: use Tchap Logo
+//            Image(asset: Asset.Images.appLogo)
+        Image(asset: TchapAsset.TargetAssets.Images.appLogo)
             // Tchap: remove background around App logo.
 //            .background {
 //                Circle()
