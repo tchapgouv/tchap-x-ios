@@ -11,7 +11,7 @@ import SwiftUI
 struct AuthenticationStartScreenBackgroundImage: View {
     var body: some View {
         // Tchap: use Tchap launch background asset.
-        Image(asset: TchapAsset.Images.tchapLaunchBackground)
+        Image(asset: TchapAsset.CommonAssets.Images.tchapLaunchBackground)
 //        Image(asset: Asset.Images.launchBackground)
             .resizable()
             .scaledToFill()
