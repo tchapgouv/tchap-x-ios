@@ -40,11 +40,33 @@ schemes:
       - BaseScheme
     test:
       testPlans:
-        - path: ../UnitTests/SupportingFiles/UnitTests.xctestplan
+        - path: UnitTests/SupportingFiles/UnitTests.xctestplan
           defaultPlan: true
-        - path: ../UITests/SupportingFiles/UITests.xctestplan
+        - path: UITests/SupportingFiles/UITests.xctestplan
           defaultPlan: false
-        - path: ../PreviewTests/SupportingFiles/PreviewTests.xctestplan
+        - path: PreviewTests/SupportingFiles/PreviewTests.xctestplan
+          defaultPlan: false
+  TchapX-Staging:
+    templates:
+      - BaseScheme
+    test:
+      testPlans:
+        - path: UnitTests/SupportingFiles/UnitTests.xctestplan
+          defaultPlan: true
+        - path: UITests/SupportingFiles/UITests.xctestplan
+          defaultPlan: false
+        - path: PreviewTests/SupportingFiles/PreviewTests.xctestplan
+          defaultPlan: false
+  TchapX-Development:
+    templates:
+      - BaseScheme
+    test:
+      testPlans:
+        - path: UnitTests/SupportingFiles/UnitTests.xctestplan
+          defaultPlan: true
+        - path: UITests/SupportingFiles/UITests.xctestplan
+          defaultPlan: false
+        - path: PreviewTests/SupportingFiles/PreviewTests.xctestplan
           defaultPlan: false
 #--------------------------------------------------------------------------------
 targetTemplates:
@@ -194,18 +216,18 @@ targetTemplates:
       product: DSWaveformImageViews
 
     sources:
-    - path: ../../ElementX/Sources
+    - path: ../ElementX/Sources
       excludes:
         - Other/Extensions/XCTestCase.swift
         - Other/Extensions/XCUIElement.swift
-    - path: ../../Secrets/Secrets.swift
-    - path: ../main/Sources
+    - path: ../Secrets/Secrets.swift
+    - path: main/Sources
       excludes:
         - Other/Extensions/XCUIElement.swift
-    - path: ../main/Resources
-    - path: ../../ElementX/Resources
-    - path: ../../ElementX/SupportingFiles/Settings.bundle
-    - path: ../../Tools/Scripts/Templates/SimpleScreenExample/ElementX
+    - path: main/Resources
+    - path: ../ElementX/Resources
+    - path: ../ElementX/SupportingFiles/Settings.bundle
+    - path: ../Tools/Scripts/Templates/SimpleScreenExample/ElementX
 #--------------------------------------------------------------------------------
 targets:
 #--------------------------------------------------------------------------------
@@ -214,11 +236,11 @@ targets:
       - BaseTarget
 
     configFiles:
-      Debug: ../production/SupportingFiles/secrets.xcconfig
-      Release: ../production/SupportingFiles/secrets.xcconfig
+      Debug: production/SupportingFiles/secrets.xcconfig
+      Release: production/SupportingFiles/secrets.xcconfig
 
     info:
-      path: ../production/SupportingFiles/Info.plist
+      path: production/SupportingFiles/Info.plist
       properties:
         BGTaskSchedulerPermittedIdentifiers: [
           fr.gouv.tchapx.background.refresh
@@ -273,8 +295,8 @@ targets:
     - target: TchapX-Production-ShareExtension
 
     sources:
-    - path: ../production/Resources
-    - path: ../production/SupportingFiles
+    - path: production/Resources
+    - path: production/SupportingFiles
       excludes:
         - target.yml
         - NSE
@@ -284,11 +306,11 @@ targets:
       - BaseTarget
 
     configFiles:
-      Debug: ../staging/SupportingFiles/secrets.xcconfig
-      Release: ../staging/SupportingFiles/secrets.xcconfig
+      Debug: staging/SupportingFiles/secrets.xcconfig
+      Release: staging/SupportingFiles/secrets.xcconfig
 
     info:
-      path: ../staging/SupportingFiles/Info.plist
+      path: staging/SupportingFiles/Info.plist
       properties:
         BGTaskSchedulerPermittedIdentifiers: [
           fr.gouv.tchapx.staging.background.refresh
@@ -343,8 +365,8 @@ targets:
     - target: TchapX-Staging-ShareExtension
 
     sources:
-    - path: ../staging/Resources
-    - path: ../staging/SupportingFiles
+    - path: staging/Resources
+    - path: staging/SupportingFiles
       excludes:
         - target.yml
         - NSE
@@ -354,11 +376,11 @@ targets:
       - BaseTarget
 
     configFiles:
-      Debug: ../development/SupportingFiles/secrets.xcconfig
-      Release: ../development/SupportingFiles/secrets.xcconfig
+      Debug: development/SupportingFiles/secrets.xcconfig
+      Release: development/SupportingFiles/secrets.xcconfig
 
     info:
-      path: ../development/SupportingFiles/Info.plist
+      path: development/SupportingFiles/Info.plist
       properties:
         BGTaskSchedulerPermittedIdentifiers: [
           fr.gouv.tchapx.dev.background.refresh
@@ -413,8 +435,8 @@ targets:
     - target: TchapX-Development-ShareExtension
 
     sources:
-    - path: ../development/Resources
-    - path: ../development/SupportingFiles
+    - path: development/Resources
+    - path: development/SupportingFiles
       excludes:
         - target.yml
         - NSE
