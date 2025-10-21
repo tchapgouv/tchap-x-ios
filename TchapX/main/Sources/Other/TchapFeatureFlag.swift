@@ -69,7 +69,7 @@ struct TchapFeatureFlag {
 }
 
 extension TchapFeatureFlag {
-    enum Instance: String {
+    enum Instance: String, CaseIterable {
         case externe = "agent.externe.tchap.gouv.fr"
         case collectivites = "agent.collectivites.tchap.gouv.fr"
         case agent = "agent.tchap.gouv.fr"
@@ -90,6 +90,10 @@ extension TchapFeatureFlag {
         case all // To allow a feature for any instance
 
         var homeServer: String? { rawValue }
+        
+        static func instance(for homeServerName: String) -> Instance? {
+            Instance.allCases.filter { $0.rawValue == homeServerName }.first
+        }
     }
 }
 
@@ -101,12 +105,15 @@ extension TchapFeatureFlag {
         // Tchap: don't use pinning for v0.7.0
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
+        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
         #elseif IS_TCHAP_STAGING
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [.agriculture, .agent])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
+        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
         #elseif IS_TCHAP_DEVELOPMENT
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
+        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [.all])
         #endif
     }
 }
