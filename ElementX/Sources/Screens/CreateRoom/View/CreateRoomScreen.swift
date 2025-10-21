@@ -248,12 +248,14 @@ struct CreateRoomScreen: View {
                                     role: .coloredIcon(CompoundCoreColorTokens.green800),
                                     iconAlignment: .top),
                     kind: .selection(isSelected: context.isRoomPrivate && context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = true })
-            // Tchap: hide uncyphered room option for 1st external beta
-//            ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
-//                                    description: TchapL10n.screenCreateRoomPrivateOptionDescription,
-//                                    icon: \.lockOff,
-//                                    iconAlignment: .top),
-//                    kind: .selection(isSelected: context.isRoomPrivate && !context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = false })
+            if let TchapFeatureFlagInstance = TchapFeatureFlag.Instance.instance(for: context.viewState.serverName),
+               TchapFeatureFlag.Configuration.unencryptedPrivateRoom.isActivated(for: TchapFeatureFlagInstance) {
+                ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
+                                        description: TchapL10n.screenCreateRoomPrivateOptionDescription,
+                                        icon: \.lockOff,
+                                        iconAlignment: .top),
+                        kind: .selection(isSelected: context.isRoomPrivate && !context.isRoomEncrypted) { context.isRoomPrivate = true; context.isRoomEncrypted = false })
+            }
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPublicOptionTitle,
                                     attributedDescriptionWhenDisabled: warningPublicRoomIsNotOpenToExterns,
                                     icon: \.public,
