@@ -21,6 +21,10 @@ public struct TchapStaticMapDiskCache {
             .appendingPathComponent(Bundle.main.bundleIdentifier!) // swiftlint:disable:this force_unwrapping
             .appendingPathComponent("map-snapshot-cache", isDirectory: true)
         
+        #if targetEnvironment(simulator)
+        MXLog.info("[TchapStaticMapDiskCacheError] \(rootDirectory)")
+        #endif
+        
         do {
             try FileManager.default.createDirectoryIfNeeded(at: rootDirectory)
             self.rootDirectory = rootDirectory
