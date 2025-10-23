@@ -70,6 +70,7 @@ struct TchapFeatureFlag {
 
 extension TchapFeatureFlag {
     enum Instance: String, CaseIterable {
+        #if IS_TCHAP_PRODUCTION
         case externe = "agent.externe.tchap.gouv.fr"
         case collectivites = "agent.collectivites.tchap.gouv.fr"
         case agent = "agent.tchap.gouv.fr"
@@ -87,6 +88,15 @@ extension TchapFeatureFlag {
         case culture = "agent.culture.tchap.gouv.fr"
         case devDurable = "agent.dev-durable.tchap.gouv.fr"
         case education = "agent.education.tchap.gouv.fr"
+        #elseif IS_TCHAP_STAGING
+        case interne = "i.tchap.gouv.fr"
+        case interne2 = "a.tchap.gouv.fr"
+        case externe = "e.tchap.gouv.fr"
+        #elseif IS_TCHAP_DEVELOPMENT
+        case dev01 = "dev01.tchap.incubateur.net"
+        case dev02 = "dev02.tchap.incubateur.net"
+        case raphoid_test = "int.private-unencrypted-android.tchap.incubateur.net"
+        #endif
         case all // To allow a feature for any instance
 
         var homeServer: String? { rawValue }
