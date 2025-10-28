@@ -188,7 +188,7 @@ struct RoomScreen: View {
                            // Tchap: add badges
                            TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: $context.isEncrypted,
                                                                        isPublic: $context.isPublic,
-                                                                       externalCount: $context.externalCount),
+                                                                       isOpenToExternalUsers: $context.isOpenToExternalUsers),
                            mediaProvider: context.mediaProvider)
                 // Using a button stops it from getting truncated in the navigation bar
                 .contentShape(.rect)

@@ -30,11 +30,11 @@ struct AvatarHeaderView<Footer: View>: View {
     private var onAvatarTap: ((URL) -> Void)?
     @ViewBuilder private var footer: () -> Footer
     
-    // Tchap: add `externalCount` property
-    var externalCount: Binding<Int>
+    // Tchap: add `isOpenToExternalUsers` property
+    var isOpenToExternalUsers: Binding<Bool?>
     
     init(room: RoomDetails,
-         externalCount: Binding<Int>, // Tchap: add `externalCount` parameter
+         isOpenToExternalUsers: Binding<Bool?>, // Tchap: add `isOpenToExternalUsers` parameter
          avatarSize: Avatars.Size,
          mediaProvider: MediaProviderProtocol? = nil,
          onAvatarTap: ((URL) -> Void)? = nil,
@@ -54,8 +54,8 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
-        // Tchap: store `externalCount` parameter
-        self.externalCount = externalCount
+        // Tchap: store `isOpenToExternalUsers` parameter
+        self.isOpenToExternalUsers = isOpenToExternalUsers
         
         var badges = [Badge]()
         badges.append(.encrypted(room.isEncrypted))
@@ -67,7 +67,7 @@ struct AvatarHeaderView<Footer: View>: View {
     
     init(accountOwner: RoomMemberDetails,
          dmRecipient: RoomMemberDetails,
-         externalCount: Binding<Int>, // Tchap: add `externalCount` parameter
+         isOpenToExternalUsers: Binding<Bool?>, // Tchap: add `isOpenToExternalUsers` parameter
          mediaProvider: MediaProviderProtocol? = nil,
          onAvatarTap: ((URL) -> Void)? = nil,
          @ViewBuilder footer: @escaping () -> Footer) {
@@ -80,8 +80,9 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
-        // Tchap: store `externalCount` parameter
-        self.externalCount = externalCount
+        
+        // Tchap: store `isOpenToExternalUsers` parameter
+        self.isOpenToExternalUsers = isOpenToExternalUsers
         
         // In EL-X a DM is by definition always encrypted
         badges = [.encrypted(true)]
@@ -117,8 +118,8 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
-        // Tchap: evaluate externalCount to 1 if displayed user is external.
-        externalCount = .constant(MatrixIdFromString(user.userID).isExternalTchapUser ? 1 : 0)
+        // Tchap: isOpenToExternalUsers
+        isOpenToExternalUsers = .constant(false)
         
         badges = isVerified ? [.verified] : []
     }
@@ -174,7 +175,7 @@ struct AvatarHeaderView<Footer: View>: View {
             }
             
             // Tchap: add `External` badge if necessary.
-            if externalCount.wrappedValue > 0 {
+            if isOpenToExternalUsers.wrappedValue ?? false {
                 BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal())
             }
         }
@@ -263,8 +264,10 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
                                          canonicalAlias: "#test:matrix.org",
                                          isEncrypted: true,
                                          isPublic: true,
-                                         isDirect: false),
-                             externalCount: .constant(1),
+                                         isDirect: false,
+                                         // Tchap: add test value
+                                         accessRule: .unrestricted),
+                             isOpenToExternalUsers: .constant(true),
                              avatarSize: .room(on: .details),
                              mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {
@@ -279,7 +282,7 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
         .previewDisplayName("Room")
         
         Form {
-            AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice), externalCount: .constant(1),
+            AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice), isOpenToExternalUsers: .constant(true),
                              mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {
                     ShareLink(item: "test") {

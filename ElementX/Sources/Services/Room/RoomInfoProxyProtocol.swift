@@ -60,6 +60,9 @@ protocol RoomInfoProxyProtocol: BaseRoomInfoProxyProtocol {
     var historyVisibility: RoomHistoryVisibility { get }
     
     var powerLevels: RoomPowerLevelsProxyProtocol? { get }
+    
+    // Tchap: implement access_rule accessor
+    var accessRule: AccessRule? { get }
 }
 
 extension BaseRoomInfoProxyProtocol {
