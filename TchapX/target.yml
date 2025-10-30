@@ -283,11 +283,12 @@ targets:
       shell: /bin/sh
       script: |
         export PATH="$PATH:/opt/homebrew/bin"
+        swiftgen config run --config "Tools/SwiftGen/swiftgen-config-tchap-main.yml"
         if which swiftgen >/dev/null; then
             swiftgen config run --config Tools/SwiftGen/swiftgen-config.yml
             # inject Xcode target into switgen-config-tchap yaml file.
-            source_file="Tools/SwiftGen/swiftgen-config-tchap.yml"
-            target_file="Tools/SwiftGen/swiftgen-config-tchap.tmp"
+            source_file="Tools/SwiftGen/swiftgen-config-tchap-target.yml"
+            target_file="Tools/SwiftGen/swiftgen-config-tchap-target.tmp"
             scheme="production"
             rm -f $target_file
             sed "s/%TARGET%/${scheme}/" $source_file > $target_file
@@ -360,12 +361,13 @@ targets:
       shell: /bin/sh
       script: |
         export PATH="$PATH:/opt/homebrew/bin"
+        swiftgen config run --config "Tools/SwiftGen/swiftgen-config-tchap-main.yml"
         if which swiftgen >/dev/null; then
             swiftgen config run --config Tools/SwiftGen/swiftgen-config.yml
             # inject Xcode target into switgen-config-tchap yaml file.
-            source_file="Tools/SwiftGen/swiftgen-config-tchap.yml"
-            target_file="Tools/SwiftGen/swiftgen-config-tchap.tmp"
-            scheme="staging"
+            source_file="Tools/SwiftGen/swiftgen-config-tchap-target.yml"
+            target_file="Tools/SwiftGen/swiftgen-config-tchap-target.tmp"
+            scheme="production"
             rm -f $target_file
             sed "s/%TARGET%/${scheme}/" $source_file > $target_file
             swiftgen config run --config $target_file
@@ -437,12 +439,13 @@ targets:
       shell: /bin/sh
       script: |
         export PATH="$PATH:/opt/homebrew/bin"
+        swiftgen config run --config "Tools/SwiftGen/swiftgen-config-tchap-main.yml"
         if which swiftgen >/dev/null; then
             swiftgen config run --config Tools/SwiftGen/swiftgen-config.yml
             # inject Xcode target into switgen-config-tchap yaml file.
-            source_file="Tools/SwiftGen/swiftgen-config-tchap.yml"
-            target_file="Tools/SwiftGen/swiftgen-config-tchap.tmp"
-            scheme="development"
+            source_file="Tools/SwiftGen/swiftgen-config-tchap-target.yml"
+            target_file="Tools/SwiftGen/swiftgen-config-tchap-target.tmp"
+            scheme="production"
             rm -f $target_file
             sed "s/%TARGET%/${scheme}/" $source_file > $target_file
             swiftgen config run --config $target_file
