@@ -22,7 +22,7 @@ public struct TchapStaticMapDiskCache {
             .appendingPathComponent("map-snapshot-cache", isDirectory: true)
         
         #if targetEnvironment(simulator)
-        MXLog.info("[TchapStaticMapDiskCacheError] \(rootDirectory)")
+        MXLog.info("[TchapStaticMapDiskCache root directory] \(rootDirectory)")
         #endif
         
         do {
