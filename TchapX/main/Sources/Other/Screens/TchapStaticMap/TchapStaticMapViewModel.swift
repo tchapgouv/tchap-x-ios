@@ -50,17 +50,17 @@ import SwiftUI
         } else {
             // Start Snapshotter on background queue to avoid blocking UI.
             // It seems to be faster and more reliable too.
-            snapshotter?.start(with: backgroundQueue) { [weak self] snapshot, error in
+            snapshotter?.start(with: backgroundQueue) { snapshot, error in
                 guard error == nil else {
-                    self?.state = .failure(error!) // swiftlint:disable:this force_unwrapping
+                    self.state = .failure(error!) // swiftlint:disable:this force_unwrapping
                     return
                 }
                 
                 if let snapshot {
-                    self?.state = .success(snapshot.image)
-                    if let cacheKey = self?.cacheKey,
+                    self.state = .success(snapshot.image)
+                    if let cacheKey = self.cacheKey,
                        let pngData = snapshot.image.dataForPNGRepresentation() {
-                        try? self?.cache?.store(data: pngData, for: cacheKey)
+                        try? self.cache?.store(data: pngData, for: cacheKey)
                     }
                 }
             }
