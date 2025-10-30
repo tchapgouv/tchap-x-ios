@@ -11,6 +11,8 @@ import Foundation
 typealias TimelineMediaPreviewViewModelType = StateStoreViewModel<TimelineMediaPreviewViewState, TimelineMediaPreviewViewAction>
 
 class TimelineMediaPreviewViewModel: TimelineMediaPreviewViewModelType {
+    static let displayMessageForwardingDelay: TimeInterval = 1.0
+    
     let instanceID = UUID()
     
     private let timelineViewModel: TimelineViewModelProtocol
@@ -86,6 +88,8 @@ class TimelineMediaPreviewViewModel: TimelineMediaPreviewViewModelType {
                 Task { await saveCurrentItem() }
             case .redact:
                 state.bindings.redactConfirmationItem = item
+            case .forward(let itemID):
+                Task { await forwardItem(itemID: itemID) }
             default:
                 MXLog.error("Received unexpected action: \(action)")
             }
@@ -94,6 +98,12 @@ class TimelineMediaPreviewViewModel: TimelineMediaPreviewViewModelType {
         case .timelineEndReached:
             showTimelineEndIndicator()
         }
+    }
+    
+    private func forwardItem(itemID: TimelineItemIdentifier) async {
+        guard let forwardingItem = await timelineViewModel.makeForwardingItem(for: itemID) else { return }
+        state.previewControllerDriver.send(.dismissDetailsSheet)
+        actionsSubject.send(.displayMessageForwarding(forwardingItem))
     }
     
     private func updateCurrentItem(_ previewItem: TimelineMediaPreviewItem) async {
@@ -140,12 +150,14 @@ class TimelineMediaPreviewViewModel: TimelineMediaPreviewViewModelType {
         state.currentItemActions = switch state.currentItem {
         case .media(let mediaItem):
             TimelineItemMenuActionProvider(timelineItem: mediaItem.timelineItem,
+                                           canCurrentUserSendMessage: timelineContext.viewState.canCurrentUserSendMessage,
                                            canCurrentUserRedactSelf: timelineContext.viewState.canCurrentUserRedactSelf,
                                            canCurrentUserRedactOthers: timelineContext.viewState.canCurrentUserRedactOthers,
                                            canCurrentUserPin: timelineContext.viewState.canCurrentUserPin,
                                            pinnedEventIDs: timelineContext.viewState.pinnedEventIDs,
                                            isDM: timelineContext.viewState.isDirectOneToOneRoom,
                                            isViewSourceEnabled: timelineContext.viewState.isViewSourceEnabled,
+                                           areThreadsEnabled: timelineContext.viewState.areThreadsEnabled,
                                            timelineKind: timelineContext.viewState.timelineKind,
                                            emojiProvider: timelineContext.viewState.emojiProvider)
                 .makeActions()

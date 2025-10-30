@@ -26,15 +26,17 @@ class HomeScreenRoomTests: XCTestCase {
                           unreadNotificationsCount: UInt,
                           notificationMode: RoomNotificationModeProxy,
                           hasOngoingCall: Bool) {
-        roomSummary = RoomSummary(roomListItem: .init(noPointer: .init()),
+        roomSummary = RoomSummary(room: .init(noPointer: .init()),
                                   id: "Test room",
                                   joinRequestType: nil,
                                   name: "Test room",
                                   isDirect: false,
+                                  isSpace: false,
                                   avatarURL: nil,
                                   heroes: [],
+                                  activeMembersCount: 0,
                                   lastMessage: nil,
-                                  lastMessageFormattedTimestamp: nil,
+                                  lastMessageDate: nil,
                                   unreadMessagesCount: unreadMessagesCount,
                                   unreadMentionsCount: unreadMentionsCount,
                                   unreadNotificationsCount: unreadNotificationsCount,
@@ -43,7 +45,8 @@ class HomeScreenRoomTests: XCTestCase {
                                   alternativeAliases: [],
                                   hasOngoingCall: hasOngoingCall,
                                   isMarkedUnread: isMarkedUnread,
-                                  isFavourite: false)
+                                  isFavourite: false,
+                                  isTombstoned: false)
     }
     
     func testNoBadge() {

@@ -22,10 +22,11 @@ class QRCodeLoginScreenViewModel: QRCodeLoginScreenViewModelType, QRCodeLoginScr
     private var scanTask: Task<Void, Never>?
 
     init(qrCodeLoginService: QRCodeLoginServiceProtocol,
+         canSignInManually: Bool,
          appMediator: AppMediatorProtocol) {
         self.qrCodeLoginService = qrCodeLoginService
         self.appMediator = appMediator
-        super.init(initialViewState: QRCodeLoginScreenViewState())
+        super.init(initialViewState: QRCodeLoginScreenViewState(canSignInManually: canSignInManually))
         setupSubscriptions()
     }
     
@@ -109,19 +110,23 @@ class QRCodeLoginScreenViewModel: QRCodeLoginScreenViewModelType, QRCodeLoginScr
             case let .success(session):
                 MXLog.info("QR Login completed")
                 actionsSubject.send(.done(userSession: session))
-            case .failure(let error):
-                handleError(error: error)
+            case .failure(.qrCodeError(let error)):
+                handleError(error)
+            case .failure:
+                handleError(.unknown)
             }
         }
     }
     
-    private func handleError(error: QRCodeLoginServiceError) {
+    private func handleError(_ error: QRCodeLoginError) {
         MXLog.error("Failed to scan the QR code: \(error)")
         switch error {
         case .invalidQRCode:
-            state.state = .scan(.invalid)
+            state.state = .scan(.scanFailed(.invalid))
+        case .providerNotAllowed(let scannedProvider, let allowedProviders):
+            state.state = .scan(.scanFailed(.notAllowed(scannedProvider: scannedProvider, allowedProviders: allowedProviders)))
         case .deviceNotSignedIn:
-            state.state = .scan(.deviceNotSignedIn)
+            state.state = .scan(.scanFailed(.deviceNotSignedIn))
         case .cancelled:
             state.state = .error(.cancelled)
         case .connectionInsecure:
@@ -134,21 +139,21 @@ class QRCodeLoginScreenViewModel: QRCodeLoginScreenViewModelType, QRCodeLoginScr
             state.state = .error(.expired)
         case .deviceNotSupported:
             state.state = .error(.deviceNotSupported)
-        case .failedLoggingIn, .unknown:
+        case .unknown:
             state.state = .error(.unknown)
         }
     }
         
     /// Only for mocking initial states
-    fileprivate init(state: QRCodeLoginState) {
+    fileprivate init(state: QRCodeLoginState, canSignInManually: Bool) {
         qrCodeLoginService = QRCodeLoginServiceMock()
         appMediator = AppMediatorMock.default
-        super.init(initialViewState: .init(state: state))
+        super.init(initialViewState: .init(state: state, canSignInManually: canSignInManually))
     }
 }
 
 extension QRCodeLoginScreenViewModel {
-    static func mock(state: QRCodeLoginState) -> QRCodeLoginScreenViewModel {
-        QRCodeLoginScreenViewModel(state: state)
+    static func mock(state: QRCodeLoginState, canSignInManually: Bool = true) -> QRCodeLoginScreenViewModel {
+        QRCodeLoginScreenViewModel(state: state, canSignInManually: canSignInManually)
     }
 }

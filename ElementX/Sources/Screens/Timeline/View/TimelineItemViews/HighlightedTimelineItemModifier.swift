@@ -23,15 +23,15 @@ private struct HighlightedTimelineItemModifier: ViewModifier {
             .background {
                 if isHighlighted {
                     VStack(spacing: 0) {
-                        Color.compound._bgBubbleHighlighted
-                        LinearGradient(colors: [.compound._bgBubbleHighlighted, .clear],
+                        Color.compound.gradientSubtleStop1
+                        LinearGradient(gradient: .compound.subtle,
                                        startPoint: .top,
                                        endPoint: .bottom)
                             .frame(maxHeight: 200)
                             .layoutPriority(1)
                     }
                     .overlay(alignment: .top) {
-                        Color.compound.bgAccentRest
+                        Color.compound.borderAccentSubtle
                             .frame(height: 1)
                     }
                 }
@@ -90,21 +90,20 @@ struct HighlightedTimelineItemTimeline_Previews: PreviewProvider {
     static let timelineViewModel = TimelineViewModel(roomProxy: roomProxyMock,
                                                      focussedEventID: focussedEventID,
                                                      timelineController: MockTimelineController(),
-                                                     mediaProvider: MediaProviderMock(configuration: .init()),
+                                                     userSession: UserSessionMock(.init()),
                                                      mediaPlayerProvider: MediaPlayerProviderMock(),
-                                                     voiceMessageMediaManager: VoiceMessageMediaManagerMock(),
                                                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                      appMediator: AppMediatorMock.default,
                                                      appSettings: ServiceLocator.shared.settings,
                                                      analyticsService: ServiceLocator.shared.analytics,
                                                      emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
-                                                     timelineControllerFactory: TimelineControllerFactoryMock(.init()),
-                                                     clientProxy: ClientProxyMock(.init()))
+                                                     linkMetadataProvider: LinkMetadataProvider(),
+                                                     timelineControllerFactory: TimelineControllerFactoryMock(.init()))
 
     static var previews: some View {
         NavigationStack {
-            RoomScreen(roomViewModel: roomViewModel,
-                       timelineViewModel: timelineViewModel,
+            RoomScreen(context: roomViewModel.context,
+                       timelineContext: timelineViewModel.context,
                        composerToolbar: ComposerToolbar.mock())
         }
         .previewDisplayName("Timeline")

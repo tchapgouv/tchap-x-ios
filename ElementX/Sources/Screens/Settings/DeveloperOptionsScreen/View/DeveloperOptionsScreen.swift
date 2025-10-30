@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct DeveloperOptionsScreen: View {
-    @ObservedObject var context: DeveloperOptionsScreenViewModel.Context
+    @Bindable var context: DeveloperOptionsScreenViewModel.Context
+    
     @State private var showConfetti = false
     @State private var elementCallURLOverrideString: String
     
@@ -30,7 +31,13 @@ struct DeveloperOptionsScreen: View {
                     }
                 }
             }
-                        
+            
+            Section("General") {
+                Toggle(isOn: $context.nextGenHTMLParserEnabled) {
+                    Text("Next gen HTML parsing")
+                }
+            }
+            
             Section("Room List") {
                 Toggle(isOn: $context.publicSearchEnabled) {
                     Text("Public search")
@@ -43,8 +50,26 @@ struct DeveloperOptionsScreen: View {
                 Toggle(isOn: $context.fuzzyRoomListSearchEnabled) {
                     Text("Fuzzy searching")
                 }
+                
+                Toggle(isOn: $context.lowPriorityFilterEnabled) {
+                    Text("Low priority filter")
+                }
+                
+                Toggle(isOn: $context.latestEventSorterEnabled) {
+                    Text("Latest event sorter")
+                    Text("Requires app reboot")
+                }
             }
             
+            Section("Timeline") {
+                Toggle(isOn: $context.linkPreviewsEnabled) {
+                    Text("Link previews")
+                    Text("Follows the timeline media visibility settings.")
+                    Text("Can leak the device IP address when loading link metadata.")
+                        .foregroundStyle(.compound.textCriticalPrimary)
+                }
+            }
+                        
             Section("Join rules") {
                 Toggle(isOn: $context.knockingEnabled) {
                     Text("Knocking")
@@ -62,16 +87,15 @@ struct DeveloperOptionsScreen: View {
             } footer: {
                 Text("This setting controls how end-to-end encryption (E2EE) keys are exchanged. Enabling it will prevent the inclusion of devices that have not been explicitly verified by their owners.")
             }
-            
-            Section("Reporting") {
-                Toggle(isOn: $context.reportRoomEnabled) {
-                    Text("Report rooms")
-                    Text("Report API might not work properly")
+
+            Section {
+                Toggle(isOn: $context.enableKeyShareOnInvite) {
+                    Text("Share encrypted history with new members")
+                    Text("Requires app reboot")
                 }
-                Toggle(isOn: $context.reportInviteEnabled) {
-                    Text("Report invites")
-                    Text("Report API might not work properly")
-                }
+            } footer: {
+                Text("When inviting a user to an encrypted room that has history visibility set to \"shared\", share encrypted history with that user, and accept encrypted history when you are invited to such a room.")
+                Text("WARNING: this feature is EXPERIMENTAL and not all security precautions are implemented. Do not enable on production accounts.")
             }
 
             Section {
@@ -91,6 +115,13 @@ struct DeveloperOptionsScreen: View {
                 Text("Element Call remote URL override")
             }
             
+            Section("Notifications") {
+                Toggle(isOn: $context.hideQuietNotificationAlerts) {
+                    Text("Hide quiet alerts")
+                    Text("The badge count will still be updated")
+                }
+            }
+            
             Section {
                 Button {
                     showConfetti = true
@@ -98,13 +129,6 @@ struct DeveloperOptionsScreen: View {
                     Text("🥳")
                         .frame(maxWidth: .infinity)
                         .alignmentGuide(.listRowSeparatorLeading) { _ in 0 } // Fix separator alignment
-                }
-                
-                Button {
-                    fatalError("This crash is a test.")
-                } label: {
-                    Text("💥")
-                        .frame(maxWidth: .infinity)
                 }
             }
 

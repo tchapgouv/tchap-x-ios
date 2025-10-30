@@ -7,7 +7,7 @@
 
 import GameController
 import SwiftUI
-import SwiftUIIntrospect
+@_spi(Advanced) import SwiftUIIntrospect
 
 // MARK: - Search Controller Extensions
 
@@ -28,12 +28,14 @@ extension View {
                           placeholder: String? = nil,
                           hidesNavigationBar: Bool = false,
                           showsCancelButton: Bool = true,
-                          disablesInteractiveDismiss: Bool = false) -> some View {
+                          disablesInteractiveDismiss: Bool = false,
+                          accessibilityFocusOnStart: Bool = false) -> some View {
         modifier(SearchControllerModifier(searchQuery: query,
                                           placeholder: placeholder,
                                           hidesNavigationBar: hidesNavigationBar,
                                           showsCancelButton: showsCancelButton,
-                                          disablesInteractiveDismiss: disablesInteractiveDismiss))
+                                          disablesInteractiveDismiss: disablesInteractiveDismiss,
+                                          accessibilityFocusOnStart: accessibilityFocusOnStart))
     }
 }
 
@@ -44,28 +46,55 @@ private struct SearchControllerModifier: ViewModifier {
     let hidesNavigationBar: Bool
     let showsCancelButton: Bool
     let disablesInteractiveDismiss: Bool
+    let accessibilityFocusOnStart: Bool
     
     /// Whether or not the user is currently searching. When ``automaticallyShowsCancelButton``
     /// is `false`, checking if this value is `false` is pretty much meaningless.
     @State private var isSearching = false
     
+    @ViewBuilder
     func body(content: Content) -> some View {
-        content
-            .interactiveDismissDisabled(!searchQuery.isEmpty && disablesInteractiveDismiss)
-            .background {
-                SearchController(searchQuery: $searchQuery,
-                                 placeholder: placeholder,
-                                 hidesNavigationBar: hidesNavigationBar,
-                                 showsCancelButton: showsCancelButton,
-                                 hidesSearchBarWhenScrolling: false,
-                                 isSearching: $isSearching)
-            }
-            .onDisappear {
-                // Dismiss search when the view disappears to tidy up appearance when popping back to the view.
-                if isSearching {
-                    isSearching = false
+        let text: Text? = if let placeholder {
+            Text(placeholder)
+        } else {
+            nil
+        }
+        
+        if #available(iOS 26, *) {
+            content
+                .searchable(text: $searchQuery, placement: .navigationBarDrawer(displayMode: .always), prompt: text)
+                .interactiveDismissDisabled(!searchQuery.isEmpty && disablesInteractiveDismiss)
+                .introspect(.navigationStack, on: .supportedVersions, scope: .ancestor) { navigationController in
+                    // Uses the navigation stack as .searchField is unreliable when pushing the second search bar, during the create rooms flow.
+                    guard let searchController = navigationController.navigationBar.topItem?.searchController else { return }
+                    searchController.automaticallyShowsCancelButton = showsCancelButton
+                    searchController.hidesNavigationBarDuringPresentation = hidesNavigationBar
                 }
-            }
+                .onDisappear {
+                    // Dismiss search when the view disappears to tidy up appearance when popping back to the view.
+                    if isSearching {
+                        isSearching = false
+                    }
+                }
+        } else {
+            content
+                .interactiveDismissDisabled(!searchQuery.isEmpty && disablesInteractiveDismiss)
+                .background {
+                    SearchController(searchQuery: $searchQuery,
+                                     placeholder: placeholder,
+                                     hidesNavigationBar: hidesNavigationBar,
+                                     showsCancelButton: showsCancelButton,
+                                     hidesSearchBarWhenScrolling: false,
+                                     accessibilityFocusOnStart: accessibilityFocusOnStart,
+                                     isSearching: $isSearching)
+                }
+                .onDisappear {
+                    // Dismiss search when the view disappears to tidy up appearance when popping back to the view.
+                    if isSearching {
+                        isSearching = false
+                    }
+                }
+        }
     }
 }
 
@@ -76,12 +105,19 @@ private struct SearchController: UIViewControllerRepresentable {
     let hidesNavigationBar: Bool
     let showsCancelButton: Bool
     let hidesSearchBarWhenScrolling: Bool
+    let accessibilityFocusOnStart: Bool
     
     @Binding var isSearching: Bool
     
     func makeUIViewController(context: Context) -> SearchInjectionViewController {
-        SearchInjectionViewController(searchController: context.coordinator.searchController,
-                                      hidesSearchBarWhenScrolling: hidesSearchBarWhenScrolling)
+        let controller = SearchInjectionViewController(searchController: context.coordinator.searchController,
+                                                       hidesSearchBarWhenScrolling: hidesSearchBarWhenScrolling)
+        if accessibilityFocusOnStart {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                UIAccessibility.post(notification: .screenChanged, argument: controller.searchController.searchBar)
+            }
+        }
+        return controller
     }
     
     func updateUIViewController(_ viewController: SearchInjectionViewController, context: Context) {

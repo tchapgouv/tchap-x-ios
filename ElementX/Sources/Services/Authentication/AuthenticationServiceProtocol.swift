@@ -5,6 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Combine
 import Foundation
 import MatrixRustSDK
 
@@ -19,6 +20,9 @@ enum AuthenticationFlow {
 enum AuthenticationServiceError: Error, Equatable {
     /// An error occurred during OIDC authentication.
     case oidcError(OIDCError)
+    /// An error occurred during login with QR Code.
+    case qrCodeError(QRCodeLoginError)
+    
     case invalidServer
     case invalidCredentials
     case invalidHomeserverAddress
@@ -26,13 +30,14 @@ enum AuthenticationServiceError: Error, Equatable {
     case slidingSyncNotAvailable
     case loginNotSupported
     case registrationNotSupported
+    case elementProRequired(serverName: String)
     case accountDeactivated
     case failedLoggingIn
     case sessionTokenRefreshNotSupported
     case failedUsingWebCredentials
 }
 
-protocol AuthenticationServiceProtocol {
+protocol AuthenticationServiceProtocol: QRCodeLoginServiceProtocol {
     /// The currently configured homeserver.
     var homeserver: CurrentValuePublisher<LoginHomeserver, Never> { get }
     /// The type of flow the service is currently configured with.
@@ -41,7 +46,7 @@ protocol AuthenticationServiceProtocol {
     /// Sets up the service for login on the specified homeserver address.
     func configure(for homeserverAddress: String, flow: AuthenticationFlow) async -> Result<Void, AuthenticationServiceError>
     /// Performs login using OIDC for the current homeserver.
-    func urlForOIDCLogin() async -> Result<OIDCAuthorizationDataProxy, AuthenticationServiceError>
+    func urlForOIDCLogin(loginHint: String?) async -> Result<OIDCAuthorizationDataProxy, AuthenticationServiceError>
     /// Asks the SDK to abort an ongoing OIDC login if we didn't get a callback to complete the request with.
     func abortOIDCLogin(data: OIDCAuthorizationDataProxy) async
     /// Completes an OIDC login that was started using ``urlForOIDCLogin``.
@@ -66,7 +71,7 @@ enum OIDCError: Error {
     case unknown
 }
 
-struct OIDCAuthorizationDataProxy: Equatable {
+struct OIDCAuthorizationDataProxy: Hashable {
     let underlyingData: OAuthAuthorizationData
     
     var url: URL {
@@ -77,8 +82,34 @@ struct OIDCAuthorizationDataProxy: Equatable {
     }
 }
 
-extension OAuthAuthorizationData: @retroactive Equatable {
+extension OAuthAuthorizationData: @retroactive Hashable {
     public static func == (lhs: MatrixRustSDK.OAuthAuthorizationData, rhs: MatrixRustSDK.OAuthAuthorizationData) -> Bool {
         lhs.loginUrl() == rhs.loginUrl()
     }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(loginUrl())
+    }
+}
+
+// MARK: - Login with QR code
+
+enum QRCodeLoginError: Error, Equatable {
+    case invalidQRCode
+    case providerNotAllowed(scannedProvider: String, allowedProviders: [String])
+    case cancelled
+    case connectionInsecure
+    case declined
+    case linkingNotSupported
+    case expired
+    case deviceNotSupported
+    case deviceNotSignedIn
+    case unknown
+}
+
+// sourcery: AutoMockable
+protocol QRCodeLoginServiceProtocol {
+    var qrLoginProgressPublisher: AnyPublisher<QrLoginProgress, Never> { get }
+    
+    func loginWithQRCode(data: Data) async -> Result<UserSessionProtocol, AuthenticationServiceError>
 }

@@ -18,29 +18,33 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private let stateMachine: AppCoordinatorStateMachine
     private let navigationRootCoordinator: NavigationRootCoordinator
     private let userSessionStore: UserSessionStoreProtocol
+    private let targetConfiguration: Target.ConfigurationResult
     private let appMediator: AppMediator
     private let appSettings: AppSettings
     private let appDelegate: AppDelegate
     private let appHooks: AppHooks
+    private let bugReportService: BugReportServiceProtocol
     private let elementCallService: ElementCallServiceProtocol
 
     /// Common background task to continue long-running tasks in the background.
     private var backgroundTask: UIBackgroundTaskIdentifier?
     
+    private var userSessionMigrationsOldVersion: Version?
     private var userSession: UserSessionProtocol? {
         didSet {
             userSessionObserver?.cancel()
-            if userSession != nil {
+            if let userSession {
                 configureElementCallService()
                 configureNotificationManager()
                 observeUserSessionChanges()
-                // Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
-                let homeServerBaseURL = URL(string: userSession!.clientProxy.homeserver) // swiftlint:disable:this force_unwrapping
-                updateBugReportServiceBaseURL(homeServerBaseURL?.appendingPathComponent("bugreports"))
                 startSync()
+                Task { await appHooks.configure(with: userSession) }
+                // Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
+                let homeServerBaseURL = URL(string: userSession.clientProxy.homeserver)! // swiftlint:disable:this force_unwrapping
+                appSettings.bugReportRageshakeURL.applyRemoteValue(.url(homeServerBaseURL.appendingPathComponent("bugreports")))
             } else {
-                // Tchap: nullify BugReportService baseURL after user is logged out.
-                updateBugReportServiceBaseURL(nil)
+                // Tchap: disable BugReportService baseURL after user is logged out.
+                appSettings.bugReportRageshakeURL.applyRemoteValue(.disabled)
             }
         }
     }
@@ -61,7 +65,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
 
     private let appRouteURLParser: AppRouteURLParser
     
-    @Consumable private var storedAppRoute: AppRoute?
+    private var storedAppRoute: AppRoute?
     @Consumable private var storedInlineReply: (roomID: String, message: String)?
     @Consumable private var storedRoomsToAwait: Set<String>?
 
@@ -78,7 +82,11 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         let appSettings = appHooks.appSettingsHook.configure(AppSettings())
         
-        Target.mainApp.configure(logLevel: appSettings.logLevel, traceLogPacks: appSettings.traceLogPacks)
+        targetConfiguration = Target.mainApp.configure(logLevel: appSettings.logLevel,
+                                                       traceLogPacks: appSettings.traceLogPacks,
+                                                       sentryURL: appSettings.bugReportSentryRustURL,
+                                                       rageshakeURL: appSettings.bugReportRageshakeURL,
+                                                       appHooks: appHooks)
         
         let appName = InfoPlistReader.main.bundleDisplayName
         let appVersion = InfoPlistReader.main.bundleShortVersionString
@@ -109,13 +117,19 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         let appLockService = AppLockService(keychainController: keychainController, appSettings: appSettings)
         let appLockNavigationCoordinator = NavigationRootCoordinator()
         appLockFlowCoordinator = AppLockFlowCoordinator(appLockService: appLockService,
-                                                        navigationCoordinator: appLockNavigationCoordinator)
+                                                        navigationCoordinator: appLockNavigationCoordinator,
+                                                        appSettings: appSettings)
         
         notificationManager = NotificationManager(notificationCenter: UNUserNotificationCenter.current(),
                                                   appSettings: appSettings)
         
+        bugReportService = BugReportService(rageshakeURLPublisher: appSettings.bugReportRageshakeURL.publisher,
+                                            applicationID: appSettings.bugReportApplicationID,
+                                            sdkGitSHA: sdkGitSha(),
+                                            maxUploadSize: appSettings.bugReportMaxUploadSize,
+                                            appHooks: appHooks)
         Self.setupServiceLocator(appSettings: appSettings, appHooks: appHooks)
-        Self.setupSentry(appSettings: appSettings)
+        Self.setupSentry(bugReportService: bugReportService, appSettings: appSettings)
         
         ServiceLocator.shared.analytics.signpost.start()
         ServiceLocator.shared.analytics.startIfEnabled()
@@ -131,9 +145,6 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         if let previousVersion = appSettings.lastVersionLaunched.flatMap(Version.init) {
             performMigrationsIfNecessary(from: previousVersion, to: currentVersion)
-            
-            // Manual clean to handle the potential case where the app crashes before moving a shared file.
-            cleanAppGroupTemporaryDirectory()
         } else {
             // The app has been deleted since the previous run. Reset everything.
             wipeUserData(includingSettings: true)
@@ -143,15 +154,20 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         setupStateMachine()
 
         observeApplicationState()
-        observeNetworkState()
         observeAppLockChanges()
         
         registerBackgroundAppRefresh()
         
         appSettings.$analyticsConsentState
             .dropFirst() // Called above before configuring the ServiceLocator
-            .sink { _ in
-                Self.setupSentry(appSettings: appSettings)
+            .sink { [bugReportService] _ in
+                Self.setupSentry(bugReportService: bugReportService, appSettings: appSettings)
+            }
+            .store(in: &cancellables)
+        
+        appSettings.$nextGenHTMLParserEnabled
+            .sink { value in
+                AttributedStringBuilder.useNextGenHTMLParser = value
             }
             .store(in: &cancellables)
         
@@ -225,6 +241,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         if let route = appRouteURLParser.route(from: url) {
             switch route {
+            case .accountProvisioningLink:
+                handleAppRoute(route)
             case .genericCallLink(let url):
                 if let userSessionFlowCoordinator {
                     userSessionFlowCoordinator.handleAppRoute(route, animated: true)
@@ -333,7 +351,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     }
     
     func notificationTapped(content: UNNotificationContent) async {
-        MXLog.info("[AppCoordinator] tappedNotification")
+        MXLog.info("Tapped Notification")
         
         guard let roomID = content.roomID,
               content.receiverID != nil else {
@@ -352,9 +370,9 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     }
     
     func handleInlineReply(_ service: NotificationManagerProtocol, content: UNNotificationContent, replyText: String) async {
-        MXLog.info("[AppCoordinator] handle notification reply")
+        MXLog.info("Handle notification reply")
         
-        guard let roomID = content.userInfo[NotificationConstants.UserInfoKey.roomIdentifier] as? String else {
+        guard let roomID = content.roomID else {
             return
         }
         
@@ -372,27 +390,19 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private static func setupServiceLocator(appSettings: AppSettings, appHooks: AppHooks) {
         ServiceLocator.shared.register(userIndicatorController: UserIndicatorController())
         ServiceLocator.shared.register(appSettings: appSettings)
-        // Tchap: set up BugReportService  baseURL to nil because user is not yet logged Its HomeServere is not known.
-//        ServiceLocator.shared.register(bugReportService: BugReportService(baseURL: appSettings.bugReportServiceBaseURL,
-        ServiceLocator.shared.register(bugReportService: BugReportService(baseURL: nil,
-                                                                          applicationID: appSettings.bugReportApplicationID,
-                                                                          sdkGitSHA: sdkGitSha(),
-                                                                          maxUploadSize: appSettings.bugReportMaxUploadSize,
-                                                                          appHooks: appHooks))
+        
         let posthogAnalyticsClient = PostHogAnalyticsClient()
         posthogAnalyticsClient.updateSuperProperties(AnalyticsEvent.SuperProperties(appPlatform: .EXI, cryptoSDK: .Rust, cryptoSDKVersion: sdkGitSha()))
         ServiceLocator.shared.register(analytics: AnalyticsService(client: posthogAnalyticsClient,
                                                                    appSettings: appSettings))
     }
-
-    // Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
-    private func updateBugReportServiceBaseURL(_ baseURL: URL?) {
-        ServiceLocator.shared.bugReportService?.updateBaseURL(baseURL)
-    }
     
     /// Perform any required migrations for the app to function correctly.
     private func performMigrationsIfNecessary(from oldVersion: Version, to newVersion: Version) {
         guard oldVersion != newVersion else { return }
+        
+        // Be tidy and clean up after ourselves every now and then (because Apple is lazy)
+        clearTemporaryDirectories()
         
         MXLog.info("The app was upgraded from \(oldVersion) to \(newVersion)")
         
@@ -405,20 +415,88 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         }
         
         if oldVersion < Version(1, 6, 7) {
-            Tracing.deleteLogFiles()
+            Tracing.deleteLogFiles(in: Tracing.legacyLogsDirectory)
             MXLog.info("Migrating to v1.6.7, log files have been wiped")
         }
         
-        if oldVersion < Version(25, 4, 2) {
-            MXLog.info("Migrating to v25.04.2, checking if hideTimelineMedia flag can be migrated to timelineMediaVisibility")
-            // Migration for the old `hideTimelineMedia` flag.
-            if let userDefaults = UserDefaults(suiteName: InfoPlistReader.main.appGroupIdentifier),
-               let hideTimelineMedia = userDefaults.value(forKey: "hideTimelineMedia") as? Bool {
-                appSettings.timelineMediaVisibility = hideTimelineMedia ? .never : .always
+        if oldVersion < Version(25, 7, 4) {
+            Tracing.migrateLogFiles()
+            MXLog.info("Migrating to version 25.07.4, log files have been moved.")
+        }
+        
+        // Store the old version to run additional migrations on the user session once it has been set up.
+        userSessionMigrationsOldVersion = oldVersion
+    }
+    
+    private func performUserSessionMigrations(_ userSession: UserSessionProtocol) async {
+        guard let oldVersion = userSessionMigrationsOldVersion else { return }
+        
+        MXLog.info("Migrating user session from \(oldVersion)")
+        
+        if oldVersion < Version(25, 6, 0) {
+            MXLog.info("Migrating to version 25.06.0, migrating timeline media settings to account data.")
+            performSettingsToAccountDataMigration(userSession: userSession)
+        }
+        
+        if oldVersion < Version(25, 9, 2) {
+            MXLog.info("Migrating to version 25.09.2, triggering sync to ensure m.space state is up to date.")
+            await userSession.clientProxy.expireSyncSessions()
+        }
+        
+        if oldVersion < Version(25, 10, 0) {
+            MXLog.info("Migrating to version 25.10.0, showing new sound banner to existing user.")
+            appSettings.hasSeenNewSoundBanner = false
+        }
+        
+        userSessionMigrationsOldVersion = nil
+    }
+    
+    // This could be removed once the adoption of 25.06.x is widespread.
+    private func performSettingsToAccountDataMigration(userSession: UserSessionProtocol) {
+        guard let userDefaults = UserDefaults(suiteName: InfoPlistReader.main.appGroupIdentifier) else {
+            return
+        }
+        
+        let hideInviteAvatars = userDefaults.value(forKey: "hideInviteAvatars") as? Bool
+        let timelineMediaVisibility = userDefaults
+            .data(forKey: "timelineMediaVisibility")
+            .flatMap {
+                try? JSONDecoder().decode(TimelineMediaVisibility.self, from: $0)
+            }
+        let hideTimelineMedia = userDefaults.value(forKey: "hideTimelineMedia") as? Bool
+        
+        guard hideInviteAvatars != nil || timelineMediaVisibility != nil || hideTimelineMedia != nil else {
+            // No migration needed, no local settings found.
+            return
+        }
+        
+        Task {
+            switch await userSession.clientProxy.fetchMediaPreviewConfiguration() {
+            case let .success(config):
+                guard config == nil else {
+                    // Found a server configuration, no need to migrate.
+                    userDefaults.removeObject(forKey: "hideInviteAvatars")
+                    userDefaults.removeObject(forKey: "timelineMediaVisibility")
+                    userDefaults.removeObject(forKey: "hideTimelineMedia")
+                    return
+                }
+                
+                if let hideInviteAvatars, case .success = await userSession.clientProxy.setHideInviteAvatars(hideInviteAvatars) {
+                    userDefaults.removeObject(forKey: "hideInviteAvatars")
+                }
+                
+                if let timelineMediaVisibility, case .success = await userSession.clientProxy.setTimelineMediaVisibility(timelineMediaVisibility) {
+                    userDefaults.removeObject(forKey: "timelineMediaVisibility")
+                } else if let hideTimelineMedia, case .success = await userSession.clientProxy.setTimelineMediaVisibility(hideTimelineMedia ? .never : .always) {
+                    userDefaults.removeObject(forKey: "hideTimelineMedia")
+                }
+            case let .failure(error):
+                MXLog.error("Could not perform migration, failed to fetch media preview config: \(error)")
+                return
             }
         }
     }
-    
+        
     /// Clears the keychain, app support directory etc ready for a fresh use.
     /// - Parameter includingSettings: Whether to additionally wipe the user's app settings too.
     private func wipeUserData(includingSettings: Bool = false) {
@@ -432,25 +510,39 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     /// Manually cleans up any files in the app group's `tmp` directory.
     ///
     /// **Note:** If there is a single file we consider it to be an active share payload and ignore it.
-    private func cleanAppGroupTemporaryDirectory() {
-        let fileURLs: [URL]
+    private func clearTemporaryDirectories() {
+        // First get rid of everything in the App's temporary directory
         do {
-            fileURLs = try FileManager.default.contentsOfDirectory(at: URL.appGroupTemporaryDirectory, includingPropertiesForKeys: nil, options: [])
+            let fileURLs = try FileManager.default.contentsOfDirectory(at: URL.temporaryDirectory, includingPropertiesForKeys: nil, options: [])
+            
+            fileURLs.forEach { url in
+                do {
+                    try FileManager.default.removeItem(at: url)
+                } catch {
+                    MXLog.warning("Failed to remove file from temporary directory: \(error)")
+                }
+            }
+        } catch {
+            MXLog.warning("Failed to enumerate temporary directory: \(error)")
+        }
+        
+        // Manual clean to handle the potential case where the app crashes before moving a shared file.
+        do {
+            let fileURLs = try FileManager.default.contentsOfDirectory(at: URL.appGroupTemporaryDirectory, includingPropertiesForKeys: nil, options: [])
+            
+            guard fileURLs.count > 1 else {
+                return // If there is only a single item in here, there's likely a pending share payload that is yet to be processed.
+            }
+            
+            for url in fileURLs {
+                do {
+                    try FileManager.default.removeItem(at: url)
+                } catch {
+                    MXLog.warning("Failed to remove file from app group temporary directory: \(error)")
+                }
+            }
         } catch {
             MXLog.warning("Failed to enumerate app group temporary directory: \(error)")
-            return
-        }
-        
-        guard fileURLs.count > 1 else {
-            return // If there is only a single item in here, there's likely a pending share payload that is yet to be processed.
-        }
-        
-        for url in fileURLs {
-            do {
-                try FileManager.default.removeItem(at: url)
-            } catch {
-                MXLog.warning("Failed to remove file from app group temporary directory: \(error)")
-            }
         }
     }
     
@@ -500,6 +592,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         Task {
             switch await userSessionStore.restoreUserSession() {
             case .success(let userSession):
+                await self.performUserSessionMigrations(userSession)
                 self.userSession = userSession
                 stateMachine.processEvent(.createdUserSession)
             case .failure:
@@ -515,22 +608,23 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                                                           encryptionKeyProvider: encryptionKeyProvider,
                                                           appSettings: appSettings,
                                                           appHooks: appHooks)
-        let qrCodeLoginService = QRCodeLoginService(encryptionKeyProvider: encryptionKeyProvider,
-                                                    userSessionStore: userSessionStore,
-                                                    appSettings: appSettings,
-                                                    appHooks: appHooks)
         
-        authenticationFlowCoordinator = AuthenticationFlowCoordinator(authenticationService: authenticationService,
-                                                                      qrCodeLoginService: qrCodeLoginService,
-                                                                      bugReportService: ServiceLocator.shared.bugReportService,
-                                                                      navigationRootCoordinator: navigationRootCoordinator,
-                                                                      appMediator: appMediator,
-                                                                      appSettings: appSettings,
-                                                                      analytics: ServiceLocator.shared.analytics,
-                                                                      userIndicatorController: ServiceLocator.shared.userIndicatorController)
-        authenticationFlowCoordinator?.delegate = self
+        let coordinator = AuthenticationFlowCoordinator(authenticationService: authenticationService,
+                                                        bugReportService: bugReportService,
+                                                        navigationRootCoordinator: navigationRootCoordinator,
+                                                        appMediator: appMediator,
+                                                        appSettings: appSettings,
+                                                        analytics: ServiceLocator.shared.analytics,
+                                                        userIndicatorController: ServiceLocator.shared.userIndicatorController)
+        coordinator.delegate = self
         
-        authenticationFlowCoordinator?.start()
+        authenticationFlowCoordinator = coordinator
+        coordinator.start()
+        
+        if storedAppRoute?.isAuthenticationRoute == true,
+           let storedAppRoute = storedAppRoute.take() {
+            coordinator.handleAppRoute(storedAppRoute, animated: false)
+        }
     }
     
     private func runPostSessionSetupTasks() async {
@@ -542,7 +636,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             userSession.clientProxy.roomsToAwait = storedRoomsToAwait
         }
         
-        if let storedAppRoute {
+        if storedAppRoute?.isAuthenticationRoute == false,
+           let storedAppRoute = storedAppRoute.take() {
             userSessionFlowCoordinator.handleAppRoute(storedAppRoute, animated: false)
         }
         
@@ -571,6 +666,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             let parameters = SoftLogoutScreenCoordinatorParameters(authenticationService: authenticationService,
                                                                    credentials: credentials,
                                                                    keyBackupNeeded: false,
+                                                                   appSettings: appSettings,
                                                                    userIndicatorController: ServiceLocator.shared.userIndicatorController)
             let coordinator = SoftLogoutScreenCoordinator(parameters: parameters)
             self.softLogoutCoordinator = coordinator
@@ -599,18 +695,24 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             fatalError("User session not setup")
         }
         
-        let userSessionFlowCoordinator = UserSessionFlowCoordinator(userSession: userSession,
+        let flowParameters = CommonFlowParameters(userSession: userSession,
+                                                  bugReportService: bugReportService,
+                                                  elementCallService: elementCallService,
+                                                  timelineControllerFactory: TimelineControllerFactory(),
+                                                  emojiProvider: EmojiProvider(appSettings: appSettings),
+                                                  linkMetadataProvider: LinkMetadataProvider(),
+                                                  appMediator: appMediator,
+                                                  appSettings: appSettings,
+                                                  appHooks: appHooks,
+                                                  analytics: ServiceLocator.shared.analytics,
+                                                  userIndicatorController: ServiceLocator.shared.userIndicatorController,
+                                                  notificationManager: notificationManager,
+                                                  stateMachineFactory: StateMachineFactory())
+        
+        let userSessionFlowCoordinator = UserSessionFlowCoordinator(isNewLogin: isNewLogin,
                                                                     navigationRootCoordinator: navigationRootCoordinator,
                                                                     appLockService: appLockFlowCoordinator.appLockService,
-                                                                    bugReportService: ServiceLocator.shared.bugReportService,
-                                                                    elementCallService: elementCallService,
-                                                                    timelineControllerFactory: TimelineControllerFactory(),
-                                                                    appMediator: appMediator,
-                                                                    appSettings: appSettings,
-                                                                    appHooks: appHooks,
-                                                                    analytics: ServiceLocator.shared.analytics,
-                                                                    notificationManager: notificationManager,
-                                                                    isNewLogin: isNewLogin)
+                                                                    flowParameters: flowParameters)
         
         userSessionFlowCoordinator.actionsPublisher
             .sink { [weak self] action in
@@ -668,6 +770,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             tearDownUserSession()
             
             AppSettings.resetSessionSpecificSettings()
+            appHooks.remoteSettingsHook.reset(appSettings)
             
             // Reset analytics
             ServiceLocator.shared.analytics.optOut()
@@ -722,7 +825,9 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         let callScreenCoordinator = CallScreenCoordinator(parameters: .init(elementCallService: elementCallService,
                                                                             configuration: configuration,
                                                                             allowPictureInPicture: false,
-                                                                            appHooks: appHooks))
+                                                                            appSettings: appSettings,
+                                                                            appHooks: appHooks,
+                                                                            analytics: ServiceLocator.shared.analytics))
         
         callScreenCoordinator.actions
             .sink { [weak self] action in
@@ -774,24 +879,6 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             }
     }
     
-    private func observeNetworkState() {
-        let reachabilityNotificationIdentifier = "io.element.elementx.reachability.notification"
-        appMediator.networkMonitor
-            .reachabilityPublisher
-            .sink { reachability in
-                MXLog.info("Reachability changed to \(reachability)")
-                
-                if reachability == .reachable {
-                    ServiceLocator.shared.userIndicatorController.retractIndicatorWithId(reachabilityNotificationIdentifier)
-                } else {
-                    ServiceLocator.shared.userIndicatorController.submitIndicator(.init(id: reachabilityNotificationIdentifier,
-                                                                                        title: L10n.commonOffline,
-                                                                                        persistent: true))
-                }
-            }
-            .store(in: &cancellables)
-    }
-    
     private func observeAppLockChanges() {
         appLockFlowCoordinator.actions.sink { [weak self] action in
             guard let self else { return }
@@ -808,9 +895,22 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     }
     
     private func handleAppRoute(_ appRoute: AppRoute) {
-        if let userSessionFlowCoordinator {
-            userSessionFlowCoordinator.handleAppRoute(appRoute, animated: appMediator.appState == .active)
-        } else {
+        var handled = false
+        
+        switch appRoute {
+        case .accountProvisioningLink:
+            if let authenticationFlowCoordinator {
+                authenticationFlowCoordinator.handleAppRoute(appRoute, animated: appMediator.appState == .active)
+                handled = true
+            }
+        default:
+            if let userSessionFlowCoordinator {
+                userSessionFlowCoordinator.handleAppRoute(appRoute, animated: appMediator.appState == .active)
+                handled = true
+            }
+        }
+        
+        if !handled {
             storedAppRoute = appRoute
         }
     }
@@ -822,7 +922,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         showLoadingIndicator()
         
-        navigationRootCoordinator.setRootCoordinator(PlaceholderScreenCoordinator())
+        navigationRootCoordinator.setRootCoordinator(PlaceholderScreenCoordinator(hideBrandChrome: appSettings.hideBrandChrome))
         
         stopSync(isBackgroundTask: false)
         userSessionFlowCoordinator?.stop()
@@ -838,7 +938,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         }
     }
     
-    private static func setupSentry(appSettings: AppSettings) {
+    private static func setupSentry(bugReportService: BugReportServiceProtocol, appSettings: AppSettings) {
         guard let bugReportSentryURL = appSettings.bugReportSentryURL else { return }
         
         let options: Options = .init()
@@ -891,12 +991,13 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         // multiple callbacks if there are multiple crash events to send (see method documentation)
         options.onCrashedLastRun = { event in
             MXLog.error("Sentry detected a crash in the previous run: \(event.eventId.sentryIdString)")
-            ServiceLocator.shared.bugReportService.lastCrashEventID = event.eventId.sentryIdString
+            bugReportService.lastCrashEventID = event.eventId.sentryIdString
         }
         
-        SentrySDK.start(options: options)
+        SentrySDK.start(options: options) // Swift
+        enableSentryLogging(enabled: options.enabled) // Rust
         
-        MXLog.info("SentrySDK started")
+        MXLog.info("Sentry configured (enabled: \(options.enabled))")
     }
     
     private func teardownSentry() {
@@ -980,7 +1081,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                 
                 switch state {
                 case .loading:
-                    if self?.appMediator.networkMonitor.reachabilityPublisher.value == .reachable {
+                    if self?.userSession?.clientProxy.homeserverReachabilityPublisher.value == .reachable {
                         ServiceLocator.shared.userIndicatorController.submitIndicator(.init(id: toastIdentifier, type: .toast(progress: .indeterminate), title: L10n.commonSyncing, persistent: true))
                     }
                 case .notLoading:

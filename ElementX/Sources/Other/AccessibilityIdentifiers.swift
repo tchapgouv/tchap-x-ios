@@ -41,6 +41,8 @@ enum A11yIdentifiers {
     static let notificationSettingsEditScreen = NotificationSettingsEditScreen()
     static let pollFormScreen = PollFormScreen()
     static let roomPollsHistoryScreen = RoomPollsHistoryScreen()
+    static let manageRoomMemberSheet = ManageRoomMemberSheet()
+    static let spaceListScreen = SpaceListScreen()
     
     struct AlertInfo {
         let primaryButton = "alert_info-primary_button"
@@ -78,6 +80,7 @@ enum A11yIdentifiers {
         let screenshot = "bug_report-screenshot"
         let removeScreenshot = "bug_report-remove_screenshot"
         let attachScreenshot = "bug-report-attach_screenshot"
+        let cancel = "bug_report-cancel"
     }
     
     struct ChangeServer {
@@ -121,13 +124,14 @@ enum A11yIdentifiers {
     struct AuthenticationStartScreen {
         let signIn = "authentication_start-sign_in"
         let signInWithQr = "authentication_start-sign_in_with_qr"
+        let appVersion = "authentication_start-app_version"
         let hidden = "authentication_start-hidden"
     }
     
     struct ReportContent {
         let ignoreUser = "report_content-ignore_user"
     }
-        
+    
     struct RoomScreen {
         let name = "room-name"
         let avatar = "room-avatar"
@@ -212,6 +216,7 @@ enum A11yIdentifiers {
     struct ServerConfirmationScreen {
         let `continue` = "server_confirmation-continue"
         let changeServer = "server_confirmation-change_server"
+        let serverPicker = "server_confirmation-server_picker"
     }
     
     struct SessionVerificationScreen {
@@ -288,5 +293,18 @@ enum A11yIdentifiers {
     
     struct RoomPollsHistoryScreen {
         let loadMore = "room_polls_history_screen-load_more"
+    }
+    
+    struct ManageRoomMemberSheet {
+        let viewProfile = "manage_room_member_sheet-view_profile"
+    }
+    
+    struct SpaceListScreen {
+        let userAvatar = "space_list_screen-user_avatar"
+        
+        let roomNamePrefix = "space_list_screen-room_name"
+        func spaceRoomName(_ name: String) -> String {
+            "\(roomNamePrefix):\(name)"
+        }
     }
 }

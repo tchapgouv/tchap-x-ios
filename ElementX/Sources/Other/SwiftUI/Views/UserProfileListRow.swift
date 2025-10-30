@@ -49,12 +49,14 @@ struct UserProfileListRow: View {
                                    role: isUnknownProfile ? .error : nil),
                     kind: kind)
             if MatrixIdFromString(user.userID).isExternalTchapUser {
-//                Text(TchapL10n.commonUserIsExternal)
-//                    .tchapExternalLabelView()
-                BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, isHighlighted: false, tchapUsage: .userIsExternal)
-                    .offset(x: 60.0, y: -16.0) // 60 is 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
+                BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal())
+                    .offset(x: 60.0, y: -8.0) // 60 is 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
             }
         }
+        // Cancel list row insets added because of VStack inside List.
+        .listRowInsets(EdgeInsets())
+        // Use same filled background as ListRow to have full solid background.
+        .listRowBackground(Color.compound.bgCanvasDefaultLevel1)
     }
     
     var avatar: LoadableAvatarImage {
@@ -70,9 +72,9 @@ private extension MembershipState {
     var localizedDescription: String? {
         switch self {
         case .join:
-            return L10n.screenRoomDetailsAlreadyAMember
+            return L10n.screenInviteUsersAlreadyAMember
         case .invite:
-            return L10n.screenRoomDetailsAlreadyInvited
+            return L10n.screenInviteUsersAlreadyInvited
         default:
             return nil
         }

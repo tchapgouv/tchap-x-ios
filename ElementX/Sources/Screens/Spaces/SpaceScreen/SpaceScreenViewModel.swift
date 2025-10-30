@@ -1,0 +1,193 @@
+//
+// Copyright 2025 New Vector Ltd.
+//
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
+//
+
+import Combine
+import SwiftUI
+
+typealias SpaceScreenViewModelType = StateStoreViewModelV2<SpaceScreenViewState, SpaceScreenViewAction>
+
+class SpaceScreenViewModel: SpaceScreenViewModelType, SpaceScreenViewModelProtocol {
+    private let spaceRoomListProxy: SpaceRoomListProxyProtocol
+    private let spaceServiceProxy: SpaceServiceProxyProtocol
+    private let clientProxy: ClientProxyProtocol
+    private let userIndicatorController: UserIndicatorControllerProtocol
+    
+    private let actionsSubject: PassthroughSubject<SpaceScreenViewModelAction, Never> = .init()
+    var actionsPublisher: AnyPublisher<SpaceScreenViewModelAction, Never> {
+        actionsSubject.eraseToAnyPublisher()
+    }
+
+    init(spaceRoomListProxy: SpaceRoomListProxyProtocol,
+         spaceServiceProxy: SpaceServiceProxyProtocol,
+         selectedSpaceRoomPublisher: CurrentValuePublisher<String?, Never>,
+         userSession: UserSessionProtocol,
+         userIndicatorController: UserIndicatorControllerProtocol) {
+        self.spaceRoomListProxy = spaceRoomListProxy
+        self.spaceServiceProxy = spaceServiceProxy
+        clientProxy = userSession.clientProxy
+        self.userIndicatorController = userIndicatorController
+        
+        super.init(initialViewState: SpaceScreenViewState(space: spaceRoomListProxy.spaceRoomProxy,
+                                                          rooms: spaceRoomListProxy.spaceRoomsPublisher.value,
+                                                          selectedSpaceRoomID: selectedSpaceRoomPublisher.value),
+                   mediaProvider: userSession.mediaProvider)
+        
+        spaceRoomListProxy.spaceRoomsPublisher
+            .receive(on: DispatchQueue.main)
+            .weakAssign(to: \.state.rooms, on: self)
+            .store(in: &cancellables)
+        
+        // As the server is slow, we just let the screen automatically paginate everything in. We can
+        // switch this to use the scroll position once Synapse receives some performance improvements.
+        spaceRoomListProxy.paginationStatePublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] paginationState in
+                switch paginationState {
+                case .idle(let endReached):
+                    self?.state.isPaginating = false
+                    guard !endReached else { return }
+                    Task { await spaceRoomListProxy.paginate() }
+                case .loading:
+                    self?.state.isPaginating = true
+                }
+            }
+            .store(in: &cancellables)
+        
+        selectedSpaceRoomPublisher
+            .weakAssign(to: \.state.selectedSpaceRoomID, on: self)
+            .store(in: &cancellables)
+        
+        Task {
+            if case let .joined(roomProxy) = await userSession.clientProxy.roomForIdentifier(spaceRoomListProxy.spaceRoomProxy.id),
+               case let .success(permalinkURL) = await roomProxy.matrixToPermalink() {
+                state.permalink = permalinkURL
+            }
+        }
+    }
+    
+    // MARK: - Public
+    
+    override func process(viewAction: SpaceScreenViewAction) {
+        MXLog.info("View model: received view action: \(viewAction)")
+        
+        switch viewAction {
+        case .spaceAction(.select(let spaceRoomProxy)):
+            if spaceRoomProxy.isSpace {
+                if spaceRoomProxy.state != .joined {
+                    actionsSubject.send(.selectUnjoinedSpace(spaceRoomProxy))
+                } else {
+                    Task { await selectSpace(spaceRoomProxy) }
+                }
+            } else {
+                // No need to check the join state, the room flow will show an appropriately configured join screen if needed.
+                actionsSubject.send(.selectRoom(roomID: spaceRoomProxy.id))
+            }
+        case .spaceAction(.join(let spaceRoomProxy)):
+            Task { await join(spaceRoomProxy) }
+        case .leaveSpace:
+            Task { await showLeaveSpaceConfirmation() }
+        case .deselectAllLeaveRoomDetails:
+            guard let leaveHandle = state.bindings.leaveHandle else { fatalError("The leave handle should be available.") }
+            for room in leaveHandle.rooms {
+                room.isSelected = false
+            }
+        case .toggleLeaveSpaceRoomDetails(let spaceRoomID):
+            guard let room = state.bindings.leaveHandle?.rooms.first(where: { $0.spaceRoomProxy.id == spaceRoomID }) else {
+                fatalError("The space room to toggle is not in the list of rooms to leave.")
+            }
+            withTransaction(\.disablesAnimations, true) { // The button is adding an unwanted animation.
+                room.isSelected.toggle()
+            }
+        case .confirmLeaveSpace:
+            Task { await confirmLeaveSpace() }
+        case .spaceSettings:
+            break // Not implemented.
+        }
+    }
+    
+    func stop() {
+        // If we pop this screen with running join operations, we don't want them to do anything.
+        state.joiningRoomIDs.removeAll()
+    }
+    
+    // MARK: - Private
+    
+    private func join(_ spaceRoomProxy: SpaceRoomProxyProtocol) async {
+        state.joiningRoomIDs.insert(spaceRoomProxy.id)
+        defer { state.joiningRoomIDs.remove(spaceRoomProxy.id) }
+        
+        guard case .success = await clientProxy.joinRoom(spaceRoomProxy.id, via: spaceRoomProxy.via) else {
+            showFailureIndicator()
+            return
+        }
+        
+        // If multiple join operations are running, then only show the last one.
+        guard state.joiningRoomIDs == [spaceRoomProxy.id] else { return }
+        
+        if spaceRoomProxy.isSpace {
+            await selectSpace(spaceRoomProxy)
+        } else {
+            actionsSubject.send(.selectRoom(roomID: spaceRoomProxy.id))
+        }
+    }
+    
+    private func selectSpace(_ spaceRoomProxy: SpaceRoomProxyProtocol) async {
+        switch await spaceServiceProxy.spaceRoomList(spaceID: spaceRoomProxy.id, parent: spaceRoomListProxy.spaceRoomProxy) {
+        case .success(let spaceRoomListProxy):
+            actionsSubject.send(.selectSpace(spaceRoomListProxy))
+        case .failure(let error):
+            MXLog.error("Unable to select space: \(error)")
+            showFailureIndicator()
+        }
+    }
+    
+    private func showLeaveSpaceConfirmation() async {
+        guard case let .success(leaveHandle) = await spaceServiceProxy.leaveSpace(spaceID: spaceRoomListProxy.spaceRoomProxy.id) else {
+            showFailureIndicator()
+            return
+        }
+        
+        state.bindings.leaveHandle = leaveHandle
+    }
+    
+    private func confirmLeaveSpace() async {
+        guard let leaveHandle = state.bindings.leaveHandle else { fatalError("Leaving without a handle is impossible.") }
+        
+        showLeavingIndicator()
+        defer { hideLeavingIndicator() }
+        
+        switch await leaveHandle.leave() {
+        case .success:
+            state.bindings.leaveHandle = nil
+            actionsSubject.send(.leftSpace)
+        case .failure:
+            showFailureIndicator()
+        }
+    }
+    
+    // MARK: - Indicators
+    
+    private static var leavingIndicatorID: String { "\(Self.self)-Leaving" }
+    private static var failureIndicatorID: String { "\(Self.self)-Failure" }
+    
+    private func showLeavingIndicator() {
+        userIndicatorController.submitIndicator(UserIndicator(id: Self.leavingIndicatorID,
+                                                              type: .modal(progress: .indeterminate, interactiveDismissDisabled: true, allowsInteraction: false),
+                                                              title: L10n.commonLeavingSpace))
+    }
+    
+    private func hideLeavingIndicator() {
+        userIndicatorController.retractIndicatorWithId(Self.leavingIndicatorID)
+    }
+    
+    private func showFailureIndicator() {
+        userIndicatorController.submitIndicator(UserIndicator(id: Self.failureIndicatorID,
+                                                              type: .toast,
+                                                              title: L10n.errorUnknown,
+                                                              iconName: "xmark"))
+    }
+}

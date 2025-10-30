@@ -15,14 +15,21 @@ extension ClientBuilder {
                             slidingSync: ClientBuilderSlidingSync,
                             sessionDelegate: ClientSessionDelegate,
                             appHooks: AppHooks,
-                            enableOnlySignedDeviceIsolationMode: Bool) -> ClientBuilder {
+                            enableOnlySignedDeviceIsolationMode: Bool,
+                            enableKeyShareOnInvite: Bool,
+                            requestTimeout: UInt64? = 30000,
+                            maxRequestRetryTime: UInt64? = nil,
+                            threadsEnabled: Bool) -> ClientBuilder {
         var builder = ClientBuilder()
             .crossProcessStoreLocksHolderName(holderName: InfoPlistReader.main.bundleIdentifier)
             .enableOidcRefreshLock()
             .setSessionDelegate(sessionDelegate: sessionDelegate)
             .userAgent(userAgent: UserAgentBuilder.makeASCIIUserAgent())
-            .requestConfig(config: .init(retryLimit: 0, timeout: 30000, maxConcurrentRequests: nil, maxRetryTime: nil))
-            .useEventCachePersistentStorage(value: true)
+            .threadsEnabled(enabled: threadsEnabled, threadSubscriptions: threadsEnabled)
+            .requestConfig(config: .init(retryLimit: 0,
+                                         timeout: requestTimeout,
+                                         maxConcurrentRequests: nil,
+                                         maxRetryTime: maxRequestRetryTime))
         
         builder = switch slidingSync {
         case .restored: builder
@@ -33,18 +40,19 @@ extension ClientBuilder {
             builder = builder
                 .autoEnableCrossSigning(autoEnableCrossSigning: true)
                 .backupDownloadStrategy(backupDownloadStrategy: .afterDecryptionFailure)
+                .enableShareHistoryOnInvite(enableShareHistoryOnInvite: enableKeyShareOnInvite)
                 .autoEnableBackups(autoEnableBackups: true)
                 
             if enableOnlySignedDeviceIsolationMode {
                 builder = builder
                     .roomKeyRecipientStrategy(strategy: .identityBasedStrategy)
-                    .roomDecryptionTrustRequirement(trustRequirement: .crossSignedOrLegacy)
+                    .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .crossSignedOrLegacy))
             } else {
                 builder = builder
                     // Tchap: [Beta DINUM] - allow sending messages even if non-verified device is present on the account.
 //                    .roomKeyRecipientStrategy(strategy: .errorOnVerifiedUserProblem)
                     .roomKeyRecipientStrategy(strategy: .allDevices)
-                    .roomDecryptionTrustRequirement(trustRequirement: .untrusted)
+                    .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .untrusted))
             }
         }
         

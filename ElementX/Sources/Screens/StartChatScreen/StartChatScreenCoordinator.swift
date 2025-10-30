@@ -15,13 +15,14 @@ struct StartChatScreenCoordinatorParameters {
     weak var navigationStackCoordinator: NavigationStackCoordinator?
     let userDiscoveryService: UserDiscoveryServiceProtocol
     let mediaUploadingPreprocessor: MediaUploadingPreprocessor
+    let appSettings: AppSettings
+    let analytics: AnalyticsService
 }
 
 enum StartChatScreenCoordinatorAction {
     case close
     case openRoom(withIdentifier: String)
     case openRoomDirectorySearch
-    case joinForum // Tchap: add `join Forum` action to `StartChat` screen
 }
 
 final class StartChatScreenCoordinator: CoordinatorProtocol {
@@ -48,10 +49,10 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
         self.parameters = parameters
         
         viewModel = StartChatScreenViewModel(userSession: parameters.userSession,
-                                             analytics: ServiceLocator.shared.analytics,
+                                             analytics: parameters.analytics,
                                              userIndicatorController: parameters.userIndicatorController,
                                              userDiscoveryService: parameters.userDiscoveryService,
-                                             appSettings: ServiceLocator.shared.settings)
+                                             appSettings: parameters.appSettings)
     }
     
     func start() {
@@ -67,8 +68,6 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
                 actionsSubject.send(.openRoom(withIdentifier: identifier))
             case .openRoomDirectorySearch:
                 actionsSubject.send(.openRoomDirectorySearch)
-            case .joinForum: // Tchap: add `join Forum` action to `StartChat` screen
-                actionsSubject.send(.joinForum)
             }
         }
         .store(in: &cancellables)
@@ -83,10 +82,9 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
     // MARK: - Private
     
     private func presentInviteUsersScreen() {
-        let inviteParameters = InviteUsersScreenCoordinatorParameters(clientProxy: parameters.userSession.clientProxy,
+        let inviteParameters = InviteUsersScreenCoordinatorParameters(userSession: parameters.userSession,
                                                                       selectedUsers: selectedUsersPublisher,
                                                                       roomType: .draft,
-                                                                      mediaProvider: parameters.userSession.mediaProvider,
                                                                       userDiscoveryService: parameters.userDiscoveryService,
                                                                       userIndicatorController: parameters.userIndicatorController)
         let coordinator = InviteUsersScreenCoordinator(parameters: inviteParameters)
@@ -116,7 +114,9 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
         let createParameters = CreateRoomCoordinatorParameters(userSession: parameters.userSession,
                                                                userIndicatorController: parameters.userIndicatorController,
                                                                createRoomParameters: createRoomParametersPublisher,
-                                                               selectedUsers: selectedUsersPublisher)
+                                                               selectedUsers: selectedUsersPublisher,
+                                                               appSettings: parameters.appSettings,
+                                                               analytics: parameters.analytics)
         let coordinator = CreateRoomCoordinator(parameters: createParameters)
         coordinator.actions.sink { [weak self] action in
             guard let self else { return }
@@ -127,8 +127,8 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
                 self.createRoomParameters.send(details)
             case .openRoom(let identifier):
                 self.actionsSubject.send(.openRoom(withIdentifier: identifier))
-            case .displayMediaPickerWithSource(let source):
-                self.displayMediaPickerWithSource(source)
+            case .displayMediaPickerWithMode(let mode):
+                self.displayMediaPickerWithMode(mode)
             case .removeImage:
                 var parameters = self.createRoomParameters.value
                 parameters.avatarImageMedia = nil
@@ -142,15 +142,22 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
     
     // MARK: - Private
     
-    private func displayMediaPickerWithSource(_ source: MediaPickerScreenSource) {
+    private func displayMediaPickerWithMode(_ mode: MediaPickerScreenMode) {
         let stackCoordinator = NavigationStackCoordinator()
         
-        let mediaPickerCoordinator = MediaPickerScreenCoordinator(userIndicatorController: parameters.userIndicatorController, source: source, orientationManager: parameters.orientationManager) { [weak self] action in
+        let mediaPickerCoordinator = MediaPickerScreenCoordinator(mode: mode,
+                                                                  userIndicatorController: parameters.userIndicatorController,
+                                                                  orientationManager: parameters.orientationManager) { [weak self] action in
             guard let self else { return }
             switch action {
             case .cancel:
                 parameters.navigationStackCoordinator?.setSheetCoordinator(nil)
-            case .selectMediaAtURL(let url):
+            case .selectedMediaAtURLs(let urls):
+                guard urls.count == 1,
+                      let url = urls.first else {
+                    fatalError("Received an invalid number of URLs")
+                }
+                
                 processAvatar(from: url)
             }
         }
@@ -166,12 +173,17 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
         Task { [weak self] in
             guard let self else { return }
             do {
-                let media = try await parameters.mediaUploadingPreprocessor.processMedia(at: url).get()
+                guard case let .success(maxUploadSize) = await parameters.userSession.clientProxy.maxMediaUploadSize else {
+                    MXLog.error("Failed to get max upload size")
+                    parameters.userIndicatorController.alertInfo = AlertInfo(id: .init())
+                    return
+                }
+                let media = try await parameters.mediaUploadingPreprocessor.processMedia(at: url, maxUploadSize: maxUploadSize).get()
                 var parameters = createRoomParameters.value
                 parameters.avatarImageMedia = media
                 createRoomParameters.send(parameters)
             } catch {
-                parameters.userIndicatorController.alertInfo = AlertInfo(id: .init(), title: L10n.commonError, message: L10n.errorUnknown)
+                parameters.userIndicatorController.alertInfo = AlertInfo(id: .init())
             }
             hideLoadingIndicator()
         }

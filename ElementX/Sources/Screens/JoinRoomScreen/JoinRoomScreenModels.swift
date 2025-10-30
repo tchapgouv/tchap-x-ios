@@ -5,10 +5,11 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-import Foundation
+import Compound
+import SwiftUI
 
-enum JoinRoomScreenViewModelAction: Equatable {
-    case joined
+enum JoinRoomScreenViewModelAction {
+    case joined(JoinRoomScreenJoinDetails)
     case dismiss
     case presentDeclineAndBlock(userID: String)
 }
@@ -41,8 +42,13 @@ struct JoinRoomScreenRoomDetails {
     let canonicalAlias: String?
     let avatar: RoomAvatar?
     let memberCount: Int?
+    let heroes: [UserProfileProxy]
     let inviter: RoomInviterDetails?
     let isDirect: Bool?
+    
+    let isSpace: Bool?
+    let childrenCount: Int?
+    let spaceVisibility: SpaceRoomProxyVisibility?
 }
 
 struct JoinRoomScreenViewState: BindableState {
@@ -69,16 +75,40 @@ struct JoinRoomScreenViewState: BindableState {
     }
     
     var subtitle: String? {
-        switch mode {
-        case .invited(isDM: true):
-            if let inviter = roomDetails?.inviter {
-                return inviter.displayName != nil ? inviter.id : nil
+        if roomDetails?.isSpace == true, let spaceVisibilityTitle {
+            return spaceVisibilityTitle
+        } else {
+            switch mode {
+            case .invited(isDM: true):
+                if let inviter = roomDetails?.inviter {
+                    return inviter.displayName != nil ? inviter.id : nil
+                }
+                return nil
+            case .loading, .unknown, .knocked:
+                return nil
+            default:
+                return roomDetails?.canonicalAlias
             }
-            return nil
-        case .loading, .unknown, .knocked:
-            return nil
-        default:
-            return roomDetails?.canonicalAlias
+        }
+    }
+    
+    var subtitleIcon: KeyPath<CompoundIcons, Image>? {
+        guard roomDetails?.isSpace == true else { return nil }
+        
+        return switch roomDetails?.spaceVisibility {
+        case .public: \.public
+        case .private: \.lock
+        case .restricted: \.space
+        case .none: \.lock
+        }
+    }
+    
+    var spaceVisibilityTitle: String? {
+        switch roomDetails?.spaceVisibility {
+        case .public: L10n.commonPublicSpace
+        case .private: L10n.commonPrivateSpace
+        case .restricted: L10n.commonSharedSpace
+        case .none: L10n.commonPrivateSpace
         }
     }
     
@@ -87,7 +117,7 @@ struct JoinRoomScreenViewState: BindableState {
         // https://github.com/matrix-org/matrix-rust-sdk/issues/4825
         if isDMInvite, let inviter = roomDetails?.inviter {
             .heroes([.init(userID: inviter.id, displayName: inviter.displayName, avatarURL: hideInviteAvatars ? nil : inviter.avatarURL)])
-        } else if let roomDetails, let avatar = roomDetails.avatar {
+        } else if let avatar = roomDetails?.avatar {
             shouldHideAvatars ? avatar.removingAvatar : avatar
         } else if let name = roomDetails?.name {
             .room(id: roomID, name: name, avatarURL: nil)
@@ -111,6 +141,7 @@ enum JoinRoomScreenAlertType {
     case declineInviteAndBlock
     case cancelKnock
     case loadingError
+    case invalidInvite
 }
 
 enum JoinRoomScreenViewAction {

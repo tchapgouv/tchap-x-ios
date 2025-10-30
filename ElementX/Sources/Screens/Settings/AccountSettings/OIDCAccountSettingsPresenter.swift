@@ -19,10 +19,10 @@ class OIDCAccountSettingsPresenter: NSObject {
     private let presentationAnchor: UIWindow
     private let oidcRedirectURL: URL
     
-    init(accountURL: URL, presentationAnchor: UIWindow) {
+    init(accountURL: URL, presentationAnchor: UIWindow, appSettings: AppSettings) {
         self.accountURL = accountURL
         self.presentationAnchor = presentationAnchor
-        oidcRedirectURL = ServiceLocator.shared.settings.oidcRedirectURL
+        oidcRedirectURL = appSettings.oidcRedirectURL
         super.init()
     }
     
@@ -31,6 +31,9 @@ class OIDCAccountSettingsPresenter: NSObject {
         let session = ASWebAuthenticationSession(url: accountURL, callback: .oidcRedirectURL(oidcRedirectURL)) { _, _ in }
         session.prefersEphemeralWebBrowserSession = false
         session.presentationContextProvider = self
+        session.additionalHeaderFields = [
+            "X-Element-User-Agent": UserAgentBuilder.makeASCIIUserAgent()
+        ]
         session.start()
     }
 }

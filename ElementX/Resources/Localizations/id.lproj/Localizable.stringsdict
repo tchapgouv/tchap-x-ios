@@ -16,6 +16,20 @@
 			<string>%1$d digit dimasukkan</string>
 		</dict>
 	</dict>
+	<key>a11y_polls_percent_of_total</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%1$d persen dari total suara</string>
+		</dict>
+	</dict>
 	<key>a11y_read_receipts_multiple_with_others</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -30,6 +44,20 @@
 			<string>Dibaca oleh %1$@ dan %2$d lainnya</string>
 		</dict>
 	</dict>
+	<key>common_many_members</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%d lainnya</string>
+		</dict>
+	</dict>
 	<key>common_member_count</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -41,7 +69,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%1$d anggota</string>
+			<string>%1$d Anggota</string>
 		</dict>
 	</dict>
 	<key>common_poll_votes_count</key>
@@ -56,6 +84,52 @@
 			<string>d</string>
 			<key>other</key>
 			<string>%d suara</string>
+		</dict>
+	</dict>
+	<key>common_replies</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%1$d balasan</string>
+		</dict>
+	</dict>
+	<key>common_rooms</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d Room</string>
+			<key>other</key>
+			<string>%1$d Rooms</string>
+		</dict>
+	</dict>
+	<key>common_spaces</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d Space</string>
+			<key>other</key>
+			<string>%1$d Spaces</string>
 		</dict>
 	</dict>
 	<key>notification_compat_summary_line_for_room</key>
@@ -170,6 +244,22 @@
 			<string>PIN salah. Anda memiliki %1$d percobaan lagi</string>
 		</dict>
 	</dict>
+	<key>screen_leave_space_submit</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Leave %1$d room and space</string>
+			<key>other</key>
+			<string>Leave %1$d rooms and space</string>
+		</dict>
+	</dict>
 	<key>screen_pinned_timeline_screen_title</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -212,6 +302,34 @@
 			<string>%1$@ +%2$d lainnya ingin bergabung ke ruangan ini</string>
 		</dict>
 	</dict>
+	<key>screen_room_timeline_reaction_a11y</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%1$d anggota bereaksi dengan %2$@</string>
+		</dict>
+	</dict>
+	<key>screen_room_timeline_reaction_including_you_a11y</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>Anda dan %1$d anggota bereaksi dengan %2$@</string>
+		</dict>
+	</dict>
 	<key>screen_room_timeline_state_changes</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -240,20 +358,6 @@
 			<string>%1$@, %2$@, dan %3$d lainnya</string>
 		</dict>
 	</dict>
-	<key>screen_room_typing_many_members_second_component_ios</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
-		<key>COUNT</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>other</key>
-			<string>%d lainnya</string>
-		</dict>
-	</dict>
 	<key>screen_room_typing_notification</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -266,6 +370,22 @@
 			<string>d</string>
 			<key>other</key>
 			<string>%1$@ sedang mengetik</string>
+		</dict>
+	</dict>
+	<key>troubleshoot_notifications_test_blocked_users_result_some</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>You blocked %1$d user. You will not receive notifications for this user.</string>
+			<key>other</key>
+			<string>You blocked %1$d users. You will not receive notifications for these users.</string>
 		</dict>
 	</dict>
 	<key>troubleshoot_notifications_test_detect_push_provider_success</key>

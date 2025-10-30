@@ -8,12 +8,12 @@
 import Combine
 import SwiftUI
 
-typealias ServerConfirmationScreenViewModelType = StateStoreViewModel<ServerConfirmationScreenViewState, ServerConfirmationScreenViewAction>
+typealias ServerConfirmationScreenViewModelType = StateStoreViewModelV2<ServerConfirmationScreenViewState, ServerConfirmationScreenViewAction>
 
 class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, ServerConfirmationScreenViewModelProtocol {
     let authenticationService: AuthenticationServiceProtocol
     let authenticationFlow: AuthenticationFlow
-    let slidingSyncLearnMoreURL: URL
+    let appSettings: AppSettings
     let userIndicatorController: UserIndicatorControllerProtocol
     
     private var actionsSubject: PassthroughSubject<ServerConfirmationScreenViewModelAction, Never> = .init()
@@ -23,23 +23,31 @@ class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, 
     }
 
     init(authenticationService: AuthenticationServiceProtocol,
+         mode: ServerConfirmationScreenMode,
          authenticationFlow: AuthenticationFlow,
-         slidingSyncLearnMoreURL: URL,
+         appSettings: AppSettings,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.authenticationService = authenticationService
         self.authenticationFlow = authenticationFlow
-        self.slidingSyncLearnMoreURL = slidingSyncLearnMoreURL
+        self.appSettings = appSettings
         self.userIndicatorController = userIndicatorController
         
-        let homeserver = authenticationService.homeserver.value
-        super.init(initialViewState: ServerConfirmationScreenViewState(homeserverAddress: homeserver.address,
-                                                                       authenticationFlow: authenticationFlow))
+        let pickerSelection: String? = switch mode {
+        case .picker(let providers): providers[0]
+        case .confirmation: nil
+        }
         
-        authenticationService.homeserver
-            .receive(on: DispatchQueue.main)
-            .map(\.address)
-            .weakAssign(to: \.state.homeserverAddress, on: self)
-            .store(in: &cancellables)
+        super.init(initialViewState: ServerConfirmationScreenViewState(mode: mode,
+                                                                       authenticationFlow: authenticationFlow,
+                                                                       bindings: .init(pickerSelection: pickerSelection)))
+        
+        if case .confirmation = mode {
+            authenticationService.homeserver
+                .receive(on: DispatchQueue.main)
+                .map { .confirmation($0.address) }
+                .weakAssign(to: \.state.mode, on: self)
+                .store(in: &cancellables)
+        }
     }
     
     override func process(viewAction: ServerConfirmationScreenViewAction) {
@@ -48,7 +56,10 @@ class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, 
             guard state.window != window else { return }
             Task { state.window = window }
         case .confirm:
-            Task { await confirmHomeserver() }
+            switch state.mode {
+            case .confirmation: Task { await confirmServer() }
+            case .picker: Task { await pickServer() }
+            }
         case .changeServer:
             actionsSubject.send(.changeServer)
         }
@@ -56,16 +67,18 @@ class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, 
     
     // MARK: - Private
     
-    private func confirmHomeserver() async {
+    private func confirmServer() async {
         let homeserver = authenticationService.homeserver.value
         
-        // If the login mode is unknown, the service hasn't be configured and we need to do it now.
+        // If the login mode is unknown, the service hasn't been configured and we need to do it now.
         // Otherwise we can continue the flow as server selection has been performed and succeeded.
         guard homeserver.loginMode == .unknown || authenticationService.flow != authenticationFlow else {
             await fetchLoginURLIfNeededAndContinue()
             return
         }
         
+        // Note: We don't show the spinner until now as it isn't needed if the service is already
+        // configured and we're about to use password based login
         startLoading()
         defer { stopLoading() }
         
@@ -84,9 +97,37 @@ class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, 
                 displayError(.login)
             case .registrationNotSupported:
                 displayError(.registration)
+            case .elementProRequired(let serverName):
+                displayError(.elementProRequired(serverName: serverName))
             default:
                 displayError(.unknownError)
             }
+        }
+    }
+    
+    private func pickServer() async {
+        guard let accountProvider = state.bindings.pickerSelection else {
+            fatalError("It shouldn't be possible to confirm without a selection.")
+        }
+        
+        // Don't bother reconfiguring the service if it has already been done for the selected server.
+        let homeserver = authenticationService.homeserver.value
+        guard homeserver.loginMode == .unknown || homeserver.address != accountProvider else {
+            await fetchLoginURLIfNeededAndContinue()
+            return
+        }
+        
+        // Note: We don't show the spinner until now as it isn't needed if the service is already
+        // configured and we're about to use password based login
+        startLoading()
+        defer { stopLoading() }
+        
+        switch await authenticationService.configure(for: accountProvider, flow: authenticationFlow) {
+        case .success:
+            await fetchLoginURLIfNeededAndContinue()
+        case .failure:
+            // When the servers are hard-coded they should have a valid configuration, so show a generic error.
+            displayError(.unknownError)
         }
     }
     
@@ -104,7 +145,7 @@ class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, 
         startLoading() // Uses the same ID, so no need to worry if the indicator already exists
         defer { stopLoading() }
         
-        switch await authenticationService.urlForOIDCLogin() {
+        switch await authenticationService.urlForOIDCLogin(loginHint: nil) {
         case .success(let oidcData):
             actionsSubject.send(.continueWithOIDC(data: oidcData, window: window))
         case .failure:
@@ -136,12 +177,10 @@ class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, 
                                                  title: L10n.commonServerNotSupported,
                                                  message: L10n.screenChangeServerErrorInvalidWellKnown(error))
         case .slidingSync:
-            let openURL = { UIApplication.shared.open(self.slidingSyncLearnMoreURL) }
+            let nonBreakingAppName = InfoPlistReader.main.bundleDisplayName.replacingOccurrences(of: " ", with: "\u{00A0}")
             state.bindings.alertInfo = AlertInfo(id: .slidingSync,
                                                  title: L10n.commonServerNotSupported,
-                                                 message: L10n.screenChangeServerErrorNoSlidingSyncMessage,
-                                                 primaryButton: .init(title: L10n.actionLearnMore, role: .cancel, action: openURL),
-                                                 secondaryButton: .init(title: L10n.actionCancel, action: nil))
+                                                 message: L10n.screenChangeServerErrorNoSlidingSyncMessage(nonBreakingAppName))
         case .login:
             state.bindings.alertInfo = AlertInfo(id: .login,
                                                  title: L10n.commonServerNotSupported,
@@ -150,6 +189,14 @@ class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, 
             state.bindings.alertInfo = AlertInfo(id: .registration,
                                                  title: L10n.commonServerNotSupported,
                                                  message: L10n.errorAccountCreationNotPossible)
+        case .elementProRequired(let serverName):
+            state.bindings.alertInfo = AlertInfo(id: .elementProRequired(serverName: serverName),
+                                                 title: L10n.screenChangeServerErrorElementProRequiredTitle,
+                                                 message: L10n.screenChangeServerErrorElementProRequiredMessage(serverName),
+                                                 primaryButton: .init(title: L10n.screenChangeServerErrorElementProRequiredActionIos) {
+                                                     UIApplication.shared.open(self.appSettings.elementProAppStoreURL)
+                                                 },
+                                                 secondaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil))
         case .unknownError:
             state.bindings.alertInfo = AlertInfo(id: .unknownError)
         }

@@ -5,6 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Algorithms
 import MatrixRustSDK // Tchap
 import UIKit
 
@@ -30,6 +31,30 @@ struct TextRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
         .text(content)
     }
     
+    var links: [URL] {
+        guard let attributedString = content.formattedBody else {
+            return []
+        }
+        
+        let links = attributedString.runs.compactMap { (run: AttributedString.Runs.Run) -> URL? in
+            if run.link == nil {
+                return nil
+            }
+            
+            guard run.elementX.eventOnRoomAlias == nil,
+                  run.elementX.eventOnRoomID == nil,
+                  run.elementX.roomAlias == nil,
+                  run.elementX.roomID == nil,
+                  run.elementX.userID == nil else {
+                return nil
+            }
+            
+            return run.link
+        }
+        
+        return Array(links.uniqued())
+    }
+
     // Tchap: BWI content-scanner scan state
     var scanState: BwiScanState = .trusted
 }

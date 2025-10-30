@@ -27,6 +27,7 @@ enum RoomDetailsScreenViewModelAction: Equatable {
     case displayKnockingRequests
     case displaySecurityAndPrivacy
     case displayReportRoom
+    case transferOwnership
 }
 
 // MARK: View
@@ -171,8 +172,8 @@ struct RoomDetailsScreenViewStateBindings {
     /// A media item that will be previewed with QuickLook.
     var mediaPreviewItem: MediaPreviewItem?
     
-    // Tchap: get number of external users to display or hide `External` badge.
-    var externalCount = 0
+    // Tchap: is the room open to external users to display or hide `External` badge.
+    var isOpenToExternalUsers: Bool?
 }
 
 struct LeaveRoomAlertItem: AlertProtocol {
@@ -291,6 +292,8 @@ enum RoomDetailsScreenErrorType: Hashable {
     case alert
     /// Leaving room has failed..
     case unknown
+    /// Last owner
+    case lastOwner
 }
 
 enum RoomDetailsScreenPinnedEventsActionState {

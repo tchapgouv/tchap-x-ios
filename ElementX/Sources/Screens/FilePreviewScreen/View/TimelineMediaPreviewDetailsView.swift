@@ -11,6 +11,7 @@ import SwiftUI
 struct TimelineMediaPreviewDetailsView: View {
     let item: TimelineMediaPreviewItem.Media
     @ObservedObject var context: TimelineMediaPreviewViewModel.Context
+    var preferredColorScheme: ColorScheme? = .dark
     
     @Binding var sheetHeight: CGFloat
     private let topPadding: CGFloat = 19
@@ -29,9 +30,11 @@ struct TimelineMediaPreviewDetailsView: View {
         .presentationDetents([.height(sheetHeight + topPadding)])
         .presentationDragIndicator(.visible)
         .presentationBackground(.compound.bgCanvasDefault)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(preferredColorScheme)
         .sheet(item: $context.redactConfirmationItem) { item in
-            TimelineMediaPreviewRedactConfirmationView(item: item, context: context)
+            TimelineMediaPreviewRedactConfirmationView(item: item,
+                                                       context: context,
+                                                       preferredColorScheme: preferredColorScheme)
         }
     }
     
@@ -44,6 +47,7 @@ struct TimelineMediaPreviewDetailsView: View {
                                         contentID: item.sender.id,
                                         avatarSize: .user(on: .mediaPreviewDetails),
                                         mediaProvider: context.mediaProvider)
+                        .accessibilityHidden(true)
                     
                     VStack(alignment: .leading, spacing: 0) {
                         if let displayName = item.sender.displayName {
@@ -180,27 +184,24 @@ struct TimelineMediaPreviewDetailsView_Previews: PreviewProvider, TestablePrevie
         if case let .media(mediaItem) = viewModel.state.currentItem {
             TimelineMediaPreviewDetailsView(item: mediaItem, context: viewModel.context, sheetHeight: $sheetHeight)
                 .previewDisplayName("Image")
-                .snapshotPreferences(expect: viewModel.context.$viewState.map { state in
-                    state.currentItemActions?.secondaryActions.contains(.redact) ?? false
-                })
+                .snapshotPreferences(expect: mediaItem.observe(\.fileHandle).map { $0 != nil }.eraseToStream())
         }
         
         if case let .media(mediaItem) = loadingViewModel.state.currentItem {
             TimelineMediaPreviewDetailsView(item: mediaItem, context: loadingViewModel.context, sheetHeight: $sheetHeight)
                 .previewDisplayName("Loading")
-                .snapshotPreferences(expect: loadingViewModel.context.$viewState.map { state in
-                    state.currentItemActions?.secondaryActions.contains(.redact) ?? false
-                })
         }
         
         if case let .media(mediaItem) = unknownTypeViewModel.state.currentItem {
             TimelineMediaPreviewDetailsView(item: mediaItem, context: unknownTypeViewModel.context, sheetHeight: $sheetHeight)
                 .previewDisplayName("Unknown type")
+                .snapshotPreferences(expect: mediaItem.observe(\.fileHandle).map { $0 != nil }.eraseToStream())
         }
         
         if case let .media(mediaItem) = presentedOnRoomViewModel.state.currentItem {
             TimelineMediaPreviewDetailsView(item: mediaItem, context: presentedOnRoomViewModel.context, sheetHeight: $sheetHeight)
                 .previewDisplayName("Incoming on Room")
+                .snapshotPreferences(expect: mediaItem.observe(\.fileHandle).map { $0 != nil }.eraseToStream())
         }
     }
     

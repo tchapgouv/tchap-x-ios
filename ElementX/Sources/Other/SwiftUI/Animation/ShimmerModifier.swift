@@ -8,6 +8,13 @@
 import Combine
 import SwiftUI
 
+extension View {
+    /// Applies a shimmering effect to the view.
+    func shimmer() -> some View {
+        modifier(ShimmerModifier())
+    }
+}
+
 /// A view modifier that applies a shimmering effect to the view.
 struct ShimmerModifier: ViewModifier {
     /// A boolean which is toggled to trigger the animation.
@@ -59,24 +66,11 @@ struct ShimmerModifier: ViewModifier {
     }
 }
 
-extension View {
-    /// Applies a shimmering effect to the view.
-    func shimmer() -> some View {
-        modifier(ShimmerModifier())
-    }
-}
-
 struct ShimmerOverlay_Previews: PreviewProvider, TestablePreview {
-    static let viewModel = HomeScreenViewModel(userSession: UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "")))),
-                                               analyticsService: ServiceLocator.shared.analytics,
-                                               appSettings: ServiceLocator.shared.settings,
-                                               selectedRoomPublisher: CurrentValueSubject<String?, Never>(nil).asCurrentValuePublisher(),
-                                               userIndicatorController: ServiceLocator.shared.userIndicatorController)
-    
     static var previews: some View {
         VStack(spacing: 0) {
             ForEach(0...8, id: \.self) { _ in
-                HomeScreenRoomCell(room: .placeholder(), context: viewModel.context, isSelected: false)
+                HomeScreenRoomCell(room: .placeholder(), isSelected: false, mediaProvider: MediaProviderMock(configuration: .init())) { _ in }
             }
         }
         .redacted(reason: .placeholder)

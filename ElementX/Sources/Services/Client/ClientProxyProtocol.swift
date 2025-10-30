@@ -34,11 +34,13 @@ enum ClientProxyError: Error {
     
     case invalidMedia
     case invalidServerName
+    case invalidResponse
     case failedUploadingMedia(ErrorKind)
     case roomPreviewIsPrivate
     case failedRetrievingUserIdentity
     case failedResolvingRoomAlias
     case roomNotInLocalStore
+    case invalidInvite
 }
 
 enum SlidingSyncConstants {
@@ -63,24 +65,28 @@ enum SessionVerificationState {
     case unverified
 }
 
+// The `Decodable` conformance is just for the purpose of migration
+enum TimelineMediaVisibility: Decodable {
+    case always
+    case privateOnly
+    case never
+}
+
 // sourcery: AutoMockable
-protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
+protocol ClientProxyProtocol: AnyObject {
     var actionsPublisher: AnyPublisher<ClientProxyAction, Never> { get }
     
     var loadingStatePublisher: CurrentValuePublisher<ClientProxyLoadingState, Never> { get }
     
     var verificationStatePublisher: CurrentValuePublisher<SessionVerificationState, Never> { get }
     
+    var homeserverReachabilityPublisher: CurrentValuePublisher<NetworkMonitorReachability, Never> { get }
+    
     var userID: String { get }
 
     var deviceID: String? { get }
 
     var homeserver: String { get }
-    
-    // TODO: This is a temporary value, in the future we should throw a migration error
-    // when decoding a session that contains a sliding sync proxy URL instead of restoring it.
-    var needsSlidingSyncMigration: Bool { get }
-    var slidingSyncVersion: SlidingSyncVersion { get }
     
     var canDeactivateAccount: Bool { get }
     
@@ -93,7 +99,13 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     /// We delay fetching this until after the first sync. Nil until then
     var ignoredUsersPublisher: CurrentValuePublisher<[String]?, Never> { get }
     
+    var timelineMediaVisibilityPublisher: CurrentValuePublisher<TimelineMediaVisibility, Never> { get }
+    
+    var hideInviteAvatarsPublisher: CurrentValuePublisher<Bool, Never> { get }
+    
     var pusherNotificationClientIdentifier: String? { get }
+    
+    var mediaLoader: MediaLoaderProtocol { get }
     
     var roomSummaryProvider: RoomSummaryProviderProtocol { get }
     
@@ -113,6 +125,14 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     
     var sessionVerificationController: SessionVerificationControllerProxyProtocol? { get }
     
+    var spaceService: SpaceServiceProxyProtocol { get }
+    
+    var isReportRoomSupported: Bool { get async }
+    
+    var isLiveKitRTCSupported: Bool { get async }
+    
+    var maxMediaUploadSize: Result<UInt, ClientProxyError> { get async }
+    
     func isOnlyDeviceLeft() async -> Result<Bool, ClientProxyError>
     
     func startSync()
@@ -120,6 +140,8 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func stopSync()
     
     func stopSync(completion: (() -> Void)?) // Hopefully this will become async once we get SE-0371.
+    
+    func expireSyncSessions() async
         
     func accountURL(action: AccountManagementAction) async -> URL?
     
@@ -145,6 +167,8 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     
     func knockRoomAlias(_ roomAlias: String, message: String?) async -> Result<Void, ClientProxyError>
     
+    func canJoinRoom(with rules: [AllowRule]) -> Bool
+    
     func uploadMedia(_ media: MediaInfo) async -> Result<String, ClientProxyError>
     
     func roomForIdentifier(_ identifier: String) async -> RoomProxyType?
@@ -156,7 +180,7 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func roomSummaryForAlias(_ alias: String) -> RoomSummary?
     
     /// Will only work for rooms that are in our room list/local store
-    func reportRoomForIdentifier(_ identifier: String, reason: String?) async -> Result<Void, ClientProxyError>
+    func reportRoomForIdentifier(_ identifier: String, reason: String) async -> Result<Void, ClientProxyError>
     
     @discardableResult func loadUserDisplayName() async -> Result<Void, ClientProxyError>
     
@@ -185,6 +209,8 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func isAliasAvailable(_ alias: String) async -> Result<Bool, ClientProxyError>
     
     @discardableResult func clearCaches() async -> Result<Void, ClientProxyError>
+    
+    func fetchMediaPreviewConfiguration() async -> Result<MediaPreviewConfig?, ClientProxyError>
 
     // MARK: - Ignored users
     
@@ -210,4 +236,9 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func resetIdentity() async -> Result<IdentityResetHandle?, ClientProxyError>
     
     func userIdentity(for userID: String) async -> Result<UserIdentityProxyProtocol?, ClientProxyError>
+    
+    // MARK: - Moderation & Safety
+    
+    func setTimelineMediaVisibility(_ value: TimelineMediaVisibility) async -> Result<Void, ClientProxyError>
+    func setHideInviteAvatars(_ value: Bool) async -> Result<Void, ClientProxyError>
 }

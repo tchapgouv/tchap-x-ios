@@ -12,8 +12,9 @@ import SwiftUI
 struct BugReportScreen: View {
     @State private var selectedScreenshot: PhotosPickerItem?
     
-    @ObservedObject var context: BugReportScreenViewModel.Context
+    @Bindable var context: BugReportScreenViewModel.Context
     
+    var canSendLogFiles: Bool { context.viewState.canSendLogFiles }
     var photosPickerTitle: String { context.viewState.screenshot == nil ? L10n.screenBugReportAttachScreenshot : L10n.screenBugReportEditScreenshot }
     
     var body: some View {
@@ -56,15 +57,23 @@ struct BugReportScreen: View {
     
     private var sendLogsSection: some View {
         Section {
-            ListRow(label: .plain(title: L10n.screenBugReportIncludeLogs),
-                    kind: .toggle($context.sendingLogsEnabled))
-                .accessibilityIdentifier(A11yIdentifiers.bugReportScreen.sendLogs)
+            if canSendLogFiles {
+                ListRow(label: .plain(title: L10n.screenBugReportIncludeLogs),
+                        kind: .toggle($context.sendingLogsEnabled))
+                    .accessibilityIdentifier(A11yIdentifiers.bugReportScreen.sendLogs)
+            }
             ListRow(label: .plain(title: L10n.screenBugReportViewLogs),
                     kind: .navigationLink { context.send(viewAction: .viewLogs) })
                 .accessibilityIdentifier(A11yIdentifiers.bugReportScreen.sendLogs)
         } footer: {
-            Text(L10n.screenBugReportLogsDescription)
-                .compoundListSectionFooter()
+            if canSendLogFiles {
+                Text(L10n.screenBugReportLogsDescription)
+                    .compoundListSectionFooter()
+            } else {
+                Label(L10n.screenBugReportIncludeLogsError, icon: \.errorSolid, iconSize: .xSmall, relativeTo: .compound.bodySM)
+                    .foregroundStyle(.compound.textCriticalPrimary)
+                    .compoundListSectionFooter()
+            }
         }
     }
 
@@ -98,6 +107,7 @@ struct BugReportScreen: View {
                     .frame(width: 100)
                     .cornerRadius(4)
                     .accessibilityIdentifier(A11yIdentifiers.bugReportScreen.screenshot)
+                    .accessibilityLabel(L10n.screenBugReportA11yScreenshot)
                     .overlay(alignment: .topTrailing) {
                         Button { context.send(viewAction: .removeScreenshot) } label: {
                             CompoundIcon(\.close, size: .small, relativeTo: .compound.bodyMD)
@@ -122,6 +132,7 @@ struct BugReportScreen: View {
                 Button(L10n.actionCancel) {
                     context.send(viewAction: .cancel)
                 }
+                .accessibilityIdentifier(A11yIdentifiers.bugReportScreen.cancel)
             }
         }
         

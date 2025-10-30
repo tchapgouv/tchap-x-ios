@@ -10,17 +10,16 @@ import Foundation
 
 enum MediaEventsTimelineFlowCoordinatorAction {
     case viewInRoomTimeline(TimelineItemIdentifier)
+    case displayMessageForwarding(MessageForwardingItem)
     case finished
 }
 
 class MediaEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
-    private let navigationStackCoordinator: NavigationStackCoordinator
-    private let userSession: UserSessionProtocol
-    private let timelineControllerFactory: TimelineControllerFactoryProtocol
     private let roomProxy: JoinedRoomProxyProtocol
-    private let userIndicatorController: UserIndicatorControllerProtocol
-    private let appMediator: AppMediatorProtocol
-    private let emojiProvider: EmojiProviderProtocol
+    private let navigationStackCoordinator: NavigationStackCoordinator
+    private let flowParameters: CommonFlowParameters
+    
+    private var userSession: UserSessionProtocol { flowParameters.userSession }
     
     private let actionsSubject: PassthroughSubject<MediaEventsTimelineFlowCoordinatorAction, Never> = .init()
     var actionsPublisher: AnyPublisher<MediaEventsTimelineFlowCoordinatorAction, Never> {
@@ -29,20 +28,12 @@ class MediaEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
     
     private var cancellables = Set<AnyCancellable>()
     
-    init(navigationStackCoordinator: NavigationStackCoordinator,
-         userSession: UserSessionProtocol,
-         timelineControllerFactory: TimelineControllerFactoryProtocol,
-         roomProxy: JoinedRoomProxyProtocol,
-         userIndicatorController: UserIndicatorControllerProtocol,
-         appMediator: AppMediatorProtocol,
-         emojiProvider: EmojiProviderProtocol) {
-        self.navigationStackCoordinator = navigationStackCoordinator
-        self.userSession = userSession
-        self.timelineControllerFactory = timelineControllerFactory
+    init(roomProxy: JoinedRoomProxyProtocol,
+         navigationStackCoordinator: NavigationStackCoordinator,
+         flowParameters: CommonFlowParameters) {
         self.roomProxy = roomProxy
-        self.userIndicatorController = userIndicatorController
-        self.appMediator = appMediator
-        self.emojiProvider = emojiProvider
+        self.navigationStackCoordinator = navigationStackCoordinator
+        self.flowParameters = flowParameters
     }
     
     func start() {
@@ -64,22 +55,22 @@ class MediaEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
                                                           attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()),
                                                           stateEventStringBuilder: RoomStateEventStringBuilder(userID: userSession.clientProxy.userID))
         
-        guard case let .success(mediaTimelineController) = await timelineControllerFactory.buildMessageFilteredTimelineController(focus: .live,
-                                                                                                                                  allowedMessageTypes: [.image, .video],
-                                                                                                                                  presentation: .mediaFilesScreen,
-                                                                                                                                  roomProxy: roomProxy,
-                                                                                                                                  timelineItemFactory: timelineItemFactory,
-                                                                                                                                  mediaProvider: userSession.mediaProvider) else {
+        guard case let .success(mediaTimelineController) = await flowParameters.timelineControllerFactory.buildMessageFilteredTimelineController(focus: .live,
+                                                                                                                                                 allowedMessageTypes: [.image, .video],
+                                                                                                                                                 presentation: .mediaFilesScreen,
+                                                                                                                                                 roomProxy: roomProxy,
+                                                                                                                                                 timelineItemFactory: timelineItemFactory,
+                                                                                                                                                 mediaProvider: userSession.mediaProvider) else {
             MXLog.error("Failed presenting media timeline")
             return
         }
         
-        guard case let .success(filesTimelineController) = await timelineControllerFactory.buildMessageFilteredTimelineController(focus: .live,
-                                                                                                                                  allowedMessageTypes: [.file, .audio],
-                                                                                                                                  presentation: .mediaFilesScreen,
-                                                                                                                                  roomProxy: roomProxy,
-                                                                                                                                  timelineItemFactory: timelineItemFactory,
-                                                                                                                                  mediaProvider: userSession.mediaProvider) else {
+        guard case let .success(filesTimelineController) = await flowParameters.timelineControllerFactory.buildMessageFilteredTimelineController(focus: .live,
+                                                                                                                                                 allowedMessageTypes: [.file, .audio],
+                                                                                                                                                 presentation: .mediaFilesScreen,
+                                                                                                                                                 roomProxy: roomProxy,
+                                                                                                                                                 timelineItemFactory: timelineItemFactory,
+                                                                                                                                                 mediaProvider: userSession.mediaProvider) else {
             MXLog.error("Failed presenting media timeline")
             return
         }
@@ -87,23 +78,27 @@ class MediaEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
         let parameters = MediaEventsTimelineScreenCoordinatorParameters(roomProxy: roomProxy,
                                                                         mediaTimelineController: mediaTimelineController,
                                                                         filesTimelineController: filesTimelineController,
-                                                                        mediaProvider: userSession.mediaProvider,
+                                                                        userSession: userSession,
                                                                         mediaPlayerProvider: MediaPlayerProvider(),
-                                                                        voiceMessageMediaManager: userSession.voiceMessageMediaManager,
-                                                                        appMediator: appMediator,
-                                                                        emojiProvider: emojiProvider,
-                                                                        userIndicatorController: userIndicatorController,
-                                                                        timelineControllerFactory: timelineControllerFactory,
-                                                                        clientProxy: userSession.clientProxy)
+                                                                        appMediator: flowParameters.appMediator,
+                                                                        appSettings: flowParameters.appSettings,
+                                                                        analytics: flowParameters.analytics,
+                                                                        emojiProvider: flowParameters.emojiProvider,
+                                                                        linkMetadataProvider: flowParameters.linkMetadataProvider,
+                                                                        userIndicatorController: flowParameters.userIndicatorController,
+                                                                        timelineControllerFactory: flowParameters.timelineControllerFactory)
         
         let coordinator = MediaEventsTimelineScreenCoordinator(parameters: parameters)
         
         coordinator.actions
             .sink { [weak self] action in
+                guard let self else { return }
                 switch action {
+                case .displayMessageForwarding(let forwardingItem):
+                    actionsSubject.send(.displayMessageForwarding(forwardingItem))
                 case .viewInRoomTimeline(let itemID):
-                    self?.navigationStackCoordinator.pop(animated: false)
-                    self?.actionsSubject.send(.viewInRoomTimeline(itemID))
+                    navigationStackCoordinator.pop(animated: false)
+                    actionsSubject.send(.viewInRoomTimeline(itemID))
                 }
             }
             .store(in: &cancellables)

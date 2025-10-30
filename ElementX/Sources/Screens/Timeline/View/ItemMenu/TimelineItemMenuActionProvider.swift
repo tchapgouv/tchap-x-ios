@@ -10,12 +10,14 @@ import Foundation
 @MainActor
 struct TimelineItemMenuActionProvider {
     let timelineItem: RoomTimelineItemProtocol
+    let canCurrentUserSendMessage: Bool
     let canCurrentUserRedactSelf: Bool
     let canCurrentUserRedactOthers: Bool
     let canCurrentUserPin: Bool
     let pinnedEventIDs: Set<String>
     let isDM: Bool
     let isViewSourceEnabled: Bool
+    let areThreadsEnabled: Bool
     let timelineKind: TimelineKind
     let emojiProvider: EmojiProviderProtocol
     
@@ -46,11 +48,17 @@ struct TimelineItemMenuActionProvider {
             actions.append(.endPoll(pollStartID: eventID))
         }
 
-        if item.canBeRepliedTo {
+        if item.canBeRepliedTo, canCurrentUserSendMessage {
             if let messageItem = item as? EventBasedMessageTimelineItemProtocol {
-                actions.append(.reply(isThread: messageItem.properties.isThreaded))
+                // If threads are enabled we will have the dedicated `replyInThread` action
+                // so there is no need to make the normal reply use the thread.
+                actions.append(.reply(isThread: areThreadsEnabled ? false : messageItem.properties.isThreaded))
             } else {
                 actions.append(.reply(isThread: false))
+            }
+            
+            if areThreadsEnabled, !timelineKind.isThread {
+                actions.append(.replyInThread)
             }
         }
         
@@ -58,7 +66,7 @@ struct TimelineItemMenuActionProvider {
             actions.append(.forward(itemID: item.id))
         }
         
-        if item.isEditable {
+        if item.isEditable, canCurrentUserSendMessage {
             if item.supportsMediaCaption {
                 if item.hasMediaCaption {
                     actions.append(.editCaption)
@@ -111,7 +119,7 @@ struct TimelineItemMenuActionProvider {
             actions.append(.save)
             actions = actions.filter(\.canAppearInMediaDetails)
             secondaryActions = secondaryActions.filter(\.canAppearInMediaDetails)
-        case .live, .detached:
+        case .live, .detached, .thread:
             break // viewInRoomTimeline is the only non-room item and was added conditionally.
         }
         
@@ -125,7 +133,7 @@ struct TimelineItemMenuActionProvider {
             secondaryActions = secondaryActions.filter(\.canAppearInRedacted)
         }
         
-        let isReactable = timelineKind == .live || timelineKind == .detached ? item.isReactable : false
+        let isReactable = timelineKind == .live || timelineKind == .detached || timelineKind.isThread ? item.isReactable : false
 
         return .init(isReactable: isReactable, actions: actions, secondaryActions: secondaryActions, emojiProvider: emojiProvider)
     }

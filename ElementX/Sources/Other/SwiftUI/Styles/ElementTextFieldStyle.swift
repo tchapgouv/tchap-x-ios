@@ -33,7 +33,7 @@ extension TextFieldStyle where Self == ElementTextFieldStyle {
 }
 
 /// The text field style used in authentication screens.
-struct ElementTextFieldStyle: TextFieldStyle {
+struct ElementTextFieldStyle: @MainActor TextFieldStyle {
     enum State {
         case success
         case error
@@ -149,12 +149,12 @@ struct ElementTextFieldStyle: TextFieldStyle {
                     }
                     .onTapGesture { isFocused = true } // Set focus with taps outside of the text field
                 }
-                .introspect(.textField, on: .supportedVersions) { textField in
-                    textField.clearButtonMode = .whileEditing
-                    textField.attributedPlaceholder = NSAttributedString(string: textField.placeholder ?? "",
-                                                                         attributes: [NSAttributedString.Key.foregroundColor: placeholderColor])
-                    textField.accessibilityIdentifier = accessibilityIdentifier
-                }
+//                .introspect(.textField, on: .supportedVersions) { textField in
+//                    textField.clearButtonMode = .whileEditing
+//                    textField.attributedPlaceholder = NSAttributedString(string: textField.placeholder ?? "",
+//                                                                         attributes: [NSAttributedString.Key.foregroundColor: placeholderColor])
+//                    textField.accessibilityIdentifier = accessibilityIdentifier
+//                }
             
             if let footerText {
                 Label {

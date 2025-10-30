@@ -44,8 +44,8 @@ class RoomChangeRolesScreenViewModelTests: XCTestCase {
         XCTAssertEqual(context.viewState.administrators, context.viewState.visibleAdministrators)
         XCTAssertEqual(context.viewState.moderators, context.viewState.visibleModerators)
         XCTAssertEqual(context.viewState.users, context.viewState.visibleUsers)
-        XCTAssertEqual(context.viewState.membersWithRole.count, 1)
-        XCTAssertEqual(context.viewState.membersWithRole.first?.id, RoomMemberProxyMock.mockModerator.userID)
+        XCTAssertEqual(context.viewState.membersWithRole.count, 3)
+        XCTAssertNotNil(context.viewState.membersWithRole.first { $0.id == RoomMemberProxyMock.mockModerator.userID })
         XCTAssertFalse(context.viewState.hasChanges)
         XCTAssertFalse(context.viewState.isSearching)
     }
@@ -61,7 +61,7 @@ class RoomChangeRolesScreenViewModelTests: XCTestCase {
         
         XCTAssertEqual(context.viewState.membersToPromote, [firstUser])
         XCTAssertEqual(context.viewState.membersToDemote, [])
-        XCTAssertEqual(context.viewState.membersWithRole.count, 2)
+        XCTAssertEqual(context.viewState.membersWithRole.count, 4)
         XCTAssertTrue(context.viewState.membersWithRole.contains(firstUser))
         XCTAssertTrue(context.viewState.hasChanges)
     }
@@ -77,7 +77,7 @@ class RoomChangeRolesScreenViewModelTests: XCTestCase {
         
         XCTAssertEqual(context.viewState.membersToPromote, [])
         XCTAssertEqual(context.viewState.membersToDemote, [])
-        XCTAssertEqual(context.viewState.membersWithRole.count, 1)
+        XCTAssertEqual(context.viewState.membersWithRole.count, 3)
         XCTAssertFalse(context.viewState.membersWithRole.contains(firstUser))
         XCTAssertFalse(context.viewState.hasChanges)
     }
@@ -93,14 +93,14 @@ class RoomChangeRolesScreenViewModelTests: XCTestCase {
         
         XCTAssertEqual(context.viewState.membersToPromote, [])
         XCTAssertEqual(context.viewState.membersToDemote, [])
-        XCTAssertEqual(context.viewState.membersWithRole.count, 1)
+        XCTAssertEqual(context.viewState.membersWithRole.count, 3)
         XCTAssertFalse(context.viewState.membersWithRole.contains(firstUser))
         XCTAssertFalse(context.viewState.hasChanges)
     }
     
     func testToggleModeratorOff() {
         testInitialStateModerators()
-        guard let existingModerator = context.viewState.membersWithRole.first else {
+        guard let existingModerator = context.viewState.membersWithRole.first(where: { $0.role == .moderator }) else {
             XCTFail("There should be a member with the role before we begin.")
             return
         }
@@ -109,7 +109,7 @@ class RoomChangeRolesScreenViewModelTests: XCTestCase {
         
         XCTAssertEqual(context.viewState.membersToPromote, [])
         XCTAssertEqual(context.viewState.membersToDemote, [existingModerator])
-        XCTAssertEqual(context.viewState.membersWithRole.count, 0)
+        XCTAssertEqual(context.viewState.membersWithRole.count, 2)
         XCTAssertFalse(context.viewState.membersWithRole.contains(existingModerator))
         XCTAssertTrue(context.viewState.hasChanges)
     }
@@ -126,14 +126,14 @@ class RoomChangeRolesScreenViewModelTests: XCTestCase {
         
         XCTAssertEqual(context.viewState.membersToPromote, [])
         XCTAssertEqual(context.viewState.membersToDemote, [])
-        XCTAssertEqual(context.viewState.membersWithRole.count, 1)
+        XCTAssertEqual(context.viewState.membersWithRole.count, 3)
         XCTAssertTrue(context.viewState.membersWithRole.contains(demotedMember))
         XCTAssertFalse(context.viewState.hasChanges)
     }
     
     func testDemoteModerator() {
         testInitialStateModerators()
-        guard let existingModerator = context.viewState.membersWithRole.first else {
+        guard let existingModerator = context.viewState.membersWithRole.first(where: { $0.role == .moderator }) else {
             XCTFail("There should be a member with the role before we begin.")
             return
         }
@@ -142,7 +142,7 @@ class RoomChangeRolesScreenViewModelTests: XCTestCase {
         
         XCTAssertEqual(context.viewState.membersToPromote, [])
         XCTAssertEqual(context.viewState.membersToDemote, [existingModerator])
-        XCTAssertEqual(context.viewState.membersWithRole.count, 0)
+        XCTAssertEqual(context.viewState.membersWithRole.count, 2)
         XCTAssertFalse(context.viewState.membersWithRole.contains(existingModerator))
         XCTAssertTrue(context.viewState.hasChanges)
     }
@@ -152,7 +152,7 @@ class RoomChangeRolesScreenViewModelTests: XCTestCase {
         setupViewModel(mode: .moderator)
         
         guard let firstUser = context.viewState.users.first(where: { !context.viewState.isMemberSelected($0) }),
-              let existingModerator = context.viewState.membersWithRole.first else {
+              let existingModerator = context.viewState.membersWithRole.first(where: { $0.role == .moderator }) else {
             XCTFail("There should be a regular user and a moderator to begin with.")
             return
         }
@@ -198,7 +198,7 @@ class RoomChangeRolesScreenViewModelTests: XCTestCase {
         XCTAssertEqual(roomProxy.updatePowerLevelsForUsersReceivedUpdates?.contains { $0.userID == firstUser.id && $0.powerLevel == 100 }, true)
     }
     
-    private func setupViewModel(mode: RoomMemberDetails.Role) {
+    private func setupViewModel(mode: RoomRole) {
         roomProxy = JoinedRoomProxyMock(.init(members: .allMembersAsAdmin))
         viewModel = RoomChangeRolesScreenViewModel(mode: mode,
                                                    roomProxy: roomProxy,

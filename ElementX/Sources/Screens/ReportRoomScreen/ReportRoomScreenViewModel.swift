@@ -8,7 +8,7 @@
 import Combine
 import SwiftUI
 
-typealias ReportRoomScreenViewModelType = StateStoreViewModel<ReportRoomScreenViewState, ReportRoomScreenViewAction>
+typealias ReportRoomScreenViewModelType = StateStoreViewModelV2<ReportRoomScreenViewState, ReportRoomScreenViewAction>
 
 class ReportRoomScreenViewModel: ReportRoomScreenViewModelType, ReportRoomScreenViewModelProtocol {
     let roomProxy: JoinedRoomProxyProtocol
@@ -38,7 +38,7 @@ class ReportRoomScreenViewModel: ReportRoomScreenViewModelType, ReportRoomScreen
         
     private func report() async {
         showLoadingIndicator()
-        let result = await roomProxy.reportRoom(reason: state.bindings.reason.isBlank ? nil : state.bindings.reason)
+        let result = await roomProxy.reportRoom(reason: state.bindings.reason)
         
         switch result {
         case .success:
@@ -51,7 +51,11 @@ class ReportRoomScreenViewModel: ReportRoomScreenViewModelType, ReportRoomScreen
             }
         case .failure:
             hideLoadingIndicator()
-            userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
+            state.bindings.alert = .init(id: .reportRoomFailed,
+                                         title: L10n.commonSomethingWentWrong,
+                                         message: L10n.commonSomethingWentWrongMessage,
+                                         primaryButton: .init(title: L10n.actionDismiss, role: .cancel, action: nil),
+                                         secondaryButton: .init(title: L10n.actionTryAgain) { [weak self] in Task { await self?.report() } })
         }
     }
     
@@ -72,7 +76,7 @@ class ReportRoomScreenViewModel: ReportRoomScreenViewModelType, ReportRoomScreen
                                          title: L10n.screenReportRoomLeaveFailedAlertTitle,
                                          message: L10n.screenReportRoomLeaveFailedAlertMessage,
                                          primaryButton: .init(title: L10n.actionDismiss, role: .cancel) { [weak self] in self?.actionsSubject.send(.dismiss(shouldLeaveRoom: false)) },
-                                         secondaryButton: .init(title: L10n.actionRetry) { [weak self] in Task { await self?.leaveRoom(showLoading: true) } })
+                                         secondaryButton: .init(title: L10n.actionTryAgain) { [weak self] in Task { await self?.leaveRoom(showLoading: true) } })
         }
     }
     

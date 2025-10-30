@@ -8,9 +8,11 @@
 import Combine
 import SwiftUI
 
-typealias SettingsScreenViewModelType = StateStoreViewModel<SettingsScreenViewState, SettingsScreenViewAction>
+typealias SettingsScreenViewModelType = StateStoreViewModelV2<SettingsScreenViewState, SettingsScreenViewAction>
 
 class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewModelProtocol {
+    private let appSettings: AppSettings
+    
     private var actionsSubject: PassthroughSubject<SettingsScreenViewModelAction, Never> = .init()
     
     var actions: AnyPublisher<SettingsScreenViewModelAction, Never> {
@@ -18,14 +20,20 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
     }
     
     init(userSession: UserSessionProtocol, appSettings: AppSettings, isBugReportServiceEnabled: Bool) {
+        self.appSettings = appSettings
+        
         super.init(initialViewState: .init(deviceID: userSession.clientProxy.deviceID,
                                            userID: userSession.clientProxy.userID,
                                            showAccountDeactivation: userSession.clientProxy.canDeactivateAccount,
-                                           showDeveloperOptions: AppSettings.isDevelopmentBuild,
+                                           showDeveloperOptions: appSettings.developerOptionsEnabled,
                                            showAnalyticsSettings: appSettings.canPromptForAnalytics,
                                            isBugReportServiceEnabled: isBugReportServiceEnabled,
                                            tchapFaqURL: appSettings.tchapFaqURL),
                    mediaProvider: userSession.mediaProvider)
+        
+        appSettings.$developerOptionsEnabled
+            .weakAssign(to: \.state.showDeveloperOptions, on: self)
+            .store(in: &cancellables)
         
         userSession.clientProxy.userAvatarURLPublisher
             .receive(on: DispatchQueue.main)
@@ -105,8 +113,10 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
             actionsSubject.send(.notifications)
         case .advancedSettings:
             actionsSubject.send(.advancedSettings)
+        case .labs:
+            actionsSubject.send(.labs)
         case .enableDeveloperOptions:
-            state.showDeveloperOptions = true
+            appSettings.developerOptionsEnabled.toggle()
         case .developerOptions:
             actionsSubject.send(.developerOptions)
         case .deactivateAccount:

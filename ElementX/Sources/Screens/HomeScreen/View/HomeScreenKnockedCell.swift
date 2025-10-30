@@ -101,37 +101,38 @@ struct HomeScreenKnockedCell_Previews: PreviewProvider, TestablePreview {
         ScrollView {
             VStack(spacing: 0) {
                 HomeScreenKnockedCell(room: .dmInvite,
-                                      context: viewModel().context)
+                                      context: makeViewModel().context)
                 
                 HomeScreenKnockedCell(room: .dmInvite,
-                                      context: viewModel().context)
+                                      context: makeViewModel().context)
                 
                 HomeScreenKnockedCell(room: .roomKnocked(),
-                                      context: viewModel().context)
+                                      context: makeViewModel().context)
                 
                 HomeScreenKnockedCell(room: .roomKnocked(),
-                                      context: viewModel().context)
+                                      context: makeViewModel().context)
                 
                 HomeScreenKnockedCell(room: .roomKnocked(alias: "#footest:somewhere.org", avatarURL: .mockMXCAvatar),
-                                      context: viewModel().context)
+                                      context: makeViewModel().context)
                 
                 HomeScreenKnockedCell(room: .roomKnocked(alias: "#footest:somewhere.org"),
-                                      context: viewModel().context)
+                                      context: makeViewModel().context)
                     .dynamicTypeSize(.accessibility1)
                     .previewDisplayName("Aliased room (AX1)")
             }
         }
     }
     
-    static func viewModel() -> HomeScreenViewModel {
+    static func makeViewModel() -> HomeScreenViewModel {
         let clientProxy = ClientProxyMock(.init())
         
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
         
         return HomeScreenViewModel(userSession: userSession,
-                                   analyticsService: ServiceLocator.shared.analytics,
-                                   appSettings: ServiceLocator.shared.settings,
                                    selectedRoomPublisher: CurrentValueSubject<String?, Never>(nil).asCurrentValuePublisher(),
+                                   appSettings: ServiceLocator.shared.settings,
+                                   analyticsService: ServiceLocator.shared.analytics,
+                                   notificationManager: NotificationManagerMock(),
                                    userIndicatorController: ServiceLocator.shared.userIndicatorController)
     }
 }
@@ -143,15 +144,17 @@ private extension HomeScreenRoom {
         inviter.displayName = "Jack"
         inviter.userID = "@jack:somewhere.com"
         
-        let summary = RoomSummary(roomListItem: RoomListItemSDKMock(),
+        let summary = RoomSummary(room: RoomSDKMock(),
                                   id: "@someone:somewhere.com",
                                   joinRequestType: .invite(inviter: inviter),
                                   name: "Some Guy",
                                   isDirect: true,
+                                  isSpace: false,
                                   avatarURL: nil,
                                   heroes: [.init(userID: "@someone:somewhere.com")],
+                                  activeMembersCount: 0,
                                   lastMessage: nil,
-                                  lastMessageFormattedTimestamp: nil,
+                                  lastMessageDate: nil,
                                   unreadMessagesCount: 0,
                                   unreadMentionsCount: 0,
                                   unreadNotificationsCount: 0,
@@ -160,7 +163,8 @@ private extension HomeScreenRoom {
                                   alternativeAliases: [],
                                   hasOngoingCall: false,
                                   isMarkedUnread: false,
-                                  isFavourite: false)
+                                  isFavourite: false,
+                                  isTombstoned: false)
         
         return .init(summary: summary, hideUnreadMessagesBadge: false)
     }
@@ -171,15 +175,17 @@ private extension HomeScreenRoom {
         inviter.userID = "@jack:somewhi.nl"
         inviter.avatarURL = avatarURL
         
-        let summary = RoomSummary(roomListItem: RoomListItemSDKMock(),
+        let summary = RoomSummary(room: RoomSDKMock(),
                                   id: "@someone:somewhere.com",
                                   joinRequestType: .invite(inviter: inviter),
                                   name: "Awesome Room",
                                   isDirect: false,
+                                  isSpace: false,
                                   avatarURL: avatarURL,
                                   heroes: [.init(userID: "@someone:somewhere.com")],
+                                  activeMembersCount: 0,
                                   lastMessage: nil,
-                                  lastMessageFormattedTimestamp: nil,
+                                  lastMessageDate: nil,
                                   unreadMessagesCount: 0,
                                   unreadMentionsCount: 0,
                                   unreadNotificationsCount: 0,
@@ -188,7 +194,8 @@ private extension HomeScreenRoom {
                                   alternativeAliases: [],
                                   hasOngoingCall: false,
                                   isMarkedUnread: false,
-                                  isFavourite: false)
+                                  isFavourite: false,
+                                  isTombstoned: false)
         
         return .init(summary: summary, hideUnreadMessagesBadge: false)
     }

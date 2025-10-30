@@ -23,15 +23,13 @@ protocol RoomMemberProxyProtocol: AnyObject {
     
     var isIgnored: Bool { get }
     
-    var powerLevel: Int { get }
-    
-    var role: RoomMemberRole { get }
+    var powerLevel: RoomPowerLevel { get }
 }
 
 extension RoomMemberProxyProtocol {
     /// The member is active in the room (joined or invited).
     var isActive: Bool {
-        membership == .join || membership == .invite
+        membership == .join || membership == .invite || membership == .knock
     }
     
     var permalink: URL? {
@@ -57,4 +55,8 @@ extension [RoomMemberProxyProtocol] {
             }
         }
     }
+}
+
+extension RoomMemberProxyProtocol {
+    var role: RoomRole { .init(powerLevel: powerLevel) }
 }

@@ -13,14 +13,29 @@ enum TimelineKind: Equatable {
     case live
     case detached
     case pinned
+    case thread(rootEventID: String)
     
     enum MediaPresentation { case roomScreenLive, roomScreenDetached, pinnedEventsScreen, mediaFilesScreen }
     case media(MediaPresentation)
+    
+    var isThread: Bool {
+        threadRootEventID != nil
+    }
+    
+    var threadRootEventID: String? {
+        switch self {
+        case .thread(let rootEventID):
+            rootEventID
+        default:
+            nil
+        }
+    }
 }
 
 enum TimelineFocus {
     case live
     case eventID(String)
+    case thread(eventID: String)
     case pinned
 }
 
@@ -35,9 +50,11 @@ enum TimelineProxyError: Error {
     case failedPaginatingEndReached
 }
 
-// sourcery: AutoMockable
+/// Element X proxies generally wrap the counterpart RustSDK objects while providing platform specific
+/// interfaces. In this case it composes methods for interacting with a room's timeline and should be used alongside
+/// the ``TimelineItemProviderProtocol`` which offers a reactive interface to timeline changes.
 protocol TimelineProxyProtocol {
-    var timelineProvider: TimelineProviderProtocol { get }
+    var timelineItemProvider: TimelineItemProviderProtocol { get }
     
     func subscribeForUpdates() async
     
@@ -96,6 +113,7 @@ protocol TimelineProxyProtocol {
                           requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError>
     
     func sendReadReceipt(for eventID: String, type: ReceiptType) async -> Result<Void, TimelineProxyError>
+    func markAsRead(receiptType: ReceiptType) async -> Result<Void, TimelineProxyError>
     
     func sendMessageEventContent(_ messageContent: RoomMessageEventContentWithoutRelation) async -> Result<Void, TimelineProxyError>
     
@@ -113,9 +131,9 @@ protocol TimelineProxyProtocol {
                   answers: [String],
                   pollKind: Poll.Kind) async -> Result<Void, TimelineProxyError>
     
-    func endPoll(pollStartID: String, text: String) async -> Result<Void, TimelineProxyError>
-    
     func sendPollResponse(pollStartID: String, answers: [String]) async -> Result<Void, TimelineProxyError>
+    
+    func endPoll(pollStartID: String, text: String) async -> Result<Void, TimelineProxyError>
     
     func getLoadedReplyDetails(eventID: String) async -> Result<InReplyToDetails, TimelineProxyError>
     
@@ -123,3 +141,6 @@ protocol TimelineProxyProtocol {
                                 html: String?,
                                 intentionalMentions: Mentions) -> RoomMessageEventContentWithoutRelation
 }
+
+// sourcery: AutoMockable
+extension TimelineProxyProtocol { }

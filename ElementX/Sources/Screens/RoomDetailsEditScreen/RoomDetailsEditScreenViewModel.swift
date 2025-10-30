@@ -13,6 +13,7 @@ typealias RoomDetailsEditScreenViewModelType = StateStoreViewModel<RoomDetailsEd
 class RoomDetailsEditScreenViewModel: RoomDetailsEditScreenViewModelType, RoomDetailsEditScreenViewModelProtocol {
     private let actionsSubject: PassthroughSubject<RoomDetailsEditScreenViewModelAction, Never> = .init()
     private let roomProxy: JoinedRoomProxyProtocol
+    private let clientProxy: ClientProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let mediaUploadingPreprocessor: MediaUploadingPreprocessor
     
@@ -21,10 +22,11 @@ class RoomDetailsEditScreenViewModel: RoomDetailsEditScreenViewModelType, RoomDe
     }
     
     init(roomProxy: JoinedRoomProxyProtocol,
-         mediaProvider: MediaProviderProtocol,
+         userSession: UserSessionProtocol,
          mediaUploadingPreprocessor: MediaUploadingPreprocessor,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.roomProxy = roomProxy
+        clientProxy = userSession.clientProxy
         self.mediaUploadingPreprocessor = mediaUploadingPreprocessor
         self.userIndicatorController = userIndicatorController
         
@@ -37,14 +39,17 @@ class RoomDetailsEditScreenViewModel: RoomDetailsEditScreenViewModelType, RoomDe
                                                                     initialName: roomName ?? "",
                                                                     initialTopic: roomTopic ?? "",
                                                                     avatarURL: roomAvatar,
-                                                                    bindings: .init(name: roomName ?? "", topic: roomTopic ?? "")), mediaProvider: mediaProvider)
+                                                                    bindings: .init(name: roomName ?? "", topic: roomTopic ?? "")),
+                   mediaProvider: userSession.mediaProvider)
         
-        Task {
-            // Can't use async let because the mocks aren't thread safe when calling the same method 🤦‍♂️
-            state.canEditAvatar = await (try? roomProxy.canUser(userID: roomProxy.ownUserID, sendStateEvent: .roomAvatar).get()) == .some(true)
-            state.canEditName = await (try? roomProxy.canUser(userID: roomProxy.ownUserID, sendStateEvent: .roomName).get()) == .some(true)
-            state.canEditTopic = await (try? roomProxy.canUser(userID: roomProxy.ownUserID, sendStateEvent: .roomTopic).get()) == .some(true)
-        }
+        roomProxy.infoPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] roomInfo in
+                self?.updateRoomInfo(roomInfo: roomInfo)
+            }
+            .store(in: &cancellables)
+        
+        updateRoomInfo(roomInfo: roomProxy.infoPublisher.value)
     }
     
     // MARK: - Public
@@ -70,15 +75,18 @@ class RoomDetailsEditScreenViewModel: RoomDetailsEditScreenViewModelType, RoomDe
     func didSelectMediaUrl(url: URL) {
         Task {
             let userIndicatorID = UUID().uuidString
-            defer {
-                userIndicatorController.retractIndicatorWithId(userIndicatorID)
-            }
+            defer { userIndicatorController.retractIndicatorWithId(userIndicatorID) }
             userIndicatorController.submitIndicator(UserIndicator(id: userIndicatorID,
                                                                   type: .modal(progress: .indeterminate, interactiveDismissDisabled: true, allowsInteraction: false),
                                                                   title: L10n.commonLoading,
                                                                   persistent: true))
             
-            let mediaResult = await mediaUploadingPreprocessor.processMedia(at: url)
+            guard case let .success(maxUploadSize) = await clientProxy.maxMediaUploadSize else {
+                MXLog.error("Failed to get max upload size")
+                userIndicatorController.alertInfo = .init(id: .init())
+                return
+            }
+            let mediaResult = await mediaUploadingPreprocessor.processMedia(at: url, maxUploadSize: maxUploadSize)
             
             switch mediaResult {
             case .success(.image):
@@ -90,6 +98,14 @@ class RoomDetailsEditScreenViewModel: RoomDetailsEditScreenViewModelType, RoomDe
     }
     
     // MARK: - Private
+    
+    private func updateRoomInfo(roomInfo: RoomInfoProxyProtocol) {
+        if let powerLevels = roomInfo.powerLevels {
+            state.canEditAvatar = powerLevels.canOwnUser(sendStateEvent: .roomAvatar)
+            state.canEditName = powerLevels.canOwnUser(sendStateEvent: .roomName)
+            state.canEditTopic = powerLevels.canOwnUser(sendStateEvent: .roomTopic)
+        }
+    }
     
     private func saveRoomDetails() {
         Task {

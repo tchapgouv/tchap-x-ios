@@ -5,19 +5,26 @@ attributes:
 
 fileGroups:
 - project.yml
+- app.yml
 
 options:
   groupSortPosition: bottom
   createIntermediateGroups: true
   deploymentTarget:
-    iOS: '17.6'
-    macOS: '14.6'
+    iOS: '17.5'
+    macOS: '14.5'
   groupOrdering:
   - order:
     - ElementX
+    - NSE
+    - ShareExtension
     - UnitTests
+    - PreviewTests
     - UITests
+    - AccessibilityTests
     - IntegrationTests
+    - DevelopmentAssets
+    - Secrets
     - Tools
   - pattern: ElementX
     order:
@@ -33,6 +40,7 @@ options:
     - Screens
     - Other
     - UITests
+    - AccessibilityTests
   postGenCommand: cd Tools/XcodeGen && sh postGenCommand.sh
 
 settings:
@@ -40,7 +48,7 @@ settings:
   ENABLE_BITCODE: false
   APP_NAME: ElementX
   KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).$(BASE_BUNDLE_IDENTIFIER)"
-  MARKETING_VERSION: 25.04.4
+  MARKETING_VERSION: 25.10.0
   CURRENT_PROJECT_VERSION: 1
   SUPPORTS_MACCATALYST: false
 
@@ -53,6 +61,7 @@ include:
 - path: IntegrationTests/SupportingFiles/target.yml
 - path: NSE/SupportingFiles/target.yml
 - path: ShareExtension/SupportingFiles/target.yml
+- path: AccessibilityTests/SupportingFiles/target.yml
 # - path: MyAppVariant/override.yml
 
 packages:
@@ -60,22 +69,21 @@ packages:
   MatrixRustSDK:
 #    url: https://github.com/element-hq/matrix-rust-components-swift
 #    exactVersion: 25.03.13
-    url: https://github.com/tchapgouv/matrix-rust-components-swift
-    branch: 25.05.19-bwi-0-8-1
-#     path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
+#    url: https://github.com/tchapgouv/matrix-rust-components-swift
+#    exactVersion: 25.09.1-bwi-0.8.1
+    path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
   Compound:
-#    url: https://github.com/element-hq/compound-ios
-#    revision: 9325643cb4d22150881c5bf79e1e6e3c5a87ea89
-    url: https://github.com/tchapgouv/compound-ios
-    branch: main
-#    path: ../tchap-x-compound/compound-ios
+    path: compound-ios
   AnalyticsEvents:
     url: https://github.com/matrix-org/matrix-analytics-events
-    minorVersion: 0.28.0
+    minorVersion: 0.29.2
     # path: ../matrix-analytics-events
+  EmbeddedElementCall:
+    url: https://github.com/element-hq/element-call-swift
+    exactVersion: 0.16.0-rc.4
   Emojibase:
     url: https://github.com/matrix-org/emojibase-bindings
-    minorVersion: 1.4.1
+    minorVersion: 1.4.2
     # path: ../emojibase-bindings
   SwiftOGG:
     url: https://github.com/element-hq/swift-ogg
@@ -85,20 +93,20 @@ packages:
     url: https://github.com/element-hq/matrix-rich-text-editor-swift
     exactVersion: 2.37.12
     # path: ../matrix-rich-text-editor/platforms/ios/lib/WysiwygComposer
-  EmbeddedElementCall:
-    url: https://github.com/element-hq/element-call-swift
-    exactVersion: 0.9.0
   
   # External dependencies
   Algorithms:
     url: https://github.com/apple/swift-algorithms
+    minorVersion: 1.2.1
+  AsyncAlgorithms:
+    url: https://github.com/apple/swift-async-algorithms
     minorVersion: 1.0.0
   Collections:
     url: https://github.com/apple/swift-collections
-    minorVersion: 1.0.0
+    minorVersion: 1.2.0
   DeviceKit:
     url: https://github.com/devicekit/DeviceKit
-    minorVersion: 5.5.0
+    minorVersion: 5.6.0
   DSWaveformImage:
     url: https://github.com/dmrschmidt/DSWaveformImage
     exactVersion: 14.1.1
@@ -110,10 +118,10 @@ packages:
     minorVersion: 1.3.2
   KeychainAccess:
     url: https://github.com/kishikawakatsumi/KeychainAccess
-    minorVersion: 4.2.0
+    minorVersion: 4.2.2
   Kingfisher:
     url: https://github.com/onevcat/Kingfisher
-    minorVersion: 8.0.3
+    minorVersion: 8.3.2
   KZFileWatchers:
     url: https://github.com/krzysztofzablocki/KZFileWatchers
     minorVersion: 1.2.0
@@ -126,21 +134,27 @@ packages:
   Mapbox:
     url: https://github.com/maplibre/maplibre-gl-native-distribution
     minorVersion: 5.13.0
+  Mutex: # Backports Swift's built in Mutex so we can use it on iOS 17.
+    url: https://github.com/swhitty/swift-mutex
+    minorVersion: 0.0.6
   PostHog:
     url: https://github.com/PostHog/posthog-ios
-    minorVersion: 3.2.5
+    minorVersion: 3.27.0
   Sentry:
     url: https://github.com/getsentry/sentry-cocoa
-    minorVersion: 8.35.1
+    minorVersion: 8.52.1
   SnapshotTesting:
     url: https://github.com/pointfreeco/swift-snapshot-testing
     minorVersion: 1.18.3
+  SwiftSoup:
+    url: https://github.com/scinfu/SwiftSoup.git
+    minorVersion: 2.8.8
   SwiftState:
     url: https://github.com/ReactKit/SwiftState
     minorVersion: 6.0.0
   Version:
     url: https://github.com/mxcl/Version
-    minorVersion: 2.1.0
+    minorVersion: 2.2.0
 
 aggregateTargets:
   Periphery:

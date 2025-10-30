@@ -33,5 +33,6 @@ protocol NotificationManagerProtocol: AnyObject {
     func requestAuthorization()
     
     func removeDeliveredMessageNotifications(for roomID: String) async
-    func removeDeliveredInviteNotifications() async
+    
+    func removeDeliveredNotificationsForFullyReadRooms(_ rooms: [RoomSummary]) async
 }

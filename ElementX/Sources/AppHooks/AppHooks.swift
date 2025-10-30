@@ -9,6 +9,10 @@ import Foundation
 
 class AppHooks: AppHooksProtocol {
     #if IS_MAIN_APP
+    func configure(with userSession: UserSessionProtocol?) async {
+        await roomScreenHook.configure(with: userSession)
+    }
+    
     private(set) var appSettingsHook: AppSettingsHookProtocol = DefaultAppSettingsHook()
     func registerAppSettingsHook(_ hook: AppSettingsHookProtocol) {
         appSettingsHook = hook
@@ -28,11 +32,26 @@ class AppHooks: AppHooksProtocol {
     func registerCertificateValidatorHook(_ hook: CertificateValidatorHookProtocol) {
         certificateValidatorHook = hook
     }
+    
+    private(set) var roomScreenHook: RoomScreenHookProtocol = DefaultRoomScreenHook()
+    func registerRoomScreenHook(_ hook: RoomScreenHookProtocol) {
+        roomScreenHook = hook
+    }
     #endif
+    
+    private(set) var tracingHook: TracingHookProtocol = DefaultTracingHook()
+    func registerTracingHook(_ hook: TracingHookProtocol) {
+        tracingHook = hook
+    }
     
     private(set) var clientBuilderHook: ClientBuilderHookProtocol = DefaultClientBuilderHook()
     func registerClientBuilderHook(_ hook: ClientBuilderHookProtocol) {
         clientBuilderHook = hook
+    }
+    
+    private(set) var remoteSettingsHook: RemoteSettingsHookProtocol = DefaultRemoteSettingsHook()
+    func registerRemoteSettingsHook(_ hook: RemoteSettingsHookProtocol) {
+        remoteSettingsHook = hook
     }
 }
 

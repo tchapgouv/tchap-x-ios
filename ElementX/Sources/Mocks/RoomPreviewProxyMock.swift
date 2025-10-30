@@ -11,7 +11,7 @@ import MatrixRustSDK
 extension RoomPreviewProxyMock {
     struct Configuration {
         var roomID = "1"
-        var canonicalAlias = "#3🌞problem:matrix.org"
+        var canonicalAlias = "#3-body-problem:matrix.org"
         var name = "The Three-Body Problem - 三体"
         var topic: String? = "“Science and technology were the only keys to opening the door to the future, and people approached science with the faith and sincerity of elementary school students.”"
         var avatarURL = URL.mockMXCAvatar.absoluteString
@@ -95,5 +95,19 @@ extension RoomPreviewProxyMock {
         roomMembershipDetails.ownRoomMember = mockMember
         
         underlyingOwnMembershipDetails = roomMembershipDetails
+    }
+    
+    convenience init(spaceRoomProxy: SpaceRoomProxyProtocol) {
+        self.init(Configuration(roomID: spaceRoomProxy.id,
+                                canonicalAlias: spaceRoomProxy.canonicalAlias ?? "",
+                                name: spaceRoomProxy.name ?? "",
+                                topic: spaceRoomProxy.topic ?? "",
+                                avatarURL: spaceRoomProxy.avatarURL?.absoluteString ?? "",
+                                numJoinedMembers: UInt64(spaceRoomProxy.joinedMembersCount),
+                                numActiveMembers: UInt64(spaceRoomProxy.joinedMembersCount),
+                                roomType: spaceRoomProxy.isSpace ? .space : .room,
+                                membership: nil,
+                                joinRule: spaceRoomProxy.joinRule ?? .restricted(rules: []),
+                                isDirect: false))
     }
 }

@@ -57,6 +57,7 @@ struct RoomSelectionScreen: View {
     private var emptyRectangle: some View {
         Rectangle()
             .frame(width: 0, height: 0)
+            .accessibilityHidden(true)
     }
 }
 
@@ -93,9 +94,8 @@ private struct RoomSelectionListRow: View {
 struct RoomSelectionScreen_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
         let summaryProvider = RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))
-        let viewModel = RoomSelectionScreenViewModel(clientProxy: ClientProxyMock(.init()),
-                                                     roomSummaryProvider: summaryProvider,
-                                                     mediaProvider: MediaProviderMock(configuration: .init()))
+        let viewModel = RoomSelectionScreenViewModel(userSession: UserSessionMock(.init()),
+                                                     roomSummaryProvider: summaryProvider)
         
         NavigationStack {
             RoomSelectionScreen(context: viewModel.context)

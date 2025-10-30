@@ -15,6 +15,8 @@ class OIDCAuthenticationPresenter: NSObject {
     private let presentationAnchor: UIWindow
     private let userIndicatorController: UserIndicatorControllerProtocol
     
+    private var activeSession: ASWebAuthenticationSession?
+    
     init(authenticationService: AuthenticationServiceProtocol,
          oidcRedirectURL: URL,
          presentationAnchor: UIWindow,
@@ -35,21 +37,31 @@ class OIDCAuthenticationPresenter: NSObject {
             
             session.prefersEphemeralWebBrowserSession = false
             session.presentationContextProvider = self
+            session.additionalHeaderFields = [
+                "X-Element-User-Agent": UserAgentBuilder.makeASCIIUserAgent()
+            ]
             
+            activeSession = session
             session.start()
         }
+        
+        activeSession = nil
         
         guard let url else {
             // Check for user cancellation to avoid showing an alert in that instance.
             if let nsError = error as? NSError,
                nsError.domain == ASWebAuthenticationSessionErrorDomain,
-               nsError.code == ASWebAuthenticationSessionError.canceledLogin.rawValue {
+               nsError.code == ASWebAuthenticationSessionError.canceledLogin.rawValue,
+               // If there's a failure reason then the cancellation wasn't made by the user.
+               nsError.localizedFailureReason == nil {
                 // No need to show an error here, just abort and return a failure.
                 await authenticationService.abortOIDCLogin(data: oidcData)
                 return .failure(.oidcError(.userCancellation))
             }
             
-            MXLog.error("Missing callback URL from the web authentication session.")
+            let errorDescription = error.map(String.init(describing:)) ?? "Unknown error"
+            MXLog.error("Missing callback URL from the web authentication session: \(errorDescription)")
+            
             userIndicatorController.alertInfo = AlertInfo(id: UUID())
             await authenticationService.abortOIDCLogin(data: oidcData)
             return .failure(.oidcError(.unknown))
@@ -62,11 +74,18 @@ class OIDCAuthenticationPresenter: NSObject {
         switch await authenticationService.loginWithOIDCCallback(url) {
         case .success(let userSession):
             return .success(userSession)
+        case .failure(.oidcError(.userCancellation)):
+            // No need to show an error here, just return the failure.
+            return .failure(.oidcError(.userCancellation))
         case .failure(let error):
             MXLog.error("Error occurred: \(error)")
             userIndicatorController.alertInfo = AlertInfo(id: UUID())
             return .failure(error)
         }
+    }
+    
+    func cancel() {
+        activeSession?.cancel()
     }
     
     private static let loadingIndicatorID = "\(OIDCAuthenticationPresenter.self)-Loading"

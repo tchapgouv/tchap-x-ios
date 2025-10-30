@@ -10,9 +10,22 @@ import SwiftUI
 struct RoomChangeRolesScreenSelectedItem: View {
     let member: RoomMemberDetails
     let mediaProvider: MediaProviderProtocol?
-    let dismissAction: () -> Void
+    let dismissAction: (() -> Void)?
     
     var body: some View {
+        mainContent
+            .accessibilityActions {
+                if let dismissAction {
+                    Button(L10n.actionDismiss) {
+                        dismissAction()
+                    }
+                }
+            }
+    }
+    
+    // MARK: - Private
+    
+    private var mainContent: some View {
         VStack(spacing: 4) {
             avatar
             
@@ -21,9 +34,8 @@ struct RoomChangeRolesScreenSelectedItem: View {
                 .foregroundColor(.compound.textPrimary)
                 .lineLimit(1)
         }
+        .accessibilityElement(children: .combine)
     }
-    
-    // MARK: - Private
     
     var avatar: some View {
         LoadableAvatarImage(url: member.avatarURL,
@@ -31,8 +43,9 @@ struct RoomChangeRolesScreenSelectedItem: View {
                             contentID: member.id,
                             avatarSize: .user(on: .inviteUsers),
                             mediaProvider: mediaProvider)
+            .accessibilityHidden(true)
             .overlay(alignment: .topTrailing) {
-                if member.role != .administrator {
+                if let dismissAction {
                     Button(action: dismissAction) {
                         Image(systemName: "xmark.circle.fill")
                             .resizable()
@@ -40,6 +53,8 @@ struct RoomChangeRolesScreenSelectedItem: View {
                             .symbolRenderingMode(.palette)
                             .foregroundStyle(Color.compound.iconOnSolidPrimary, Color.compound.iconPrimary)
                     }
+                    // We will use the accessibility action
+                    .accessibilityHidden(true)
                     .offset(x: 4)
                 }
             }

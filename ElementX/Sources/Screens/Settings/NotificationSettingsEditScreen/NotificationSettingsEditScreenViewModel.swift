@@ -8,7 +8,7 @@
 import Combine
 import SwiftUI
 
-typealias NotificationSettingsEditScreenViewModelType = StateStoreViewModel<NotificationSettingsEditScreenViewState, NotificationSettingsEditScreenViewAction>
+typealias NotificationSettingsEditScreenViewModelType = StateStoreViewModelV2<NotificationSettingsEditScreenViewState, NotificationSettingsEditScreenViewAction>
 
 class NotificationSettingsEditScreenViewModel: NotificationSettingsEditScreenViewModelType, NotificationSettingsEditScreenViewModelProtocol {
     private var actionsSubject: PassthroughSubject<NotificationSettingsEditScreenViewModelAction, Never> = .init()
@@ -26,11 +26,11 @@ class NotificationSettingsEditScreenViewModel: NotificationSettingsEditScreenVie
         actionsSubject.eraseToAnyPublisher()
     }
     
-    init(chatType: NotificationSettingsChatType, userSession: UserSessionProtocol, notificationSettingsProxy: NotificationSettingsProxyProtocol) {
+    init(chatType: NotificationSettingsChatType, userSession: UserSessionProtocol) {
         let bindings = NotificationSettingsEditScreenViewStateBindings()
         self.chatType = chatType
         self.userSession = userSession
-        self.notificationSettingsProxy = notificationSettingsProxy
+        notificationSettingsProxy = userSession.clientProxy.notificationSettings
         roomSummaryProvider = userSession.clientProxy.roomSummaryProvider
         
         super.init(initialViewState: NotificationSettingsEditScreenViewState(bindings: bindings,

@@ -30,11 +30,11 @@ struct AvatarHeaderView<Footer: View>: View {
     private var onAvatarTap: ((URL) -> Void)?
     @ViewBuilder private var footer: () -> Footer
     
-    // Tchap: add `externalCount` property
-    var externalCount: Binding<Int>
+    // Tchap: add `isOpenToExternalUsers` property
+    var isOpenToExternalUsers: Binding<Bool?>
     
     init(room: RoomDetails,
-         externalCount: Binding<Int>, // Tchap: add `externalCount` parameter
+         isOpenToExternalUsers: Binding<Bool?>, // Tchap: add `isOpenToExternalUsers` parameter
          avatarSize: Avatars.Size,
          mediaProvider: MediaProviderProtocol? = nil,
          onAvatarTap: ((URL) -> Void)? = nil,
@@ -54,8 +54,8 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
-        // Tchap: store `externalCount` parameter
-        self.externalCount = externalCount
+        // Tchap: store `isOpenToExternalUsers` parameter
+        self.isOpenToExternalUsers = isOpenToExternalUsers
         
         var badges = [Badge]()
         badges.append(.encrypted(room.isEncrypted))
@@ -67,7 +67,7 @@ struct AvatarHeaderView<Footer: View>: View {
     
     init(accountOwner: RoomMemberDetails,
          dmRecipient: RoomMemberDetails,
-         externalCount: Binding<Int>, // Tchap: add `externalCount` parameter
+         isOpenToExternalUsers: Binding<Bool?>, // Tchap: add `isOpenToExternalUsers` parameter
          mediaProvider: MediaProviderProtocol? = nil,
          onAvatarTap: ((URL) -> Void)? = nil,
          @ViewBuilder footer: @escaping () -> Footer) {
@@ -80,8 +80,9 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
-        // Tchap: store `externalCount` parameter
-        self.externalCount = externalCount
+        
+        // Tchap: store `isOpenToExternalUsers` parameter
+        self.isOpenToExternalUsers = isOpenToExternalUsers
         
         // In EL-X a DM is by definition always encrypted
         badges = [.encrypted(true)]
@@ -117,10 +118,27 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
-        // Tchap: evaluate externalCount to 1 if displayed user is external.
-        externalCount = .constant(MatrixIdFromString(user.userID).isExternalTchapUser ? 1 : 0)
+        // Tchap: isOpenToExternalUsers
+        isOpenToExternalUsers = .constant(false)
         
         badges = isVerified ? [.verified] : []
+    }
+    
+    /// Initialises the view by using the sender,
+    /// only to be used when a room member has not been loaded yet.
+    init(sender: TimelineItemSender,
+         avatarSize: Avatars.Size,
+         mediaProvider: MediaProviderProtocol? = nil,
+         onAvatarTap: ((URL) -> Void)? = nil,
+         @ViewBuilder footer: @escaping () -> Footer) {
+        let profile = UserProfileProxy(sender: sender)
+        
+        self.init(user: profile,
+                  isVerified: false,
+                  avatarSize: avatarSize,
+                  mediaProvider: mediaProvider,
+                  onAvatarTap: onAvatarTap,
+                  footer: footer)
     }
     
     private var badgesStack: some View {
@@ -132,30 +150,46 @@ struct AvatarHeaderView<Footer: View>: View {
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgeEncrypted,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgeEncrypted,
                                icon: \.lockSolid,
-                               isHighlighted: true)
+                               style: .accent,
+                               tchapUsage: .roomIsEncrypted(inRoomHeaderView: false))
                 case .encrypted(false):
                     // Tchap: use Tchap label
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgeNotEncrypted,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgeNotEncrypted,
                                icon: \.lockOff,
-                               isHighlighted: false)
+                               style: .info,
+                               tchapUsage: .roomIsNotEncrypted(inRoomHeaderView: false))
                 case .public:
                     // Tchap: use Tchap label
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgePublic,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgePublic,
                                icon: \.public,
-                               isHighlighted: false)
+                               style: .info,
+                               tchapUsage: .roomIsPublic(inRoomHeaderView: false))
                 case .verified:
                     BadgeLabel(title: L10n.commonVerified,
                                icon: \.verified,
-                               isHighlighted: true)
+                               style: .accent,
+                               tchapUsage: .none)
                 }
             }
             
             // Tchap: add `External` badge if necessary.
-            if externalCount.wrappedValue > 0 {
-                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, isHighlighted: false, tchapUsage: .userIsExternal)
+            if isOpenToExternalUsers.wrappedValue ?? false {
+                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal())
             }
+        }
+    }
+    
+    private var avatarAccessibilityLabel: String {
+        guard onAvatarTap != nil else {
+            return L10n.a11yAvatar
+        }
+        switch avatarInfo {
+        case .room(let roomAvatar):
+            return roomAvatar.hasURL ? L10n.a11yViewAvatar : L10n.a11yAvatar
+        case .user(let userProfileProxy):
+            return userProfileProxy.avatarURL != nil ? L10n.a11yViewAvatar : L10n.a11yAvatar
         }
     }
     
@@ -167,7 +201,7 @@ struct AvatarHeaderView<Footer: View>: View {
                             avatarSize: avatarSize,
                             mediaProvider: mediaProvider,
                             onAvatarTap: onAvatarTap)
-                .accessibilityLabel(L10n.a11yAvatar)
+                .accessibilityLabel(avatarAccessibilityLabel)
             
         case .user(let userProfile):
             LoadableAvatarImage(url: userProfile.avatarURL,
@@ -176,7 +210,7 @@ struct AvatarHeaderView<Footer: View>: View {
                                 avatarSize: avatarSize,
                                 mediaProvider: mediaProvider,
                                 onTap: onAvatarTap)
-                .accessibilityLabel(L10n.a11yAvatar)
+                .accessibilityLabel(avatarAccessibilityLabel)
         }
     }
     
@@ -230,8 +264,10 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
                                          canonicalAlias: "#test:matrix.org",
                                          isEncrypted: true,
                                          isPublic: true,
-                                         isDirect: false),
-                             externalCount: .constant(1),
+                                         isDirect: false,
+                                         // Tchap: add test value
+                                         accessRule: .unrestricted),
+                             isOpenToExternalUsers: .constant(true),
                              avatarSize: .room(on: .details),
                              mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {
@@ -246,7 +282,7 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
         .previewDisplayName("Room")
         
         Form {
-            AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice), externalCount: .constant(1),
+            AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice), isOpenToExternalUsers: .constant(true),
                              mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {
                     ShareLink(item: "test") {

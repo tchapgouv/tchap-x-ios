@@ -9,16 +9,33 @@ import Combine
 import SwiftUI
 
 struct JoinRoomScreenCoordinatorParameters {
-    let roomID: String
-    let via: [String]
-    let clientProxy: ClientProxyProtocol
-    let mediaProvider: MediaProviderProtocol
+    let source: JoinRoomScreenSource
+    let userSession: UserSessionProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
     let appSettings: AppSettings
 }
 
+enum JoinRoomScreenSource {
+    case generic(roomID: String, via: [String])
+    case space(SpaceRoomProxyProtocol)
+    
+    func roomIDAndVia() -> (roomID: String, via: [String]) {
+        switch self {
+        case let .generic(roomID: roomID, via: via):
+            return (roomID: roomID, via: via)
+        case let .space(spaceRoomProxy):
+            return (roomID: spaceRoomProxy.id, via: spaceRoomProxy.via)
+        }
+    }
+}
+
+enum JoinRoomScreenJoinDetails {
+    case roomID(String)
+    case space(SpaceRoomListProxyProtocol)
+}
+
 enum JoinRoomScreenCoordinatorAction {
-    case joined
+    case joined(JoinRoomScreenJoinDetails)
     case cancelled
     case presentDeclineAndBlock(userID: String)
 }
@@ -34,11 +51,9 @@ final class JoinRoomScreenCoordinator: CoordinatorProtocol {
     }
     
     init(parameters: JoinRoomScreenCoordinatorParameters) {
-        viewModel = JoinRoomScreenViewModel(roomID: parameters.roomID,
-                                            via: parameters.via,
+        viewModel = JoinRoomScreenViewModel(source: parameters.source,
                                             appSettings: parameters.appSettings,
-                                            clientProxy: parameters.clientProxy,
-                                            mediaProvider: parameters.mediaProvider,
+                                            userSession: parameters.userSession,
                                             userIndicatorController: parameters.userIndicatorController)
     }
     
@@ -48,8 +63,8 @@ final class JoinRoomScreenCoordinator: CoordinatorProtocol {
             
             guard let self else { return }
             switch action {
-            case .joined:
-                actionsSubject.send(.joined)
+            case .joined(let details):
+                actionsSubject.send(.joined(details))
             case .dismiss:
                 actionsSubject.send(.cancelled)
             case .presentDeclineAndBlock(let userID):

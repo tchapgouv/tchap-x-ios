@@ -18,6 +18,22 @@
 			<string>%1$d numeroa syötetty</string>
 		</dict>
 	</dict>
+	<key>a11y_polls_percent_of_total</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d prosentti kaikista äänistä</string>
+			<key>other</key>
+			<string>%1$d prosenttia kaikista äänistä</string>
+		</dict>
+	</dict>
 	<key>a11y_read_receipts_multiple_with_others</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -34,6 +50,22 @@
 			<string>%1$@ ja %2$d muuta on lukenut viestin</string>
 		</dict>
 	</dict>
+	<key>common_many_members</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%d muu</string>
+			<key>other</key>
+			<string>%d muuta</string>
+		</dict>
+	</dict>
 	<key>common_member_count</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -45,9 +77,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%1$d jäsen</string>
+			<string>%1$d Jäsen</string>
 			<key>other</key>
-			<string>%1$d jäsentä</string>
+			<string>%1$d Jäsentä</string>
 		</dict>
 	</dict>
 	<key>common_poll_votes_count</key>
@@ -64,6 +96,54 @@
 			<string>%d ääni</string>
 			<key>other</key>
 			<string>%d ääntä</string>
+		</dict>
+	</dict>
+	<key>common_replies</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d vastaus</string>
+			<key>other</key>
+			<string>%1$d vastausta</string>
+		</dict>
+	</dict>
+	<key>common_rooms</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d Huone</string>
+			<key>other</key>
+			<string>%1$d Huonetta</string>
+		</dict>
+	</dict>
+	<key>common_spaces</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d Tila</string>
+			<key>other</key>
+			<string>%1$d Tilaa</string>
 		</dict>
 	</dict>
 	<key>notification_compat_summary_line_for_room</key>
@@ -194,6 +274,22 @@
 			<string>Väärä PIN-koodi. Sinulla on %1$d yritystä jäljellä</string>
 		</dict>
 	</dict>
+	<key>screen_leave_space_submit</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Poistu %1$d huoneesta ja tilasta</string>
+			<key>other</key>
+			<string>Poistu %1$d huoneesta ja tilasta</string>
+		</dict>
+	</dict>
 	<key>screen_pinned_timeline_screen_title</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -242,6 +338,38 @@
 			<string>%1$@ +%2$d muuta haluavat liittyä tähän huoneeseen</string>
 		</dict>
 	</dict>
+	<key>screen_room_timeline_reaction_a11y</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d jäsen reagoi %2$@</string>
+			<key>other</key>
+			<string>%1$d jäsentä reagoivat %2$@</string>
+		</dict>
+	</dict>
+	<key>screen_room_timeline_reaction_including_you_a11y</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Sinä ja %1$d jäsen reagoitte %2$@</string>
+			<key>other</key>
+			<string>Sinä ja %1$d jäsentä reagoitte %2$@</string>
+		</dict>
+	</dict>
 	<key>screen_room_timeline_state_changes</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -274,22 +402,6 @@
 			<string>%1$@, %2$@ ja %3$d muuta</string>
 		</dict>
 	</dict>
-	<key>screen_room_typing_many_members_second_component_ios</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
-		<key>COUNT</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>%d muu</string>
-			<key>other</key>
-			<string>%d muuta</string>
-		</dict>
-	</dict>
 	<key>screen_room_typing_notification</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -304,6 +416,22 @@
 			<string>%1$@ kirjoittaa</string>
 			<key>other</key>
 			<string>%1$@ kirjoittavat</string>
+		</dict>
+	</dict>
+	<key>troubleshoot_notifications_test_blocked_users_result_some</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Estit %1$d käyttäjän. Et saa ilmoituksia tältä käyttäjältä.</string>
+			<key>other</key>
+			<string>Estit %1$d käyttäjää. Et saa ilmoituksia näiltä käyttäjiltä.</string>
 		</dict>
 	</dict>
 	<key>troubleshoot_notifications_test_detect_push_provider_success</key>

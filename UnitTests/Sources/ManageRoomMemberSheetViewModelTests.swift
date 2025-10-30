@@ -33,15 +33,14 @@ class ManageRoomMemberSheetViewModelTests: XCTestCase {
             return .success(())
         }
         
-        viewModel = ManageRoomMemberSheetViewModel(member: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice),
-                                                   canKick: true,
-                                                   canBan: true,
+        viewModel = ManageRoomMemberSheetViewModel(memberDetails: .memberDetails(roomMember: .init(withProxy: RoomMemberProxyMock.mockAlice)),
+                                                   permissions: .init(canKick: true, canBan: true, ownPowerLevel: RoomMemberProxyMock.mockAdmin.powerLevel),
                                                    roomProxy: roomProxy,
                                                    userIndicatorController: UserIndicatorControllerMock(),
                                                    analyticsService: ServiceLocator.shared.analytics,
                                                    mediaProvider: MediaProviderMock(configuration: .init()))
         
-        let deferred = deferFulfillment(context.$viewState) { $0.bindings.alertInfo != nil }
+        let deferred = deferFulfillment(context.observe(\.viewState.bindings.alertInfo)) { $0 != nil }
         let deferredAction = deferFulfillment(viewModel.actions) { action in
             action == .dismiss(shouldShowDetails: false)
         }
@@ -65,15 +64,14 @@ class ManageRoomMemberSheetViewModelTests: XCTestCase {
             return .success(())
         }
         
-        viewModel = ManageRoomMemberSheetViewModel(member: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice),
-                                                   canKick: true,
-                                                   canBan: true,
+        viewModel = ManageRoomMemberSheetViewModel(memberDetails: .memberDetails(roomMember: .init(withProxy: RoomMemberProxyMock.mockAlice)),
+                                                   permissions: .init(canKick: true, canBan: true, ownPowerLevel: RoomMemberProxyMock.mockAdmin.powerLevel),
                                                    roomProxy: roomProxy,
                                                    userIndicatorController: UserIndicatorControllerMock(),
                                                    analyticsService: ServiceLocator.shared.analytics,
                                                    mediaProvider: MediaProviderMock(configuration: .init()))
         
-        let deferred = deferFulfillment(context.$viewState) { $0.bindings.alertInfo != nil }
+        let deferred = deferFulfillment(context.observe(\.viewState.bindings.alertInfo)) { $0 != nil }
         context.send(viewAction: .ban)
         try await deferred.fulfill()
         
@@ -88,9 +86,8 @@ class ManageRoomMemberSheetViewModelTests: XCTestCase {
     
     func testDisplayDetails() async throws {
         let roomProxy = JoinedRoomProxyMock(.init(members: [RoomMemberProxyMock.mockAdmin, RoomMemberProxyMock.mockAlice]))
-        viewModel = ManageRoomMemberSheetViewModel(member: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice),
-                                                   canKick: true,
-                                                   canBan: true,
+        viewModel = ManageRoomMemberSheetViewModel(memberDetails: .memberDetails(roomMember: .init(withProxy: RoomMemberProxyMock.mockAlice)),
+                                                   permissions: .init(canKick: true, canBan: true, ownPowerLevel: RoomMemberProxyMock.mockAdmin.powerLevel),
                                                    roomProxy: roomProxy,
                                                    userIndicatorController: UserIndicatorControllerMock(),
                                                    analyticsService: ServiceLocator.shared.analytics,

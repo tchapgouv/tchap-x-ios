@@ -60,6 +60,7 @@ struct RoomDetailsEditScreen: View {
                                    contentID: context.viewState.roomID,
                                    avatarSize: .user(on: .memberDetails),
                                    mediaProvider: context.mediaProvider)
+                .accessibilityLabel(L10n.a11yEditAvatar)
                 .overlay(alignment: .bottomTrailing) {
                     if context.viewState.canEditAvatar {
                         avatarOverlayIcon
@@ -120,6 +121,7 @@ struct RoomDetailsEditScreen: View {
                 Circle()
                     .foregroundColor(.black)
             }
+            .accessibilityHidden(true)
     }
     
     @ViewBuilder
@@ -153,7 +155,7 @@ struct RoomDetailsEditScreen_Previews: PreviewProvider, TestablePreview {
                                                   members: [.mockMeAdmin]))
         
         return RoomDetailsEditScreenViewModel(roomProxy: roomProxy,
-                                              mediaProvider: MediaProviderMock(configuration: .init()),
+                                              userSession: UserSessionMock(.init()),
                                               mediaUploadingPreprocessor: MediaUploadingPreprocessor(appSettings: ServiceLocator.shared.settings),
                                               userIndicatorController: UserIndicatorControllerMock.default)
     }()
@@ -164,7 +166,7 @@ struct RoomDetailsEditScreen_Previews: PreviewProvider, TestablePreview {
                                                   members: [.mockAlice]))
         
         return RoomDetailsEditScreenViewModel(roomProxy: roomProxy,
-                                              mediaProvider: MediaProviderMock(configuration: .init()),
+                                              userSession: UserSessionMock(.init()),
                                               mediaUploadingPreprocessor: MediaUploadingPreprocessor(appSettings: ServiceLocator.shared.settings),
                                               userIndicatorController: UserIndicatorControllerMock.default)
     }()

@@ -15,6 +15,8 @@ enum RoomScreenViewModelAction: Equatable {
     case displayCall
     case removeComposerFocus
     case displayKnockRequests
+    case displayRoom(roomID: String, via: [String])
+    case displayMessageForwarding(MessageForwardingItem)
 }
 
 enum RoomScreenViewAction {
@@ -26,6 +28,7 @@ enum RoomScreenViewAction {
     case acceptKnock(eventID: String)
     case dismissKnockRequests
     case viewKnockRequests
+    case displaySuccessorRoom
 }
 
 struct RoomScreenViewState: BindableState {
@@ -40,9 +43,19 @@ struct RoomScreenViewState: BindableState {
         !pinnedEventsBannerState.isEmpty && lastScrollDirection != .top
     }
     
+    var canSendMessage = true
+    
+    /// Whether or not starting a call is supported.
+    var isCallingEnabled = true
+    /// Whether or not the user is allowed to join calls in this room.
     var canJoinCall = false
+    /// Whether or not this room currently has a call in progress.
     var hasOngoingCall: Bool
-    var shouldShowCallButton = true
+    /// Whether or not the user is already part of a call in another room.
+    var isParticipatingInOngoingCall = false
+    var shouldShowCallButton: Bool {
+        isCallingEnabled && !isParticipatingInOngoingCall // Hide the join call button when already in the call
+    }
     
     var isKnockingEnabled = false
     var isKnockableRoom = false
@@ -51,6 +64,8 @@ struct RoomScreenViewState: BindableState {
     var canBan = false
     var unseenKnockRequests: [KnockRequestInfo] = []
     var handledEventIDs: Set<String> = []
+    
+    var hasSuccessor: Bool
     
     var displayedKnockRequests: [KnockRequestInfo] {
         unseenKnockRequests.filter { !handledEventIDs.contains($0.eventID) }
@@ -65,7 +80,7 @@ struct RoomScreenViewState: BindableState {
     
     var footerDetails: RoomScreenFooterViewDetails?
     
-    var bindings: RoomScreenViewStateBindings
+    var bindings = RoomScreenViewStateBindings()
 }
 
 struct RoomScreenViewStateBindings {
@@ -74,7 +89,7 @@ struct RoomScreenViewStateBindings {
     // Tchap: display room properties badges. As they are queried async, make them Bindable.
     var isEncrypted: Bool?
     var isPublic: Bool?
-    var externalCount = 0
+    var isOpenToExternalUsers: Bool?
 }
 
 enum RoomScreenFooterViewAction {

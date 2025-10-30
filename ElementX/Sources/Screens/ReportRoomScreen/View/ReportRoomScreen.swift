@@ -9,7 +9,7 @@ import Compound
 import SwiftUI
 
 struct ReportRoomScreen: View {
-    @ObservedObject var context: ReportRoomScreenViewModel.Context
+    @Bindable var context: ReportRoomScreenViewModel.Context
     
     var body: some View {
         Form {
@@ -53,6 +53,7 @@ struct ReportRoomScreen: View {
             Button(L10n.actionReport) {
                 context.send(viewAction: .report)
             }
+            .disabled(!context.viewState.canReport)
         }
     }
 }

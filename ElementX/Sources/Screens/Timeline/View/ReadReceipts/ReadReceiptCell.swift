@@ -30,6 +30,7 @@ struct ReadReceiptCell: View {
                                 contentID: readReceipt.userID,
                                 avatarSize: .user(on: .readReceiptSheet),
                                 mediaProvider: mediaProvider)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 12) {
                     Text(title)
@@ -53,6 +54,7 @@ struct ReadReceiptCell: View {
                 #endif
             }
         }
+        .accessibilityElement(children: .combine)
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
     }

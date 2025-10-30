@@ -20,17 +20,19 @@ import XCTest
 class NotificationSettingsEditScreenViewModelTests: XCTestCase {
     private var viewModel: NotificationSettingsEditScreenViewModelProtocol!
     private var notificationSettingsProxy: NotificationSettingsProxyMock!
-    private var userSession: UserSessionProtocol!
+    private var userSession: UserSessionMock!
+    private var clientProxy: ClientProxyMock!
     
     private var context: NotificationSettingsEditScreenViewModelType.Context {
         viewModel.context
     }
     
     @MainActor override func setUpWithError() throws {
-        let clientProxy = ClientProxyMock(.init(userID: "@a:b.com"))
-        userSession = UserSessionMock(.init(clientProxy: clientProxy))
         notificationSettingsProxy = NotificationSettingsProxyMock(with: NotificationSettingsProxyMockConfiguration())
         notificationSettingsProxy.getDefaultRoomNotificationModeIsEncryptedIsOneToOneReturnValue = .allMessages
+        
+        clientProxy = ClientProxyMock(.init(userID: "@a:b.com", notificationSettings: notificationSettingsProxy))
+        userSession = UserSessionMock(.init(clientProxy: clientProxy))
     }
     
     func testFetchSettings() async throws {
@@ -42,13 +44,9 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
                 return .mentionsAndKeywordsOnly
             }
         }
-        viewModel = NotificationSettingsEditScreenViewModel(chatType: .groupChat,
-                                                            userSession: userSession,
-                                                            notificationSettingsProxy: notificationSettingsProxy)
+        viewModel = NotificationSettingsEditScreenViewModel(chatType: .groupChat, userSession: userSession)
 
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.defaultMode != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
@@ -83,13 +81,9 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
         notificationSettingsProxy.canPushEncryptedEventsToDeviceClosure = {
             true
         }
-        viewModel = NotificationSettingsEditScreenViewModel(chatType: .groupChat,
-                                                            userSession: userSession,
-                                                            notificationSettingsProxy: notificationSettingsProxy)
+        viewModel = NotificationSettingsEditScreenViewModel(chatType: .groupChat, userSession: userSession)
 
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.defaultMode != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
@@ -114,18 +108,15 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
     
     func testSetModeAllMessages() async throws {
         notificationSettingsProxy.getDefaultRoomNotificationModeIsEncryptedIsOneToOneReturnValue = .mentionsAndKeywordsOnly
-        viewModel = NotificationSettingsEditScreenViewModel(chatType: .groupChat,
-                                                            userSession: userSession,
-                                                            notificationSettingsProxy: notificationSettingsProxy)
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.defaultMode != nil
-        }
+        viewModel = NotificationSettingsEditScreenViewModel(chatType: .groupChat, userSession: userSession)
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
         try await deferred.fulfill()
         
-        var deferredViewState = deferFulfillment(viewModel.context.$viewState, keyPath: \.pendingMode, transitionValues: [nil, .allMessages, nil])
+        var deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.pendingMode),
+                                                 transitionValues: [nil, .allMessages, nil])
 
         context.send(viewAction: .setMode(.allMessages))
         
@@ -143,8 +134,7 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
         XCTAssertEqual(invocations[1].isOneToOne, false)
         XCTAssertEqual(invocations[1].mode, .allMessages)
         
-        deferredViewState = deferFulfillment(viewModel.context.$viewState,
-                                             keyPath: \.defaultMode,
+        deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode),
                                              transitionValues: [.allMessages])
         
         try await deferredViewState.fulfill()
@@ -154,20 +144,15 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
     }
 
     func testSetModeMentions() async throws {
-        viewModel = NotificationSettingsEditScreenViewModel(chatType: .groupChat,
-                                                            userSession: userSession,
-                                                            notificationSettingsProxy: notificationSettingsProxy)
+        viewModel = NotificationSettingsEditScreenViewModel(chatType: .groupChat, userSession: userSession)
         
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.defaultMode != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
         try await deferred.fulfill()
         
-        var deferredViewState = deferFulfillment(viewModel.context.$viewState,
-                                                 keyPath: \.pendingMode,
+        var deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.pendingMode),
                                                  transitionValues: [nil, .mentionsAndKeywordsOnly, nil])
                 
         context.send(viewAction: .setMode(.mentionsAndKeywordsOnly))
@@ -186,8 +171,7 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
         XCTAssertEqual(invocations[1].isOneToOne, false)
         XCTAssertEqual(invocations[1].mode, .mentionsAndKeywordsOnly)
         
-        deferredViewState = deferFulfillment(viewModel.context.$viewState,
-                                             keyPath: \.defaultMode,
+        deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode),
                                              transitionValues: [.mentionsAndKeywordsOnly])
         
         try await deferredViewState.fulfill()
@@ -199,20 +183,15 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
     func testSetModeDirectChats() async throws {
         notificationSettingsProxy.getDefaultRoomNotificationModeIsEncryptedIsOneToOneReturnValue = .mentionsAndKeywordsOnly
         // Initialize for direct chats
-        viewModel = NotificationSettingsEditScreenViewModel(chatType: .oneToOneChat,
-                                                            userSession: userSession,
-                                                            notificationSettingsProxy: notificationSettingsProxy)
+        viewModel = NotificationSettingsEditScreenViewModel(chatType: .oneToOneChat, userSession: userSession)
         
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.defaultMode != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
         try await deferred.fulfill()
         
-        let deferredViewState = deferFulfillment(viewModel.context.$viewState,
-                                                 keyPath: \.pendingMode,
+        let deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.pendingMode),
                                                  transitionValues: [nil, .allMessages, nil])
         
         context.send(viewAction: .setMode(.allMessages))
@@ -235,20 +214,15 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
     func testSetModeFailure() async throws {
         notificationSettingsProxy.getDefaultRoomNotificationModeIsEncryptedIsOneToOneReturnValue = .mentionsAndKeywordsOnly
         notificationSettingsProxy.setDefaultRoomNotificationModeIsEncryptedIsOneToOneModeThrowableError = NotificationSettingsError.Generic(msg: "error")
-        viewModel = NotificationSettingsEditScreenViewModel(chatType: .oneToOneChat,
-                                                            userSession: userSession,
-                                                            notificationSettingsProxy: notificationSettingsProxy)
+        viewModel = NotificationSettingsEditScreenViewModel(chatType: .oneToOneChat, userSession: userSession)
         
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.defaultMode != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
         try await deferred.fulfill()
         
-        let deferredViewState = deferFulfillment(viewModel.context.$viewState,
-                                                 keyPath: \.pendingMode,
+        let deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.pendingMode),
                                                  transitionValues: [nil, .allMessages, nil])
 
         context.send(viewAction: .setMode(.allMessages))
@@ -260,9 +234,7 @@ class NotificationSettingsEditScreenViewModelTests: XCTestCase {
 
     func testSelectRoom() async throws {
         let roomID = "!roomidentifier:matrix.org"
-        viewModel = NotificationSettingsEditScreenViewModel(chatType: .oneToOneChat,
-                                                            userSession: userSession,
-                                                            notificationSettingsProxy: notificationSettingsProxy)
+        viewModel = NotificationSettingsEditScreenViewModel(chatType: .oneToOneChat, userSession: userSession)
         
         let deferredActions = deferFulfillment(viewModel.actions) { action in
             switch action {

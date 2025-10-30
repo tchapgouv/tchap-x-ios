@@ -10,7 +10,7 @@ import Foundation
 import MatrixRustSDK
 
 @MainActor
-class AutoUpdatingTimelineProviderMock: TimelineProvider {
+class AutoUpdatingTimelineItemProviderMock: TimelineItemProvider {
     static var timelineListener: TimelineListener?
     
     private let innerPaginationStatePublisher: PassthroughSubject<PaginationState, Never>
@@ -33,14 +33,11 @@ class AutoUpdatingTimelineProviderMock: TimelineProvider {
             for _ in 0...100 {
                 try? await Task.sleep(for: .seconds(1))
                 
-                let diff = TimelineDiffSDKMock()
-                diff.changeReturnValue = .append
-                
                 let timelineItem = TimelineItemSDKMock()
                 timelineItem.asEventReturnValue = EventTimelineItem.mockMessage
                 timelineItem.uniqueIdReturnValue = .init(id: UUID().uuidString)
                 
-                diff.appendReturnValue = [timelineItem]
+                let diff = TimelineDiff.append(values: [timelineItem])
                 
                 await Self.timelineListener?.onUpdate(diff: [diff])
             }

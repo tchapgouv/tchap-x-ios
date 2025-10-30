@@ -27,12 +27,15 @@ struct HomeScreenContent: View {
                 case .skeletons:
                     LazyVStack(spacing: 0) {
                         ForEach(context.viewState.visibleRooms) { room in
-                            HomeScreenRoomCell(room: room, context: context, isSelected: false)
+                            HomeScreenRoomCell(room: room, isSelected: false, mediaProvider: context.mediaProvider, action: context.send)
                                 .redacted(reason: .placeholder)
                                 .shimmer() // Putting this directly on the LazyVStack creates an accordion animation on iOS 16.
                         }
                     }
                     .disabled(true)
+                    .accessibilityRepresentation {
+                        Text(L10n.commonLoading)
+                    }
                 case .empty:
                     HomeScreenEmptyStateLayout(minHeight: geometry.size.height) {
                         topSection
@@ -119,14 +122,16 @@ struct HomeScreenContent: View {
     @ViewBuilder
     private var topSection: some View {
         // An empty VStack causes glitches within the room list
-        if context.viewState.shouldShowFilters || context.viewState.securityBannerMode.isShown {
+        if context.viewState.shouldShowFilters || context.viewState.shouldShowBanner {
             VStack(spacing: 0) {
                 if context.viewState.shouldShowFilters {
                     RoomListFiltersView(state: $context.filtersState)
                 }
-            
+                
                 if case let .show(state) = context.viewState.securityBannerMode {
                     HomeScreenRecoveryKeyConfirmationBanner(state: state, context: context)
+                } else if context.viewState.shouldShowNewSoundBanner {
+                    HomeScreenNewSoundBanner { context.send(viewAction: .dismissNewSoundBanner) }
                 }
             }
             .background(Color.compound.bgCanvasDefault)

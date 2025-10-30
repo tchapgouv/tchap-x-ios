@@ -8,12 +8,13 @@
 import Combine
 import SwiftUI
 
-typealias RoomRolesAndPermissionsScreenViewModelType = StateStoreViewModel<RoomRolesAndPermissionsScreenViewState, RoomRolesAndPermissionsScreenViewAction>
+typealias RoomRolesAndPermissionsScreenViewModelType = StateStoreViewModelV2<RoomRolesAndPermissionsScreenViewState, RoomRolesAndPermissionsScreenViewAction>
 
 class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewModelType, RoomRolesAndPermissionsScreenViewModelProtocol {
     private let roomProxy: JoinedRoomProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let analytics: AnalyticsService
+    private var ownUser: RoomMemberDetails?
     
     private var actionsSubject: PassthroughSubject<RoomRolesAndPermissionsScreenViewModelAction, Never> = .init()
     var actionsPublisher: AnyPublisher<RoomRolesAndPermissionsScreenViewModelAction, Never> {
@@ -24,7 +25,8 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
         self.roomProxy = roomProxy
         self.userIndicatorController = userIndicatorController
         self.analytics = analytics
-        super.init(initialViewState: RoomRolesAndPermissionsScreenViewState(permissions: initialPermissions))
+        super.init(initialViewState: RoomRolesAndPermissionsScreenViewState(ownRole: roomProxy.membersPublisher.value.first { $0.userID == roomProxy.ownUserID }?.role ?? .administrator,
+                                                                            permissions: initialPermissions))
         
         // Automatically update the admin/moderator counts.
         roomProxy.membersPublisher
@@ -39,12 +41,12 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
         // Automatically update the room permissions
         roomProxy.infoPublisher
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                Task { await self?.updatePermissions() }
+            .sink { [weak self] roomInfo in
+                self?.updateRoomInfo(roomInfo: roomInfo)
             }
             .store(in: &cancellables)
         
-        Task { await updatePermissions() }
+        updateRoomInfo(roomInfo: roomProxy.infoPublisher.value)
     }
     
     // MARK: - Public
@@ -80,22 +82,26 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
                                                  secondaryButton: .init(title: L10n.actionCancel, role: .cancel) { })
         }
     }
-    
+
     // MARK: - Members
     
     private func updateMembers(_ members: [RoomMemberProxyProtocol]) {
+        state.administratorsAndOwnersCount = members.filter { $0.role.isAdminOrHigher && $0.isActive }.count
         state.administratorCount = members.filter { $0.role == .administrator && $0.isActive }.count
         state.moderatorCount = members.filter { $0.role == .moderator && $0.isActive }.count
+        if let ownUser = members.first(where: { $0.userID == roomProxy.ownUserID }) {
+            state.ownRole = ownUser.role
+        }
     }
     
-    private func updateOwnRole(_ role: RoomMemberDetails.Role) async {
+    private func updateOwnRole(_ role: RoomRole) async {
         showSavingIndicator()
         
         // A task we can await until the room's info gets modified with the new power levels.
         // Note: Ignore the first value as the publisher is backed by a current value subject.
         let infoTask = Task { await roomProxy.infoPublisher.dropFirst().values.first { _ in true } }
         
-        switch await roomProxy.updatePowerLevelsForUsers([(userID: roomProxy.ownUserID, powerLevel: role.rustPowerLevel)]) {
+        switch await roomProxy.updatePowerLevelsForUsers([(userID: roomProxy.ownUserID, powerLevel: role.powerLevelValue)]) {
         case .success:
             _ = await infoTask.value
             await roomProxy.updateMembers()
@@ -113,12 +119,9 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
     
     // MARK: - Permissions
     
-    private func updatePermissions() async {
-        switch await roomProxy.powerLevels() {
-        case .success(let powerLevels):
-            state.permissions = .init(powerLevels: powerLevels)
-        case .failure:
-            break
+    private func updateRoomInfo(roomInfo: RoomInfoProxyProtocol) {
+        if let powerLevels = roomInfo.powerLevels {
+            state.permissions = .init(powerLevels: powerLevels.values)
         }
     }
     
@@ -144,7 +147,7 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
         
         hideSavingIndicator()
     }
-    
+        
     // MARK: Loading indicator
     
     private static let savingIndicatorID = "RolesAndPermissionsSaving"

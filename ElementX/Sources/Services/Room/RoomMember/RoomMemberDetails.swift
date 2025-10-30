@@ -17,10 +17,10 @@ struct RoomMemberDetails: Identifiable, Hashable {
     var isInvited: Bool
     var isIgnored: Bool
     var isBanned: Bool
-    
-    enum Role { case administrator, moderator, user }
-    let role: Role
-    let powerLevel: Int
+    var isActive: Bool
+
+    let role: RoomRole
+    let powerLevel: RoomPowerLevel
     
     func matches(searchQuery: String) -> Bool {
         guard !searchQuery.isEmpty else { return true }
@@ -34,21 +34,11 @@ extension RoomMemberDetails {
         name = proxy.displayName
         avatarURL = proxy.avatarURL
         permalink = proxy.permalink
-        
+        isActive = proxy.isActive
         isInvited = proxy.membership == .invite
         isIgnored = proxy.isIgnored
         isBanned = proxy.membership == .ban
-        role = .init(proxy.role)
+        role = proxy.role
         powerLevel = proxy.powerLevel
-    }
-}
-
-extension RoomMemberDetails.Role {
-    init(_ role: RoomMemberRole) {
-        self = switch role {
-        case .administrator: .administrator
-        case .moderator: .moderator
-        case .user: .user
-        }
     }
 }

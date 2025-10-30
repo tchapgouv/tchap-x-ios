@@ -10,21 +10,37 @@ import XCTest
 @MainActor
 class UserSessionScreenTests: XCTestCase {
     let firstRoomName = "Foundation 🔭🪐🌌"
+    let firstSpaceName = "The Foundation"
+    let unjoinedSpaceRoomName = "Company Room"
+    let joinedSubspaceName = "Joined Space"
+    let joinedSubspaceRoomName = "Management"
+    
+    enum Step {
+        static let homeScreen = 1
+        static let roomScreen = 2
+        static let composerAttachments = 3
+        static let spacesTabBar = 4
+        static let spaceList = 5
+        static let spaceScreen = 6
+        static let subspaceScreen = 7
+        static let subspaceRoomScreen = 8
+        static let spaceJoinRoomScreen = 9
+    }
     
     func testUserSessionFlows() async throws {
         let app = Application.launch(.userSessionScreen)
         
         app.swipeDown() // Make sure the header shows a large title
         
-        try await app.assertScreenshot(step: 1)
+        try await app.assertScreenshot(step: Step.homeScreen)
 
         app.buttons[A11yIdentifiers.homeScreen.roomName(firstRoomName)].tap()
         XCTAssert(app.staticTexts[firstRoomName].waitForExistence(timeout: 5.0))
         try await Task.sleep(for: .seconds(1))
-        try await app.assertScreenshot(step: 2)
+        try await app.assertScreenshot(step: Step.roomScreen)
 
-        app.buttons[A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions].tapCenter()
-        try await app.assertScreenshot(step: 3)
+        app.buttons[A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions].tap(.center)
+        try await app.assertScreenshot(step: Step.composerAttachments)
     }
 
     func testUserSessionReply() async throws {
@@ -52,5 +68,44 @@ class UserSessionScreenTests: XCTestCase {
         
         let joinButton = app.buttons["Continue"]
         XCTAssert(joinButton.waitForExistence(timeout: 10))
+    }
+    
+    func testSpaceExploration() async throws {
+        let app = Application.launch(.userSessionSpacesFlow)
+        
+        app.swipeDown() // Make sure the header shows a large title
+        
+        try await app.assertScreenshot(step: Step.spacesTabBar)
+        
+        // app.tabBars doesn't work on iPadOS 18 😐
+        app.buttons["Spaces"].firstMatch.tap(.center)
+        
+        try await app.assertScreenshot(step: Step.spaceList)
+        
+        app.buttons[A11yIdentifiers.spaceListScreen.spaceRoomName(firstSpaceName)].tap()
+        XCTAssert(app.staticTexts[firstSpaceName].waitForExistence(timeout: 5.0))
+        try await Task.sleep(for: .seconds(1))
+        try await app.assertScreenshot(step: Step.spaceScreen)
+        
+        app.buttons[A11yIdentifiers.spaceListScreen.spaceRoomName(joinedSubspaceName)].tap()
+        XCTAssert(app.staticTexts[joinedSubspaceName].waitForExistence(timeout: 5.0))
+        try await Task.sleep(for: .seconds(1))
+        try await app.assertScreenshot(step: Step.subspaceScreen)
+        
+        app.buttons[A11yIdentifiers.spaceListScreen.spaceRoomName(joinedSubspaceRoomName)].tap()
+        XCTAssert(app.staticTexts[joinedSubspaceRoomName].waitForExistence(timeout: 5.0))
+        try await Task.sleep(for: .seconds(1))
+        try await app.assertScreenshot(step: Step.subspaceRoomScreen)
+        
+        app.navigationBars.buttons[joinedSubspaceName].firstMatch.tap(.center)
+        XCTAssert(app.staticTexts[joinedSubspaceName].waitForExistence(timeout: 5.0))
+        
+        app.navigationBars.buttons[firstSpaceName].firstMatch.tap(.center)
+        XCTAssert(app.staticTexts[firstSpaceName].waitForExistence(timeout: 5.0))
+        
+        app.buttons[A11yIdentifiers.spaceListScreen.spaceRoomName(unjoinedSpaceRoomName)].tap()
+        XCTAssert(app.staticTexts[unjoinedSpaceRoomName].waitForExistence(timeout: 5.0))
+        try await Task.sleep(for: .seconds(1))
+        try await app.assertScreenshot(step: Step.spaceJoinRoomScreen)
     }
 }

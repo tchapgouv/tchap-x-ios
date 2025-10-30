@@ -28,26 +28,6 @@ struct PinnedEventsTimelineScreen: View {
             .background(.compound.bgCanvasDefault)
             .interactiveDismissDisabled()
             .timelineMediaPreview(viewModel: $context.mediaPreviewViewModel)
-            .sheet(item: $timelineContext.manageMemberViewModel) {
-                ManageRoomMemberSheetView(context: $0.context)
-            }
-            .sheet(item: $timelineContext.debugInfo) { TimelineItemDebugView(info: $0) }
-            .sheet(item: $timelineContext.actionMenuInfo) { info in
-                let actions = TimelineItemMenuActionProvider(timelineItem: info.item,
-                                                             canCurrentUserRedactSelf: timelineContext.viewState.canCurrentUserRedactSelf,
-                                                             canCurrentUserRedactOthers: timelineContext.viewState.canCurrentUserRedactOthers,
-                                                             canCurrentUserPin: timelineContext.viewState.canCurrentUserPin,
-                                                             pinnedEventIDs: timelineContext.viewState.pinnedEventIDs,
-                                                             isDM: timelineContext.viewState.isDirectOneToOneRoom,
-                                                             isViewSourceEnabled: timelineContext.viewState.isViewSourceEnabled,
-                                                             timelineKind: timelineContext.viewState.timelineKind,
-                                                             emojiProvider: timelineContext.viewState.emojiProvider)
-                    .makeActions()
-                if let actions {
-                    TimelineItemMenu(item: info.item, actions: actions)
-                        .environmentObject(timelineContext)
-                }
-            }
     }
     
     @ViewBuilder
@@ -68,10 +48,7 @@ struct PinnedEventsTimelineScreen: View {
             .padding(.top, 48)
             .padding(.horizontal, 16)
         } else {
-            TimelineView()
-                .id(timelineContext.viewState.roomID)
-                .environmentObject(timelineContext)
-                .environment(\.focussedEventID, timelineContext.viewState.timelineState.focussedEvent?.eventID)
+            TimelineView(timelineContext: timelineContext)
         }
     }
     
@@ -94,16 +71,15 @@ struct PinnedEventsTimelineScreen_Previews: PreviewProvider, TestablePreview {
         timelineController.timelineItems = []
         return TimelineViewModel(roomProxy: JoinedRoomProxyMock(.init(name: "Preview room")),
                                  timelineController: timelineController,
-                                 mediaProvider: MediaProviderMock(configuration: .init()),
+                                 userSession: UserSessionMock(.init()),
                                  mediaPlayerProvider: MediaPlayerProviderMock(),
-                                 voiceMessageMediaManager: VoiceMessageMediaManagerMock(),
                                  userIndicatorController: UserIndicatorControllerMock(),
                                  appMediator: AppMediatorMock.default,
                                  appSettings: ServiceLocator.shared.settings,
                                  analyticsService: ServiceLocator.shared.analytics,
                                  emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
-                                 timelineControllerFactory: TimelineControllerFactoryMock(.init()),
-                                 clientProxy: ClientProxyMock(.init()))
+                                 linkMetadataProvider: LinkMetadataProvider(),
+                                 timelineControllerFactory: TimelineControllerFactoryMock(.init()))
     }()
         
     static var previews: some View {

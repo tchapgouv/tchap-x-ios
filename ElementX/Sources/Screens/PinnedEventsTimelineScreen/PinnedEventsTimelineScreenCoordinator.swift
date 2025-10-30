@@ -11,13 +11,15 @@ import SwiftUI
 struct PinnedEventsTimelineScreenCoordinatorParameters {
     let roomProxy: JoinedRoomProxyProtocol
     let timelineController: TimelineControllerProtocol
-    let mediaProvider: MediaProviderProtocol
+    let userSession: UserSessionProtocol
     let mediaPlayerProvider: MediaPlayerProviderProtocol
-    let voiceMessageMediaManager: VoiceMessageMediaManagerProtocol
     let appMediator: AppMediatorProtocol
+    let appSettings: AppSettings
+    let analytics: AnalyticsService
     let emojiProvider: EmojiProviderProtocol
+    let linkMetadataProvider: LinkMetadataProviderProtocol
     let timelineControllerFactory: TimelineControllerFactoryProtocol
-    let clientProxy: ClientProxyProtocol
+    let userIndicatorController: UserIndicatorControllerProtocol
 }
 
 enum PinnedEventsTimelineScreenCoordinatorAction {
@@ -43,19 +45,18 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
     init(parameters: PinnedEventsTimelineScreenCoordinatorParameters) {
         self.parameters = parameters
         
-        viewModel = PinnedEventsTimelineScreenViewModel(analyticsService: ServiceLocator.shared.analytics)
+        viewModel = PinnedEventsTimelineScreenViewModel(analyticsService: parameters.analytics)
         timelineViewModel = TimelineViewModel(roomProxy: parameters.roomProxy,
                                               timelineController: parameters.timelineController,
-                                              mediaProvider: parameters.mediaProvider,
+                                              userSession: parameters.userSession,
                                               mediaPlayerProvider: parameters.mediaPlayerProvider,
-                                              voiceMessageMediaManager: parameters.voiceMessageMediaManager,
-                                              userIndicatorController: ServiceLocator.shared.userIndicatorController,
+                                              userIndicatorController: parameters.userIndicatorController,
                                               appMediator: parameters.appMediator,
-                                              appSettings: ServiceLocator.shared.settings,
-                                              analyticsService: ServiceLocator.shared.analytics,
+                                              appSettings: parameters.appSettings,
+                                              analyticsService: parameters.analytics,
                                               emojiProvider: parameters.emojiProvider,
-                                              timelineControllerFactory: parameters.timelineControllerFactory,
-                                              clientProxy: parameters.clientProxy)
+                                              linkMetadataProvider: parameters.linkMetadataProvider,
+                                              timelineControllerFactory: parameters.timelineControllerFactory)
     }
     
     func start() {
@@ -64,6 +65,8 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
             
             guard let self else { return }
             switch action {
+            case .displayMessageForwarding(let forwardingItem):
+                actionsSubject.send(.displayMessageForwarding(forwardingItem: forwardingItem))
             case .viewInRoomTimeline(let itemID):
                 guard let eventID = itemID.eventID else { fatalError("A pinned event must have an event ID.") }
                 actionsSubject.send(.displayRoomScreenWithFocussedPin(eventID: eventID))
@@ -91,7 +94,7 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
             // These other actions will not be handled in this view
             case .displayEmojiPicker, .displayReportContent, .displayCameraPicker, .displayMediaPicker,
                  .displayDocumentPicker, .displayLocationPicker, .displayPollForm, .displayMediaUploadPreviewScreen,
-                 .displayResolveSendFailure, .composer, .hasScrolled:
+                 .displayResolveSendFailure, .displayThread, .composer, .hasScrolled, .displayRoom, .displayMediaDetails:
                 // These actions are not handled in this coordinator
                 break
             }

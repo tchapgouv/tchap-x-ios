@@ -38,14 +38,22 @@ enum DeveloperOptionsScreenViewAction {
 protocol DeveloperOptionsProtocol: AnyObject {
     var logLevel: LogLevel { get set }
     var traceLogPacks: Set<TraceLogPack> { get set }
-    var publicSearchEnabled: Bool { get set }
-    var hideUnreadMessagesBadge: Bool { get set }
-    var fuzzyRoomListSearchEnabled: Bool { get set }
+    
     var enableOnlySignedDeviceIsolationMode: Bool { get set }
+    var enableKeyShareOnInvite: Bool { get set }
+    var hideQuietNotificationAlerts: Bool { get set }
+    
+    var hideUnreadMessagesBadge: Bool { get set }
     var elementCallBaseURLOverride: URL? { get set }
+    
+    var publicSearchEnabled: Bool { get set }
+    var fuzzyRoomListSearchEnabled: Bool { get set }
+    var lowPriorityFilterEnabled: Bool { get set }
     var knockingEnabled: Bool { get set }
-    var reportRoomEnabled: Bool { get set }
-    var reportInviteEnabled: Bool { get set }
+    var latestEventSorterEnabled: Bool { get set }
+    
+    var nextGenHTMLParserEnabled: Bool { get set }
+    var linkPreviewsEnabled: Bool { get set }
 }
 
 extension AppSettings: DeveloperOptionsProtocol { }

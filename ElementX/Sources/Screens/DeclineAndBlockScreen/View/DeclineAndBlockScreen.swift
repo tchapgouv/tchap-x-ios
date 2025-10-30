@@ -9,7 +9,7 @@ import Compound
 import SwiftUI
 
 struct DeclineAndBlockScreen: View {
-    @ObservedObject var context: DeclineAndBlockScreenViewModel.Context
+    @Bindable var context: DeclineAndBlockScreenViewModel.Context
     
     var body: some View {
         Form {
@@ -24,6 +24,7 @@ struct DeclineAndBlockScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
         .animation(.elementDefault, value: context.shouldReport)
+        .alert(item: $context.alert)
     }
     
     private var blockUserSection: some View {

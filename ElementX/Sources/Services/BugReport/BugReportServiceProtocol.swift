@@ -15,16 +15,18 @@ struct BugReport: Equatable {
     let ed25519: String?
     let curve25519: String?
     let text: String
-    let includeLogs: Bool
+    let logFiles: [URL]?
     let canContact: Bool
     var githubLabels: [String]
     let files: [URL]
 }
 
 struct SubmitBugReportResponse: Decodable {
-    // Tchap: allow SubmitBugReportResponse to not contains `reportUrl` value.
-//    var reportUrl: String
-    var reportUrl: String?
+    var reportURL: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case reportURL = "report_url"
+    }
 }
 
 enum BugReportServiceError: LocalizedError {
@@ -50,9 +52,6 @@ protocol BugReportServiceProtocol: AnyObject {
     var crashedLastRun: Bool { get }
     
     var lastCrashEventID: String? { get set }
-    
-    // Tchap: Make BugReportService baseURL updatable and nullable (on logout)
-    func updateBaseURL(_ baseURL: URL?)
     
     func submitBugReport(_ bugReport: BugReport,
                          progressListener: CurrentValueSubject<Double, Never>) async -> Result<SubmitBugReportResponse, BugReportServiceError>

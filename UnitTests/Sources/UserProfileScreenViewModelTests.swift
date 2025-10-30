@@ -27,12 +27,11 @@ class UserProfileScreenViewModelTests: XCTestCase {
         
         viewModel = UserProfileScreenViewModel(userID: profile.userID,
                                                isPresentedModally: false,
-                                               clientProxy: clientProxy,
-                                               mediaProvider: MediaProviderMock(configuration: .init()),
+                                               userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                                userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                analytics: ServiceLocator.shared.analytics)
         
-        let waitForMemberToLoad = deferFulfillment(context.$viewState) { $0.userProfile != nil }
+        let waitForMemberToLoad = deferFulfillment(context.observe(\.viewState.userProfile)) { $0 != nil }
         try await waitForMemberToLoad.fulfill()
         
         XCTAssertFalse(context.viewState.isOwnUser)
@@ -47,12 +46,11 @@ class UserProfileScreenViewModelTests: XCTestCase {
         
         viewModel = UserProfileScreenViewModel(userID: profile.userID,
                                                isPresentedModally: false,
-                                               clientProxy: clientProxy,
-                                               mediaProvider: MediaProviderMock(configuration: .init()),
+                                               userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                                userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                analytics: ServiceLocator.shared.analytics)
         
-        let waitForMemberToLoad = deferFulfillment(context.$viewState) { $0.userProfile != nil }
+        let waitForMemberToLoad = deferFulfillment(context.observe(\.viewState.userProfile)) { $0 != nil }
         try await waitForMemberToLoad.fulfill()
         
         XCTAssertTrue(context.viewState.isOwnUser)

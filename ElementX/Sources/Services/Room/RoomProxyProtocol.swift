@@ -5,6 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Algorithms
 import Combine
 import Foundation
 import MatrixRustSDK
@@ -16,6 +17,8 @@ enum RoomProxyError: Error {
     case invalidMedia
     case eventNotFound
     case missingTransactionID
+    case failedCreatingPinnedTimeline
+    case timelineError(TimelineProxyError)
 }
 
 /// An enum that describes the relationship between the current user and the room, and contains a reference to the specific implementation of the `RoomProxy`.
@@ -61,9 +64,16 @@ enum KnockRequestsState {
     case loaded([KnockRequestProxyProtocol])
 }
 
+struct RTCDeclinedEvent {
+    /// The sender of the decline event
+    let sender: String
+    /// The rtc.notification event that is beeing declined
+    let notificationEventID: String
+}
+
 // sourcery: AutoMockable
 protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
-    var infoPublisher: CurrentValuePublisher<RoomInfoProxy, Never> { get }
+    var infoPublisher: CurrentValuePublisher<RoomInfoProxyProtocol, Never> { get }
 
     var membersPublisher: CurrentValuePublisher<[RoomMemberProxyProtocol], Never> { get }
     
@@ -75,7 +85,9 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     var timeline: TimelineProxyProtocol { get }
     
-    var pinnedEventsTimeline: TimelineProxyProtocol? { get async }
+    var predecessorRoom: PredecessorRoom? { get }
+    
+    var successorRoom: SuccessorRoom? { get }
     
     func subscribeForUpdates() async
     
@@ -83,9 +95,15 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     func timelineFocusedOnEvent(eventID: String, numberOfEvents: UInt16) async -> Result<TimelineProxyProtocol, RoomProxyError>
     
+    func threadTimeline(eventID: String) async -> Result<TimelineProxyProtocol, RoomProxyError>
+    
+    func loadOrFetchEventDetails(for eventID: String) async -> Result<TimelineEvent, RoomProxyError>
+    
     func messageFilteredTimeline(focus: TimelineFocus,
                                  allowedMessageTypes: [TimelineAllowedMessageType],
                                  presentation: TimelineKind.MediaPresentation) async -> Result<TimelineProxyProtocol, RoomProxyError>
+    
+    func pinnedEventsTimeline() async -> Result<TimelineProxyProtocol, RoomProxyError>
     
     func enableEncryption() async -> Result<Void, RoomProxyError>
     
@@ -93,7 +111,7 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     func reportContent(_ eventID: String, reason: String?) async -> Result<Void, RoomProxyError>
     
-    func reportRoom(reason: String?) async -> Result<Void, RoomProxyError>
+    func reportRoom(reason: String) async -> Result<Void, RoomProxyError>
 
     func leaveRoom() async -> Result<Void, RoomProxyError>
     
@@ -145,19 +163,11 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     // MARK: - Power Levels
     
-    func powerLevels() async -> Result<RoomPowerLevels, RoomProxyError>
+    func powerLevels() async -> Result<RoomPowerLevelsProxyProtocol?, RoomProxyError>
     func applyPowerLevelChanges(_ changes: RoomPowerLevelChanges) async -> Result<Void, RoomProxyError>
-    func resetPowerLevels() async -> Result<RoomPowerLevels, RoomProxyError>
+    func resetPowerLevels() async -> Result<Void, RoomProxyError>
     func suggestedRole(for userID: String) async -> Result<RoomMemberRole, RoomProxyError>
     func updatePowerLevelsForUsers(_ updates: [(userID: String, powerLevel: Int64)]) async -> Result<Void, RoomProxyError>
-    func canUser(userID: String, sendStateEvent event: StateEventType) async -> Result<Bool, RoomProxyError>
-    func canUserInvite(userID: String) async -> Result<Bool, RoomProxyError>
-    func canUserRedactOther(userID: String) async -> Result<Bool, RoomProxyError>
-    func canUserRedactOwn(userID: String) async -> Result<Bool, RoomProxyError>
-    func canUserKick(userID: String) async -> Result<Bool, RoomProxyError>
-    func canUserBan(userID: String) async -> Result<Bool, RoomProxyError>
-    func canUserTriggerRoomNotification(userID: String) async -> Result<Bool, RoomProxyError>
-    func canUserPinOrUnpin(userID: String) async -> Result<Bool, RoomProxyError>
     
     // MARK: - Moderation
     
@@ -167,10 +177,9 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     // MARK: - Element Call
     
-    func canUserJoinCall(userID: String) async -> Result<Bool, RoomProxyError>
     func elementCallWidgetDriver(deviceID: String) -> ElementCallWidgetDriverProtocol
-    
-    func sendCallNotificationIfNeeded() async -> Result<Void, RoomProxyError>
+    func declineCall(notificationID: String) async -> Result<Void, RoomProxyError>
+    func subscribeToCallDeclineEvents(rtcNotificationEventID: String, listener: CallDeclineListener) -> Result<TaskHandle, RoomProxyError>
     
     // MARK: - Permalinks
     
@@ -179,9 +188,12 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     // MARK: - Drafts
     
-    func saveDraft(_ draft: ComposerDraft) async -> Result<Void, RoomProxyError>
-    func loadDraft() async -> Result<ComposerDraft?, RoomProxyError>
-    func clearDraft() async -> Result<Void, RoomProxyError>
+    func saveDraft(_ draft: ComposerDraft, threadRootEventID: String?) async -> Result<Void, RoomProxyError>
+    func loadDraft(threadRootEventID: String?) async -> Result<ComposerDraft?, RoomProxyError>
+    func clearDraft(threadRootEventID: String?) async -> Result<Void, RoomProxyError>
+    
+    // Tchap: access rules accessor
+    func accessRules() async -> Result<AccessRule?, RoomProxyError>
 }
 
 extension JoinedRoomProxyProtocol {
@@ -191,8 +203,10 @@ extension JoinedRoomProxyProtocol {
                     avatar: infoPublisher.value.avatar,
                     canonicalAlias: infoPublisher.value.canonicalAlias,
                     isEncrypted: infoPublisher.value.isEncrypted,
-                    isPublic: infoPublisher.value.isPublic,
-                    isDirect: infoPublisher.value.isDirect)
+                    isPublic: !(infoPublisher.value.isPrivate ?? false),
+                    isDirect: infoPublisher.value.isDirect,
+                    // Tchap: add accessRule publied value
+                    accessRule: infoPublisher.value.accessRule)
     }
     
     var isDirectOneToOneRoom: Bool {
@@ -202,5 +216,14 @@ extension JoinedRoomProxyProtocol {
     func members() async -> [RoomMemberProxyProtocol]? {
         await updateMembers()
         return membersPublisher.value
+    }
+    
+    // This is a horrible workaround for not having any server names available when using tombstone links with v12 room IDs.
+    func knownServerNames(maxCount: Int) -> any Sequence<String> {
+        membersPublisher.value
+            .prefix(1000) // No need to go crazy here…
+            .compactMap { $0.userID.split(separator: ":").last.map(String.init) }
+            .uniqued()
+            .prefix(maxCount)
     }
 }

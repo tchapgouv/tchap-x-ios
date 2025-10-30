@@ -168,6 +168,8 @@ struct RoomMembersListScreen_Previews: PreviewProvider, TestablePreview {
             .mockBob,
             .mockCharlie,
             mockAdmin,
+            .mockCreator,
+            .mockOwner,
             .mockModerator
         ]
         
@@ -194,12 +196,11 @@ struct RoomMembersListScreen_Previews: PreviewProvider, TestablePreview {
         }
         
         return RoomMembersListScreenViewModel(initialMode: initialMode,
-                                              clientProxy: clientProxyMock,
+                                              userSession: UserSessionMock(.init(clientProxy: clientProxyMock)),
                                               roomProxy: JoinedRoomProxyMock(.init(name: "Some room",
                                                                                    members: members,
                                                                                    ownUserID: ownUserID,
-                                                                                   canUserInvite: false)),
-                                              mediaProvider: MediaProviderMock(configuration: .init()),
+                                                                                   powerLevelsConfiguration: .init(canUserInvite: false))),
                                               userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                               analytics: ServiceLocator.shared.analytics)
     }

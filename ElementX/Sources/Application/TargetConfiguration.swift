@@ -5,6 +5,8 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Combine
+import Foundation
 import MatrixRustSDK
 
 enum Target: String {
@@ -13,42 +15,65 @@ enum Target: String {
     case shareExtension = "shareextension"
     case tests
     
-    private static var isConfigured = false
+    var useLightweightTokioRuntime: Bool {
+        switch self {
+        case .mainApp: false
+        case .nse: true
+        case .shareExtension: true
+        case .tests: false
+        }
+    }
     
-    func configure(logLevel: LogLevel, traceLogPacks: Set<TraceLogPack>) {
-        guard !Self.isConfigured else {
-            return
+    var logFilePrefix: String? {
+        switch self {
+        case .mainApp: nil
+        default: rawValue
+        }
+    }
+    
+    /// Configures the target with logging and an appropriate runtime.
+    ///
+    /// Returns a `ConfigurationResult` which should be stored to
+    ///   a) detect whether the platform is already configured.
+    ///   b) automatically reconfigure the platform as necessary.
+    func configure(logLevel: LogLevel,
+                   traceLogPacks: Set<TraceLogPack>,
+                   sentryURL: URL?,
+                   rageshakeURL: RemotePreference<RageshakeConfiguration>,
+                   appHooks: AppHooks) -> ConfigurationResult {
+        let tracingConfiguration = Tracing.buildConfiguration(logLevel: logLevel,
+                                                              traceLogPacks: traceLogPacks,
+                                                              currentTarget: rawValue,
+                                                              filePrefix: logFilePrefix,
+                                                              sentryURL: sentryURL)
+        
+        do {
+            try initPlatform(config: tracingConfiguration, useLightweightTokioRuntime: useLightweightTokioRuntime)
+        } catch {
+            fatalError("Failed configuring target \(self) with error: \(error)")
         }
         
-        switch self {
-        case .mainApp:
-            let tracingConfiguration = Tracing.buildConfiguration(logLevel: logLevel,
-                                                                  traceLogPacks: traceLogPacks,
-                                                                  currentTarget: rawValue,
-                                                                  filePrefix: nil)
-            initPlatform(config: tracingConfiguration, useLightweightTokioRuntime: false)
-        case .nse:
-            let tracingConfiguration = Tracing.buildConfiguration(logLevel: logLevel,
-                                                                  traceLogPacks: traceLogPacks,
-                                                                  currentTarget: rawValue,
-                                                                  filePrefix: rawValue)
-            initPlatform(config: tracingConfiguration, useLightweightTokioRuntime: true)
-        case .shareExtension:
-            let tracingConfiguration = Tracing.buildConfiguration(logLevel: logLevel,
-                                                                  traceLogPacks: traceLogPacks,
-                                                                  currentTarget: rawValue,
-                                                                  filePrefix: rawValue)
-            initPlatform(config: tracingConfiguration, useLightweightTokioRuntime: true)
-        case .tests:
-            let tracingConfiguration = Tracing.buildConfiguration(logLevel: logLevel,
-                                                                  traceLogPacks: traceLogPacks,
-                                                                  currentTarget: rawValue,
-                                                                  filePrefix: rawValue)
-            initPlatform(config: tracingConfiguration, useLightweightTokioRuntime: false)
-        }
+        // Setup sentry above but disable it by default. It will be started
+        // later together with the analytics service if the user consents.
+        enableSentryLogging(enabled: false)
         
         MXLog.configure(currentTarget: rawValue)
         
-        Self.isConfigured = true
+        let hookCancellable = rageshakeURL.publisher
+            .sink { _ in
+                appHooks.tracingHook.update(tracingConfiguration, with: rageshakeURL)
+            }
+        
+        return ConfigurationResult(hookCancellable: hookCancellable)
+    }
+    
+    /// The result of calling ``configure(logLevel:traceLogPacks:sentryURL:)``.
+    /// This must be stored - see the docs on the configure method to learn more.
+    struct ConfigurationResult {
+        private let hookCancellable: AnyCancellable
+        
+        init(hookCancellable: AnyCancellable) {
+            self.hookCancellable = hookCancellable
+        }
     }
 }

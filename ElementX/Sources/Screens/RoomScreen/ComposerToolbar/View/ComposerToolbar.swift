@@ -13,12 +13,6 @@ import WysiwygComposer
 
 struct ComposerToolbar: View {
     @ObservedObject var context: ComposerToolbarViewModel.Context
-    
-    // Needs to be observable or the placeholder and the dictation state are not managed correctly.
-    @ObservedObject var wysiwygViewModel: WysiwygComposerViewModel
-    
-    let keyCommands: [WysiwygKeyCommand]
-    
     @FocusState private var composerFocused: Bool
     @State private var frame: CGRect = .zero
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -39,11 +33,34 @@ struct ComposerToolbar: View {
         }
         .padding(.leading, 5)
         .padding(.trailing, 8)
+        .padding(.bottom, context.composerFormattingEnabled ? 8 : 12)
+        .background {
+            if context.composerFormattingEnabled {
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.compound.borderInteractiveSecondary, lineWidth: 0.5)
+                    .ignoresSafeArea()
+            }
+        }
         .readFrame($frame)
+        .safeAreaInset(edge: .top) {
+            if !context.viewState.isRoomEncrypted {
+                Label {
+                    Text(L10n.commonNotEncrypted)
+                        .font(.compound.bodySM)
+                        .foregroundStyle(.compound.textSecondary)
+                } icon: {
+                    CompoundIcon(\.lockOff, size: .xSmall, relativeTo: .compound.bodyMD)
+                        .foregroundStyle(.compound.iconInfoPrimary)
+                }
+                .padding(4.0)
+            }
+        }
         .overlay(alignment: .bottom) {
-            if verticalSizeClass != .compact, !context.composerExpanded {
-                suggestionView
-                    .offset(y: -frame.height)
+            ZStack {
+                if verticalSizeClass != .compact, !context.composerExpanded {
+                    suggestionView
+                        .offset(y: -frame.height)
+                }
             }
         }
         .disabled(!context.viewState.canSend)
@@ -125,7 +142,7 @@ struct ComposerToolbar: View {
                 .scaledFrame(size: 30, relativeTo: .compound.headingLG)
                 .scaledPadding(7, relativeTo: .compound.headingLG)
         }
-        .accessibilityLabel(L10n.actionClose)
+        .accessibilityLabel(L10n.richTextEditorCloseFormattingOptions)
         .accessibilityIdentifier(A11yIdentifiers.roomScreen.composerToolbar.closeFormattingOptions)
     }
     
@@ -160,13 +177,12 @@ struct ComposerToolbar: View {
                         placeholder: placeholder,
                         composerFormattingEnabled: context.composerFormattingEnabled,
                         showResizeGrabber: context.composerFormattingEnabled,
-                        isExpanded: $context.composerExpanded,
-                        isEncrypted: context.viewState.isRoomEncrypted) {
+                        isExpanded: $context.composerExpanded) {
             sendMessage()
         } editAction: {
             context.send(viewAction: .editLastMessage)
-        } pasteAction: { provider in
-            context.send(viewAction: .handlePasteOrDrop(provider: provider))
+        } pasteAction: { providers in
+            context.send(viewAction: .handlePasteOrDrop(providers: providers))
         } cancellationAction: {
             switch context.viewState.composerMode {
             case .edit:
@@ -178,6 +194,9 @@ struct ComposerToolbar: View {
             }
         } onAppearAction: {
             context.send(viewAction: .composerAppeared)
+        }
+        .onDisappear {
+            context.send(viewAction: .composerDisappeared)
         }
         .environmentObject(context)
         .focused($composerFocused)
@@ -231,20 +250,16 @@ struct ComposerToolbar: View {
     }
     
     private var composerPlaceholder: String {
-        if context.viewState.isRoomEncrypted {
-            return L10n.richTextEditorComposerPlaceholder
-        } else {
-            return L10n.richTextEditorComposerUnencryptedPlaceholder
-        }
+        L10n.richTextEditorComposerPlaceholder
     }
     
     private var composerView: WysiwygComposerView {
         WysiwygComposerView(placeholder: placeholder,
                             placeholderColor: .compound.textSecondary,
-                            viewModel: wysiwygViewModel,
+                            viewModel: context.viewState.wysiwygViewModel,
                             itemProviderHelper: ItemProviderHelper(),
-                            keyCommands: keyCommands) { provider in
-            context.send(viewAction: .handlePasteOrDrop(provider: provider))
+                            keyCommands: context.viewState.keyCommands) { provider in
+            context.send(viewAction: .handlePasteOrDrop(providers: [provider]))
         }
     }
     
@@ -313,6 +328,7 @@ struct ComposerToolbar: View {
 // MARK: - Previews
 
 struct ComposerToolbar_Previews: PreviewProvider, TestablePreview {
+    static let viewModel = TimelineViewModel.mock
     static let wysiwygViewModel = WysiwygComposerViewModel()
     static let composerViewModel = ComposerToolbarViewModel(roomProxy: JoinedRoomProxyMock(.init()),
                                                             wysiwygViewModel: wysiwygViewModel,
@@ -321,7 +337,7 @@ struct ComposerToolbar_Previews: PreviewProvider, TestablePreview {
                                                             mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                             appSettings: ServiceLocator.shared.settings,
                                                             analyticsService: ServiceLocator.shared.analytics,
-                                                            composerDraftService: ComposerDraftServiceMock())
+                                                            composerDraftService: ComposerDraftServiceMock(.init()))
     
     static let suggestions: [SuggestionItem] = [
         .init(suggestionType: .user(.init(id: "@user_mention_1:matrix.org", displayName: "User 1", avatarURL: nil)), range: .init(), rawSuggestionText: ""),
@@ -334,9 +350,7 @@ struct ComposerToolbar_Previews: PreviewProvider, TestablePreview {
         // Putting them is VStack allows the completion suggestion preview to work properly in tests
         VStack(spacing: 8) {
             // The mock functon can't be used in this context because it does not hold a reference to the view model, losing the combine subscriptions
-            ComposerToolbar(context: composerViewModel.context,
-                            wysiwygViewModel: wysiwygViewModel,
-                            keyCommands: [])
+            ComposerToolbar(context: composerViewModel.context)
         }
         .previewDisplayName("With Suggestions")
         
@@ -352,6 +366,7 @@ struct ComposerToolbar_Previews: PreviewProvider, TestablePreview {
             ComposerToolbar.replyLoadingPreviewMock(isLoading: true)
             ComposerToolbar.replyLoadingPreviewMock(isLoading: false)
         }
+        .environmentObject(viewModel.context)
         .previewDisplayName("Reply")
         
         VStack(spacing: 8) {
@@ -372,13 +387,11 @@ extension ComposerToolbar {
                                                  mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                  appSettings: ServiceLocator.shared.settings,
                                                  analyticsService: ServiceLocator.shared.analytics,
-                                                 composerDraftService: ComposerDraftServiceMock())
+                                                 composerDraftService: ComposerDraftServiceMock(.init()))
             model.state.composerEmpty = focused
             return model
         }
-        return ComposerToolbar(context: composerViewModel.context,
-                               wysiwygViewModel: wysiwygViewModel,
-                               keyCommands: [])
+        return ComposerToolbar(context: composerViewModel.context)
     }
     
     static func textWithVoiceMessage(focused: Bool = true) -> ComposerToolbar {
@@ -391,13 +404,11 @@ extension ComposerToolbar {
                                                  mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                  appSettings: ServiceLocator.shared.settings,
                                                  analyticsService: ServiceLocator.shared.analytics,
-                                                 composerDraftService: ComposerDraftServiceMock())
+                                                 composerDraftService: ComposerDraftServiceMock(.init()))
             model.state.composerEmpty = focused
             return model
         }
-        return ComposerToolbar(context: composerViewModel.context,
-                               wysiwygViewModel: wysiwygViewModel,
-                               keyCommands: [])
+        return ComposerToolbar(context: composerViewModel.context)
     }
     
     static func voiceMessageRecordingMock() -> ComposerToolbar {
@@ -410,13 +421,11 @@ extension ComposerToolbar {
                                                  mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                  appSettings: ServiceLocator.shared.settings,
                                                  analyticsService: ServiceLocator.shared.analytics,
-                                                 composerDraftService: ComposerDraftServiceMock())
+                                                 composerDraftService: ComposerDraftServiceMock(.init()))
             model.state.composerMode = .recordVoiceMessage(state: AudioRecorderState())
             return model
         }
-        return ComposerToolbar(context: composerViewModel.context,
-                               wysiwygViewModel: wysiwygViewModel,
-                               keyCommands: [])
+        return ComposerToolbar(context: composerViewModel.context)
     }
     
     static func voiceMessagePreviewMock(uploading: Bool) -> ComposerToolbar {
@@ -430,7 +439,7 @@ extension ComposerToolbar {
                                                  mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                  appSettings: ServiceLocator.shared.settings,
                                                  analyticsService: ServiceLocator.shared.analytics,
-                                                 composerDraftService: ComposerDraftServiceMock())
+                                                 composerDraftService: ComposerDraftServiceMock(.init()))
             model.state.composerMode = .previewVoiceMessage(state: AudioPlayerState(id: .recorderPreview,
                                                                                     title: L10n.commonVoiceMessage,
                                                                                     duration: 10.0),
@@ -438,9 +447,7 @@ extension ComposerToolbar {
                                                             isUploading: uploading)
             return model
         }
-        return ComposerToolbar(context: composerViewModel.context,
-                               wysiwygViewModel: wysiwygViewModel,
-                               keyCommands: [])
+        return ComposerToolbar(context: composerViewModel.context)
     }
     
     static func replyLoadingPreviewMock(isLoading: Bool) -> ComposerToolbar {
@@ -453,7 +460,7 @@ extension ComposerToolbar {
                                                  mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                  appSettings: ServiceLocator.shared.settings,
                                                  analyticsService: ServiceLocator.shared.analytics,
-                                                 composerDraftService: ComposerDraftServiceMock())
+                                                 composerDraftService: ComposerDraftServiceMock(.init()))
             model.state.composerMode = isLoading ? .reply(eventID: UUID().uuidString,
                                                           replyDetails: .loading(eventID: ""),
                                                           isThread: false) :
@@ -463,9 +470,7 @@ extension ComposerToolbar {
                                              eventID: "", eventContent: .message(.text(.init(body: "Hello World!")))), isThread: false)
             return model
         }
-        return ComposerToolbar(context: composerViewModel.context,
-                               wysiwygViewModel: wysiwygViewModel,
-                               keyCommands: [])
+        return ComposerToolbar(context: composerViewModel.context)
     }
     
     static func disabledPreviewMock() -> ComposerToolbar {
@@ -478,12 +483,10 @@ extension ComposerToolbar {
                                                  mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                  appSettings: ServiceLocator.shared.settings,
                                                  analyticsService: ServiceLocator.shared.analytics,
-                                                 composerDraftService: ComposerDraftServiceMock())
+                                                 composerDraftService: ComposerDraftServiceMock(.init()))
             model.state.canSend = false
             return model
         }
-        return ComposerToolbar(context: composerViewModel.context,
-                               wysiwygViewModel: wysiwygViewModel,
-                               keyCommands: [])
+        return ComposerToolbar(context: composerViewModel.context)
     }
 }

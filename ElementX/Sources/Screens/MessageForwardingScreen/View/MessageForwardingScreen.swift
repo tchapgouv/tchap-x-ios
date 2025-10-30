@@ -57,6 +57,7 @@ struct MessageForwardingScreen: View {
     private var emptyRectangle: some View {
         Rectangle()
             .frame(width: 0, height: 0)
+            .accessibilityHidden(true)
     }
 }
 
@@ -96,10 +97,9 @@ struct MessageForwardingScreen_Previews: PreviewProvider, TestablePreview {
         let viewModel = MessageForwardingScreenViewModel(forwardingItem: .init(id: .randomEvent,
                                                                                roomID: "",
                                                                                content: .init(noPointer: .init())),
-                                                         clientProxy: ClientProxyMock(.init()),
+                                                         userSession: UserSessionMock(.init()),
                                                          roomSummaryProvider: summaryProvider,
-                                                         userIndicatorController: UserIndicatorControllerMock(),
-                                                         mediaProvider: MediaProviderMock(configuration: .init()))
+                                                         userIndicatorController: UserIndicatorControllerMock())
         
         NavigationStack {
             MessageForwardingScreen(context: viewModel.context)

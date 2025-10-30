@@ -3,7 +3,7 @@ import Foundation
 
 @main
 struct Tools: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(abstract: "A collection of command line tools for ElementX",
+    static let configuration = CommandConfiguration(abstract: "A collection of command line tools for ElementX",
                                                     subcommands: [BuildSDK.self,
                                                                   SetupProject.self,
                                                                   OutdatedPackages.self,
@@ -11,5 +11,7 @@ struct Tools: AsyncParsableCommand {
                                                                   Locheck.self,
                                                                   GenerateSDKMocks.self,
                                                                   GenerateSAS.self,
-                                                                  AppIconBanner.self])
+                                                                  AppIconBanner.self,
+                                                                  UnusedStrings.self,
+                                                                  BumpCalendarVersion.self])
 }

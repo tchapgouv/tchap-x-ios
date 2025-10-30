@@ -60,17 +60,16 @@ class UserSessionStore: UserSessionStoreProtocol {
         }
     }
     
-    func userSession(for client: ClientProtocol, sessionDirectories: SessionDirectories, passphrase: String?) async -> Result<UserSessionProtocol, UserSessionStoreError> {
+    func userSession(for client: ClientProtocol, sessionDirectories: SessionDirectories, passphrase: String) async -> Result<UserSessionProtocol, UserSessionStoreError> {
         do {
             let session = try client.session()
             let userID = try client.userId()
-            let clientProxy = try await setupProxyForClient(client, needsSlidingSyncMigration: false)
+            let clientProxy = try await setupProxyForClient(client)
             
             keychainController.setRestorationToken(RestorationToken(session: session,
                                                                     sessionDirectories: sessionDirectories,
                                                                     passphrase: passphrase,
-                                                                    pusherNotificationClientIdentifier: clientProxy.pusherNotificationClientIdentifier,
-                                                                    slidingSyncProxyURLString: nil),
+                                                                    pusherNotificationClientIdentifier: clientProxy.pusherNotificationClientIdentifier),
                                                    forUsername: userID)
             
             MXLog.info("Set up session for user \(userID) at: \(sessionDirectories)")
@@ -95,9 +94,9 @@ class UserSessionStore: UserSessionStoreProtocol {
     // MARK: - Private
     
     private func buildUserSessionWithClient(_ clientProxy: ClientProxyProtocol) -> UserSessionProtocol {
-        let mediaProvider = MediaProvider(mediaLoader: clientProxy,
+        let mediaProvider = MediaProvider(mediaLoader: clientProxy.mediaLoader,
                                           imageCache: .onlyInMemory,
-                                          networkMonitor: networkMonitor)
+                                          homeserverReachabilityPublisher: clientProxy.homeserverReachabilityPublisher)
         
         let voiceMessageMediaManager = VoiceMessageMediaManager(mediaProvider: mediaProvider)
         
@@ -107,23 +106,22 @@ class UserSessionStore: UserSessionStoreProtocol {
     }
     
     private func restorePreviousLogin(_ credentials: KeychainCredentials) async -> Result<ClientProxyProtocol, UserSessionStoreError> {
-        if credentials.restorationToken.passphrase != nil {
-            MXLog.info("Restoring client with encrypted store.")
-        }
-        
         guard credentials.restorationToken.sessionDirectories.isNonTransientUserDataValid() else {
             MXLog.error("Failed restoring login, missing non-transient user data")
             return .failure(.failedRestoringLogin)
         }
         
         let homeserverURL = credentials.restorationToken.session.homeserverUrl
+        appHooks.remoteSettingsHook.loadCache(forHomeserver: homeserverURL, applyingTo: appSettings)
         
         let builder = ClientBuilder
             .baseBuilder(httpProxy: URL(string: homeserverURL)?.globalProxy,
                          slidingSync: .restored,
                          sessionDelegate: keychainController,
                          appHooks: appHooks,
-                         enableOnlySignedDeviceIsolationMode: appSettings.enableOnlySignedDeviceIsolationMode)
+                         enableOnlySignedDeviceIsolationMode: appSettings.enableOnlySignedDeviceIsolationMode,
+                         enableKeyShareOnInvite: appSettings.enableKeyShareOnInvite,
+                         threadsEnabled: appSettings.threadsEnabled)
             .sessionPaths(dataPath: credentials.restorationToken.sessionDirectories.dataPath,
                           cachePath: credentials.restorationToken.sessionDirectories.cachePath)
             .username(username: credentials.userID)
@@ -132,12 +130,13 @@ class UserSessionStore: UserSessionStoreProtocol {
         
         do {
             let client = try await builder.build()
-            
             try await client.restoreSession(session: credentials.restorationToken.session)
             
             MXLog.info("Set up session for user \(credentials.userID) at: \(credentials.restorationToken.sessionDirectories)")
             
-            return try await .success(setupProxyForClient(client, needsSlidingSyncMigration: credentials.restorationToken.needsSlidingSyncMigration))
+            Task(priority: .low) { await appHooks.remoteSettingsHook.updateCache(using: client) }
+            
+            return try await .success(setupProxyForClient(client))
         } catch UserSessionStoreError.failedSettingUpClientProxy(let error) {
             // If this has failed, there is likely something wrong with the creation of the sync service
             // There is nothing we can do, but at the same time we don't want the user to the get logged out
@@ -149,10 +148,9 @@ class UserSessionStore: UserSessionStoreProtocol {
         }
     }
     
-    private func setupProxyForClient(_ client: ClientProtocol, needsSlidingSyncMigration: Bool) async throws -> ClientProxyProtocol {
+    private func setupProxyForClient(_ client: ClientProtocol) async throws -> ClientProxyProtocol {
         do {
             return try await ClientProxy(client: client,
-                                         needsSlidingSyncMigration: needsSlidingSyncMigration,
                                          networkMonitor: networkMonitor,
                                          appSettings: appSettings)
         } catch {

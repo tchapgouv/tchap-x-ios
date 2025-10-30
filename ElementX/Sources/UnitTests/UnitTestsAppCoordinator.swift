@@ -8,6 +8,10 @@
 import SwiftUI
 
 class UnitTestsAppCoordinator: AppCoordinatorProtocol {
+    private let targetConfiguration: Target.ConfigurationResult
+    static let targetRageshakeURL = RemotePreference<RageshakeConfiguration>(.url("bugs.example.com/submit"))
+    static let targetAppHooks = AppHooks()
+    
     let windowManager: SecureWindowManagerProtocol
     
     init(appDelegate: AppDelegate) {
@@ -17,12 +21,22 @@ class UnitTestsAppCoordinator: AppCoordinatorProtocol {
         AppSettings.configureWithSuiteName("io.element.elementx.unittests")
         AppSettings.resetAllSettings()
         ServiceLocator.shared.register(appSettings: AppSettings())
-        ServiceLocator.shared.register(bugReportService: BugReportServiceMock(.init()))
         
         let analyticsClient = AnalyticsClientMock()
         analyticsClient.isRunning = false
         ServiceLocator.shared.register(analytics: AnalyticsService(client: analyticsClient,
                                                                    appSettings: ServiceLocator.shared.settings))
+        
+        // As the tests take advantage of Rust's ability to redirect the log files, there is
+        // often some debris left from the previous run, so we wipe the entire directory.
+        // This is an NOT an advised way to delete logs in production, `Tracing.deleteLogFiles`
+        // exists for that purpose.
+        try? FileManager.default.removeItem(at: .appGroupLogsDirectory)
+        targetConfiguration = Target.tests.configure(logLevel: .info,
+                                                     traceLogPacks: [],
+                                                     sentryURL: nil,
+                                                     rageshakeURL: Self.targetRageshakeURL,
+                                                     appHooks: Self.targetAppHooks)
     }
     
     func start() { }

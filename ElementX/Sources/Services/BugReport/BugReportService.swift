@@ -12,35 +12,37 @@ import Sentry
 import UIKit
 
 class BugReportService: NSObject, BugReportServiceProtocol {
-    // Tchap: Make BugReportService baseURL updatable and nullable (on logout)
-//    private let baseURL: URL?
-    private(set) var baseURL: URL?
+    private var rageshakeURL: RageshakeConfiguration
     private let applicationID: String
     private let sdkGitSHA: String
     private let maxUploadSize: Int
     private let session: URLSession
-    
     private let appHooks: AppHooks
     
     private let progressSubject = PassthroughSubject<Double, Never>()
     private var cancellables = Set<AnyCancellable>()
     
-    var isEnabled: Bool { baseURL != nil }
+    var isEnabled: Bool { rageshakeURL != .disabled }
     var lastCrashEventID: String?
     
-    init(baseURL: URL?,
+    init(rageshakeURLPublisher: CurrentValuePublisher<RageshakeConfiguration, Never>,
          applicationID: String,
          sdkGitSHA: String,
          maxUploadSize: Int,
          session: URLSession = .shared,
          appHooks: AppHooks) {
-        self.baseURL = baseURL
+        rageshakeURL = rageshakeURLPublisher.value
         self.applicationID = applicationID
         self.sdkGitSHA = sdkGitSHA
         self.maxUploadSize = maxUploadSize
         self.session = session
         self.appHooks = appHooks
+        
         super.init()
+        
+        rageshakeURLPublisher
+            .weakAssign(to: \.rageshakeURL, on: self)
+            .store(in: &cancellables)
     }
 
     // MARK: - BugReportServiceProtocol
@@ -48,20 +50,15 @@ class BugReportService: NSObject, BugReportServiceProtocol {
     var crashedLastRun: Bool {
         SentrySDK.crashedLastRun
     }
-        
-    // Tchap: Make BugReportService baseURL updatable and nullable (on logout)
-    func updateBaseURL(_ baseURL: URL?) {
-        self.baseURL = baseURL
-    }
-
+    
     // swiftlint:disable:next cyclomatic_complexity
     func submitBugReport(_ bugReport: BugReport,
                          progressListener: CurrentValueSubject<Double, Never>) async -> Result<SubmitBugReportResponse, BugReportServiceError> {
-        guard let baseURL else {
+        guard case let .url(rageshakeURL) = rageshakeURL else {
             fatalError("No bug report URL set, the screen should not be shown in this case.")
         }
         
-        let bugReport = appHooks.bugReportHook.update(bugReport)
+        var bugReport = appHooks.bugReportHook.update(bugReport)
         
         var params = [
             MultipartFormData(key: "text", type: .text(value: bugReport.text)),
@@ -70,6 +67,8 @@ class BugReportService: NSObject, BugReportServiceProtocol {
         
         if let userID = bugReport.userID {
             params.append(.init(key: "user_id", type: .text(value: userID)))
+        } else {
+            bugReport.githubLabels.append("login")
         }
         
         if let deviceID = bugReport.deviceID {
@@ -81,21 +80,30 @@ class BugReportService: NSObject, BugReportServiceProtocol {
             params.append(.init(key: "device_keys", type: .text(value: compactKeys)))
         }
         
+        if let crashEventID = lastCrashEventID {
+            params.append(MultipartFormData(key: "crash_report", type: .text(value: "<https://sentry.tools.element.io/organizations/element/issues/?project=44&query=\(crashEventID)>")))
+            bugReport.githubLabels.append("crash")
+        }
+        
         params.append(contentsOf: defaultParams)
+        
+        if InfoPlistReader.main.baseBundleIdentifier == "io.element.elementx.nightly" {
+            bugReport.githubLabels.append("Nightly")
+        }
+        
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            bugReport.githubLabels.append("macOS")
+        }
         
         for label in bugReport.githubLabels {
             params.append(MultipartFormData(key: "label", type: .text(value: label)))
         }
         
-        if bugReport.includeLogs {
-            let logAttachments = await zipFiles(Tracing.logFiles)
+        if let logFiles = bugReport.logFiles {
+            let logAttachments = await zipFiles(logFiles)
             for url in logAttachments.files {
                 params.append(MultipartFormData(key: "compressed-log", type: .file(url: url)))
             }
-        }
-        
-        if let crashEventID = lastCrashEventID {
-            params.append(MultipartFormData(key: "crash_report", type: .text(value: "<https://sentry.tools.element.io/organizations/element/issues/?project=44&query=\(crashEventID)>")))
         }
         
         for url in bugReport.files {
@@ -114,7 +122,7 @@ class BugReportService: NSObject, BugReportServiceProtocol {
         }
         body.appendString(string: "--\(boundary)--\r\n")
 
-        var request = URLRequest(url: baseURL.appendingPathComponent("submit"))
+        var request = URLRequest(url: rageshakeURL)
         request.addValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
         request.httpMethod = "POST"
@@ -144,14 +152,9 @@ class BugReportService: NSObject, BugReportServiceProtocol {
             
             // Parse the JSON data
             let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
             let uploadResponse = try decoder.decode(SubmitBugReportResponse.self, from: data)
             
-            // Tchap: allow SubmitBugReportResponse to not contains `reportUrl` value.
-//            if !uploadResponse.reportUrl.isEmpty {
-            if !(uploadResponse.reportUrl?.isEmpty ?? false) {
-                lastCrashEventID = nil
-            }
+            lastCrashEventID = nil
             
             MXLog.info("Feedback submitted.")
             
@@ -192,7 +195,12 @@ class BugReportService: NSObject, BugReportServiceProtocol {
     }
 
     private var os: String {
-        "\(UIDevice.current.systemName) \(UIDevice.current.systemVersion)"
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            // The other APIs report macOS's equivalent iOS version, so lets use the right one to get the macOS version.
+            "macOS \(ProcessInfo.processInfo.operatingSystemVersionString)"
+        } else {
+            "\(UIDevice.current.systemName) \(UIDevice.current.systemVersion)"
+        }
     }
 
     private func zipFiles(_ logFiles: [URL]) async -> Logs {

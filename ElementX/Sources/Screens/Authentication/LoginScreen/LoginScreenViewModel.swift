@@ -8,12 +8,12 @@
 import Combine
 import SwiftUI
 
-typealias LoginScreenViewModelType = StateStoreViewModel<LoginScreenViewState, LoginScreenViewAction>
+typealias LoginScreenViewModelType = StateStoreViewModelV2<LoginScreenViewState, LoginScreenViewAction>
 
 class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtocol {
     private let authenticationService: AuthenticationServiceProtocol
-    private let slidingSyncLearnMoreURL: URL
     private let userIndicatorController: UserIndicatorControllerProtocol
+    private let appSettings: AppSettings
     private let analytics: AnalyticsService
     
     private var actionsSubject: PassthroughSubject<LoginScreenViewModelAction, Never> = .init()
@@ -22,15 +22,23 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
     }
 
     init(authenticationService: AuthenticationServiceProtocol,
-         slidingSyncLearnMoreURL: URL,
+         loginHint: String?,
          userIndicatorController: UserIndicatorControllerProtocol,
+         appSettings: AppSettings,
          analytics: AnalyticsService) {
         self.authenticationService = authenticationService
-        self.slidingSyncLearnMoreURL = slidingSyncLearnMoreURL
         self.userIndicatorController = userIndicatorController
+        self.appSettings = appSettings
         self.analytics = analytics
         
-        let viewState = LoginScreenViewState(homeserver: authenticationService.homeserver.value)
+        let username = switch loginHint {
+        case .some(let hint) where hint.hasPrefix("mxid:"): String(hint.dropFirst(5)) // MSC4198
+        case .some(let hint): hint
+        case .none: ""
+        }
+        
+        let viewState = LoginScreenViewState(homeserver: authenticationService.homeserver.value,
+                                             bindings: LoginScreenBindings(username: username))
         
         super.init(initialViewState: viewState)
         
@@ -155,13 +163,21 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
                                                  title: L10n.commonServerNotSupported,
                                                  message: L10n.screenChangeServerErrorInvalidWellKnown(error))
         case .slidingSyncNotAvailable:
-            let openURL = { UIApplication.shared.open(self.slidingSyncLearnMoreURL) }
+            let nonBreakingAppName = InfoPlistReader.main.bundleDisplayName.replacingOccurrences(of: " ", with: "\u{00A0}")
             state.bindings.alertInfo = AlertInfo(id: .slidingSyncAlert,
                                                  title: L10n.commonServerNotSupported,
-                                                 message: L10n.screenChangeServerErrorNoSlidingSyncMessage,
-                                                 primaryButton: .init(title: L10n.actionLearnMore, role: .cancel, action: openURL),
-                                                 secondaryButton: .init(title: L10n.actionCancel, action: nil))
+                                                 message: L10n.screenChangeServerErrorNoSlidingSyncMessage(nonBreakingAppName))
             
+            // Clear out the invalid username to avoid an attempted login to matrix.org
+            state.bindings.username = ""
+        case .elementProRequired(let serverName):
+            state.bindings.alertInfo = AlertInfo(id: .elementProAlert,
+                                                 title: L10n.screenChangeServerErrorElementProRequiredTitle,
+                                                 message: L10n.screenChangeServerErrorElementProRequiredMessage(serverName),
+                                                 primaryButton: .init(title: L10n.screenChangeServerErrorElementProRequiredActionIos) {
+                                                     UIApplication.shared.open(self.appSettings.elementProAppStoreURL)
+                                                 },
+                                                 secondaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil))
             // Clear out the invalid username to avoid an attempted login to matrix.org
             state.bindings.username = ""
         case .sessionTokenRefreshNotSupported:

@@ -97,6 +97,7 @@ struct TimelineReplyView: View {
         var body: some View {
             ReplyView(sender: .init(id: "@alice:matrix.org"), plainBody: "Hello world", formattedBody: nil)
                 .redacted(reason: .placeholder)
+                .accessibilityLabel(L10n.commonLoading)
         }
     }
     
@@ -129,14 +130,15 @@ struct TimelineReplyView: View {
                     .foregroundColor(.compound.iconPrimary)
                     .background(Color.compound.bgSubtlePrimary)
                     .cornerRadius(icon?.cornerRadii ?? 0.0, corners: .allCorners)
+                    .accessibilityHidden(true)
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(sender.displayName ?? sender.id)
+                    Text(sender.disambiguatedDisplayName ?? sender.id)
                         .font(.compound.bodySMSemibold)
                         .foregroundColor(.compound.textPrimary)
-                        .accessibilityLabel(L10n.commonInReplyTo(sender.displayName ?? sender.id))
+                        .accessibilityLabel(L10n.commonInReplyTo(sender.disambiguatedDisplayName ?? sender.id))
                     
-                    Text(messagePreview)
+                    Text(context.viewState.buildMessagePreview(formattedBody: formattedBody, plainBody: plainBody))
                         .font(.compound.bodyMD)
                         .foregroundColor(.compound.textSecondary)
                         .tint(.compound.textLinkExternal)
@@ -145,6 +147,7 @@ struct TimelineReplyView: View {
                 .padding(.leading, icon == nil ? 8 : 0)
                 .padding(.trailing, 8)
             }
+            .accessibilityElement(children: .combine)
         }
         
         @ViewBuilder
@@ -174,56 +177,6 @@ struct TimelineReplyView: View {
                     CompoundIcon(keyPath, size: .small, relativeTo: .body)
                 }
             }
-        }
-        
-        /// The string shown as the message preview.
-        ///
-        /// This converts the formatted body to a plain string to remove formatting
-        /// and render with a consistent font size. This conversion is done to avoid
-        /// showing markdown characters in the preview for messages with formatting.
-        private var messagePreview: String {
-            guard let formattedBody,
-                  let attributedString = try? NSMutableAttributedString(formattedBody, including: \.elementX) else {
-                return plainBody
-            }
-            
-            let range = NSRange(location: 0, length: attributedString.length)
-            attributedString.enumerateAttributes(in: range) { attributes, range, _ in
-                if let userID = attributes[.MatrixUserID] as? String {
-                    if let displayName = context.viewState.members[userID]?.displayName {
-                        attributedString.replaceCharacters(in: range, with: "@\(displayName)")
-                    } else {
-                        attributedString.replaceCharacters(in: range, with: userID)
-                    }
-                }
-                
-                if attributes[.MatrixAllUsersMention] as? Bool == true {
-                    attributedString.replaceCharacters(in: range, with: PillUtilities.atRoom)
-                }
-                
-                if let roomAlias = attributes[.MatrixRoomAlias] as? String {
-                    let roomName = context.viewState.roomNameForAliasResolver?(roomAlias)
-                    attributedString.replaceCharacters(in: range, with: PillUtilities.roomPillDisplayText(roomName: roomName, rawRoomText: roomAlias))
-                }
-                
-                if let roomID = attributes[.MatrixRoomID] as? String {
-                    let roomName = context.viewState.roomNameForIDResolver?(roomID)
-                    attributedString.replaceCharacters(in: range, with: PillUtilities.roomPillDisplayText(roomName: roomName, rawRoomText: roomID))
-                }
-                
-                if let eventOnRoomID = attributes[.MatrixEventOnRoomID] as? EventOnRoomIDAttribute.Value {
-                    let roomID = eventOnRoomID.roomID
-                    let roomName = context.viewState.roomNameForIDResolver?(roomID)
-                    attributedString.replaceCharacters(in: range, with: PillUtilities.eventPillDisplayText(roomName: roomName, rawRoomText: roomID))
-                }
-                
-                if let eventOnRoomAlias = attributes[.MatrixEventOnRoomAlias] as? EventOnRoomAliasAttribute.Value {
-                    let roomAlias = eventOnRoomAlias.alias
-                    let roomName = context.viewState.roomNameForAliasResolver?(roomAlias)
-                    attributedString.replaceCharacters(in: range, with: PillUtilities.eventPillDisplayText(roomName: roomName, rawRoomText: eventOnRoomAlias.alias))
-                }
-            }
-            return attributedString.string
         }
     }
 }

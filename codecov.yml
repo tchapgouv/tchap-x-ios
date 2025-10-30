@@ -19,6 +19,11 @@ ignore:
   - "**/Mock*.swift"
   - "**/*Mock.swift"
   - "**/*Proxy.swift"
+  - "**/*Protocol.swift"
+  - "compound-ios/Inspector"
+  - "compound-ios/Tests"
+  - "compound-ios/Sources/Previews"
+  - "compound-ios/Tools"
 # Tchap: add TchapX generated files to exclusion list.
   - "TchapX/Sources/main/Generated"
 

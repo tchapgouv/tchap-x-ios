@@ -69,7 +69,8 @@ struct TchapFeatureFlag {
 }
 
 extension TchapFeatureFlag {
-    enum Instance: String {
+    enum Instance: String, CaseIterable {
+        #if IS_TCHAP_PRODUCTION
         case externe = "agent.externe.tchap.gouv.fr"
         case collectivites = "agent.collectivites.tchap.gouv.fr"
         case agent = "agent.tchap.gouv.fr"
@@ -87,9 +88,22 @@ extension TchapFeatureFlag {
         case culture = "agent.culture.tchap.gouv.fr"
         case devDurable = "agent.dev-durable.tchap.gouv.fr"
         case education = "agent.education.tchap.gouv.fr"
+        #elseif IS_TCHAP_STAGING
+        case interne = "i.tchap.gouv.fr"
+        case interne2 = "a.tchap.gouv.fr"
+        case externe = "e.tchap.gouv.fr"
+        #elseif IS_TCHAP_DEVELOPMENT
+        case dev01 = "dev01.tchap.incubateur.net"
+        case dev02 = "dev02.tchap.incubateur.net"
+        case raphoid_test = "int.private-unencrypted-android.tchap.incubateur.net"
+        #endif
         case all // To allow a feature for any instance
 
         var homeServer: String? { rawValue }
+        
+        static func instance(for homeServerName: String) -> Instance? {
+            Instance.allCases.filter { $0.rawValue == homeServerName }.first
+        }
     }
 }
 
@@ -97,14 +111,19 @@ extension TchapFeatureFlag {
     enum Configuration { // Use empty Enum rather than empty Struct. (Linter advice)
         #if IS_TCHAP_PRODUCTION
         // certificatePinning can only be activated for .all or none because it is used before any activae session.
-        static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
+//        static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
+        // Tchap: don't use pinning for v0.7.0
+        static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
+        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
         #elseif IS_TCHAP_STAGING
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [.agriculture, .agent])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
+        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
         #elseif IS_TCHAP_DEVELOPMENT
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
+        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [.all])
         #endif
     }
 }

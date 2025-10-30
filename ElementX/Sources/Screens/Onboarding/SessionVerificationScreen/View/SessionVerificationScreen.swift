@@ -10,7 +10,12 @@ import MatrixRustSDK
 import SwiftUI
 
 struct SessionVerificationScreen: View {
+    enum AccessibilityFocus {
+        case title
+    }
+    
     @ObservedObject var context: SessionVerificationScreenViewModel.Context
+    @AccessibilityFocusState private var accessibilityFocus: AccessibilityFocus?
     
     var body: some View {
         FullscreenDialog {
@@ -26,6 +31,11 @@ struct SessionVerificationScreen: View {
         .interactiveDismissDisabled()
         .navigationBarBackButtonHidden(context.viewState.verificationState == .verified)
         .toolbar { toolbar }
+        .onAppear {
+            var announcement = AttributedString(L10n.a11ySessionVerificationTimeLimitedActionRequired)
+            announcement.accessibilitySpeechAnnouncementPriority = .high
+            AccessibilityNotification.Announcement(announcement).post()
+        }
     }
     
     // MARK: - Private
@@ -33,7 +43,7 @@ struct SessionVerificationScreen: View {
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             switch context.viewState.flow {
-            case .userIntiator, .userResponder:
+            case .userInitiator, .userResponder:
                 Button(L10n.actionCancel) {
                     context.send(viewAction: .cancel)
                 }
@@ -56,6 +66,10 @@ struct SessionVerificationScreen: View {
                 .foregroundColor(.compound.textPrimary)
                 .padding(.bottom, 8)
                 .accessibilityIdentifier(context.viewState.titleAccessibilityIdentifier)
+                .onChange(of: context.viewState.title) { _, _ in
+                    accessibilityFocus = .title
+                }
+                .accessibilityFocused($accessibilityFocus, equals: .title)
 
             Text(context.viewState.message)
                 .font(.compound.bodyMD)
@@ -77,7 +91,7 @@ struct SessionVerificationScreen: View {
                 SessionVerificationRequestDetailsView(details: details,
                                                       isUserVerification: true,
                                                       mediaProvider: context.mediaProvider)
-            case .userIntiator:
+            case .userInitiator:
                 Button(L10n.actionLearnMore) {
                     UIApplication.shared.open(context.viewState.learnMoreURL)
                 }
@@ -116,7 +130,7 @@ struct SessionVerificationScreen: View {
         switch context.viewState.verificationState {
         case .initial:
             switch context.viewState.flow {
-            case .deviceInitiator, .userIntiator:
+            case .deviceInitiator, .userInitiator:
                 Button(L10n.actionStartVerification) {
                     context.send(viewAction: .requestVerification)
                 }
@@ -124,7 +138,7 @@ struct SessionVerificationScreen: View {
                 .accessibilityIdentifier(A11yIdentifiers.sessionVerificationScreen.requestVerification)
             case .deviceResponder, .userResponder:
                 VStack(spacing: 16) {
-                    Button(L10n.actionStart) {
+                    Button(L10n.actionStartVerification) {
                         context.send(viewAction: .acceptVerificationRequest)
                     }
                     .buttonStyle(.compound(.primary))
@@ -140,7 +154,7 @@ struct SessionVerificationScreen: View {
 
         case .cancelled:
             switch context.viewState.flow {
-            case .deviceInitiator, .userIntiator:
+            case .deviceInitiator, .userInitiator:
                 Button(L10n.actionRetry) {
                     context.send(viewAction: .restart)
                 }
@@ -186,10 +200,12 @@ struct SessionVerificationScreen: View {
             VStack(spacing: 16.0) {
                 Text(emoji.symbol)
                     .font(.compound.headingXLBold)
+                    .accessibilityHidden(true)
                 Text(emoji.localizedDescription.capitalized)
                     .font(.compound.bodyMD)
                     .foregroundColor(.compound.textSecondary)
             }
+            .accessibilityElement(children: .combine)
             .padding(8.0)
         }
     }
@@ -200,7 +216,7 @@ struct SessionVerification_Previews: PreviewProvider, TestablePreview {
         sessionVerificationScreen(state: .initial, flow: .deviceInitiator)
             .previewDisplayName("Initial - Device Initiator")
         
-        sessionVerificationScreen(state: .initial, flow: .userIntiator(userID: "@bob:matrix.org"))
+        sessionVerificationScreen(state: .initial, flow: .userInitiator(userID: "@bob:matrix.org"))
             .previewDisplayName("Initial - User Initiator")
         
         let details = SessionVerificationRequestDetails(senderProfile: UserProfileProxy(userID: "@bob:matrix.org",

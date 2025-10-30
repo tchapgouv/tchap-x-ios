@@ -11,11 +11,10 @@ import SwiftUI
 typealias RoomMembersListScreenViewModelType = StateStoreViewModel<RoomMembersListScreenViewState, RoomMembersListScreenViewAction>
 
 class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMembersListScreenViewModelProtocol {
-    private let clientProxy: ClientProxyProtocol
+    private let userSession: UserSessionProtocol
     private let roomProxy: JoinedRoomProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let analytics: AnalyticsService
-    private let mediaProvider: MediaProviderProtocol
     
     private var members: [RoomMemberProxyProtocol] = []
     private var currentUserProxy: RoomMemberProxyProtocol?
@@ -27,20 +26,18 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
     }
 
     init(initialMode: RoomMembersListScreenMode = .members,
-         clientProxy: ClientProxyProtocol,
+         userSession: UserSessionProtocol,
          roomProxy: JoinedRoomProxyProtocol,
-         mediaProvider: MediaProviderProtocol,
          userIndicatorController: UserIndicatorControllerProtocol,
          analytics: AnalyticsService) {
-        self.clientProxy = clientProxy
+        self.userSession = userSession
         self.roomProxy = roomProxy
         self.userIndicatorController = userIndicatorController
         self.analytics = analytics
-        self.mediaProvider = mediaProvider
         
         super.init(initialViewState: .init(joinedMembersCount: roomProxy.infoPublisher.value.joinedMembersCount,
                                            bindings: .init(mode: initialMode)),
-                   mediaProvider: mediaProvider)
+                   mediaProvider: userSession.mediaProvider)
         
         setupMembers()
     }
@@ -51,8 +48,6 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
         switch viewAction {
         case .selectMember(let member):
             selectMember(member)
-        case .unbanMember(let member):
-            Task { await unbanMember(member) }
         case .invite:
             actionsSubject.send(.invite)
         }
@@ -80,7 +75,7 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
             }
             .store(in: &cancellables)
         
-        roomProxy.timeline.timelineProvider.membershipChangePublisher.sink { [roomProxy] _ in
+        roomProxy.timeline.timelineItemProvider.membershipChangePublisher.sink { [roomProxy] _ in
             Task { await roomProxy.updateMembers() }
         }
         .store(in: &cancellables)
@@ -89,6 +84,10 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
     private func updateState(members: [RoomMemberProxyProtocol]) {
         Task {
             showLoadingIndicator(Self.updateStateLoadingIndicatorIdentifier)
+            
+            defer {
+                hideLoadingIndicator(Self.updateStateLoadingIndicatorIdentifier)
+            }
             
             let members = members.sorted()
             let roomMembersDetails = await buildMembersDetails(members: members)
@@ -101,15 +100,20 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
                                bannedMembers: roomMembersDetails.bannedMembers,
                                bindings: state.bindings)
             
-            // Tchap: if user is external user, don't allow any modification power level.
-            if MatrixIdFromString(roomProxy.ownUserID).isExternalTchapUser {
-                self.state.canInviteUsers = false
-                self.state.canKickUsers = false
-                self.state.canBanUsers = false
-            } else {
-                self.state.canInviteUsers = await (try? roomProxy.canUserInvite(userID: roomProxy.ownUserID).get()) == true
-                self.state.canKickUsers = await (try? roomProxy.canUserKick(userID: roomProxy.ownUserID).get()) == true
-                self.state.canBanUsers = await (try? roomProxy.canUserBan(userID: roomProxy.ownUserID).get()) == true
+            if let powerLevels = roomProxy.infoPublisher.value.powerLevels {
+                // Tchap: if user is external user, don't allow any modification power level.
+//                self.state.canInviteUsers = powerLevels.canOwnUserInvite()
+//                self.state.canKickUsers = powerLevels.canOwnUserKick()
+//                self.state.canBanUsers = powerLevels.canOwnUserBan()
+                if MatrixIdFromString(roomProxy.ownUserID).isExternalTchapUser {
+                    self.state.canInviteUsers = false
+                    self.state.canKickUsers = false
+                    self.state.canBanUsers = false
+                } else {
+                    self.state.canInviteUsers = powerLevels.canOwnUserInvite()
+                    self.state.canKickUsers = powerLevels.canOwnUserKick()
+                    self.state.canBanUsers = powerLevels.canOwnUserBan()
+                }
             }
             
             hideLoadingIndicator(Self.updateStateLoadingIndicatorIdentifier)
@@ -117,7 +121,7 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
     }
     
     private func buildMembersDetails(members: [RoomMemberProxyProtocol]) async -> RoomMembersDetails {
-        await Task.detached { [clientProxy, roomProxy] in
+        await Task.detached { [userSession, roomProxy] in
             // accessing RoomMember's properties is very slow. We need to do it in a background thread.
             var invitedMembers: [RoomMemberListScreenEntry] = .init()
             var joinedMembers: [RoomMemberListScreenEntry] = .init()
@@ -126,7 +130,7 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
             for member in members {
                 var verificationState: UserIdentityVerificationState = .notVerified
                 if roomProxy.infoPublisher.value.isEncrypted, // We don't care about identity statuses on non-encrypted rooms
-                   case let .success(userIdentity) = await clientProxy.userIdentity(for: member.userID),
+                   case let .success(userIdentity) = await userSession.clientProxy.userIdentity(for: member.userID),
                    let userIdentity {
                     verificationState = userIdentity.verificationState
                 }
@@ -151,46 +155,31 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
     }
     
     private func selectMember(_ member: RoomMemberDetails) {
-        guard let currentUserProxy,
-              currentUserProxy.powerLevel > member.powerLevel else {
+        guard currentUserProxy?.userID != member.id else {
             showMemberDetails(member)
-            return
-        }
-              
-        if member.isBanned { // No need to check canBan here, banned users are only shown when it is true.
-            state.bindings.alertInfo = AlertInfo(id: .unbanConfirmation(member),
-                                                 title: L10n.screenRoomMemberListManageMemberUnbanTitle,
-                                                 message: L10n.screenRoomMemberListManageMemberUnbanMessage,
-                                                 primaryButton: .init(title: L10n.screenRoomMemberListManageMemberUnbanAction) { [weak self] in
-                                                     self?.context.send(viewAction: .unbanMember(member))
-                                                 },
-                                                 secondaryButton: .init(title: L10n.actionCancel, role: .cancel) { })
             return
         }
         
-        if state.canKickUsers || state.canBanUsers {
-            let manageMemeberViewModel = ManageRoomMemberSheetViewModel(member: member,
-                                                                        canKick: state.canKickUsers,
-                                                                        canBan: state.canBanUsers,
-                                                                        roomProxy: roomProxy,
-                                                                        userIndicatorController: userIndicatorController,
-                                                                        analyticsService: analytics,
-                                                                        mediaProvider: mediaProvider)
-            manageMemeberViewModel.actions.sink { [weak self] action in
-                guard let self else { return }
-                switch action {
-                case .dismiss(let shouldShowDetails):
-                    state.bindings.manageMemeberViewModel = nil
-                    if shouldShowDetails {
-                        showMemberDetails(member)
-                    }
+        let manageMemberViewModel = ManageRoomMemberSheetViewModel(memberDetails: .memberDetails(roomMember: member),
+                                                                   permissions: .init(canKick: state.canKickUsers,
+                                                                                      canBan: state.canBanUsers,
+                                                                                      ownPowerLevel: currentUserProxy?.powerLevel ?? .init(value: 0)),
+                                                                   roomProxy: roomProxy,
+                                                                   userIndicatorController: userIndicatorController,
+                                                                   analyticsService: analytics,
+                                                                   mediaProvider: userSession.mediaProvider)
+        manageMemberViewModel.actions.sink { [weak self] action in
+            guard let self else { return }
+            switch action {
+            case .dismiss(let shouldShowDetails):
+                state.bindings.manageMemeberViewModel = nil
+                if shouldShowDetails {
+                    showMemberDetails(member)
                 }
             }
-            .store(in: &cancellables)
-            state.bindings.manageMemeberViewModel = manageMemeberViewModel
-        } else {
-            showMemberDetails(member)
         }
+        .store(in: &cancellables)
+        state.bindings.manageMemeberViewModel = manageMemberViewModel
     }
     
     private func showMemberDetails(_ member: RoomMemberDetails) {

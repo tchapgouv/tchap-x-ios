@@ -22,6 +22,7 @@ enum AppLockFlowCoordinatorAction: Equatable {
 class AppLockFlowCoordinator: CoordinatorProtocol {
     let appLockService: AppLockServiceProtocol
     let navigationCoordinator: NavigationRootCoordinator
+    let appSettings: AppSettings
     
     /// States the flow can find itself in
     enum State: StateType {
@@ -89,9 +90,11 @@ class AppLockFlowCoordinator: CoordinatorProtocol {
     init(initialState: State = .initial,
          appLockService: AppLockServiceProtocol,
          navigationCoordinator: NavigationRootCoordinator,
-         notificationCenter: NotificationCenter = .default) {
+         notificationCenter: NotificationCenter = .default,
+         appSettings: AppSettings) {
         self.appLockService = appLockService
         self.navigationCoordinator = navigationCoordinator
+        self.appSettings = appSettings
         
         // Set the initial state and start with the placeholder screen as the root view.
         stateMachine = .init(state: initialState)
@@ -153,13 +156,13 @@ class AppLockFlowCoordinator: CoordinatorProtocol {
                 guard appLockService.computeNeedsUnlock(didBecomeActiveAt: .now) else { return .unlocked }
                 return isBiometricUnlockAvailable ? .attemptingBiometricUnlock : .attemptingPINUnlock
             case (.attemptingBiometricUnlock, .didFinishBiometricUnlock(let result)):
-                return .dismissingBiometricUnlock(result) // Transitional state until the app becomes active again.
-            case (.dismissingBiometricUnlock(let result), .didBecomeActive):
-                return switch result {
-                case .unlocked: .unlocked
-                case .failed: .attemptingPINUnlock
-                case .interrupted: .attemptingBiometricUnlock
+                if ProcessInfo.processInfo.isiOSAppOnMac { // On the Mac the app is already active at this point
+                    return result.toStateMachineState()
+                } else { // On iOS on the other hand it, biometrics keep it non-active
+                    return .dismissingBiometricUnlock(result) // Transitional state until the app becomes active again.
                 }
+            case (.dismissingBiometricUnlock(let result), .didBecomeActive):
+                return result.toStateMachineState()
             case (.attemptingPINUnlock, .didUnlockWithPIN):
                 return .unlocked
             case (.attemptingPINUnlock, .forceLogout):
@@ -215,7 +218,7 @@ class AppLockFlowCoordinator: CoordinatorProtocol {
     
     /// Displays the unlock flow with the app's placeholder view to hide obscure the view hierarchy in the app switcher.
     private func showPlaceholder() {
-        navigationCoordinator.setRootCoordinator(PlaceholderScreenCoordinator(showsBackgroundGradient: true), animated: false)
+        navigationCoordinator.setRootCoordinator(PlaceholderScreenCoordinator(hideBrandChrome: appSettings.hideBrandChrome, hideGradientBackground: false), animated: false)
         actionsSubject.send(.lockApp)
     }
     
@@ -241,5 +244,15 @@ class AppLockFlowCoordinator: CoordinatorProtocol {
         
         navigationCoordinator.setRootCoordinator(coordinator, animated: false)
         actionsSubject.send(.lockApp)
+    }
+}
+
+private extension AppLockServiceBiometricResult {
+    func toStateMachineState() -> AppLockFlowCoordinator.State {
+        switch self {
+        case .unlocked: .unlocked
+        case .failed: .attemptingPINUnlock
+        case .interrupted: .attemptingBiometricUnlock
+        }
     }
 }

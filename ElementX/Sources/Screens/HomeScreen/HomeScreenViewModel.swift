@@ -16,6 +16,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
     private let userSession: UserSessionProtocol
     private let analyticsService: AnalyticsService
     private let appSettings: AppSettings
+    private let notificationManager: NotificationManagerProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     
     private let roomSummaryProvider: RoomSummaryProviderProtocol?
@@ -26,18 +27,21 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
     }
     
     init(userSession: UserSessionProtocol,
-         analyticsService: AnalyticsService,
-         appSettings: AppSettings,
          selectedRoomPublisher: CurrentValuePublisher<String?, Never>,
+         appSettings: AppSettings,
+         analyticsService: AnalyticsService,
+         notificationManager: NotificationManagerProtocol,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.userSession = userSession
         self.analyticsService = analyticsService
         self.appSettings = appSettings
+        self.notificationManager = notificationManager
         self.userIndicatorController = userIndicatorController
         
         roomSummaryProvider = userSession.clientProxy.roomSummaryProvider
         
-        super.init(initialViewState: .init(userID: userSession.clientProxy.userID),
+        super.init(initialViewState: .init(userID: userSession.clientProxy.userID,
+                                           bindings: .init(filtersState: .init(appSettings: appSettings))),
                    mediaProvider: userSession.mediaProvider)
         
         userSession.clientProxy.userAvatarURLPublisher
@@ -101,13 +105,21 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             }
             .store(in: &cancellables)
         
-        appSettings.$hideInviteAvatars
+        appSettings.$hasSeenNewSoundBanner
+            .sink { [weak self] hasSeenNewSoundBanner in
+                self?.state.shouldShowNewSoundBanner = !hasSeenNewSoundBanner
+            }
+            .store(in: &cancellables)
+        
+        userSession.clientProxy.hideInviteAvatarsPublisher
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
             .weakAssign(to: \.state.hideInviteAvatars, on: self)
             .store(in: &cancellables)
         
-        appSettings.$reportRoomEnabled
-            .weakAssign(to: \.state.reportRoomEnabled, on: self)
-            .store(in: &cancellables)
+        Task {
+            state.reportRoomEnabled = await userSession.clientProxy.isReportRoomSupported
+        }
         
         let isSearchFieldFocused = context.$viewState.map(\.bindings.isSearchFieldFocused)
         let searchQuery = context.$viewState.map(\.bindings.searchQuery)
@@ -128,10 +140,6 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         setupRoomListSubscriptions()
         
         updateRooms()
-        
-        Task {
-            await checkSlidingSyncMigration()
-        }
     }
     
     // MARK: - Public
@@ -158,6 +166,8 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             actionsSubject.send(.presentEncryptionResetScreen)
         case .skipRecoveryKeyConfirmation:
             state.securityBannerMode = .dismissed
+        case .dismissNewSoundBanner:
+            appSettings.hasSeenNewSoundBanner = true
         case .updateVisibleItemRange(let range):
             roomSummaryProvider?.updateVisibleRange(range)
         case .startChat:
@@ -205,7 +215,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                 await acceptInvite(roomID: roomIdentifier)
             }
         case .declineInvite(let roomIdentifier):
-            showDeclineInviteConfirmationAlert(roomID: roomIdentifier)
+            Task { await showDeclineInviteConfirmationAlert(roomID: roomIdentifier) }
         }
     }
     
@@ -313,24 +323,6 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         state.rooms = rooms
     }
     
-    /// Check whether we can inform the user about potential migrations
-    /// or have him logout as his proxy is no longer available
-    private func checkSlidingSyncMigration() async {
-        guard userSession.clientProxy.needsSlidingSyncMigration else {
-            return
-        }
-        
-        // The proxy is no longer supported so a logout is needed.
-        // Delay setting the alert otherwise it automatically gets dismissed. Same as the crashed last run one
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.state.bindings.alertInfo = AlertInfo(id: UUID(),
-                                                      title: L10n.bannerMigrateToNativeSlidingSyncAppForceLogoutTitle(InfoPlistReader.main.bundleDisplayName),
-                                                      primaryButton: .init(title: L10n.bannerMigrateToNativeSlidingSyncAction) { [weak self] in
-                                                          self?.actionsSubject.send(.logoutWithoutConfirmation)
-                                                      })
-        }
-    }
-    
     private func markRoomAsFavourite(_ roomID: String, isFavourite: Bool) async {
         guard case let .joined(roomProxy) = await userSession.clientProxy.roomForIdentifier(roomID) else {
             MXLog.error("Failed retrieving room for identifier: \(roomID)")
@@ -359,15 +351,39 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                 return
             }
             
-            if roomProxy.infoPublisher.value.isPublic {
-                state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomID, isDM: roomProxy.isDirectOneToOneRoom, state: .public)
-            } else {
-                state.bindings.leaveRoomAlertItem = if roomProxy.infoPublisher.value.joinedMembersCount > 1 {
-                    LeaveRoomAlertItem(roomID: roomID, isDM: roomProxy.isDirectOneToOneRoom, state: .private)
-                } else {
-                    LeaveRoomAlertItem(roomID: roomID, isDM: roomProxy.isDirectOneToOneRoom, state: .empty)
+            guard roomProxy.infoPublisher.value.joinedMembersCount > 1 else {
+                state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomID,
+                                                                       isDM: roomProxy.isDirectOneToOneRoom,
+                                                                       state: roomProxy.infoPublisher.value.isPrivate ?? true ? .empty : .public)
+                return
+            }
+            
+            if !roomProxy.isDirectOneToOneRoom {
+                if case let .success(ownMember) = await roomProxy.getMember(userID: roomProxy.ownUserID),
+                   ownMember.role.isOwner {
+                    await roomProxy.updateMembers()
+                    var isLastOwner = true
+                    for member in roomProxy.membersPublisher.value where member.userID != roomProxy.ownUserID {
+                        if member.role.isOwner {
+                            isLastOwner = false
+                            break
+                        }
+                    }
+                    
+                    if isLastOwner {
+                        state.bindings.alertInfo = .init(id: UUID(),
+                                                         title: L10n.leaveRoomAlertSelectNewOwnerTitle,
+                                                         message: L10n.leaveRoomAlertSelectNewOwnerSubtitle,
+                                                         primaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil),
+                                                         secondaryButton: .init(title: L10n.leaveRoomAlertSelectNewOwnerAction, role: .destructive) { [weak self] in
+                                                             self?.actionsSubject.send(.transferOwnership(roomIdentifier: roomID))
+                                                         })
+                        return
+                    }
                 }
             }
+            
+            state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomID, isDM: roomProxy.isDirectOneToOneRoom, state: roomProxy.infoPublisher.value.isPrivate ?? true ? .private : .public)
         }
     }
     
@@ -406,17 +422,40 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         
         switch await userSession.clientProxy.joinRoom(roomID, via: []) {
         case .success:
-            actionsSubject.send(.presentRoom(roomIdentifier: roomID))
-            analyticsService.trackJoinedRoom(isDM: roomProxy.info.isDirect,
-                                             isSpace: roomProxy.info.isSpace,
-                                             activeMemberCount: UInt(roomProxy.info.activeMembersCount))
-            appSettings.seenInvites.remove(roomID)
-        case .failure:
-            displayError()
+            await finishAcceptInvite(roomProxy: roomProxy)
+        case .failure(let error):
+            switch error {
+            case .invalidInvite:
+                displayError(title: L10n.dialogTitleError, message: L10n.errorInvalidInvite)
+            default:
+                displayError()
+            }
         }
     }
     
-    private func showDeclineInviteConfirmationAlert(roomID: String) {
+    private func finishAcceptInvite(roomProxy: InvitedRoomProxyProtocol) async {
+        if roomProxy.info.isSpace {
+            let spaceService = userSession.clientProxy.spaceService
+            
+            switch await spaceService.spaceRoomList(spaceID: roomProxy.id, parent: nil) {
+            case .success(let spaceRoomListProxy):
+                actionsSubject.send(.presentSpace(spaceRoomListProxy))
+            case .failure(let error):
+                MXLog.error("Failed to get the space room list after accepting invite: \(error)")
+                displayError()
+                return
+            }
+        } else {
+            actionsSubject.send(.presentRoom(roomIdentifier: roomProxy.id))
+        }
+        
+        analyticsService.trackJoinedRoom(isDM: roomProxy.info.isDirect,
+                                         isSpace: roomProxy.info.isSpace,
+                                         activeMemberCount: UInt(roomProxy.info.activeMembersCount))
+        appSettings.seenInvites.remove(roomProxy.id)
+    }
+    
+    private func showDeclineInviteConfirmationAlert(roomID: String) async {
         guard let room = state.rooms.first(where: { $0.id == roomID }) else {
             displayError()
             return
@@ -426,7 +465,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         let title = room.isDirect ? L10n.screenInvitesDeclineDirectChatTitle : L10n.screenInvitesDeclineChatTitle
         let message = room.isDirect ? L10n.screenInvitesDeclineDirectChatMessage(roomPlaceholder) : L10n.screenInvitesDeclineChatMessage(roomPlaceholder)
         
-        if appSettings.reportInviteEnabled, let userID = room.inviter?.id {
+        if await userSession.clientProxy.isReportRoomSupported, let userID = room.inviter?.id {
             state.bindings.alertInfo = .init(id: UUID(),
                                              title: title,
                                              message: message,
@@ -462,15 +501,16 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         
         switch result {
         case .success:
+            await notificationManager.removeDeliveredMessageNotifications(for: roomID) // Normally handled by the room flow, but that's never presented in this case.
             appSettings.seenInvites.remove(roomID)
         case .failure:
             displayError()
         }
     }
     
-    private func displayError() {
+    private func displayError(title: String? = nil, message: String? = nil) {
         state.bindings.alertInfo = .init(id: UUID(),
-                                         title: L10n.commonError,
-                                         message: L10n.errorUnknown)
+                                         title: title ?? L10n.commonError,
+                                         message: message ?? L10n.errorUnknown)
     }
 }

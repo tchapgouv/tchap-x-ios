@@ -8,7 +8,7 @@
 import Combine
 import SwiftUI
 
-typealias BlockedUsersScreenViewModelType = StateStoreViewModel<BlockedUsersScreenViewState, BlockedUsersScreenViewAction>
+typealias BlockedUsersScreenViewModelType = StateStoreViewModelV2<BlockedUsersScreenViewState, BlockedUsersScreenViewAction>
 
 class BlockedUsersScreenViewModel: BlockedUsersScreenViewModelType, BlockedUsersScreenViewModelProtocol {
     let hideProfiles: Bool
@@ -16,17 +16,16 @@ class BlockedUsersScreenViewModel: BlockedUsersScreenViewModelType, BlockedUsers
     let userIndicatorController: UserIndicatorControllerProtocol
 
     init(hideProfiles: Bool,
-         clientProxy: ClientProxyProtocol,
-         mediaProvider: MediaProviderProtocol,
+         userSession: UserSessionProtocol,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.hideProfiles = hideProfiles
-        self.clientProxy = clientProxy
+        clientProxy = userSession.clientProxy
         self.userIndicatorController = userIndicatorController
         
         let ignoredUsers = clientProxy.ignoredUsersPublisher.value?.map { UserProfileProxy(userID: $0) }
         
         super.init(initialViewState: BlockedUsersScreenViewState(blockedUsers: ignoredUsers ?? []),
-                   mediaProvider: mediaProvider)
+                   mediaProvider: userSession.mediaProvider)
         
         showLoadingIndicator()
         

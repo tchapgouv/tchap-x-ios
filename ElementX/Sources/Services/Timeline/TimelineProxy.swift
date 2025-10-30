@@ -24,9 +24,9 @@ final class TimelineProxy: TimelineProxyProtocol {
     
     private let kind: TimelineKind
    
-    private var innerTimelineProvider: TimelineProviderProtocol!
-    var timelineProvider: TimelineProviderProtocol {
-        innerTimelineProvider
+    private var innerTimelineItemProvider: TimelineItemProviderProtocol!
+    var timelineItemProvider: TimelineItemProviderProtocol {
+        innerTimelineItemProvider
     }
     
     deinit {
@@ -39,7 +39,7 @@ final class TimelineProxy: TimelineProxyProtocol {
     }
     
     func subscribeForUpdates() async {
-        guard innerTimelineProvider == nil else {
+        guard innerTimelineItemProvider == nil else {
             MXLog.warning("Timeline already subscribed for updates")
             return
         }
@@ -51,12 +51,12 @@ final class TimelineProxy: TimelineProxyProtocol {
         
         await subscribeToPagination()
         
-        let provider = await TimelineProvider(timeline: timeline, kind: kind, paginationStatePublisher: paginationStatePublisher)
+        let provider = await TimelineItemProvider(timeline: timeline, kind: kind, paginationStatePublisher: paginationStatePublisher)
         // Make sure the existing items are built so that we have content in the timeline before
         // determining whether or not the timeline should paginate to load more items.
         await provider.waitForInitialItems()
         
-        innerTimelineProvider = provider
+        innerTimelineItemProvider = provider
         
         Task {
             await timeline.fetchMembers()
@@ -76,7 +76,7 @@ final class TimelineProxy: TimelineProxyProtocol {
     }
     
     func messageEventContent(for timelineItemID: TimelineItemIdentifier) async -> RoomMessageEventContentWithoutRelation? {
-        guard let content = await timelineProvider.itemProxies.firstEventTimelineItemUsingStableID(timelineItemID)?.content,
+        guard let content = await timelineItemProvider.itemProxies.firstEventTimelineItemUsingStableID(timelineItemID)?.content,
               case let .msgLike(messageLikeContent) = content,
               case let .message(messageContent) = messageLikeContent.kind else {
             return nil
@@ -97,7 +97,7 @@ final class TimelineProxy: TimelineProxyProtocol {
         switch kind {
         case .live:
             return await paginateBackwardsOnLive(requestSize: requestSize)
-        case .detached, .media:
+        case .detached, .media, .thread:
             return await focussedPaginate(.backwards, requestSize: requestSize)
         case .pinned:
             return .success(())
@@ -233,14 +233,12 @@ final class TimelineProxy: TimelineProxyProtocol {
         MXLog.info("Sending audio")
         
         do {
-            let handle = try timeline.sendAudio(params: .init(filename: url.path(percentEncoded: false),
+            let handle = try timeline.sendAudio(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                               caption: caption,
                                                               formattedCaption: nil, // Rust will build this from the caption's markdown.
                                                               mentions: nil,
-                                                              replyParams: nil,
-                                                              useSendQueue: true),
-                                                audioInfo: audioInfo,
-                                                progressWatcher: nil)
+                                                              inReplyTo: nil),
+                                                audioInfo: audioInfo)
             
             await requestHandle(handle)
             
@@ -261,14 +259,12 @@ final class TimelineProxy: TimelineProxyProtocol {
         MXLog.info("Sending file")
         
         do {
-            let handle = try timeline.sendFile(params: .init(filename: url.path(percentEncoded: false),
+            let handle = try timeline.sendFile(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                              caption: caption,
                                                              formattedCaption: nil, // Rust will build this from the caption's markdown.
                                                              mentions: nil,
-                                                             replyParams: nil,
-                                                             useSendQueue: true),
-                                               fileInfo: fileInfo,
-                                               progressWatcher: nil)
+                                                             inReplyTo: nil),
+                                               fileInfo: fileInfo)
             
             await requestHandle(handle)
             
@@ -290,15 +286,13 @@ final class TimelineProxy: TimelineProxyProtocol {
         MXLog.info("Sending image")
         
         do {
-            let handle = try timeline.sendImage(params: .init(filename: url.path(percentEncoded: false),
+            let handle = try timeline.sendImage(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                               caption: caption,
                                                               formattedCaption: nil, // Rust will build this from the caption's markdown.
                                                               mentions: nil,
-                                                              replyParams: nil,
-                                                              useSendQueue: true),
-                                                thumbnailPath: thumbnailURL.path(percentEncoded: false),
-                                                imageInfo: imageInfo,
-                                                progressWatcher: nil)
+                                                              inReplyTo: nil),
+                                                thumbnailSource: .file(filename: thumbnailURL.path(percentEncoded: false)),
+                                                imageInfo: imageInfo)
             
             await requestHandle(handle)
             
@@ -319,13 +313,19 @@ final class TimelineProxy: TimelineProxyProtocol {
                       assetType: AssetType?) async -> Result<Void, TimelineProxyError> {
         MXLog.info("Sending location")
         
-        await timeline.sendLocation(body: body,
-                                    geoUri: geoURI.string,
-                                    description: description,
-                                    zoomLevel: zoomLevel,
-                                    assetType: assetType)
-        
-        MXLog.info("Finished sending location")
+        do {
+            try await timeline.sendLocation(body: body,
+                                            geoUri: geoURI.string,
+                                            description: description,
+                                            zoomLevel: zoomLevel,
+                                            assetType: assetType,
+                                            repliedToEventId: nil)
+            
+            MXLog.info("Finished sending location")
+        } catch {
+            MXLog.error("Failed sending location with error: \(error)")
+            return .failure(.sdkError(error))
+        }
         
         return .success(())
     }
@@ -338,15 +338,13 @@ final class TimelineProxy: TimelineProxyProtocol {
         MXLog.info("Sending video")
         
         do {
-            let handle = try timeline.sendVideo(params: .init(filename: url.path(percentEncoded: false),
+            let handle = try timeline.sendVideo(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                               caption: caption,
                                                               formattedCaption: nil,
                                                               mentions: nil,
-                                                              replyParams: nil,
-                                                              useSendQueue: true),
-                                                thumbnailPath: thumbnailURL.path(percentEncoded: false),
-                                                videoInfo: videoInfo,
-                                                progressWatcher: nil)
+                                                              inReplyTo: nil),
+                                                thumbnailSource: .file(filename: thumbnailURL.path(percentEncoded: false)),
+                                                videoInfo: videoInfo)
             
             await requestHandle(handle)
             
@@ -367,15 +365,13 @@ final class TimelineProxy: TimelineProxyProtocol {
         MXLog.info("Sending voice message")
         
         do {
-            let handle = try timeline.sendVoiceMessage(params: .init(filename: url.path(percentEncoded: false),
+            let handle = try timeline.sendVoiceMessage(params: .init(source: .file(filename: url.path(percentEncoded: false)),
                                                                      caption: nil,
                                                                      formattedCaption: nil,
                                                                      mentions: nil,
-                                                                     replyParams: nil,
-                                                                     useSendQueue: true),
+                                                                     inReplyTo: nil),
                                                        audioInfo: audioInfo,
-                                                       waveform: waveform,
-                                                       progressWatcher: nil)
+                                                       waveform: waveform)
             
             await requestHandle(handle)
             
@@ -389,6 +385,9 @@ final class TimelineProxy: TimelineProxyProtocol {
         return .success(())
     }
     
+    /// Send a message within a room. If `inReplyToEventID` is specified then it will be sent as a reply
+    /// to that particular message. This works for both normal and threaded timelines with the relation and
+    /// fallback logic being handled SDK side based on the timeline instance focus mode.
     func sendMessage(_ message: String,
                      html: String?,
                      inReplyToEventID: String? = nil,
@@ -405,11 +404,7 @@ final class TimelineProxy: TimelineProxyProtocol {
         
         do {
             if let inReplyToEventID {
-                // `enforceThread` will force send the message a thread with `inReplyToEventID` while
-                // `replyWithinThread` will create an in-reply-to associated field *within* that same thread
-                try await timeline.sendReply(msg: messageContent, replyParams: .init(eventId: inReplyToEventID,
-                                                                                     enforceThread: false,
-                                                                                     replyWithinThread: false))
+                try await timeline.sendReply(msg: messageContent, eventId: inReplyToEventID)
                 MXLog.info("Finished sending reply to eventID: \(inReplyToEventID)")
             } else {
                 _ = try await timeline.send(msg: messageContent)
@@ -455,11 +450,24 @@ final class TimelineProxy: TimelineProxyProtocol {
         }
     }
     
+    func markAsRead(receiptType: ReceiptType) async -> Result<Void, TimelineProxyError> {
+        MXLog.info("Marking as \(receiptType)")
+        
+        do {
+            try await timeline.markAsRead(receiptType: receiptType)
+            MXLog.info("Finished marking as read")
+            return .success(())
+        } catch {
+            MXLog.error("Failed marking as \(receiptType) with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
     func toggleReaction(_ reaction: String, to eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID) async -> Result<Void, TimelineProxyError> {
         MXLog.info("Toggling reaction \(reaction) for event: \(eventOrTransactionID)")
         
         do {
-            try await timeline.toggleReaction(itemId: eventOrTransactionID.rustValue, key: reaction)
+            _ = try await timeline.toggleReaction(itemId: eventOrTransactionID.rustValue, key: reaction)
             MXLog.info("Finished toggling reaction for event: \(eventOrTransactionID)")
             return .success(())
         } catch {
@@ -470,7 +478,8 @@ final class TimelineProxy: TimelineProxyProtocol {
     
     // MARK: - Polls
 
-    func createPoll(question: String, answers: [String], pollKind: Poll.Kind) async -> Result<Void, TimelineProxyError> {
+    func createPoll(question: String, answers: [String],
+                    pollKind: Poll.Kind) async -> Result<Void, TimelineProxyError> {
         MXLog.info("Creating poll")
         
         do {
@@ -577,7 +586,7 @@ final class TimelineProxy: TimelineProxyProtocol {
     private func subscribeToPagination() async {
         switch kind {
         case .live:
-            let backPaginationListener = RoomPaginationStatusListener { [weak self] status in
+            let backPaginationListener = SDKListener<RoomPaginationStatus> { [weak self] status in
                 guard let self else {
                     return
                 }
@@ -596,7 +605,7 @@ final class TimelineProxy: TimelineProxyProtocol {
                 MXLog.error("Failed to subscribe to back pagination status with error: \(error)")
             }
             forwardPaginationStatusSubject.send(.timelineEndReached)
-        case .detached:
+        case .detached, .thread:
             // Detached timelines don't support observation, set the initial state ourself.
             backPaginationStatusSubject.send(.idle)
             forwardPaginationStatusSubject.send(.idle)
@@ -606,32 +615,6 @@ final class TimelineProxy: TimelineProxyProtocol {
         case .pinned:
             backPaginationStatusSubject.send(.timelineEndReached)
             forwardPaginationStatusSubject.send(.timelineEndReached)
-        }
-    }
-}
-
-private final class RoomPaginationStatusListener: PaginationStatusListener {
-    private let onUpdateClosure: (RoomPaginationStatus) -> Void
-
-    init(_ onUpdateClosure: @escaping (RoomPaginationStatus) -> Void) {
-        self.onUpdateClosure = onUpdateClosure
-    }
-
-    func onUpdate(status: RoomPaginationStatus) {
-        onUpdateClosure(status)
-    }
-}
-
-private final class UploadProgressListener: ProgressWatcher {
-    private let onUpdateClosure: (Double) -> Void
-    
-    init(_ onUpdateClosure: @escaping (Double) -> Void) {
-        self.onUpdateClosure = onUpdateClosure
-    }
-    
-    func transmissionProgress(progress: TransmissionProgress) {
-        DispatchQueue.main.async { [weak self] in
-            self?.onUpdateClosure(Double(progress.current) / Double(progress.total))
         }
     }
 }

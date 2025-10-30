@@ -42,7 +42,7 @@ class UserFlowTests: XCTestCase {
         // And open it
         let firstRoom = app.buttons.matching(NSPredicate(format: "identifier CONTAINS %@", Self.integrationTestsRoomName)).firstMatch
         XCTAssertTrue(firstRoom.waitForExistence(timeout: 10.0))
-        firstRoom.tapCenter()
+        firstRoom.tap(.center)
         
         sendMessages()
         
@@ -60,9 +60,9 @@ class UserFlowTests: XCTestCase {
         tapOnBackButton("Chats")
         
         // Cancel initial the room search
-        let searchCancelButton = app.buttons["Cancel"].firstMatch
+        let searchCancelButton = app.buttons["Close"].firstMatch
         XCTAssertTrue(searchCancelButton.waitForExistence(timeout: 10.0))
-        searchCancelButton.tapCenter()
+        searchCancelButton.tap(.center)
     }
     
     private func sendMessages() {
@@ -72,7 +72,7 @@ class UserFlowTests: XCTestCase {
         
         var sendButton = app.buttons[A11yIdentifiers.roomScreen.sendButton].firstMatch
         XCTAssertTrue(sendButton.waitForExistence(timeout: 10.0))
-        sendButton.tapCenter()
+        sendButton.tap(.center)
         
         sleep(10) // Wait for the message to be sent
         
@@ -86,12 +86,12 @@ class UserFlowTests: XCTestCase {
         
         sendButton = app.buttons[A11yIdentifiers.roomScreen.sendButton].firstMatch
         XCTAssertTrue(sendButton.waitForExistence(timeout: 10.0))
-        sendButton.tapCenter()
+        sendButton.tap(.center)
         
         sleep(5) // Wait for the message to be sent
         
         // Close the formatting options
-        app.buttons[A11yIdentifiers.roomScreen.composerToolbar.closeFormattingOptions].tapCenter()
+        app.buttons[A11yIdentifiers.roomScreen.composerToolbar.closeFormattingOptions].tap(.center)
     }
         
     private func checkPhotoSharing() {
@@ -103,7 +103,7 @@ class UserFlowTests: XCTestCase {
         // Tap on the second image. First one is always broken on simulators.
         let secondImage = app.scrollViews.images.element(boundBy: 1)
         XCTAssertTrue(secondImage.waitForExistence(timeout: 20.0)) // Photo library takes a bit to load
-        secondImage.tapCenter()
+        secondImage.tap(.center)
         
         // Wait for the image to be processed and the new screen to appear
         sleep(10)
@@ -134,7 +134,7 @@ class UserFlowTests: XCTestCase {
         // Handle map loading errors (missing credentials)
         let alertOkButton = app.alerts.firstMatch.buttons["OK"].firstMatch
         if alertOkButton.waitForExistence(timeout: 10.0) {
-            alertOkButton.tapCenter()
+            alertOkButton.tap(.center)
         }
         
         allowLocationPermissionOnce()
@@ -146,7 +146,7 @@ class UserFlowTests: XCTestCase {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let notificationAlertAllowButton = springboard.buttons["Allow Once"].firstMatch
         if notificationAlertAllowButton.waitForExistence(timeout: 10.0) {
-            notificationAlertAllowButton.tapCenter()
+            notificationAlertAllowButton.tap(.center)
         }
     }
     
@@ -183,7 +183,7 @@ class UserFlowTests: XCTestCase {
         // Open the room details
         let roomHeader = app.staticTexts[A11yIdentifiers.roomScreen.name]
         XCTAssertTrue(roomHeader.waitForExistence(timeout: 10.0))
-        roomHeader.tapCenter()
+        roomHeader.tap(.center)
         
         // Open the room member details
         tapOnButton(A11yIdentifiers.roomDetailsScreen.people)
@@ -191,7 +191,12 @@ class UserFlowTests: XCTestCase {
         // Open the first member's details. Loading members for big rooms can take a while.
         let firstRoomMember = app.scrollViews.buttons.firstMatch
         XCTAssertTrue(firstRoomMember.waitForExistence(timeout: 1000.0))
-        firstRoomMember.tapCenter()
+        firstRoomMember.tap(.center)
+        
+        // Open the profile from the bottom sheet
+        let viewProfileButton = app.buttons[A11yIdentifiers.manageRoomMemberSheet.viewProfile]
+        XCTAssertTrue(viewProfileButton.waitForExistence(timeout: 10.0))
+        tapOnButton(A11yIdentifiers.manageRoomMemberSheet.viewProfile, waitForDisappearance: true)
         
         // Go back to the room member details
         tapOnBackButton("People")
@@ -211,7 +216,7 @@ class UserFlowTests: XCTestCase {
         let profileButton = app.buttons[A11yIdentifiers.homeScreen.userAvatar]
         
         // `Failed to scroll to visible (by AX action) Button` https://stackoverflow.com/a/33534187/730924
-        profileButton.tapCenter()
+        profileButton.tap(.center)
         
         // Open analytics
         tapOnButton(A11yIdentifiers.settingsScreen.analytics)
@@ -238,7 +243,7 @@ class UserFlowTests: XCTestCase {
     private func tapOnButton(_ identifier: String, waitForDisappearance: Bool = false) {
         let button = app.buttons[identifier]
         XCTAssertTrue(button.waitForExistence(timeout: 10.0))
-        button.tapCenter()
+        button.tap(.center)
         
         if waitForDisappearance {
             let doesNotExistPredicate = NSPredicate(format: "exists == 0")
@@ -250,7 +255,7 @@ class UserFlowTests: XCTestCase {
     private func tapOnMenu(_ identifier: String) {
         let button = app.buttons[identifier]
         XCTAssertTrue(button.waitForExistence(timeout: 10.0))
-        button.tapCenter()
+        button.tap(.center)
     }
     
     /// Taps on a back button that the system configured with a label but no identifier.
@@ -258,8 +263,8 @@ class UserFlowTests: XCTestCase {
     /// When there are multiple buttons with the same label in the hierarchy, all the buttons we created
     /// should have an identifier set, and so this method will ignore those picking the one with only a label.
     private func tapOnBackButton(_ label: String = "Back") {
-        let button = app.buttons.matching(NSPredicate(format: "label == %@ && identifier == ''", label)).firstMatch
+        let button = app.buttons.matching(NSPredicate(format: "label == %@ && identifier == 'BackButton'", label)).firstMatch
         XCTAssertTrue(button.waitForExistence(timeout: 10.0))
-        button.tapCenter()
+        button.tap(.center)
     }
 }

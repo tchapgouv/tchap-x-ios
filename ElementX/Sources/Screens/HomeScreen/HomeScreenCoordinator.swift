@@ -12,6 +12,10 @@ struct HomeScreenCoordinatorParameters {
     let userSession: UserSessionProtocol
     let bugReportService: BugReportServiceProtocol
     let selectedRoomPublisher: CurrentValuePublisher<String?, Never>
+    let appSettings: AppSettings
+    let analyticsService: AnalyticsService
+    let notificationManager: NotificationManagerProtocol
+    let userIndicatorController: UserIndicatorControllerProtocol
 }
 
 enum HomeScreenCoordinatorAction {
@@ -19,7 +23,9 @@ enum HomeScreenCoordinatorAction {
     case presentRoomDetails(roomIdentifier: String)
     case presentReportRoom(roomIdentifier: String)
     case presentDeclineAndBlock(userID: String, roomID: String)
+    case presentSpace(SpaceRoomListProxyProtocol)
     case roomLeft(roomIdentifier: String)
+    case transferOwnership(roomIdentifier: String)
     case presentSettingsScreen
     case presentFeedbackScreen
     case presentSecureBackupSettings
@@ -27,7 +33,6 @@ enum HomeScreenCoordinatorAction {
     case presentEncryptionResetScreen
     case presentStartChatScreen
     case presentGlobalSearch
-    case logoutWithoutConfirmation
     case logout
 }
 
@@ -45,10 +50,11 @@ final class HomeScreenCoordinator: CoordinatorProtocol {
     
     init(parameters: HomeScreenCoordinatorParameters) {
         viewModel = HomeScreenViewModel(userSession: parameters.userSession,
-                                        analyticsService: ServiceLocator.shared.analytics,
-                                        appSettings: ServiceLocator.shared.settings,
                                         selectedRoomPublisher: parameters.selectedRoomPublisher,
-                                        userIndicatorController: ServiceLocator.shared.userIndicatorController)
+                                        appSettings: parameters.appSettings,
+                                        analyticsService: parameters.analyticsService,
+                                        notificationManager: parameters.notificationManager,
+                                        userIndicatorController: parameters.userIndicatorController)
         bugReportService = parameters.bugReportService
         
         viewModel.actions
@@ -62,6 +68,10 @@ final class HomeScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.presentRoomDetails(roomIdentifier: roomIdentifier))
                 case .presentReportRoom(let roomIdentifier):
                     actionsSubject.send(.presentReportRoom(roomIdentifier: roomIdentifier))
+                case .presentDeclineAndBlock(let userID, let roomID):
+                    actionsSubject.send(.presentDeclineAndBlock(userID: userID, roomID: roomID))
+                case .presentSpace(let spaceRoomListProxy):
+                    actionsSubject.send(.presentSpace(spaceRoomListProxy))
                 case .roomLeft(roomIdentifier: let roomIdentifier):
                     actionsSubject.send(.roomLeft(roomIdentifier: roomIdentifier))
                 case .presentFeedbackScreen:
@@ -78,12 +88,10 @@ final class HomeScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.presentStartChatScreen)
                 case .presentGlobalSearch:
                     actionsSubject.send(.presentGlobalSearch)
-                case .logoutWithoutConfirmation:
-                    actionsSubject.send(.logoutWithoutConfirmation)
                 case .logout:
                     actionsSubject.send(.logout)
-                case .presentDeclineAndBlock(let userID, let roomID):
-                    actionsSubject.send(.presentDeclineAndBlock(userID: userID, roomID: roomID))
+                case .transferOwnership(let roomIdentifier):
+                    actionsSubject.send(.transferOwnership(roomIdentifier: roomIdentifier))
                 }
             }
             .store(in: &cancellables)

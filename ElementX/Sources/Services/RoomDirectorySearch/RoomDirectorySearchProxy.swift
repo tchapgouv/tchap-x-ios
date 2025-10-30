@@ -13,7 +13,7 @@ import MatrixRustSDK
 final class RoomDirectorySearchProxy: RoomDirectorySearchProxyProtocol {
     private let roomDirectorySearch: RoomDirectorySearchProtocol
     private let appSettings: AppSettings
-    private let serialDispatchQueue = DispatchQueue(label: "io.element.elementx.roomdirectorysearch", qos: .default)
+    private let serialDispatchQueue = DispatchQueue(label: "io.element.elementx.room_directory_search_proxy", qos: .default)
     
     private let resultsSubject = CurrentValueSubject<[RoomDirectorySearchResult], Never>([])
     
@@ -42,7 +42,7 @@ final class RoomDirectorySearchProxy: RoomDirectorySearchProxyProtocol {
             .store(in: &cancellables)
         
         Task {
-            searchEntriesSubscription = await roomDirectorySearch.results(listener: RoomDirectorySearchEntriesListenerProxy { [weak self] updates in
+            searchEntriesSubscription = await roomDirectorySearch.results(listener: SDKListener { [weak self] updates in
                 self?.diffsPublisher.send(updates)
             })
         }
@@ -150,17 +150,5 @@ final class RoomDirectorySearchProxy: RoomDirectorySearchProxyProtocol {
                                   topic: value.topic,
                                   avatar: .room(id: value.roomId, name: value.name, avatarURL: value.avatarUrl.flatMap(URL.init(string:))),
                                   canBeJoined: value.joinRule == .public || (appSettings.knockingEnabled && value.joinRule == .knock))
-    }
-}
-
-private final class RoomDirectorySearchEntriesListenerProxy: RoomDirectorySearchEntriesListener {
-    private let onUpdateClosure: ([RoomDirectorySearchEntryUpdate]) -> Void
-    
-    func onUpdate(roomEntriesUpdate: [RoomDirectorySearchEntryUpdate]) {
-        onUpdateClosure(roomEntriesUpdate)
-    }
-        
-    init(_ onUpdateClosure: @escaping (([RoomDirectorySearchEntryUpdate]) -> Void)) {
-        self.onUpdateClosure = onUpdateClosure
     }
 }

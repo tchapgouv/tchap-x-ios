@@ -11,8 +11,10 @@ import SwiftUI
 struct LoginScreenCoordinatorParameters {
     /// The service used to authenticate the user.
     let authenticationService: AuthenticationServiceProtocol
-    let slidingSyncLearnMoreURL: URL
+    /// An optional hint that can be used to pre-fill the form.
+    let loginHint: String?
     let userIndicatorController: UserIndicatorControllerProtocol
+    let appSettings: AppSettings
     let analytics: AnalyticsService
 }
 
@@ -43,8 +45,9 @@ final class LoginScreenCoordinator: CoordinatorProtocol {
         self.parameters = parameters
         
         viewModel = LoginScreenViewModel(authenticationService: parameters.authenticationService,
-                                         slidingSyncLearnMoreURL: parameters.slidingSyncLearnMoreURL,
+                                         loginHint: parameters.loginHint,
                                          userIndicatorController: parameters.userIndicatorController,
+                                         appSettings: parameters.appSettings,
                                          analytics: parameters.analytics)
     }
     

@@ -11,16 +11,20 @@ import MatrixRustSDK
 
 final class ComposerDraftService: ComposerDraftServiceProtocol {
     private let roomProxy: JoinedRoomProxyProtocol
+    private let threadRootEventID: String?
     private let timelineItemfactory: RoomTimelineItemFactoryProtocol
     private var volatileDraft: ComposerDraftProxy?
     
-    init(roomProxy: JoinedRoomProxyProtocol, timelineItemfactory: RoomTimelineItemFactoryProtocol) {
+    init(roomProxy: JoinedRoomProxyProtocol,
+         timelineItemfactory: RoomTimelineItemFactoryProtocol,
+         threadRootEventID: String?) {
         self.roomProxy = roomProxy
+        self.threadRootEventID = threadRootEventID
         self.timelineItemfactory = timelineItemfactory
     }
     
     func saveDraft(_ draft: ComposerDraftProxy) async -> Result<Void, ComposerDraftServiceError> {
-        switch await roomProxy.saveDraft(draft.toRust) {
+        switch await roomProxy.saveDraft(draft.toRust, threadRootEventID: threadRootEventID) {
         case .success:
             MXLog.info("Successfully saved draft")
             return .success(())
@@ -31,7 +35,7 @@ final class ComposerDraftService: ComposerDraftServiceProtocol {
     }
     
     func loadDraft() async -> Result<ComposerDraftProxy?, ComposerDraftServiceError> {
-        switch await roomProxy.loadDraft() {
+        switch await roomProxy.loadDraft(threadRootEventID: threadRootEventID) {
         case .success(let draft):
             guard let draft else {
                 return .success(nil)
@@ -46,7 +50,7 @@ final class ComposerDraftService: ComposerDraftServiceProtocol {
     func getReply(eventID: String) async -> Result<TimelineItemReply, ComposerDraftServiceError> {
         switch await roomProxy.timeline.getLoadedReplyDetails(eventID: eventID) {
         case .success(let replyDetails):
-            return .success(timelineItemfactory.buildReply(details: replyDetails))
+            return .success(timelineItemfactory.buildTimelineItemReply(replyDetails))
         case .failure(let error):
             MXLog.error("Could not load reply: \(error)")
             return .failure(.failedToLoadReply)
@@ -54,7 +58,7 @@ final class ComposerDraftService: ComposerDraftServiceProtocol {
     }
     
     func clearDraft() async -> Result<Void, ComposerDraftServiceError> {
-        switch await roomProxy.clearDraft() {
+        switch await roomProxy.clearDraft(threadRootEventID: threadRootEventID) {
         case .success:
             MXLog.info("Successfully cleared draft")
             return .success(())

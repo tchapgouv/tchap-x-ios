@@ -18,15 +18,18 @@ enum TimelineViewModelAction {
     case displayDocumentPicker
     case displayLocationPicker
     case displayPollForm(mode: PollFormMode)
-    case displayMediaUploadPreviewScreen(url: URL)
+    case displayMediaUploadPreviewScreen(mediaURLs: [URL])
     case displaySenderDetails(userID: String)
     case displayMessageForwarding(forwardingItem: MessageForwardingItem)
     case displayMediaPreview(TimelineMediaPreviewViewModel)
     case displayLocation(body: String, geoURI: GeoURI, description: String?)
     case displayResolveSendFailure(failure: TimelineItemSendFailure.VerifiedUser, sendHandle: SendHandleProxy)
+    case displayThread(itemID: TimelineItemIdentifier)
     case composer(action: TimelineComposerAction)
     case hasScrolled(direction: ScrollDirection)
     case viewInRoomTimeline(eventID: String)
+    case displayRoom(roomID: String, via: [String])
+    case displayMediaDetails(item: EventBasedMessageTimelineItemProtocol)
 }
 
 enum TimelineViewPollAction {
@@ -55,12 +58,13 @@ enum TimelineViewAction {
     case displayTimelineItemMenu(itemID: TimelineItemIdentifier)
     case handleTimelineItemMenuAction(itemID: TimelineItemIdentifier, action: TimelineItemMenuAction)
     
-    case tappedOnSenderDetails(userID: String)
+    case tappedOnSenderDetails(sender: TimelineItemSender)
     case displayReactionSummary(itemID: TimelineItemIdentifier, key: String)
     case displayEmojiPicker(itemID: TimelineItemIdentifier)
     case displayReadReceipts(itemID: TimelineItemIdentifier)
+    case displayThread(itemID: TimelineItemIdentifier)
     
-    case handlePasteOrDrop(provider: NSItemProvider)
+    case handlePasteOrDrop(providers: [NSItemProvider])
     case handlePollAction(TimelineViewPollAction)
     case handleAudioPlayerAction(TimelineAudioPlayerAction)
     
@@ -74,7 +78,8 @@ enum TimelineViewAction {
     case hasSwitchedTimeline
     
     case hasScrolled(direction: ScrollDirection)
-    case setOpenURLAction(OpenURLAction)
+    
+    case displayPredecessorRoom
 }
 
 enum TimelineComposerAction {
@@ -96,20 +101,24 @@ struct TimelineViewState: BindableState {
     var timelineState: TimelineState // check the doc before changing this
 
     var ownUserID: String
+    var canCurrentUserSendMessage = false
     var canCurrentUserRedactOthers = false
     var canCurrentUserRedactSelf = false
     var canCurrentUserPin = false
     var canCurrentUserKick = false
     var canCurrentUserBan = false
-    var isViewSourceEnabled: Bool
+    
     var hideTimelineMedia: Bool
+    
+    var isViewSourceEnabled: Bool
+    var areThreadsEnabled: Bool
+    var linkPreviewsEnabled: Bool
+    
+    let hasPredecessor: Bool
         
     // The `pinnedEventIDs` are used only to determine if an item is already pinned or not.
     // It's updated from the room info, so it's faster than using the timeline
     var pinnedEventIDs: Set<String> = []
-    
-    /// an openURL closure which opens URLs first using the App's environment rather than skipping out to external apps
-    var openURL: OpenURLAction?
     
     /// A closure providing the associated audio player state for an item in the timeline.
     var audioPlayerStateProvider: (@MainActor (_ itemId: TimelineItemIdentifier) -> AudioPlayerState?)?
@@ -124,6 +133,8 @@ struct TimelineViewState: BindableState {
     var roomNameForAliasResolver: (@MainActor (String) -> String?)?
     
     var emojiProvider: EmojiProviderProtocol
+    
+    var linkMetadataProvider: LinkMetadataProviderProtocol?
     
     var mapTilerConfiguration: MapTilerConfiguration
     
@@ -237,4 +248,57 @@ struct TimelineState {
 enum ScrollDirection: Equatable {
     case top
     case bottom
+}
+
+extension TimelineViewState {
+    /// The string shown as the message preview.
+    ///
+    /// This converts the formatted body to a plain string to remove formatting
+    /// and render with a consistent font size. This conversion is done to avoid
+    /// showing markdown characters in the preview for messages with formatting.
+    func buildMessagePreview(formattedBody: AttributedString?, plainBody: String) -> String {
+        guard let formattedBody,
+              let attributedString = try? NSMutableAttributedString(formattedBody, including: \.elementX) else {
+            return plainBody
+        }
+        
+        let range = NSRange(location: 0, length: attributedString.length)
+        attributedString.enumerateAttributes(in: range) { attributes, range, _ in
+            if let userID = attributes[.MatrixUserID] as? String {
+                if let displayName = members[userID]?.displayName {
+                    attributedString.replaceCharacters(in: range, with: "@\(displayName)")
+                } else {
+                    attributedString.replaceCharacters(in: range, with: userID)
+                }
+            }
+            
+            if attributes[.MatrixAllUsersMention] as? Bool == true {
+                attributedString.replaceCharacters(in: range, with: PillUtilities.atRoom)
+            }
+            
+            if let roomAlias = attributes[.MatrixRoomAlias] as? String {
+                let roomName = roomNameForAliasResolver?(roomAlias)
+                attributedString.replaceCharacters(in: range, with: PillUtilities.roomPillDisplayText(roomName: roomName, rawRoomText: roomAlias))
+            }
+            
+            if let roomID = attributes[.MatrixRoomID] as? String {
+                let roomName = roomNameForIDResolver?(roomID)
+                attributedString.replaceCharacters(in: range, with: PillUtilities.roomPillDisplayText(roomName: roomName, rawRoomText: roomID))
+            }
+            
+            if let eventOnRoomID = attributes[.MatrixEventOnRoomID] as? EventOnRoomIDAttribute.Value {
+                let roomID = eventOnRoomID.roomID
+                let roomName = roomNameForIDResolver?(roomID)
+                attributedString.replaceCharacters(in: range, with: PillUtilities.eventPillDisplayText(roomName: roomName, rawRoomText: roomID))
+            }
+            
+            if let eventOnRoomAlias = attributes[.MatrixEventOnRoomAlias] as? EventOnRoomAliasAttribute.Value {
+                let roomAlias = eventOnRoomAlias.alias
+                let roomName = roomNameForAliasResolver?(roomAlias)
+                attributedString.replaceCharacters(in: range, with: PillUtilities.eventPillDisplayText(roomName: roomName, rawRoomText: eventOnRoomAlias.alias))
+            }
+        }
+        
+        return attributedString.string
+    }
 }

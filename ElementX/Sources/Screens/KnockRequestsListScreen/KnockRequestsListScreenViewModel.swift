@@ -26,10 +26,7 @@ class KnockRequestsListScreenViewModel: KnockRequestsListScreenViewModelType, Kn
         self.userIndicatorController = userIndicatorController
         super.init(initialViewState: KnockRequestsListScreenViewState(), mediaProvider: mediaProvider)
         
-        updateRoomInfo(roomInfo: roomProxy.infoPublisher.value)
-        Task {
-            await updatePermissions()
-        }
+        updateRoomInfo(roomProxy.infoPublisher.value)
         
         setupSubscriptions()
     }
@@ -188,8 +185,7 @@ class KnockRequestsListScreenViewModel: KnockRequestsListScreenViewModelType, Kn
         roomProxy.infoPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] roomInfo in
-                self?.updateRoomInfo(roomInfo: roomInfo)
-                Task { await self?.updatePermissions() }
+                self?.updateRoomInfo(roomInfo)
             }
             .store(in: &cancellables)
         
@@ -214,19 +210,19 @@ class KnockRequestsListScreenViewModel: KnockRequestsListScreenViewModelType, Kn
             .store(in: &cancellables)
     }
     
-    private func updateRoomInfo(roomInfo: RoomInfoProxy) {
+    private func updateRoomInfo(_ roomInfo: RoomInfoProxyProtocol) {
         switch roomInfo.joinRule {
         case .knock, .knockRestricted:
             state.isKnockableRoom = true
         default:
             state.isKnockableRoom = false
         }
-    }
-    
-    private func updatePermissions() async {
-        state.canAccept = await (try? roomProxy.canUserInvite(userID: roomProxy.ownUserID).get()) == true
-        state.canDecline = await (try? roomProxy.canUserKick(userID: roomProxy.ownUserID).get()) == true
-        state.canBan = await (try? roomProxy.canUserBan(userID: roomProxy.ownUserID).get()) == true
+        
+        if let powerLevels = roomProxy.infoPublisher.value.powerLevels {
+            state.canAccept = powerLevels.canOwnUserInvite()
+            state.canDecline = powerLevels.canOwnUserKick()
+            state.canBan = powerLevels.canOwnUserBan()
+        }
     }
     
     private static let loadingIndicatorIdentifier = "\(KnockRequestsListScreenViewModel.self)-Loading"

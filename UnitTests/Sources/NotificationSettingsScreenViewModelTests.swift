@@ -64,9 +64,7 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
             }
         }
         
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
         
         notificationSettingsProxy.callbacks.send(.settingsDidChange)
         
@@ -94,9 +92,7 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
             }
         }
 
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
         
         notificationSettingsProxy.callbacks.send(.settingsDidChange)
         
@@ -118,9 +114,7 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
             }
         }
 
-        let deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferred = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
 
         notificationSettingsProxy.callbacks.send(.settingsDidChange)
 
@@ -143,22 +137,21 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
             }
         }
 
-        var deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferredSettings = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
         
         notificationSettingsProxy.callbacks.send(.settingsDidChange)
         
-        try await deferred.fulfill()
+        try await deferredSettings.fulfill()
 
         XCTAssertEqual(context.viewState.settings?.directChatsMode, .allMessages)
         XCTAssertEqual(context.viewState.settings?.inconsistentSettings, [.init(chatType: .oneToOneChat, isEncrypted: false)])
         
-        deferred = deferFulfillment(viewModel.context.$viewState, keyPath: \.fixingConfigurationMismatch, transitionValues: [false, true, false])
+        let deferredMismatch = deferFulfillment(viewModel.context.observe(\.viewState.fixingConfigurationMismatch),
+                                                transitionValues: [false, true, false])
         
         context.send(viewAction: .fixConfigurationMismatchTapped)
         
-        try await deferred.fulfill()
+        try await deferredMismatch.fulfill()
 
         // Ensure we only fix the invalid setting: unencrypted one-to-one chats should be set to `.allMessages` (to match encrypted one-to-one chats)
         XCTAssertEqual(notificationSettingsProxy.setDefaultRoomNotificationModeIsEncryptedIsOneToOneModeCallsCount, 1)
@@ -181,30 +174,24 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
             }
         }
 
-        var deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferredSettings = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
 
         notificationSettingsProxy.callbacks.send(.settingsDidChange)
 
-        try await deferred.fulfill()
+        try await deferredSettings.fulfill()
 
         XCTAssertEqual(context.viewState.settings?.directChatsMode, .allMessages)
         XCTAssertEqual(context.viewState.settings?.inconsistentSettings, [.init(chatType: .groupChat, isEncrypted: false), .init(chatType: .oneToOneChat, isEncrypted: false)])
 
-        deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.fixingConfigurationMismatch == true
-        }
+        var deferredMismatch = deferFulfillment(viewModel.context.observe(\.viewState.fixingConfigurationMismatch)) { $0 }
         
         context.send(viewAction: .fixConfigurationMismatchTapped)
         
-        try await deferred.fulfill()
+        try await deferredMismatch.fulfill()
         
-        deferred = deferFulfillment(viewModel.context.$viewState) { state in
-            state.fixingConfigurationMismatch == false
-        }
+        deferredMismatch = deferFulfillment(viewModel.context.observe(\.viewState.fixingConfigurationMismatch)) { !$0 }
         
-        try await deferred.fulfill()
+        try await deferredMismatch.fulfill()
 
         // All problems should be fixed
         XCTAssertEqual(notificationSettingsProxy.setDefaultRoomNotificationModeIsEncryptedIsOneToOneModeCallsCount, 2)
@@ -222,9 +209,7 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
     func testToggleRoomMentionOff() async throws {
         notificationSettingsProxy.isRoomMentionEnabledReturnValue = true
         
-        let deferredState = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferredState = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
         
         notificationSettingsProxy.callbacks.send(.settingsDidChange)
         
@@ -247,9 +232,7 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
     func testToggleRoomMentionOn() async throws {
         notificationSettingsProxy.isRoomMentionEnabledReturnValue = false
         
-        let deferredInitialFetch = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferredInitialFetch = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         try await deferredInitialFetch.fulfill()
@@ -272,9 +255,7 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
         notificationSettingsProxy.setRoomMentionEnabledEnabledThrowableError = NotificationSettingsError.Generic(msg: "error")
         notificationSettingsProxy.isRoomMentionEnabledReturnValue = false
         
-        let deferredInitialFetch = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferredInitialFetch = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
@@ -282,17 +263,13 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
 
         context.roomMentionsEnabled = true
         
-        var deferred = deferFulfillment(context.$viewState) { state in
-            state.applyingChange == true
-        }
+        var deferred = deferFulfillment(context.observe(\.viewState.applyingChange)) { $0 }
         
         context.send(viewAction: .roomMentionChanged)
         
         try await deferred.fulfill()
         
-        deferred = deferFulfillment(context.$viewState) { state in
-            state.applyingChange == false
-        }
+        deferred = deferFulfillment(context.observe(\.viewState.applyingChange)) { !$0 }
         
         try await deferred.fulfill()
 
@@ -302,9 +279,7 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
     func testToggleCallsOff() async throws {
         notificationSettingsProxy.isCallEnabledReturnValue = true
         
-        let deferredInitialFetch = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferredInitialFetch = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
@@ -326,9 +301,7 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
     func testToggleCallsOn() async throws {
         notificationSettingsProxy.isCallEnabledReturnValue = false
 
-        let deferredInitialFetch = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferredInitialFetch = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
@@ -352,9 +325,7 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
         notificationSettingsProxy.setCallEnabledEnabledThrowableError = NotificationSettingsError.Generic(msg: "error")
         notificationSettingsProxy.isCallEnabledReturnValue = false
         
-        let deferredInitialFetch = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferredInitialFetch = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
@@ -362,17 +333,13 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
 
         context.callsEnabled = true
         
-        var deferred = deferFulfillment(context.$viewState) { state in
-            state.applyingChange == true
-        }
+        var deferred = deferFulfillment(context.observe(\.viewState.applyingChange)) { $0 }
         
         context.send(viewAction: .callsChanged)
         
         try await deferred.fulfill()
         
-        deferred = deferFulfillment(context.$viewState) { state in
-            state.applyingChange == false
-        }
+        deferred = deferFulfillment(context.observe(\.viewState.applyingChange)) { !$0 }
         
         try await deferred.fulfill()
         
@@ -382,9 +349,7 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
     func testToggleInvitationsOff() async throws {
         notificationSettingsProxy.isInviteForMeEnabledReturnValue = true
         
-        let deferredInitialFetch = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferredInitialFetch = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
@@ -406,9 +371,7 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
     func testToggleInvitationsOn() async throws {
         notificationSettingsProxy.isInviteForMeEnabledReturnValue = false
         
-        let deferredInitialFetch = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferredInitialFetch = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
@@ -432,9 +395,7 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
         notificationSettingsProxy.setInviteForMeEnabledEnabledThrowableError = NotificationSettingsError.Generic(msg: "error")
         notificationSettingsProxy.isInviteForMeEnabledReturnValue = false
         
-        let deferredInitialFetch = deferFulfillment(viewModel.context.$viewState) { state in
-            state.settings != nil
-        }
+        let deferredInitialFetch = deferFulfillment(viewModel.context.observe(\.viewState.settings)) { $0 != nil }
         
         viewModel.fetchInitialContent()
         
@@ -442,17 +403,13 @@ class NotificationSettingsScreenViewModelTests: XCTestCase {
 
         context.invitationsEnabled = true
         
-        var deferred = deferFulfillment(context.$viewState) { state in
-            state.applyingChange == true
-        }
+        var deferred = deferFulfillment(context.observe(\.viewState.applyingChange)) { $0 }
         
         context.send(viewAction: .invitationsChanged)
         
         try await deferred.fulfill()
         
-        deferred = deferFulfillment(context.$viewState) { state in
-            state.applyingChange == false
-        }
+        deferred = deferFulfillment(context.observe(\.viewState.applyingChange)) { !$0 }
         
         try await deferred.fulfill()
         

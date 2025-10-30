@@ -9,9 +9,8 @@ import Compound
 import SwiftUI
 
 struct EmojiPickerScreen: View {
-    @ObservedObject var context: EmojiPickerScreenViewModel.Context
+    let context: EmojiPickerScreenViewModel.Context
     
-    var selectedEmojis = Set<String>()
     @State var searchString = ""
     @State private var isSearching = false
     
@@ -36,6 +35,7 @@ struct EmojiPickerScreen: View {
                                         .background(Circle()
                                             .foregroundColor(emojiBackgroundColor(for: emoji.value)))
                                 }
+                                .accessibilityLabel(accessibilityLabel(for: emoji.value))
                             }
                         } header: {
                             EmojiPickerScreenHeaderView(title: category.name)
@@ -62,8 +62,16 @@ struct EmojiPickerScreen: View {
         }
     }
     
+    private func accessibilityLabel(for emoji: String) -> String {
+        if context.viewState.selectedEmojis.contains(emoji) {
+            return L10n.a11yRemoveReaction(emoji)
+        } else {
+            return L10n.a11yAddReaction(emoji)
+        }
+    }
+    
     private func emojiBackgroundColor(for emoji: String) -> Color {
-        if selectedEmojis.contains(emoji) {
+        if context.viewState.selectedEmojis.contains(emoji) {
             return .compound.bgActionPrimaryRest
         } else {
             return .clear
@@ -92,24 +100,28 @@ struct EmojiPickerScreen: View {
 // MARK: - Previews
 
 struct EmojiPickerScreen_Previews: PreviewProvider, TestablePreview {
-    static let viewModel = EmojiPickerScreenViewModel(emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings))
+    static let viewModel = EmojiPickerScreenViewModel(itemID: .randomEvent,
+                                                      selectedEmojis: ["😀", "😄"],
+                                                      emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                                      timelineController: MockTimelineController())
     
     static var previews: some View {
-        EmojiPickerScreen(context: viewModel.context, selectedEmojis: ["😀", "😄"])
+        EmojiPickerScreen(context: viewModel.context)
             .previewDisplayName("Screen")
-            .snapshotPreferences(expect: viewModel.context.$viewState.map { state in
-                !state.categories.isEmpty
-            })
+            .snapshotPreferences(expect: viewModel.context.observe(\.viewState.categories).map { !$0.isEmpty }.eraseToStream())
     }
 }
 
 struct EmojiPickerScreenSheet_Previews: PreviewProvider {
-    static let viewModel = EmojiPickerScreenViewModel(emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings))
+    static let viewModel = EmojiPickerScreenViewModel(itemID: .randomEvent,
+                                                      selectedEmojis: ["😀", "😄"],
+                                                      emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                                      timelineController: MockTimelineController())
     
     static var previews: some View {
         Text("Timeline view")
             .sheet(isPresented: .constant(true)) {
-                EmojiPickerScreen(context: viewModel.context, selectedEmojis: ["😀", "😄"])
+                EmojiPickerScreen(context: viewModel.context)
             }
             .previewDisplayName("Sheet")
     }

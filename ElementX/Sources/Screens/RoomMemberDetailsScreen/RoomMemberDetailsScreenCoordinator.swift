@@ -11,8 +11,7 @@ import SwiftUI
 struct RoomMemberDetailsScreenCoordinatorParameters {
     let userID: String
     let roomProxy: JoinedRoomProxyProtocol
-    let clientProxy: ClientProxyProtocol
-    let mediaProvider: MediaProviderProtocol
+    let userSession: UserSessionProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
     let analytics: AnalyticsService
 }
@@ -20,7 +19,7 @@ struct RoomMemberDetailsScreenCoordinatorParameters {
 enum RoomMemberDetailsScreenCoordinatorAction {
     case openUserProfile
     case openDirectChat(roomID: String)
-    case startCall(roomID: String)
+    case startCall(roomProxy: JoinedRoomProxyProtocol)
     case verifyUser(userID: String)
 }
 
@@ -37,8 +36,7 @@ final class RoomMemberDetailsScreenCoordinator: CoordinatorProtocol {
     init(parameters: RoomMemberDetailsScreenCoordinatorParameters) {
         viewModel = RoomMemberDetailsScreenViewModel(userID: parameters.userID,
                                                      roomProxy: parameters.roomProxy,
-                                                     clientProxy: parameters.clientProxy,
-                                                     mediaProvider: parameters.mediaProvider,
+                                                     userSession: parameters.userSession,
                                                      userIndicatorController: parameters.userIndicatorController,
                                                      analytics: parameters.analytics)
     }
@@ -52,8 +50,8 @@ final class RoomMemberDetailsScreenCoordinator: CoordinatorProtocol {
                 actionsSubject.send(.openUserProfile)
             case .openDirectChat(let roomID):
                 actionsSubject.send(.openDirectChat(roomID: roomID))
-            case .startCall(let roomID):
-                actionsSubject.send(.startCall(roomID: roomID))
+            case .startCall(let roomProxy):
+                actionsSubject.send(.startCall(roomProxy: roomProxy))
             case .verifyUser(let userID):
                 actionsSubject.send(.verifyUser(userID: userID))
             }

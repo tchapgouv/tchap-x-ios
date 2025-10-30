@@ -19,15 +19,17 @@ class NetworkMonitor: NetworkMonitorProtocol {
     }
     
     init() {
-        queue = DispatchQueue(label: "io.element.elementx.networkmonitor", qos: .background)
+        queue = DispatchQueue(label: "io.element.elementx.network_monitor", qos: .background)
         pathMonitor = NWPathMonitor()
         reachabilitySubject = CurrentValueSubject<NetworkMonitorReachability, Never>(.reachable)
         
         pathMonitor.pathUpdateHandler = { [weak self] path in
             DispatchQueue.main.async {
                 if path.status == .satisfied {
+                    MXLog.info("Network reachability changed to reachable")
                     self?.reachabilitySubject.send(.reachable)
                 } else {
+                    MXLog.info("Network reachability changed to unreachable")
                     self?.reachabilitySubject.send(.unreachable)
                 }
             }

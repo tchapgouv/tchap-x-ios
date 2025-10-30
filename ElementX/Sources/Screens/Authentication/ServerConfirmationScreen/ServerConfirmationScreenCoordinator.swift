@@ -11,7 +11,7 @@ import SwiftUI
 struct ServerConfirmationScreenCoordinatorParameters {
     let authenticationService: AuthenticationServiceProtocol
     let authenticationFlow: AuthenticationFlow
-    let slidingSyncLearnMoreURL: URL
+    let appSettings: AppSettings
     let userIndicatorController: UserIndicatorControllerProtocol
 }
 
@@ -31,9 +31,16 @@ final class ServerConfirmationScreenCoordinator: CoordinatorProtocol {
     }
     
     init(parameters: ServerConfirmationScreenCoordinatorParameters) {
+        let mode = if parameters.appSettings.allowOtherAccountProviders {
+            ServerConfirmationScreenMode.confirmation(parameters.authenticationService.homeserver.value.address)
+        } else {
+            ServerConfirmationScreenMode.picker(parameters.appSettings.accountProviders)
+        }
+        
         viewModel = ServerConfirmationScreenViewModel(authenticationService: parameters.authenticationService,
+                                                      mode: mode,
                                                       authenticationFlow: parameters.authenticationFlow,
-                                                      slidingSyncLearnMoreURL: parameters.slidingSyncLearnMoreURL,
+                                                      appSettings: parameters.appSettings,
                                                       userIndicatorController: parameters.userIndicatorController)
     }
     

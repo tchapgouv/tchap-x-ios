@@ -13,7 +13,7 @@ struct LoginScreen: View {
     /// The focus state of the password text field.
     @FocusState private var isPasswordFocused: Bool
     
-    @ObservedObject var context: LoginScreenViewModel.Context
+    @Bindable var context: LoginScreenViewModel.Context
     
     var body: some View {
         ScrollView {
@@ -47,9 +47,16 @@ struct LoginScreen: View {
         VStack(spacing: 8) {
             BigIcon(icon: \.lockSolid)
                 .padding(.bottom, 8)
-            
-            Text(L10n.screenLoginTitleWithHomeserver(context.viewState.homeserver.address))
+            // Tchap: [Beta DINUM] Customize login title
+//            Text(L10n.screenLoginTitleWithHomeserver(context.viewState.homeserver.address))
+            Text(TchapL10n.screenLoginTitleWithTchap)
                 .font(.compound.headingMDBold)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.compound.textPrimary)
+                .padding(.bottom, 8)
+            // Tchap: [Beta DINUM] Add Tchap description
+            Text(TchapL10n.screenLoginDescriptionWithTchap)
+                .font(.compound.bodyMD)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.compound.textPrimary)
         }
@@ -138,17 +145,13 @@ struct LoginScreen_Previews: PreviewProvider, TestablePreview {
         NavigationStack {
             LoginScreen(context: viewModel.context)
         }
-        .snapshotPreferences(expect: viewModel.context.$viewState.map { state in
-            state.homeserver.loginMode == .password
-        })
+        .snapshotPreferences(expect: viewModel.context.observe(\.viewState.homeserver.loginMode).map { $0 == .password }.eraseToStream())
         .previewDisplayName("Initial State")
         
         NavigationStack {
             LoginScreen(context: credentialsViewModel.context)
         }
-        .snapshotPreferences(expect: credentialsViewModel.context.$viewState.map { state in
-            state.homeserver.loginMode == .password
-        })
+        .snapshotPreferences(expect: credentialsViewModel.context.observe(\.viewState.homeserver.loginMode).map { $0 == .password }.eraseToStream())
         .previewDisplayName("Credentials Entered")
         
         NavigationStack {
@@ -163,8 +166,9 @@ struct LoginScreen_Previews: PreviewProvider, TestablePreview {
         Task { await authenticationService.configure(for: homeserverAddress, flow: .login) }
         
         let viewModel = LoginScreenViewModel(authenticationService: authenticationService,
-                                             slidingSyncLearnMoreURL: ServiceLocator.shared.settings.slidingSyncLearnMoreURL,
+                                             loginHint: nil,
                                              userIndicatorController: UserIndicatorControllerMock(),
+                                             appSettings: ServiceLocator.shared.settings,
                                              analytics: ServiceLocator.shared.analytics)
         
         if withCredentials {

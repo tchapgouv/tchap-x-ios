@@ -8,19 +8,73 @@
 import SwiftUI
 import WysiwygComposer
 
+struct TimelineView: View {
+    @ObservedObject var timelineContext: TimelineViewModel.Context
+    @State private var dragOver = false
+    
+    var body: some View {
+        TimelineViewRepresentable()
+            .id(timelineContext.viewState.roomID)
+            // It is tempting to inject these environment values last to avoid also injecting them into the sheets,
+            // and that approach works great on iOS. But it doesn't work on macOS (as of 15.5) where the app goes 💥
+            .environmentObject(timelineContext)
+            .environment(\.timelineContext, timelineContext)
+            .environment(\.focussedEventID, timelineContext.viewState.timelineState.focussedEvent?.eventID)
+            .alert(item: $timelineContext.alertInfo)
+            .sheet(item: $timelineContext.manageMemberViewModel) {
+                ManageRoomMemberSheetView(context: $0.context)
+            }
+            .sheet(item: $timelineContext.debugInfo) { TimelineItemDebugView(info: $0) }
+            .sheet(item: $timelineContext.actionMenuInfo) { info in
+                let actions = TimelineItemMenuActionProvider(timelineItem: info.item,
+                                                             canCurrentUserSendMessage: timelineContext.viewState.canCurrentUserSendMessage,
+                                                             canCurrentUserRedactSelf: timelineContext.viewState.canCurrentUserRedactSelf,
+                                                             canCurrentUserRedactOthers: timelineContext.viewState.canCurrentUserRedactOthers,
+                                                             canCurrentUserPin: timelineContext.viewState.canCurrentUserPin,
+                                                             pinnedEventIDs: timelineContext.viewState.pinnedEventIDs,
+                                                             isDM: timelineContext.viewState.isDirectOneToOneRoom,
+                                                             isViewSourceEnabled: timelineContext.viewState.isViewSourceEnabled,
+                                                             areThreadsEnabled: timelineContext.viewState.areThreadsEnabled,
+                                                             timelineKind: timelineContext.viewState.timelineKind,
+                                                             emojiProvider: timelineContext.viewState.emojiProvider)
+                    .makeActions()
+                if let actions {
+                    TimelineItemMenu(item: info.item, actions: actions)
+                        .environmentObject(timelineContext)
+                }
+            }
+            .sheet(item: $timelineContext.reactionSummaryInfo) {
+                ReactionsSummaryView(reactions: $0.reactions,
+                                     members: timelineContext.viewState.members,
+                                     mediaProvider: timelineContext.mediaProvider,
+                                     selectedReactionKey: $0.selectedKey)
+                    .edgesIgnoringSafeArea([.bottom])
+            }
+            .sheet(item: $timelineContext.readReceiptsSummaryInfo) {
+                ReadReceiptsSummaryView(orderedReadReceipts: $0.orderedReceipts)
+                    .environmentObject(timelineContext)
+            }
+            .onDrop(of: ["public.item", "public.file-url"], isTargeted: $dragOver) { providers -> Bool in
+                let supportedProviders = providers.filter(\.isSupportedForPasteOrDrop)
+                
+                guard !supportedProviders.isEmpty else {
+                    return false
+                }
+                
+                timelineContext.send(viewAction: .handlePasteOrDrop(providers: supportedProviders))
+                return true
+            }
+    }
+}
+
 /// A table view wrapper that displays the timeline of a room.
-struct TimelineView: UIViewControllerRepresentable {
+struct TimelineViewRepresentable: UIViewControllerRepresentable {
     @EnvironmentObject private var viewModelContext: TimelineViewModel.Context
-    @Environment(\.openURL) var openURL
 
     func makeUIViewController(context: Context) -> TimelineTableViewController {
         let tableViewController = TimelineTableViewController(coordinator: context.coordinator,
                                                               isScrolledToBottom: $viewModelContext.isScrolledToBottom,
                                                               scrollToBottomPublisher: viewModelContext.viewState.timelineState.scrollToBottomPublisher)
-        // Needs to be dispatched on main asynchronously otherwise we get a runtime warning
-        DispatchQueue.main.async {
-            viewModelContext.send(viewAction: .setOpenURLAction(openURL))
-        }
         return tableViewController
     }
     
@@ -83,21 +137,20 @@ struct TimelineView_Previews: PreviewProvider, TestablePreview {
     static let roomViewModel = RoomScreenViewModel.mock(roomProxyMock: roomProxyMock)
     static let timelineViewModel = TimelineViewModel(roomProxy: roomProxyMock,
                                                      timelineController: MockTimelineController(),
-                                                     mediaProvider: MediaProviderMock(configuration: .init()),
+                                                     userSession: UserSessionMock(.init()),
                                                      mediaPlayerProvider: MediaPlayerProviderMock(),
-                                                     voiceMessageMediaManager: VoiceMessageMediaManagerMock(),
                                                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                                                      appMediator: AppMediatorMock.default,
                                                      appSettings: ServiceLocator.shared.settings,
                                                      analyticsService: ServiceLocator.shared.analytics,
                                                      emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
-                                                     timelineControllerFactory: TimelineControllerFactoryMock(.init()),
-                                                     clientProxy: ClientProxyMock(.init()))
+                                                     linkMetadataProvider: LinkMetadataProvider(),
+                                                     timelineControllerFactory: TimelineControllerFactoryMock(.init()))
 
     static var previews: some View {
         NavigationStack {
-            RoomScreen(roomViewModel: roomViewModel,
-                       timelineViewModel: timelineViewModel,
+            RoomScreen(context: roomViewModel.context,
+                       timelineContext: timelineViewModel.context,
                        composerToolbar: ComposerToolbar.mock())
         }
     }

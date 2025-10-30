@@ -42,14 +42,15 @@ struct PollView: View {
     
     let poll: Poll
     let state: PollViewState
+    let sender: TimelineItemSender
     let actionHandler: (PollViewAction) -> Void
     
     var body: some View {
         if state.isPreview {
-            questionView
+            accessibleQuestionView
         } else {
             VStack(alignment: .leading, spacing: 16) {
-                questionView
+                accessibleQuestionView
                 optionsView
                 summaryView
                 toolbarView
@@ -59,34 +60,60 @@ struct PollView: View {
     }
 
     // MARK: - Private
+    
+    private var senderString: String { poll.createdByAccountOwner ? L10n.commonYou : sender.disambiguatedDisplayName ?? sender.id }
+    
+    @ViewBuilder
+    private var accessibleQuestionView: some View {
+        questionView
+            .accessibilityRepresentation {
+                HStack(spacing: 0) {
+                    Text(senderString)
+                    questionView
+                }
+                .accessibilityElement(children: .combine)
+            }
+    }
 
     private var questionView: some View {
         HStack(alignment: .top, spacing: 12) {
             CompoundIcon(poll.hasEnded ? \.pollsEnd : \.polls,
                          size: .custom(22),
                          relativeTo: .compound.bodyLGSemibold)
-                .accessibilityHidden(true)
+                .accessibilityLabel(poll.hasEnded ? L10n.a11yPollEnd : L10n.a11yPoll)
 
             Text(poll.question)
                 .multilineTextAlignment(.leading)
                 .font(.compound.bodyLGSemibold)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 
     private var optionsView: some View {
         ForEach(poll.options, id: \.id) { option in
-            Button {
-                guard !option.isSelected else { return }
-                actionHandler(.selectOption(optionID: option.id))
-                feedbackGenerator.impactOccurred()
-            } label: {
-                PollOptionView(pollOption: option,
-                               showVotes: showVotes,
-                               isFinalResult: poll.hasEnded)
-                    .foregroundColor(progressBarColor(for: option))
-            }
-            .disabled(poll.hasEnded)
+            pollOption(option: option)
+                .backportAccessibilityHint(L10n.a11yPollsWillRemoveSelection,
+                                           isEnabled: isRemovePreviousSelectionHintEnabled(option: option))
         }
+    }
+    
+    private func isRemovePreviousSelectionHintEnabled(option: Poll.Option) -> Bool {
+        !poll.hasEnded && poll.hasMaxSelections && !option.isSelected
+    }
+    
+    private func pollOption(option: Poll.Option) -> some View {
+        Button {
+            guard !option.isSelected else { return }
+            actionHandler(.selectOption(optionID: option.id))
+            feedbackGenerator.impactOccurred()
+        } label: {
+            PollOptionView(pollOption: option,
+                           showVotes: showVotes,
+                           isFinalResult: poll.hasEnded)
+                .foregroundColor(progressBarColor(for: option))
+        }
+        .disabled(poll.hasEnded)
     }
 
     @ViewBuilder
@@ -164,31 +191,31 @@ private extension Poll {
 
 struct PollView_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
-        PollView(poll: .disclosed(), state: .full(isEditable: false)) { _ in }
+        PollView(poll: .disclosed(), state: .full(isEditable: false), sender: .test) { _ in }
             .padding()
             .previewDisplayName("Disclosed")
 
-        PollView(poll: .undisclosed(), state: .full(isEditable: false)) { _ in }
+        PollView(poll: .undisclosed(), state: .full(isEditable: false), sender: .test) { _ in }
             .padding()
             .previewDisplayName("Undisclosed")
 
-        PollView(poll: .endedDisclosed, state: .full(isEditable: false)) { _ in }
+        PollView(poll: .endedDisclosed, state: .full(isEditable: false), sender: .test) { _ in }
             .padding()
             .previewDisplayName("Ended, Disclosed")
 
-        PollView(poll: .endedUndisclosed, state: .full(isEditable: false)) { _ in }
+        PollView(poll: .endedUndisclosed, state: .full(isEditable: false), sender: .test) { _ in }
             .padding()
             .previewDisplayName("Ended, Undisclosed")
 
-        PollView(poll: .disclosed(createdByAccountOwner: true), state: .full(isEditable: true)) { _ in }
+        PollView(poll: .disclosed(createdByAccountOwner: true), state: .full(isEditable: true), sender: .test) { _ in }
             .padding()
             .previewDisplayName("Creator, disclosed")
         
-        PollView(poll: .emptyDisclosed, state: .full(isEditable: true)) { _ in }
+        PollView(poll: .emptyDisclosed, state: .full(isEditable: true), sender: .test) { _ in }
             .padding()
             .previewDisplayName("Creator, no votes")
         
-        PollView(poll: .emptyDisclosed, state: .preview) { _ in }
+        PollView(poll: .emptyDisclosed, state: .preview, sender: .test) { _ in }
             .padding()
             .previewDisplayName("Preview")
     }

@@ -13,19 +13,17 @@ import UIKit
 
 class TimelineController: TimelineControllerProtocol {
     private let roomProxy: JoinedRoomProxyProtocol
-    private let liveTimelineProvider: TimelineProviderProtocol
+    private let liveTimelineItemProvider: TimelineItemProviderProtocol
     private let timelineItemFactory: RoomTimelineItemFactoryProtocol
     private let mediaProvider: MediaProviderProtocol
     private let appSettings: AppSettings
     
-    private let serialDispatchQueue: DispatchQueue
-    
     let callbacks = PassthroughSubject<TimelineControllerCallback, Never>()
     
     private var activeTimeline: TimelineProxyProtocol
-    private var activeTimelineProvider: TimelineProviderProtocol {
+    private var activeTimelineItemProvider: TimelineItemProviderProtocol {
         didSet {
-            configureActiveTimelineProvider()
+            configureActiveTimelineItemProvider()
         }
     }
     
@@ -42,7 +40,7 @@ class TimelineController: TimelineControllerProtocol {
     }
     
     var timelineKind: TimelineKind {
-        activeTimelineProvider.kind
+        activeTimelineItemProvider.kind
     }
     
     init(roomProxy: JoinedRoomProxyProtocol,
@@ -52,18 +50,16 @@ class TimelineController: TimelineControllerProtocol {
          mediaProvider: MediaProviderProtocol,
          appSettings: AppSettings) {
         self.roomProxy = roomProxy
-        liveTimelineProvider = timelineProxy.timelineProvider
+        liveTimelineItemProvider = timelineProxy.timelineItemProvider
         self.timelineItemFactory = timelineItemFactory
         self.mediaProvider = mediaProvider
         self.appSettings = appSettings
         
-        serialDispatchQueue = DispatchQueue(label: "io.element.elementx.timelineprovider", qos: .utility)
-        
         activeTimeline = timelineProxy
-        activeTimelineProvider = liveTimelineProvider
+        activeTimelineItemProvider = liveTimelineItemProvider
         
         guard let initialFocussedEventID else {
-            configureActiveTimelineProvider()
+            configureActiveTimelineItemProvider()
             return
         }
         
@@ -75,7 +71,7 @@ class TimelineController: TimelineControllerProtocol {
                 break
             case .failure:
                 // Setup the live timeline as a fallback.
-                configureActiveTimelineProvider()
+                configureActiveTimelineItemProvider()
             }
         }
     }
@@ -85,7 +81,7 @@ class TimelineController: TimelineControllerProtocol {
         case .success(let timeline):
             await timeline.subscribeForUpdates()
             activeTimeline = timeline
-            activeTimelineProvider = timeline.timelineProvider
+            activeTimelineItemProvider = timeline.timelineItemProvider
             return .success(())
         case .failure(let error):
             if case .eventNotFound = error {
@@ -98,7 +94,7 @@ class TimelineController: TimelineControllerProtocol {
     
     func focusLive() {
         activeTimeline = roomProxy.timeline
-        activeTimelineProvider = liveTimelineProvider
+        activeTimelineItemProvider = liveTimelineItemProvider
     }
     
     func paginateBackwards(requestSize: UInt16) async -> Result<Void, TimelineControllerError> {
@@ -128,16 +124,11 @@ class TimelineController: TimelineControllerProtocol {
     func sendReadReceipt(for itemID: TimelineItemIdentifier) async {
         let receiptType: MatrixRustSDK.ReceiptType = appSettings.sharePresence ? .read : .readPrivate
         
-        // Mark the whole room as read if it's the last timeline item
-        if timelineItems.last?.id == itemID {
-            _ = await roomProxy.markAsRead(receiptType: receiptType)
-        } else {
-            guard let eventID = itemID.eventID else {
-                return
-            }
-            
-            _ = await activeTimeline.sendReadReceipt(for: eventID, type: receiptType)
+        guard let eventID = itemID.eventID else {
+            return
         }
+            
+        _ = await activeTimeline.sendReadReceipt(for: eventID, type: receiptType)
     }
     
     func processItemAppearance(_ itemID: TimelineItemIdentifier) async {
@@ -153,73 +144,6 @@ class TimelineController: TimelineControllerProtocol {
     }
     
     func processItemDisappearance(_ itemID: TimelineItemIdentifier) { }
-    
-    func sendMessage(_ message: String,
-                     html: String?,
-                     inReplyToEventID: String?,
-                     intentionalMentions: IntentionalMentions) async {
-        MXLog.info("Send message in \(roomID)")
-        
-        switch await activeTimeline.sendMessage(message,
-                                                html: html,
-                                                inReplyToEventID: inReplyToEventID,
-                                                intentionalMentions: intentionalMentions) {
-        case .success:
-            MXLog.info("Finished sending message")
-            await donateSendMessageIntent()
-        case .failure(let error):
-            MXLog.error("Failed sending message with error: \(error)")
-        }
-    }
-    
-    private func donateSendMessageIntent() async {
-        guard let displayName = roomProxy.details.name ?? roomProxy.details.canonicalAlias, !displayName.isEmpty else {
-            MXLog.error("Failed donating send message intent, room missing name or alias.")
-            return
-        }
-        
-        let groupName = INSpeakableString(spokenPhrase: displayName)
-        
-        let sendMessageIntent = INSendMessageIntent(recipients: nil,
-                                                    outgoingMessageType: .outgoingMessageText,
-                                                    content: nil,
-                                                    speakableGroupName: groupName,
-                                                    conversationIdentifier: roomProxy.id,
-                                                    serviceName: nil,
-                                                    sender: nil,
-                                                    attachments: nil)
-        
-        let avatarURL = switch roomProxy.details.avatar {
-        case .room(_, _, let avatarURL):
-            avatarURL
-        case .heroes(let userProfiles):
-            userProfiles.first?.avatarURL
-        }
-        
-        func addPlacehoder() {
-            if let imageData = Avatars.generatePlaceholderAvatarImageData(name: displayName, id: roomProxy.id, size: .init(width: 100, height: 100)) {
-                sendMessageIntent.setImage(INImage(imageData: imageData), forParameterNamed: \.speakableGroupName)
-            }
-        }
-        
-        if let avatarURL, let mediaSource = try? MediaSourceProxy(url: avatarURL, mimeType: nil) {
-            if case let .success(avatarData) = await mediaProvider.loadThumbnailForSource(source: mediaSource, size: .init(width: 100, height: 100)) {
-                sendMessageIntent.setImage(INImage(imageData: avatarData), forParameterNamed: \.speakableGroupName)
-            } else {
-                addPlacehoder()
-            }
-        } else {
-            addPlacehoder()
-        }
-        
-        let interaction = INInteraction(intent: sendMessageIntent, response: nil)
-        
-        do {
-            try await interaction.donate()
-        } catch {
-            MXLog.error("Failed donating send message intent with error: \(error)")
-        }
-    }
     
     func toggleReaction(_ reaction: String, to eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID) async {
         MXLog.info("Toggle reaction \(reaction) to \(eventOrTransactionID)")
@@ -328,7 +252,7 @@ class TimelineController: TimelineControllerProtocol {
     // Handle this parallel to the timeline items so we're not forced
     // to bundle the Rust side objects within them
     func debugInfo(for itemID: TimelineItemIdentifier) -> TimelineItemDebugInfo {
-        for timelineItemProxy in activeTimelineProvider.itemProxies {
+        for timelineItemProxy in activeTimelineItemProvider.itemProxies {
             switch timelineItemProxy {
             case .event(let item):
                 if item.id == itemID {
@@ -343,7 +267,7 @@ class TimelineController: TimelineControllerProtocol {
     }
     
     func sendHandle(for itemID: TimelineItemIdentifier) -> SendHandleProxy? {
-        for timelineItemProxy in activeTimelineProvider.itemProxies {
+        for timelineItemProxy in activeTimelineItemProvider.itemProxies {
             switch timelineItemProxy {
             case .event(let item):
                 if item.id == itemID {
@@ -357,28 +281,127 @@ class TimelineController: TimelineControllerProtocol {
         return nil
     }
     
+    // MARK: - Sending
+    
+    func sendMessage(_ message: String,
+                     html: String?,
+                     inReplyToEventID: String?,
+                     intentionalMentions: IntentionalMentions) async {
+        MXLog.info("Send message in \(roomID)")
+        
+        switch await activeTimeline.sendMessage(message,
+                                                html: html,
+                                                inReplyToEventID: inReplyToEventID,
+                                                intentionalMentions: intentionalMentions) {
+        case .success:
+            MXLog.info("Finished sending message")
+            await donateSendMessageIntent()
+        case .failure(let error):
+            MXLog.error("Failed sending message with error: \(error)")
+        }
+    }
+    
+    func sendAudio(url: URL,
+                   audioInfo: MatrixRustSDK.AudioInfo,
+                   caption: String?,
+                   requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineControllerError> {
+        await activeTimeline.sendAudio(url: url,
+                                       audioInfo: audioInfo,
+                                       caption: caption,
+                                       requestHandle: requestHandle).mapError(TimelineControllerError.timelineProxyError)
+    }
+    
+    func sendFile(url: URL,
+                  fileInfo: MatrixRustSDK.FileInfo,
+                  caption: String?,
+                  requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineControllerError> {
+        await activeTimeline.sendFile(url: url,
+                                      fileInfo: fileInfo,
+                                      caption: caption,
+                                      requestHandle: requestHandle).mapError(TimelineControllerError.timelineProxyError)
+    }
+    
+    func sendImage(url: URL,
+                   thumbnailURL: URL,
+                   imageInfo: MatrixRustSDK.ImageInfo,
+                   caption: String?,
+                   requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineControllerError> {
+        await activeTimeline.sendImage(url: url,
+                                       thumbnailURL: thumbnailURL,
+                                       imageInfo: imageInfo,
+                                       caption: caption,
+                                       requestHandle: requestHandle).mapError(TimelineControllerError.timelineProxyError)
+    }
+    
+    func sendVideo(url: URL,
+                   thumbnailURL: URL,
+                   videoInfo: MatrixRustSDK.VideoInfo,
+                   caption: String?,
+                   requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineControllerError> {
+        await activeTimeline.sendVideo(url: url,
+                                       thumbnailURL: thumbnailURL,
+                                       videoInfo: videoInfo,
+                                       caption: caption,
+                                       requestHandle: requestHandle).mapError(TimelineControllerError.timelineProxyError)
+    }
+    
+    func sendLocation(body: String,
+                      geoURI: GeoURI,
+                      description: String?,
+                      zoomLevel: UInt8?,
+                      assetType: AssetType?) async -> Result<Void, TimelineControllerError> {
+        await activeTimeline.sendLocation(body: body, geoURI: geoURI, description: description, zoomLevel: zoomLevel, assetType: assetType).mapError(TimelineControllerError.timelineProxyError)
+    }
+    
+    func sendVoiceMessage(url: URL,
+                          audioInfo: MatrixRustSDK.AudioInfo,
+                          waveform: [UInt16],
+                          requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineControllerError> {
+        await activeTimeline.sendVoiceMessage(url: url,
+                                              audioInfo: audioInfo,
+                                              waveform: waveform, requestHandle: requestHandle).mapError(TimelineControllerError.timelineProxyError)
+    }
+    
+    // MARK: - Polls
+    
+    func createPoll(question: String, answers: [String], pollKind: Poll.Kind) async -> Result<Void, TimelineControllerError> {
+        await activeTimeline.createPoll(question: question, answers: answers, pollKind: pollKind).mapError(TimelineControllerError.timelineProxyError)
+    }
+    
+    func editPoll(original eventID: String, question: String, answers: [String], pollKind: Poll.Kind) async -> Result<Void, TimelineControllerError> {
+        await activeTimeline.editPoll(original: eventID, question: question, answers: answers, pollKind: pollKind).mapError(TimelineControllerError.timelineProxyError)
+    }
+    
+    func sendPollResponse(pollStartID: String, answers: [String]) async -> Result<Void, TimelineControllerError> {
+        await activeTimeline.sendPollResponse(pollStartID: pollStartID, answers: answers).mapError(TimelineControllerError.timelineProxyError)
+    }
+    
+    func endPoll(pollStartID: String, text: String) async -> Result<Void, TimelineControllerError> {
+        await activeTimeline.endPoll(pollStartID: pollStartID, text: text).mapError(TimelineControllerError.timelineProxyError)
+    }
+    
     // MARK: - Private
     
     /// The cancellable used to update the timeline items.
     private var updateTimelineItemsCancellable: AnyCancellable?
-    /// The controller is switching the `activeTimelineProvider`.
+    /// The controller is switching the `activeTimelineItemProvider`.
     private var isSwitchingTimelines = false
     
     /// Configures the controller to listen to `activeTimeline` for events.
     /// - Parameter clearExistingItems: Whether or not to clear any existing items before loading the timeline's contents.
-    private func configureActiveTimelineProvider() {
+    private func configureActiveTimelineItemProvider() {
         updateTimelineItemsCancellable = nil
         
         isSwitchingTimelines = true
         
         // Inform the world that the initial items are loading from the store
         paginationState = PaginationState(backward: .paginating, forward: .paginating)
-        callbacks.send(.isLive(activeTimelineProvider.kind == .live))
+        callbacks.send(.isLive(activeTimelineItemProvider.kind == .live))
         
-        updateTimelineItemsCancellable = Task { [weak self, activeTimelineProvider] in
+        updateTimelineItemsCancellable = Task { [weak self, activeTimelineItemProvider] in
             let contentSizeChangePublisher = NotificationCenter.default.publisher(for: UIContentSizeCategory.didChangeNotification)
-            let timelineUpdates = activeTimelineProvider.updatePublisher.merge(with: contentSizeChangePublisher.map { _ in
-                (activeTimelineProvider.itemProxies, activeTimelineProvider.paginationState)
+            let timelineUpdates = activeTimelineItemProvider.updatePublisher.merge(with: contentSizeChangePublisher.map { _ in
+                (activeTimelineItemProvider.itemProxies, activeTimelineItemProvider.paginationState)
             })
             
             for await (items, paginationState) in timelineUpdates.values {
@@ -393,6 +416,7 @@ class TimelineController: TimelineControllerProtocol {
         
         let isDM = roomProxy.isDirectOneToOneRoom
         let displayName = roomProxy.infoPublisher.value.displayName
+        let hasPredecessor = roomProxy.predecessorRoom != nil
         
         var newTimelineItems = await Task.detached { [timelineItemFactory, activeTimeline] in
             var newTimelineItems = [RoomTimelineItemProtocol]()
@@ -405,6 +429,7 @@ class TimelineController: TimelineControllerProtocol {
                 let items = collapsibleChunk.compactMap { itemProxy in
                     let timelineItem = self.buildTimelineItem(for: itemProxy,
                                                               isDM: isDM,
+                                                              hasPredecessor: hasPredecessor,
                                                               roomDisplayName: displayName,
                                                               timelineItemFactory: timelineItemFactory,
                                                               activeTimeline: activeTimeline)
@@ -462,6 +487,7 @@ class TimelineController: TimelineControllerProtocol {
     
     private nonisolated func buildTimelineItem(for itemProxy: TimelineItemProxy,
                                                isDM: Bool,
+                                               hasPredecessor: Bool,
                                                roomDisplayName: String?,
                                                timelineItemFactory: RoomTimelineItemFactoryProtocol,
                                                activeTimeline: TimelineProxyProtocol) -> RoomTimelineItemProtocol? {
@@ -486,6 +512,11 @@ class TimelineController: TimelineControllerProtocol {
             case .readMarker:
                 return ReadMarkerRoomTimelineItem(id: .virtual(uniqueID: uniqueID))
             case .timelineStart:
+                // We always display the timeline start item, if there is a predecessor room.
+                guard !hasPredecessor else {
+                    return TimelineStartRoomTimelineItem(name: roomDisplayName)
+                }
+                // If not we only display the timeline start item if this is not a DM.
                 return isDM ? nil : TimelineStartRoomTimelineItem(name: roomDisplayName)
             // Tchap: BWI content-scanner for app build purposes
             case .scanStateChanged(eventId: let eventID, newScanState: let scanState):
@@ -517,7 +548,7 @@ class TimelineController: TimelineControllerProtocol {
     }
     
     func eventTimestamp(for itemID: TimelineItemIdentifier) -> Date? {
-        for itemProxy in activeTimelineProvider.itemProxies {
+        for itemProxy in activeTimelineItemProvider.itemProxies {
             switch itemProxy {
             case .event(let eventTimelineItemProxy):
                 if eventTimelineItemProxy.id == itemID {
@@ -530,6 +561,58 @@ class TimelineController: TimelineControllerProtocol {
             }
         }
         return nil
+    }
+    
+    private func donateSendMessageIntent() async {
+        guard let displayName = roomProxy.details.name ?? roomProxy.details.canonicalAlias, !displayName.isEmpty else {
+            MXLog.error("Failed donating send message intent, room missing name or alias.")
+            return
+        }
+        
+        let groupName = INSpeakableString(spokenPhrase: displayName)
+        
+        let sendMessageIntent = INSendMessageIntent(recipients: nil,
+                                                    outgoingMessageType: .outgoingMessageText,
+                                                    content: nil,
+                                                    speakableGroupName: groupName,
+                                                    conversationIdentifier: roomProxy.id,
+                                                    serviceName: nil,
+                                                    sender: nil,
+                                                    attachments: nil)
+        
+        let avatarURL: URL? = switch roomProxy.details.avatar {
+        case .room(_, _, let avatarURL),
+             .space(_, _, let avatarURL):
+            avatarURL
+        case .heroes(let userProfiles):
+            userProfiles.first?.avatarURL
+        case .tombstoned:
+            nil
+        }
+        
+        func addPlacehoder() {
+            if let imageData = Avatars.generatePlaceholderAvatarImageData(name: displayName, id: roomProxy.id, size: .init(width: 100, height: 100)) {
+                sendMessageIntent.setImage(INImage(imageData: imageData), forParameterNamed: \.speakableGroupName)
+            }
+        }
+        
+        if let avatarURL, let mediaSource = try? MediaSourceProxy(url: avatarURL, mimeType: nil) {
+            if case let .success(avatarData) = await mediaProvider.loadThumbnailForSource(source: mediaSource, size: .init(width: 100, height: 100)) {
+                sendMessageIntent.setImage(INImage(imageData: avatarData), forParameterNamed: \.speakableGroupName)
+            } else {
+                addPlacehoder()
+            }
+        } else {
+            addPlacehoder()
+        }
+        
+        let interaction = INInteraction(intent: sendMessageIntent, response: nil)
+        
+        do {
+            try await interaction.donate()
+        } catch {
+            MXLog.error("Failed donating send message intent with error: \(error)")
+        }
     }
 }
 

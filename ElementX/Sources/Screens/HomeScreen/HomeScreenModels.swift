@@ -9,12 +9,14 @@ import Combine
 import Foundation
 import UIKit
 
-enum HomeScreenViewModelAction: Equatable {
+enum HomeScreenViewModelAction {
     case presentRoom(roomIdentifier: String)
     case presentRoomDetails(roomIdentifier: String)
     case presentReportRoom(roomIdentifier: String)
     case presentDeclineAndBlock(userID: String, roomID: String)
+    case presentSpace(SpaceRoomListProxyProtocol)
     case roomLeft(roomIdentifier: String)
+    case transferOwnership(roomIdentifier: String)
     case presentSecureBackupSettings
     case presentRecoveryKeyScreen
     case presentEncryptionResetScreen
@@ -22,7 +24,6 @@ enum HomeScreenViewModelAction: Equatable {
     case presentFeedbackScreen
     case presentStartChatScreen
     case presentGlobalSearch
-    case logoutWithoutConfirmation
     case logout
 }
 
@@ -38,6 +39,7 @@ enum HomeScreenViewAction {
     case confirmRecoveryKey
     case resetEncryption
     case skipRecoveryKeyConfirmation
+    case dismissNewSoundBanner
     case updateVisibleItemRange(Range<Int>)
     case globalSearch
     case markRoomAsUnread(roomIdentifier: String)
@@ -91,6 +93,7 @@ struct HomeScreenViewState: BindableState {
     var userAvatarURL: URL?
     
     var securityBannerMode = HomeScreenSecurityBannerMode.none
+    var shouldShowNewSoundBanner = false
     
     var requiresExtraAccountSetup = false
         
@@ -113,7 +116,7 @@ struct HomeScreenViewState: BindableState {
         return rooms
     }
         
-    var bindings = HomeScreenViewStateBindings()
+    var bindings: HomeScreenViewStateBindings
     
     var placeholderRooms: [HomeScreenRoom] {
         (1...10).map { _ in
@@ -133,10 +136,14 @@ struct HomeScreenViewState: BindableState {
     var shouldShowFilters: Bool {
         !bindings.isSearchFieldFocused && roomListMode == .rooms
     }
+    
+    var shouldShowBanner: Bool {
+        securityBannerMode.isShown || shouldShowNewSoundBanner
+    }
 }
 
 struct HomeScreenViewStateBindings {
-    var filtersState = RoomListFiltersState()
+    var filtersState: RoomListFiltersState
     var searchQuery = ""
     var isSearchFieldFocused = false
     
@@ -193,6 +200,16 @@ struct HomeScreenRoom: Identifiable, Equatable {
         
     let canonicalAlias: String?
     
+    let isTombstoned: Bool
+    
+    var displayedLastMessage: AttributedString? {
+        // If the room is tombstoned, show a specific message, regardless of any last message.
+        guard !isTombstoned else {
+            return AttributedString(L10n.screenRoomlistTombstonedRoomDescription)
+        }
+        return lastMessage
+    }
+    
     static func placeholder() -> HomeScreenRoom {
         HomeScreenRoom(id: UUID().uuidString,
                        roomID: nil,
@@ -205,7 +222,8 @@ struct HomeScreenRoom: Identifiable, Equatable {
                        timestamp: "Now",
                        lastMessage: placeholderLastMessage,
                        avatar: .room(id: "", name: "", avatarURL: nil),
-                       canonicalAlias: nil)
+                       canonicalAlias: nil,
+                       isTombstoned: false)
     }
 }
 
@@ -239,9 +257,10 @@ extension HomeScreenRoom {
                   isDirect: summary.isDirect,
                   isHighlighted: isHighlighted,
                   isFavourite: summary.isFavourite,
-                  timestamp: summary.lastMessageFormattedTimestamp,
+                  timestamp: summary.lastMessageDate?.formattedMinimal(),
                   lastMessage: summary.lastMessage,
                   avatar: summary.avatar,
-                  canonicalAlias: summary.canonicalAlias)
+                  canonicalAlias: summary.canonicalAlias,
+                  isTombstoned: summary.isTombstoned)
     }
 }
