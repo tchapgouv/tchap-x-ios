@@ -735,6 +735,16 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         }
     }
 
+    // Tchap: read access rules from local state store.
+    func accessRules() async -> Result<AccessRule?, RoomProxyError> {
+        do {
+            return try await .success(room.getAccessRule())
+        } catch {
+            MXLog.error("Failed building the current access rule settings: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
     // MARK: - Private
     
     private func subscribeToTypingNotifications() {

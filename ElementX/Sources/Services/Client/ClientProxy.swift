@@ -466,6 +466,7 @@ class ClientProxy: ClientProxyProtocol {
                                                   isEncrypted: isRoomEncrypted,
                                                   isDirect: false,
                                                   visibility: isRoomPrivate ? .private : .public,
+                                                  accessRuleOverride: .restricted, // Tchap: make access rule `restricted` by default
                                                   preset: isRoomPrivate ? .privateChat : .publicChat,
                                                   invite: userIDs,
                                                   avatar: avatarURL?.absoluteString,

@@ -7,6 +7,9 @@
 
 import Foundation
 
+// Tchap: Add Matrix SDK dependency for accessRule property.
+import MatrixRustSDK
+
 struct RoomDetails {
     let id: String
     let name: String?
@@ -15,4 +18,6 @@ struct RoomDetails {
     let isEncrypted: Bool
     let isPublic: Bool
     let isDirect: Bool
+    // Tchap: add AccessRule value
+    let accessRule: AccessRule?
 }

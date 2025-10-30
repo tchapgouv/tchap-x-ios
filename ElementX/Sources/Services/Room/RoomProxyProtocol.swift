@@ -191,6 +191,9 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func saveDraft(_ draft: ComposerDraft, threadRootEventID: String?) async -> Result<Void, RoomProxyError>
     func loadDraft(threadRootEventID: String?) async -> Result<ComposerDraft?, RoomProxyError>
     func clearDraft(threadRootEventID: String?) async -> Result<Void, RoomProxyError>
+    
+    // Tchap: access rules accessor
+    func accessRules() async -> Result<AccessRule?, RoomProxyError>
 }
 
 extension JoinedRoomProxyProtocol {
@@ -201,7 +204,9 @@ extension JoinedRoomProxyProtocol {
                     canonicalAlias: infoPublisher.value.canonicalAlias,
                     isEncrypted: infoPublisher.value.isEncrypted,
                     isPublic: !(infoPublisher.value.isPrivate ?? false),
-                    isDirect: infoPublisher.value.isDirect)
+                    isDirect: infoPublisher.value.isDirect,
+                    // Tchap: add accessRule publied value
+                    accessRule: infoPublisher.value.accessRule)
     }
     
     var isDirectOneToOneRoom: Bool {

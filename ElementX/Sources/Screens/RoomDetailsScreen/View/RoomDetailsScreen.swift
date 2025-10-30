@@ -62,7 +62,7 @@ struct RoomDetailsScreen: View {
     
     private var roomHeaderSection: some View {
         AvatarHeaderView(room: context.viewState.details,
-                         externalCount: $context.externalCount, // Tchap: pass `externalCount` binding parameter
+                         isOpenToExternalUsers: $context.isOpenToExternalUsers, // Tchap: pass `isOpenToExternalUsers` binding parameter
                          avatarSize: .room(on: .details),
                          mediaProvider: context.mediaProvider) { url in
             context.send(viewAction: .displayAvatar(url))
