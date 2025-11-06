@@ -507,7 +507,9 @@ class RoomDetailsScreenViewModelTests: XCTestCase {
         notificationSettingsProxyMock.callbacks.send(.settingsDidChange)
         try await deferred.fulfill()
         
-        XCTAssertEqual(context.viewState.notificationSettingsState.label, "Default")
+        // Tchap: adapt test
+//        XCTAssertEqual(context.viewState.notificationSettingsState.label, "Default")
+        XCTAssertEqual(context.viewState.notificationSettingsState.label, L10n.screenRoomDetailsNotificationModeDefault)
     }
     
     func testNotificationCustomMode() async throws {
@@ -518,7 +520,9 @@ class RoomDetailsScreenViewModelTests: XCTestCase {
         notificationSettingsProxyMock.callbacks.send(.settingsDidChange)
         try await deferred.fulfill()
         
-        XCTAssertEqual(context.viewState.notificationSettingsState.label, "Custom")
+        // Tchap: adapt test
+//        XCTAssertEqual(context.viewState.notificationSettingsState.label, "Custom")
+        XCTAssertEqual(context.viewState.notificationSettingsState.label, L10n.screenRoomDetailsNotificationModeCustom)
     }
     
     func testNotificationRoomMuted() async throws {
