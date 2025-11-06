@@ -30,6 +30,9 @@ class AttributedStringBuilderV1Tests: XCTestCase {
     private var attributedStringBuilder: AttributedStringBuilder!
     private let maxHeaderPointSize = ceil(UIFont.preferredFont(forTextStyle: .body).pointSize * 1.2)
     
+    // Tchap: adapt test
+    fileprivate let homeServerName = "tchap.gouv.fr"
+    
     override func setUp() async throws {
         attributedStringBuilder = AttributedStringBuilder(mentionBuilder: MentionBuilder())
     }
@@ -238,7 +241,9 @@ class AttributedStringBuilderV1Tests: XCTestCase {
     func testUserIDLink() {
         let userID = "@user:matrix.org"
         let string = "The user is \(userID)."
-        let expectedLink = "https://matrix.to/#/\(userID)"
+        // Tchap: adapt test
+//        let expectedLink = "https://matrix.to/#/\(userID)"
+        let expectedLink = "https://\(homeServerName)/#/\(userID)"
         checkLinkIn(attributedString: attributedStringBuilder.fromHTML(string), expectedLink: expectedLink, expectedRuns: 3)
         checkLinkIn(attributedString: attributedStringBuilder.fromPlain(string), expectedLink: expectedLink, expectedRuns: 3)
     }
@@ -246,7 +251,9 @@ class AttributedStringBuilderV1Tests: XCTestCase {
     func testRoomAliasLink() {
         let roomAlias = "#room:matrix.org"
         let string = "The room is \(roomAlias)."
-        guard let expectedLink = URL(string: "https://matrix.to/#/\(roomAlias)") else {
+        // Tchap: adapt test
+//        guard let expectedLink = URL(string: "https://matrix.to/#/\(roomAlias)") else {
+        guard let expectedLink = URL(string: "https://\(homeServerName)/#/\(roomAlias)") else {
             XCTFail("The expected link should be valid.")
             return
         }
@@ -459,11 +466,15 @@ class AttributedStringBuilderV1Tests: XCTestCase {
         let attributedStringFromHTML = attributedStringBuilder.fromHTML(string)
         XCTAssertNotNil(attributedStringFromHTML?.attachment)
         XCTAssertEqual(attributedStringFromHTML?.userID, "@test:matrix.org")
-        XCTAssertEqual(attributedStringFromHTML?.link?.absoluteString, "https://matrix.to/#/@test:matrix.org")
+        // Tchap: adapt test
+//        XCTAssertEqual(attributedStringFromHTML?.link?.absoluteString, "https://matrix.to/#/@test:matrix.org")
+        XCTAssertEqual(attributedStringFromHTML?.link?.absoluteString, "https://\(homeServerName)/#/@test:matrix.org")
         let attributedStringFromPlain = attributedStringBuilder.fromPlain(string)
         XCTAssertNotNil(attributedStringFromPlain?.attachment)
         XCTAssertEqual(attributedStringFromPlain?.userID, "@test:matrix.org")
-        XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://matrix.to/#/@test:matrix.org")
+        // Tchap: adapt test
+//        XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://matrix.to/#/@test:matrix.org")
+        XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://\(homeServerName)/#/@test:matrix.org")
     }
     
     func testRoomIDPermalinkMentionAttachment() {
@@ -495,11 +506,15 @@ class AttributedStringBuilderV1Tests: XCTestCase {
         let attributedStringFromHTML = attributedStringBuilder.fromHTML(string)
         XCTAssertNotNil(attributedStringFromHTML?.attachment)
         XCTAssertEqual(attributedStringFromHTML?.roomAlias, "#test:matrix.org")
-        XCTAssertEqual(attributedStringFromHTML?.link?.absoluteString, "https://matrix.to/#/%23test:matrix.org")
+        // Tchap: adapt test
+//        XCTAssertEqual(attributedStringFromHTML?.link?.absoluteString, "https://matrix.to/#/%23test:matrix.org")
+        XCTAssertEqual(attributedStringFromHTML?.link?.absoluteString, "https://\(homeServerName)/#/%23test:matrix.org")
         let attributedStringFromPlain = attributedStringBuilder.fromPlain(string)
         XCTAssertNotNil(attributedStringFromPlain?.attachment)
         XCTAssertEqual(attributedStringFromHTML?.roomAlias, "#test:matrix.org")
-        XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://matrix.to/#/%23test:matrix.org")
+        // Tchap: adapt test
+//        XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://matrix.to/#/%23test:matrix.org")
+        XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://\(homeServerName)/#/%23test:matrix.org")
     }
     
     func testEventRoomIDPermalinkMentionAttachment() {

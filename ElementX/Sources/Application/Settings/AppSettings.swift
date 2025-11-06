@@ -181,6 +181,8 @@ final class AppSettings {
     private(set) var accountProviders = ["matrix.i.tchap.gouv.fr"]
     #elseif IS_TCHAP_PRODUCTION
     private(set) var accountProviders = ["matrix.agent.dinum.tchap.gouv.fr"]
+    #elseif IS_TCHAP_UNIT_TESTS
+    private(set) var accountProviders = ["matrix.agent.dinum.tchap.gouv.fr"]
     #else
     private(set) var accountProviders = ["matrix.org"]
     #endif

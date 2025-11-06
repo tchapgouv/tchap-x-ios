@@ -27,6 +27,9 @@ class ComposerToolbarViewModelTests: XCTestCase {
     private var completionSuggestionServiceMock: CompletionSuggestionServiceMock!
     private var draftServiceMock: ComposerDraftServiceMock!
 
+    // Tchap: adapt test
+    private let homeServerName = "tchap.gouv.fr"
+    
     override func setUp() {
         AppSettings.resetAllSettings()
         appSettings = AppSettings()
@@ -132,7 +135,9 @@ class ComposerToolbarViewModelTests: XCTestCase {
         viewModel.context.send(viewAction: .selectedSuggestion(suggestion))
         
         // The display name can be used for HTML injection in the rich text editor and it's useless anyway as the clients don't use it when resolving display names
-        XCTAssertEqual(wysiwygViewModel.content.html, "<a href=\"https://matrix.to/#/@test:matrix.org\">@test:matrix.org</a> ")
+        // Tchap: adapt test
+//        XCTAssertEqual(wysiwygViewModel.content.html, "<a href=\"https://matrix.to/#/@test:matrix.org\">@test:matrix.org</a> ")
+        XCTAssertEqual(wysiwygViewModel.content.html, "<a href=\"https://\(homeServerName)/#/@test:matrix.org\">@test:matrix.org</a> ")
     }
     
     func testSelectedRoomSuggestion() {
@@ -147,7 +152,9 @@ class ComposerToolbarViewModelTests: XCTestCase {
         
         // The display name can be used for HTML injection in the rich text editor and it's useless anyway as the clients don't use it when resolving display names
 
-        XCTAssertEqual(wysiwygViewModel.content.html, "<a href=\"https://matrix.to/#/%23room-alias:matrix.org\">#room-alias:matrix.org</a> ")
+        // Tchap: adapt test
+//        XCTAssertEqual(wysiwygViewModel.content.html, "<a href=\"https://matrix.to/#/%23room-alias:matrix.org\">#room-alias:matrix.org</a> ")
+        XCTAssertEqual(wysiwygViewModel.content.html, "<a href=\"https://\(homeServerName)/#/%23room-alias:matrix.org\">#room-alias:matrix.org</a> ")
     }
     
     func testAllUsersSuggestion() {

@@ -86,7 +86,9 @@ class AuthenticationServiceTests: XCTestCase {
         }
         
         XCTAssertEqual(service.flow, .login)
-        XCTAssertEqual(service.homeserver.value, .init(address: "matrix.org", loginMode: .unknown))
+        // Tchap: adapt test
+//        XCTAssertEqual(service.homeserver.value, .init(address: "matrix.org", loginMode: .unknown))
+        XCTAssertEqual(service.homeserver.value, .init(address: "matrix.agent.dinum.tchap.gouv.fr", loginMode: .unknown))
     }
     
     // MARK: - Helpers

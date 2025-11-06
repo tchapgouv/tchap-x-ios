@@ -55,7 +55,11 @@ class RoomRolesAndPermissionsScreenViewModelTests: XCTestCase {
         context.send(viewAction: .editOwnUserRole)
         XCTAssertNotNil(context.alertInfo)
         
-        context.alertInfo?.verticalButtons?.first { $0.title.localizedStandardContains("moderator") }?.action?()
+        context.alertInfo?.verticalButtons?.first {
+            // Tchap: adapt test
+//            $0.title.localizedStandardContains("moderator")
+            $0.title.localizedStandardContains("moderator") || $0.title.localizedStandardContains("modérateur")
+        }?.action?()
         
         try await Task.sleep(for: .milliseconds(100))
         
@@ -70,7 +74,11 @@ class RoomRolesAndPermissionsScreenViewModelTests: XCTestCase {
         context.send(viewAction: .editOwnUserRole)
         XCTAssertNotNil(context.alertInfo)
         
-        context.alertInfo?.verticalButtons?.first { $0.title.localizedStandardContains("member") }?.action?()
+        context.alertInfo?.verticalButtons?.first {
+            // Tchap: adapt test
+//            $0.title.localizedStandardContains("member")
+            $0.title.localizedStandardContains("member") || $0.title.localizedStandardContains("membre")
+        }?.action?()
         
         try await Task.sleep(for: .milliseconds(100))
         

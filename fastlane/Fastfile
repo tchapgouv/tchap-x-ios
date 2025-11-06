@@ -18,6 +18,35 @@ end
 lane :unit_tests do |options|
   reset_simulator = ENV.key?('CI')
   
+  #Tchap: generate empty 'generated files' to avoid Xcode error: files not found.
+  dest = "../TchapX/main/Sources/Generated"
+  FileUtils.mkdir_p dest
+  Dir.chdir dest do
+      files = ["TchapAssets.swift", "TchapStrings.swift", "TchapStrings+Untranslated.swift"]
+      files.each do |filename|
+        if !File.exist?(filename)
+          FileUtils.touch filename
+        end
+      end
+  end
+  
+  #Tchap: generate Secrets.swift file if it doesn't exist.
+  destFolder = "../Secrets"
+  destFile = "Secrets.swift"
+  if !File.exist?("#{destFolder}/#{destFile}")
+    FileUtils.mkdir_p destFolder
+    File.open("#{destFolder}/#{destFile}", "w") do |f|
+      f.write(%q(  enum Secrets {
+      static let sentryDSN: String? = "https://username@sentry.localhost/project_id"
+      static let sentryRustDSN: String? = "https://username@sentry.localhost/project_id"
+      static let postHogHost: String? = "https://posthog.localhost"
+      static let postHogAPIKey: String? = "your_key"
+      static let rageshakeURL: String? = "https://rageshake.localhost/submit"
+      static let mapLibreAPIKey: String? = "your_key"
+      }))
+    end  
+  end
+  
   # Tchap: generate xcode project because .xcodeproj files are not gitted.
   xcodegen(
     spec: "project-tchap-x.yml"
