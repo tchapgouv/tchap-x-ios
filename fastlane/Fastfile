@@ -15,10 +15,9 @@ before_all do
   ENV["SENTRY_LOG_LEVEL"] = "DEBUG"
 end
 
-lane :unit_tests do |options|
-  reset_simulator = ENV.key?('CI')
-  
-  #Tchap: generate empty 'generated files' to avoid Xcode error: files not found.
+#Tchap: generate empty 'generated files' to avoid Xcode error: files not found.
+def tchap_generate_missing_files
+  UI.message("Tchap: Generating missing file needed by Xcode project") 
   dest = "../TchapX/main/Sources/Generated"
   FileUtils.mkdir_p dest
   Dir.chdir dest do
@@ -29,8 +28,11 @@ lane :unit_tests do |options|
         end
       end
   end
-  
-  #Tchap: generate Secrets.swift file if it doesn't exist.
+end
+
+#Tchap: generate Secrets.swift file if it doesn't exist.
+def generate_secrets_file_if_needed
+  UI.message("Tchap: Generating (if needed) Secrets.swift file needed by Xcode project")
   destFolder = "../Secrets"
   destFile = "Secrets.swift"
   if !File.exist?("#{destFolder}/#{destFile}")
@@ -46,6 +48,16 @@ lane :unit_tests do |options|
       }))
     end  
   end
+end
+
+lane :unit_tests do |options|
+  reset_simulator = ENV.key?('CI')
+  
+  #Tchap: generate empty 'generated files' to avoid Xcode error: files not found.
+  tchap_generate_missing_files
+  
+  #Tchap: generate Secrets.swift file if it doesn't exist.
+  generate_secrets_file_if_needed
   
   # Tchap: generate xcode project because .xcodeproj files are not gitted.
   xcodegen(
