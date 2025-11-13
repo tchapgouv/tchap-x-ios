@@ -63,6 +63,7 @@ protocol RoomInfoProxyProtocol: BaseRoomInfoProxyProtocol {
     
     // Tchap: implement access_rule accessor
     var accessRule: AccessRule? { get }
+    var visibility: RoomVisibility! { get }
 }
 
 extension BaseRoomInfoProxyProtocol {

@@ -59,7 +59,7 @@ struct AvatarHeaderView<Footer: View>: View {
         
         var badges = [Badge]()
         badges.append(.encrypted(room.isEncrypted))
-        if room.isPublic {
+        if room.isPublicAndNotPrivateUnencrypted {
             badges.append(.public)
         }
         self.badges = badges
@@ -266,7 +266,8 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
                                          isPublic: true,
                                          isDirect: false,
                                          // Tchap: add test value
-                                         accessRule: .unrestricted),
+                                         accessRule: .unrestricted,
+                                         visibility: .private),
                              isOpenToExternalUsers: .constant(true),
                              avatarSize: .room(on: .details),
                              mediaProvider: MediaProviderMock(configuration: .init())) {

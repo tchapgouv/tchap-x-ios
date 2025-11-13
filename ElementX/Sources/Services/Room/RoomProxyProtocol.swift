@@ -206,7 +206,8 @@ extension JoinedRoomProxyProtocol {
                     isPublic: !(infoPublisher.value.isPrivate ?? false),
                     isDirect: infoPublisher.value.isDirect,
                     // Tchap: add accessRule publied value
-                    accessRule: infoPublisher.value.accessRule)
+                    accessRule: infoPublisher.value.accessRule,
+                    visibility: infoPublisher.value.visibility)
     }
     
     var isDirectOneToOneRoom: Bool {

@@ -6,6 +6,9 @@
 //
 
 import Foundation
+
+// Tchap: Add Matrix SDK dependency for RoomVisibility type.
+import MatrixRustSDK
 import OrderedCollections
 
 enum RoomScreenViewModelAction: Equatable {
@@ -90,6 +93,8 @@ struct RoomScreenViewStateBindings {
     var isEncrypted: Bool?
     var isPublic: Bool?
     var isOpenToExternalUsers: Bool?
+    var visibilityInRoomDirectory: RoomVisibility!
+    var isPublicAndNotPrivateUnencrypted: Bool!
 }
 
 enum RoomScreenFooterViewAction {

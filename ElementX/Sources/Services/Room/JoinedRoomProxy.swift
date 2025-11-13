@@ -744,6 +744,16 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             return .failure(.sdkError(error))
         }
     }
+
+    // Tchap: read access rules Encrypted value from local state store.
+    func isEncrypted() async -> Bool {
+        await room.getIsEncrypted()
+    }
+    
+    // Tchap: read access rules Visibility value from local state store.
+    func visibility() async -> RoomVisibility {
+        await room.getVisibility()
+    }
     
     // MARK: - Private
     
