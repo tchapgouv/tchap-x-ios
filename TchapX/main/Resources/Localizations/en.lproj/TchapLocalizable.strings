@@ -36,8 +36,11 @@ screen_create_room_room_visibility_section_title = "Room type";
 screen_create_room_externals_are_presents_warning = "This room contains external members.";
 screen_create_room_externals_are_presents_link = "More info";
 
-screen_invite_external_user_dialog_message = "This action will allow external users to be invited to this room.";
-screen_invite_external_user_error_modifying_access_rule = "The room could not be configured to allow external users to be invited.";
+screen_invite_external_user_dialog_title = "Invitation of an external";
+screen_invite_external_user_dialog_message = "By inviting an external user, this room will become accessible to any external user.\nThis change is final and irreversible.";
+
+screen_invite_external_user_error_modifying_access_rule_title = "Unable to open the room to externals";
+screen_invite_external_user_error_modifying_access_rule_message = "The opening of the room to external users failed. No invitations were sent.";
 
 room_header_badge_encrypted = "ENCRYPTED";
 room_header_badge_not_encrypted = "NOT ENCRYPTED";

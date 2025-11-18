@@ -36,8 +36,11 @@ screen_create_room_room_visibility_section_title = "Type de salon";
 screen_create_room_externals_are_presents_warning = "Ce salon contient des invités externes. ";
 screen_create_room_externals_are_presents_link = "En savoir +";
 
-screen_invite_external_user_dialog_message = "Cette action permettra d'inviter des utilisateurs externes dans ce salon.";
-screen_invite_external_user_error_modifying_access_rule = "Le salon n'a pas pû être configuré pour autoriser l'invitation d'utilisateurs externes.";
+screen_invite_external_user_dialog_title = "Invitation d’un externe";
+screen_invite_external_user_dialog_message = "En invitant un partenaire externe, ce salon deviendra accessible aux utilisateurs externes.\nCette modification est définitive et irréversible.";
+
+screen_invite_external_user_error_modifying_access_rule_title = "Impossible d’ouvrir le salon aux externes";
+screen_invite_external_user_error_modifying_access_rule_message = "L’ouverture du salon aux externes a échoué. Aucune invitation n’a été envoyée.";
 
 room_header_badge_encrypted = "SÉCURISÉ";
 room_header_badge_not_encrypted = "NON CHIFFRÉ";
