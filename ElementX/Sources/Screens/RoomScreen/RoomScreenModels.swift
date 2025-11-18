@@ -94,7 +94,7 @@ struct RoomScreenViewStateBindings {
     var isPublic: Bool?
     var isOpenToExternalUsers: Bool?
     var visibilityInRoomDirectory: RoomVisibility!
-    var isPublicAndNotPrivateUnencrypted: Bool!
+    var canDisplayPublicBadge: Bool!
 }
 
 enum RoomScreenFooterViewAction {

@@ -59,7 +59,7 @@ struct AvatarHeaderView<Footer: View>: View {
         
         var badges = [Badge]()
         badges.append(.encrypted(room.isEncrypted))
-        if room.isPublicAndNotPrivateUnencrypted {
+        if room.canDisplayPublicBadge {
             badges.append(.public)
         }
         self.badges = badges
