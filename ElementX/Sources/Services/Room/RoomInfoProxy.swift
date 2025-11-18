@@ -56,6 +56,8 @@ struct RoomInfoProxy: RoomInfoProxyProtocol {
     
     // Tchap: accessRule property accessor
     var accessRule: AccessRule? { roomInfo.accessRule }
+    var isEncryptedFromAccessRules: Bool? { roomInfo.isEncrypted }
+    var visibility: RoomVisibility! { roomInfo.visiblity }
 }
 
 struct RoomPreviewInfoProxy: BaseRoomInfoProxyProtocol {
