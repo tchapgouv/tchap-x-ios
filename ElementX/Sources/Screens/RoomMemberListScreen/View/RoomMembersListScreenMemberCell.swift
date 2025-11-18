@@ -42,7 +42,7 @@ struct RoomMembersListScreenMemberCell: View {
                         }
                         #endif
                         if MatrixIdFromString(listEntry.member.id).isExternalTchapUser {
-                            BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal())
+                            BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)

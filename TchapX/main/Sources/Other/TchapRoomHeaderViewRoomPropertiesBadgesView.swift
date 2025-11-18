@@ -42,15 +42,15 @@ struct TchapRoomHeaderViewRoomPropertiesBadgesView: View {
         HStack(spacing: 3) {
             if let isEncrypted = isEncrypted,
                isEncrypted == true {
-                BadgeLabel(title: TchapL10n.roomHeaderBadgeEncrypted, icon: \.lockSolid, style: .info, tchapUsage: .roomIsEncrypted(inRoomHeaderView: true))
+                BadgeLabel(title: TchapL10n.roomHeaderBadgeEncrypted, icon: \.lockSolid, style: .info, tchapUsage: .roomIsEncrypted(useSmallSize: true))
             } else {
-                BadgeLabel(title: TchapL10n.roomHeaderBadgeNotEncrypted, icon: \.lockOff, style: .info, tchapUsage: .roomIsNotEncrypted(inRoomHeaderView: true))
+                BadgeLabel(title: TchapL10n.roomHeaderBadgeNotEncrypted, icon: \.lockOff, style: .info, tchapUsage: .roomIsNotEncrypted(useSmallSize: true))
             }
             if let isPublic = isPublic,
                isPublic == true {
-                BadgeLabel(title: TchapL10n.roomHeaderBadgePublic, icon: \.public, style: .info, tchapUsage: .roomIsPublic(inRoomHeaderView: true))
+                BadgeLabel(title: TchapL10n.roomHeaderBadgePublic, icon: \.public, style: .info, tchapUsage: .roomIsPublic(useSmallSize: true))
             } else if isOpenToExternalUsers ?? false {
-                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .roomIsAccessibleToExternals(inRoomHeaderView: true))
+                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .roomIsAccessibleToExternals(useSmallSize: true))
             }
         }
     }
