@@ -281,9 +281,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 case .loginWithQR:
                     stateMachine.tryEvent(.loginWithQR)
                 case .login:
-                    // Tchap: skip confirm server screen
-//                    stateMachine.tryEvent(.confirmServer(.login))
-                    stateMachine.tryEvent(.continueWithPassword)
+                    stateMachine.tryEvent(.confirmServer(.login))
                 case .register:
                     stateMachine.tryEvent(.confirmServer(.register))
                 case .reportProblem:
