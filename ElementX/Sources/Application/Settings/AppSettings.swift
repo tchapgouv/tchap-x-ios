@@ -263,8 +263,14 @@ final class AppSettings {
     
     /// Any pre-defined static client registrations for OIDC issuers.
     let oidcStaticRegistrations: [URL: String] = ["https://id.thirdroom.io/realms/thirdroom": "elementx"]
+
+    // Tchap: Customize OIDC Redirect URL (as stated here https://github.com/element-hq/element-x-ios/issues/4119#issuecomment-2879430647)
+    // and now in the `docs/FORKING.md` (https://github.com/element-hq/element-x-ios/blob/develop/docs/FORKING.md)
+    // Use the same Redirect URL as Tchap Legacy.
+    // The fact it is a custom scheme rather than a special web URL avoid the mandatory associated domain declaration: https://developer.apple.com/documentation/xcode/supporting-associated-domains
+//    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
     /// The redirect URL used for OIDC. This no longer uses universal links so we don't need the bundle ID to avoid conflicts between Element X, Nightly and PR builds.
-    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
+    private(set) var oidcRedirectURL: URL = "tchap://connect"
     
     private(set) lazy var oidcConfiguration = OIDCConfiguration(clientName: InfoPlistReader.main.bundleDisplayName,
                                                                 redirectURI: oidcRedirectURL,
