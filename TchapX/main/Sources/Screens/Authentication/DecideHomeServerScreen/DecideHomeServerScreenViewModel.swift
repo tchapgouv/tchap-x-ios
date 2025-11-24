@@ -72,11 +72,11 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
         MXLog.info("[DecideHomeServerScreen]Starting requesting homeserver attachment for email login.")
         startLoading(isInteractionBlocking: true)
         
-        let requestServerDomains = accountProviders.map { $0.replacingOccurrences(of: "matrix.", with: "") }
+        let requestServerDomains = accountProviders.shuffled()
 
         // Init and keep strong ref to task.
         // It will be canceled if view is dismissed.
-        requestServerDomainsTask = Task {
+        requestServerDomainsTask = Task(priority: .background) {
             for domain in requestServerDomains {
                 if Task.isCancelled {
                     return
