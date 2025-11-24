@@ -398,7 +398,8 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                                                                      loginHint: loginHint,
                                                                      userIndicatorController: userIndicatorController,
                                                                      appSettings: appSettings,
-                                                                     analytics: analytics)
+                                                                     analytics: analytics,
+                                                                     accountProviders: appSettings.accountProviders)
         let coordinator = DecideHomeServerScreenCoordinator(parameters: parameters)
         
         coordinator.actions

@@ -16,6 +16,8 @@ struct DecideHomeServerScreenCoordinatorParameters {
     let userIndicatorController: UserIndicatorControllerProtocol
     let appSettings: AppSettings
     let analytics: AnalyticsService
+    // The Homeservers that can be queried to obtain the attachment Homeserver for a given email.
+    let accountProviders: [String]
 }
 
 enum DecideHomeServerScreenCoordinatorAction {
@@ -46,6 +48,7 @@ final class DecideHomeServerScreenCoordinator: CoordinatorProtocol {
         
         viewModel = DecideHomeServerScreenViewModel(authenticationService: parameters.authenticationService,
                                                     loginHint: parameters.loginHint,
+                                                    accountProviders: parameters.accountProviders,
                                                     userIndicatorController: parameters.userIndicatorController,
                                                     appSettings: parameters.appSettings,
                                                     analytics: parameters.analytics)

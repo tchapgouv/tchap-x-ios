@@ -16,6 +16,8 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let appSettings: AppSettings
     private let analytics: AnalyticsService
+    private let accountProviders: [String]
+    private var requestServerDomainsTask: Task<Void, Never>? = nil // Will be canceled if View is leaved.
     
     private var actionsSubject: PassthroughSubject<DecideHomeServerScreenViewModelAction, Never> = .init()
     var actions: AnyPublisher<DecideHomeServerScreenViewModelAction, Never> {
@@ -24,6 +26,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
 
     init(authenticationService: AuthenticationServiceProtocol,
          loginHint: String?,
+         accountProviders: [String],
          userIndicatorController: UserIndicatorControllerProtocol,
          appSettings: AppSettings,
          analytics: AnalyticsService) {
@@ -31,6 +34,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
         self.userIndicatorController = userIndicatorController
         self.appSettings = appSettings
         self.analytics = analytics
+        self.accountProviders = accountProviders
         
         let username = switch loginHint {
         case .some(let hint) where hint.hasPrefix("mxid:"): String(hint.dropFirst(5)) // MSC4198
@@ -61,25 +65,53 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
     // MARK: - Private
         
     /// Requests the homeservers' list for the homeserver attached to the email address.
-    /// The homeservers list must have been randomized on init.
-    /// Each server .is requested one at a time until the first correct response.
+    /// The homeservers list is randomized before use..
+    /// Each server is requested one at a time until the first correct response.
     /// Display an error if no response is obtained.
     private func requestForHomeserver() {
-        MXLog.info("[DecideHomeServerScreen]Starting requesting homeserver attachment for email.")
+        MXLog.info("[DecideHomeServerScreen]Starting requesting homeserver attachment for email login.")
         startLoading(isInteractionBlocking: true)
+        
+        let requestServerDomains = accountProviders.map { $0.replacingOccurrences(of: "matrix.", with: "") }
 
-        let config = TchapGetInstanceConfig(homeServer: "dev01.tchap.incubateur.net", userAgent: UserAgentBuilder.makeASCIIUserAgent())
-        Task {
-            do {
-                let homeserverDomain = try tchapGetInstance(config: config, forEmail: context.username)
-                MXLog.info("[DecideHomeServerScreen] requestForHomeserver -> \(homeserverDomain)")
-                await initAuthenticationService(for: homeserverDomain)
-                stopLoading()
-            } catch {
-                stopLoading()
-                MXLog.error("[DecideHomeServerScreen] requestForHomeserver -> \(error)")
-                handleError(.tchapGetInstanceError)
+        // Init and keep strong ref to task.
+        // It will be canceled if view is dismissed.
+        requestServerDomainsTask = Task {
+            for domain in requestServerDomains {
+                if Task.isCancelled {
+                    return
+                }
+                
+                switch await self.requestHomeserverForInfo(homeserver: domain, forEmail: self.context.username) {
+                case .success(let homeserverDomain):
+                    MXLog.info("[DecideHomeServerScreen] requestForHomeserver \(domain) returned domain -> \(homeserverDomain)")
+                    if Task.isCancelled {
+                        return
+                    }
+                    await initAuthenticationService(for: homeserverDomain)
+                    stopLoading()
+                    // exit method now that AuthenticationService is inited.
+                    return
+                case .failure(let error):
+                    MXLog.error("[DecideHomeServerScreen] requestForHomeserver \(domain) returned error -> \(error)")
+                }
             }
+            
+            if Task.isCancelled {
+                return
+            }
+            // No homeserver returned a domain for the email specified. Throw error.
+            MXLog.error("[DecideHomeServerScreen] No homeserver returned a domain for the email \(self.context.username).")
+            handleError(.tchapGetInstanceError)
+        }
+    }
+    
+    private func requestHomeserverForInfo(homeserver: String, forEmail: String) async -> Result<String, DecideHomeServerScreenErrorType> {
+        let config = TchapGetInstanceConfig(homeServer: homeserver, userAgent: UserAgentBuilder.makeASCIIUserAgent())
+        do {
+            return try .success(tchapGetInstance(config: config, forEmail: forEmail))
+        } catch {
+            return .failure(.tchapGetInstanceError)
         }
     }
     

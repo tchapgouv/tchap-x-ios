@@ -127,6 +127,7 @@ struct DecideHomeServerScreen_Previews: PreviewProvider, TestablePreview {
         
         let viewModel = DecideHomeServerScreenViewModel(authenticationService: authenticationService,
                                                         loginHint: nil,
+                                                        accountProviders: AppSettings().accountProviders,
                                                         userIndicatorController: UserIndicatorControllerMock(),
                                                         appSettings: ServiceLocator.shared.settings,
                                                         analytics: ServiceLocator.shared.analytics)
