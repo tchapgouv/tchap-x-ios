@@ -22,7 +22,7 @@ screen_onboarding_welcome_or_between_buttons = "ou";
 screen_login_title_login = "Se connecter à Tchap";
 screen_login_title_register = "Créer un compte sur Tchap";
 screen_login_description_with_tchap = "La messagerie instantanée du secteur public";
-screen_login_input_email_label = "Saisissez votre email professionnel";
+screen_login_input_email_label = "Saisissez votre mail professionnelle";
 
 // Tchap: login by MAS.
 screen_decide_homeserver_error_get_instance_title = "Erreur";
