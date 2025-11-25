@@ -19,8 +19,10 @@ screen_onboarding_welcome_message = "The civil servants instant messaging system
 screen_onboarding_welcome_qrcode_header = "Already logged on a computer?";
 screen_onboarding_welcome_or_between_buttons = "or";
 
-screen_login_title_with_tchap = "Sign in to Tchap";
+screen_login_title_login = "Sign in to Tchap";
+screen_login_title_register = "Create an account on Tchap";
 screen_login_description_with_tchap = "Instant messaging of public sector";
+screen_login_input_email_label = "Enter your work email address";
 
 // Tchap: login by MAS.
 screen_decide_homeserver_error_get_instance_title = "Erreur";

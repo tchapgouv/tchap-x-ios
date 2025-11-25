@@ -50,7 +50,7 @@ struct LoginScreen: View {
                 .padding(.bottom, 8)
             // Tchap: [Beta DINUM] Customize login title
 //            Text(L10n.screenLoginTitleWithHomeserver(context.viewState.homeserver.address))
-            Text(TchapL10n.screenLoginTitleWithTchap)
+            Text(TchapL10n.screenLoginTitleLogin)
                 .font(.compound.headingMDBold)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.compound.textPrimary)

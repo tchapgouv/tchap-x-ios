@@ -41,7 +41,7 @@ struct DecideHomeServerScreen: View {
             BigIcon(icon: \.lockSolid)
                 .padding(.bottom, 8)
             // Tchap: [Beta DINUM] Customize login title
-            Text(TchapL10n.screenLoginTitleWithTchap)
+            Text(context.viewState.authenticationFlow == .register ? TchapL10n.screenLoginTitleRegister : TchapL10n.screenLoginTitleLogin)
                 .font(.compound.headingMDBold)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.compound.textPrimary)
@@ -58,7 +58,7 @@ struct DecideHomeServerScreen: View {
     /// The form with text fields for username and password, along with a submit button.
     var loginForm: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(L10n.screenLoginFormHeader)
+            Text(TchapL10n.screenLoginInputEmailLabel)
                 .font(.compound.bodySM)
                 .foregroundColor(.compound.textPrimary)
                 .padding(.horizontal, 16)
@@ -126,6 +126,7 @@ struct DecideHomeServerScreen_Previews: PreviewProvider, TestablePreview {
         Task { await authenticationService.configure(for: homeserverAddress, flow: .login) }
         
         let viewModel = DecideHomeServerScreenViewModel(authenticationService: authenticationService,
+                                                        authenticationFlow: .login,
                                                         loginHint: nil,
                                                         accountProviders: AppSettings().accountProviders,
                                                         userIndicatorController: UserIndicatorControllerMock(),

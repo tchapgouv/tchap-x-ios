@@ -28,6 +28,9 @@ struct DecideHomeServerScreenViewState: BindableState {
     var canSubmit: Bool {
         !isLoading && bindings.username.isEmailAddress
     }
+
+    /// The  authentication flow: .login or .register.
+    let authenticationFlow: AuthenticationFlow
 }
 
 struct DecideHomeServerScreenBindings {

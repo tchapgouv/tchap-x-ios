@@ -11,6 +11,10 @@ import SwiftUI
 struct DecideHomeServerScreenCoordinatorParameters {
     /// The service used to authenticate the user.
     let authenticationService: AuthenticationServiceProtocol
+    // The Authentication flow wanted:
+    //   - .login
+    //   - .register
+    let authenticationFlow: AuthenticationFlow
     /// An optional hint that can be used to pre-fill the form.
     let loginHint: String?
     let userIndicatorController: UserIndicatorControllerProtocol
@@ -47,6 +51,7 @@ final class DecideHomeServerScreenCoordinator: CoordinatorProtocol {
         self.parameters = parameters
         
         viewModel = DecideHomeServerScreenViewModel(authenticationService: parameters.authenticationService,
+                                                    authenticationFlow: parameters.authenticationFlow,
                                                     loginHint: parameters.loginHint,
                                                     accountProviders: parameters.accountProviders,
                                                     userIndicatorController: parameters.userIndicatorController,

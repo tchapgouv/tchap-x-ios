@@ -184,6 +184,7 @@ final class AppSettings {
     ]
     #elseif IS_TCHAP_STAGING
     private(set) var accountProviders = ["i.tchap.gouv.fr",
+                                         "a.tchap.gouv.fr",
                                          "e.tchap.gouv.fr"]
     #elseif IS_TCHAP_PRODUCTION
     private(set) var accountProviders = ["agent.externe.tchap.gouv.fr",

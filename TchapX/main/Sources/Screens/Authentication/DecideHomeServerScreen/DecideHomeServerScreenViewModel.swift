@@ -13,6 +13,7 @@ typealias DecideHomeServerScreenViewModelType = StateStoreViewModelV2<DecideHome
 
 class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, DecideHomeServerScreenViewModelProtocol {
     private let authenticationService: AuthenticationServiceProtocol
+    private let authenticationFlow: AuthenticationFlow
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let appSettings: AppSettings
     private let analytics: AnalyticsService
@@ -25,12 +26,14 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
     }
 
     init(authenticationService: AuthenticationServiceProtocol,
+         authenticationFlow: AuthenticationFlow,
          loginHint: String?,
          accountProviders: [String],
          userIndicatorController: UserIndicatorControllerProtocol,
          appSettings: AppSettings,
          analytics: AnalyticsService) {
         self.authenticationService = authenticationService
+        self.authenticationFlow = authenticationFlow
         self.userIndicatorController = userIndicatorController
         self.appSettings = appSettings
         self.analytics = analytics
@@ -42,7 +45,8 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
         case .none: ""
         }
         
-        let viewState = DecideHomeServerScreenViewState(bindings: DecideHomeServerScreenBindings(username: username))
+        let viewState = DecideHomeServerScreenViewState(bindings: DecideHomeServerScreenBindings(username: username),
+                                                        authenticationFlow: authenticationFlow) // Needed to display UI elments.
         
         super.init(initialViewState: viewState)
     }
@@ -118,7 +122,8 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
     // Initialize the Authentication service with the returned homeServer.
     private func initAuthenticationService(for homeserverDomain: String) async {
         // Try to configure the Authentication Service to use the selected Homeserver.
-        switch await authenticationService.configure(for: homeserverDomain, flow: .login) {
+        // Pass the Authentication service the desired flow: .login or .register
+        switch await authenticationService.configure(for: homeserverDomain, flow: authenticationFlow) {
         case .success:
             if authenticationService.homeserver.value.loginMode.supportsOIDCFlow {
                 switch await prepareOIDCFlow() {
