@@ -116,17 +116,17 @@ extension TchapFeatureFlag {
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
         static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
-        static let loginByMAS = TchapFeatureFlag(allowedInstances: [])
+        static let enableMAS = TchapFeatureFlag(allowedInstances: [])
         #elseif IS_TCHAP_STAGING
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [.agriculture, .agent])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
         static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
-        static let loginByMAS = TchapFeatureFlag(allowedInstances: [])
+        static let enableMAS = TchapFeatureFlag(allowedInstances: [])
         #elseif IS_TCHAP_DEVELOPMENT
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
         static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [.all])
-        static let loginByMAS = TchapFeatureFlag(allowedInstances: [.all])
+        static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
         #endif
     }
 }

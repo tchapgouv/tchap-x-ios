@@ -230,7 +230,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
 //               }
 //               self?.showOIDCAuthentication(oidcData: oidcData, presentationAnchor: window, fromState: context.fromState)
 //           }
-        let transitions: [SwiftState.Transition<State>] = if TchapFeatureFlag.Configuration.loginByMAS.isActivated(for: .all) {
+        let transitions: [SwiftState.Transition<State>] = if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
             [.serverConfirmationScreen => .oidcAuthentication,
              .startScreen => .oidcAuthentication,
              .tchapDecideHomeServerScreen(.login) => .oidcAuthentication,
@@ -264,7 +264,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         }
         
         // Tchap: login by MAS
-        if TchapFeatureFlag.Configuration.loginByMAS.isActivated(for: .all) {
+        if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
             stateMachine.addRoutes(event: .tchapDecideHomeServer(.login), transitions: [.startScreen => .tchapDecideHomeServerScreen(.login)]) { [weak self] context in
                 let loginHint = context.userInfo as? String
                 self?.showDecideHomeServerScreen(flow: .login, loginHint: loginHint, fromState: context.fromState)
@@ -338,7 +338,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 case .login:
                     // Tchap: login customization
 //                    stateMachine.tryEvent(.confirmServer(.login))
-                    if TchapFeatureFlag.Configuration.loginByMAS.isActivated(for: .all) {
+                    if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
                         // Tchap: login by MAS.
                         stateMachine.tryEvent(.tchapDecideHomeServer(.login))
                     } else {
@@ -349,7 +349,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 case .register:
                     // Tchap: register customization
 //                    stateMachine.tryEvent(.confirmServer(.register))
-                    if TchapFeatureFlag.Configuration.loginByMAS.isActivated(for: .all) {
+                    if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
                         // Tchap: register by MAS.
                         stateMachine.tryEvent(.tchapDecideHomeServer(.register))
                     } else {
