@@ -64,11 +64,7 @@ public struct ListRow<Icon: View, DetailsIcon: View, CustomContent: View, Select
             .buttonStyle(ListRowButtonStyle())
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.compound.bgCanvasDefaultLevel1)
-<<<<<<< HEAD
-            .listRowSeparatorTint(.compound._borderInteractiveSecondaryAlpha)
-=======
             .listRowSeparatorTint(ListRowColor.separatorTint)
->>>>>>> release/25.12.0
     }
     
     @ViewBuilder

@@ -284,7 +284,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         }
         
         if let powerLevels = roomInfo.powerLevels {
-<<<<<<< HEAD
             // Tchap: if user is external user, don't allow any modification power level.
 //            state.canEditRoomName = powerLevels.canOwnUser(sendStateEvent: .roomName)
 //            state.canEditRoomTopic = powerLevels.canOwnUser(sendStateEvent: .roomTopic)
@@ -294,6 +293,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
 //            state.canBanUsers = powerLevels.canOwnUserBan()
 //            state.canJoinCall = powerLevels.canOwnUserJoinCall()
 //            state.canEditRolesOrPermissions = powerLevels.canOwnUserEditRolesAndPermissions()
+//            state.canEditSecurityAndPrivacy = powerLevels.canOwnUserEditSecurityAndPrivacy()
             if MatrixIdFromString(userSession.clientProxy.userID).isExternalTchapUser {
                 state.canEditRoomName = false
                 state.canEditRoomTopic = false
@@ -303,6 +303,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 state.canBanUsers = false
                 state.canJoinCall = powerLevels.canOwnUserJoinCall()
                 state.canEditRolesOrPermissions = false
+                state.canEditSecurityAndPrivacy = false;
             } else {
                 state.canEditRoomName = powerLevels.canOwnUser(sendStateEvent: .roomName)
                 state.canEditRoomTopic = powerLevels.canOwnUser(sendStateEvent: .roomTopic)
@@ -312,18 +313,8 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 state.canBanUsers = powerLevels.canOwnUserBan()
                 state.canJoinCall = powerLevels.canOwnUserJoinCall()
                 state.canEditRolesOrPermissions = powerLevels.canOwnUserEditRolesAndPermissions()
+                state.canEditSecurityAndPrivacy = powerLevels.canOwnUserEditSecurityAndPrivacy()
             }
-=======
-            state.canEditRoomName = powerLevels.canOwnUser(sendStateEvent: .roomName)
-            state.canEditRoomTopic = powerLevels.canOwnUser(sendStateEvent: .roomTopic)
-            state.canEditRoomAvatar = powerLevels.canOwnUser(sendStateEvent: .roomAvatar)
-            state.canInviteUsers = powerLevels.canOwnUserInvite()
-            state.canKickUsers = powerLevels.canOwnUserKick()
-            state.canBanUsers = powerLevels.canOwnUserBan()
-            state.canJoinCall = powerLevels.canOwnUserJoinCall()
-            state.canEditRolesOrPermissions = powerLevels.canOwnUserEditRolesAndPermissions()
-            state.canEditSecurityAndPrivacy = powerLevels.canOwnUserEditSecurityAndPrivacy()
->>>>>>> release/25.12.0
         }
     }
     

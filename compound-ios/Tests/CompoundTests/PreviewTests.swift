@@ -22,16 +22,11 @@ class PreviewTests: XCTestCase {
     
     private let deviceConfig: ViewImageConfig = .iPhoneX
     private let simulatorDevice: String? = "iPhone14,6" // iPhone SE 3rd Generation
-<<<<<<< HEAD
-    private let requiredOSVersion = (major: 18, minor: 5)
-    private let snapshotDevices = ["iPhone 16", "iPad"]
-=======
     private let requiredOSVersion = (major: 26, minor: 1)
     // The key is the name we will give to the snapshot
     // The value is the actual device that will be used to render the preview
     private let snapshotDevices: [SnapshotDevice] = [.init(name: "iPhone", device: "iPhone 17"),
                                                      .init(name: "iPad", device: "iPad")]
->>>>>>> release/25.12.0
     private var recordMode: SnapshotTestingConfiguration.Record = .missing
 
     override func setUp() {

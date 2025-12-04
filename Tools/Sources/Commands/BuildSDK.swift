@@ -47,11 +47,7 @@ struct BuildSDK: AsyncParsableCommand {
                 Run the following command to install them:
                 
                 rustup target add \(missingTargets.joined(separator: " "))
-<<<<<<< HEAD
-                    
-=======
                 
->>>>>>> release/25.12.0
                 """
             default:
                 return nil

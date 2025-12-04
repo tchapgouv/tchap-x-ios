@@ -157,83 +157,6 @@ struct CreateRoomScreen: View {
         //        }
     }
     
-<<<<<<< HEAD:ElementX/Sources/Screens/CreateRoom/View/CreateRoomScreen.swift
-    @State private var frame: CGRect = .zero
-    @ScaledMetric private var invitedUserCellWidth: CGFloat = 72
-    
-    // Tchap: boolean representing the presence of external members in invited users
-    private var externalsArePresents: Bool {
-        context.viewState.selectedUsers.first { MatrixIdFromString($0.userID).isExternalTchapUser } != nil
-    }
-    
-    // Tchap: "external are present" warning
-    private var externalsWarning: AttributedString {
-        var externWarning = AttributedString(TchapL10n.screenCreateRoomExternalsArePresentsWarning)
-        externWarning.font = .footnote
-        var externMoreLink = AttributedString(TchapL10n.screenCreateRoomExternalsArePresentsLink)
-        externMoreLink.font = .footnote
-        externMoreLink.underlineStyle = .single
-        externMoreLink.foregroundColor = .primary
-        externMoreLink.link = context.viewState.tchapExternalMembersFaqLink
-        return externWarning + externMoreLink
-    }
-    
-    // Tchap: verifiy at view init that selected room type is not Public Room if external users are present.
-    // This can happen when we select Public Room (because no externals are present) and go back to previous screen
-    // to select external and continue to this screen (which remember then the previous selection).
-    private func forceRoomSelectionIfExternalsArePresent() {
-        if externalsArePresents,
-           !context.isRoomPrivate {
-            // Force revert to default configuration: private and encrypted room
-            context.isRoomPrivate = true
-            context.isRoomEncrypted = true
-        }
-    }
-    
-    private var selectedUsersSection: some View {
-        Section { // Tchap: put selected users list in section
-            VStack(spacing: 0.0) {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 8) { // Tchap: reduce space between items.
-                        ForEach(context.viewState.selectedUsers, id: \.userID) { user in
-                            InviteUsersScreenSelectedItem(user: user, mediaProvider: context.mediaProvider) {
-                                context.send(viewAction: .deselectUser(user))
-                            }
-//                            .frame(width: invitedUserCellWidth) // Tchap: let the view takes its intrinsic size to be well-spaced.
-                        }
-                    }
-//                    .padding(.horizontal, ListRowPadding.horizontal) // Tchap: remove horizontal padding to display more member in available space.
-                    .padding(.vertical, 22)
-                }
-                // Tchap: add warning if some users are externals.
-                if externalsArePresents {
-                    HStack(spacing: 4.0) {
-                        Image(systemName: "info.circle.fill")
-                            .foregroundColor(CompoundCoreColorTokens.orange700)
-                        Text(externalsWarning)
-                        Spacer()
-                    }
-                }
-            }
-            // Tchap: reduce horizontal margins on members section.
-            .listRowInsets(EdgeInsets(top: 4.0, leading: 8.0, bottom: 4.0, trailing: 8.0))
-//            .frame(width: frame.width) // Tchap: remove because in a Section now.
-        } header: { // Tchap: set selected users list section title
-            Text(TchapL10n.screenCreateRoomSelectedUsersLabel)
-                .compoundListSectionHeader()
-        }
-    }
-    
-    // Tchap: colored line warning about public rooms not open to externals.
-    private var warningPublicRoomIsNotOpenToExterns: AttributedString {
-        let description = AttributedString(TchapL10n.screenCreateRoomPublicOptionDescription1)
-        var warning = AttributedString(TchapL10n.screenCreateRoomPublicOptionDescription2)
-        warning.foregroundColor = CompoundCoreColorTokens.orange700
-        return description + warning
-    }
-    
-=======
->>>>>>> release/25.12.0:ElementX/Sources/Screens/CreateRoomScreen/View/CreateRoomScreen.swift
     private var securitySection: some View {
         Section {
             // Tchap: use Tchap own room types list
@@ -348,14 +271,10 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
     
     static let publicRoomViewModel = {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
-<<<<<<< HEAD:ElementX/Sources/Screens/CreateRoom/View/CreateRoomScreen.swift
         let parameters = CreateRoomFlowParameters(isRoomPrivate: false, isRoomEncrypted: false) // Tchap: add `isRoomEncrypted` parameter
-        let selectedUsers: [UserProfileProxy] = [.mockAlice, .mockBob, .mockCharlie]
-=======
->>>>>>> release/25.12.0:ElementX/Sources/Screens/CreateRoomScreen/View/CreateRoomScreen.swift
         ServiceLocator.shared.settings.knockingEnabled = true
         return CreateRoomScreenViewModel(userSession: userSession,
-                                         initialParameters: .init(isRoomPrivate: false),
+                                         initialParameters: parameters,
                                          analytics: ServiceLocator.shared.analytics,
                                          userIndicatorController: UserIndicatorControllerMock(),
                                          appSettings: ServiceLocator.shared.settings)
@@ -363,13 +282,10 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
     
     static let publicRoomInvalidAliasViewModel = {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
-<<<<<<< HEAD:ElementX/Sources/Screens/CreateRoom/View/CreateRoomScreen.swift
         let parameters = CreateRoomFlowParameters(isRoomPrivate: false, isRoomEncrypted: false, aliasLocalPart: "#:") // Tchap: add `isRoomEncrypted` parameter
-=======
->>>>>>> release/25.12.0:ElementX/Sources/Screens/CreateRoomScreen/View/CreateRoomScreen.swift
         ServiceLocator.shared.settings.knockingEnabled = true
         return CreateRoomScreenViewModel(userSession: userSession,
-                                         initialParameters: .init(isRoomPrivate: false, aliasLocalPart: "#:"),
+                                         initialParameters: .parameters,
                                          analytics: ServiceLocator.shared.analytics,
                                          userIndicatorController: UserIndicatorControllerMock(),
                                          appSettings: ServiceLocator.shared.settings)
@@ -379,13 +295,10 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
         let clientProxy = ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))
         clientProxy.isAliasAvailableReturnValue = .success(false)
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
-<<<<<<< HEAD:ElementX/Sources/Screens/CreateRoom/View/CreateRoomScreen.swift
         let parameters = CreateRoomFlowParameters(isRoomPrivate: false, isRoomEncrypted: false, aliasLocalPart: "existing") // Tchap: add `isRoomEncrypted` parameter
-=======
->>>>>>> release/25.12.0:ElementX/Sources/Screens/CreateRoomScreen/View/CreateRoomScreen.swift
         ServiceLocator.shared.settings.knockingEnabled = true
         return CreateRoomScreenViewModel(userSession: userSession,
-                                         initialParameters: .init(isRoomPrivate: false, aliasLocalPart: "existing"),
+                                         initialParameters: parameters,
                                          analytics: ServiceLocator.shared.analytics,
                                          userIndicatorController: UserIndicatorControllerMock(),
                                          appSettings: ServiceLocator.shared.settings)

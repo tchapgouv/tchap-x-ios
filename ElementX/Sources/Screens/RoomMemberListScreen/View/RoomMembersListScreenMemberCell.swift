@@ -27,12 +27,7 @@ struct RoomMembersListScreenMemberCell: View {
                     .accessibilityHidden(true)
                 
                 HStack(alignment: .center, spacing: 4) {
-<<<<<<< HEAD
-                    VStack(alignment: .leading, spacing: 0) {
-                        // Tchap: display user as external if needed
-=======
                     VStack(alignment: .leading, spacing: 2) {
->>>>>>> release/25.12.0
                         Text(title)
                             .font(.compound.bodyLG)
                             .foregroundColor(.compound.textPrimary)

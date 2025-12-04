@@ -47,31 +47,17 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
         self.analytics = analytics
         self.userIndicatorController = userIndicatorController
         
-<<<<<<< HEAD:ElementX/Sources/Screens/CreateRoom/CreateRoomViewModel.swift
         let bindings = CreateRoomViewStateBindings(roomTopic: parameters.topic,
                                                    isRoomPrivate: parameters.isRoomPrivate,
                                                    isRoomEncrypted: parameters.isRoomEncrypted, // Tchap: additional property
                                                    isRoomFederated: parameters.isRoomFederated, // Tchap: additional property
                                                    isKnockingOnly: appSettings.knockingEnabled ? parameters.isKnockingOnly : false)
 
-        super.init(initialViewState: CreateRoomViewState(roomName: parameters.name,
-                                                         serverName: userSession.clientProxy.userIDServerName ?? "",
-                                                         isKnockingFeatureEnabled: appSettings.knockingEnabled,
-                                                         selectedUsers: selectedUsers.value,
-                                                         aliasLocalPart: parameters.aliasLocalPart ?? roomAliasNameFromRoomDisplayName(roomName: parameters.name),
-                                                         bindings: bindings,
-                                                         tchapExternalMembersFaqLink: appSettings.tchapExternalFaqURL), // Tchap: add external members FAQ link
-=======
-        let bindings = CreateRoomScreenViewStateBindings(roomTopic: parameters.topic,
-                                                         isRoomPrivate: parameters.isRoomPrivate,
-                                                         isKnockingOnly: appSettings.knockingEnabled ? parameters.isKnockingOnly : false)
-
         super.init(initialViewState: CreateRoomScreenViewState(roomName: parameters.name,
                                                                serverName: userSession.clientProxy.userIDServerName ?? "",
                                                                isKnockingFeatureEnabled: appSettings.knockingEnabled,
                                                                aliasLocalPart: parameters.aliasLocalPart ?? roomAliasNameFromRoomDisplayName(roomName: parameters.name),
                                                                bindings: bindings),
->>>>>>> release/25.12.0:ElementX/Sources/Screens/CreateRoomScreen/CreateRoomScreenViewModel.swift
                    mediaProvider: userSession.mediaProvider)
         
         setupBindings()
@@ -213,7 +199,6 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
             .store(in: &cancellables)
     }
     
-<<<<<<< HEAD:ElementX/Sources/Screens/CreateRoom/CreateRoomViewModel.swift
     private func updateParameters(state: CreateRoomViewState) {
         createRoomParameters.name = state.roomName
         createRoomParameters.topic = state.bindings.roomTopic
@@ -221,13 +206,6 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
         createRoomParameters.isRoomEncrypted = state.bindings.isRoomEncrypted // Tchap: additional property
         createRoomParameters.isRoomFederated = state.bindings.isRoomFederated // Tchap: additional property
         createRoomParameters.isKnockingOnly = state.bindings.isKnockingOnly
-=======
-    private func updateParameters(state: CreateRoomScreenViewState) {
-        parameters.name = state.roomName
-        parameters.topic = state.bindings.roomTopic
-        parameters.isRoomPrivate = state.bindings.isRoomPrivate
-        parameters.isKnockingOnly = state.bindings.isKnockingOnly
->>>>>>> release/25.12.0:ElementX/Sources/Screens/CreateRoomScreen/CreateRoomScreenViewModel.swift
         if state.isKnockingFeatureEnabled, !state.aliasLocalPart.isEmpty {
             parameters.aliasLocalPart = state.aliasLocalPart
         } else {
@@ -291,17 +269,11 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
             avatarURL = nil
         }
         
-<<<<<<< HEAD:ElementX/Sources/Screens/CreateRoom/CreateRoomViewModel.swift
         switch await userSession.clientProxy.createRoom(name: createRoomParameters.name,
                                                         topic: createRoomParameters.topic.isBlank ? nil : createRoomParameters.topic,
                                                         isRoomPrivate: createRoomParameters.isRoomPrivate,
                                                         isRoomEncrypted: createRoomParameters.isRoomEncrypted, // Tchap: additional property
                                                         // TODO: add parameter       isRoomFederated: createRoomParameters.isRoomPrivate || createRoomParameters. , // Tchap: additional property `isRoomFederated`. And Private room is always federated. Only Public room can be non-federated.
-=======
-        switch await userSession.clientProxy.createRoom(name: parameters.name,
-                                                        topic: parameters.topic.isBlank ? nil : parameters.topic,
-                                                        isRoomPrivate: parameters.isRoomPrivate,
->>>>>>> release/25.12.0:ElementX/Sources/Screens/CreateRoomScreen/CreateRoomScreenViewModel.swift
                                                         // As of right now we don't want to make private rooms with the knock rule
                                                         isKnockingOnly: parameters.isRoomPrivate ? false : parameters.isKnockingOnly,
                                                         userIDs: [], // The invite users screen is shown next so we don't need to invite anyone right now.

@@ -55,14 +55,9 @@ lane :unit_tests do |options|
   )
   
   run_tests(
-<<<<<<< HEAD
     project: "TchapX.xcodeproj",
     scheme: "TchapX-UnitTests",
-    device: "iPhone 17 (26.0)",
-=======
-    scheme: "UnitTests",
     device: "iPhone 17 (#{simulator_version})",
->>>>>>> release/25.12.0
     ensure_devices_found: true,
     result_bundle: true,
     number_of_retries: 3,
@@ -373,7 +368,8 @@ private_lane :create_simulator_if_necessary do |options|
     
     UI.message "Created new simulator: #{simulator_name} (#{device_id})"
   end
-<<<<<<< HEAD
+  
+  # device_id is unused right now but is useful to check e.g. the boot status of a simulator.
 end
 
 lane :config_secrets do
@@ -381,8 +377,3 @@ lane :config_secrets do
     sh("pkl eval --cache-dir vendor -o Secrets.swift Secrets.pkl")
   end
 end
-=======
-  
-  # device_id is unused right now but is useful to check e.g. the boot status of a simulator.
-end
->>>>>>> release/25.12.0

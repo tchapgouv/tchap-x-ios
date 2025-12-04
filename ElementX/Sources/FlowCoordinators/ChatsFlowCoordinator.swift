@@ -217,13 +217,6 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             case (.roomList, .startEncryptionResetFlow, .encryptionResetFlow):
                 startEncryptionResetFlow(animated: animated)
             case (.encryptionResetFlow, .finishedEncryptionResetFlow, .roomList):
-<<<<<<< HEAD
-                break
-            case (.roomList, .showStartChatScreen, .startChatScreen):
-                presentStartChat(animated: animated)
-            case (.startChatScreen, .dismissedStartChatScreen, .roomList):
-                break
-=======
                 encryptionResetFlowCoordinator = nil
                 
             case (.roomList, .startStartChatFlow, .startChatFlow):
@@ -231,7 +224,6 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             case (.startChatFlow, .finishedStartChatFlow, .roomList):
                 startChatFlowCoordinator = nil
                 
->>>>>>> release/25.12.0
             case (.roomList, .showRoomDirectorySearchScreen, .roomDirectorySearchScreen):
                 presentRoomDirectorySearch()
             case (.roomDirectorySearchScreen, .dismissedRoomDirectorySearchScreen, .roomList):

@@ -11,19 +11,11 @@ import CoreLocation
 protocol MapTilerURLBuilderProtocol {
     func interactiveMapURL(for style: MapTilerStyle) -> URL?
     
-<<<<<<< HEAD
-    func staticMapURL(for style: MapTilerStyle,
+    func staticMapTileImageURL(for style: MapTilerStyle,
                       coordinates: CLLocationCoordinate2D,
                       zoomLevel: Double,
                       size: CGSize,
                       attribution: MapTilerAttributionPlacement) -> URL?
     // Tchap: addition for static map
     func staticMapStyleURL(for style: MapTilerStyle, attribution: MapTilerAttributionPlacement) -> URL
-=======
-    func staticMapTileImageURL(for style: MapTilerStyle,
-                               coordinates: CLLocationCoordinate2D,
-                               zoomLevel: Double,
-                               size: CGSize,
-                               attribution: MapTilerAttributionPlacement) -> URL?
->>>>>>> release/25.12.0
 }

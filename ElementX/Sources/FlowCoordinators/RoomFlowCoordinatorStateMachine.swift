@@ -307,15 +307,6 @@ extension RoomFlowCoordinator {
             case (.roomDetailsEditScreen, .dismissRoomDetailsEditScreen):
                 return .roomDetails(isRoot: false)
                 
-<<<<<<< HEAD
-            case (.roomDetails, .presentRoomMembersList):
-                return .roomMembersList
-
-            case (.roomMembersList, .dismissRoomMembersList):
-                return .roomDetails(isRoot: false)
-                
-=======
->>>>>>> release/25.12.0
             case (.roomDetails, .presentNotificationSettingsScreen):
                 return .notificationSettings
 
@@ -390,15 +381,6 @@ extension RoomFlowCoordinator {
                 return .spaceFlow(previousState: previousState)
             case (.spaceFlow(let previousState), .finishedSpaceFlow):
                 return previousState
-<<<<<<< HEAD
-                    
-            case (_, .presentRoomMemberDetails(userID: let userID)):
-                return .roomMemberDetails(userID: userID, previousState: fromState)
-
-            case (.roomMemberDetails(_, let previousState), .dismissRoomMemberDetails):
-                return previousState
-=======
->>>>>>> release/25.12.0
                 
             case (_, .presentKnockRequestsListScreen):
                 return .knockRequestsList(previousState: fromState)
@@ -414,15 +396,6 @@ extension RoomFlowCoordinator {
 
             case (.globalNotificationSettings, .dismissGlobalNotificationSettingsScreen):
                 return .notificationSettings
-<<<<<<< HEAD
-            
-            case (.roomMemberDetails(_, let previousState), .presentUserProfile(let userID)):
-                return .userProfile(userID: userID, previousState: previousState)
-
-            case (.userProfile(_, let previousState), .dismissUserProfile):
-                return previousState
-=======
->>>>>>> release/25.12.0
                 
             case (.pollsHistory, .presentPollForm):
                 return .pollsHistoryForm

@@ -174,13 +174,11 @@ struct RoomDetailsScreenViewStateBindings {
     /// A media item that will be previewed with QuickLook.
     var mediaPreviewItem: MediaPreviewItem?
     
-<<<<<<< HEAD
-    // Tchap: is the room open to external users to display or hide `External` badge.
-    var isOpenToExternalUsers: Bool?
-=======
     /// The view model used to display the leave space sheet, will only be used if the room is a space.
     var leaveSpaceViewModel: LeaveSpaceViewModel?
->>>>>>> release/25.12.0
+
+    // Tchap: is the room open to external users to display or hide `External` badge.
+    var isOpenToExternalUsers: Bool?
 }
 
 struct LeaveRoomAlertItem: AlertProtocol {
