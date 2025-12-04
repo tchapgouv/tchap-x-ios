@@ -202,6 +202,14 @@ struct CreateRoomScreen: View {
         }
     }
     
+    // Tchap: colored line warning about public rooms not open to externals.
+    private var warningPublicRoomIsNotOpenToExterns: AttributedString {
+        let description = AttributedString(TchapL10n.screenCreateRoomPublicOptionDescription1)
+        var warning = AttributedString(TchapL10n.screenCreateRoomPublicOptionDescription2)
+        warning.foregroundColor = CompoundCoreColorTokens.orange700
+        return description + warning
+    }
+    
     // Tchap: Allow Public room to be non-federated
     private var tchapNonFederatedPublicRoomSection: some View {
         Section {
