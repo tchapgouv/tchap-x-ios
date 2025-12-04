@@ -43,9 +43,6 @@ struct CreateRoomScreenViewState: BindableState {
             nil
         }
     }
-    
-    // Tchap: external member FAQ link
-    var tchapExternalMembersFaqLink: URL
 }
 
 struct CreateRoomScreenViewStateBindings {
