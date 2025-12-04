@@ -39,10 +39,6 @@ struct CreateRoomScreen: View {
         Form {
             roomSection
             topicSection
-            // Tchap: set selected users list as a section
-            if !context.viewState.selectedUsers.isEmpty {
-                selectedUsersSection
-            }
             securitySection
             // Tchap: allow to disable federated state on Public room.
             if !context.isRoomPrivate {
@@ -62,10 +58,6 @@ struct CreateRoomScreen: View {
         .toolbar { toolbar }
         .alert(item: $context.alertInfo)
         .shouldScrollOnKeyboardDidShow(focus == .alias, to: Focus.alias)
-        // Tchap: check external guets and room type compatibility.
-        .task {
-            forceRoomSelectionIfExternalsArePresent()
-        }
     }
     
     private var roomSection: some View {
@@ -190,8 +182,6 @@ struct CreateRoomScreen: View {
                                     icon: \.public,
                                     iconAlignment: .top),
                     kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
-                // Tchap: disabled Public forum if externals are present.
-                .disabled(externalsArePresents)
         } header: {
             Text(TchapL10n.screenCreateRoomRoomVisibilitySectionTitle)
                 .compoundListSectionHeader()
@@ -271,10 +261,9 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
     
     static let publicRoomViewModel = {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
-        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, isRoomEncrypted: false) // Tchap: add `isRoomEncrypted` parameter
         ServiceLocator.shared.settings.knockingEnabled = true
         return CreateRoomScreenViewModel(userSession: userSession,
-                                         initialParameters: parameters,
+                                         initialParameters: .init(isRoomPrivate: false, isRoomEncrypted: false), // Tchap: add `isRoomEncrypted` parameter
                                          analytics: ServiceLocator.shared.analytics,
                                          userIndicatorController: UserIndicatorControllerMock(),
                                          appSettings: ServiceLocator.shared.settings)
@@ -282,10 +271,9 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
     
     static let publicRoomInvalidAliasViewModel = {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
-        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, isRoomEncrypted: false, aliasLocalPart: "#:") // Tchap: add `isRoomEncrypted` parameter
         ServiceLocator.shared.settings.knockingEnabled = true
         return CreateRoomScreenViewModel(userSession: userSession,
-                                         initialParameters: .parameters,
+                                         initialParameters: .init(isRoomPrivate: false, isRoomEncrypted: false, aliasLocalPart: "#:"), // Tchap: add `isRoomEncrypted` parameter,
                                          analytics: ServiceLocator.shared.analytics,
                                          userIndicatorController: UserIndicatorControllerMock(),
                                          appSettings: ServiceLocator.shared.settings)
@@ -295,10 +283,9 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
         let clientProxy = ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))
         clientProxy.isAliasAvailableReturnValue = .success(false)
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
-        let parameters = CreateRoomFlowParameters(isRoomPrivate: false, isRoomEncrypted: false, aliasLocalPart: "existing") // Tchap: add `isRoomEncrypted` parameter
         ServiceLocator.shared.settings.knockingEnabled = true
         return CreateRoomScreenViewModel(userSession: userSession,
-                                         initialParameters: parameters,
+                                         initialParameters: .init(isRoomPrivate: false, isRoomEncrypted: false, aliasLocalPart: "existing"), // Tchap: add `isRoomEncrypted` parameter,
                                          analytics: ServiceLocator.shared.analytics,
                                          userIndicatorController: UserIndicatorControllerMock(),
                                          appSettings: ServiceLocator.shared.settings)

@@ -372,7 +372,7 @@ internal enum L10n {
   internal static var bannerNewSoundMessage: String { return L10n.tr("Localizable", "banner_new_sound_message") }
   /// We’ve refreshed your sounds
   internal static var bannerNewSoundTitle: String { return L10n.tr("Localizable", "banner_new_sound_title") }
-  /// Recover your cryptographic identity and message history with a recovery key if you have lost all your existing devices.
+  /// Recover your cryptographic identity and message history with a verification code if you have lost all your existing devices.
   internal static var bannerSetUpRecoveryContent: String { return L10n.tr("Localizable", "banner_set_up_recovery_content") }
   /// Set up recovery
   internal static var bannerSetUpRecoverySubmit: String { return L10n.tr("Localizable", "banner_set_up_recovery_submit") }
@@ -600,7 +600,7 @@ internal enum L10n {
   internal static var commonReactions: String { return L10n.tr("Localizable", "common_reactions") }
   /// Reason
   internal static var commonReason: String { return L10n.tr("Localizable", "common_reason") }
-  /// Recovery key
+  /// Verification code
   internal static var commonRecoveryKey: String { return L10n.tr("Localizable", "common_recovery_key") }
   /// Refreshing…
   internal static var commonRefreshing: String { return L10n.tr("Localizable", "common_refreshing") }
@@ -762,11 +762,11 @@ internal enum L10n {
   internal static var commonWaitingForDecryptionKey: String { return L10n.tr("Localizable", "common_waiting_for_decryption_key") }
   /// You
   internal static var commonYou: String { return L10n.tr("Localizable", "common_you") }
-  /// Confirm your recovery key to maintain access to your key storage and message history.
+  /// Confirm your verification code to maintain access to your key storage and message history.
   internal static var confirmRecoveryKeyBannerMessage: String { return L10n.tr("Localizable", "confirm_recovery_key_banner_message") }
-  /// Enter your recovery key
+  /// Enter your verification code
   internal static var confirmRecoveryKeyBannerPrimaryButtonTitle: String { return L10n.tr("Localizable", "confirm_recovery_key_banner_primary_button_title") }
-  /// Forgot your recovery key?
+  /// Forgot your verification code?
   internal static var confirmRecoveryKeyBannerSecondaryButtonTitle: String { return L10n.tr("Localizable", "confirm_recovery_key_banner_secondary_button_title") }
   /// Your key storage is out of sync
   internal static var confirmRecoveryKeyBannerTitle: String { return L10n.tr("Localizable", "confirm_recovery_key_banner_title") }
@@ -1469,11 +1469,11 @@ internal enum L10n {
   internal static var screenChatBackupKeyStorageToggleDescription: String { return L10n.tr("Localizable", "screen_chat_backup_key_storage_toggle_description") }
   /// Allow key storage
   internal static var screenChatBackupKeyStorageToggleTitle: String { return L10n.tr("Localizable", "screen_chat_backup_key_storage_toggle_title") }
-  /// Change recovery key
+  /// Change verification code
   internal static var screenChatBackupRecoveryActionChange: String { return L10n.tr("Localizable", "screen_chat_backup_recovery_action_change") }
-  /// Recover your cryptographic identity and message history with a recovery key if you’ve lost all your existing devices.
+  /// Recover your cryptographic identity and message history with a verification code if you’ve lost all your existing devices.
   internal static var screenChatBackupRecoveryActionChangeDescription: String { return L10n.tr("Localizable", "screen_chat_backup_recovery_action_change_description") }
-  /// Enter recovery key
+  /// Enter verification code
   internal static var screenChatBackupRecoveryActionConfirm: String { return L10n.tr("Localizable", "screen_chat_backup_recovery_action_confirm") }
   /// Your key storage is currently out of sync.
   internal static var screenChatBackupRecoveryActionConfirmDescription: String { return L10n.tr("Localizable", "screen_chat_backup_recovery_action_confirm_description") }
@@ -1497,9 +1497,9 @@ internal enum L10n {
   }
   /// “Reset all”
   internal static var screenCreateNewRecoveryKeyListItem3ResetAll: String { return L10n.tr("Localizable", "screen_create_new_recovery_key_list_item_3_reset_all") }
-  /// Follow the instructions to create a new recovery key
+  /// Follow the instructions to create a new verification code
   internal static var screenCreateNewRecoveryKeyListItem4: String { return L10n.tr("Localizable", "screen_create_new_recovery_key_list_item_4") }
-  /// Save your new recovery key in a password manager or encrypted note
+  /// Save your new verification code in a password manager or encrypted note
   internal static var screenCreateNewRecoveryKeyListItem5: String { return L10n.tr("Localizable", "screen_create_new_recovery_key_list_item_5") }
   /// Reset the encryption for your account using another device
   internal static var screenCreateNewRecoveryKeyTitle: String { return L10n.tr("Localizable", "screen_create_new_recovery_key_title") }
@@ -1654,7 +1654,7 @@ internal enum L10n {
   internal static var screenEncryptionResetBullet2: String { return L10n.tr("Localizable", "screen_encryption_reset_bullet_2") }
   /// You will need to verify all your existing devices and contacts again
   internal static var screenEncryptionResetBullet3: String { return L10n.tr("Localizable", "screen_encryption_reset_bullet_3") }
-  /// Only reset your identity if you don’t have access to another signed-in device and you’ve lost your recovery key.
+  /// Only reset your identity if you don’t have access to another signed-in device and you’ve lost your verification code.
   internal static var screenEncryptionResetFooter: String { return L10n.tr("Localizable", "screen_encryption_reset_footer") }
   /// Can't confirm? You’ll need to reset your identity.
   internal static var screenEncryptionResetTitle: String { return L10n.tr("Localizable", "screen_encryption_reset_title") }
@@ -1664,7 +1664,7 @@ internal enum L10n {
   internal static var screenHomeTabSpaces: String { return L10n.tr("Localizable", "screen_home_tab_spaces") }
   /// Can't confirm?
   internal static var screenIdentityConfirmationCannotConfirm: String { return L10n.tr("Localizable", "screen_identity_confirmation_cannot_confirm") }
-  /// Create a new recovery key
+  /// Create a new verification code
   internal static var screenIdentityConfirmationCreateNewRecoveryKey: String { return L10n.tr("Localizable", "screen_identity_confirmation_create_new_recovery_key") }
   /// Verify this device to set up secure messaging.
   internal static var screenIdentityConfirmationSubtitle: String { return L10n.tr("Localizable", "screen_identity_confirmation_subtitle") }
@@ -1672,7 +1672,7 @@ internal enum L10n {
   internal static var screenIdentityConfirmationTitle: String { return L10n.tr("Localizable", "screen_identity_confirmation_title") }
   /// Use another device
   internal static var screenIdentityConfirmationUseAnotherDevice: String { return L10n.tr("Localizable", "screen_identity_confirmation_use_another_device") }
-  /// Use recovery key
+  /// Use verification code
   internal static var screenIdentityConfirmationUseRecoveryKey: String { return L10n.tr("Localizable", "screen_identity_confirmation_use_recovery_key") }
   /// Now you can read or send messages securely, and anyone you chat with can also trust this device.
   internal static var screenIdentityConfirmedSubtitle: String { return L10n.tr("Localizable", "screen_identity_confirmed_subtitle") }
@@ -1889,7 +1889,6 @@ internal enum L10n {
   /// The selected homeserver doesn't support password or OIDC login. Please contact your admin or choose another homeserver.
   internal static var screenLoginErrorUnsupportedAuthentication: String { return L10n.tr("Localizable", "screen_login_error_unsupported_authentication") }
   /// Enter your details
-  /// (using pattern paul-lagent-beta.gouv.fr)
   internal static var screenLoginFormHeader: String { return L10n.tr("Localizable", "screen_login_form_header") }
   /// Matrix is an open network for secure, decentralised communication.
   internal static var screenLoginSubtitle: String { return L10n.tr("Localizable", "screen_login_subtitle") }
@@ -2179,53 +2178,53 @@ internal enum L10n {
   internal static var screenQrCodeLoginVerifyCodeSubtitle: String { return L10n.tr("Localizable", "screen_qr_code_login_verify_code_subtitle") }
   /// Your verification code
   internal static var screenQrCodeLoginVerifyCodeTitle: String { return L10n.tr("Localizable", "screen_qr_code_login_verify_code_title") }
-  /// Get a new recovery key if you've lost your existing one. After changing your recovery key, your old one will no longer work.
+  /// Get a new verification code if you've lost your existing one. After changing your verification code, your old one will no longer work.
   internal static var screenRecoveryKeyChangeDescription: String { return L10n.tr("Localizable", "screen_recovery_key_change_description") }
-  /// Generate a new recovery key
+  /// Generate a new verification code
   internal static var screenRecoveryKeyChangeGenerateKey: String { return L10n.tr("Localizable", "screen_recovery_key_change_generate_key") }
   /// Do not share this with anyone!
   internal static var screenRecoveryKeyChangeGenerateKeyDescription: String { return L10n.tr("Localizable", "screen_recovery_key_change_generate_key_description") }
-  /// Recovery key changed
+  /// Verification code changed
   internal static var screenRecoveryKeyChangeSuccess: String { return L10n.tr("Localizable", "screen_recovery_key_change_success") }
-  /// Change recovery key?
+  /// Change verification code?
   internal static var screenRecoveryKeyChangeTitle: String { return L10n.tr("Localizable", "screen_recovery_key_change_title") }
-  /// Create new recovery key
+  /// Create new verification code
   internal static var screenRecoveryKeyConfirmCreateNewRecoveryKey: String { return L10n.tr("Localizable", "screen_recovery_key_confirm_create_new_recovery_key") }
   /// Make sure nobody can see this screen!
   internal static var screenRecoveryKeyConfirmDescription: String { return L10n.tr("Localizable", "screen_recovery_key_confirm_description") }
   /// Please try again to confirm access to your key storage.
   internal static var screenRecoveryKeyConfirmErrorContent: String { return L10n.tr("Localizable", "screen_recovery_key_confirm_error_content") }
-  /// Incorrect recovery key
+  /// Incorrect verification code
   internal static var screenRecoveryKeyConfirmErrorTitle: String { return L10n.tr("Localizable", "screen_recovery_key_confirm_error_title") }
   /// If you have a security key or security phrase, this will work too.
   internal static var screenRecoveryKeyConfirmKeyDescription: String { return L10n.tr("Localizable", "screen_recovery_key_confirm_key_description") }
   /// Enter…
   internal static var screenRecoveryKeyConfirmKeyPlaceholder: String { return L10n.tr("Localizable", "screen_recovery_key_confirm_key_placeholder") }
-  /// Lost your recovery key?
+  /// Lost your verification code?
   internal static var screenRecoveryKeyConfirmLostRecoveryKey: String { return L10n.tr("Localizable", "screen_recovery_key_confirm_lost_recovery_key") }
-  /// Recovery key confirmed
+  /// Verification code confirmed
   internal static var screenRecoveryKeyConfirmSuccess: String { return L10n.tr("Localizable", "screen_recovery_key_confirm_success") }
-  /// Enter your recovery key
+  /// Enter your verification code
   internal static var screenRecoveryKeyConfirmTitle: String { return L10n.tr("Localizable", "screen_recovery_key_confirm_title") }
-  /// Copied recovery key
+  /// Copied verification code
   internal static var screenRecoveryKeyCopiedToClipboard: String { return L10n.tr("Localizable", "screen_recovery_key_copied_to_clipboard") }
   /// Generating…
   internal static var screenRecoveryKeyGeneratingKey: String { return L10n.tr("Localizable", "screen_recovery_key_generating_key") }
-  /// Save recovery key
+  /// Save verification code
   internal static var screenRecoveryKeySaveAction: String { return L10n.tr("Localizable", "screen_recovery_key_save_action") }
-  /// Write down this recovery key somewhere safe, like a password manager, encrypted note, or a physical safe.
+  /// Write down this verification code somewhere safe, like a password manager, encrypted note, or a physical safe.
   internal static var screenRecoveryKeySaveDescription: String { return L10n.tr("Localizable", "screen_recovery_key_save_description") }
-  /// Tap to copy recovery key
+  /// Tap to copy verification code
   internal static var screenRecoveryKeySaveKeyDescription: String { return L10n.tr("Localizable", "screen_recovery_key_save_key_description") }
-  /// Save your recovery key somewhere safe
+  /// Save your verification code somewhere safe
   internal static var screenRecoveryKeySaveTitle: String { return L10n.tr("Localizable", "screen_recovery_key_save_title") }
-  /// You will not be able to access your new recovery key after this step.
+  /// You will not be able to access your new verification code after this step.
   internal static var screenRecoveryKeySetupConfirmationDescription: String { return L10n.tr("Localizable", "screen_recovery_key_setup_confirmation_description") }
-  /// Have you saved your recovery key?
+  /// Have you saved your verification code?
   internal static var screenRecoveryKeySetupConfirmationTitle: String { return L10n.tr("Localizable", "screen_recovery_key_setup_confirmation_title") }
-  /// Your key storage is protected by a recovery key. If you need a new recovery key after setup, you can recreate it by selecting ‘Change recovery key’.
+  /// Your key storage is protected by a verification code. If you need a new verification code after setup, you can recreate it by selecting ‘Change verification code’.
   internal static var screenRecoveryKeySetupDescription: String { return L10n.tr("Localizable", "screen_recovery_key_setup_description") }
-  /// Generate your recovery key
+  /// Generate your verification code
   internal static var screenRecoveryKeySetupGenerateKey: String { return L10n.tr("Localizable", "screen_recovery_key_setup_generate_key") }
   /// Do not share this with anyone!
   internal static var screenRecoveryKeySetupGenerateKeyDescription: String { return L10n.tr("Localizable", "screen_recovery_key_setup_generate_key_description") }
@@ -2878,7 +2877,7 @@ internal enum L10n {
   internal static var screenSessionVerificationCompleteUserSubtitle: String { return L10n.tr("Localizable", "screen_session_verification_complete_user_subtitle") }
   /// Device verified
   internal static var screenSessionVerificationDeviceVerified: String { return L10n.tr("Localizable", "screen_session_verification_device_verified") }
-  /// Enter recovery key
+  /// Enter verification code
   internal static var screenSessionVerificationEnterRecoveryKey: String { return L10n.tr("Localizable", "screen_session_verification_enter_recovery_key") }
   /// Either the request timed out, the request was denied, or there was a verification mismatch.
   internal static var screenSessionVerificationFailedSubtitle: String { return L10n.tr("Localizable", "screen_session_verification_failed_subtitle") }
@@ -2992,7 +2991,7 @@ internal enum L10n {
   internal static var screenSignoutRecoveryDisabledTitle: String { return L10n.tr("Localizable", "screen_signout_recovery_disabled_title") }
   /// You are about to sign out of your last session. If you sign out now, you might lose access to your encrypted messages.
   internal static var screenSignoutSaveRecoveryKeySubtitle: String { return L10n.tr("Localizable", "screen_signout_save_recovery_key_subtitle") }
-  /// Have you saved your recovery key?
+  /// Have you saved your verification code?
   internal static var screenSignoutSaveRecoveryKeyTitle: String { return L10n.tr("Localizable", "screen_signout_save_recovery_key_title") }
   /// View spaces you've created or joined
   internal static var screenSpaceAnnouncementItem1: String { return L10n.tr("Localizable", "screen_space_announcement_item1") }

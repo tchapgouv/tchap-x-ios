@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.3.0 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.6 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 // swiftlint:disable all
@@ -9742,6 +9742,70 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
             return clearDraftThreadRootEventIDReturnValue
         }
     }
+    //MARK: - accessRules
+
+    var accessRulesUnderlyingCallsCount = 0
+    var accessRulesCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return accessRulesUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = accessRulesUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                accessRulesUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    accessRulesUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var accessRulesCalled: Bool {
+        return accessRulesCallsCount > 0
+    }
+
+    var accessRulesUnderlyingReturnValue: Result<AccessRule?, RoomProxyError>!
+    var accessRulesReturnValue: Result<AccessRule?, RoomProxyError>! {
+        get {
+            if Thread.isMainThread {
+                return accessRulesUnderlyingReturnValue
+            } else {
+                var returnValue: Result<AccessRule?, RoomProxyError>? = nil
+                DispatchQueue.main.sync {
+                    returnValue = accessRulesUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                accessRulesUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    accessRulesUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    var accessRulesClosure: (() async -> Result<AccessRule?, RoomProxyError>)?
+
+    func accessRules() async -> Result<AccessRule?, RoomProxyError> {
+        accessRulesCallsCount += 1
+        if let accessRulesClosure = accessRulesClosure {
+            return await accessRulesClosure()
+        } else {
+            return accessRulesReturnValue
+        }
+    }
 }
 class KeychainControllerMock: KeychainControllerProtocol, @unchecked Sendable {
 
@@ -13844,6 +13908,8 @@ class RoomInfoProxyMock: RoomInfoProxyProtocol, @unchecked Sendable {
     }
     var underlyingHistoryVisibility: RoomHistoryVisibility!
     var powerLevels: RoomPowerLevelsProxyProtocol?
+    var accessRule: AccessRule?
+    var visibility: RoomVisibility!
     var successor: SuccessorRoom?
     var heroes: [RoomHero] = []
 

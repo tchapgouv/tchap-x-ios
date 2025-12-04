@@ -12,10 +12,10 @@ protocol MapTilerURLBuilderProtocol {
     func interactiveMapURL(for style: MapTilerStyle) -> URL?
     
     func staticMapTileImageURL(for style: MapTilerStyle,
-                      coordinates: CLLocationCoordinate2D,
-                      zoomLevel: Double,
-                      size: CGSize,
-                      attribution: MapTilerAttributionPlacement) -> URL?
+                               coordinates: CLLocationCoordinate2D,
+                               zoomLevel: Double,
+                               size: CGSize,
+                               attribution: MapTilerAttributionPlacement) -> URL?
     // Tchap: addition for static map
     func staticMapStyleURL(for style: MapTilerStyle, attribution: MapTilerAttributionPlacement) -> URL
 }

@@ -17,6 +17,8 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
         var name = ""
         var topic = ""
         var isRoomPrivate = true
+        var isRoomEncrypted = true // Tchap: add encrypted option to private
+        var isRoomFederated = true // Tchap: add option to not federate public room. Always True for private room. Always starts at true for any type of room.
         var isKnockingOnly = false
         var avatarImageMedia: MediaInfo?
         var aliasLocalPart: String?
@@ -47,11 +49,11 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
         self.analytics = analytics
         self.userIndicatorController = userIndicatorController
         
-        let bindings = CreateRoomViewStateBindings(roomTopic: parameters.topic,
-                                                   isRoomPrivate: parameters.isRoomPrivate,
-                                                   isRoomEncrypted: parameters.isRoomEncrypted, // Tchap: additional property
-                                                   isRoomFederated: parameters.isRoomFederated, // Tchap: additional property
-                                                   isKnockingOnly: appSettings.knockingEnabled ? parameters.isKnockingOnly : false)
+        let bindings = CreateRoomScreenViewStateBindings(roomTopic: parameters.topic,
+                                                         isRoomPrivate: parameters.isRoomPrivate,
+                                                         isRoomEncrypted: parameters.isRoomEncrypted, // Tchap: additional property
+                                                         isRoomFederated: parameters.isRoomFederated, // Tchap: additional property
+                                                         isKnockingOnly: appSettings.knockingEnabled ? parameters.isKnockingOnly : false)
 
         super.init(initialViewState: CreateRoomScreenViewState(roomName: parameters.name,
                                                                serverName: userSession.clientProxy.userIDServerName ?? "",
@@ -199,13 +201,13 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
             .store(in: &cancellables)
     }
     
-    private func updateParameters(state: CreateRoomViewState) {
-        createRoomParameters.name = state.roomName
-        createRoomParameters.topic = state.bindings.roomTopic
-        createRoomParameters.isRoomPrivate = state.bindings.isRoomPrivate
-        createRoomParameters.isRoomEncrypted = state.bindings.isRoomEncrypted // Tchap: additional property
-        createRoomParameters.isRoomFederated = state.bindings.isRoomFederated // Tchap: additional property
-        createRoomParameters.isKnockingOnly = state.bindings.isKnockingOnly
+    private func updateParameters(state: CreateRoomScreenViewState) {
+        parameters.name = state.roomName
+        parameters.topic = state.bindings.roomTopic
+        parameters.isRoomPrivate = state.bindings.isRoomPrivate
+        parameters.isRoomEncrypted = state.bindings.isRoomEncrypted // Tchap: additional property
+        parameters.isRoomFederated = state.bindings.isRoomFederated // Tchap: additional property
+        parameters.isKnockingOnly = state.bindings.isKnockingOnly
         if state.isKnockingFeatureEnabled, !state.aliasLocalPart.isEmpty {
             parameters.aliasLocalPart = state.aliasLocalPart
         } else {
@@ -269,10 +271,10 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
             avatarURL = nil
         }
         
-        switch await userSession.clientProxy.createRoom(name: createRoomParameters.name,
-                                                        topic: createRoomParameters.topic.isBlank ? nil : createRoomParameters.topic,
-                                                        isRoomPrivate: createRoomParameters.isRoomPrivate,
-                                                        isRoomEncrypted: createRoomParameters.isRoomEncrypted, // Tchap: additional property
+        switch await userSession.clientProxy.createRoom(name: parameters.name,
+                                                        topic: parameters.topic.isBlank ? nil : parameters.topic,
+                                                        isRoomPrivate: parameters.isRoomPrivate,
+                                                        isRoomEncrypted: parameters.isRoomEncrypted, // Tchap: additional property
                                                         // TODO: add parameter       isRoomFederated: createRoomParameters.isRoomPrivate || createRoomParameters. , // Tchap: additional property `isRoomFederated`. And Private room is always federated. Only Public room can be non-federated.
                                                         // As of right now we don't want to make private rooms with the knock rule
                                                         isKnockingOnly: parameters.isRoomPrivate ? false : parameters.isKnockingOnly,

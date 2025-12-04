@@ -303,7 +303,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 state.canBanUsers = false
                 state.canJoinCall = powerLevels.canOwnUserJoinCall()
                 state.canEditRolesOrPermissions = false
-                state.canEditSecurityAndPrivacy = false;
+                state.canEditSecurityAndPrivacy = false
             } else {
                 state.canEditRoomName = powerLevels.canOwnUser(sendStateEvent: .roomName)
                 state.canEditRoomTopic = powerLevels.canOwnUser(sendStateEvent: .roomTopic)
