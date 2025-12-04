@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -14,11 +15,11 @@ enum RemoteSettingsError: Error {
 
 protocol RemoteSettingsHookProtocol {
     #if IS_MAIN_APP
-    func initializeCache(using client: ClientProtocol, applyingTo appSettings: CommonSettingsProtocol) async -> Result<Void, RemoteSettingsError>
+    @MainActor func initializeCache(using client: ClientProtocol, applyingTo appSettings: CommonSettingsProtocol) async -> Result<Void, RemoteSettingsError>
     func updateCache(using client: ClientProtocol) async
-    func reset(_ appSettings: CommonSettingsProtocol)
+    @MainActor func reset(_ appSettings: CommonSettingsProtocol)
     #endif
-    func loadCache(forHomeserver homeserver: String, applyingTo appSettings: CommonSettingsProtocol)
+    @MainActor func loadCache(forHomeserver homeserver: String, applyingTo appSettings: CommonSettingsProtocol)
 }
 
 struct DefaultRemoteSettingsHook: RemoteSettingsHookProtocol {

@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -20,6 +21,7 @@ public extension ShapeStyle where Self == Color {
 
 /// The colours used by Element as defined in Compound Design Tokens.
 /// This struct contains only the colour tokens in a more usable form.
+@Observable
 @dynamicMemberLookup
 public class CompoundColors {
     /// The base colour tokens that form the palette of available colours.
@@ -38,7 +40,7 @@ public class CompoundColors {
     
     /// Customise the colour at the specified key path with the supplied colour.
     /// Supplying `nil` as the colour will remove any existing customisation.
-    public func override(_ keyPath: KeyPath<CompoundColorTokens, Color>, with color: Color?) {
+    @MainActor public func override(_ keyPath: KeyPath<CompoundColorTokens, Color>, with color: Color?) {
         overrides[keyPath] = color
     }
     

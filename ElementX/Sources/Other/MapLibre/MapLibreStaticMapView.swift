@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -35,6 +36,7 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
     
     var body: some View {
         GeometryReader { geometry in
+<<<<<<< HEAD
             // Tchap: use MapTiler Snapshotter to request bitmap rendering of preview maps.
             //            if let url = mapURLBuilder.staticMapURL(for: colorScheme.mapStyle,
             //                                                    coordinates: coordinates,
@@ -73,6 +75,30 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
                                placeholderView: placeholderImage,
                                pinAnnotationView: pinAnnotationView,
                                errorView: errorView)
+=======
+            if let url = mapURLBuilder.staticMapTileImageURL(for: colorScheme.mapStyle,
+                                                             coordinates: coordinates,
+                                                             zoomLevel: zoomLevel,
+                                                             size: mapSize, // temporary using a fixed size since the refresh doesn't work properly on the UITableView based timeline
+                                                             attribution: mapTilerAttributionPlacement) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        placeholderImage
+                    case .success(let image):
+                        ZStack {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                            pinAnnotationView
+                        }
+                    case .failure:
+                        errorView
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+>>>>>>> release/25.12.0
                 .position(x: geometry.frame(in: .local).midX, y: geometry.frame(in: .local).midY)
                 .id(fetchAttempt)
         }
@@ -126,13 +152,13 @@ struct MapLibreStaticMapView_Previews: PreviewProvider, TestablePreview {
 }
 
 private struct MapTilerURLBuilderMock: MapTilerURLBuilderProtocol {
-    func dynamicMapURL(for style: MapTilerStyle) -> URL? { nil }
+    func interactiveMapURL(for style: MapTilerStyle) -> URL? { nil }
     
-    func staticMapURL(for style: MapTilerStyle,
-                      coordinates: CLLocationCoordinate2D,
-                      zoomLevel: Double,
-                      size: CGSize,
-                      attribution: MapTilerAttributionPlacement) -> URL? {
+    func staticMapTileImageURL(for style: MapTilerStyle,
+                               coordinates: CLLocationCoordinate2D,
+                               zoomLevel: Double,
+                               size: CGSize,
+                               attribution: MapTilerAttributionPlacement) -> URL? {
         switch style {
         case .light:
             return URL(string: "https://www.maptiler.com/img/cloud/home/map5.webp")

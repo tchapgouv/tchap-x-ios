@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -67,7 +68,8 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
             hideLoadingIndicator(Self.setupMembersLoadingIndicatorIdentifier)
         }
         
-        roomProxy.membersPublisher.combineLatest(roomProxy.identityStatusChangesPublisher)
+        roomProxy.membersPublisher
+            .combineLatest(roomProxy.identityStatusChangesPublisher)
             .filter { !$0.0.isEmpty }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] members, _ in
@@ -79,6 +81,14 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
             Task { await roomProxy.updateMembers() }
         }
         .store(in: &cancellables)
+        
+        roomProxy.infoPublisher
+            .map(\.powerLevels)
+            .removeDuplicates { $0?.userPowerLevels == $1?.userPowerLevels }
+            .sink { [weak self] _ in
+                Task { await self?.roomProxy.updateMembers() }
+            }
+            .store(in: &cancellables)
     }
     
     private func updateState(members: [RoomMemberProxyProtocol]) {
@@ -94,11 +104,15 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
             self.members = members
             self.currentUserProxy = members.first { $0.userID == roomProxy.ownUserID }
             
+            var newBindings = state.bindings
+            if roomMembersDetails.bannedMembers.count == 0 {
+                newBindings.mode = .members
+            }
             self.state = .init(joinedMembersCount: roomProxy.infoPublisher.value.joinedMembersCount,
                                joinedMembers: roomMembersDetails.joinedMembers,
                                invitedMembers: roomMembersDetails.invitedMembers,
                                bannedMembers: roomMembersDetails.bannedMembers,
-                               bindings: state.bindings)
+                               bindings: newBindings)
             
             if let powerLevels = roomProxy.infoPublisher.value.powerLevels {
                 // Tchap: if user is external user, don't allow any modification power level.
@@ -130,7 +144,7 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
             for member in members {
                 var verificationState: UserIdentityVerificationState = .notVerified
                 if roomProxy.infoPublisher.value.isEncrypted, // We don't care about identity statuses on non-encrypted rooms
-                   case let .success(userIdentity) = await userSession.clientProxy.userIdentity(for: member.userID),
+                   case let .success(userIdentity) = await userSession.clientProxy.userIdentity(for: member.userID, fallBackToServer: false),
                    let userIdentity {
                     verificationState = userIdentity.verificationState
                 }

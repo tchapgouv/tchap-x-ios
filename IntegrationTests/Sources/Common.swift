@@ -1,5 +1,6 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -7,10 +8,14 @@
 
 import XCTest
 
+enum IntegrationTestsError: Error {
+    case webAuthenticationSessionFailure
+}
+
 extension XCUIApplication {
     private var doesNotExistPredicate: NSPredicate { NSPredicate(format: "exists == 0") }
     
-    func login(currentTestCase: XCTestCase) {
+    func login(currentTestCase: XCTestCase) throws {
         let getStartedButton = buttons[A11yIdentifiers.authenticationStartScreen.signIn]
         
         XCTAssertTrue(getStartedButton.waitForExistence(timeout: 10.0))
@@ -54,6 +59,7 @@ extension XCUIApplication {
             remainingAttempts -= 1
             if remainingAttempts <= 0 {
                 XCTFail("Failed to present the web authentication session.")
+                throw IntegrationTestsError.webAuthenticationSessionFailure
             }
             
             if alerts.count > 0 {

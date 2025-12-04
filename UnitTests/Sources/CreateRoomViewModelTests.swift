@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -18,54 +19,26 @@ import XCTest
 
 @MainActor
 class CreateRoomScreenViewModelTests: XCTestCase {
-    var viewModel: CreateRoomViewModelProtocol!
+    var viewModel: CreateRoomScreenViewModelProtocol!
     var clientProxy: ClientProxyMock!
     var userSession: UserSessionMock!
     
     private let usersSubject = CurrentValueSubject<[UserProfileProxy], Never>([])
-    private var cancellables = Set<AnyCancellable>()
     
-    var context: CreateRoomViewModel.Context {
+    var context: CreateRoomScreenViewModel.Context {
         viewModel.context
     }
     
     override func setUpWithError() throws {
-        cancellables.removeAll()
         clientProxy = ClientProxyMock(.init(userIDServerName: "matrix.org", userID: "@a:b.com"))
+        clientProxy.roomForIdentifierClosure = { roomID in .joined(JoinedRoomProxyMock(.init(id: roomID))) }
         userSession = UserSessionMock(.init(clientProxy: clientProxy))
-        let parameters = CreateRoomFlowParameters()
-        usersSubject.send([.mockAlice, .mockBob, .mockCharlie])
         ServiceLocator.shared.settings.knockingEnabled = true
-        let viewModel = CreateRoomViewModel(userSession: userSession,
-                                            createRoomParameters: .init(parameters),
-                                            selectedUsers: usersSubject.asCurrentValuePublisher(),
-                                            analytics: ServiceLocator.shared.analytics,
-                                            userIndicatorController: UserIndicatorControllerMock(),
-                                            appSettings: ServiceLocator.shared.settings)
+        let viewModel = CreateRoomScreenViewModel(userSession: userSession,
+                                                  analytics: ServiceLocator.shared.analytics,
+                                                  userIndicatorController: UserIndicatorControllerMock(),
+                                                  appSettings: ServiceLocator.shared.settings)
         self.viewModel = viewModel
-        
-        viewModel.actions.sink { [weak self] action in
-            guard let self else { return }
-            switch action {
-            case .deselectUser(let user):
-                var selectedUsers = usersSubject.value
-                if let index = selectedUsers.firstIndex(where: { $0.userID == user.userID }) {
-                    selectedUsers.remove(at: index)
-                }
-                usersSubject.send(selectedUsers)
-            default:
-                break
-            }
-        }
-        .store(in: &cancellables)
-    }
-    
-    func testDeselectUser() {
-        XCTAssertFalse(context.viewState.selectedUsers.isEmpty)
-        XCTAssertEqual(context.viewState.selectedUsers.count, 3)
-        XCTAssertEqual(context.viewState.selectedUsers.first?.userID, UserProfileProxy.mockAlice.userID)
-        context.send(viewAction: .deselectUser(.mockAlice))
-        XCTAssertNotEqual(context.viewState.selectedUsers.first?.userID, UserProfileProxy.mockAlice.userID)
     }
     
     func testDefaulSecurity() {
@@ -91,7 +64,7 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         // Tchap: adapted test adding `isEncrypted`
         clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
         let deferred = deferFulfillment(viewModel.actions) { action in
-            guard case .openRoom("1") = action else { return false }
+            guard case .createdRoom(let roomProxy) = action, roomProxy.id == "1" else { return false }
             return true
         }
         context.send(viewAction: .createRoom)

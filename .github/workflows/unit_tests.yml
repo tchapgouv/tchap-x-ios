@@ -11,7 +11,8 @@ on:
 jobs:
   tests:
     name: Tests
-    runs-on: macos-15
+    runs-on: macos-26
+    timeout-minutes: 60
 
     concurrency:
       # Only allow a single run of this workflow on each branch, automatically cancelling older runs.
@@ -45,7 +46,7 @@ jobs:
         run: zip -r UnitTests.zip UnitTests.xcresult PreviewTests.xcresult
       
       - name: Archive artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         # We only care about artefacts if the tests fail
         if: failure()
         with:

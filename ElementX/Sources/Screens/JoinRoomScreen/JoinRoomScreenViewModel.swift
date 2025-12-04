@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -116,7 +117,7 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
                                                  primaryButton: .init(title: L10n.actionTryAgain) { [weak self] in Task { await self?.loadRoomDetails() }},
                                                  secondaryButton: .init(title: L10n.actionCancel, role: .cancel) { [weak self] in self?.actionsSubject.send(.dismiss) })
             }
-        case .space(let spaceRoomProxyProtocol):
+        case .space:
             isLoadingPreview = false
         }
         
@@ -336,7 +337,7 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
             return
         }
         
-        switch await clientProxy.spaceService.spaceRoomList(spaceID: roomID, parent: nil) {
+        switch await clientProxy.spaceService.spaceRoomList(spaceID: roomID) {
         case .success(let spaceRoomListProxy):
             actionsSubject.send(.joined(.space(spaceRoomListProxy)))
         case .failure(let error):

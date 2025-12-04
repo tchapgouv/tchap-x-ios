@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -15,15 +16,19 @@ struct RoomEventStringBuilder {
     let shouldPrefixSenderName: Bool
     
     func buildAttributedString(for eventItemProxy: EventTimelineItemProxy) -> AttributedString? {
-        let sender = eventItemProxy.sender
-        let isOutgoing = eventItemProxy.isOwn
+        buildAttributedString(for: eventItemProxy.content,
+                              sender: eventItemProxy.sender,
+                              isOutgoing: eventItemProxy.isOwn)
+    }
+    
+    func buildAttributedString(for content: TimelineItemContent, sender: TimelineItemSender, isOutgoing: Bool) -> AttributedString? {
         let displayName = if shouldDisambiguateDisplayNames {
             sender.disambiguatedDisplayName ?? sender.id
         } else {
             sender.displayName ?? sender.id
         }
         
-        switch eventItemProxy.content {
+        switch content {
         case .msgLike(let messageLikeContent):
             switch messageLikeContent.kind {
             case .message(let messageContent):

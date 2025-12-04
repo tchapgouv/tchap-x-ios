@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -9,38 +10,26 @@ import Combine
 import SwiftUI
 
 struct StartChatScreenCoordinatorParameters {
-    let orientationManager: OrientationManagerProtocol
     let userSession: UserSessionProtocol
-    let userIndicatorController: UserIndicatorControllerProtocol
-    weak var navigationStackCoordinator: NavigationStackCoordinator?
     let userDiscoveryService: UserDiscoveryServiceProtocol
-    let mediaUploadingPreprocessor: MediaUploadingPreprocessor
+    let userIndicatorController: UserIndicatorControllerProtocol
     let appSettings: AppSettings
     let analytics: AnalyticsService
 }
 
 enum StartChatScreenCoordinatorAction {
     case close
-    case openRoom(withIdentifier: String)
+    case createRoom
+    case openRoom(roomID: String)
     case openRoomDirectorySearch
 }
 
 final class StartChatScreenCoordinator: CoordinatorProtocol {
     private let parameters: StartChatScreenCoordinatorParameters
     private var viewModel: StartChatScreenViewModelProtocol
-    private let actionsSubject: PassthroughSubject<StartChatScreenCoordinatorAction, Never> = .init()
     private var cancellables = Set<AnyCancellable>()
-    
-    private var createRoomParameters = CurrentValueSubject<CreateRoomFlowParameters, Never>(.init())
-    private var createRoomParametersPublisher: CurrentValuePublisher<CreateRoomFlowParameters, Never> {
-        createRoomParameters.asCurrentValuePublisher()
-    }
-    
-    private let selectedUsers = CurrentValueSubject<[UserProfileProxy], Never>([])
-    private var selectedUsersPublisher: CurrentValuePublisher<[UserProfileProxy], Never> {
-        selectedUsers.asCurrentValuePublisher()
-    }
         
+    private let actionsSubject: PassthroughSubject<StartChatScreenCoordinatorAction, Never> = .init()
     var actions: AnyPublisher<StartChatScreenCoordinatorAction, Never> {
         actionsSubject.eraseToAnyPublisher()
     }
@@ -62,10 +51,9 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
             case .close:
                 actionsSubject.send(.close)
             case .createRoom:
-                // before creating a room we select the users we would like to invite in that room
-                presentInviteUsersScreen()
-            case .showRoom(let identifier):
-                actionsSubject.send(.openRoom(withIdentifier: identifier))
+                actionsSubject.send(.createRoom)
+            case .showRoom(let roomID):
+                actionsSubject.send(.openRoom(roomID: roomID))
             case .openRoomDirectorySearch:
                 actionsSubject.send(.openRoomDirectorySearch)
             }
@@ -78,6 +66,7 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
     func toPresentable() -> AnyView {
         AnyView(StartChatScreen(context: viewModel.context))
     }
+<<<<<<< HEAD
     
     // MARK: - Private
     
@@ -213,4 +202,6 @@ final class StartChatScreenCoordinator: CoordinatorProtocol {
     private func hideLoadingIndicator() {
         parameters.userIndicatorController.retractIndicatorWithId(Self.loadingIndicatorIdentifier)
     }
+=======
+>>>>>>> release/25.12.0
 }

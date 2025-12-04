@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -14,10 +15,7 @@ enum InviteUsersScreenErrorType: Error {
 }
 
 enum InviteUsersScreenViewModelAction {
-    case cancel
-    case proceed
-    case invite(users: [String])
-    case toggleUser(UserProfileProxy)
+    case dismiss
 }
 
 enum InviteUsersScreenRoomType {
@@ -54,18 +52,18 @@ struct InviteUsersScreenViewState: BindableState {
         membershipState[user.userID]
     }
     
-    let isCreatingRoom: Bool
+    let isSkippable: Bool
     
     var actionText: String {
-        if isCreatingRoom {
-            return selectedUsers.isEmpty ? L10n.actionSkip : L10n.actionNext
+        if isSkippable, selectedUsers.isEmpty {
+            L10n.actionSkip
         } else {
-            return L10n.actionInvite
+            L10n.actionInvite
         }
     }
     
     var isActionDisabled: Bool {
-        isCreatingRoom ? false : selectedUsers.isEmpty
+        isSkippable ? false : selectedUsers.isEmpty
     }
 }
 

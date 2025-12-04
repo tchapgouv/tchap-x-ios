@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -39,6 +40,7 @@ struct JoinRoomScreen: View {
         .alert(item: $context.alertInfo)
         .background()
         .backgroundStyle(.compound.bgCanvasDefault)
+        .toolbarRole(RoomHeaderView.toolbarRole)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
         .shouldScrollOnKeyboardDidShow(focus == .knockMessage, to: Focus.knockMessage)
@@ -78,7 +80,7 @@ struct JoinRoomScreen: View {
                             .multilineTextAlignment(.center)
                     } icon: {
                         if let icon = context.viewState.subtitleIcon {
-                            CompoundIcon(icon)
+                            CompoundIcon(icon, size: .small, relativeTo: .compound.bodyLG)
                                 .foregroundStyle(.compound.iconTertiary)
                         }
                     }
@@ -308,6 +310,7 @@ struct JoinRoomScreen: View {
     var joinButton: some View {
         Button(L10n.screenJoinRoomJoinAction) { context.send(viewAction: .join) }
             .buttonStyle(.compound(.super))
+            .accessibilityIdentifier(A11yIdentifiers.joinRoomScreen.join)
     }
     
     @ToolbarContentBuilder

@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -34,4 +35,18 @@ protocol RoomPowerLevelsProxyProtocol {
     func canUserTriggerRoomNotification(userID: String) -> Result<Bool, RoomProxyError>
     func canUserPinOrUnpin(userID: String) -> Result<Bool, RoomProxyError>
     func canUserJoinCall(userID: String) -> Result<Bool, RoomProxyError>
+}
+
+// MARK: - Helpers
+
+extension RoomPowerLevelsProxyProtocol {
+    /// Can own user edit either the room name, avatar or topic.
+    func canOwnUserEditBaseInfo() -> Bool {
+        canOwnUser(sendStateEvent: .roomAvatar) || canOwnUser(sendStateEvent: .roomName) || canOwnUser(sendStateEvent: .roomTopic)
+    }
+    
+    /// Can own user edit any of the security and privacy settings.
+    func canOwnUserEditSecurityAndPrivacy() -> Bool {
+        canOwnUser(sendStateEvent: .roomEncryption) || canOwnUser(sendStateEvent: .roomAliases) || canOwnUser(sendStateEvent: .roomJoinRules) || canOwnUser(sendStateEvent: .roomHistoryVisibility)
+    }
 }

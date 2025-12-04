@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -11,6 +12,7 @@ import MatrixRustSDK
 import SwiftUI
 
 enum ChatsFlowCoordinatorAction {
+    case switchToChatsTab
     case showSettings
     case showChatBackupSettings
     case sessionVerification(SessionVerificationScreenFlow)
@@ -34,9 +36,10 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
     
     // periphery:ignore - retaining purpose
     private var bugReportFlowCoordinator: BugReportFlowCoordinator?
-    
     // periphery:ignore - retaining purpose
     private var encryptionResetFlowCoordinator: EncryptionResetFlowCoordinator?
+    // periphery:ignore - retaining purpose
+    private var startChatFlowCoordinator: StartChatFlowCoordinator?
     
     // periphery:ignore - retaining purpose
     private var globalSearchScreenCoordinator: GlobalSearchScreenCoordinator?
@@ -44,7 +47,6 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
     private var cancellables = Set<AnyCancellable>()
     
     private let sidebarNavigationStackCoordinator: NavigationStackCoordinator
-    private let detailNavigationStackCoordinator: NavigationStackCoordinator
 
     private let selectedRoomSubject = CurrentValueSubject<String?, Never>(nil)
     
@@ -61,14 +63,13 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
         self.flowParameters = flowParameters
         
         sidebarNavigationStackCoordinator = NavigationStackCoordinator(navigationSplitCoordinator: navigationSplitCoordinator)
-        detailNavigationStackCoordinator = NavigationStackCoordinator(navigationSplitCoordinator: navigationSplitCoordinator)
         navigationSplitCoordinator.setSidebarCoordinator(sidebarNavigationStackCoordinator)
         
         setupStateMachine()
         setupObservers()
     }
     
-    func start() {
+    func start(animated: Bool) {
         stateMachine.processEvent(.start)
     }
     
@@ -127,6 +128,12 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             roomFlowCoordinator?.clearRoute(animated: animated)
         case .roomMemberDetails:
             roomFlowCoordinator?.handleAppRoute(appRoute, animated: animated)
+        case .thread(let roomID, let threadRootEventID, let focusEventID):
+            stateMachine.processEvent(.selectRoom(roomID: roomID,
+                                                  via: [],
+                                                  entryPoint: .thread(rootEventID: threadRootEventID,
+                                                                      focusEventID: focusEventID)),
+                                      userInfo: .init(animated: animated))
         case .event(let eventID, let roomID, let via):
             stateMachine.processEvent(.selectRoom(roomID: roomID, via: via, entryPoint: .eventID(eventID)), userInfo: .init(animated: animated))
         case .eventOnRoomAlias(let eventID, let alias):
@@ -185,24 +192,7 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             case (.initial, .start, .roomList):
                 presentHomeScreen()
             case(.roomList(let detailState), .selectRoom(let roomID, let via, let entryPoint), .roomList):
-                if case .room(roomID) = detailState,
-                   !entryPoint.isEventID, // Don't reuse the existing room so the live timeline is hidden while the detached timeline is loading.
-                   let roomFlowCoordinator {
-                    let route: AppRoute = switch entryPoint {
-                    case .room: .room(roomID: roomID, via: via)
-                    case .roomDetails: .roomDetails(roomID: roomID)
-                    case .eventID(let eventID): .event(eventID: eventID, roomID: roomID, via: via) // ignored.
-                    case .share(let payload): .share(payload)
-                    case .transferOwnership: .transferOwnership(roomID: roomID)
-                    }
-                    roomFlowCoordinator.handleAppRoute(route, animated: animated)
-                } else {
-                    if case .space = detailState {
-                        dismissRoomFlow(animated: animated)
-                    }
-                    startRoomFlow(roomID: roomID, via: via, entryPoint: entryPoint, animated: animated)
-                }
-                actionsSubject.send(.hideCallScreenOverlay) // Turn any active call into a PiP so that navigation from a notification is visible to the user.
+                handleSelectRoomTransition(roomID: roomID, via: via, entryPoint: entryPoint, detailState: detailState, animated: animated)
             case(.roomList, .deselectRoom, .roomList):
                 dismissRoomFlow(animated: animated)
             
@@ -227,11 +217,21 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             case (.roomList, .startEncryptionResetFlow, .encryptionResetFlow):
                 startEncryptionResetFlow(animated: animated)
             case (.encryptionResetFlow, .finishedEncryptionResetFlow, .roomList):
+<<<<<<< HEAD
                 break
             case (.roomList, .showStartChatScreen, .startChatScreen):
                 presentStartChat(animated: animated)
             case (.startChatScreen, .dismissedStartChatScreen, .roomList):
                 break
+=======
+                encryptionResetFlowCoordinator = nil
+                
+            case (.roomList, .startStartChatFlow, .startChatFlow):
+                startStartChatFlow(animated: animated)
+            case (.startChatFlow, .finishedStartChatFlow, .roomList):
+                startChatFlowCoordinator = nil
+                
+>>>>>>> release/25.12.0
             case (.roomList, .showRoomDirectorySearchScreen, .roomDirectorySearchScreen):
                 presentRoomDirectorySearch()
             case (.roomDirectorySearchScreen, .dismissedRoomDirectorySearchScreen, .roomList):
@@ -268,6 +268,9 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             switch context.toState {
             case .roomList(detailState: .room(let detailStateRoomID)):
                 self?.selectedRoomSubject.send(detailStateRoomID)
+            case .roomList(detailState: .space):
+                // We don't show joined spaces in the room list yet so clear the selected room when accepting a space invite.
+                self?.selectedRoomSubject.send(nil)
             case .roomList(detailState: nil):
                 self?.selectedRoomSubject.send(nil)
             default:
@@ -282,6 +285,28 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                 fatalError("Failed transition with context: \(context)")
             }
         }
+    }
+    
+    private func handleSelectRoomTransition(roomID: String, via: [String], entryPoint: RoomFlowCoordinatorEntryPoint, detailState: ChatsFlowCoordinatorStateMachine.DetailState?, animated: Bool) {
+        if case .room(roomID) = detailState,
+           !entryPoint.isEventID, // Don't reuse the existing room so the live timeline is hidden while the detached timeline is loading.
+           let roomFlowCoordinator {
+            let route: AppRoute = switch entryPoint {
+            case .room: .room(roomID: roomID, via: via)
+            case .roomDetails: .roomDetails(roomID: roomID)
+            case .eventID(let eventID): .event(eventID: eventID, roomID: roomID, via: via) // ignored.
+            case .share(let payload): .share(payload)
+            case .transferOwnership: .transferOwnership(roomID: roomID)
+            case .thread(let rootEventID, let focusEventID): .thread(roomID: roomID, threadRootEventID: rootEventID, focusEventID: focusEventID)
+            }
+            roomFlowCoordinator.handleAppRoute(route, animated: animated)
+        } else {
+            if case .space = detailState {
+                dismissRoomFlow(animated: animated)
+            }
+            startRoomFlow(roomID: roomID, via: via, entryPoint: entryPoint, animated: animated)
+        }
+        actionsSubject.send(.hideCallScreenOverlay) // Turn any active call into a PiP so that navigation from a notification is visible to the user.
     }
     
     private func setupObservers() {
@@ -373,7 +398,7 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                 case .presentEncryptionResetScreen:
                     stateMachine.processEvent(.startEncryptionResetFlow)
                 case .presentStartChatScreen:
-                    stateMachine.processEvent(.showStartChatScreen)
+                    stateMachine.processEvent(.startStartChatFlow)
                 case .presentGlobalSearch:
                     presentGlobalSearch()
                 case .logout:
@@ -446,9 +471,10 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                                via: [String],
                                entryPoint: RoomFlowCoordinatorEntryPoint,
                                animated: Bool) {
+        let navigationStackCoordinator = NavigationStackCoordinator(navigationSplitCoordinator: navigationSplitCoordinator)
         let coordinator = RoomFlowCoordinator(roomID: roomID,
                                               isChildFlow: false,
-                                              navigationStackCoordinator: detailNavigationStackCoordinator,
+                                              navigationStackCoordinator: navigationStackCoordinator,
                                               flowParameters: flowParameters)
         
         coordinator.actions.sink { [weak self] action in
@@ -469,9 +495,7 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
         
         roomFlowCoordinator = coordinator
         
-        if navigationSplitCoordinator.detailCoordinator !== detailNavigationStackCoordinator {
-            navigationSplitCoordinator.setDetailCoordinator(detailNavigationStackCoordinator, animated: animated)
-        }
+        navigationSplitCoordinator.setDetailCoordinator(navigationStackCoordinator, animated: animated)
         
         switch entryPoint {
         case .room:
@@ -484,6 +508,8 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             coordinator.handleAppRoute(.share(payload), animated: animated)
         case .transferOwnership:
             coordinator.handleAppRoute(.transferOwnership(roomID: roomID), animated: animated)
+        case .thread(let rootEventID, let focusEventID):
+            coordinator.handleAppRoute(.thread(roomID: roomID, threadRootEventID: rootEventID, focusEventID: focusEventID), animated: animated)
         }
                 
         Task {
@@ -502,10 +528,11 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
     // MARK: Space Flow
     
     private func startSpaceFlow(spaceRoomListProxy: SpaceRoomListProxyProtocol, animated: Bool) {
+        let navigationStackCoordinator = NavigationStackCoordinator(navigationSplitCoordinator: navigationSplitCoordinator)
         let coordinator = SpaceFlowCoordinator(entryPoint: .space(spaceRoomListProxy),
                                                spaceServiceProxy: userSession.clientProxy.spaceService,
                                                isChildFlow: false,
-                                               navigationStackCoordinator: detailNavigationStackCoordinator,
+                                               navigationStackCoordinator: navigationStackCoordinator,
                                                flowParameters: flowParameters)
         coordinator.actionsPublisher
             .sink { [weak self] action in
@@ -523,9 +550,7 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
         
         spaceFlowCoordinator = coordinator
         
-        if navigationSplitCoordinator.detailCoordinator !== detailNavigationStackCoordinator {
-            navigationSplitCoordinator.setDetailCoordinator(detailNavigationStackCoordinator, animated: animated)
-        }
+        navigationSplitCoordinator.setDetailCoordinator(navigationStackCoordinator, animated: animated)
         
         coordinator.start()
     }
@@ -538,39 +563,34 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
     
     // MARK: Start Chat
     
-    private func presentStartChat(animated: Bool) {
-        let startChatNavigationStackCoordinator = NavigationStackCoordinator()
-
-        let userDiscoveryService = UserDiscoveryService(clientProxy: userSession.clientProxy)
-        let parameters = StartChatScreenCoordinatorParameters(orientationManager: flowParameters.windowManager,
-                                                              userSession: userSession,
-                                                              userIndicatorController: flowParameters.userIndicatorController,
-                                                              navigationStackCoordinator: startChatNavigationStackCoordinator,
-                                                              userDiscoveryService: userDiscoveryService,
-                                                              mediaUploadingPreprocessor: MediaUploadingPreprocessor(appSettings: flowParameters.appSettings),
-                                                              appSettings: flowParameters.appSettings,
-                                                              analytics: flowParameters.analytics)
+    private func startStartChatFlow(animated: Bool) {
+        let navigationStackCoordinator = NavigationStackCoordinator()
+        let coordinator = StartChatFlowCoordinator(userDiscoveryService: UserDiscoveryService(clientProxy: userSession.clientProxy),
+                                                   navigationStackCoordinator: navigationStackCoordinator,
+                                                   flowParameters: flowParameters)
         
-        let coordinator = StartChatScreenCoordinator(parameters: parameters)
-        coordinator.actions.sink { [weak self] action in
-            guard let self else { return }
-            switch action {
-            case .close:
-                navigationSplitCoordinator.setSheetCoordinator(nil)
-            case .openRoom(let roomID):
-                navigationSplitCoordinator.setSheetCoordinator(nil)
-                stateMachine.processEvent(.selectRoom(roomID: roomID, via: [], entryPoint: .room))
-            case .openRoomDirectorySearch:
-                navigationSplitCoordinator.setSheetCoordinator(nil)
-                stateMachine.processEvent(.showRoomDirectorySearchScreen)
+        coordinator.actionsPublisher
+            .sink { [weak self] action in
+                guard let self else { return }
+                switch action {
+                case .finished(let roomID):
+                    navigationSplitCoordinator.setSheetCoordinator(nil)
+                    
+                    if let roomID {
+                        stateMachine.processEvent(.selectRoom(roomID: roomID, via: [], entryPoint: .room))
+                    }
+                case .showRoomDirectory:
+                    navigationSplitCoordinator.setSheetCoordinator(nil)
+                    stateMachine.processEvent(.showRoomDirectorySearchScreen)
+                }
             }
-        }
-        .store(in: &cancellables)
-
-        startChatNavigationStackCoordinator.setRootCoordinator(coordinator)
-
-        navigationSplitCoordinator.setSheetCoordinator(startChatNavigationStackCoordinator, animated: animated) { [weak self] in
-            self?.stateMachine.processEvent(.dismissedStartChatScreen)
+            .store(in: &cancellables)
+        
+        startChatFlowCoordinator = coordinator
+        coordinator.start()
+        
+        navigationSplitCoordinator.setSheetCoordinator(navigationStackCoordinator, animated: animated) { [weak self] in
+            self?.stateMachine.processEvent(.finishedStartChatFlow)
         }
     }
     
@@ -612,10 +632,8 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             guard let self else { return }
             switch action {
             case .resetComplete:
-                encryptionResetFlowCoordinator = nil
                 navigationSplitCoordinator.setSheetCoordinator(nil)
             case .cancel:
-                encryptionResetFlowCoordinator = nil
                 navigationSplitCoordinator.setSheetCoordinator(nil)
             }
         }
@@ -649,6 +667,7 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                 case .select(let roomID):
                     dismissGlobalSearch()
                     handleAppRoute(.room(roomID: roomID, via: []), animated: true)
+                    actionsSubject.send(.switchToChatsTab)
                 }
             }
             .store(in: &cancellables)

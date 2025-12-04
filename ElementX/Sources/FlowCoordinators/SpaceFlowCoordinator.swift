@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -21,7 +22,7 @@ enum SpaceFlowCoordinatorEntryPoint {
     
     var spaceID: String {
         switch self {
-        case .space(let spaceRoomListProxy): spaceRoomListProxy.spaceRoomProxy.id
+        case .space(let spaceRoomListProxy): spaceRoomListProxy.id
         case .joinSpace(let spaceRoomProxy): spaceRoomProxy.id
         }
     }
@@ -40,6 +41,9 @@ class SpaceFlowCoordinator: FlowCoordinatorProtocol {
     
     private var childSpaceFlowCoordinator: SpaceFlowCoordinator?
     private var roomFlowCoordinator: RoomFlowCoordinator?
+    private var membersFlowCoordinator: RoomMembersFlowCoordinator?
+    private var settingsFlowCoordinator: SpaceSettingsFlowCoordinator?
+    private var rolesAndPermissionsFlowCoordinator: RoomRolesAndPermissionsFlowCoordinator?
     
     indirect enum State: StateType {
         /// The state machine hasn't started.
@@ -52,6 +56,12 @@ class SpaceFlowCoordinator: FlowCoordinatorProtocol {
         case presentingChild(childSpaceID: String, previousState: State)
         /// A room flow is in progress
         case roomFlow(previousState: State)
+        /// A members flow is in progress
+        case membersFlow
+        /// A space settings flow is in progress
+        case settingsFlow
+        
+        case rolesAndPermissionsFlow
         
         case leftSpace
     }
@@ -76,6 +86,15 @@ class SpaceFlowCoordinator: FlowCoordinatorProtocol {
         
         case startRoomFlow(roomID: String)
         case stopRoomFlow
+        
+        case startMembersFlow
+        case stopMembersFlow
+        
+        case startSettingsFlow
+        case stopSettingsFlow
+        
+        case startRolesAndPermissionsFlow
+        case stopRolesAndPermissionsFlow
     }
     
     private let stateMachine: StateMachine<State, Event>
@@ -102,7 +121,7 @@ class SpaceFlowCoordinator: FlowCoordinatorProtocol {
         configureStateMachine()
     }
     
-    func start() {
+    func start(animated: Bool) {
         switch entryPoint {
         case .space:
             stateMachine.tryEvent(.start)
@@ -132,11 +151,21 @@ class SpaceFlowCoordinator: FlowCoordinatorProtocol {
         case .roomFlow:
             roomFlowCoordinator?.clearRoute(animated: animated)
             clearRoute(animated: animated) // Re-run with the state machine back in the .space state.
+        case .membersFlow:
+            membersFlowCoordinator?.clearRoute(animated: animated)
+            clearRoute(animated: animated) // Re-run with the state machine back in the .space state.
+        case .settingsFlow:
+            settingsFlowCoordinator?.clearRoute(animated: animated)
+            clearRoute(animated: animated) // Re-run with the state machine back in the .space state.
+        case .rolesAndPermissionsFlow:
+            rolesAndPermissionsFlowCoordinator?.clearRoute(animated: animated)
+            clearRoute(animated: animated) // Re-run with the state machine back in the .space state.
         }
     }
     
     // MARK: - Private
     
+    // swiftlint:disable:next cyclomatic_complexity
     private func configureStateMachine() {
         stateMachine.addRoutes(event: .start, transitions: [.initial => .space]) { [weak self] _ in
             self?.presentSpace()
@@ -192,6 +221,58 @@ class SpaceFlowCoordinator: FlowCoordinatorProtocol {
             selectedSpaceRoomSubject.send(nil)
         }
         
+        stateMachine.addRouteMapping { event, fromState, _ in
+            guard case .startMembersFlow = event, case .space = fromState else {
+                return nil
+            }
+            return .membersFlow
+        } handler: { [weak self] context in
+            guard let self, let roomProxy = context.userInfo as? JoinedRoomProxyProtocol else {
+                fatalError("The room proxy must always be provided")
+            }
+            startMembersFlow(roomProxy: roomProxy)
+        }
+        
+        stateMachine.addRouteMapping { event, fromState, _ in
+            guard event == .stopMembersFlow, case .membersFlow = fromState else { return nil }
+            return .space
+        } handler: { [weak self] _ in
+            guard let self else { return }
+            membersFlowCoordinator = nil
+        }
+        
+        stateMachine.addRouteMapping { event, fromState, _ in
+            guard event == .startSettingsFlow, case .space = fromState else { return nil }
+            return .settingsFlow
+        } handler: { [weak self] context in
+            guard let self, let roomProxy = context.userInfo as? JoinedRoomProxyProtocol else { return }
+            startSettingsFlow(roomProxy: roomProxy)
+        }
+        
+        stateMachine.addRouteMapping { event, fromState, _ in
+            guard event == .stopSettingsFlow, case .settingsFlow = fromState else { return nil }
+            return .space
+        } handler: { [weak self] _ in
+            guard let self else { return }
+            settingsFlowCoordinator = nil
+        }
+        
+        stateMachine.addRouteMapping { event, fromState, _ in
+            guard event == .startRolesAndPermissionsFlow, case .space = fromState else { return nil }
+            return .rolesAndPermissionsFlow
+        } handler: { [weak self] context in
+            guard let self, let roomProxy = context.userInfo as? JoinedRoomProxyProtocol else { return }
+            startRolesAndPermissionsFlow(roomProxy: roomProxy)
+        }
+        
+        stateMachine.addRouteMapping { event, fromState, _ in
+            guard event == .stopRolesAndPermissionsFlow, case .rolesAndPermissionsFlow = fromState else { return nil }
+            return .space
+        } handler: { [weak self] _ in
+            guard let self else { return }
+            rolesAndPermissionsFlowCoordinator = nil
+        }
+        
         stateMachine.addErrorHandler { context in
             fatalError("Unexpected transition: \(context)")
         }
@@ -204,6 +285,7 @@ class SpaceFlowCoordinator: FlowCoordinatorProtocol {
                                                           spaceServiceProxy: spaceServiceProxy,
                                                           selectedSpaceRoomPublisher: selectedSpaceRoomSubject.asCurrentValuePublisher(),
                                                           userSession: flowParameters.userSession,
+                                                          appSettings: flowParameters.appSettings,
                                                           userIndicatorController: flowParameters.userIndicatorController)
         let coordinator = SpaceScreenCoordinator(parameters: parameters)
         coordinator.actionsPublisher
@@ -218,6 +300,12 @@ class SpaceFlowCoordinator: FlowCoordinatorProtocol {
                     stateMachine.tryEvent(.startRoomFlow(roomID: roomID))
                 case .leftSpace:
                     stateMachine.tryEvent(.leftSpace)
+                case .displayMembers(let roomProxy):
+                    stateMachine.tryEvent(.startMembersFlow, userInfo: roomProxy)
+                case .displaySpaceSettings(let roomProxy):
+                    stateMachine.tryEvent(.startSettingsFlow, userInfo: roomProxy)
+                case .displayRolesAndPermissions(let roomProxy):
+                    stateMachine.tryEvent(.startRolesAndPermissionsFlow, userInfo: roomProxy)
                 }
             }
             .store(in: &cancellables)
@@ -337,5 +425,71 @@ class SpaceFlowCoordinator: FlowCoordinatorProtocol {
         roomFlowCoordinator = coordinator
         coordinator.handleAppRoute(.room(roomID: roomID, via: []), animated: true)
         selectedSpaceRoomSubject.send(roomID)
+    }
+    
+    private func startMembersFlow(roomProxy: JoinedRoomProxyProtocol) {
+        let flowCoordinator = RoomMembersFlowCoordinator(entryPoint: .roomMembersList,
+                                                         roomProxy: roomProxy,
+                                                         navigationStackCoordinator: navigationStackCoordinator,
+                                                         flowParameters: flowParameters)
+        
+        flowCoordinator.actions.sink { [weak self] actions in
+            guard let self else { return }
+            switch actions {
+            case .finished:
+                stateMachine.tryEvent(.stopMembersFlow)
+            case .presentCallScreen(let roomProxy):
+                actionsSubject.send(.presentCallScreen(roomProxy: roomProxy))
+            case .verifyUser(let userID):
+                actionsSubject.send(.verifyUser(userID: userID))
+            }
+        }
+        .store(in: &cancellables)
+        membersFlowCoordinator = flowCoordinator
+        flowCoordinator.start()
+    }
+    
+    private func startSettingsFlow(roomProxy: JoinedRoomProxyProtocol) {
+        let flowCoordinator = SpaceSettingsFlowCoordinator(roomProxy: roomProxy,
+                                                           navigationStackCoordinator: navigationStackCoordinator,
+                                                           flowParameters: flowParameters)
+        
+        flowCoordinator.actions.sink { [weak self] actions in
+            guard let self else { return }
+            switch actions {
+            case .finished(let leftRoom):
+                stateMachine.tryEvent(.stopSettingsFlow)
+                if leftRoom {
+                    stateMachine.tryEvent(.leftSpace)
+                }
+            case .presentCallScreen(let roomProxy):
+                actionsSubject.send(.presentCallScreen(roomProxy: roomProxy))
+            case .verifyUser(userID: let userID):
+                actionsSubject.send(.verifyUser(userID: userID))
+            }
+        }
+        .store(in: &cancellables)
+        
+        settingsFlowCoordinator = flowCoordinator
+        flowCoordinator.start()
+    }
+    
+    private func startRolesAndPermissionsFlow(roomProxy: JoinedRoomProxyProtocol) {
+        let flowCoordinator = RoomRolesAndPermissionsFlowCoordinator(parameters: .init(roomProxy: roomProxy,
+                                                                                       mediaProvider: flowParameters.userSession.mediaProvider,
+                                                                                       navigationStackCoordinator: navigationStackCoordinator,
+                                                                                       userIndicatorController: flowParameters.userIndicatorController,
+                                                                                       analytics: flowParameters.analytics))
+        flowCoordinator.actionsPublisher.sink { [weak self] action in
+            guard let self else { return }
+            switch action {
+            case .complete:
+                stateMachine.tryEvent(.stopRolesAndPermissionsFlow)
+            }
+        }
+        .store(in: &cancellables)
+        
+        rolesAndPermissionsFlowCoordinator = flowCoordinator
+        flowCoordinator.start()
     }
 }

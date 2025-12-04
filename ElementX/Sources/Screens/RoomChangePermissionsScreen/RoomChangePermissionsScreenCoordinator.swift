@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -10,7 +11,6 @@ import SwiftUI
 
 struct RoomChangePermissionsScreenCoordinatorParameters {
     let permissions: RoomPermissions
-    let permissionsGroup: RoomRolesAndPermissionsScreenPermissionsGroup
     let roomProxy: JoinedRoomProxyProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
     let analytics: AnalyticsService
@@ -34,7 +34,6 @@ final class RoomChangePermissionsScreenCoordinator: CoordinatorProtocol {
         self.parameters = parameters
         
         viewModel = RoomChangePermissionsScreenViewModel(currentPermissions: parameters.permissions,
-                                                         group: parameters.permissionsGroup,
                                                          roomProxy: parameters.roomProxy,
                                                          userIndicatorController: parameters.userIndicatorController,
                                                          analytics: parameters.analytics)

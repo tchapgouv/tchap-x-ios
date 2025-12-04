@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -71,7 +72,7 @@ class EncryptionSettingsFlowCoordinator: FlowCoordinatorProtocol {
         configureStateMachine()
     }
     
-    func start() {
+    func start(animated: Bool) {
         stateMachine.tryEvent(.start)
     }
     
@@ -80,7 +81,7 @@ class EncryptionSettingsFlowCoordinator: FlowCoordinatorProtocol {
         case .accountProvisioningLink:
             break // We always ignore this flow when logged in.
         case .roomList, .room, .roomAlias, .childRoom, .childRoomAlias,
-             .roomDetails, .roomMemberDetails, .userProfile,
+             .roomDetails, .roomMemberDetails, .userProfile, .thread,
              .event, .eventOnRoomAlias, .childEvent, .childEventOnRoomAlias,
              .call, .genericCallLink, .settings, .share, .transferOwnership:
             // These routes aren't in this flow so clear the entire stack.

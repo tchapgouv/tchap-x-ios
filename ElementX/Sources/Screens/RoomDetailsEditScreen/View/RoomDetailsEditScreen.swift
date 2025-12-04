@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -29,6 +30,7 @@ struct RoomDetailsEditScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
         .track(screen: .RoomSettings)
+        .alert(item: $context.alertInfo)
     }
     
     // MARK: - Private
@@ -58,6 +60,7 @@ struct RoomDetailsEditScreen: View {
                                    url: context.viewState.avatarURL,
                                    name: context.viewState.initialName,
                                    contentID: context.viewState.roomID,
+                                   isSpace: context.viewState.isSpace,
                                    avatarSize: .user(on: .memberDetails),
                                    mediaProvider: context.mediaProvider)
                 .accessibilityLabel(L10n.a11yEditAvatar)

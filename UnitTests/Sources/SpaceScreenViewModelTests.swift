@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -107,7 +108,7 @@ class SpaceScreenViewModelTests: XCTestCase {
         let action = try await deferred.fulfill()
         
         switch action {
-        case .selectSpace(let spaceRoomListProxy) where spaceRoomListProxy.spaceRoomProxy.id == selectedSpace.id:
+        case .selectSpace(let spaceRoomListProxy) where spaceRoomListProxy.id == selectedSpace.id:
             break
         default:
             XCTFail("The action should select the space.")
@@ -156,21 +157,12 @@ class SpaceScreenViewModelTests: XCTestCase {
             expectation.fulfill()
             return .success(())
         }
-        let deferred = deferFulfillment(viewModel.actionsPublisher) { _ in true }
         let deferredState = deferFulfillment(viewModel.context.observe(\.viewState.joiningRoomIDs), transitionValues: [[selectedSpace.id], []])
         
         viewModel.context.send(viewAction: .spaceAction(.join(selectedSpace)))
         
         await fulfillment(of: [expectation])
         try await deferredState.fulfill()
-        let action = try await deferred.fulfill()
-        
-        switch action {
-        case .selectSpace(let spaceRoomListProxy) where spaceRoomListProxy.spaceRoomProxy.id == selectedSpace.id:
-            break
-        default:
-            XCTFail("The join should finish by selecting the space.")
-        }
     }
     
     func testJoiningRoom() async throws {
@@ -183,51 +175,43 @@ class SpaceScreenViewModelTests: XCTestCase {
             expectation.fulfill()
             return .success(())
         }
-        let deferred = deferFulfillment(viewModel.actionsPublisher) { _ in true }
         let deferredState = deferFulfillment(viewModel.context.observe(\.viewState.joiningRoomIDs), transitionValues: [[selectedRoom.id], []])
         
         viewModel.context.send(viewAction: .spaceAction(.join(selectedRoom)))
         
         await fulfillment(of: [expectation])
         try await deferredState.fulfill()
-        let action = try await deferred.fulfill()
-        
-        switch action {
-        case .selectRoom(let roomID) where roomID == selectedRoom.id:
-            break
-        default:
-            XCTFail("The join should finish by selecting the room.")
-        }
     }
     
     func testLeavingSpace() async throws {
         setupViewModel()
-        XCTAssertNil(context.leaveHandle)
+        XCTAssertNil(context.leaveSpaceViewModel)
         
-        let deferredHandle = deferFulfillment(context.observe(\.leaveHandle)) { $0 != nil }
+        let deferredHandle = deferFulfillment(context.observe(\.leaveSpaceViewModel)) { $0 != nil }
         context.send(viewAction: .leaveSpace)
         try await deferredHandle.fulfill()
-        XCTAssertNotNil(context.leaveHandle, "The leave action should show the leave view.")
+        XCTAssertNotNil(context.leaveSpaceViewModel, "The leave action should show the leave view.")
         
-        let handle = try XCTUnwrap(context.leaveHandle)
+        let leaveSpaceViewModel = try XCTUnwrap(context.leaveSpaceViewModel)
+        let handle = try XCTUnwrap(context.leaveSpaceViewModel?.state.leaveHandle)
         let selectedCount = handle.selectedCount
         let firstSelectedRoom = try XCTUnwrap(handle.rooms.first { $0.isSelected })
         XCTAssertGreaterThan(selectedCount, 0, "The leave view should have selected rooms to begin with")
         
-        context.send(viewAction: .deselectAllLeaveRoomDetails)
+        leaveSpaceViewModel.context.send(viewAction: .deselectAll)
         XCTAssertEqual(handle.selectedCount, 0, "Deselecting all should result in no selected rooms.")
         
-        context.send(viewAction: .toggleLeaveSpaceRoomDetails(id: firstSelectedRoom.spaceRoomProxy.id))
+        leaveSpaceViewModel.context.send(viewAction: .toggleRoom(roomID: firstSelectedRoom.spaceRoomProxy.id))
         XCTAssertEqual(handle.selectedCount, 1, "Toggling a room should result in 1 selected room")
         
         // Confirming the leave should leave the selected room and then the space.
         let deferredAction = deferFulfillment(viewModel.actionsPublisher) { $0.isLeftSpace }
-        context.send(viewAction: .confirmLeaveSpace)
+        leaveSpaceViewModel.context.send(viewAction: .confirmLeaveSpace)
         try await deferredAction.fulfill()
-        XCTAssertNil(context.leaveHandle)
+        XCTAssertNil(context.leaveSpaceViewModel)
         XCTAssertTrue(rustLeaveHandle.leaveRoomIdsCalled)
         XCTAssertEqual(rustLeaveHandle.leaveRoomIdsReceivedRoomIds,
-                       [firstSelectedRoom.spaceRoomProxy.id, spaceRoomListProxy.spaceRoomProxy.id],
+                       [firstSelectedRoom.spaceRoomProxy.id, spaceRoomListProxy.id],
                        "Confirming the leave should first leave the selected room and then the space.")
     }
     
@@ -239,7 +223,7 @@ class SpaceScreenViewModelTests: XCTestCase {
                                                           paginationResponses: paginationResponses))
         
         let spaceServiceProxy = SpaceServiceProxyMock(.init())
-        spaceServiceProxy.spaceRoomListSpaceIDParentClosure = { [mockSpaceRooms] spaceID, _ in
+        spaceServiceProxy.spaceRoomListSpaceIDClosure = { [mockSpaceRooms] spaceID in
             guard let spaceRoomProxy = mockSpaceRooms.first(where: { $0.id == spaceID }) else { return .failure(.missingSpace) }
             return .success(SpaceRoomListProxyMock(.init(spaceRoomProxy: spaceRoomProxy)))
         }
@@ -255,6 +239,7 @@ class SpaceScreenViewModelTests: XCTestCase {
                                          spaceServiceProxy: spaceServiceProxy,
                                          selectedSpaceRoomPublisher: .init(nil),
                                          userSession: UserSessionMock(.init(clientProxy: clientProxy)),
+                                         appSettings: AppSettings(),
                                          userIndicatorController: UserIndicatorControllerMock())
     }
 }

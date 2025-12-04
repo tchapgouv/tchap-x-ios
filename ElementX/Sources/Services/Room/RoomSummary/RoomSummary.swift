@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -28,6 +29,8 @@ struct RoomSummary {
             }
         }
     }
+    
+    enum LastMessageState { case sending, failed }
 
     let room: Room
     
@@ -45,6 +48,7 @@ struct RoomSummary {
     
     let lastMessage: AttributedString?
     let lastMessageDate: Date?
+    let lastMessageState: LastMessageState?
     let unreadMessagesCount: UInt
     let unreadMentionsCount: UInt
     let unreadNotificationsCount: UInt
@@ -116,6 +120,7 @@ extension RoomSummary {
         
         lastMessage = AttributedString(string)
         lastMessageDate = .mock
+        lastMessageState = nil
         unreadMessagesCount = hasUnreadMessages ? 1 : 0
         unreadMentionsCount = hasUnreadMentions ? 1 : 0
         unreadNotificationsCount = hasUnreadNotifications ? 1 : 0

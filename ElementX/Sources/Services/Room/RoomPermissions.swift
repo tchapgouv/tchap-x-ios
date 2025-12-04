@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -40,6 +41,7 @@ struct RoomPermissionsSetting: Identifiable {
         case \.roomName: \.roomName
         case \.roomAvatar: \.roomAvatar
         case \.roomTopic: \.roomTopic
+        case \.spaceChild: \.spaceChild
         default: fatalError("Unexpected key path: \(keyPath)")
         }
     }
@@ -66,6 +68,8 @@ struct RoomPermissions {
     var roomAvatar: RoomRole
     /// The level required to change the room's topic.
     var roomTopic: RoomRole
+    /// The level required to add/remove childrens from a space.
+    var spaceChild: RoomRole
 }
 
 extension RoomPermissions {
@@ -81,5 +85,6 @@ extension RoomPermissions {
         roomName = RoomRole(powerLevelValue: powerLevels.roomName)
         roomAvatar = RoomRole(powerLevelValue: powerLevels.roomAvatar)
         roomTopic = RoomRole(powerLevelValue: powerLevels.roomTopic)
+        spaceChild = RoomRole(powerLevelValue: powerLevels.spaceChild)
     }
 }

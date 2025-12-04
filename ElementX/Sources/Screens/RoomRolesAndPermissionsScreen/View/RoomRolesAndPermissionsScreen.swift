@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -91,42 +92,22 @@ struct RoomRolesAndPermissionsScreen: View {
     
     private var permissionsSection: some View {
         Section {
-            ListRow(label: .default(title: L10n.screenRoomRolesAndPermissionsRoomDetails,
-                                    icon: \.info),
+            ListRow(label: .default(title: L10n.screenRoomRolesAndPermissionsPermissionsHeader,
+                                    icon: \.settings),
                     details: .isWaiting(context.viewState.permissions == nil),
                     kind: .navigationLink {
-                        context.send(viewAction: .editPermissions(.roomDetails))
+                        context.send(viewAction: .editPermissions)
                     })
-                    .accessibilityIdentifier(A11yIdentifiers.roomRolesAndPermissionsScreen.roomDetails)
+                    .accessibilityIdentifier(A11yIdentifiers.roomRolesAndPermissionsScreen.permissions)
                     .disabled(context.viewState.permissions == nil)
-            
-            ListRow(label: .default(title: L10n.screenRoomRolesAndPermissionsMessagesAndContent,
-                                    icon: \.chat),
-                    details: .isWaiting(context.viewState.permissions == nil),
-                    kind: .navigationLink {
-                        context.send(viewAction: .editPermissions(.messagesAndContent))
-                    })
-                    .accessibilityIdentifier(A11yIdentifiers.roomRolesAndPermissionsScreen.messagesAndContent)
-                    .disabled(context.viewState.permissions == nil)
-            
-            ListRow(label: .default(title: L10n.screenRoomRolesAndPermissionsMemberModeration,
-                                    icon: \.user),
-                    details: .isWaiting(context.viewState.permissions == nil),
-                    kind: .navigationLink {
-                        context.send(viewAction: .editPermissions(.memberModeration))
-                    })
-                    .accessibilityIdentifier(A11yIdentifiers.roomRolesAndPermissionsScreen.memberModeration)
-                    .disabled(context.viewState.permissions == nil)
-        } header: {
-            Text(L10n.screenRoomRolesAndPermissionsPermissionsHeader)
-                .compoundListSectionHeader()
         }
     }
     
     private var resetSection: some View {
         Section {
-            ListRow(label: .plain(title: L10n.screenRoomRolesAndPermissionsReset,
-                                  role: .destructive),
+            ListRow(label: .default(title: L10n.screenRoomRolesAndPermissionsReset,
+                                    icon: \.delete,
+                                    role: .destructive),
                     kind: .button {
                         context.send(viewAction: .reset)
                     })

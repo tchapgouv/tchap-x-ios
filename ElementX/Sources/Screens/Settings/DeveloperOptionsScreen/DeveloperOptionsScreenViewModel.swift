@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -17,9 +18,9 @@ class DeveloperOptionsScreenViewModel: DeveloperOptionsScreenViewModelType, Deve
         actionsSubject.eraseToAnyPublisher()
     }
     
-    init(developerOptions: DeveloperOptionsProtocol, elementCallBaseURL: URL) {
+    init(developerOptions: DeveloperOptionsProtocol, elementCallBaseURL: URL, appHooks: AppHooks) {
         let bindings = DeveloperOptionsScreenViewStateBindings(developerOptions: developerOptions)
-        let state = DeveloperOptionsScreenViewState(elementCallBaseURL: elementCallBaseURL, bindings: bindings)
+        let state = DeveloperOptionsScreenViewState(elementCallBaseURL: elementCallBaseURL, appHooks: appHooks, bindings: bindings)
         
         super.init(initialViewState: state)
     }

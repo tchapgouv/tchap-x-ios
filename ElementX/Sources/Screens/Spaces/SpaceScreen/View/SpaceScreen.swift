@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -20,11 +21,12 @@ struct SpaceScreen: View {
             }
         }
         .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
-        .navigationTitle(context.viewState.spaceName)
+        .toolbarRole(RoomHeaderView.toolbarRole)
+        .navigationTitle(context.viewState.space.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
-        .sheet(item: $context.leaveHandle) { leaveHandle in
-            LeaveSpaceView(context: context, leaveHandle: leaveHandle)
+        .sheet(item: $context.leaveSpaceViewModel) { leaveSpaceViewModel in
+            LeaveSpaceView(context: leaveSpaceViewModel.context)
         }
     }
     
@@ -50,7 +52,7 @@ struct SpaceScreen: View {
         // Use the same trick as the RoomScreen for a leading title view that
         // also hides the navigation title.
         ToolbarItem(placement: .principal) {
-            RoomHeaderView(roomName: context.viewState.spaceName,
+            RoomHeaderView(roomName: context.viewState.space.name,
                            roomAvatar: context.viewState.space.avatar,
                            roomPropertiesBadgesView: nil, // Tchap addition
                            mediaProvider: context.mediaProvider)
@@ -61,10 +63,22 @@ struct SpaceScreen: View {
         // controller attempts to anchor itself to the button that is no longer visible.
         ToolbarItem(placement: .primaryAction) {
             Menu {
-                if let permalink = context.viewState.permalink {
-                    Section {
+                Section {
+                    if let roomProxy = context.viewState.roomProxy {
+                        Button { context.send(viewAction: .displayMembers(roomProxy: roomProxy)) } label: {
+                            Label(L10n.screenSpaceMenuActionMembers, icon: \.user)
+                        }
+                    }
+                    if let permalink = context.viewState.permalink {
                         ShareLink(item: permalink) {
                             Label(L10n.actionShare, icon: \.shareIos)
+                        }
+                    }
+                    
+                    if context.viewState.isSpaceManagementEnabled,
+                       let roomProxy = context.viewState.roomProxy {
+                        Button { context.send(viewAction: .spaceSettings(roomProxy: roomProxy)) } label: {
+                            Label(L10n.commonSettings, icon: \.settings)
                         }
                     }
                 }
@@ -101,14 +115,22 @@ struct SpaceScreen_Previews: PreviewProvider, TestablePreview {
                                                       joinedMembersCount: 76,
                                                       heroes: [.mockDan, .mockBob, .mockCharlie, .mockVerbose],
                                                       topic: "Description of the space goes right here. Lorem ipsum dolor sit amet consectetur. Leo viverra morbi habitant in.",
+                                                      canonicalAlias: "#engineering-team:element.io",
                                                       joinRule: .knockRestricted(rules: [.roomMembership(roomId: "")])))
         let spaceRoomListProxy = SpaceRoomListProxyMock(.init(spaceRoomProxy: spaceRoomProxy,
                                                               initialSpaceRooms: .mockSpaceList))
         
+        let clientProxy = ClientProxyMock(.init())
+        clientProxy.roomForIdentifierClosure = { _ in
+            .joined(JoinedRoomProxyMock(.init()))
+        }
+        let userSession = UserSessionMock(.init(clientProxy: clientProxy))
+        
         let viewModel = SpaceScreenViewModel(spaceRoomListProxy: spaceRoomListProxy,
                                              spaceServiceProxy: SpaceServiceProxyMock(.init()),
                                              selectedSpaceRoomPublisher: .init(nil),
-                                             userSession: UserSessionMock(.init()),
+                                             userSession: userSession,
+                                             appSettings: AppSettings(),
                                              userIndicatorController: UserIndicatorControllerMock())
         return viewModel
     }

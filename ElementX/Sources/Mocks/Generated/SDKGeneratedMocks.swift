@@ -6,16 +6,81 @@
 
 import Foundation
 
+open class CheckCodeSenderSDKMock: MatrixRustSDK.CheckCodeSender, @unchecked Sendable {
+    init() {
+        super.init(noHandle: .init())
+    }
+
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
+    }
+
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
+
+    //MARK: - send
+
+    open var sendCodeThrowableError: Error?
+    var sendCodeUnderlyingCallsCount = 0
+    open var sendCodeCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return sendCodeUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = sendCodeUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                sendCodeUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    sendCodeUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var sendCodeCalled: Bool {
+        return sendCodeCallsCount > 0
+    }
+    open var sendCodeReceivedCode: UInt8?
+    open var sendCodeReceivedInvocations: [UInt8] = []
+    open var sendCodeClosure: ((UInt8) async throws -> Void)?
+
+    open override func send(code: UInt8) async throws {
+        if let error = sendCodeThrowableError {
+            throw error
+        }
+        sendCodeCallsCount += 1
+        sendCodeReceivedCode = code
+        DispatchQueue.main.async {
+            self.sendCodeReceivedInvocations.append(code)
+        }
+        try await sendCodeClosure?(code)
+    }
+}
 open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - abortOidcAuth
 
@@ -3188,52 +3253,6 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         try await loginWithOidcCallbackCallbackUrlClosure?(callbackUrl)
     }
 
-    //MARK: - loginWithQrCode
-
-    open var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerThrowableError: Error?
-    var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount = 0
-    open var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerCallsCount: Int {
-        get {
-            if Thread.isMainThread {
-                return loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount
-            } else {
-                var returnValue: Int? = nil
-                DispatchQueue.main.sync {
-                    returnValue = loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerUnderlyingCallsCount = newValue
-                }
-            }
-        }
-    }
-    open var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerCalled: Bool {
-        return loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerCallsCount > 0
-    }
-    open var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerReceivedArguments: (qrCodeData: QrCodeData, oidcConfiguration: OidcConfiguration, progressListener: QrLoginProgressListener)?
-    open var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerReceivedInvocations: [(qrCodeData: QrCodeData, oidcConfiguration: OidcConfiguration, progressListener: QrLoginProgressListener)] = []
-    open var loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerClosure: ((QrCodeData, OidcConfiguration, QrLoginProgressListener) async throws -> Void)?
-
-    open override func loginWithQrCode(qrCodeData: QrCodeData, oidcConfiguration: OidcConfiguration, progressListener: QrLoginProgressListener) async throws {
-        if let error = loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerThrowableError {
-            throw error
-        }
-        loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerCallsCount += 1
-        loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerReceivedArguments = (qrCodeData: qrCodeData, oidcConfiguration: oidcConfiguration, progressListener: progressListener)
-        DispatchQueue.main.async {
-            self.loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerReceivedInvocations.append((qrCodeData: qrCodeData, oidcConfiguration: oidcConfiguration, progressListener: progressListener))
-        }
-        try await loginWithQrCodeQrCodeDataOidcConfigurationProgressListenerClosure?(qrCodeData, oidcConfiguration, progressListener)
-    }
-
     //MARK: - logout
 
     open var logoutThrowableError: Error?
@@ -3272,6 +3291,142 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         }
         logoutCallsCount += 1
         try await logoutClosure?()
+    }
+
+    //MARK: - newGrantLoginWithQrCodeHandler
+
+    var newGrantLoginWithQrCodeHandlerUnderlyingCallsCount = 0
+    open var newGrantLoginWithQrCodeHandlerCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return newGrantLoginWithQrCodeHandlerUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = newGrantLoginWithQrCodeHandlerUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                newGrantLoginWithQrCodeHandlerUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    newGrantLoginWithQrCodeHandlerUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var newGrantLoginWithQrCodeHandlerCalled: Bool {
+        return newGrantLoginWithQrCodeHandlerCallsCount > 0
+    }
+
+    var newGrantLoginWithQrCodeHandlerUnderlyingReturnValue: GrantLoginWithQrCodeHandler!
+    open var newGrantLoginWithQrCodeHandlerReturnValue: GrantLoginWithQrCodeHandler! {
+        get {
+            if Thread.isMainThread {
+                return newGrantLoginWithQrCodeHandlerUnderlyingReturnValue
+            } else {
+                var returnValue: GrantLoginWithQrCodeHandler? = nil
+                DispatchQueue.main.sync {
+                    returnValue = newGrantLoginWithQrCodeHandlerUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                newGrantLoginWithQrCodeHandlerUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    newGrantLoginWithQrCodeHandlerUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var newGrantLoginWithQrCodeHandlerClosure: (() -> GrantLoginWithQrCodeHandler)?
+
+    open override func newGrantLoginWithQrCodeHandler() -> GrantLoginWithQrCodeHandler {
+        newGrantLoginWithQrCodeHandlerCallsCount += 1
+        if let newGrantLoginWithQrCodeHandlerClosure = newGrantLoginWithQrCodeHandlerClosure {
+            return newGrantLoginWithQrCodeHandlerClosure()
+        } else {
+            return newGrantLoginWithQrCodeHandlerReturnValue
+        }
+    }
+
+    //MARK: - newLoginWithQrCodeHandler
+
+    var newLoginWithQrCodeHandlerOidcConfigurationUnderlyingCallsCount = 0
+    open var newLoginWithQrCodeHandlerOidcConfigurationCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return newLoginWithQrCodeHandlerOidcConfigurationUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = newLoginWithQrCodeHandlerOidcConfigurationUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                newLoginWithQrCodeHandlerOidcConfigurationUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    newLoginWithQrCodeHandlerOidcConfigurationUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var newLoginWithQrCodeHandlerOidcConfigurationCalled: Bool {
+        return newLoginWithQrCodeHandlerOidcConfigurationCallsCount > 0
+    }
+    open var newLoginWithQrCodeHandlerOidcConfigurationReceivedOidcConfiguration: OidcConfiguration?
+    open var newLoginWithQrCodeHandlerOidcConfigurationReceivedInvocations: [OidcConfiguration] = []
+
+    var newLoginWithQrCodeHandlerOidcConfigurationUnderlyingReturnValue: LoginWithQrCodeHandler!
+    open var newLoginWithQrCodeHandlerOidcConfigurationReturnValue: LoginWithQrCodeHandler! {
+        get {
+            if Thread.isMainThread {
+                return newLoginWithQrCodeHandlerOidcConfigurationUnderlyingReturnValue
+            } else {
+                var returnValue: LoginWithQrCodeHandler? = nil
+                DispatchQueue.main.sync {
+                    returnValue = newLoginWithQrCodeHandlerOidcConfigurationUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                newLoginWithQrCodeHandlerOidcConfigurationUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    newLoginWithQrCodeHandlerOidcConfigurationUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var newLoginWithQrCodeHandlerOidcConfigurationClosure: ((OidcConfiguration) -> LoginWithQrCodeHandler)?
+
+    open override func newLoginWithQrCodeHandler(oidcConfiguration: OidcConfiguration) -> LoginWithQrCodeHandler {
+        newLoginWithQrCodeHandlerOidcConfigurationCallsCount += 1
+        newLoginWithQrCodeHandlerOidcConfigurationReceivedOidcConfiguration = oidcConfiguration
+        DispatchQueue.main.async {
+            self.newLoginWithQrCodeHandlerOidcConfigurationReceivedInvocations.append(oidcConfiguration)
+        }
+        if let newLoginWithQrCodeHandlerOidcConfigurationClosure = newLoginWithQrCodeHandlerOidcConfigurationClosure {
+            return newLoginWithQrCodeHandlerOidcConfigurationClosure(oidcConfiguration)
+        } else {
+            return newLoginWithQrCodeHandlerOidcConfigurationReturnValue
+        }
     }
 
     //MARK: - notificationClient
@@ -3495,6 +3650,48 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         }
     }
 
+    //MARK: - registerNotificationHandler
+
+    var registerNotificationHandlerListenerUnderlyingCallsCount = 0
+    open var registerNotificationHandlerListenerCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return registerNotificationHandlerListenerUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = registerNotificationHandlerListenerUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                registerNotificationHandlerListenerUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    registerNotificationHandlerListenerUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var registerNotificationHandlerListenerCalled: Bool {
+        return registerNotificationHandlerListenerCallsCount > 0
+    }
+    open var registerNotificationHandlerListenerReceivedListener: SyncNotificationListener?
+    open var registerNotificationHandlerListenerReceivedInvocations: [SyncNotificationListener] = []
+    open var registerNotificationHandlerListenerClosure: ((SyncNotificationListener) async -> Void)?
+
+    open override func registerNotificationHandler(listener: SyncNotificationListener) async {
+        registerNotificationHandlerListenerCallsCount += 1
+        registerNotificationHandlerListenerReceivedListener = listener
+        DispatchQueue.main.async {
+            self.registerNotificationHandlerListenerReceivedInvocations.append(listener)
+        }
+        await registerNotificationHandlerListenerClosure?(listener)
+    }
+
     //MARK: - removeAvatar
 
     open var removeAvatarThrowableError: Error?
@@ -3535,18 +3732,18 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         try await removeAvatarClosure?()
     }
 
-    //MARK: - resetServerInfo
+    //MARK: - resetSupportedVersions
 
-    open var resetServerInfoThrowableError: Error?
-    var resetServerInfoUnderlyingCallsCount = 0
-    open var resetServerInfoCallsCount: Int {
+    open var resetSupportedVersionsThrowableError: Error?
+    var resetSupportedVersionsUnderlyingCallsCount = 0
+    open var resetSupportedVersionsCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return resetServerInfoUnderlyingCallsCount
+                return resetSupportedVersionsUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = resetServerInfoUnderlyingCallsCount
+                    returnValue = resetSupportedVersionsUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -3554,25 +3751,65 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                resetServerInfoUnderlyingCallsCount = newValue
+                resetSupportedVersionsUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    resetServerInfoUnderlyingCallsCount = newValue
+                    resetSupportedVersionsUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    open var resetServerInfoCalled: Bool {
-        return resetServerInfoCallsCount > 0
+    open var resetSupportedVersionsCalled: Bool {
+        return resetSupportedVersionsCallsCount > 0
     }
-    open var resetServerInfoClosure: (() async throws -> Void)?
+    open var resetSupportedVersionsClosure: (() async throws -> Void)?
 
-    open override func resetServerInfo() async throws {
-        if let error = resetServerInfoThrowableError {
+    open override func resetSupportedVersions() async throws {
+        if let error = resetSupportedVersionsThrowableError {
             throw error
         }
-        resetServerInfoCallsCount += 1
-        try await resetServerInfoClosure?()
+        resetSupportedVersionsCallsCount += 1
+        try await resetSupportedVersionsClosure?()
+    }
+
+    //MARK: - resetWellKnown
+
+    open var resetWellKnownThrowableError: Error?
+    var resetWellKnownUnderlyingCallsCount = 0
+    open var resetWellKnownCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return resetWellKnownUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = resetWellKnownUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                resetWellKnownUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    resetWellKnownUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var resetWellKnownCalled: Bool {
+        return resetWellKnownCallsCount > 0
+    }
+    open var resetWellKnownClosure: (() async throws -> Void)?
+
+    open override func resetWellKnown() async throws {
+        if let error = resetWellKnownThrowableError {
+            throw error
+        }
+        resetWellKnownCallsCount += 1
+        try await resetWellKnownClosure?()
     }
 
     //MARK: - resolveRoomAlias
@@ -5119,6 +5356,81 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         }
     }
 
+    //MARK: - subscribeToSendQueueUpdates
+
+    open var subscribeToSendQueueUpdatesListenerThrowableError: Error?
+    var subscribeToSendQueueUpdatesListenerUnderlyingCallsCount = 0
+    open var subscribeToSendQueueUpdatesListenerCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return subscribeToSendQueueUpdatesListenerUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = subscribeToSendQueueUpdatesListenerUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                subscribeToSendQueueUpdatesListenerUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    subscribeToSendQueueUpdatesListenerUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var subscribeToSendQueueUpdatesListenerCalled: Bool {
+        return subscribeToSendQueueUpdatesListenerCallsCount > 0
+    }
+    open var subscribeToSendQueueUpdatesListenerReceivedListener: SendQueueRoomUpdateListener?
+    open var subscribeToSendQueueUpdatesListenerReceivedInvocations: [SendQueueRoomUpdateListener] = []
+
+    var subscribeToSendQueueUpdatesListenerUnderlyingReturnValue: TaskHandle!
+    open var subscribeToSendQueueUpdatesListenerReturnValue: TaskHandle! {
+        get {
+            if Thread.isMainThread {
+                return subscribeToSendQueueUpdatesListenerUnderlyingReturnValue
+            } else {
+                var returnValue: TaskHandle? = nil
+                DispatchQueue.main.sync {
+                    returnValue = subscribeToSendQueueUpdatesListenerUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                subscribeToSendQueueUpdatesListenerUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    subscribeToSendQueueUpdatesListenerUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var subscribeToSendQueueUpdatesListenerClosure: ((SendQueueRoomUpdateListener) async throws -> TaskHandle)?
+
+    open override func subscribeToSendQueueUpdates(listener: SendQueueRoomUpdateListener) async throws -> TaskHandle {
+        if let error = subscribeToSendQueueUpdatesListenerThrowableError {
+            throw error
+        }
+        subscribeToSendQueueUpdatesListenerCallsCount += 1
+        subscribeToSendQueueUpdatesListenerReceivedListener = listener
+        DispatchQueue.main.async {
+            self.subscribeToSendQueueUpdatesListenerReceivedInvocations.append(listener)
+        }
+        if let subscribeToSendQueueUpdatesListenerClosure = subscribeToSendQueueUpdatesListenerClosure {
+            return try await subscribeToSendQueueUpdatesListenerClosure(listener)
+        } else {
+            return subscribeToSendQueueUpdatesListenerReturnValue
+        }
+    }
+
     //MARK: - syncService
 
     var syncServiceUnderlyingCallsCount = 0
@@ -5612,14 +5924,18 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
 }
 open class ClientBuilderSDKMock: MatrixRustSDK.ClientBuilder, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - addRootCertificates
 
@@ -6518,6 +6834,71 @@ open class ClientBuilderSDKMock: MatrixRustSDK.ClientBuilder, @unchecked Sendabl
         }
     }
 
+    //MARK: - inMemoryStore
+
+    var inMemoryStoreUnderlyingCallsCount = 0
+    open var inMemoryStoreCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return inMemoryStoreUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = inMemoryStoreUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                inMemoryStoreUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    inMemoryStoreUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var inMemoryStoreCalled: Bool {
+        return inMemoryStoreCallsCount > 0
+    }
+
+    var inMemoryStoreUnderlyingReturnValue: ClientBuilder!
+    open var inMemoryStoreReturnValue: ClientBuilder! {
+        get {
+            if Thread.isMainThread {
+                return inMemoryStoreUnderlyingReturnValue
+            } else {
+                var returnValue: ClientBuilder? = nil
+                DispatchQueue.main.sync {
+                    returnValue = inMemoryStoreUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                inMemoryStoreUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    inMemoryStoreUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var inMemoryStoreClosure: (() -> ClientBuilder)?
+
+    open override func inMemoryStore() -> ClientBuilder {
+        inMemoryStoreCallsCount += 1
+        if let inMemoryStoreClosure = inMemoryStoreClosure {
+            return inMemoryStoreClosure()
+        } else {
+            return inMemoryStoreReturnValue
+        }
+    }
+
     //MARK: - proxy
 
     var proxyUrlUnderlyingCallsCount = 0
@@ -6873,219 +7254,6 @@ open class ClientBuilderSDKMock: MatrixRustSDK.ClientBuilder, @unchecked Sendabl
         }
     }
 
-    //MARK: - sessionCacheSize
-
-    var sessionCacheSizeCacheSizeUnderlyingCallsCount = 0
-    open var sessionCacheSizeCacheSizeCallsCount: Int {
-        get {
-            if Thread.isMainThread {
-                return sessionCacheSizeCacheSizeUnderlyingCallsCount
-            } else {
-                var returnValue: Int? = nil
-                DispatchQueue.main.sync {
-                    returnValue = sessionCacheSizeCacheSizeUnderlyingCallsCount
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                sessionCacheSizeCacheSizeUnderlyingCallsCount = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    sessionCacheSizeCacheSizeUnderlyingCallsCount = newValue
-                }
-            }
-        }
-    }
-    open var sessionCacheSizeCacheSizeCalled: Bool {
-        return sessionCacheSizeCacheSizeCallsCount > 0
-    }
-    open var sessionCacheSizeCacheSizeReceivedCacheSize: UInt32?
-    open var sessionCacheSizeCacheSizeReceivedInvocations: [UInt32?] = []
-
-    var sessionCacheSizeCacheSizeUnderlyingReturnValue: ClientBuilder!
-    open var sessionCacheSizeCacheSizeReturnValue: ClientBuilder! {
-        get {
-            if Thread.isMainThread {
-                return sessionCacheSizeCacheSizeUnderlyingReturnValue
-            } else {
-                var returnValue: ClientBuilder? = nil
-                DispatchQueue.main.sync {
-                    returnValue = sessionCacheSizeCacheSizeUnderlyingReturnValue
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                sessionCacheSizeCacheSizeUnderlyingReturnValue = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    sessionCacheSizeCacheSizeUnderlyingReturnValue = newValue
-                }
-            }
-        }
-    }
-    open var sessionCacheSizeCacheSizeClosure: ((UInt32?) -> ClientBuilder)?
-
-    open override func sessionCacheSize(cacheSize: UInt32?) -> ClientBuilder {
-        sessionCacheSizeCacheSizeCallsCount += 1
-        sessionCacheSizeCacheSizeReceivedCacheSize = cacheSize
-        DispatchQueue.main.async {
-            self.sessionCacheSizeCacheSizeReceivedInvocations.append(cacheSize)
-        }
-        if let sessionCacheSizeCacheSizeClosure = sessionCacheSizeCacheSizeClosure {
-            return sessionCacheSizeCacheSizeClosure(cacheSize)
-        } else {
-            return sessionCacheSizeCacheSizeReturnValue
-        }
-    }
-
-    //MARK: - sessionJournalSizeLimit
-
-    var sessionJournalSizeLimitLimitUnderlyingCallsCount = 0
-    open var sessionJournalSizeLimitLimitCallsCount: Int {
-        get {
-            if Thread.isMainThread {
-                return sessionJournalSizeLimitLimitUnderlyingCallsCount
-            } else {
-                var returnValue: Int? = nil
-                DispatchQueue.main.sync {
-                    returnValue = sessionJournalSizeLimitLimitUnderlyingCallsCount
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                sessionJournalSizeLimitLimitUnderlyingCallsCount = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    sessionJournalSizeLimitLimitUnderlyingCallsCount = newValue
-                }
-            }
-        }
-    }
-    open var sessionJournalSizeLimitLimitCalled: Bool {
-        return sessionJournalSizeLimitLimitCallsCount > 0
-    }
-    open var sessionJournalSizeLimitLimitReceivedLimit: UInt32?
-    open var sessionJournalSizeLimitLimitReceivedInvocations: [UInt32?] = []
-
-    var sessionJournalSizeLimitLimitUnderlyingReturnValue: ClientBuilder!
-    open var sessionJournalSizeLimitLimitReturnValue: ClientBuilder! {
-        get {
-            if Thread.isMainThread {
-                return sessionJournalSizeLimitLimitUnderlyingReturnValue
-            } else {
-                var returnValue: ClientBuilder? = nil
-                DispatchQueue.main.sync {
-                    returnValue = sessionJournalSizeLimitLimitUnderlyingReturnValue
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                sessionJournalSizeLimitLimitUnderlyingReturnValue = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    sessionJournalSizeLimitLimitUnderlyingReturnValue = newValue
-                }
-            }
-        }
-    }
-    open var sessionJournalSizeLimitLimitClosure: ((UInt32?) -> ClientBuilder)?
-
-    open override func sessionJournalSizeLimit(limit: UInt32?) -> ClientBuilder {
-        sessionJournalSizeLimitLimitCallsCount += 1
-        sessionJournalSizeLimitLimitReceivedLimit = limit
-        DispatchQueue.main.async {
-            self.sessionJournalSizeLimitLimitReceivedInvocations.append(limit)
-        }
-        if let sessionJournalSizeLimitLimitClosure = sessionJournalSizeLimitLimitClosure {
-            return sessionJournalSizeLimitLimitClosure(limit)
-        } else {
-            return sessionJournalSizeLimitLimitReturnValue
-        }
-    }
-
-    //MARK: - sessionPassphrase
-
-    var sessionPassphrasePassphraseUnderlyingCallsCount = 0
-    open var sessionPassphrasePassphraseCallsCount: Int {
-        get {
-            if Thread.isMainThread {
-                return sessionPassphrasePassphraseUnderlyingCallsCount
-            } else {
-                var returnValue: Int? = nil
-                DispatchQueue.main.sync {
-                    returnValue = sessionPassphrasePassphraseUnderlyingCallsCount
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                sessionPassphrasePassphraseUnderlyingCallsCount = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    sessionPassphrasePassphraseUnderlyingCallsCount = newValue
-                }
-            }
-        }
-    }
-    open var sessionPassphrasePassphraseCalled: Bool {
-        return sessionPassphrasePassphraseCallsCount > 0
-    }
-    open var sessionPassphrasePassphraseReceivedPassphrase: String?
-    open var sessionPassphrasePassphraseReceivedInvocations: [String?] = []
-
-    var sessionPassphrasePassphraseUnderlyingReturnValue: ClientBuilder!
-    open var sessionPassphrasePassphraseReturnValue: ClientBuilder! {
-        get {
-            if Thread.isMainThread {
-                return sessionPassphrasePassphraseUnderlyingReturnValue
-            } else {
-                var returnValue: ClientBuilder? = nil
-                DispatchQueue.main.sync {
-                    returnValue = sessionPassphrasePassphraseUnderlyingReturnValue
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                sessionPassphrasePassphraseUnderlyingReturnValue = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    sessionPassphrasePassphraseUnderlyingReturnValue = newValue
-                }
-            }
-        }
-    }
-    open var sessionPassphrasePassphraseClosure: ((String?) -> ClientBuilder)?
-
-    open override func sessionPassphrase(passphrase: String?) -> ClientBuilder {
-        sessionPassphrasePassphraseCallsCount += 1
-        sessionPassphrasePassphraseReceivedPassphrase = passphrase
-        DispatchQueue.main.async {
-            self.sessionPassphrasePassphraseReceivedInvocations.append(passphrase)
-        }
-        if let sessionPassphrasePassphraseClosure = sessionPassphrasePassphraseClosure {
-            return sessionPassphrasePassphraseClosure(passphrase)
-        } else {
-            return sessionPassphrasePassphraseReturnValue
-        }
-    }
-
     //MARK: - sessionPaths
 
     var sessionPathsDataPathCachePathUnderlyingCallsCount = 0
@@ -7154,77 +7322,6 @@ open class ClientBuilderSDKMock: MatrixRustSDK.ClientBuilder, @unchecked Sendabl
             return sessionPathsDataPathCachePathClosure(dataPath, cachePath)
         } else {
             return sessionPathsDataPathCachePathReturnValue
-        }
-    }
-
-    //MARK: - sessionPoolMaxSize
-
-    var sessionPoolMaxSizePoolMaxSizeUnderlyingCallsCount = 0
-    open var sessionPoolMaxSizePoolMaxSizeCallsCount: Int {
-        get {
-            if Thread.isMainThread {
-                return sessionPoolMaxSizePoolMaxSizeUnderlyingCallsCount
-            } else {
-                var returnValue: Int? = nil
-                DispatchQueue.main.sync {
-                    returnValue = sessionPoolMaxSizePoolMaxSizeUnderlyingCallsCount
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                sessionPoolMaxSizePoolMaxSizeUnderlyingCallsCount = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    sessionPoolMaxSizePoolMaxSizeUnderlyingCallsCount = newValue
-                }
-            }
-        }
-    }
-    open var sessionPoolMaxSizePoolMaxSizeCalled: Bool {
-        return sessionPoolMaxSizePoolMaxSizeCallsCount > 0
-    }
-    open var sessionPoolMaxSizePoolMaxSizeReceivedPoolMaxSize: UInt32?
-    open var sessionPoolMaxSizePoolMaxSizeReceivedInvocations: [UInt32?] = []
-
-    var sessionPoolMaxSizePoolMaxSizeUnderlyingReturnValue: ClientBuilder!
-    open var sessionPoolMaxSizePoolMaxSizeReturnValue: ClientBuilder! {
-        get {
-            if Thread.isMainThread {
-                return sessionPoolMaxSizePoolMaxSizeUnderlyingReturnValue
-            } else {
-                var returnValue: ClientBuilder? = nil
-                DispatchQueue.main.sync {
-                    returnValue = sessionPoolMaxSizePoolMaxSizeUnderlyingReturnValue
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                sessionPoolMaxSizePoolMaxSizeUnderlyingReturnValue = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    sessionPoolMaxSizePoolMaxSizeUnderlyingReturnValue = newValue
-                }
-            }
-        }
-    }
-    open var sessionPoolMaxSizePoolMaxSizeClosure: ((UInt32?) -> ClientBuilder)?
-
-    open override func sessionPoolMaxSize(poolMaxSize: UInt32?) -> ClientBuilder {
-        sessionPoolMaxSizePoolMaxSizeCallsCount += 1
-        sessionPoolMaxSizePoolMaxSizeReceivedPoolMaxSize = poolMaxSize
-        DispatchQueue.main.async {
-            self.sessionPoolMaxSizePoolMaxSizeReceivedInvocations.append(poolMaxSize)
-        }
-        if let sessionPoolMaxSizePoolMaxSizeClosure = sessionPoolMaxSizePoolMaxSizeClosure {
-            return sessionPoolMaxSizePoolMaxSizeClosure(poolMaxSize)
-        } else {
-            return sessionPoolMaxSizePoolMaxSizeReturnValue
         }
     }
 
@@ -7367,6 +7464,77 @@ open class ClientBuilderSDKMock: MatrixRustSDK.ClientBuilder, @unchecked Sendabl
             return slidingSyncVersionBuilderVersionBuilderClosure(versionBuilder)
         } else {
             return slidingSyncVersionBuilderVersionBuilderReturnValue
+        }
+    }
+
+    //MARK: - sqliteStore
+
+    var sqliteStoreConfigUnderlyingCallsCount = 0
+    open var sqliteStoreConfigCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return sqliteStoreConfigUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = sqliteStoreConfigUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                sqliteStoreConfigUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    sqliteStoreConfigUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var sqliteStoreConfigCalled: Bool {
+        return sqliteStoreConfigCallsCount > 0
+    }
+    open var sqliteStoreConfigReceivedConfig: SqliteStoreBuilder?
+    open var sqliteStoreConfigReceivedInvocations: [SqliteStoreBuilder] = []
+
+    var sqliteStoreConfigUnderlyingReturnValue: ClientBuilder!
+    open var sqliteStoreConfigReturnValue: ClientBuilder! {
+        get {
+            if Thread.isMainThread {
+                return sqliteStoreConfigUnderlyingReturnValue
+            } else {
+                var returnValue: ClientBuilder? = nil
+                DispatchQueue.main.sync {
+                    returnValue = sqliteStoreConfigUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                sqliteStoreConfigUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    sqliteStoreConfigUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var sqliteStoreConfigClosure: ((SqliteStoreBuilder) -> ClientBuilder)?
+
+    open override func sqliteStore(config: SqliteStoreBuilder) -> ClientBuilder {
+        sqliteStoreConfigCallsCount += 1
+        sqliteStoreConfigReceivedConfig = config
+        DispatchQueue.main.async {
+            self.sqliteStoreConfigReceivedInvocations.append(config)
+        }
+        if let sqliteStoreConfigClosure = sqliteStoreConfigClosure {
+            return sqliteStoreConfigClosure(config)
+        } else {
+            return sqliteStoreConfigReturnValue
         }
     }
 
@@ -7650,14 +7818,18 @@ open class ClientBuilderSDKMock: MatrixRustSDK.ClientBuilder, @unchecked Sendabl
 }
 open class EncryptionSDKMock: MatrixRustSDK.Encryption, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - backupExistsOnServer
 
@@ -8684,16 +8856,16 @@ open class EncryptionSDKMock: MatrixRustSDK.Encryption, @unchecked Sendable {
 
     //MARK: - userIdentity
 
-    open var userIdentityUserIdThrowableError: Error?
-    var userIdentityUserIdUnderlyingCallsCount = 0
-    open var userIdentityUserIdCallsCount: Int {
+    open var userIdentityUserIdFallbackToServerThrowableError: Error?
+    var userIdentityUserIdFallbackToServerUnderlyingCallsCount = 0
+    open var userIdentityUserIdFallbackToServerCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return userIdentityUserIdUnderlyingCallsCount
+                return userIdentityUserIdFallbackToServerUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = userIdentityUserIdUnderlyingCallsCount
+                    returnValue = userIdentityUserIdFallbackToServerUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -8701,29 +8873,29 @@ open class EncryptionSDKMock: MatrixRustSDK.Encryption, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                userIdentityUserIdUnderlyingCallsCount = newValue
+                userIdentityUserIdFallbackToServerUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    userIdentityUserIdUnderlyingCallsCount = newValue
+                    userIdentityUserIdFallbackToServerUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    open var userIdentityUserIdCalled: Bool {
-        return userIdentityUserIdCallsCount > 0
+    open var userIdentityUserIdFallbackToServerCalled: Bool {
+        return userIdentityUserIdFallbackToServerCallsCount > 0
     }
-    open var userIdentityUserIdReceivedUserId: String?
-    open var userIdentityUserIdReceivedInvocations: [String] = []
+    open var userIdentityUserIdFallbackToServerReceivedArguments: (userId: String, fallbackToServer: Bool)?
+    open var userIdentityUserIdFallbackToServerReceivedInvocations: [(userId: String, fallbackToServer: Bool)] = []
 
-    var userIdentityUserIdUnderlyingReturnValue: UserIdentity?
-    open var userIdentityUserIdReturnValue: UserIdentity? {
+    var userIdentityUserIdFallbackToServerUnderlyingReturnValue: UserIdentity?
+    open var userIdentityUserIdFallbackToServerReturnValue: UserIdentity? {
         get {
             if Thread.isMainThread {
-                return userIdentityUserIdUnderlyingReturnValue
+                return userIdentityUserIdFallbackToServerUnderlyingReturnValue
             } else {
                 var returnValue: UserIdentity?? = nil
                 DispatchQueue.main.sync {
-                    returnValue = userIdentityUserIdUnderlyingReturnValue
+                    returnValue = userIdentityUserIdFallbackToServerUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -8731,29 +8903,29 @@ open class EncryptionSDKMock: MatrixRustSDK.Encryption, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                userIdentityUserIdUnderlyingReturnValue = newValue
+                userIdentityUserIdFallbackToServerUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    userIdentityUserIdUnderlyingReturnValue = newValue
+                    userIdentityUserIdFallbackToServerUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-    open var userIdentityUserIdClosure: ((String) async throws -> UserIdentity?)?
+    open var userIdentityUserIdFallbackToServerClosure: ((String, Bool) async throws -> UserIdentity?)?
 
-    open override func userIdentity(userId: String) async throws -> UserIdentity? {
-        if let error = userIdentityUserIdThrowableError {
+    open override func userIdentity(userId: String, fallbackToServer: Bool) async throws -> UserIdentity? {
+        if let error = userIdentityUserIdFallbackToServerThrowableError {
             throw error
         }
-        userIdentityUserIdCallsCount += 1
-        userIdentityUserIdReceivedUserId = userId
+        userIdentityUserIdFallbackToServerCallsCount += 1
+        userIdentityUserIdFallbackToServerReceivedArguments = (userId: userId, fallbackToServer: fallbackToServer)
         DispatchQueue.main.async {
-            self.userIdentityUserIdReceivedInvocations.append(userId)
+            self.userIdentityUserIdFallbackToServerReceivedInvocations.append((userId: userId, fallbackToServer: fallbackToServer))
         }
-        if let userIdentityUserIdClosure = userIdentityUserIdClosure {
-            return try await userIdentityUserIdClosure(userId)
+        if let userIdentityUserIdFallbackToServerClosure = userIdentityUserIdFallbackToServerClosure {
+            return try await userIdentityUserIdFallbackToServerClosure(userId, fallbackToServer)
         } else {
-            return userIdentityUserIdReturnValue
+            return userIdentityUserIdFallbackToServerReturnValue
         }
     }
 
@@ -8975,16 +9147,127 @@ open class EncryptionSDKMock: MatrixRustSDK.Encryption, @unchecked Sendable {
         await waitForE2eeInitializationTasksClosure?()
     }
 }
+open class GrantLoginWithQrCodeHandlerSDKMock: MatrixRustSDK.GrantLoginWithQrCodeHandler, @unchecked Sendable {
+    init() {
+        super.init(noHandle: .init())
+    }
+
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
+    }
+
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
+
+    //MARK: - generate
+
+    open var generateProgressListenerThrowableError: Error?
+    var generateProgressListenerUnderlyingCallsCount = 0
+    open var generateProgressListenerCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return generateProgressListenerUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = generateProgressListenerUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                generateProgressListenerUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    generateProgressListenerUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var generateProgressListenerCalled: Bool {
+        return generateProgressListenerCallsCount > 0
+    }
+    open var generateProgressListenerReceivedProgressListener: GrantGeneratedQrLoginProgressListener?
+    open var generateProgressListenerReceivedInvocations: [GrantGeneratedQrLoginProgressListener] = []
+    open var generateProgressListenerClosure: ((GrantGeneratedQrLoginProgressListener) async throws -> Void)?
+
+    open override func generate(progressListener: GrantGeneratedQrLoginProgressListener) async throws {
+        if let error = generateProgressListenerThrowableError {
+            throw error
+        }
+        generateProgressListenerCallsCount += 1
+        generateProgressListenerReceivedProgressListener = progressListener
+        DispatchQueue.main.async {
+            self.generateProgressListenerReceivedInvocations.append(progressListener)
+        }
+        try await generateProgressListenerClosure?(progressListener)
+    }
+
+    //MARK: - scan
+
+    open var scanQrCodeDataProgressListenerThrowableError: Error?
+    var scanQrCodeDataProgressListenerUnderlyingCallsCount = 0
+    open var scanQrCodeDataProgressListenerCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return scanQrCodeDataProgressListenerUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = scanQrCodeDataProgressListenerUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                scanQrCodeDataProgressListenerUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    scanQrCodeDataProgressListenerUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var scanQrCodeDataProgressListenerCalled: Bool {
+        return scanQrCodeDataProgressListenerCallsCount > 0
+    }
+    open var scanQrCodeDataProgressListenerReceivedArguments: (qrCodeData: QrCodeData, progressListener: GrantQrLoginProgressListener)?
+    open var scanQrCodeDataProgressListenerReceivedInvocations: [(qrCodeData: QrCodeData, progressListener: GrantQrLoginProgressListener)] = []
+    open var scanQrCodeDataProgressListenerClosure: ((QrCodeData, GrantQrLoginProgressListener) async throws -> Void)?
+
+    open override func scan(qrCodeData: QrCodeData, progressListener: GrantQrLoginProgressListener) async throws {
+        if let error = scanQrCodeDataProgressListenerThrowableError {
+            throw error
+        }
+        scanQrCodeDataProgressListenerCallsCount += 1
+        scanQrCodeDataProgressListenerReceivedArguments = (qrCodeData: qrCodeData, progressListener: progressListener)
+        DispatchQueue.main.async {
+            self.scanQrCodeDataProgressListenerReceivedInvocations.append((qrCodeData: qrCodeData, progressListener: progressListener))
+        }
+        try await scanQrCodeDataProgressListenerClosure?(qrCodeData, progressListener)
+    }
+}
 open class HomeserverLoginDetailsSDKMock: MatrixRustSDK.HomeserverLoginDetails, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - slidingSyncVersion
 
@@ -9378,14 +9661,18 @@ open class HomeserverLoginDetailsSDKMock: MatrixRustSDK.HomeserverLoginDetails, 
 }
 open class IdentityResetHandleSDKMock: MatrixRustSDK.IdentityResetHandle, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - authType
 
@@ -9536,14 +9823,18 @@ open class IdentityResetHandleSDKMock: MatrixRustSDK.IdentityResetHandle, @unche
 }
 open class InReplyToDetailsSDKMock: MatrixRustSDK.InReplyToDetails, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - event
 
@@ -9677,14 +9968,18 @@ open class InReplyToDetailsSDKMock: MatrixRustSDK.InReplyToDetails, @unchecked S
 }
 open class KnockRequestActionsSDKMock: MatrixRustSDK.KnockRequestActions, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - accept
 
@@ -9860,14 +10155,18 @@ open class KnockRequestActionsSDKMock: MatrixRustSDK.KnockRequestActions, @unche
 }
 open class LazyTimelineItemProviderSDKMock: MatrixRustSDK.LazyTimelineItemProvider, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - containsOnlyEmojis
 
@@ -10137,14 +10436,18 @@ open class LazyTimelineItemProviderSDKMock: MatrixRustSDK.LazyTimelineItemProvid
 }
 open class LeaveSpaceHandleSDKMock: MatrixRustSDK.LeaveSpaceHandle, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - leave
 
@@ -10257,16 +10560,127 @@ open class LeaveSpaceHandleSDKMock: MatrixRustSDK.LeaveSpaceHandle, @unchecked S
         }
     }
 }
+open class LoginWithQrCodeHandlerSDKMock: MatrixRustSDK.LoginWithQrCodeHandler, @unchecked Sendable {
+    init() {
+        super.init(noHandle: .init())
+    }
+
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
+    }
+
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
+
+    //MARK: - generate
+
+    open var generateProgressListenerThrowableError: Error?
+    var generateProgressListenerUnderlyingCallsCount = 0
+    open var generateProgressListenerCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return generateProgressListenerUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = generateProgressListenerUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                generateProgressListenerUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    generateProgressListenerUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var generateProgressListenerCalled: Bool {
+        return generateProgressListenerCallsCount > 0
+    }
+    open var generateProgressListenerReceivedProgressListener: GeneratedQrLoginProgressListener?
+    open var generateProgressListenerReceivedInvocations: [GeneratedQrLoginProgressListener] = []
+    open var generateProgressListenerClosure: ((GeneratedQrLoginProgressListener) async throws -> Void)?
+
+    open override func generate(progressListener: GeneratedQrLoginProgressListener) async throws {
+        if let error = generateProgressListenerThrowableError {
+            throw error
+        }
+        generateProgressListenerCallsCount += 1
+        generateProgressListenerReceivedProgressListener = progressListener
+        DispatchQueue.main.async {
+            self.generateProgressListenerReceivedInvocations.append(progressListener)
+        }
+        try await generateProgressListenerClosure?(progressListener)
+    }
+
+    //MARK: - scan
+
+    open var scanQrCodeDataProgressListenerThrowableError: Error?
+    var scanQrCodeDataProgressListenerUnderlyingCallsCount = 0
+    open var scanQrCodeDataProgressListenerCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return scanQrCodeDataProgressListenerUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = scanQrCodeDataProgressListenerUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                scanQrCodeDataProgressListenerUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    scanQrCodeDataProgressListenerUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var scanQrCodeDataProgressListenerCalled: Bool {
+        return scanQrCodeDataProgressListenerCallsCount > 0
+    }
+    open var scanQrCodeDataProgressListenerReceivedArguments: (qrCodeData: QrCodeData, progressListener: QrLoginProgressListener)?
+    open var scanQrCodeDataProgressListenerReceivedInvocations: [(qrCodeData: QrCodeData, progressListener: QrLoginProgressListener)] = []
+    open var scanQrCodeDataProgressListenerClosure: ((QrCodeData, QrLoginProgressListener) async throws -> Void)?
+
+    open override func scan(qrCodeData: QrCodeData, progressListener: QrLoginProgressListener) async throws {
+        if let error = scanQrCodeDataProgressListenerThrowableError {
+            throw error
+        }
+        scanQrCodeDataProgressListenerCallsCount += 1
+        scanQrCodeDataProgressListenerReceivedArguments = (qrCodeData: qrCodeData, progressListener: progressListener)
+        DispatchQueue.main.async {
+            self.scanQrCodeDataProgressListenerReceivedInvocations.append((qrCodeData: qrCodeData, progressListener: progressListener))
+        }
+        try await scanQrCodeDataProgressListenerClosure?(qrCodeData, progressListener)
+    }
+}
 open class MediaFileHandleSDKMock: MatrixRustSDK.MediaFileHandle, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - path
 
@@ -10414,14 +10828,18 @@ open class MediaFileHandleSDKMock: MatrixRustSDK.MediaFileHandle, @unchecked Sen
 }
 open class MediaSourceSDKMock: MatrixRustSDK.MediaSource, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
     static func reset()
     {
     }
@@ -10558,14 +10976,18 @@ open class MediaSourceSDKMock: MatrixRustSDK.MediaSource, @unchecked Sendable {
 }
 open class NotificationClientSDKMock: MatrixRustSDK.NotificationClient, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - getNotification
 
@@ -10794,14 +11216,18 @@ open class NotificationClientSDKMock: MatrixRustSDK.NotificationClient, @uncheck
 }
 open class NotificationSettingsSDKMock: MatrixRustSDK.NotificationSettings, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - canHomeserverPushEncryptedEventToDevice
 
@@ -12093,14 +12519,18 @@ open class NotificationSettingsSDKMock: MatrixRustSDK.NotificationSettings, @unc
 }
 open class OAuthAuthorizationDataSDKMock: MatrixRustSDK.OAuthAuthorizationData, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - loginUrl
 
@@ -12169,14 +12599,18 @@ open class OAuthAuthorizationDataSDKMock: MatrixRustSDK.OAuthAuthorizationData, 
 }
 open class QrCodeDataSDKMock: MatrixRustSDK.QrCodeData, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
     static func reset()
     {
     }
@@ -12248,14 +12682,18 @@ open class QrCodeDataSDKMock: MatrixRustSDK.QrCodeData, @unchecked Sendable {
 }
 open class RoomSDKMock: MatrixRustSDK.Room, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - activeMembersCount
 
@@ -14622,6 +15060,52 @@ open class RoomSDKMock: MatrixRustSDK.Room, @unchecked Sendable {
         } else {
             return loadOrFetchEventEventIdReturnValue
         }
+    }
+
+    //MARK: - markAsFullyReadUnchecked
+
+    open var markAsFullyReadUncheckedEventIdThrowableError: Error?
+    var markAsFullyReadUncheckedEventIdUnderlyingCallsCount = 0
+    open var markAsFullyReadUncheckedEventIdCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return markAsFullyReadUncheckedEventIdUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = markAsFullyReadUncheckedEventIdUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                markAsFullyReadUncheckedEventIdUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    markAsFullyReadUncheckedEventIdUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var markAsFullyReadUncheckedEventIdCalled: Bool {
+        return markAsFullyReadUncheckedEventIdCallsCount > 0
+    }
+    open var markAsFullyReadUncheckedEventIdReceivedEventId: String?
+    open var markAsFullyReadUncheckedEventIdReceivedInvocations: [String] = []
+    open var markAsFullyReadUncheckedEventIdClosure: ((String) async throws -> Void)?
+
+    open override func markAsFullyReadUnchecked(eventId: String) async throws {
+        if let error = markAsFullyReadUncheckedEventIdThrowableError {
+            throw error
+        }
+        markAsFullyReadUncheckedEventIdCallsCount += 1
+        markAsFullyReadUncheckedEventIdReceivedEventId = eventId
+        DispatchQueue.main.async {
+            self.markAsFullyReadUncheckedEventIdReceivedInvocations.append(eventId)
+        }
+        try await markAsFullyReadUncheckedEventIdClosure?(eventId)
     }
 
     //MARK: - markAsRead
@@ -17054,6 +17538,81 @@ open class RoomSDKMock: MatrixRustSDK.Room, @unchecked Sendable {
         }
     }
 
+    //MARK: - subscribeToSendQueueUpdates
+
+    open var subscribeToSendQueueUpdatesListenerThrowableError: Error?
+    var subscribeToSendQueueUpdatesListenerUnderlyingCallsCount = 0
+    open var subscribeToSendQueueUpdatesListenerCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return subscribeToSendQueueUpdatesListenerUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = subscribeToSendQueueUpdatesListenerUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                subscribeToSendQueueUpdatesListenerUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    subscribeToSendQueueUpdatesListenerUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var subscribeToSendQueueUpdatesListenerCalled: Bool {
+        return subscribeToSendQueueUpdatesListenerCallsCount > 0
+    }
+    open var subscribeToSendQueueUpdatesListenerReceivedListener: SendQueueListener?
+    open var subscribeToSendQueueUpdatesListenerReceivedInvocations: [SendQueueListener] = []
+
+    var subscribeToSendQueueUpdatesListenerUnderlyingReturnValue: TaskHandle!
+    open var subscribeToSendQueueUpdatesListenerReturnValue: TaskHandle! {
+        get {
+            if Thread.isMainThread {
+                return subscribeToSendQueueUpdatesListenerUnderlyingReturnValue
+            } else {
+                var returnValue: TaskHandle? = nil
+                DispatchQueue.main.sync {
+                    returnValue = subscribeToSendQueueUpdatesListenerUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                subscribeToSendQueueUpdatesListenerUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    subscribeToSendQueueUpdatesListenerUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var subscribeToSendQueueUpdatesListenerClosure: ((SendQueueListener) async throws -> TaskHandle)?
+
+    open override func subscribeToSendQueueUpdates(listener: SendQueueListener) async throws -> TaskHandle {
+        if let error = subscribeToSendQueueUpdatesListenerThrowableError {
+            throw error
+        }
+        subscribeToSendQueueUpdatesListenerCallsCount += 1
+        subscribeToSendQueueUpdatesListenerReceivedListener = listener
+        DispatchQueue.main.async {
+            self.subscribeToSendQueueUpdatesListenerReceivedInvocations.append(listener)
+        }
+        if let subscribeToSendQueueUpdatesListenerClosure = subscribeToSendQueueUpdatesListenerClosure {
+            return try await subscribeToSendQueueUpdatesListenerClosure(listener)
+        } else {
+            return subscribeToSendQueueUpdatesListenerReturnValue
+        }
+    }
+
     //MARK: - subscribeToTypingNotifications
 
     var subscribeToTypingNotificationsListenerUnderlyingCallsCount = 0
@@ -17890,14 +18449,18 @@ open class RoomSDKMock: MatrixRustSDK.Room, @unchecked Sendable {
 }
 open class RoomDirectorySearchSDKMock: MatrixRustSDK.RoomDirectorySearch, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - isAtLastPage
 
@@ -18196,14 +18759,18 @@ open class RoomDirectorySearchSDKMock: MatrixRustSDK.RoomDirectorySearch, @unche
 }
 open class RoomListSDKMock: MatrixRustSDK.RoomList, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - entriesWithDynamicAdapters
 
@@ -18499,14 +19066,18 @@ open class RoomListSDKMock: MatrixRustSDK.RoomList, @unchecked Sendable {
 }
 open class RoomListDynamicEntriesControllerSDKMock: MatrixRustSDK.RoomListDynamicEntriesController, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - addOnePage
 
@@ -18653,14 +19224,18 @@ open class RoomListDynamicEntriesControllerSDKMock: MatrixRustSDK.RoomListDynami
 }
 open class RoomListEntriesWithDynamicAdaptersResultSDKMock: MatrixRustSDK.RoomListEntriesWithDynamicAdaptersResult, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - controller
 
@@ -18794,14 +19369,18 @@ open class RoomListEntriesWithDynamicAdaptersResultSDKMock: MatrixRustSDK.RoomLi
 }
 open class RoomListServiceSDKMock: MatrixRustSDK.RoomListService, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - allRooms
 
@@ -19137,14 +19716,18 @@ open class RoomListServiceSDKMock: MatrixRustSDK.RoomListService, @unchecked Sen
 }
 open class RoomMembersIteratorSDKMock: MatrixRustSDK.RoomMembersIterator, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - len
 
@@ -19284,14 +19867,18 @@ open class RoomMembersIteratorSDKMock: MatrixRustSDK.RoomMembersIterator, @unche
 }
 open class RoomMessageEventContentWithoutRelationSDKMock: MatrixRustSDK.RoomMessageEventContentWithoutRelation, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - withMentions
 
@@ -19366,14 +19953,18 @@ open class RoomMessageEventContentWithoutRelationSDKMock: MatrixRustSDK.RoomMess
 }
 open class RoomPowerLevelsSDKMock: MatrixRustSDK.RoomPowerLevels, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - canOwnUserBan
 
@@ -20779,14 +21370,18 @@ open class RoomPowerLevelsSDKMock: MatrixRustSDK.RoomPowerLevels, @unchecked Sen
 }
 open class RoomPreviewSDKMock: MatrixRustSDK.RoomPreview, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - forget
 
@@ -21065,14 +21660,18 @@ open class RoomPreviewSDKMock: MatrixRustSDK.RoomPreview, @unchecked Sendable {
 }
 open class SendAttachmentJoinHandleSDKMock: MatrixRustSDK.SendAttachmentJoinHandle, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - cancel
 
@@ -21152,14 +21751,18 @@ open class SendAttachmentJoinHandleSDKMock: MatrixRustSDK.SendAttachmentJoinHand
 }
 open class SendGalleryJoinHandleSDKMock: MatrixRustSDK.SendGalleryJoinHandle, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - cancel
 
@@ -21239,14 +21842,18 @@ open class SendGalleryJoinHandleSDKMock: MatrixRustSDK.SendGalleryJoinHandle, @u
 }
 open class SendHandleSDKMock: MatrixRustSDK.SendHandle, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - abort
 
@@ -21359,14 +21966,18 @@ open class SendHandleSDKMock: MatrixRustSDK.SendHandle, @unchecked Sendable {
 }
 open class SessionVerificationControllerSDKMock: MatrixRustSDK.SessionVerificationController, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - acceptVerificationRequest
 
@@ -21744,14 +22355,18 @@ open class SessionVerificationControllerSDKMock: MatrixRustSDK.SessionVerificati
 }
 open class SessionVerificationEmojiSDKMock: MatrixRustSDK.SessionVerificationEmoji, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - description
 
@@ -21885,14 +22500,18 @@ open class SessionVerificationEmojiSDKMock: MatrixRustSDK.SessionVerificationEmo
 }
 open class SpaceRoomListSDKMock: MatrixRustSDK.SpaceRoomList, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - paginate
 
@@ -22344,14 +22963,204 @@ open class SpaceRoomListSDKMock: MatrixRustSDK.SpaceRoomList, @unchecked Sendabl
 }
 open class SpaceServiceSDKMock: MatrixRustSDK.SpaceService, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
+
+    //MARK: - addChildToSpace
+
+    open var addChildToSpaceChildIdSpaceIdThrowableError: Error?
+    var addChildToSpaceChildIdSpaceIdUnderlyingCallsCount = 0
+    open var addChildToSpaceChildIdSpaceIdCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return addChildToSpaceChildIdSpaceIdUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = addChildToSpaceChildIdSpaceIdUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                addChildToSpaceChildIdSpaceIdUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    addChildToSpaceChildIdSpaceIdUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var addChildToSpaceChildIdSpaceIdCalled: Bool {
+        return addChildToSpaceChildIdSpaceIdCallsCount > 0
+    }
+    open var addChildToSpaceChildIdSpaceIdReceivedArguments: (childId: String, spaceId: String)?
+    open var addChildToSpaceChildIdSpaceIdReceivedInvocations: [(childId: String, spaceId: String)] = []
+    open var addChildToSpaceChildIdSpaceIdClosure: ((String, String) async throws -> Void)?
+
+    open override func addChildToSpace(childId: String, spaceId: String) async throws {
+        if let error = addChildToSpaceChildIdSpaceIdThrowableError {
+            throw error
+        }
+        addChildToSpaceChildIdSpaceIdCallsCount += 1
+        addChildToSpaceChildIdSpaceIdReceivedArguments = (childId: childId, spaceId: spaceId)
+        DispatchQueue.main.async {
+            self.addChildToSpaceChildIdSpaceIdReceivedInvocations.append((childId: childId, spaceId: spaceId))
+        }
+        try await addChildToSpaceChildIdSpaceIdClosure?(childId, spaceId)
+    }
+
+    //MARK: - editableSpaces
+
+    var editableSpacesUnderlyingCallsCount = 0
+    open var editableSpacesCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return editableSpacesUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = editableSpacesUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                editableSpacesUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    editableSpacesUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var editableSpacesCalled: Bool {
+        return editableSpacesCallsCount > 0
+    }
+
+    var editableSpacesUnderlyingReturnValue: [SpaceRoom]!
+    open var editableSpacesReturnValue: [SpaceRoom]! {
+        get {
+            if Thread.isMainThread {
+                return editableSpacesUnderlyingReturnValue
+            } else {
+                var returnValue: [SpaceRoom]? = nil
+                DispatchQueue.main.sync {
+                    returnValue = editableSpacesUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                editableSpacesUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    editableSpacesUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var editableSpacesClosure: (() async -> [SpaceRoom])?
+
+    open override func editableSpaces() async -> [SpaceRoom] {
+        editableSpacesCallsCount += 1
+        if let editableSpacesClosure = editableSpacesClosure {
+            return await editableSpacesClosure()
+        } else {
+            return editableSpacesReturnValue
+        }
+    }
+
+    //MARK: - joinedParentsOfChild
+
+    open var joinedParentsOfChildChildIdThrowableError: Error?
+    var joinedParentsOfChildChildIdUnderlyingCallsCount = 0
+    open var joinedParentsOfChildChildIdCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return joinedParentsOfChildChildIdUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = joinedParentsOfChildChildIdUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                joinedParentsOfChildChildIdUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    joinedParentsOfChildChildIdUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var joinedParentsOfChildChildIdCalled: Bool {
+        return joinedParentsOfChildChildIdCallsCount > 0
+    }
+    open var joinedParentsOfChildChildIdReceivedChildId: String?
+    open var joinedParentsOfChildChildIdReceivedInvocations: [String] = []
+
+    var joinedParentsOfChildChildIdUnderlyingReturnValue: [SpaceRoom]!
+    open var joinedParentsOfChildChildIdReturnValue: [SpaceRoom]! {
+        get {
+            if Thread.isMainThread {
+                return joinedParentsOfChildChildIdUnderlyingReturnValue
+            } else {
+                var returnValue: [SpaceRoom]? = nil
+                DispatchQueue.main.sync {
+                    returnValue = joinedParentsOfChildChildIdUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                joinedParentsOfChildChildIdUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    joinedParentsOfChildChildIdUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var joinedParentsOfChildChildIdClosure: ((String) async throws -> [SpaceRoom])?
+
+    open override func joinedParentsOfChild(childId: String) async throws -> [SpaceRoom] {
+        if let error = joinedParentsOfChildChildIdThrowableError {
+            throw error
+        }
+        joinedParentsOfChildChildIdCallsCount += 1
+        joinedParentsOfChildChildIdReceivedChildId = childId
+        DispatchQueue.main.async {
+            self.joinedParentsOfChildChildIdReceivedInvocations.append(childId)
+        }
+        if let joinedParentsOfChildChildIdClosure = joinedParentsOfChildChildIdClosure {
+            return try await joinedParentsOfChildChildIdClosure(childId)
+        } else {
+            return joinedParentsOfChildChildIdReturnValue
+        }
+    }
 
     //MARK: - joinedSpaces
 
@@ -22491,6 +23300,52 @@ open class SpaceServiceSDKMock: MatrixRustSDK.SpaceService, @unchecked Sendable 
         } else {
             return leaveSpaceSpaceIdReturnValue
         }
+    }
+
+    //MARK: - removeChildFromSpace
+
+    open var removeChildFromSpaceChildIdSpaceIdThrowableError: Error?
+    var removeChildFromSpaceChildIdSpaceIdUnderlyingCallsCount = 0
+    open var removeChildFromSpaceChildIdSpaceIdCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return removeChildFromSpaceChildIdSpaceIdUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = removeChildFromSpaceChildIdSpaceIdUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                removeChildFromSpaceChildIdSpaceIdUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    removeChildFromSpaceChildIdSpaceIdUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var removeChildFromSpaceChildIdSpaceIdCalled: Bool {
+        return removeChildFromSpaceChildIdSpaceIdCallsCount > 0
+    }
+    open var removeChildFromSpaceChildIdSpaceIdReceivedArguments: (childId: String, spaceId: String)?
+    open var removeChildFromSpaceChildIdSpaceIdReceivedInvocations: [(childId: String, spaceId: String)] = []
+    open var removeChildFromSpaceChildIdSpaceIdClosure: ((String, String) async throws -> Void)?
+
+    open override func removeChildFromSpace(childId: String, spaceId: String) async throws {
+        if let error = removeChildFromSpaceChildIdSpaceIdThrowableError {
+            throw error
+        }
+        removeChildFromSpaceChildIdSpaceIdCallsCount += 1
+        removeChildFromSpaceChildIdSpaceIdReceivedArguments = (childId: childId, spaceId: spaceId)
+        DispatchQueue.main.async {
+            self.removeChildFromSpaceChildIdSpaceIdReceivedInvocations.append((childId: childId, spaceId: spaceId))
+        }
+        try await removeChildFromSpaceChildIdSpaceIdClosure?(childId, spaceId)
     }
 
     //MARK: - spaceRoomList
@@ -22641,14 +23496,18 @@ open class SpaceServiceSDKMock: MatrixRustSDK.SpaceService, @unchecked Sendable 
 }
 open class SpanSDKMock: MatrixRustSDK.Span, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
     static func reset()
     {
     }
@@ -22790,16 +23649,384 @@ open class SpanSDKMock: MatrixRustSDK.Span, @unchecked Sendable {
         }
     }
 }
+open class SqliteStoreBuilderSDKMock: MatrixRustSDK.SqliteStoreBuilder, @unchecked Sendable {
+    init() {
+        super.init(noHandle: .init())
+    }
+
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
+    }
+
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
+
+    //MARK: - cacheSize
+
+    var cacheSizeCacheSizeUnderlyingCallsCount = 0
+    open var cacheSizeCacheSizeCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return cacheSizeCacheSizeUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = cacheSizeCacheSizeUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                cacheSizeCacheSizeUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    cacheSizeCacheSizeUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var cacheSizeCacheSizeCalled: Bool {
+        return cacheSizeCacheSizeCallsCount > 0
+    }
+    open var cacheSizeCacheSizeReceivedCacheSize: UInt32?
+    open var cacheSizeCacheSizeReceivedInvocations: [UInt32?] = []
+
+    var cacheSizeCacheSizeUnderlyingReturnValue: SqliteStoreBuilder!
+    open var cacheSizeCacheSizeReturnValue: SqliteStoreBuilder! {
+        get {
+            if Thread.isMainThread {
+                return cacheSizeCacheSizeUnderlyingReturnValue
+            } else {
+                var returnValue: SqliteStoreBuilder? = nil
+                DispatchQueue.main.sync {
+                    returnValue = cacheSizeCacheSizeUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                cacheSizeCacheSizeUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    cacheSizeCacheSizeUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var cacheSizeCacheSizeClosure: ((UInt32?) -> SqliteStoreBuilder)?
+
+    open override func cacheSize(cacheSize: UInt32?) -> SqliteStoreBuilder {
+        cacheSizeCacheSizeCallsCount += 1
+        cacheSizeCacheSizeReceivedCacheSize = cacheSize
+        DispatchQueue.main.async {
+            self.cacheSizeCacheSizeReceivedInvocations.append(cacheSize)
+        }
+        if let cacheSizeCacheSizeClosure = cacheSizeCacheSizeClosure {
+            return cacheSizeCacheSizeClosure(cacheSize)
+        } else {
+            return cacheSizeCacheSizeReturnValue
+        }
+    }
+
+    //MARK: - journalSizeLimit
+
+    var journalSizeLimitLimitUnderlyingCallsCount = 0
+    open var journalSizeLimitLimitCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return journalSizeLimitLimitUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = journalSizeLimitLimitUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                journalSizeLimitLimitUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    journalSizeLimitLimitUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var journalSizeLimitLimitCalled: Bool {
+        return journalSizeLimitLimitCallsCount > 0
+    }
+    open var journalSizeLimitLimitReceivedLimit: UInt32?
+    open var journalSizeLimitLimitReceivedInvocations: [UInt32?] = []
+
+    var journalSizeLimitLimitUnderlyingReturnValue: SqliteStoreBuilder!
+    open var journalSizeLimitLimitReturnValue: SqliteStoreBuilder! {
+        get {
+            if Thread.isMainThread {
+                return journalSizeLimitLimitUnderlyingReturnValue
+            } else {
+                var returnValue: SqliteStoreBuilder? = nil
+                DispatchQueue.main.sync {
+                    returnValue = journalSizeLimitLimitUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                journalSizeLimitLimitUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    journalSizeLimitLimitUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var journalSizeLimitLimitClosure: ((UInt32?) -> SqliteStoreBuilder)?
+
+    open override func journalSizeLimit(limit: UInt32?) -> SqliteStoreBuilder {
+        journalSizeLimitLimitCallsCount += 1
+        journalSizeLimitLimitReceivedLimit = limit
+        DispatchQueue.main.async {
+            self.journalSizeLimitLimitReceivedInvocations.append(limit)
+        }
+        if let journalSizeLimitLimitClosure = journalSizeLimitLimitClosure {
+            return journalSizeLimitLimitClosure(limit)
+        } else {
+            return journalSizeLimitLimitReturnValue
+        }
+    }
+
+    //MARK: - passphrase
+
+    var passphrasePassphraseUnderlyingCallsCount = 0
+    open var passphrasePassphraseCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return passphrasePassphraseUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = passphrasePassphraseUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                passphrasePassphraseUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    passphrasePassphraseUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var passphrasePassphraseCalled: Bool {
+        return passphrasePassphraseCallsCount > 0
+    }
+    open var passphrasePassphraseReceivedPassphrase: String?
+    open var passphrasePassphraseReceivedInvocations: [String?] = []
+
+    var passphrasePassphraseUnderlyingReturnValue: SqliteStoreBuilder!
+    open var passphrasePassphraseReturnValue: SqliteStoreBuilder! {
+        get {
+            if Thread.isMainThread {
+                return passphrasePassphraseUnderlyingReturnValue
+            } else {
+                var returnValue: SqliteStoreBuilder? = nil
+                DispatchQueue.main.sync {
+                    returnValue = passphrasePassphraseUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                passphrasePassphraseUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    passphrasePassphraseUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var passphrasePassphraseClosure: ((String?) -> SqliteStoreBuilder)?
+
+    open override func passphrase(passphrase: String?) -> SqliteStoreBuilder {
+        passphrasePassphraseCallsCount += 1
+        passphrasePassphraseReceivedPassphrase = passphrase
+        DispatchQueue.main.async {
+            self.passphrasePassphraseReceivedInvocations.append(passphrase)
+        }
+        if let passphrasePassphraseClosure = passphrasePassphraseClosure {
+            return passphrasePassphraseClosure(passphrase)
+        } else {
+            return passphrasePassphraseReturnValue
+        }
+    }
+
+    //MARK: - poolMaxSize
+
+    var poolMaxSizePoolMaxSizeUnderlyingCallsCount = 0
+    open var poolMaxSizePoolMaxSizeCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return poolMaxSizePoolMaxSizeUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = poolMaxSizePoolMaxSizeUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                poolMaxSizePoolMaxSizeUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    poolMaxSizePoolMaxSizeUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var poolMaxSizePoolMaxSizeCalled: Bool {
+        return poolMaxSizePoolMaxSizeCallsCount > 0
+    }
+    open var poolMaxSizePoolMaxSizeReceivedPoolMaxSize: UInt32?
+    open var poolMaxSizePoolMaxSizeReceivedInvocations: [UInt32?] = []
+
+    var poolMaxSizePoolMaxSizeUnderlyingReturnValue: SqliteStoreBuilder!
+    open var poolMaxSizePoolMaxSizeReturnValue: SqliteStoreBuilder! {
+        get {
+            if Thread.isMainThread {
+                return poolMaxSizePoolMaxSizeUnderlyingReturnValue
+            } else {
+                var returnValue: SqliteStoreBuilder? = nil
+                DispatchQueue.main.sync {
+                    returnValue = poolMaxSizePoolMaxSizeUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                poolMaxSizePoolMaxSizeUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    poolMaxSizePoolMaxSizeUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var poolMaxSizePoolMaxSizeClosure: ((UInt32?) -> SqliteStoreBuilder)?
+
+    open override func poolMaxSize(poolMaxSize: UInt32?) -> SqliteStoreBuilder {
+        poolMaxSizePoolMaxSizeCallsCount += 1
+        poolMaxSizePoolMaxSizeReceivedPoolMaxSize = poolMaxSize
+        DispatchQueue.main.async {
+            self.poolMaxSizePoolMaxSizeReceivedInvocations.append(poolMaxSize)
+        }
+        if let poolMaxSizePoolMaxSizeClosure = poolMaxSizePoolMaxSizeClosure {
+            return poolMaxSizePoolMaxSizeClosure(poolMaxSize)
+        } else {
+            return poolMaxSizePoolMaxSizeReturnValue
+        }
+    }
+
+    //MARK: - systemIsMemoryConstrained
+
+    var systemIsMemoryConstrainedUnderlyingCallsCount = 0
+    open var systemIsMemoryConstrainedCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return systemIsMemoryConstrainedUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = systemIsMemoryConstrainedUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                systemIsMemoryConstrainedUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    systemIsMemoryConstrainedUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var systemIsMemoryConstrainedCalled: Bool {
+        return systemIsMemoryConstrainedCallsCount > 0
+    }
+
+    var systemIsMemoryConstrainedUnderlyingReturnValue: SqliteStoreBuilder!
+    open var systemIsMemoryConstrainedReturnValue: SqliteStoreBuilder! {
+        get {
+            if Thread.isMainThread {
+                return systemIsMemoryConstrainedUnderlyingReturnValue
+            } else {
+                var returnValue: SqliteStoreBuilder? = nil
+                DispatchQueue.main.sync {
+                    returnValue = systemIsMemoryConstrainedUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                systemIsMemoryConstrainedUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    systemIsMemoryConstrainedUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var systemIsMemoryConstrainedClosure: (() -> SqliteStoreBuilder)?
+
+    open override func systemIsMemoryConstrained() -> SqliteStoreBuilder {
+        systemIsMemoryConstrainedCallsCount += 1
+        if let systemIsMemoryConstrainedClosure = systemIsMemoryConstrainedClosure {
+            return systemIsMemoryConstrainedClosure()
+        } else {
+            return systemIsMemoryConstrainedReturnValue
+        }
+    }
+}
 open class SsoHandlerSDKMock: MatrixRustSDK.SsoHandler, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - finish
 
@@ -22914,14 +24141,18 @@ open class SsoHandlerSDKMock: MatrixRustSDK.SsoHandler, @unchecked Sendable {
 }
 open class SyncServiceSDKMock: MatrixRustSDK.SyncService, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - expireSessions
 
@@ -23169,14 +24400,18 @@ open class SyncServiceSDKMock: MatrixRustSDK.SyncService, @unchecked Sendable {
 }
 open class SyncServiceBuilderSDKMock: MatrixRustSDK.SyncServiceBuilder, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - finish
 
@@ -23450,14 +24685,18 @@ open class SyncServiceBuilderSDKMock: MatrixRustSDK.SyncServiceBuilder, @uncheck
 }
 open class TaskHandleSDKMock: MatrixRustSDK.TaskHandle, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - cancel
 
@@ -23562,14 +24801,18 @@ open class TaskHandleSDKMock: MatrixRustSDK.TaskHandle, @unchecked Sendable {
 }
 open class ThreadSummarySDKMock: MatrixRustSDK.ThreadSummary, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - latestEvent
 
@@ -23703,14 +24946,18 @@ open class ThreadSummarySDKMock: MatrixRustSDK.ThreadSummary, @unchecked Sendabl
 }
 open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - addListener
 
@@ -24146,6 +25393,71 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
             return try await getEventTimelineItemByEventIdEventIdClosure(eventId)
         } else {
             return getEventTimelineItemByEventIdEventIdReturnValue
+        }
+    }
+
+    //MARK: - latestEventId
+
+    var latestEventIdUnderlyingCallsCount = 0
+    open var latestEventIdCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return latestEventIdUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = latestEventIdUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                latestEventIdUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    latestEventIdUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var latestEventIdCalled: Bool {
+        return latestEventIdCallsCount > 0
+    }
+
+    var latestEventIdUnderlyingReturnValue: String?
+    open var latestEventIdReturnValue: String? {
+        get {
+            if Thread.isMainThread {
+                return latestEventIdUnderlyingReturnValue
+            } else {
+                var returnValue: String?? = nil
+                DispatchQueue.main.sync {
+                    returnValue = latestEventIdUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                latestEventIdUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    latestEventIdUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var latestEventIdClosure: (() async -> String?)?
+
+    open override func latestEventId() async -> String? {
+        latestEventIdCallsCount += 1
+        if let latestEventIdClosure = latestEventIdClosure {
+            return await latestEventIdClosure()
+        } else {
+            return latestEventIdReturnValue
         }
     }
 
@@ -25247,8 +26559,8 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
     open var sendVoiceMessageParamsAudioInfoWaveformCalled: Bool {
         return sendVoiceMessageParamsAudioInfoWaveformCallsCount > 0
     }
-    open var sendVoiceMessageParamsAudioInfoWaveformReceivedArguments: (params: UploadParameters, audioInfo: AudioInfo, waveform: [UInt16])?
-    open var sendVoiceMessageParamsAudioInfoWaveformReceivedInvocations: [(params: UploadParameters, audioInfo: AudioInfo, waveform: [UInt16])] = []
+    open var sendVoiceMessageParamsAudioInfoWaveformReceivedArguments: (params: UploadParameters, audioInfo: AudioInfo, waveform: [Float])?
+    open var sendVoiceMessageParamsAudioInfoWaveformReceivedInvocations: [(params: UploadParameters, audioInfo: AudioInfo, waveform: [Float])] = []
 
     var sendVoiceMessageParamsAudioInfoWaveformUnderlyingReturnValue: SendAttachmentJoinHandle!
     open var sendVoiceMessageParamsAudioInfoWaveformReturnValue: SendAttachmentJoinHandle! {
@@ -25274,9 +26586,9 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
             }
         }
     }
-    open var sendVoiceMessageParamsAudioInfoWaveformClosure: ((UploadParameters, AudioInfo, [UInt16]) throws -> SendAttachmentJoinHandle)?
+    open var sendVoiceMessageParamsAudioInfoWaveformClosure: ((UploadParameters, AudioInfo, [Float]) throws -> SendAttachmentJoinHandle)?
 
-    open override func sendVoiceMessage(params: UploadParameters, audioInfo: AudioInfo, waveform: [UInt16]) throws -> SendAttachmentJoinHandle {
+    open override func sendVoiceMessage(params: UploadParameters, audioInfo: AudioInfo, waveform: [Float]) throws -> SendAttachmentJoinHandle {
         if let error = sendVoiceMessageParamsAudioInfoWaveformThrowableError {
             throw error
         }
@@ -25519,14 +26831,18 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
 }
 open class TimelineEventSDKMock: MatrixRustSDK.TimelineEvent, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - eventId
 
@@ -25859,28 +27175,36 @@ open class TimelineEventSDKMock: MatrixRustSDK.TimelineEvent, @unchecked Sendabl
 }
 open class TimelineEventTypeFilterSDKMock: MatrixRustSDK.TimelineEventTypeFilter, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
     static func reset()
     {
     }
 }
 open class TimelineItemSDKMock: MatrixRustSDK.TimelineItem, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - asEvent
 
@@ -26144,14 +27468,18 @@ open class TimelineItemSDKMock: MatrixRustSDK.TimelineItem, @unchecked Sendable 
 }
 open class UnreadNotificationsCountSDKMock: MatrixRustSDK.UnreadNotificationsCount, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - hasNotifications
 
@@ -26350,14 +27678,18 @@ open class UnreadNotificationsCountSDKMock: MatrixRustSDK.UnreadNotificationsCou
 }
 open class UserIdentitySDKMock: MatrixRustSDK.UserIdentity, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - hasVerificationViolation
 
@@ -26701,14 +28033,18 @@ open class UserIdentitySDKMock: MatrixRustSDK.UserIdentity, @unchecked Sendable 
 }
 open class WidgetDriverSDKMock: MatrixRustSDK.WidgetDriver, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - run
 
@@ -26754,14 +28090,18 @@ open class WidgetDriverSDKMock: MatrixRustSDK.WidgetDriver, @unchecked Sendable 
 }
 open class WidgetDriverHandleSDKMock: MatrixRustSDK.WidgetDriverHandle, @unchecked Sendable {
     init() {
-        super.init(noPointer: .init())
+        super.init(noHandle: .init())
     }
 
-    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
-        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    public required init(unsafeFromHandle handle: UInt64) {
+        fatalError("init(unsafeFromHandle:) has not been implemented")
     }
 
-    fileprivate var pointer: UnsafeMutableRawPointer!
+    fileprivate var handle: UInt64 {
+        get { return underlyingHandle }
+        set(value) { underlyingHandle = value }
+    }
+    fileprivate var underlyingHandle: UInt64!
 
     //MARK: - recv
 

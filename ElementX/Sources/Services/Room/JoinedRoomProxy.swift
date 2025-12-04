@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -84,7 +85,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                                                                                                          filter: .eventTypeFilter(filter: excludedEventsFilter),
                                                                                                          internalIdPrefix: nil,
                                                                                                          dateDividerMode: .daily,
-                                                                                                         trackReadReceipts: true,
+                                                                                                         trackReadReceipts: .messageLikeEvents,
                                                                                                          reportUtds: true)),
                                            kind: .live)
         
@@ -149,7 +150,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                                                                                             filter: .all,
                                                                                             internalIdPrefix: UUID().uuidString,
                                                                                             dateDividerMode: .daily,
-                                                                                            trackReadReceipts: false,
+                                                                                            trackReadReceipts: .disabled,
                                                                                             reportUtds: true))
             
             return .success(TimelineProxy(timeline: sdkTimeline, kind: .detached))
@@ -177,7 +178,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                                                                                             filter: .all,
                                                                                             internalIdPrefix: UUID().uuidString,
                                                                                             dateDividerMode: .daily,
-                                                                                            trackReadReceipts: true,
+                                                                                            trackReadReceipts: .messageLikeEvents,
                                                                                             reportUtds: true))
             
             let timeline = TimelineProxy(timeline: sdkTimeline, kind: .thread(rootEventID: eventID))
@@ -224,7 +225,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                                                                                             filter: .onlyMessage(types: rustMessageTypes),
                                                                                             internalIdPrefix: nil,
                                                                                             dateDividerMode: .monthly,
-                                                                                            trackReadReceipts: false,
+                                                                                            trackReadReceipts: .disabled,
                                                                                             reportUtds: true))
             
             let timeline = TimelineProxy(timeline: sdkTimeline, kind: .media(presentation))
@@ -255,7 +256,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                                                                                                     filter: .all,
                                                                                                     internalIdPrefix: nil,
                                                                                                     dateDividerMode: .daily,
-                                                                                                    trackReadReceipts: false,
+                                                                                                    trackReadReceipts: .disabled,
                                                                                                     reportUtds: true))
                     
                     let timeline = TimelineProxy(timeline: sdkTimeline, kind: .pinned)
@@ -758,7 +759,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     // MARK: - Private
     
     private func subscribeToTypingNotifications() {
-        typingNotificationObservationToken = room.subscribeToTypingNotifications(listener: RoomTypingNotificationUpdateListener { [weak self] typingUserIDs in
+        typingNotificationObservationToken = room.subscribeToTypingNotifications(listener: SDKListener { [weak self] typingUserIDs in
             guard let self else { return }
             
             MXLog.info("Received typing notification update, typingUsers: \(typingUserIDs)")
@@ -777,7 +778,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     private func subscribeToIdentityStatusChanges() async {
         do {
-            identityStatusChangesObservationToken = try await room.subscribeToIdentityStatusChanges(listener: RoomIdentityStatusChangeListener { [weak self] changes in
+            identityStatusChangesObservationToken = try await room.subscribeToIdentityStatusChanges(listener: SDKListener { [weak self] changes in
                 guard let self else { return }
                 
                 MXLog.info("Received identity status changes: \(changes)")
@@ -791,7 +792,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     private func subscribeToKnockRequests() async {
         do {
-            knockRequestsChangesObservationToken = try await room.subscribeToKnockRequests(listener: RoomKnockRequestsListener { [weak self] requests in
+            knockRequestsChangesObservationToken = try await room.subscribeToKnockRequests(listener: SDKListener { [weak self] requests in
                 guard let self else { return }
                 
                 MXLog.info("Received requests to join update, requests id: \(requests.map(\.eventId))")
@@ -819,40 +820,4 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                                                    .policyRuleUser]
         return .exclude(eventTypes: stateEventFilters.map { FilterTimelineEventType.state(eventType: $0) })
     }()
-}
-
-private final class RoomTypingNotificationUpdateListener: TypingNotificationsListener {
-    private let onUpdateClosure: ([String]) -> Void
-    
-    init(_ onUpdateClosure: @escaping ([String]) -> Void) {
-        self.onUpdateClosure = onUpdateClosure
-    }
-    
-    func call(typingUserIds: [String]) {
-        onUpdateClosure(typingUserIds)
-    }
-}
-
-private final class RoomIdentityStatusChangeListener: IdentityStatusChangeListener {
-    private let onUpdateClosure: ([IdentityStatusChange]) -> Void
-    
-    init(_ onUpdateClosure: @escaping ([IdentityStatusChange]) -> Void) {
-        self.onUpdateClosure = onUpdateClosure
-    }
-    
-    func call(identityStatusChange: [IdentityStatusChange]) {
-        onUpdateClosure(identityStatusChange)
-    }
-}
-
-private final class RoomKnockRequestsListener: KnockRequestsListener {
-    private let onUpdateClosure: ([KnockRequest]) -> Void
-    
-    init(_ onUpdateClosure: @escaping ([KnockRequest]) -> Void) {
-        self.onUpdateClosure = onUpdateClosure
-    }
-    
-    func call(joinRequests: [KnockRequest]) {
-        onUpdateClosure(joinRequests)
-    }
 }

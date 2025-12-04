@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -33,8 +34,10 @@ class RoomDetailsEditScreenViewModel: RoomDetailsEditScreenViewModelType, RoomDe
         let roomAvatar = roomProxy.infoPublisher.value.avatarURL
         let roomName = roomProxy.infoPublisher.value.displayName
         let roomTopic = roomProxy.infoPublisher.value.topic
+        let isSpace = roomProxy.infoPublisher.value.isSpace
         
         super.init(initialViewState: RoomDetailsEditScreenViewState(roomID: roomProxy.id,
+                                                                    isSpace: isSpace,
                                                                     initialAvatarURL: roomAvatar,
                                                                     initialName: roomName ?? "",
                                                                     initialTopic: roomTopic ?? "",
@@ -57,9 +60,9 @@ class RoomDetailsEditScreenViewModel: RoomDetailsEditScreenViewModelType, RoomDe
     override func process(viewAction: RoomDetailsEditScreenViewAction) {
         switch viewAction {
         case .cancel:
-            actionsSubject.send(.cancel)
+            cancel()
         case .save:
-            saveRoomDetails()
+            Task { await saveRoomDetails() }
         case .presentMediaSource:
             state.bindings.showMediaSheet = true
         case .displayCameraPicker:
@@ -107,50 +110,60 @@ class RoomDetailsEditScreenViewModel: RoomDetailsEditScreenViewModelType, RoomDe
         }
     }
     
-    private func saveRoomDetails() {
-        Task {
-            let userIndicatorID = UUID().uuidString
-            defer {
-                userIndicatorController.retractIndicatorWithId(userIndicatorID)
-            }
-            userIndicatorController.submitIndicator(UserIndicator(id: userIndicatorID,
-                                                                  type: .modal(progress: .indeterminate, interactiveDismissDisabled: true, allowsInteraction: false),
-                                                                  title: L10n.screenRoomDetailsUpdatingRoom,
-                                                                  persistent: true))
-            
-            do {
-                try await withThrowingTaskGroup(of: Void.self) { group in
-                    if state.avatarDidChange {
-                        group.addTask {
-                            if let localMedia = await self.state.localMedia {
-                                try await self.roomProxy.uploadAvatar(media: localMedia).get()
-                            } else if await self.state.avatarURL == nil {
-                                try await self.roomProxy.removeAvatar().get()
-                            }
+    private func cancel() {
+        if state.canSave {
+            state.bindings.alertInfo = .init(id: .unsavedChanges,
+                                             title: L10n.dialogUnsavedChangesTitle,
+                                             message: L10n.dialogUnsavedChangesDescription,
+                                             primaryButton: .init(title: L10n.actionSave) { Task { await self.saveRoomDetails() } },
+                                             secondaryButton: .init(title: L10n.actionDiscard, role: .cancel) { self.actionsSubject.send(.cancel) })
+        } else {
+            actionsSubject.send(.cancel)
+        }
+    }
+    
+    private func saveRoomDetails() async {
+        let userIndicatorID = UUID().uuidString
+        defer {
+            userIndicatorController.retractIndicatorWithId(userIndicatorID)
+        }
+        userIndicatorController.submitIndicator(UserIndicator(id: userIndicatorID,
+                                                              type: .modal(progress: .indeterminate, interactiveDismissDisabled: true, allowsInteraction: false),
+                                                              title: L10n.screenRoomDetailsUpdatingRoom,
+                                                              persistent: true))
+        
+        do {
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                if state.avatarDidChange {
+                    group.addTask {
+                        if let localMedia = await self.state.localMedia {
+                            try await self.roomProxy.uploadAvatar(media: localMedia).get()
+                        } else if await self.state.avatarURL == nil {
+                            try await self.roomProxy.removeAvatar().get()
                         }
                     }
-                    
-                    if state.nameDidChange {
-                        group.addTask {
-                            try await self.roomProxy.setName(self.state.bindings.name).get()
-                        }
-                    }
-                    
-                    if state.topicDidChange {
-                        group.addTask {
-                            try await self.roomProxy.setTopic(self.state.bindings.topic).get()
-                        }
-                    }
-                    
-                    try await group.waitForAll()
                 }
                 
-                actionsSubject.send(.saveFinished)
-            } catch {
-                userIndicatorController.alertInfo = .init(id: .init(),
-                                                          title: L10n.screenRoomDetailsEditionErrorTitle,
-                                                          message: L10n.screenRoomDetailsEditionError)
+                if state.nameDidChange {
+                    group.addTask {
+                        try await self.roomProxy.setName(self.state.bindings.name).get()
+                    }
+                }
+                
+                if state.topicDidChange {
+                    group.addTask {
+                        try await self.roomProxy.setTopic(self.state.bindings.topic).get()
+                    }
+                }
+                
+                try await group.waitForAll()
             }
+            
+            actionsSubject.send(.saveFinished)
+        } catch {
+            userIndicatorController.alertInfo = .init(id: .init(),
+                                                      title: L10n.screenRoomDetailsEditionErrorTitle,
+                                                      message: L10n.screenRoomDetailsEditionError)
         }
     }
 }

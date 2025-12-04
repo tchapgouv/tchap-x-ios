@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -24,11 +25,21 @@ extension RoomFlowCoordinator {
     enum PresentationAction: Hashable {
         case eventFocus(FocusEvent)
         case share(ShareExtensionPayload)
+        case thread(rootEventID: String, focusEvent: FocusEvent?)
         
         var focusedEvent: FocusEvent? {
             switch self {
             case .eventFocus(let focusEvent):
                 focusEvent
+            case .thread(let rootEventID, let focusEvent):
+                // Since this enum is for the room and not the threaded timeline,
+                // we will focus the thread root event id, and not the event id itself
+                // which will be done at the thread presentation level
+                if let focusEvent {
+                    .init(eventID: rootEventID, shouldSetPin: focusEvent.shouldSetPin)
+                } else {
+                    nil
+                }
             default:
                 nil
             }
@@ -53,9 +64,6 @@ extension RoomFlowCoordinator {
         case roomDetailsEditScreen
         case notificationSettings
         case globalNotificationSettings
-        case roomMembersList
-        case roomMemberDetails(userID: String, previousState: State)
-        case userProfile(userID: String, previousState: State)
         case inviteUsersScreen(previousState: State)
         case mediaUploadPicker(mode: MediaPickerScreenMode, previousState: State)
         case mediaUploadPreview(mediaURLs: [URL], previousState: State)
@@ -72,6 +80,7 @@ extension RoomFlowCoordinator {
         case knockRequestsList(previousState: State)
         case mediaEventsTimeline(previousState: State)
         case securityAndPrivacy(previousState: State)
+        case manageAuthorizedSpacesScreen(previousState: State)
         case reportRoom(previousState: State)
         case declineAndBlockScreen
         
@@ -82,12 +91,15 @@ extension RoomFlowCoordinator {
         
         /// A space flow is in progress
         case spaceFlow(previousState: State)
+        /// A members flow is in progress
+        case membersFlow(previousState: State)
     }
     
     struct EventUserInfo {
         let animated: Bool
         var timelineController: TimelineControllerProtocol?
         var spaceRoomListProxy: SpaceRoomListProxyProtocol?
+        var authorizedSpacesSelection: AuthorizedSpacesSelection?
     }
 
     enum Event: EventType {
@@ -118,15 +130,6 @@ extension RoomFlowCoordinator {
         
         case presentGlobalNotificationSettingsScreen
         case dismissGlobalNotificationSettingsScreen
-        
-        case presentRoomMembersList
-        case dismissRoomMembersList
-        
-        case presentRoomMemberDetails(userID: String)
-        case dismissRoomMemberDetails
-        
-        case presentUserProfile(userID: String)
-        case dismissUserProfile
         
         case presentInviteUsersScreen
         case dismissInviteUsersScreen
@@ -173,11 +176,17 @@ extension RoomFlowCoordinator {
         case presentSecurityAndPrivacyScreen
         case dismissSecurityAndPrivacyScreen
         
+        case presentManageAuthorizedSpacesScreen
+        case dismissedManageAuthorizedSpacesScreen
+        
         case presentReportRoomScreen
         case dismissReportRoomScreen
         
         case presentDeclineAndBlockScreen(userID: String)
         case dismissDeclineAndBlockScreen
+        
+        case startMembersFlow(entryPoint: RoomMembersFlowCoordinatorEntryPoint)
+        case stopMembersFlow
     }
     
     // swiftlint:disable:next function_body_length
@@ -298,12 +307,15 @@ extension RoomFlowCoordinator {
             case (.roomDetailsEditScreen, .dismissRoomDetailsEditScreen):
                 return .roomDetails(isRoot: false)
                 
+<<<<<<< HEAD
             case (.roomDetails, .presentRoomMembersList):
                 return .roomMembersList
 
             case (.roomMembersList, .dismissRoomMembersList):
                 return .roomDetails(isRoot: false)
                 
+=======
+>>>>>>> release/25.12.0
             case (.roomDetails, .presentNotificationSettingsScreen):
                 return .notificationSettings
 
@@ -334,6 +346,11 @@ extension RoomFlowCoordinator {
             case (.securityAndPrivacy(let previousState), .dismissSecurityAndPrivacyScreen):
                 return previousState
                 
+            case (.securityAndPrivacy, .presentManageAuthorizedSpacesScreen):
+                return .manageAuthorizedSpacesScreen(previousState: fromState)
+            case (.manageAuthorizedSpacesScreen(let previousState), .dismissedManageAuthorizedSpacesScreen):
+                return previousState
+                
             case (.roomDetails, .presentReportRoomScreen):
                 return .reportRoom(previousState: fromState)
 
@@ -357,6 +374,11 @@ extension RoomFlowCoordinator {
                 return .joinRoomScreen
                 
             // Other
+                
+            case (_, .startMembersFlow):
+                return .membersFlow(previousState: fromState)
+            case (.membersFlow(let previousState), .stopMembersFlow):
+                return previousState
             
             case (_, .startChildFlow(let roomID, _, _)):
                 return .presentingChild(childRoomID: roomID, previousState: fromState)
@@ -368,12 +390,15 @@ extension RoomFlowCoordinator {
                 return .spaceFlow(previousState: previousState)
             case (.spaceFlow(let previousState), .finishedSpaceFlow):
                 return previousState
+<<<<<<< HEAD
                     
             case (_, .presentRoomMemberDetails(userID: let userID)):
                 return .roomMemberDetails(userID: userID, previousState: fromState)
 
             case (.roomMemberDetails(_, let previousState), .dismissRoomMemberDetails):
                 return previousState
+=======
+>>>>>>> release/25.12.0
                 
             case (_, .presentKnockRequestsListScreen):
                 return .knockRequestsList(previousState: fromState)
@@ -389,12 +414,15 @@ extension RoomFlowCoordinator {
 
             case (.globalNotificationSettings, .dismissGlobalNotificationSettingsScreen):
                 return .notificationSettings
+<<<<<<< HEAD
             
             case (.roomMemberDetails(_, let previousState), .presentUserProfile(let userID)):
                 return .userProfile(userID: userID, previousState: previousState)
 
             case (.userProfile(_, let previousState), .dismissUserProfile):
                 return previousState
+=======
+>>>>>>> release/25.12.0
                 
             case (.pollsHistory, .presentPollForm):
                 return .pollsHistoryForm

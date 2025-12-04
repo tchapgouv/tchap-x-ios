@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -111,7 +112,7 @@ class RoomMemberDetailsScreenViewModel: RoomMemberDetailsScreenViewModelType, Ro
             actionsSubject.send(.openUserProfile)
         }
         
-        if case let .success(.some(identity)) = await userSession.clientProxy.userIdentity(for: state.userID) {
+        if case let .success(.some(identity)) = await userSession.clientProxy.userIdentity(for: state.userID, fallBackToServer: true) {
             state.verificationState = identity.verificationState
         } else {
             MXLog.error("Failed to find the member's identity.")

@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -64,7 +65,7 @@ class StartChatScreenViewModel: StartChatScreenViewModelType, StartChatScreenVie
             switch currentDirectRoom {
             case .success(.some(let roomId)):
                 hideLoadingIndicator()
-                actionsSubject.send(.showRoom(withIdentifier: roomId))
+                actionsSubject.send(.showRoom(roomID: roomId))
             case .success:
                 hideLoadingIndicator()
                 state.bindings.selectedUserToInvite = user
@@ -189,7 +190,7 @@ class StartChatScreenViewModel: StartChatScreenViewModelType, StartChatScreenVie
         switch await userSession.clientProxy.createDirectRoom(with: user.userID, expectedRoomName: user.displayName) {
         case .success(let roomId):
             analytics.trackCreatedRoom(isDM: true)
-            actionsSubject.send(.showRoom(withIdentifier: roomId))
+            actionsSubject.send(.showRoom(roomID: roomId))
         case .failure:
             displayError()
         }
@@ -204,7 +205,7 @@ class StartChatScreenViewModel: StartChatScreenViewModelType, StartChatScreenVie
     private func joinRoomByAddress() {
         if case let .addressFound(lastTestedAddress, roomID) = internalRoomAddressState,
            lastTestedAddress == state.bindings.roomAddress {
-            actionsSubject.send(.showRoom(withIdentifier: roomID))
+            actionsSubject.send(.showRoom(roomID: roomID))
         } else if let resolveAliasTask {
             // If the task is still running we wait for it to complete and we check the state again
             showLoadingIndicator(delay: .milliseconds(250))
