@@ -91,6 +91,10 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "ComposerToolbar_Previews")
     }
 
+    func testCopyTextButton() async throws {
+        try await performAccessibilityAudit(named: "CopyTextButton_Previews")
+    }
+
     func testCreateRoom() async throws {
         try await performAccessibilityAudit(named: "CreateRoom_Previews")
     }
@@ -293,6 +297,10 @@ extension AccessibilityTests {
 
     func testLongPressWithFeedback() async throws {
         try await performAccessibilityAudit(named: "LongPressWithFeedback_Previews")
+    }
+
+    func testManageAuthorizedSpacesScreen() async throws {
+        try await performAccessibilityAudit(named: "ManageAuthorizedSpacesScreen_Previews")
     }
 
     func testManageRoomMemberSheetView() async throws {
@@ -631,6 +639,10 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "SpaceScreen_Previews")
     }
 
+    func testSpaceSettingsScreen() async throws {
+        try await performAccessibilityAudit(named: "SpaceSettingsScreen_Previews")
+    }
+
     func testSpacesAnnouncementSheetView() async throws {
         try await performAccessibilityAudit(named: "SpacesAnnouncementSheetView_Previews")
     }
@@ -733,6 +745,10 @@ extension AccessibilityTests {
 
     func testTombstonedAvatarImage() async throws {
         try await performAccessibilityAudit(named: "TombstonedAvatarImage_Previews")
+    }
+
+    func testToolbarButton() async throws {
+        try await performAccessibilityAudit(named: "ToolbarButton_Previews")
     }
 
     func testTypingIndicatorView() async throws {

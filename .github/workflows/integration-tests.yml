@@ -9,7 +9,8 @@ on:
 jobs:
   integration_tests:
     name: Integration Tests
-    runs-on: macos-15
+    runs-on: macos-26
+    timeout-minutes: 45
 
     concurrency:
       # Only allow a single run of this workflow on each branch, automatically cancelling older runs.
@@ -17,7 +18,7 @@ jobs:
       cancel-in-progress: false
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/cache@v4
         with:
@@ -52,7 +53,7 @@ jobs:
         run: zip -r IntegrationTests.xcresult.zip IntegrationTests.xcresult
       
       - name: Archive artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: Results
@@ -61,7 +62,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Archive raw log file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: raw.log

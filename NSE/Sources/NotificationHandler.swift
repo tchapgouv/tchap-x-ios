@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -124,10 +125,11 @@ class NotificationHandler {
                 }
                 
                 return .processedShouldDiscard
-            case .rtcNotification(let notificationType, _):
+            case .rtcNotification(let notificationType, let expirationTimestamp):
                 return await handleCallNotification(notificationType: notificationType,
                                                     rtcNotifyEventID: event.eventId(),
                                                     timestamp: event.timestamp(),
+                                                    expirationTimestamp: expirationTimestamp,
                                                     roomID: itemProxy.roomID,
                                                     roomDisplayName: itemProxy.roomDisplayName)
             case .callAnswer,
@@ -156,6 +158,7 @@ class NotificationHandler {
     private func handleCallNotification(notificationType: RtcNotificationType,
                                         rtcNotifyEventID: String,
                                         timestamp: Timestamp,
+                                        expirationTimestamp: Timestamp,
                                         roomID: String,
                                         roomDisplayName: String) async -> NotificationProcessingResult {
         // Handle incoming VoIP calls, show the native OS call screen
@@ -207,9 +210,11 @@ class NotificationHandler {
             }
         }
         
+        let expirationDate = Date(timeIntervalSince1970: TimeInterval(expirationTimestamp / 1000))
         let payload = [ElementCallServiceNotificationKey.roomID.rawValue: roomID,
                        ElementCallServiceNotificationKey.roomDisplayName.rawValue: roomDisplayName,
-                       ElementCallServiceNotificationKey.rtcNotifyEventID.rawValue: rtcNotifyEventID]
+                       ElementCallServiceNotificationKey.expirationDate.rawValue: expirationDate,
+                       ElementCallServiceNotificationKey.rtcNotifyEventID.rawValue: rtcNotifyEventID] as [String: Any]
         
         do {
             try await CXProvider.reportNewIncomingVoIPPushPayload(payload)

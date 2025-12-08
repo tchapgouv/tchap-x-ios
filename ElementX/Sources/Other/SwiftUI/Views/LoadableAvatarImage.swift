@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -10,7 +11,7 @@ import SwiftUI
 struct LoadableAvatarImage: View {
     private let url: URL?
     private let name: String?
-    private let contentID: String?
+    private let contentID: String
     private let isSpace: Bool
     private let avatarSize: Avatars.Size
     private let mediaProvider: MediaProviderProtocol?
@@ -20,7 +21,7 @@ struct LoadableAvatarImage: View {
     
     init(url: URL?,
          name: String?,
-         contentID: String?,
+         contentID: String,
          isSpace: Bool = false,
          avatarSize: Avatars.Size,
          mediaProvider: MediaProviderProtocol?,
@@ -53,12 +54,8 @@ struct LoadableAvatarImage: View {
         avatar
             .frame(width: frameSize, height: frameSize)
             .background(Color.compound.bgCanvasDefault)
-            .clipShape(avatarShape)
+            .clipAvatar(isSpace: isSpace, scaledSize: _frameSize)
             .environment(\.shouldAutomaticallyLoadImages, true) // We always load avatars.
-    }
-    
-    private var avatarShape: some Shape {
-        isSpace ? AnyShape(RoundedRectangle(cornerRadius: frameSize / 4)) : AnyShape(Circle())
     }
     
     @ViewBuilder
@@ -76,5 +73,39 @@ struct LoadableAvatarImage: View {
         } else {
             PlaceholderAvatarImage(name: name, contentID: contentID)
         }
+    }
+}
+
+extension View {
+    func clipAvatar(isSpace: Bool, size: CGFloat) -> some View {
+        modifier(ClipAvatarModifier(isSpace: isSpace, size: size))
+    }
+    
+    func clipAvatar(isSpace: Bool, scaledSize: ScaledMetric<CGFloat>) -> some View {
+        modifier(ClipAvatarModifier(isSpace: isSpace, scaledSize: scaledSize))
+    }
+}
+
+struct ClipAvatarModifier: ViewModifier {
+    private let isSpace: Bool
+    @ScaledMetric private var scaledSize: CGFloat
+    
+    init(isSpace: Bool, size: CGFloat) {
+        self.isSpace = isSpace
+        _scaledSize = ScaledMetric(wrappedValue: size)
+    }
+    
+    init(isSpace: Bool, scaledSize: ScaledMetric<CGFloat>) {
+        self.isSpace = isSpace
+        _scaledSize = scaledSize
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            .clipShape(avatarShape)
+    }
+    
+    private var avatarShape: some Shape {
+        isSpace ? AnyShape(RoundedRectangle(cornerRadius: scaledSize / 4)) : AnyShape(Circle())
     }
 }

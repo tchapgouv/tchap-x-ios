@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -27,11 +28,10 @@ enum PinnedEventsTimelineScreenCoordinatorAction {
     case displayUser(userID: String)
     case presentLocationViewer(geoURI: GeoURI, description: String?)
     case displayMessageForwarding(forwardingItem: MessageForwardingItem)
-    case displayRoomScreenWithFocussedPin(eventID: String)
+    case displayRoomScreenWithFocussedPin(eventID: String, threadRootEventID: String?)
 }
 
 final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
-    private let parameters: PinnedEventsTimelineScreenCoordinatorParameters
     private let viewModel: PinnedEventsTimelineScreenViewModelProtocol
     private let timelineViewModel: TimelineViewModelProtocol
     
@@ -43,9 +43,10 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
     }
     
     init(parameters: PinnedEventsTimelineScreenCoordinatorParameters) {
-        self.parameters = parameters
-        
-        viewModel = PinnedEventsTimelineScreenViewModel(analyticsService: parameters.analytics)
+        viewModel = PinnedEventsTimelineScreenViewModel(roomProxy: parameters.roomProxy,
+                                                        userIndicatorController: parameters.userIndicatorController,
+                                                        appSettings: parameters.appSettings,
+                                                        analyticsService: parameters.analytics)
         timelineViewModel = TimelineViewModel(roomProxy: parameters.roomProxy,
                                               timelineController: parameters.timelineController,
                                               userSession: parameters.userSession,
@@ -67,9 +68,8 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
             switch action {
             case .displayMessageForwarding(let forwardingItem):
                 actionsSubject.send(.displayMessageForwarding(forwardingItem: forwardingItem))
-            case .viewInRoomTimeline(let itemID):
-                guard let eventID = itemID.eventID else { fatalError("A pinned event must have an event ID.") }
-                actionsSubject.send(.displayRoomScreenWithFocussedPin(eventID: eventID))
+            case .viewInRoomTimeline(let eventID, let threadRootEventID):
+                actionsSubject.send(.displayRoomScreenWithFocussedPin(eventID: eventID, threadRootEventID: threadRootEventID))
             case .dismiss:
                 self.actionsSubject.send(.dismiss)
             }
@@ -89,8 +89,8 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
                 viewModel.displayMediaPreview(mediaPreviewViewModel)
             case .displayLocation(_, let geoURI, let description):
                 actionsSubject.send(.presentLocationViewer(geoURI: geoURI, description: description))
-            case .viewInRoomTimeline(let eventID):
-                actionsSubject.send(.displayRoomScreenWithFocussedPin(eventID: eventID))
+            case .viewInRoomTimeline(let eventID, let threadRootEventID):
+                actionsSubject.send(.displayRoomScreenWithFocussedPin(eventID: eventID, threadRootEventID: threadRootEventID))
             // These other actions will not be handled in this view
             case .displayEmojiPicker, .displayReportContent, .displayCameraPicker, .displayMediaPicker,
                  .displayDocumentPicker, .displayLocationPicker, .displayPollForm, .displayMediaUploadPreviewScreen,

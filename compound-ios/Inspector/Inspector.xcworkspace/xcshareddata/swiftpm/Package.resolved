@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/element-hq/compound-design-tokens.git",
       "state" : {
-        "revision" : "be5d26dfd4ad659b0d3b3aec1ad1cccd0dc8d063",
-        "version" : "6.0.0"
+        "revision" : "bd38d61c1af0b7a786f3a7d4bf1d0afa3da86870",
+        "version" : "6.4.2"
       }
     },
     {
@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SFSafeSymbols/SFSafeSymbols.git",
       "state" : {
-        "revision" : "3dd282d3269b061853a3b3bcd23a509d2aa166ce",
-        "version" : "6.2.0"
+        "revision" : "e01b3d4f861412f8dcee8d93c417d2c2b0cdfd77",
+        "version" : "7.0.0"
       }
     },
     {

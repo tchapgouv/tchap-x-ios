@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -33,9 +34,13 @@ struct DeveloperOptionsScreen: View {
             }
             
             Section("General") {
-                Toggle(isOn: $context.nextGenHTMLParserEnabled) {
-                    Text("Next gen HTML parsing")
+                Toggle(isOn: $context.spaceSettingsEnabled) {
+                    Text("Space settings")
                 }
+                
+                context.viewState.appHooks
+                    .developerOptionsScreenHook
+                    .generalSectionRows()
             }
             
             Section("Room List") {
@@ -53,11 +58,6 @@ struct DeveloperOptionsScreen: View {
                 
                 Toggle(isOn: $context.lowPriorityFilterEnabled) {
                     Text("Low priority filter")
-                }
-                
-                Toggle(isOn: $context.latestEventSorterEnabled) {
-                    Text("Latest event sorter")
-                    Text("Requires app reboot")
                 }
             }
             
@@ -120,6 +120,9 @@ struct DeveloperOptionsScreen: View {
                     Text("Hide quiet alerts")
                     Text("The badge count will still be updated")
                 }
+                Toggle(isOn: $context.focusEventOnNotificationTap) {
+                    Text("Focus event on notification tap")
+                }
             }
             
             Section {
@@ -142,7 +145,6 @@ struct DeveloperOptionsScreen: View {
             }
         }
         .overlay(effectsView)
-        .compoundList()
         .navigationTitle(L10n.commonDeveloperOptions)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -201,7 +203,8 @@ private extension Set<TraceLogPack> {
 
 struct DeveloperOptionsScreen_Previews: PreviewProvider {
     static let viewModel = DeveloperOptionsScreenViewModel(developerOptions: ServiceLocator.shared.settings,
-                                                           elementCallBaseURL: ServiceLocator.shared.settings.elementCallBaseURL)
+                                                           elementCallBaseURL: ServiceLocator.shared.settings.elementCallBaseURL,
+                                                           appHooks: AppHooks())
     static var previews: some View {
         NavigationStack {
             DeveloperOptionsScreen(context: viewModel.context)

@@ -71,6 +71,10 @@ internal enum TchapL10n {
   internal static var screenCreateRoomRoomVisibilitySectionTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_visibility_section_title") }
   /// Members
   internal static var screenCreateRoomSelectedUsersLabel: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_selected_users_label") }
+  /// Instant messaging of public sector
+  internal static var screenLoginDescriptionWithTchap: String { return TchapL10n.tr("TchapLocalizable", "screen_login_description_with_tchap") }
+  /// Sign in to Tchap
+  internal static var screenLoginTitleWithTchap: String { return TchapL10n.tr("TchapLocalizable", "screen_login_title_with_tchap") }
   /// The civil servants instant messaging system
   internal static var screenOnboardingWelcomeMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_message") }
   /// or

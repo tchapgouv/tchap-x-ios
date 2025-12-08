@@ -11,7 +11,7 @@ options:
   groupSortPosition: bottom
   createIntermediateGroups: true
   deploymentTarget:
-    iOS: '17.5'
+    iOS: '18.5'
     macOS: '14.5'
   groupOrdering:
   - order:
@@ -41,6 +41,9 @@ options:
     - Other
     - UITests
     - AccessibilityTests
+  fileTypes:
+    icon:
+      file: true # https://github.com/yonaskolb/XcodeGen/issues/1556
   postGenCommand: cd Tools/XcodeGen && sh postGenCommand.sh
 
 settings:
@@ -48,7 +51,7 @@ settings:
   ENABLE_BITCODE: false
   APP_NAME: ElementX
   KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).$(BASE_BUNDLE_IDENTIFIER)"
-  MARKETING_VERSION: 25.10.0
+  MARKETING_VERSION: 25.12.0
   CURRENT_PROJECT_VERSION: 1
   SUPPORTS_MACCATALYST: false
 
@@ -69,8 +72,8 @@ packages:
   MatrixRustSDK:
 #    url: https://github.com/element-hq/matrix-rust-components-swift
 #    exactVersion: 25.03.13
-    url: https://github.com/tchapgouv/matrix-rust-components-swift
-    exactVersion: 25.06.1-bwi-main
+#    url: https://github.com/tchapgouv/matrix-rust-components-swift
+#    exactVersion: 25.06.1-bwi-main
     path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
   Compound:
     path: compound-ios
@@ -101,6 +104,9 @@ packages:
   AsyncAlgorithms:
     url: https://github.com/apple/swift-async-algorithms
     minorVersion: 1.0.0
+  Clocks:
+    url: https://github.com/pointfreeco/swift-clocks
+    from: 1.0.6
   Collections:
     url: https://github.com/apple/swift-collections
     minorVersion: 1.2.0
@@ -110,9 +116,9 @@ packages:
   DSWaveformImage:
     url: https://github.com/dmrschmidt/DSWaveformImage
     exactVersion: 14.1.1
-  DTCoreText:
-    url: https://github.com/Cocoanetics/DTCoreText
-    exactVersion: 1.6.26
+  Dynamic:
+    url: https://github.com/mhdhejazi/Dynamic
+    exactVersion: 1.2.0
   GZIP:
     url: https://github.com/nicklockwood/GZIP
     minorVersion: 1.3.2

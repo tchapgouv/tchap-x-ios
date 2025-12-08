@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -95,6 +96,32 @@ extension [SpaceRoomProxyProtocol] {
                                      isSpace: true,
                                      childrenCount: 15,
                                      joinedMembersCount: 300_000,
+                                     state: .joined))
+        ]
+    }
+    
+    static var mockJoinedSpaces2: [SpaceRoomProxyMock] {
+        [
+            SpaceRoomProxyMock(.init(id: "space1",
+                                     name: "The Foundation",
+                                     avatarURL: .mockMXCAvatar,
+                                     isSpace: true,
+                                     childrenCount: 1,
+                                     joinedMembersCount: 500,
+                                     canonicalAlias: "#the-foundation:matrix.org",
+                                     state: .joined)),
+            SpaceRoomProxyMock(.init(id: "space2",
+                                     name: "The Second Foundation",
+                                     isSpace: true,
+                                     childrenCount: 1,
+                                     joinedMembersCount: 100,
+                                     state: .joined)),
+            SpaceRoomProxyMock(.init(id: "space3",
+                                     name: "The Galactic Empire",
+                                     isSpace: true,
+                                     childrenCount: 25000,
+                                     joinedMembersCount: 1_000_000_000,
+                                     canonicalAlias: "#the-galactic-empire:matrix.org",
                                      state: .joined))
         ]
     }

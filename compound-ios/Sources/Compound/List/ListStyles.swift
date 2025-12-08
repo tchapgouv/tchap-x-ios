@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -17,7 +18,7 @@ public extension View {
     
     /// Styles a list section header using the Compound design tokens.
     func compoundListSectionHeader() -> some View {
-        font(.compound.bodySM)
+        font(headerFont)
             .foregroundColor(.compound.textSecondary)
             .listRowInsets(EdgeInsets(top: 15,
                                       leading: ListRowPadding.horizontal,
@@ -33,6 +34,16 @@ public extension View {
                                       leading: ListRowPadding.horizontal,
                                       bottom: 10,
                                       trailing: ListRowPadding.horizontal))
+    }
+    
+    // MARK: - Private
+    
+    private var headerFont: Font {
+        if #available(iOS 26.0, *) {
+            .compound.bodyMDSemibold
+        } else {
+            .compound.bodySM
+        }
     }
 }
 

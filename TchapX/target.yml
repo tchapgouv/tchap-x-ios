@@ -191,7 +191,6 @@ targetTemplates:
     - package: AnalyticsEvents
     - package: Collections
     - package: DeviceKit
-    - package: DTCoreText
     - package: EmbeddedElementCall
     - package: KeychainAccess
     - package: Kingfisher
@@ -228,6 +227,14 @@ targetTemplates:
     - path: ../ElementX/Resources
     - path: ../ElementX/SupportingFiles/Settings.bundle
     - path: ../Tools/Scripts/Templates/SimpleScreenExample/ElementX
+
+    # This is required for testing purposes... The problem with unit tests is that if you
+    # try to `@testable import NSE` you can only get the definition of files, but due to a
+    # limitation in how they work, they can only compile files that are part of the main test
+    # target, so linking will fail. The solution is to just have the main app to reference the
+    # extension code, and test it directly.
+    - path: ../NSE/Sources
+
 #--------------------------------------------------------------------------------
 targets:
 #--------------------------------------------------------------------------------

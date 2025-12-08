@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -63,6 +64,7 @@ extension RoomPowerLevelsValues {
                               usersDefault: 0,
                               roomName: 50,
                               roomAvatar: 50,
-                              roomTopic: 50)
+                              roomTopic: 50,
+                              spaceChild: 50)
     }
 }

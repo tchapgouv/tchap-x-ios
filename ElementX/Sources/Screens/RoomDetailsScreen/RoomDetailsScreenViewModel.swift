@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -168,6 +169,11 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
     // MARK: - Private
     
     private func processTapToLeave() {
+        guard !roomProxy.infoPublisher.value.isSpace else {
+            Task { await processLeaveSpace() }
+            return
+        }
+        
         guard state.joinedMembersCount > 1 else {
             state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomProxy.id,
                                                                    isDM: roomProxy.isDirectOneToOneRoom,
@@ -177,7 +183,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         
         if !roomProxy.isDirectOneToOneRoom, state.accountOwner?.role.isOwner == true {
             var isLastOwner = true
-            for member in roomProxy.membersPublisher.value where member.userID != roomProxy.ownUserID {
+            for member in roomProxy.membersPublisher.value where member.userID != roomProxy.ownUserID && member.membership == .join {
                 if member.role.isOwner {
                     isLastOwner = false
                     break
@@ -199,6 +205,35 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomProxy.id,
                                                                isDM: roomProxy.isDirectOneToOneRoom,
                                                                state: roomProxy.infoPublisher.value.isPrivate ?? true ? .private : .public)
+    }
+    
+    private func processLeaveSpace() async {
+        switch await userSession.clientProxy.spaceService.leaveSpace(spaceID: roomProxy.id) {
+        case .success(let leaveHandle):
+            let leaveSpaceViewModel = LeaveSpaceViewModel(spaceName: state.details.name ?? state.details.id,
+                                                          canEditRolesAndPermissions: state.canEditRolesOrPermissions,
+                                                          leaveHandle: leaveHandle,
+                                                          userIndicatorController: userIndicatorController,
+                                                          mediaProvider: userSession.mediaProvider)
+            leaveSpaceViewModel.actions.sink { [weak self] action in
+                guard let self else { return }
+                switch action {
+                case .didCancel:
+                    state.bindings.leaveSpaceViewModel = nil
+                case .presentRolesAndPermissions:
+                    state.bindings.leaveSpaceViewModel = nil
+                    actionsSubject.send(.requestRolesAndPermissionsPresentation)
+                case .didLeaveSpace:
+                    state.bindings.leaveSpaceViewModel = nil
+                    actionsSubject.send(.leftRoom)
+                }
+            }
+            .store(in: &cancellables)
+            
+            state.bindings.leaveSpaceViewModel = leaveSpaceViewModel
+        case .failure:
+            userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
+        }
     }
     
     private func setupRoomSubscription() {
@@ -258,6 +293,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
 //            state.canBanUsers = powerLevels.canOwnUserBan()
 //            state.canJoinCall = powerLevels.canOwnUserJoinCall()
 //            state.canEditRolesOrPermissions = powerLevels.canOwnUserEditRolesAndPermissions()
+//            state.canEditSecurityAndPrivacy = powerLevels.canOwnUserEditSecurityAndPrivacy()
             if MatrixIdFromString(userSession.clientProxy.userID).isExternalTchapUser {
                 state.canEditRoomName = false
                 state.canEditRoomTopic = false
@@ -267,6 +303,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 state.canBanUsers = false
                 state.canJoinCall = powerLevels.canOwnUserJoinCall()
                 state.canEditRolesOrPermissions = false
+                state.canEditSecurityAndPrivacy = false
             } else {
                 state.canEditRoomName = powerLevels.canOwnUser(sendStateEvent: .roomName)
                 state.canEditRoomTopic = powerLevels.canOwnUser(sendStateEvent: .roomTopic)
@@ -276,6 +313,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 state.canBanUsers = powerLevels.canOwnUserBan()
                 state.canJoinCall = powerLevels.canOwnUserJoinCall()
                 state.canEditRolesOrPermissions = powerLevels.canOwnUserEditRolesAndPermissions()
+                state.canEditSecurityAndPrivacy = powerLevels.canOwnUserEditSecurityAndPrivacy()
             }
         }
     }
@@ -312,14 +350,14 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         
         if roomProxy.isDirectOneToOneRoom {
             if var dmRecipientInfo = state.dmRecipientInfo {
-                if case let .success(userIdentity) = await userSession.clientProxy.userIdentity(for: dmRecipientInfo.member.id) {
+                if case let .success(userIdentity) = await userSession.clientProxy.userIdentity(for: dmRecipientInfo.member.id, fallBackToServer: true) {
                     dmRecipientInfo.verificationState = userIdentity?.verificationState
                     state.dmRecipientInfo = dmRecipientInfo
                 }
             }
         } else {
             for member in roomProxy.membersPublisher.value {
-                if case let .success(userIdentity) = await userSession.clientProxy.userIdentity(for: member.userID) {
+                if case let .success(userIdentity) = await userSession.clientProxy.userIdentity(for: member.userID, fallBackToServer: false) {
                     if userIdentity?.verificationState == .verificationViolation {
                         state.hasMemberIdentityVerificationStateViolations = true
                         return

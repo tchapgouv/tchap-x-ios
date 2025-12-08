@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -177,9 +178,8 @@ class AuthenticationService: AuthenticationServiceProtocol {
         
         do {
             let client = try await makeClient(homeserverAddress: scannedServerName)
-            try await client.loginWithQrCode(qrCodeData: qrData,
-                                             oidcConfiguration: appSettings.oidcConfiguration.rustValue,
-                                             progressListener: listener)
+            let qrCodeHandler = client.newLoginWithQrCodeHandler(oidcConfiguration: appSettings.oidcConfiguration.rustValue)
+            try await qrCodeHandler.scan(qrCodeData: qrData, progressListener: listener)
             return await userSession(for: client)
         } catch let error as HumanQrLoginError {
             MXLog.error("QRCode login error: \(error)")
@@ -248,7 +248,7 @@ private extension HumanQrLoginError {
             .qrCodeError(.deviceNotSupported)
         case .OtherDeviceNotSignedIn:
             .qrCodeError(.deviceNotSignedIn)
-        case .Unknown, .OidcMetadataInvalid:
+        case .Unknown, .NotFound, .OidcMetadataInvalid, .CheckCodeAlreadySent, .CheckCodeCannotBeSent:
             .qrCodeError(.unknown)
         }
     }

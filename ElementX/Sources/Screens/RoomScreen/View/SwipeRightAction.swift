@@ -1,5 +1,6 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -50,59 +51,52 @@ struct SwipeRightAction<Label: View>: ViewModifier {
     
     @ViewBuilder
     private func mainContent(content: Content) -> some View {
-        if #available(iOS 18, *) {
-            content
-                .offset(x: xOffset, y: 0.0)
-                .animation(.interactiveSpring().speed(0.5), value: xOffset)
-                .gesture(PanGesture { gesture in
-                    switch gesture.state {
-                    case .ended, .cancelled, .failed:
-                        if xOffset > actionThreshold {
-                            action()
-                        }
-                        
-                        xOffset = 0.0
-                    default:
-                        guard shouldStartAction() else {
-                            return
-                        }
-                        let translation = gesture.translation(in: nil)
-                        
-                        // Due to https://forums.developer.apple.com/forums/thread/760035 we had to make
-                        // the drag a simultaneous gesture otherwise it was impossible to scroll the timeline.
-                        // Therefore we need to prevent the animation to run if the user is to scrolling vertically.
-                        // It would be nice if we could somehow abort the gesture in this case.
-                        let width: CGFloat = if translation.x > abs(translation.y) {
-                            translation.x
-                        } else {
-                            0.0
-                        }
-                        
-                        // We want to add a spring like behaviour to the drag in which the view
-                        // moves slower the more it's dragged. We use a circular easing function
-                        // to generate those values up to the `swipeThreshold`
-                        // The final translation will be between 0 and `swipeThreshold` with the action being enabled from
-                        // `actionThreshold` onwards
-                        let screenWidthNormalisedTranslation = max(0.0, min(width, swipeThreshold)) / swipeThreshold
-                        let easedTranslation = circularEaseOut(screenWidthNormalisedTranslation)
-                        xOffset = easedTranslation * xOffsetThreshold
-                        
-                        if xOffset > actionThreshold {
-                            if !hasReachedActionThreshold {
-                                feedbackGenerator.impactOccurred()
-                                hasReachedActionThreshold = true
-                            }
-                        } else {
-                            hasReachedActionThreshold = false
-                        }
+        content
+            .offset(x: xOffset, y: 0.0)
+            .animation(.interactiveSpring().speed(0.5), value: xOffset)
+            .gesture(PanGestureRepresentable { gesture in
+                switch gesture.state {
+                case .ended, .cancelled, .failed:
+                    if xOffset > actionThreshold {
+                        action()
                     }
-                })
-        } else {
-            content
-                .offset(x: xOffset, y: 0.0)
-                .animation(.interactiveSpring().speed(0.5), value: xOffset)
-                .gesture(oldGesture)
-        }
+                    
+                    xOffset = 0.0
+                default:
+                    guard shouldStartAction() else {
+                        return
+                    }
+                    let translation = gesture.translation(in: nil)
+                    
+                    // Due to https://forums.developer.apple.com/forums/thread/760035 we had to make
+                    // the drag a simultaneous gesture otherwise it was impossible to scroll the timeline.
+                    // Therefore we need to prevent the animation to run if the user is to scrolling vertically.
+                    // It would be nice if we could somehow abort the gesture in this case.
+                    let width: CGFloat = if translation.x > abs(translation.y) {
+                        translation.x
+                    } else {
+                        0.0
+                    }
+                    
+                    // We want to add a spring like behaviour to the drag in which the view
+                    // moves slower the more it's dragged. We use a circular easing function
+                    // to generate those values up to the `swipeThreshold`
+                    // The final translation will be between 0 and `swipeThreshold` with the action being enabled from
+                    // `actionThreshold` onwards
+                    let screenWidthNormalisedTranslation = max(0.0, min(width, swipeThreshold)) / swipeThreshold
+                    let easedTranslation = circularEaseOut(screenWidthNormalisedTranslation)
+                    xOffset = easedTranslation * xOffsetThreshold
+                    
+                    if xOffset > actionThreshold {
+                        if !hasReachedActionThreshold {
+                            feedbackGenerator.impactOccurred()
+                            hasReachedActionThreshold = true
+                        }
+                    } else {
+                        hasReachedActionThreshold = false
+                    }
+                }
+            })
     }
     
     private var oldGesture: some Gesture {
@@ -204,7 +198,7 @@ struct SwipeRightAction_Previews: PreviewProvider, TestablePreview {
 
 // Fixes the issue on iOS 18 where DragGesture conflicts with the scroll view
 // https://github.com/feedback-assistant/reports/issues/542#issuecomment-2581322968
-private struct PanGesture: UIGestureRecognizerRepresentable {
+private struct PanGestureRepresentable: UIGestureRecognizerRepresentable {
     var handle: (UIPanGestureRecognizer) -> Void
     
     func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator { .init() }

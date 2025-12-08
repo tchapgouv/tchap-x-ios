@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -162,12 +163,6 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             .dropFirst() // Called above before configuring the ServiceLocator
             .sink { [bugReportService] _ in
                 Self.setupSentry(bugReportService: bugReportService, appSettings: appSettings)
-            }
-            .store(in: &cancellables)
-        
-        appSettings.$nextGenHTMLParserEnabled
-            .sink { value in
-                AttributedStringBuilder.useNextGenHTMLParser = value
             }
             .store(in: &cancellables)
         
@@ -358,15 +353,21 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             return
         }
         
+        let eventID = appSettings.focusEventOnNotificationTap ? content.eventID : nil
         if content.categoryIdentifier == NotificationConstants.Category.invite {
             if let userSession {
                 userSession.clientProxy.roomsToAwait.insert(roomID)
             } else {
                 storedRoomsToAwait = [roomID]
             }
+            handleAppRoute(.room(roomID: roomID, via: []))
+        } else if appSettings.threadsEnabled, let threadRootEventID = content.threadRootEventID {
+            handleAppRoute(.thread(roomID: roomID, threadRootEventID: threadRootEventID, focusEventID: eventID))
+        } else if let eventID {
+            handleAppRoute(.event(eventID: eventID, roomID: roomID, via: []))
+        } else {
+            handleAppRoute(.room(roomID: roomID, via: []))
         }
-        
-        handleAppRoute(.room(roomID: roomID, via: []))
     }
     
     func handleInlineReply(_ service: NotificationManagerProtocol, content: UNNotificationContent, replyText: String) async {
@@ -1081,7 +1082,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                 
                 switch state {
                 case .loading:
-                    if self?.userSession?.clientProxy.homeserverReachabilityPublisher.value == .reachable {
+                    if self?.userSession?.clientProxy.homeserverReachabilityPublisher.value == .reachable,
+                       self?.appMediator.networkMonitor.reachabilityPublisher.value == .reachable {
                         ServiceLocator.shared.userIndicatorController.submitIndicator(.init(id: toastIdentifier, type: .toast(progress: .indeterminate), title: L10n.commonSyncing, persistent: true))
                     }
                 case .notLoading:

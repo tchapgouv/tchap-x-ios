@@ -1,14 +1,15 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
 import MatrixRustSDK
 
-class LeaveSpaceHandleProxy: Identifiable {
+final class LeaveSpaceHandleProxy {
     let id: String
     var rooms: [LeaveSpaceRoomDetails]
     
@@ -48,6 +49,25 @@ class LeaveSpaceHandleProxy: Identifiable {
         } else {
             .manyRooms
         }
+    }
+    
+    func deselectAll() {
+        for room in rooms {
+            room.isSelected = false
+        }
+    }
+    
+    func selectAll() {
+        for room in rooms where !room.isLastAdmin {
+            room.isSelected = true
+        }
+    }
+    
+    func toggleRoom(roomID: String) {
+        guard let room = rooms.first(where: { $0.spaceRoomProxy.id == roomID }) else {
+            return
+        }
+        room.isSelected.toggle()
     }
     
     func leave() async -> Result<Void, SpaceServiceProxyError> {

@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -58,7 +59,7 @@ class ManageRoomMemberSheetViewModel: ManageRoomMemberSheetViewModelType, Manage
         case .kick:
             state.bindings.alertInfo = .init(id: alertType,
                                              title: L10n.screenBottomSheetManageRoomMemberKickMemberConfirmationTitle,
-                                             message: L10n.screenBottomSheetManageRoomMemberKickMemberConfirmationDescription,
+                                             message: roomProxy.infoPublisher.value.isSpace ? L10n.screenBottomSheetManageRoomMemberKickMemberFromSpaceConfirmationDescription : L10n.screenBottomSheetManageRoomMemberKickMemberConfirmationDescription,
                                              primaryButton: .init(title: L10n.actionCancel, role: .cancel) { },
                                              secondaryButton: .init(title: L10n.screenBottomSheetManageRoomMemberKickMemberConfirmationAction) { [weak self] in Task { await self?.kickMember(id: memberID, name: memberName, reason: reason) } },
                                              textFields: [.init(placeholder: L10n.commonReason,
@@ -68,7 +69,7 @@ class ManageRoomMemberSheetViewModel: ManageRoomMemberSheetViewModelType, Manage
         case .ban:
             state.bindings.alertInfo = .init(id: alertType,
                                              title: L10n.screenBottomSheetManageRoomMemberBanMemberConfirmationTitle,
-                                             message: L10n.screenBottomSheetManageRoomMemberBanMemberConfirmationDescription,
+                                             message: roomProxy.infoPublisher.value.isSpace ? L10n.screenBottomSheetManageRoomMemberBanMemberFromSpaceConfirmationDescription : L10n.screenBottomSheetManageRoomMemberBanMemberConfirmationDescription,
                                              primaryButton: .init(title: L10n.actionCancel, role: .cancel) { },
                                              secondaryButton: .init(title: L10n.screenBottomSheetManageRoomMemberBanMemberConfirmationAction) { [weak self] in Task { await self?.banMember(id: memberID, name: memberName, reason: reason) } },
                                              textFields: [.init(placeholder: L10n.commonReason,

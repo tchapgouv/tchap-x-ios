@@ -144,6 +144,12 @@ extension PreviewTests {
         }
     }
 
+    func testCopyTextButton() async throws {
+        for (index, preview) in CopyTextButton_Previews._allPreviews.enumerated() {
+            try await assertSnapshots(matching: preview, step: index)
+        }
+    }
+
     func testCreateRoom() async throws {
         for (index, preview) in CreateRoom_Previews._allPreviews.enumerated() {
             try await assertSnapshots(matching: preview, step: index)
@@ -446,6 +452,12 @@ extension PreviewTests {
 
     func testLongPressWithFeedback() async throws {
         for (index, preview) in LongPressWithFeedback_Previews._allPreviews.enumerated() {
+            try await assertSnapshots(matching: preview, step: index)
+        }
+    }
+
+    func testManageAuthorizedSpacesScreen() async throws {
+        for (index, preview) in ManageAuthorizedSpacesScreen_Previews._allPreviews.enumerated() {
             try await assertSnapshots(matching: preview, step: index)
         }
     }
@@ -954,6 +966,12 @@ extension PreviewTests {
         }
     }
 
+    func testSpaceSettingsScreen() async throws {
+        for (index, preview) in SpaceSettingsScreen_Previews._allPreviews.enumerated() {
+            try await assertSnapshots(matching: preview, step: index)
+        }
+    }
+
     func testSpacesAnnouncementSheetView() async throws {
         for (index, preview) in SpacesAnnouncementSheetView_Previews._allPreviews.enumerated() {
             try await assertSnapshots(matching: preview, step: index)
@@ -1106,6 +1124,12 @@ extension PreviewTests {
 
     func testTombstonedAvatarImage() async throws {
         for (index, preview) in TombstonedAvatarImage_Previews._allPreviews.enumerated() {
+            try await assertSnapshots(matching: preview, step: index)
+        }
+    }
+
+    func testToolbarButton() async throws {
+        for (index, preview) in ToolbarButton_Previews._allPreviews.enumerated() {
             try await assertSnapshots(matching: preview, step: index)
         }
     }

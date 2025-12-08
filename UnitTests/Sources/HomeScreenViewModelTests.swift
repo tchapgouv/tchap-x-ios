@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -412,7 +413,7 @@ class HomeScreenViewModelTests: XCTestCase {
             clientProxy.roomForIdentifierClosure = { spaceID in .invited(InvitedRoomProxyMock(.init(id: spaceID, isSpace: true))) }
             
             let spaceServiceProxy = SpaceServiceProxyMock(.init())
-            spaceServiceProxy.spaceRoomListSpaceIDParentClosure = { spaceID, _ in
+            spaceServiceProxy.spaceRoomListSpaceIDClosure = { spaceID in
                 .success(SpaceRoomListProxyMock(.init(spaceRoomProxy: SpaceRoomProxyMock(.init(id: spaceID, isSpace: true)))))
             }
             clientProxy.underlyingSpaceService = spaceServiceProxy
@@ -460,7 +461,7 @@ extension HomeScreenViewModelAction: @retroactive Equatable {
         case (.presentDeclineAndBlock(let lhsUserID, let lhsRoomID), .presentDeclineAndBlock(let rhsUserID, let rhsRoomID)):
             lhsUserID == rhsUserID && lhsRoomID == rhsRoomID
         case (.presentSpace(let lhsSpaceRoomListProxy), .presentSpace(let rhsSpaceRoomListProxy)):
-            lhsSpaceRoomListProxy.spaceRoomProxy.id == rhsSpaceRoomListProxy.spaceRoomProxy.id
+            lhsSpaceRoomListProxy.id == rhsSpaceRoomListProxy.id
         case (.roomLeft(let lhsID), .roomLeft(let rhsID)):
             lhsID == rhsID
         case (.transferOwnership(let lhsID), .transferOwnership(let rhsID)):

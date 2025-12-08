@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -76,7 +77,7 @@ class LoggingTests: XCTestCase {
         let roomName = "Private Conversation"
         let lastMessage = "Secret information"
         let heroName = "Pseudonym"
-        let roomSummary = RoomSummary(room: .init(noPointer: .init()),
+        let roomSummary = RoomSummary(room: .init(noHandle: .init()),
                                       id: "myroomid",
                                       joinRequestType: nil,
                                       name: roomName,
@@ -87,6 +88,7 @@ class LoggingTests: XCTestCase {
                                       activeMembersCount: 0,
                                       lastMessage: AttributedString(lastMessage),
                                       lastMessageDate: .mock,
+                                      lastMessageState: nil,
                                       unreadMessagesCount: 0,
                                       unreadMentionsCount: 0,
                                       unreadNotificationsCount: 0,
@@ -229,19 +231,19 @@ class LoggingTests: XCTestCase {
         let rustImageMessage = ImageMessageContent(filename: "ImageString",
                                                    caption: "ImageString",
                                                    formattedCaption: nil,
-                                                   source: MediaSource(noPointer: .init()),
+                                                   source: MediaSource(noHandle: .init()),
                                                    info: nil)
         
         let rustVideoMessage = VideoMessageContent(filename: "VideoString",
                                                    caption: "VideoString",
                                                    formattedCaption: nil,
-                                                   source: MediaSource(noPointer: .init()),
+                                                   source: MediaSource(noHandle: .init()),
                                                    info: nil)
         
         let rustFileMessage = FileMessageContent(filename: "FileString",
                                                  caption: "FileString",
                                                  formattedCaption: nil,
-                                                 source: MediaSource(noPointer: .init()),
+                                                 source: MediaSource(noHandle: .init()),
                                                  info: nil)
         
         // When logging that value

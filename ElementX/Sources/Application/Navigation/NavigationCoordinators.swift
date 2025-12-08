@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -329,6 +330,7 @@ private struct NavigationSplitCoordinatorView: View {
     @State private var columnVisibility = NavigationSplitViewVisibility.all
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.scenePhase) private var scenePhase
     
     @Bindable var navigationSplitCoordinator: NavigationSplitCoordinator
     
@@ -351,6 +353,12 @@ private struct NavigationSplitCoordinatorView: View {
         .fullScreenCover(item: $navigationSplitCoordinator.fullScreenCoverModule) { module in
             module.coordinator?.toPresentable()
                 .id(module.id)
+        }
+        .onChange(of: columnVisibility) { oldValue, _ in
+            // Preserve the current column visibility when backgrounding the app
+            if scenePhase == .background {
+                columnVisibility = oldValue
+            }
         }
         .ignoresSafeArea() // Necessary when embedded in a TabView on iPadOS otherwise there's a gap at the top (as of 18.5).
     }
@@ -392,7 +400,7 @@ private struct NavigationSplitCoordinatorView: View {
                 .id(module.id)
         }
         .animation(.elementDefault, value: navigationSplitCoordinator.sidebarModule)
-        .animation(.elementDefault, value: navigationSplitCoordinator.detailModule)
+        .animation(.noAnimation, value: navigationSplitCoordinator.detailModule) // Don't crossfade the detail transition on iPad.
     }
 }
 
@@ -563,6 +571,21 @@ private struct NavigationSplitCoordinatorView: View {
 
         withTransaction(transaction) {
             _ = stackModules.popLast()
+        }
+    }
+    
+    func pop(to coordinator: CoordinatorProtocol, animated: Bool = true) {
+        if rootCoordinator === coordinator {
+            popToRoot(animated: animated)
+        } else if stackCoordinators.contains(where: { $0 === coordinator }) {
+            var transaction = Transaction()
+            transaction.disablesAnimations = !animated
+            
+            withTransaction(transaction) {
+                while stackCoordinators.last !== coordinator, !stackCoordinators.isEmpty {
+                    _ = stackModules.popLast()
+                }
+            }
         }
     }
     

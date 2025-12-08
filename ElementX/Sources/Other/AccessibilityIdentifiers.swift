@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -22,6 +23,7 @@ enum A11yIdentifiers {
     static let loginScreen = LoginScreen()
     static let authenticationStartScreen = AuthenticationStartScreen()
     static let reportContent = ReportContent()
+    static let joinRoomScreen = JoinRoomScreen()
     static let roomScreen = RoomScreen()
     static let roomDetailsScreen = RoomDetailsScreen()
     static let roomNotificationSettingsScreen = RoomNotificationSettingsScreen()
@@ -132,6 +134,10 @@ enum A11yIdentifiers {
         let ignoreUser = "report_content-ignore_user"
     }
     
+    struct JoinRoomScreen {
+        let join = "join-room_join"
+    }
+    
     struct RoomScreen {
         let name = "room-name"
         let avatar = "room-avatar"
@@ -191,9 +197,7 @@ enum A11yIdentifiers {
     struct RoomRolesAndPermissionsScreen {
         let administrators = "room_roles_and_permissions-administrators"
         let moderators = "room_roles_and_permissions-moderators"
-        let roomDetails = "room_roles_and_permissions-room_details"
-        let messagesAndContent = "room_roles_and_permissions-messages_and_content"
-        let memberModeration = "room_roles_and_permissions-member_moderation"
+        let permissions = "room_roles_and_permissions-permissions"
     }
     
     struct SecureBackupScreen {
@@ -264,8 +268,11 @@ enum A11yIdentifiers {
     }
     
     struct CreateRoomScreen {
+        let create = "create_room-create"
+        let roomAvatar = "create_room-room_avatar"
         let roomName = "create_room-room_name"
         let roomTopic = "create_room-room_topic"
+        let mediaPicker = "create_room-media_picker"
     }
 
     struct PollFormScreen {

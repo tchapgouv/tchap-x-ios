@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -12,9 +13,10 @@ import SwiftUI
 typealias InviteUsersScreenViewModelType = StateStoreViewModel<InviteUsersScreenViewState, InviteUsersScreenViewAction>
 
 class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScreenViewModelProtocol {
-    private let roomType: InviteUsersScreenRoomType
+    private let roomProxy: JoinedRoomProxyProtocol
     private let userDiscoveryService: UserDiscoveryServiceProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
+    private let appSettings: AppSettings
     
     private var suggestedUsers = [UserProfileProxy]()
     
@@ -24,19 +26,21 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
     }
     
     init(userSession: UserSessionProtocol,
-         selectedUsers: CurrentValuePublisher<[UserProfileProxy], Never>,
-         roomType: InviteUsersScreenRoomType,
+         roomProxy: JoinedRoomProxyProtocol,
+         isSkippable: Bool,
          userDiscoveryService: UserDiscoveryServiceProtocol,
-         userIndicatorController: UserIndicatorControllerProtocol) {
-        self.roomType = roomType
+         userIndicatorController: UserIndicatorControllerProtocol,
+         appSettings: AppSettings) {
+        self.roomProxy = roomProxy
         self.userDiscoveryService = userDiscoveryService
         self.userIndicatorController = userIndicatorController
+        self.appSettings = appSettings
         
-        super.init(initialViewState: InviteUsersScreenViewState(selectedUsers: selectedUsers.value,
-                                                                isCreatingRoom: roomType.isCreatingRoom),
+        super.init(initialViewState: InviteUsersScreenViewState(selectedUsers: [],
+                                                                isSkippable: isSkippable),
                    mediaProvider: userSession.mediaProvider)
                 
-        setupSubscriptions(selectedUsers: selectedUsers)
+        setupSubscriptions()
         fetchMembersIfNeeded()
         
         Task {
@@ -53,25 +57,63 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
     override func process(viewAction: InviteUsersScreenViewAction) {
         switch viewAction {
         case .cancel:
-            actionsSubject.send(.cancel)
+            actionsSubject.send(.dismiss)
         case .proceed:
-            switch roomType {
-            case .draft:
-                actionsSubject.send(.proceed)
-            case .room:
-                actionsSubject.send(.invite(users: state.selectedUsers.map(\.userID)))
-            }
+            inviteUsers(state.selectedUsers.map(\.userID), roomProxy: roomProxy)
         case .toggleUser(let user):
-            let willSelectUser = !state.selectedUsers.contains(user)
-            state.scrollToLastID = willSelectUser ? user.userID : nil
-            actionsSubject.send(.toggleUser(user))
+            toggleUser(user)
         }
     }
 
     // MARK: - Private
     
+    private func toggleUser(_ user: UserProfileProxy) {
+        if state.selectedUsers.contains(user) {
+            state.scrollToLastID = nil
+            state.selectedUsers.removeAll { $0.userID == user.userID }
+        } else {
+            state.scrollToLastID = user.userID
+            state.selectedUsers.append(user)
+        }
+    }
+    
+    private func inviteUsers(_ users: [String], roomProxy: JoinedRoomProxyProtocol) {
+        if appSettings.enableKeyShareOnInvite {
+            showLoadingIndicator(title: L10n.screenRoomDetailsInvitePeoplePreparing, message: L10n.screenRoomDetailsInvitePeopleDontClose)
+        } else {
+            showLoadingIndicator()
+        }
+        
+        Task {
+            defer {
+                hideLoadingIndicator()
+                actionsSubject.send(.dismiss)
+            }
+            
+            let result: Result<Void, RoomProxyError> = await withTaskGroup(of: Result<Void, RoomProxyError>.self) { group in
+                for user in users {
+                    group.addTask {
+                        await roomProxy.invite(userID: user)
+                    }
+                }
+                
+                return await group.first { inviteResult in
+                    inviteResult.isFailure
+                } ?? .success(())
+            }
+            
+            guard case .failure = result else {
+                return
+            }
+            
+            userIndicatorController.alertInfo = .init(id: .init(),
+                                                      title: L10n.commonUnableToInviteTitle,
+                                                      message: L10n.commonUnableToInviteMessage)
+        }
+    }
+    
     private func buildMembershipStateIfNeeded(members: [RoomMemberProxyProtocol]) {
-        showLoader()
+        showLoadingIndicator()
         
         Task.detached { [members] in
             // accessing RoomMember's properties is very slow. We need to do it in a background thread.
@@ -82,7 +124,7 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
             
             Task { @MainActor in
                 self.state.membershipState = membershipState
-                self.hideLoader()
+                self.hideLoadingIndicator()
             }
         }
     }
@@ -91,7 +133,7 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
     @CancellableTask
     private var fetchUsersTask: Task<Void, Never>?
     
-    private func setupSubscriptions(selectedUsers: CurrentValuePublisher<[UserProfileProxy], Never>) {
+    private func setupSubscriptions() {
         context.$viewState
             .map(\.bindings.searchQuery)
             .debounceTextQueriesAndRemoveDuplicates()
@@ -99,23 +141,13 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
                 self?.fetchUsers()
             }
             .store(in: &cancellables)
-        
-        selectedUsers
-            .sink { [weak self] users in
-                self?.state.selectedUsers = users
-            }
-            .store(in: &cancellables)
     }
     
     private func fetchMembersIfNeeded() {
-        guard case let .room(roomProxy) = roomType else {
-            return
-        }
-        
         Task {
-            showLoader()
+            showLoadingIndicator()
             await roomProxy.updateMembers()
-            hideLoader()
+            hideLoadingIndicator()
         }
         
         roomProxy.membersPublisher
@@ -158,22 +190,17 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
     
     private let userIndicatorID = UUID().uuidString
     
-    private func showLoader() {
-        userIndicatorController.submitIndicator(UserIndicator(id: userIndicatorID, type: .modal, title: L10n.commonLoading, persistent: true), delay: .milliseconds(200))
+    private func showLoadingIndicator(title: String = L10n.commonLoading,
+                                      message: String? = nil) {
+        userIndicatorController.submitIndicator(UserIndicator(id: userIndicatorID,
+                                                              type: .modal,
+                                                              title: title,
+                                                              message: message,
+                                                              persistent: true),
+                                                delay: .milliseconds(200))
     }
     
-    private func hideLoader() {
+    private func hideLoadingIndicator() {
         userIndicatorController.retractIndicatorWithId(userIndicatorID)
-    }
-}
-
-private extension InviteUsersScreenRoomType {
-    var isCreatingRoom: Bool {
-        switch self {
-        case .draft:
-            return true
-        case .room:
-            return false
-        }
     }
 }

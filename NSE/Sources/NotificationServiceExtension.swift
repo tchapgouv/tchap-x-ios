@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -61,8 +62,11 @@ class NotificationServiceExtension: UNNotificationServiceExtension {
         super.init()
     }
     
-    override func didReceive(_ request: UNNotificationRequest,
-                             withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
+    override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
+        Task { await handle(request, withContentHandler: contentHandler) }
+    }
+    
+    private func handle(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) async {
         guard !DataProtectionManager.isDeviceLockedAfterReboot(containerURL: URL.appGroupContainerDirectory),
               let roomID = request.content.roomID,
               let eventID = request.content.eventID,
@@ -77,7 +81,7 @@ class NotificationServiceExtension: UNNotificationServiceExtension {
         }
         
         let homeserverURL = credentials.restorationToken.session.homeserverUrl
-        appHooks.remoteSettingsHook.loadCache(forHomeserver: homeserverURL, applyingTo: settings)
+        await appHooks.remoteSettingsHook.loadCache(forHomeserver: homeserverURL, applyingTo: settings)
         
         guard let mutableContent = request.content.mutableCopy() as? UNMutableNotificationContent else {
             return contentHandler(request.content)
@@ -89,27 +93,25 @@ class NotificationServiceExtension: UNNotificationServiceExtension {
         
         MXLog.info("\(tag) Received payload: \(request.content.userInfo)")
         
-        Task {
-            do {
-                let userSession = try await NSEUserSession(credentials: credentials,
-                                                           roomID: roomID,
-                                                           clientSessionDelegate: keychainController,
-                                                           appHooks: appHooks,
-                                                           appSettings: settings)
-                
-                notificationHandler = NotificationHandler(userSession: userSession,
-                                                          settings: settings,
-                                                          contentHandler: contentHandler,
-                                                          notificationContent: mutableContent,
-                                                          tag: tag)
-                
-                ExtensionLogger.logMemory(with: tag)
-                MXLog.info("\(tag) Configured user session")
-                
-                await notificationHandler?.processEvent(eventID, roomID: roomID)
-            } catch {
-                MXLog.error("Failed creating user session with error: \(error)")
-            }
+        do {
+            let userSession = try await NSEUserSession(credentials: credentials,
+                                                       roomID: roomID,
+                                                       clientSessionDelegate: keychainController,
+                                                       appHooks: appHooks,
+                                                       appSettings: settings)
+            
+            notificationHandler = NotificationHandler(userSession: userSession,
+                                                      settings: settings,
+                                                      contentHandler: contentHandler,
+                                                      notificationContent: mutableContent,
+                                                      tag: tag)
+            
+            ExtensionLogger.logMemory(with: tag)
+            MXLog.info("\(tag) Configured user session")
+            
+            await notificationHandler?.processEvent(eventID, roomID: roomID)
+        } catch {
+            MXLog.error("Failed creating user session with error: \(error)")
         }
     }
     

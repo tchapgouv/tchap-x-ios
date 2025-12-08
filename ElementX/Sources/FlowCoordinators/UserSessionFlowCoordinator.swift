@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -107,7 +108,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         setupObservers()
     }
     
-    func start() {
+    func start(animated: Bool) {
         stateMachine.tryEvent(.start)
     }
     
@@ -131,7 +132,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         case .roomList, .room, .roomAlias, .childRoom, .childRoomAlias,
              .roomDetails, .roomMemberDetails, .userProfile,
              .event, .eventOnRoomAlias, .childEvent, .childEventOnRoomAlias,
-             .share, .transferOwnership:
+             .share, .transferOwnership, .thread:
             clearPresentedSheets(animated: animated) // Make sure the presented route is visible.
             chatsFlowCoordinator.handleAppRoute(appRoute, animated: animated)
             if navigationTabCoordinator.selectedTab != .chats {
@@ -193,6 +194,8 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             .sink { [weak self] action in
                 guard let self else { return }
                 switch action {
+                case .switchToChatsTab:
+                    navigationTabCoordinator.selectedTab = .chats
                 case .showSettings:
                     handleAppRoute(.settings, animated: true)
                 case .showChatBackupSettings:
@@ -243,16 +246,16 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
                 MXLog.info("Homeserver reachability: \(homeserverReachability)")
                 
                 guard let self else { return }
-                switch (homeserverReachability, networkReachability) {
-                case (.reachable, _):
+                switch (networkReachability, homeserverReachability) {
+                case (.reachable, .reachable):
                     flowParameters.userIndicatorController.retractIndicatorWithId(reachabilityNotificationID)
-                case (.unreachable, .unreachable):
-                    flowParameters.userIndicatorController.submitIndicator(.init(id: reachabilityNotificationID,
-                                                                                 title: L10n.commonOffline,
-                                                                                 persistent: true))
-                case (.unreachable, .reachable):
+                case (.reachable, .unreachable):
                     flowParameters.userIndicatorController.submitIndicator(.init(id: reachabilityNotificationID,
                                                                                  title: L10n.commonServerUnreachable,
+                                                                                 persistent: true))
+                case (.unreachable, _):
+                    flowParameters.userIndicatorController.submitIndicator(.init(id: reachabilityNotificationID,
+                                                                                 title: L10n.commonOffline,
                                                                                  persistent: true))
                 }
             }

@@ -1,8 +1,9 @@
 //
-// Copyright 2024 New Vector Ltd.
-// Copyright 2021-2024 The Matrix.org Foundation C.I.C
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
+// Copyright 2021-2025 The Matrix.org Foundation C.I.C
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -18,7 +19,7 @@ enum MXLog {
     static func configure(currentTarget: String) {
         self.currentTarget = currentTarget
         
-        rootSpan = Span(file: #file, line: #line, level: .info, target: self.currentTarget, name: "root")
+        rootSpan = Span(file: #file, line: #line, level: .info, target: self.currentTarget, name: "root", bridgeTraceId: nil)
         rootSpan.enter()
     }
     
@@ -121,7 +122,7 @@ enum MXLog {
             rootSpan.enter()
         }
         
-        return Span(file: file, line: UInt32(line), level: level.rustLogLevel, target: currentTarget, name: name)
+        return Span(file: file, line: UInt32(line), level: level.rustLogLevel, target: currentTarget, name: name, bridgeTraceId: nil)
     }
     
     // periphery:ignore:parameters function,column

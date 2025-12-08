@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -363,7 +364,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                    ownMember.role.isOwner {
                     await roomProxy.updateMembers()
                     var isLastOwner = true
-                    for member in roomProxy.membersPublisher.value where member.userID != roomProxy.ownUserID {
+                    for member in roomProxy.membersPublisher.value where member.userID != roomProxy.ownUserID && member.membership == .join {
                         if member.role.isOwner {
                             isLastOwner = false
                             break
@@ -437,7 +438,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         if roomProxy.info.isSpace {
             let spaceService = userSession.clientProxy.spaceService
             
-            switch await spaceService.spaceRoomList(spaceID: roomProxy.id, parent: nil) {
+            switch await spaceService.spaceRoomList(spaceID: roomProxy.id) {
             case .success(let spaceRoomListProxy):
                 actionsSubject.send(.presentSpace(spaceRoomListProxy))
             case .failure(let error):

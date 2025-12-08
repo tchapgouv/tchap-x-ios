@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -196,6 +197,9 @@ struct HomeScreenRoom: Identifiable, Equatable {
     
     let lastMessage: AttributedString?
     
+    enum LastMessageState { case sending, failed }
+    let lastMessageState: LastMessageState?
+    
     let avatar: RoomAvatar
         
     let canonicalAlias: String?
@@ -203,11 +207,13 @@ struct HomeScreenRoom: Identifiable, Equatable {
     let isTombstoned: Bool
     
     var displayedLastMessage: AttributedString? {
-        // If the room is tombstoned, show a specific message, regardless of any last message.
-        guard !isTombstoned else {
-            return AttributedString(L10n.screenRoomlistTombstonedRoomDescription)
+        if isTombstoned {
+            AttributedString(L10n.screenRoomlistTombstonedRoomDescription)
+        } else if lastMessageState == .failed {
+            AttributedString(L10n.commonMessageFailedToSend)
+        } else {
+            lastMessage
         }
-        return lastMessage
     }
     
     static func placeholder() -> HomeScreenRoom {
@@ -221,6 +227,7 @@ struct HomeScreenRoom: Identifiable, Equatable {
                        isFavourite: false,
                        timestamp: "Now",
                        lastMessage: placeholderLastMessage,
+                       lastMessageState: nil,
                        avatar: .room(id: "", name: "", avatarURL: nil),
                        canonicalAlias: nil,
                        isTombstoned: false)
@@ -259,8 +266,23 @@ extension HomeScreenRoom {
                   isFavourite: summary.isFavourite,
                   timestamp: summary.lastMessageDate?.formattedMinimal(),
                   lastMessage: summary.lastMessage,
+                  lastMessageState: summary.homeScreenLastMessageState,
                   avatar: summary.avatar,
                   canonicalAlias: summary.canonicalAlias,
                   isTombstoned: summary.isTombstoned)
+    }
+}
+
+private extension RoomSummary {
+    var homeScreenLastMessageState: HomeScreenRoom.LastMessageState? {
+        if isTombstoned {
+            nil
+        } else {
+            switch lastMessageState {
+            case .sending: .sending
+            case .failed: .failed
+            case .none: .none
+            }
+        }
     }
 }

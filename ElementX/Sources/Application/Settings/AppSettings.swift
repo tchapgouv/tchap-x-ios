@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -62,9 +63,9 @@ final class AppSettings {
         case knockingEnabled
         case threadsEnabled
         case developerOptionsEnabled
-        case nextGenHTMLParserEnabled
         case linkPreviewsEnabled
-        case latestEventSorterEnabled
+        case spaceSettingsEnabled
+        case focusEventOnNotificationTap
         
         // Doug's tweaks 🔧
         case hideUnreadMessagesBadge
@@ -465,14 +466,14 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: true, storageType: .userDefaults(store))
     var threadsEnabled
     
-    @UserPreference(key: UserDefaultsKeys.nextGenHTMLParserEnabled, defaultValue: true, storageType: .userDefaults(store))
-    var nextGenHTMLParserEnabled
+    @UserPreference(key: UserDefaultsKeys.focusEventOnNotificationTap, defaultValue: false, storageType: .userDefaults(store))
+    var focusEventOnNotificationTap
     
+    @UserPreference(key: UserDefaultsKeys.spaceSettingsEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var spaceSettingsEnabled
+        
     @UserPreference(key: UserDefaultsKeys.linkPreviewsEnabled, defaultValue: false, storageType: .userDefaults(store))
     var linkPreviewsEnabled
-    
-    @UserPreference(key: UserDefaultsKeys.latestEventSorterEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var latestEventSorterEnabled
     
     @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
     var developerOptionsEnabled

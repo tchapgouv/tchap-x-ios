@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -67,7 +68,7 @@ class SpaceListScreenViewModelTests: XCTestCase {
         let action = try await deferred.fulfill()
         
         switch action {
-        case .selectSpace(let spaceRoomListProxy) where spaceRoomListProxy.spaceRoomProxy.id == selectedSpace.id:
+        case .selectSpace(let spaceRoomListProxy) where spaceRoomListProxy.id == selectedSpace.id:
             break
         default:
             XCTFail("The action should select the space.")
@@ -108,7 +109,7 @@ class SpaceListScreenViewModelTests: XCTestCase {
         ])
         spaceServiceProxy = SpaceServiceProxyMock(.init())
         spaceServiceProxy.joinedSpacesPublisher = joinedSpacesSubject.asCurrentValuePublisher()
-        spaceServiceProxy.spaceRoomListSpaceIDParentClosure = { [joinedSpacesSubject] spaceID, _ in
+        spaceServiceProxy.spaceRoomListSpaceIDClosure = { [joinedSpacesSubject] spaceID in
             guard let spaceRoomProxy = joinedSpacesSubject?.value.first(where: { $0.id == spaceID }) else { return .failure(.missingSpace) }
             return .success(SpaceRoomListProxyMock(.init(spaceRoomProxy: spaceRoomProxy)))
         }

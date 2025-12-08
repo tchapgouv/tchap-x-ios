@@ -1,5 +1,6 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -84,11 +85,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
     override func process(viewAction: RoomScreenViewAction) {
         switch viewAction {
         case .tappedPinnedEventsBanner:
-            analyticsService.trackInteraction(name: .PinnedMessageBannerClick)
-            if let eventID = state.pinnedEventsBannerState.selectedPinnedEventID {
-                actionsSubject.send(.focusEvent(eventID: eventID))
-            }
-            state.pinnedEventsBannerState.previousPin()
+            handleTappedPinnedEventsBanner()
         case .viewAllPins:
             analyticsService.trackInteraction(name: .PinnedMessageBannerViewAllButton)
             actionsSubject.send(.displayPinnedEventsTimeline)
@@ -260,7 +257,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
     private func updateVerificationBadge() async {
         guard roomProxy.isDirectOneToOneRoom,
               let dmRecipient = roomProxy.membersPublisher.value.first(where: { $0.userID != roomProxy.ownUserID }),
-              case let .success(userIdentity) = await clientProxy.userIdentity(for: dmRecipient.userID) else {
+              case let .success(userIdentity) = await clientProxy.userIdentity(for: dmRecipient.userID, fallBackToServer: true) else {
             state.dmRecipientVerificationState = .notVerified
             return
         }
@@ -406,6 +403,27 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
             return failedIDs
         }
         state.handledEventIDs.subtract(failedIDs)
+    }
+    
+    private func handleTappedPinnedEventsBanner() {
+        analyticsService.trackInteraction(name: .PinnedMessageBannerClick)
+        if let eventID = state.pinnedEventsBannerState.selectedPinnedEventID {
+            Task {
+                switch await roomProxy.loadOrFetchEventDetails(for: eventID) {
+                case .success(let event):
+                    if appSettings.threadsEnabled,
+                       let threadRootEventID = event.threadRootEventId() {
+                        actionsSubject.send(.focusEvent(eventID: threadRootEventID))
+                        actionsSubject.send(.displayThread(threadRootEventID: threadRootEventID, focussedEventID: eventID))
+                    } else {
+                        actionsSubject.send(.focusEvent(eventID: eventID))
+                    }
+                case .failure:
+                    userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
+                }
+            }
+        }
+        state.pinnedEventsBannerState.previousPin()
     }
     
     // MARK: Loading indicators

@@ -32,7 +32,7 @@ import SwiftUI
                                                        size: size)
         snapshotterOptions.zoomLevel = zoom
         snapshotter = MGLMapSnapshotter(options: snapshotterOptions)
-        cacheKey = mapUrlBuilder.staticMapURL(for: style, coordinates: location, zoomLevel: zoom, size: size, attribution: attribution)
+        cacheKey = mapUrlBuilder.staticMapTileImageURL(for: style, coordinates: location, zoomLevel: zoom, size: size, attribution: attribution)
         cache = TchapStaticMapDiskCache()
         
         startLoading()
