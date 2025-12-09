@@ -92,9 +92,10 @@ class AuthenticationService: AuthenticationServiceProtocol {
         guard let client else { return .failure(.oidcError(.urlFailure)) }
         do {
             // The create prompt is broken: https://github.com/element-hq/matrix-authentication-service/issues/3429
-            // let prompt: OidcPrompt = flow == .register ? .create : .consent
+            // Tchap: activate flow even if Element considers it is broken.
+            let prompt: OidcPrompt = flow == .register ? .create : .consent
             let oidcData = try await client.urlForOidc(oidcConfiguration: appSettings.oidcConfiguration.rustValue,
-                                                       prompt: .consent,
+                                                       prompt: prompt,
                                                        loginHint: loginHint,
                                                        deviceId: nil,
                                                        additionalScopes: nil)

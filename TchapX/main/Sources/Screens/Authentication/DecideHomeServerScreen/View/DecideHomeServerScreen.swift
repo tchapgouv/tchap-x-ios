@@ -1,20 +1,18 @@
 //
-// Copyright 2025 Element Creations Ltd.
-// Copyright 2022-2025 New Vector Ltd.
+// Copyright 2022-2024 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import SwiftUI
 
-struct LoginScreen: View {
+struct DecideHomeServerScreen: View {
     /// The focus state of the username text field.
     @FocusState private var isUsernameFocused: Bool
-    /// The focus state of the password text field.
-    @FocusState private var isPasswordFocused: Bool
     
-    @Bindable var context: LoginScreenViewModel.Context
+    @Bindable var context: DecideHomeServerScreenViewModel.Context
     
     var body: some View {
         ScrollView {
@@ -23,16 +21,7 @@ struct LoginScreen: View {
                     .padding(.top, UIConstants.titleTopPaddingToNavigationBar)
                     .padding(.bottom, 32)
                 
-                switch context.viewState.loginMode {
-                case .password:
-                    loginForm
-                case .oidc:
-                    // This should never be shown.
-                    ProgressView()
-                default:
-                    // This should never be shown either.
-                    loginUnavailableText
-                }
+                loginForm
             }
             .readableFrame()
             .padding(.horizontal, 16)
@@ -41,6 +30,9 @@ struct LoginScreen: View {
         .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .alert(item: $context.alertInfo)
+        .introspect(.window, on: .supportedVersions) { window in
+            context.send(viewAction: .updateWindow(window))
+        }
     }
     
     /// The header containing the title and icon.
@@ -49,8 +41,7 @@ struct LoginScreen: View {
             BigIcon(icon: \.lockSolid)
                 .padding(.bottom, 8)
             // Tchap: [Beta DINUM] Customize login title
-//            Text(L10n.screenLoginTitleWithHomeserver(context.viewState.homeserver.address))
-            Text(TchapL10n.screenLoginTitleLogin)
+            Text(context.viewState.authenticationFlow == .register ? TchapL10n.screenLoginTitleRegister : TchapL10n.screenLoginTitleLogin)
                 .font(.compound.headingMDBold)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.compound.textPrimary)
@@ -67,7 +58,7 @@ struct LoginScreen: View {
     /// The form with text fields for username and password, along with a submit button.
     var loginForm: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(L10n.screenLoginFormHeader)
+            Text(TchapL10n.screenLoginInputEmailLabel)
                 .font(.compound.bodySM)
                 .foregroundColor(.compound.textPrimary)
                 .padding(.horizontal, 16)
@@ -75,7 +66,6 @@ struct LoginScreen: View {
             
             TextField(text: $context.username) {
                 // Tchap: Hint as "Email" rather than "User name".
-//                Text(L10n.commonUsername).foregroundColor(.compound.textSecondary)
                 Text(TchapL10n.commonEmail).foregroundColor(.compound.textSecondary)
             }
             .focused($isUsernameFocused)
@@ -84,20 +74,8 @@ struct LoginScreen: View {
             .textContentType(.username)
             .autocapitalization(.none)
             .submitLabel(.next)
-            .onChange(of: isUsernameFocused) { _, newValue in
-                usernameFocusChanged(isFocussed: newValue)
-            }
-            .onSubmit { isPasswordFocused = true }
+            .onSubmit { submit() }
             .padding(.bottom, 20)
-            
-            SecureField(text: $context.password) {
-                Text(L10n.commonPassword).foregroundColor(.compound.textSecondary)
-            }
-            .focused($isPasswordFocused)
-            .textFieldStyle(.element(accessibilityIdentifier: A11yIdentifiers.loginScreen.password))
-            .textContentType(.password)
-            .submitLabel(.done)
-            .onSubmit(submit)
             
             Spacer().frame(height: 32)
 
@@ -110,71 +88,53 @@ struct LoginScreen: View {
         }
     }
     
-    /// Text shown if neither password or OIDC login is supported.
-    var loginUnavailableText: some View {
-        Text(L10n.screenLoginErrorUnsupportedAuthentication)
-            .font(.body)
-            .multilineTextAlignment(.center)
-            .foregroundColor(.compound.textPrimary)
-            .frame(maxWidth: .infinity)
-            .accessibilityIdentifier(A11yIdentifiers.loginScreen.unsupportedServer)
-    }
-    
-    /// Parses the username for a homeserver.
-    private func usernameFocusChanged(isFocussed: Bool) {
-        guard !isFocussed, !context.username.isEmpty else { return }
-        context.send(viewAction: .parseUsername)
-    }
-    
     /// Sends the `next` view action so long as valid credentials have been input.
     private func submit() {
         guard context.viewState.canSubmit else { return }
-        context.send(viewAction: .next)
+        context.send(viewAction: .requestForHomeserver)
         isUsernameFocused = false
-        isPasswordFocused = false
     }
 }
 
 // MARK: - Previews
 
-struct LoginScreen_Previews: PreviewProvider, TestablePreview {
+struct DecideHomeServerScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModel = makeViewModel()
     static let credentialsViewModel = makeViewModel(withCredentials: true)
     static let unconfiguredViewModel = makeViewModel(homeserverAddress: "somethingtofailconfiguration")
     
     static var previews: some View {
         NavigationStack {
-            LoginScreen(context: viewModel.context)
+            DecideHomeServerScreen(context: viewModel.context)
         }
-        .snapshotPreferences(expect: viewModel.context.observe(\.viewState.homeserver.loginMode).map { $0 == .password }.eraseToStream())
         .previewDisplayName("Initial State")
         
         NavigationStack {
-            LoginScreen(context: credentialsViewModel.context)
+            DecideHomeServerScreen(context: credentialsViewModel.context)
         }
-        .snapshotPreferences(expect: credentialsViewModel.context.observe(\.viewState.homeserver.loginMode).map { $0 == .password }.eraseToStream())
         .previewDisplayName("Credentials Entered")
         
         NavigationStack {
-            LoginScreen(context: unconfiguredViewModel.context)
+            DecideHomeServerScreen(context: unconfiguredViewModel.context)
         }
         .previewDisplayName("Unsupported")
     }
     
-    static func makeViewModel(homeserverAddress: String = "example.com", withCredentials: Bool = false) -> LoginScreenViewModel {
+    static func makeViewModel(homeserverAddress: String = "example.com", withCredentials: Bool = false) -> DecideHomeServerScreenViewModel {
         let authenticationService = AuthenticationService.mock
         
         Task { await authenticationService.configure(for: homeserverAddress, flow: .login) }
         
-        let viewModel = LoginScreenViewModel(authenticationService: authenticationService,
-                                             loginHint: nil,
-                                             userIndicatorController: UserIndicatorControllerMock(),
-                                             appSettings: ServiceLocator.shared.settings,
-                                             analytics: ServiceLocator.shared.analytics)
+        let viewModel = DecideHomeServerScreenViewModel(authenticationService: authenticationService,
+                                                        authenticationFlow: .login,
+                                                        loginHint: nil,
+                                                        accountProviders: AppSettings().accountProviders,
+                                                        userIndicatorController: UserIndicatorControllerMock(),
+                                                        appSettings: ServiceLocator.shared.settings,
+                                                        analytics: ServiceLocator.shared.analytics)
         
         if withCredentials {
             viewModel.context.username = "alice"
-            viewModel.context.password = "password"
         }
         
         return viewModel

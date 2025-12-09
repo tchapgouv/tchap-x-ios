@@ -19,8 +19,18 @@ screen_onboarding_welcome_message = "La messagerie instantanée du secteur publi
 screen_onboarding_welcome_qrcode_header = "Déjà connecté sur un ordinateur ?";
 screen_onboarding_welcome_or_between_buttons = "ou";
 
-screen_login_title_with_tchap = "Se connecter à Tchap";
+screen_login_title_login = "Se connecter à Tchap";
+screen_login_title_register = "Créer un compte sur Tchap";
 screen_login_description_with_tchap = "La messagerie instantanée du secteur public";
+screen_login_input_email_label = "Saisissez votre mail professionnelle";
+
+// Tchap: login by MAS.
+screen_decide_homeserver_error_get_instance_title = "Erreur";
+screen_decide_homeserver_error_get_instance_message = "Impossible de déterminer à quel serveur est rattaché votre compte.";
+screen_decide_homeserver_error_homeserver_configuration_unreachable_title = "Erreur";
+screen_decide_homeserver_error_homeserver_configuration_unreachable_message = "Impossible d'accéder à la configuration de votre serveur de rattachement.";
+screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_title = "Erreur";
+screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_message = "Votre serveur de rattachement ne supporte pas l'authentification OIDC.";
 
 screen_create_room_selected_users_label = "Membres";
 screen_create_room_private_encrypted_option_title = "Salon privé sécurisé";

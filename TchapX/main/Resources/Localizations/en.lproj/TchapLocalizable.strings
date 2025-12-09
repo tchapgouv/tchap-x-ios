@@ -19,8 +19,18 @@ screen_onboarding_welcome_message = "The civil servants instant messaging system
 screen_onboarding_welcome_qrcode_header = "Already logged on a computer?";
 screen_onboarding_welcome_or_between_buttons = "or";
 
-screen_login_title_with_tchap = "Sign in to Tchap";
+screen_login_title_login = "Sign in to Tchap";
+screen_login_title_register = "Create an account on Tchap";
 screen_login_description_with_tchap = "Instant messaging of public sector";
+screen_login_input_email_label = "Enter your professional email address";
+
+// Tchap: login by MAS.
+screen_decide_homeserver_error_get_instance_title = "Erreur";
+screen_decide_homeserver_error_get_instance_message = "Unable to determine which server your account is attached to.";
+screen_decide_homeserver_error_homeserver_configuration_unreachable_title = "Erreur";
+screen_decide_homeserver_error_homeserver_configuration_unreachable_message = "Unable to read the configuration of your attachment server.";
+screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_title = "Erreur";
+screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_message = "Your attachment server doesn't support OIDC authentication.";
 
 screen_create_room_selected_users_label = "Members";
 screen_create_room_private_encrypted_option_title = "Private secured room";
