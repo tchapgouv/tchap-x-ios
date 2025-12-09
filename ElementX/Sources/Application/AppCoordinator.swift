@@ -42,7 +42,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                 Task { await appHooks.configure(with: userSession) }
                 // Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
                 let homeServerBaseURL = URL(string: userSession.clientProxy.homeserver)! // swiftlint:disable:this force_unwrapping
-                appSettings.bugReportRageshakeURL.applyRemoteValue(.url(homeServerBaseURL.appendingPathComponent("bugreports")))
+                appSettings.bugReportRageshakeURL.applyRemoteValue(.url(homeServerBaseURL.appendingPathComponent("bugreports").appendingPathComponent("submit")))
             } else {
                 // Tchap: disable BugReportService baseURL after user is logged out.
                 appSettings.bugReportRageshakeURL.applyRemoteValue(.disabled)
