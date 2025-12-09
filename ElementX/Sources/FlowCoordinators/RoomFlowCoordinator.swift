@@ -7,6 +7,9 @@
 //
 
 import Combine
+
+// Tchap: needed for AccessRule
+import MatrixRustSDK
 import SwiftState
 import SwiftUI
 import UserNotifications

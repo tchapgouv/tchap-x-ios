@@ -446,6 +446,7 @@ class ClientProxy: ClientProxyProtocol {
                                                   isEncrypted: true,
                                                   isDirect: true,
                                                   visibility: .private,
+                                                  accessRuleOverride: .direct, // Tchap: make access rule `direct` for Direct room.
                                                   preset: .trustedPrivateChat,
                                                   invite: [userID],
                                                   avatar: nil,

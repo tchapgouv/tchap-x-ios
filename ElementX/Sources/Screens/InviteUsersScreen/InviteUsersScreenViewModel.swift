@@ -59,7 +59,17 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
         case .cancel:
             actionsSubject.send(.dismiss)
         case .proceed:
-            inviteUsers(state.selectedUsers.map(\.userID), roomProxy: roomProxy)
+            // Tchap: check if room access rule need to be updated before inviting users.
+//            inviteUsers(state.selectedUsers.map(\.userID), roomProxy: roomProxy)
+            Task {
+                // Tchap: if room access rule is `restricted` and any invited user is external, update room access_rule to `unrestricted`.
+                let usersToInvite = state.selectedUsers.map(\.userID)
+                guard await !self.roomProxy.accessRuleNeedToBeUpdated(for: usersToInvite) else {
+                    self.displayAlertAboutOpeningRoomToExternalUsers(users: usersToInvite, in: self.roomProxy)
+                    return
+                }
+                self.inviteUsers(usersToInvite, roomProxy: roomProxy)
+            }
         case .toggleUser(let user):
             toggleUser(user)
         }
@@ -110,6 +120,35 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
                                                       title: L10n.commonUnableToInviteTitle,
                                                       message: L10n.commonUnableToInviteMessage)
         }
+    }
+    
+    // Tchap: display dialog box to inform user that the room needs to be configured to accept external users
+    // before inviting the first external user.
+    // The user can decline or confirm the operation.
+    private func displayAlertAboutOpeningRoomToExternalUsers(users: [String], in room: JoinedRoomProxyProtocol) {
+        let continueButton = AlertInfo<UUID>.AlertButton(title: L10n.actionContinue) {
+            Task { [weak self] in
+                self?.showLoadingIndicator()
+                defer {
+                    self?.hideLoadingIndicator()
+                }
+                switch await room.applyAccessRulesChanges(.unrestricted) {
+                case .success:
+                    // We can safely invite external users now that the room's access rule is `.unrestricted`.
+                    self?.inviteUsers(users, roomProxy: room)
+                case .failure:
+                    self?.userIndicatorController.alertInfo = .init(id: .init(),
+                                                                    title: TchapL10n.screenInviteExternalUserErrorModifyingAccessRuleTitle,
+                                                                    message: TchapL10n.screenInviteExternalUserErrorModifyingAccessRuleMessage)
+                }
+            }
+        }
+        let cancelButton = AlertInfo<UUID>.AlertButton(title: L10n.actionCancel, action: nil)
+        userIndicatorController.alertInfo = .init(id: .init(),
+                                                  title: TchapL10n.screenInviteExternalUserDialogTitle,
+                                                  message: TchapL10n.screenInviteExternalUserDialogMessage,
+                                                  primaryButton: continueButton,
+                                                  secondaryButton: cancelButton)
     }
     
     private func buildMembershipStateIfNeeded(members: [RoomMemberProxyProtocol]) {

@@ -152,21 +152,21 @@ struct AvatarHeaderView<Footer: View>: View {
                     BadgeLabel(title: TchapL10n.roomHeaderBadgeEncrypted,
                                icon: \.lockSolid,
                                style: .accent,
-                               tchapUsage: .roomIsEncrypted(inRoomHeaderView: false))
+                               tchapUsage: .roomIsEncrypted(useSmallSize: true))
                 case .encrypted(false):
                     // Tchap: use Tchap label
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgeNotEncrypted,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgeNotEncrypted,
                                icon: \.lockOff,
                                style: .info,
-                               tchapUsage: .roomIsNotEncrypted(inRoomHeaderView: false))
+                               tchapUsage: .roomIsNotEncrypted(useSmallSize: true))
                 case .public:
                     // Tchap: use Tchap label
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgePublic,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgePublic,
                                icon: \.public,
                                style: .info,
-                               tchapUsage: .roomIsPublic(inRoomHeaderView: false))
+                               tchapUsage: .roomIsPublic(useSmallSize: true))
                 case .verified:
                     BadgeLabel(title: L10n.commonVerified,
                                icon: \.verified,
@@ -177,7 +177,7 @@ struct AvatarHeaderView<Footer: View>: View {
             
             // Tchap: add `External` badge if necessary.
             if isOpenToExternalUsers.wrappedValue ?? false {
-                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal())
+                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
             }
         }
     }

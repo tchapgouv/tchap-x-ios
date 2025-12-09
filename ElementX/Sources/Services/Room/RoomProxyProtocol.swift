@@ -20,6 +20,8 @@ enum RoomProxyError: Error {
     case missingTransactionID
     case failedCreatingPinnedTimeline
     case timelineError(TimelineProxyError)
+    // Tchap:
+    case unableToUpdateAccessRule(Error)
 }
 
 /// An enum that describes the relationship between the current user and the room, and contains a reference to the specific implementation of the `RoomProxy`.
@@ -193,8 +195,14 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func loadDraft(threadRootEventID: String?) async -> Result<ComposerDraft?, RoomProxyError>
     func clearDraft(threadRootEventID: String?) async -> Result<Void, RoomProxyError>
     
-    // Tchap: access rules accessor
-    func accessRules() async -> Result<AccessRule?, RoomProxyError>
+    // Tchap: access rule accessor
+    func accessRule() async -> Result<AccessRule?, RoomProxyError>
+    
+    // Tchap: update access rule on the homeServer.
+    func applyAccessRulesChanges(_ changes: AccessRule) async -> Result<Void, RoomProxyError>
+
+    // Tchap: check if room access rule need to be updated to invite user (check for first external user).
+    func accessRuleNeedToBeUpdated(for invitedUsers: [String]) async -> Bool
 }
 
 extension JoinedRoomProxyProtocol {

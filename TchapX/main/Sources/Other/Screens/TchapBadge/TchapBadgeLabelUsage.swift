@@ -10,98 +10,97 @@ import SwiftUI
 
 // Tchap: usage of badges in Tchap.
 public enum TchapBadgeLabelUsage {
-    case userIsExternal(inRoomHeaderView: Bool = false)
-    case roomIsEncrypted(inRoomHeaderView: Bool = false)
-    case roomIsNotEncrypted(inRoomHeaderView: Bool = false)
-    case roomIsPublic(inRoomHeaderView: Bool = false)
-    case roomIsAccessibleToExternals(inRoomHeaderView: Bool = false)
+    case userIsExternal(useSmallSize: Bool = false)
+    case roomIsEncrypted(useSmallSize: Bool = false)
+    case roomIsNotEncrypted(useSmallSize: Bool = false)
+    case roomIsPublic(useSmallSize: Bool = false)
+    case roomIsAccessibleToExternals(useSmallSize: Bool = false)
 
     // Tchap: evaluate our own icon size
     var iconSize: CompoundIcon.Size {
         switch self {
-        case .userIsExternal(let inRoomHeaderView): inRoomHeaderView ? .custom(9.0) : .xSmall
-        case .roomIsEncrypted(let inRoomHeaderView): inRoomHeaderView ? .custom(9.0) : .xSmall
-        case .roomIsNotEncrypted(let inRoomHeaderView): inRoomHeaderView ? .custom(9.0) : .xSmall
-        case .roomIsPublic(let inRoomHeaderView): inRoomHeaderView ? .custom(9.0) : .xSmall
-        case .roomIsAccessibleToExternals(let inRoomHeaderView): inRoomHeaderView ? .custom(8.0) : .xSmall
+        case .userIsExternal(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
+        case .roomIsEncrypted(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
+        case .roomIsNotEncrypted(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
+        case .roomIsPublic(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
+        case .roomIsAccessibleToExternals(let useSmallSize): useSmallSize ? .custom(8.0) : .xSmall
         }
     }
 
     var titleColor: Color {
         switch self {
-        case .userIsExternal: CompoundCoreColorTokens.orange1200
-        case .roomIsEncrypted: CompoundCoreColorTokens.green1200
-        case .roomIsNotEncrypted: CompoundCoreColorTokens.gray1200
-        case .roomIsPublic: CompoundCoreColorTokens.gray1200
-        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange1200
+        case .userIsExternal: CompoundCoreColorTokens.orange1100
+        case .roomIsEncrypted: .compound.textBadgeAccent
+        case .roomIsNotEncrypted: .compound.textBadgeInfo
+        case .roomIsPublic: .compound.textBadgeInfo
+        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange1100
         }
     }
 
     var iconColor: Color {
         switch self {
-        case .userIsExternal: CompoundCoreColorTokens.orange1200
-        case .roomIsEncrypted: CompoundCoreColorTokens.green1200
-        case .roomIsNotEncrypted: CompoundCoreColorTokens.gray1200
-        case .roomIsPublic: CompoundCoreColorTokens.gray1200
-        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange1200
+        case .userIsExternal: .compound.textDecorative6
+        case .roomIsEncrypted: .compound.iconAccentPrimary
+        case .roomIsNotEncrypted: .compound.iconInfoPrimary
+        case .roomIsPublic: .compound.iconInfoPrimary
+        case .roomIsAccessibleToExternals: .compound.textDecorative6
         }
     }
 
     var backgroundColor: Color {
         switch self {
-        case .userIsExternal: CompoundCoreColorTokens.orange400
-        case .roomIsEncrypted: CompoundCoreColorTokens.green400
-        case .roomIsNotEncrypted: CompoundCoreColorTokens.gray400
-        case .roomIsPublic: CompoundCoreColorTokens.gray400
-        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange400
+        case .userIsExternal: CompoundCoreColorTokens.orange300
+        case .roomIsEncrypted: .compound.bgBadgeAccent
+        case .roomIsNotEncrypted: .compound.bgBadgeInfo
+        case .roomIsPublic: .compound.bgBadgeInfo
+        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange300
         }
     }
 
     var font: Font {
         switch self {
-        case .userIsExternal(let inRoomHeaderView):
-            if inRoomHeaderView == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
-        case .roomIsEncrypted(let inRoomHeaderView):
-            if inRoomHeaderView == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
-        case .roomIsNotEncrypted(let inRoomHeaderView):
-            if inRoomHeaderView == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
-        case .roomIsPublic(let inRoomHeaderView):
-            if inRoomHeaderView == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
-        case .roomIsAccessibleToExternals(let inRoomHeaderView):
-            if inRoomHeaderView == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
+        case .userIsExternal(let useSmallSize):
+            if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
+        case .roomIsEncrypted(let useSmallSize):
+            if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
+        case .roomIsNotEncrypted(let useSmallSize):
+            if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
+        case .roomIsPublic(let useSmallSize):
+            if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
+        case .roomIsAccessibleToExternals(let useSmallSize):
+            if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
         }
     }
     
     var leadingPadding: CGFloat {
         switch self {
-        case .userIsExternal(let inRoomHeaderView),
-             .roomIsEncrypted(let inRoomHeaderView),
-             .roomIsNotEncrypted(let inRoomHeaderView),
-             .roomIsPublic(let inRoomHeaderView),
-             .roomIsAccessibleToExternals(let inRoomHeaderView):
-            if inRoomHeaderView == true { 4.0 } else { 8.0 }
+        case .userIsExternal(let useSmallSize),
+             .roomIsEncrypted(let useSmallSize), .roomIsNotEncrypted(let useSmallSize),
+             .roomIsPublic(let useSmallSize),
+             .roomIsAccessibleToExternals(let useSmallSize):
+            if useSmallSize == true { 4.0 } else { 8.0 }
         }
     }
     
     var trailingPadding: CGFloat {
         switch self {
-        case .userIsExternal(let inRoomHeaderView),
-             .roomIsEncrypted(let inRoomHeaderView),
-             .roomIsNotEncrypted(let inRoomHeaderView),
-             .roomIsPublic(let inRoomHeaderView),
-             .roomIsAccessibleToExternals(let inRoomHeaderView):
-            if inRoomHeaderView == true { 5.0 } else { 12.0 }
+        case .userIsExternal(let useSmallSize),
+             .roomIsEncrypted(let useSmallSize),
+             .roomIsNotEncrypted(let useSmallSize),
+             .roomIsPublic(let useSmallSize),
+             .roomIsAccessibleToExternals(let useSmallSize):
+            if useSmallSize == true { 5.0 } else { 12.0 }
         }
     }
     
     var verticalPadding: CGFloat {
         switch self {
-        case .userIsExternal(let inRoomHeaderView),
-             .roomIsEncrypted(let inRoomHeaderView),
-             .roomIsNotEncrypted(let inRoomHeaderView),
-             .roomIsPublic(let inRoomHeaderView),
-             .roomIsAccessibleToExternals(let inRoomHeaderView):
-            if inRoomHeaderView == true { 2.0 } else { 4.0 }
+        case .userIsExternal(let useSmallSize),
+             .roomIsEncrypted(let useSmallSize),
+             .roomIsNotEncrypted(let useSmallSize),
+             .roomIsPublic(let useSmallSize),
+             .roomIsAccessibleToExternals(let useSmallSize):
+            if useSmallSize == true { 2.0 } else { 4.0 }
         }
     }
 }

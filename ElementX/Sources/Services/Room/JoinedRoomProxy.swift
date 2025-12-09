@@ -736,8 +736,8 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         }
     }
 
-    // Tchap: read access rules from local state store.
-    func accessRules() async -> Result<AccessRule?, RoomProxyError> {
+    // Tchap: read access rule from local state store.
+    func accessRule() async -> Result<AccessRule?, RoomProxyError> {
         do {
             return try await .success(room.getAccessRule())
         } catch {
@@ -755,7 +755,28 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     func visibility() async -> RoomVisibility {
         await room.getVisibility()
     }
+
+    // Tchap: update access rule on the homeServer.
+    func applyAccessRulesChanges(_ changes: AccessRule) async -> Result<Void, RoomProxyError> {
+        do {
+            return try await .success(room.setAccessRule(rule: changes))
+        } catch {
+            MXLog.error("Failed applying the access rule changes: \(error)")
+            return .failure(.unableToUpdateAccessRule(error))
+        }
+    }
     
+    // Tchap: check if room access rule need to be updated to invite user (check for first external user).
+    func accessRuleNeedToBeUpdated(for invitedUsers: [String]) async -> Bool {
+        guard invitedUsers.containsExternalTchapUser,
+              case .success(let currentAccessRule) = await accessRule(),
+              currentAccessRule == .restricted else {
+            // Invited users list doesn't contain any external user or access rule is not `restricted` No need to update.
+            return false
+        }
+        return true
+    }
+
     // MARK: - Private
     
     private func subscribeToTypingNotifications() {
