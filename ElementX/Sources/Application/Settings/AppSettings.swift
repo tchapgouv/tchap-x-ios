@@ -452,7 +452,7 @@ final class AppSettings {
     private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
                                                                    apiKey: Secrets.mapLibreAPIKey,
                                                                    lightStyleID: "osm-bright",
-                                                                   darkStyleID: "dark-matter")
+                                                                   darkStyleID: "fiord-color")
     #else
     private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
                                                                    apiKey: Secrets.mapLibreAPIKey,
