@@ -250,7 +250,8 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .startScreen), transitions: [.oidcAuthentication => .startScreen])
         
         stateMachine.addRoutes(event: .continueWithPassword, transitions: [.serverConfirmationScreen => .loginScreen,
-                                                                           .startScreen => .loginScreen]) { [weak self] context in
+                                                                           .startScreen => .loginScreen,
+                                                                           .tchapDecideHomeServerScreen(.login) => .loginScreen]) { [weak self] context in
             let loginHint = context.userInfo as? String
             // Tchap: login with email converted to matrix ID.
             // Tchap: as we skip the homeServer confirmation screen, we have to configure it now before showing login screen.
@@ -285,7 +286,9 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .serverConfirmationScreen), transitions: [.loginScreen => .serverConfirmationScreen])
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .startScreen), transitions: [.loginScreen => .startScreen])
-        
+        // Tchap: cancel login from tchapDecideHomeServerScreen flow.
+        stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .tchapDecideHomeServerScreen(.login)), transitions: [.loginScreen => .tchapDecideHomeServerScreen(.login)])
+
         // Bug Report
         
         stateMachine.addRoutes(event: .reportProblem, transitions: [.startScreen => .bugReportFlow]) { [weak self] _ in
@@ -425,8 +428,8 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 guard let self else { return }
 
                 switch action {
-                case .authenticationServiceConfiguredForLogin:
-                    stateMachine.tryEvent(.continueWithOIDC)
+                case .authenticationServiceConfiguredForLogin(let loginHint):
+                    stateMachine.tryEvent(.continueWithPassword, userInfo: loginHint)
                 case .authenticationServiceConfiguredForOIDC(let oidcData, let window):
                     stateMachine.tryEvent(.continueWithOIDC, userInfo: (oidcData, window))
                 }

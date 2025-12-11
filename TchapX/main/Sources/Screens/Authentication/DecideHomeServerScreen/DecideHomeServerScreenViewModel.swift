@@ -58,12 +58,21 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
             Task { state.window = window }
         case .requestForHomeserver:
             requestForHomeserver()
+        case .resetLoadingState: // Called when the view comes to screen (or going back to the view).
+            resetLoadingState()
         }
     }
-
+    
+    private func resetLoadingState() {
+        stopLoading()
+        state.blockUserInteraction = false
+    }
+    
     func stopLoading() {
         state.isLoading = false
         userIndicatorController.retractIndicatorWithId(Self.loadingIndicatorIdentifier)
+        // Don't unblock submit button else it can be tapped before going to next screen.
+        // It will be enabled again when coming back to this screen if necessary.
     }
     
     // MARK: - Private
@@ -73,27 +82,35 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
     /// Each server is requested one at a time until the first correct response.
     /// Display an error if no response is obtained.
     private func requestForHomeserver() {
-        MXLog.info("[DecideHomeServerScreen]Starting requesting homeserver attachment for email login.")
+        MXLog.info("[DecideHomeServerScreen] Starting requesting homeserver attachment for email login.")
         startLoading(isInteractionBlocking: true)
         
+        // Randonize order of servers list to avoid requesting the same servers in the same order (balance the charge).
         let requestServerDomains = accountProviders.shuffled()
 
         // Init and keep strong ref to task.
         // It will be canceled if view is dismissed.
         requestServerDomainsTask = Task(priority: .background) {
+            defer {
+                stopLoading()
+            }
+            
+            // Trim option numerical suffix (if account was closed and recreated multiple times).
+            // Else, the returned domain will be domain for external users, and the user won't be able to login if not external.
+            let usernameIdWithoutNumericalSuffix = String(self.context.username.trimmingSuffix { $0.isNumber })
+            
             for domain in requestServerDomains {
                 if Task.isCancelled {
                     return
                 }
                 
-                switch await self.requestHomeserverForInfo(homeserver: domain, forEmail: self.context.username) {
+                switch await self.requestHomeserverForInfo(homeserver: domain, forEmail: usernameIdWithoutNumericalSuffix) {
                 case .success(let homeserverDomain):
                     MXLog.info("[DecideHomeServerScreen] requestForHomeserver \(domain) returned domain -> \(homeserverDomain)")
                     if Task.isCancelled {
                         return
                     }
-                    await initAuthenticationService(for: homeserverDomain)
-                    stopLoading()
+                    await initAuthenticationService(for: homeserverDomain, loginHint: self.context.username)
                     // exit method now that AuthenticationService is inited.
                     return
                 case .failure(let error):
@@ -107,6 +124,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
             // No homeserver returned a domain for the email specified. Throw error.
             MXLog.error("[DecideHomeServerScreen] No homeserver returned a domain for the email \(self.context.username).")
             handleError(.tchapGetInstanceError)
+            resetLoadingState()
         }
     }
     
@@ -120,7 +138,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
     }
     
     // Initialize the Authentication service with the returned homeServer.
-    private func initAuthenticationService(for homeserverDomain: String) async {
+    private func initAuthenticationService(for homeserverDomain: String, loginHint: String) async {
         // Try to configure the Authentication Service to use the selected Homeserver.
         // Pass the Authentication service the desired flow: .login or .register
         switch await authenticationService.configure(for: homeserverDomain, flow: authenticationFlow) {
@@ -133,6 +151,10 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
                     handleError(error)
                     MXLog.error("[DecideHomeServerScreen] initAuthenticationService error: can't prepare OIDC flow")
                 }
+            } else if authenticationService.homeserver.value.loginMode == .password {
+                // Redirect to Login flow.
+                // Should not occur: TchapX only supports OIDC / MAS.
+                actionsSubject.send(.authenticationServiceConfiguredForLogin(loginHint: loginHint))
             } else {
                 // TchapX only supports authentication via OIDC / MAS
                 MXLog.error("[DecideHomeServerScreen] initAuthenticationService error: homeserverDoesntSupportOIDCLoginFlow")
@@ -170,6 +192,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
         } else {
             state.isLoading = true
         }
+        state.blockUserInteraction = true
     }
     
     /// Processes an error to either update the flow or display it to the user.

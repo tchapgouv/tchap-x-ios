@@ -115,8 +115,8 @@ extension TchapFeatureFlag {
         // Tchap: don't use pinning for v0.7.0
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
-        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
-        static let enableMAS = TchapFeatureFlag(allowedInstances: [])
+        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [.all])
+        static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
         #elseif IS_TCHAP_STAGING
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [.agriculture, .agent])
         static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])

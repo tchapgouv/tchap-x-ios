@@ -13,7 +13,7 @@ enum DecideHomeServerScreenViewModelAction {
     /// The homeserver domain is obtained and the Authentication Service supports OIDC
     case authenticationServiceConfiguredForOIDC(data: OIDCAuthorizationDataProxy, window: UIWindow)
     /// The homeserver domain is obtained and the Authentication Service is configured for login
-    case authenticationServiceConfiguredForLogin
+    case authenticationServiceConfiguredForLogin(loginHint: String)
 }
 
 struct DecideHomeServerScreenViewState: BindableState {
@@ -26,11 +26,15 @@ struct DecideHomeServerScreenViewState: BindableState {
     
     /// `true` when valid credentials have been entered and a homeserver has been loaded.
     var canSubmit: Bool {
-        !isLoading && bindings.username.isEmailAddress
+        !blockUserInteraction && !isLoading && bindings.username.isEmailAddress
     }
 
     /// The  authentication flow: .login or .register.
     let authenticationFlow: AuthenticationFlow
+    
+    /// A flag to block submit button once it is tapped else it can be tapped again before leaving screen.
+    /// It is resetted when coming back to screen if needed.
+    var blockUserInteraction = false
 }
 
 struct DecideHomeServerScreenBindings {
@@ -45,6 +49,8 @@ enum DecideHomeServerScreenViewAction {
     case updateWindow(UIWindow)
     /// Ask any HomeServer the homeServer attached to this email address .
     case requestForHomeserver
+    //// Reset loading state of view
+    case resetLoadingState
 }
 
 enum DecideHomeServerScreenErrorType: Error, Hashable {

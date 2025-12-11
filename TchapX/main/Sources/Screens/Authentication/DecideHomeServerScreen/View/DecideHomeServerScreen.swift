@@ -33,6 +33,9 @@ struct DecideHomeServerScreen: View {
         .introspect(.window, on: .supportedVersions) { window in
             context.send(viewAction: .updateWindow(window))
         }
+        .onAppear {
+            context.send(viewAction: .resetLoadingState)
+        }
     }
     
     /// The header containing the title and icon.
@@ -76,6 +79,7 @@ struct DecideHomeServerScreen: View {
             .submitLabel(.next)
             .onSubmit { submit() }
             .padding(.bottom, 20)
+            .disabled(context.viewState.blockUserInteraction)
             
             Spacer().frame(height: 32)
 
