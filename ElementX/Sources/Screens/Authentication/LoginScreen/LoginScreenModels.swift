@@ -42,6 +42,9 @@ struct LoginScreenViewState: BindableState {
     var canSubmit: Bool {
         hasValidCredentials && !isLoading
     }
+    
+    // Tchap: lock editing if loginHint is not null or empty
+    var loginHintIsEmpty = true
 }
 
 struct LoginScreenBindings {

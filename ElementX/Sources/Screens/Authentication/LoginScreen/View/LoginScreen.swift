@@ -89,6 +89,7 @@ struct LoginScreen: View {
             }
             .onSubmit { isPasswordFocused = true }
             .padding(.bottom, 20)
+            .disabled(!context.viewState.loginHintIsEmpty)
             
             SecureField(text: $context.password) {
                 Text(L10n.commonPassword).foregroundColor(.compound.textSecondary)
