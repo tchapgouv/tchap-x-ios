@@ -11,7 +11,7 @@ common_faq = "Foire Aux Questions";
 common_user_is_external = "INVITÉ EXTERNE";
 common_email = "Email";
 
-legal_terms_of_use = "Conditions Générales d'Utilisation";
+legal_terms_of_use = "Modalités d'utilisation";
 legal_privacy_policy = "Politique de confidentialité";
 
 screen_onboarding_welcome_title = "Bienvenue dans Tchap";
