@@ -7,6 +7,9 @@
 //
 
 import Compound
+
+// Tchap: Used to check if MatrixID is external user.
+import MatrixRustSDK
 import SwiftUI
 
 // MARK: - Coordinator
@@ -176,9 +179,6 @@ struct RoomDetailsScreenViewStateBindings {
     
     /// The view model used to display the leave space sheet, will only be used if the room is a space.
     var leaveSpaceViewModel: LeaveSpaceViewModel?
-
-    // Tchap: is the room open to external users to display or hide `External` badge.
-    var isOpenToExternalUsers: Bool?
 }
 
 struct LeaveRoomAlertItem: AlertProtocol {

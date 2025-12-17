@@ -124,7 +124,6 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
             // No homeserver returned a domain for the email specified. Throw error.
             MXLog.error("[DecideHomeServerScreen] No homeserver returned a domain for the email \(self.context.username).")
             handleError(.tchapGetInstanceError)
-            resetLoadingState()
         }
     }
     
@@ -198,7 +197,8 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
     /// Processes an error to either update the flow or display it to the user.
     private func handleError(_ error: DecideHomeServerScreenErrorType) {
         MXLog.info("[DecideHomeServerScreen] Error occurred: \(error)")
-       
+        resetLoadingState()
+        
         switch error {
         case .tchapGetInstanceError:
             state.bindings.alertInfo = AlertInfo(id: .tchapGetInstanceError,

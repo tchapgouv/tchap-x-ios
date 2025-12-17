@@ -346,8 +346,10 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
             state.bindings.isEncrypted = roomProxy.details.isEncrypted
             state.bindings.isPublic = roomProxy.details.isPublic
             // Tchap: read the `external access` value in the `accessRules` of the room.
-            state.bindings.isOpenToExternalUsers = roomProxy.details.accessRule == .unrestricted
+            // Used to display "open to external users" badge.
+            state.bindings.accessRule = roomProxy.details.accessRule
             state.bindings.canDisplayPublicBadge = roomProxy.details.canDisplayPublicBadge
+            state.bindings.roomAvatar = roomProxy.details.avatar
         }
     }
     

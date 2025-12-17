@@ -324,9 +324,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             .sink { [weak self, ownUserID = roomProxy.ownUserID] members in
                 guard let self else { return }
                
-                // Tchap: update `isOpenToExternalUsers` to display `external` badge on RoomDetailsScreen if necessary.
-                self.state.bindings.isOpenToExternalUsers = roomProxy.details.accessRule == .unrestricted
-
                 guard roomProxy.isDirectOneToOneRoom else {
                     return
                 }
