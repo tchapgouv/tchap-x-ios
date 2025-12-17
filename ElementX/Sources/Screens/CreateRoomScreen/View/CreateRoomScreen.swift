@@ -181,7 +181,9 @@ struct CreateRoomScreen: View {
                                     attributedDescriptionWhenDisabled: warningPublicRoomIsNotOpenToExterns,
                                     icon: \.public,
                                     iconAlignment: .top),
-                    kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
+                    // Tchap: add `isRoomEncrypted` flag becasue of new Tchap room type "Private not encrypted"
+//                    kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
+                    kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false; context.isRoomEncrypted = false })
         } header: {
             Text(TchapL10n.screenCreateRoomRoomVisibilitySectionTitle)
                 .compoundListSectionHeader()
