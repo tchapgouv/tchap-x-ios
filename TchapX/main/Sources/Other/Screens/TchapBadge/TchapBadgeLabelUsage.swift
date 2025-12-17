@@ -52,7 +52,7 @@ public enum TchapBadgeLabelUsage {
         case .userIsExternal: CompoundCoreColorTokens.orange300
         case .roomIsEncrypted: .compound.bgBadgeAccent
         case .roomIsNotEncrypted: .compound.bgBadgeInfo
-        case .roomIsPublic: .compound.bgBadgeInfo
+        case .roomIsPublic: .compound.bgBadgeDefault
         case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange300
         }
     }
