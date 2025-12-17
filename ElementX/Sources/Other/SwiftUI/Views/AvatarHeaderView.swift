@@ -7,6 +7,9 @@
 //
 
 import Compound
+
+// Tchap: Used to check if MatrixID is external user.
+import MatrixRustSDK
 import SwiftUI
 
 struct AvatarHeaderView<Footer: View>: View {
@@ -31,11 +34,12 @@ struct AvatarHeaderView<Footer: View>: View {
     private var onAvatarTap: ((URL) -> Void)?
     @ViewBuilder private var footer: () -> Footer
     
-    // Tchap: add `isOpenToExternalUsers` property
-    var isOpenToExternalUsers: Binding<Bool?>
-    
+    // Tchap: add `accessRule` property
+    var accessRule: Binding<AccessRule?>
+    // Tchap: store `room.name` parameter to use in case of direct message to know if recipient is external user.
+    var dmRecipientId: Binding<String?>
+
     init(room: RoomDetails,
-         isOpenToExternalUsers: Binding<Bool?>, // Tchap: add `isOpenToExternalUsers` parameter
          avatarSize: Avatars.Size,
          mediaProvider: MediaProviderProtocol? = nil,
          onAvatarTap: ((URL) -> Void)? = nil,
@@ -55,8 +59,25 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
-        // Tchap: store `isOpenToExternalUsers` parameter
-        self.isOpenToExternalUsers = isOpenToExternalUsers
+        
+        // Tchap: store `accessRule` parameter
+        accessRule = Binding(get: {
+            room.accessRule
+        }, set: { _ in
+            // Should not be set this way.
+        })
+        
+        // Tchap: store `room.name` parameter to use in case of direct message to know if recipient is external user.
+        dmRecipientId = Binding(get: {
+            if room.isDirect,
+               case .heroes(let heroes) = room.avatar {
+                return heroes.first?.userID
+            } else {
+                return nil
+            }
+        }, set: { _ in
+            // Should not be set this way.
+        })
         
         var badges = [Badge]()
         badges.append(.encrypted(room.isEncrypted))
@@ -68,7 +89,6 @@ struct AvatarHeaderView<Footer: View>: View {
     
     init(accountOwner: RoomMemberDetails,
          dmRecipient: RoomMemberDetails,
-         isOpenToExternalUsers: Binding<Bool?>, // Tchap: add `isOpenToExternalUsers` parameter
          mediaProvider: MediaProviderProtocol? = nil,
          onAvatarTap: ((URL) -> Void)? = nil,
          @ViewBuilder footer: @escaping () -> Footer) {
@@ -82,8 +102,9 @@ struct AvatarHeaderView<Footer: View>: View {
         self.onAvatarTap = onAvatarTap
         self.footer = footer
         
-        // Tchap: store `isOpenToExternalUsers` parameter
-        self.isOpenToExternalUsers = isOpenToExternalUsers
+        // Tchap: store `accessRule` parameter based on dmRecipient only because DM creator can't be external user.
+        accessRule = .constant(MatrixIdFromString(dmRecipient.id).isExternalTchapUser ? .unrestricted : .restricted)
+        dmRecipientId = .constant(dmRecipient.id)
         
         // In EL-X a DM is by definition always encrypted
         badges = [.encrypted(true)]
@@ -119,8 +140,9 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
-        // Tchap: isOpenToExternalUsers
-        isOpenToExternalUsers = .constant(false)
+        // Tchap: accessRule
+        accessRule = .constant(.restricted)
+        dmRecipientId = .constant(nil)
         
         badges = isVerified ? [.verified] : []
     }
@@ -176,7 +198,8 @@ struct AvatarHeaderView<Footer: View>: View {
             }
             
             // Tchap: add `External` badge if necessary.
-            if isOpenToExternalUsers.wrappedValue ?? false {
+            if (accessRule.wrappedValue ?? .restricted) == .unrestricted ||
+                (dmRecipientId.wrappedValue != nil && MatrixIdFromString(dmRecipientId.wrappedValue!).isExternalTchapUser) { // swiftlint:disable:this force_unwrapping
                 BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
             }
         }
@@ -269,7 +292,6 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
                                          // Tchap: add test value
                                          accessRule: .unrestricted,
                                          visibility: .private),
-                             isOpenToExternalUsers: .constant(true),
                              avatarSize: .room(on: .details),
                              mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {
@@ -284,7 +306,7 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
         .previewDisplayName("Room")
         
         Form {
-            AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice), isOpenToExternalUsers: .constant(true),
+            AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice),
                              mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {
                     ShareLink(item: "test") {

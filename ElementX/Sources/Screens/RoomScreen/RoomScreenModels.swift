@@ -94,9 +94,11 @@ struct RoomScreenViewStateBindings {
     // Tchap: display room properties badges. As they are queried async, make them Bindable.
     var isEncrypted: Bool?
     var isPublic: Bool?
-    var isOpenToExternalUsers: Bool?
+    var accessRule: AccessRule?
     var visibilityInRoomDirectory: RoomVisibility!
     var canDisplayPublicBadge: Bool!
+    var roomAvatar: RoomAvatar?
+    // Tchap: end
 }
 
 enum RoomScreenFooterViewAction {
