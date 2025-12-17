@@ -217,8 +217,19 @@ final class AppSettings {
     /// The task identifier used for background app refresh. Also used in main target's the Info.plist
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
 
+    // Tchap: adapt website URL for OIDC / MAS
+    //    private(set) var websiteURL: URL = "https://element.io"
     /// A URL where users can go read more about the app.
+    #if IS_TCHAP_DEVELOPMENT
+    private(set) var websiteURL: URL = "https://tchap.gouv.fr"
+    #elseif IS_TCHAP_STAGING
+    private(set) var websiteURL: URL = "https://beta.tchap.gouv.fr"
+    #elseif IS_TCHAP_PRODUCTION
+    private(set) var websiteURL: URL = "https://tchap.incubateur.net"
+    #else
     private(set) var websiteURL: URL = "https://element.io"
+    #endif
+    
     /// A URL that contains the app's logo that may be used when showing content in a web view.
     private(set) var logoURL: URL = "https://element.io/mobile-icon.png"
     /// A URL that contains that app's copyright notice.
@@ -290,10 +301,21 @@ final class AppSettings {
     // and now in the `docs/FORKING.md` (https://github.com/element-hq/element-x-ios/blob/develop/docs/FORKING.md)
     // Use the same Redirect URL as Tchap Legacy.
     // The fact it is a custom scheme rather than a special web URL avoid the mandatory associated domain declaration: https://developer.apple.com/documentation/xcode/supporting-associated-domains
-//    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
+    //
+    // It seemd the MAS need an oidc redirect url the match the domain name in reverse notation.
+    //    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
     /// The redirect URL used for OIDC. This no longer uses universal links so we don't need the bundle ID to avoid conflicts between Element X, Nightly and PR builds.
-    private(set) var oidcRedirectURL: URL = "tchap://connect"
     
+    #if IS_TCHAP_DEVELOPMENT
+    private(set) var oidcRedirectURL: URL = "net.incubateur.tchap.ios:/"
+    #elseif IS_TCHAP_STAGING
+    private(set) var oidcRedirectURL: URL = "fr.gouv.tchap.beta.ios:/"
+    #elseif IS_TCHAP_PRODUCTION
+    private(set) var oidcRedirectURL: URL = "fr.gouv.tchap.ios:/"
+    #else
+    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
+    #endif
+
     private(set) lazy var oidcConfiguration = OIDCConfiguration(clientName: InfoPlistReader.main.bundleDisplayName,
                                                                 redirectURI: oidcRedirectURL,
                                                                 clientURI: websiteURL,
