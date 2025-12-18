@@ -71,22 +71,52 @@ internal enum TchapL10n {
   internal static var screenCreateRoomRoomVisibilitySectionTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_visibility_section_title") }
   /// Members
   internal static var screenCreateRoomSelectedUsersLabel: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_selected_users_label") }
+  /// Unable to determine which server your account is attached to.
+  internal static var screenDecideHomeserverErrorGetInstanceMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_get_instance_message") }
+  /// Erreur
+  internal static var screenDecideHomeserverErrorGetInstanceTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_get_instance_title") }
+  /// Unable to read the configuration of your attachment server.
+  internal static var screenDecideHomeserverErrorHomeserverConfigurationUnreachableMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_homeserver_configuration_unreachable_message") }
+  /// Erreur
+  internal static var screenDecideHomeserverErrorHomeserverConfigurationUnreachableTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_homeserver_configuration_unreachable_title") }
+  /// Your attachment server doesn't support OIDC authentication.
+  internal static var screenDecideHomeserverErrorHomeserverDoesntSupportOidcLoginFlowMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_message") }
+  /// Erreur
+  internal static var screenDecideHomeserverErrorHomeserverDoesntSupportOidcLoginFlowTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_title") }
+  /// By inviting an external guest, this room will become accessible to any external guest.
+  /// This change is final and irreversible.
+  internal static var screenInviteExternalUserDialogMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_invite_external_user_dialog_message") }
+  /// Invitation of an external
+  internal static var screenInviteExternalUserDialogTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_invite_external_user_dialog_title") }
+  /// The opening of the room to external users failed. No invitations were sent.
+  internal static var screenInviteExternalUserErrorModifyingAccessRuleMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_invite_external_user_error_modifying_access_rule_message") }
+  /// Unable to open the room to externals
+  internal static var screenInviteExternalUserErrorModifyingAccessRuleTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_invite_external_user_error_modifying_access_rule_title") }
   /// Instant messaging of public sector
   internal static var screenLoginDescriptionWithTchap: String { return TchapL10n.tr("TchapLocalizable", "screen_login_description_with_tchap") }
+  /// Enter your professional email address
+  internal static var screenLoginInputEmailLabel: String { return TchapL10n.tr("TchapLocalizable", "screen_login_input_email_label") }
   /// Sign in to Tchap
-  internal static var screenLoginTitleWithTchap: String { return TchapL10n.tr("TchapLocalizable", "screen_login_title_with_tchap") }
+  internal static var screenLoginTitleLogin: String { return TchapL10n.tr("TchapLocalizable", "screen_login_title_login") }
+  /// Create an account on Tchap
+  internal static var screenLoginTitleRegister: String { return TchapL10n.tr("TchapLocalizable", "screen_login_title_register") }
   /// The civil servants instant messaging system
   internal static var screenOnboardingWelcomeMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_message") }
   /// or
   internal static var screenOnboardingWelcomeOrBetweenButtons: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_or_between_buttons") }
   /// Already logged on a computer?
   internal static var screenOnboardingWelcomeQrcodeHeader: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_qrcode_header") }
-  /// Welcome to Tchap
-  internal static var screenOnboardingWelcomeTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_title") }
+  /// Welcome to
+  /// %1$@
+  internal static func screenOnboardingWelcomeTitle(_ p1: Any) -> String {
+    return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_title", String(describing: p1))
+  }
   /// Join a public room
   internal static var screenRoomDirectorySearchTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_room_directory_search_title") }
   /// Join a public room
   internal static var startChatActionJoinForum: String { return TchapL10n.tr("TchapLocalizable", "start_chat_action_join_forum") }
+  /// Room access rule updated
+  internal static var stateEventRoomAccessRule: String { return TchapL10n.tr("TchapLocalizable", "state_event_room_access_rule") }
 }
 // swiftlint:enable explicit_type_interface function_parameter_count identifier_name line_length
 // swiftlint:enable nesting type_body_length type_name vertical_whitespace_opening_braces

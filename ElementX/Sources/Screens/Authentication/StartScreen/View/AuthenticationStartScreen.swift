@@ -72,7 +72,7 @@ struct AuthenticationStartScreen: View {
                 VStack(spacing: 8) {
                     // Tchap: Change Title on Start screen
                     //                Text(L10n.screenOnboardingWelcomeTitle)
-                    Text(TchapL10n.screenOnboardingWelcomeTitle)
+                    Text(TchapL10n.screenOnboardingWelcomeTitle(InfoPlistReader.main.bundleDisplayName))
                         .font(.compound.headingLGBold)
                         .foregroundColor(.compound.textPrimary)
                         .multilineTextAlignment(.center)

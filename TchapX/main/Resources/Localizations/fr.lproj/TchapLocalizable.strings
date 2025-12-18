@@ -14,7 +14,7 @@ common_email = "Email";
 legal_terms_of_use = "Modalités d'utilisation";
 legal_privacy_policy = "Politique de confidentialité";
 
-screen_onboarding_welcome_title = "Bienvenue dans Tchap";
+screen_onboarding_welcome_title = "Bienvenue dans\n%1$@";
 screen_onboarding_welcome_message = "La messagerie instantanée du secteur public";
 screen_onboarding_welcome_qrcode_header = "Déjà connecté sur un ordinateur ?";
 screen_onboarding_welcome_or_between_buttons = "ou";
