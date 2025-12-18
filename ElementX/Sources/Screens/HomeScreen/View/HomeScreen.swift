@@ -74,7 +74,9 @@ struct HomeScreen: View {
             } label: {
                 CompoundIcon(\.plus)
             }
-            .buttonStyle(.compound(.super, size: .toolbarIcon))
+            // Tchap: make the "start chat" button in Tchap style (Tchap primary color).
+//            .buttonStyle(.compound(.super, size: .toolbarIcon))
+            .buttonStyle(.compound(.primary, size: .toolbarIcon))
             .accessibilityLabel(L10n.actionStartChat)
             .accessibilityIdentifier(A11yIdentifiers.homeScreen.startChat)
         default:
