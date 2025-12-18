@@ -27,7 +27,7 @@ struct RoomChangeRolesScreenRow: View {
                 kind: .multiSelection(isSelected: isSelected, action: action))
         #else
         ListRow(label: .avatar(title: member.name ?? member.id,
-                               status: member.isInvited ? L10n.screenRoomMemberListPendingHeaderTitle : nil,
+                               status: member.isInvited ? L10n.screenRoomMemberListPendingStatus : nil,
                                description: nil,
                                icon: avatar),
                 kind: .multiSelection(isSelected: isSelected, action: action))
