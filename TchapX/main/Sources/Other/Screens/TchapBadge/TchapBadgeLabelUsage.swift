@@ -29,31 +29,31 @@ public enum TchapBadgeLabelUsage {
 
     var titleColor: Color {
         switch self {
-        case .userIsExternal: CompoundCoreColorTokens.orange1100
+        case .userIsExternal: .compound.textBadgeExternal
         case .roomIsEncrypted: .compound.textBadgeAccent
-        case .roomIsNotEncrypted: .compound.textBadgeInfo
-        case .roomIsPublic: .compound.textBadgeInfo
-        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange1100
+        case .roomIsNotEncrypted: .compound.textBadgeDefault
+        case .roomIsPublic: .compound.textBadgeDefault
+        case .roomIsAccessibleToExternals: .compound.textBadgeExternal
         }
     }
 
     var iconColor: Color {
         switch self {
-        case .userIsExternal: .compound.textDecorative6
-        case .roomIsEncrypted: .compound.iconAccentPrimary
-        case .roomIsNotEncrypted: .compound.iconInfoPrimary
-        case .roomIsPublic: .compound.iconInfoPrimary
-        case .roomIsAccessibleToExternals: .compound.textDecorative6
+        case .userIsExternal: .compound.iconBadgeExternal
+        case .roomIsEncrypted: .compound.iconBadgeAccent
+        case .roomIsNotEncrypted: .compound.iconBadgeDefault
+        case .roomIsPublic: .compound.iconBadgeDefault
+        case .roomIsAccessibleToExternals: .compound.iconBadgeExternal
         }
     }
 
     var backgroundColor: Color {
         switch self {
-        case .userIsExternal: CompoundCoreColorTokens.orange300
+        case .userIsExternal: .compound.bgBadgeExternal
         case .roomIsEncrypted: .compound.bgBadgeAccent
-        case .roomIsNotEncrypted: .compound.bgBadgeInfo
+        case .roomIsNotEncrypted: .compound.bgBadgeDefault
         case .roomIsPublic: .compound.bgBadgeDefault
-        case .roomIsAccessibleToExternals: CompoundCoreColorTokens.orange300
+        case .roomIsAccessibleToExternals: .compound.bgBadgeExternal
         }
     }
 
