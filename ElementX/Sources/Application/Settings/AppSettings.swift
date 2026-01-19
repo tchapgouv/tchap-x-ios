@@ -204,6 +204,7 @@ final class AppSettings {
 //                                         "agent.culture.tchap.gouv.fr",
 //                                         "agent.dev-durable.tchap.gouv.fr",
 //                                         "agent.education.tchap.gouv.fr"]
+    // TODO: Remove restriction for official release.
     // Restrict currently to DINUM testers only.
     private(set) var accountProviders = ["agent.dinum.tchap.gouv.fr"]
     #elseif IS_TCHAP_UNIT_TESTS
