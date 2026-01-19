@@ -18,7 +18,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
     private let appSettings: AppSettings
     private let analytics: AnalyticsService
     private let accountProviders: [String]
-    private var requestServerDomainsTask: Task<Void, Never>? = nil // Will be canceled if View is leaved.
+    private var requestServerDomainsTask: Task<Void, Never>? // Will be canceled if View is leaved.
     
     private var actionsSubject: PassthroughSubject<DecideHomeServerScreenViewModelAction, Never> = .init()
     var actions: AnyPublisher<DecideHomeServerScreenViewModelAction, Never> {
@@ -130,7 +130,12 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
     private func requestHomeserverForInfo(homeserver: String, forEmail: String) async -> Result<String, DecideHomeServerScreenErrorType> {
         let config = TchapGetInstanceConfig(homeServer: homeserver, userAgent: UserAgentBuilder.makeASCIIUserAgent())
         do {
-            return try .success(tchapGetInstance(config: config, forEmail: forEmail))
+            let tchapInstance = try tchapGetInstance(config: config, forEmail: forEmail)
+            // Reject login attempt if returned instance in not in a listed account provider.
+            if !accountProviders.contains(tchapInstance) {
+                return .failure(.tchapGetInstanceError)
+            }
+            return .success(tchapInstance)
         } catch {
             return .failure(.tchapGetInstanceError)
         }
