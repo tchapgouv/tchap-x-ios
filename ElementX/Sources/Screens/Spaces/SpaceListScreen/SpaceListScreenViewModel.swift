@@ -30,13 +30,14 @@ class SpaceListScreenViewModel: SpaceListScreenViewModelType, SpaceListScreenVie
         self.userIndicatorController = userIndicatorController
         
         super.init(initialViewState: SpaceListScreenViewState(userID: userSession.clientProxy.userID,
-                                                              joinedSpaces: spaceServiceProxy.joinedSpacesPublisher.value,
+                                                              topLevelSpaces: spaceServiceProxy.topLevelSpacesPublisher.value,
+                                                              isCreateSpaceEnabled: appSettings.createSpaceEnabled,
                                                               bindings: .init()),
                    mediaProvider: userSession.mediaProvider)
         
-        spaceServiceProxy.joinedSpacesPublisher
+        spaceServiceProxy.topLevelSpacesPublisher
             .receive(on: DispatchQueue.main)
-            .weakAssign(to: \.state.joinedSpaces, on: self)
+            .weakAssign(to: \.state.topLevelSpaces, on: self)
             .store(in: &cancellables)
         
         selectedSpacePublisher
@@ -52,6 +53,10 @@ class SpaceListScreenViewModel: SpaceListScreenViewModelType, SpaceListScreenVie
             .receive(on: DispatchQueue.main)
             .weakAssign(to: \.state.userDisplayName, on: self)
             .store(in: &cancellables)
+        
+        appSettings.$createSpaceEnabled
+            .weakAssign(to: \.state.isCreateSpaceEnabled, on: self)
+            .store(in: &cancellables)
     }
     
     // MARK: - Public
@@ -60,8 +65,8 @@ class SpaceListScreenViewModel: SpaceListScreenViewModelType, SpaceListScreenVie
         MXLog.info("View model: received view action: \(viewAction)")
         
         switch viewAction {
-        case .spaceAction(.select(let spaceRoomProxy)):
-            Task { await selectSpace(spaceRoomProxy) }
+        case .spaceAction(.select(let spaceServiceRoom)):
+            Task { await selectSpace(spaceServiceRoom) }
         case .spaceAction(.join):
             fatalError("There shouldn't be any unjoined spaces in the joined spaces list.")
         case .showSettings:
@@ -73,13 +78,16 @@ class SpaceListScreenViewModel: SpaceListScreenViewModelType, SpaceListScreenVie
             }
         case .featureAnnouncementAppeared:
             appSettings.hasSeenSpacesAnnouncement = true
+        case .createSpace:
+            // TODO: Implement
+            break
         }
     }
     
     // MARK: - Private
     
-    private func selectSpace(_ spaceRoomProxy: SpaceRoomProxyProtocol) async {
-        switch await spaceServiceProxy.spaceRoomList(spaceID: spaceRoomProxy.id) {
+    private func selectSpace(_ spaceServiceRoom: SpaceServiceRoomProtocol) async {
+        switch await spaceServiceProxy.spaceRoomList(spaceID: spaceServiceRoom.id) {
         case .success(let spaceRoomListProxy):
             actionsSubject.send(.selectSpace(spaceRoomListProxy))
         case .failure(let error):

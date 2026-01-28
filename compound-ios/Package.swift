@@ -9,13 +9,18 @@ let package = Package(
         .library(name: "Compound", targets: ["Compound"])
     ],
     dependencies: [
+<<<<<<< HEAD
 // Use the Github hosted version of Tchap Compound-design--tokens
        .package(url: "https://github.com/tchapgouv/compound-design-tokens", branch: "angelo-uikit-ev2"),
 // Use the local version of Tchap Compound-design--tokens
 //        .package(path: "../../tchap-x-compound/compound-design-tokens"),
+=======
+        .package(url: "https://github.com/element-hq/compound-design-tokens", exact: "6.6.0"),
+        // .package(path: "../compound-design-tokens"),
+>>>>>>> release/26.01.0
         .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "26.0.0"),
         .package(url: "https://github.com/SFSafeSymbols/SFSafeSymbols", from: "7.0.0"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.18.3")
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.18.7")
     ],
     targets: [
         .target(

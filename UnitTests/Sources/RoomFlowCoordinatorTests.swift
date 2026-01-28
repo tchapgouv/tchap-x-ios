@@ -16,7 +16,11 @@ import Combine
 @testable import TchapX_Production
 #else
 @testable import ElementX
+<<<<<<< HEAD
 #endif
+=======
+import MatrixRustSDKMocks
+>>>>>>> release/26.01.0
 
 @MainActor
 class RoomFlowCoordinatorTests: XCTestCase {

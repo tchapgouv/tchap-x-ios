@@ -48,6 +48,21 @@ enum SlidingSyncConstants {
     static let maximumVisibleRangeSize = 30
 }
 
+enum CreateRoomAccessType: CaseIterable {
+    case `public`
+    case askToJoin
+    case `private`
+    
+    var isPrivate: Bool {
+        switch self {
+        case .private:
+            true
+        case .public, .askToJoin:
+            false
+        }
+    }
+}
+
 /// This struct represents the configuration that we are using to register the application through Pusher to Sygnal
 /// using the Matrix Rust SDK, more info here:
 /// https://github.com/matrix-org/sygnal
@@ -132,6 +147,8 @@ protocol ClientProxyProtocol: AnyObject {
     
     var isLiveKitRTCSupported: Bool { get async }
     
+    var isLoginWithQRCodeSupported: Bool { get async }
+    
     var maxMediaUploadSize: Result<UInt, ClientProxyError> { get async }
     
     func isOnlyDeviceLeft() async -> Result<Bool, ClientProxyError>
@@ -154,10 +171,15 @@ protocol ClientProxyProtocol: AnyObject {
     
     func createRoom(name: String,
                     topic: String?,
+<<<<<<< HEAD
                     isRoomPrivate: Bool,
                     isRoomEncrypted: Bool, // Tchap: additional property
                     // TODO: add parameter                   isRoomFederated: Bool, // Tchap: additional property.
                     isKnockingOnly: Bool,
+=======
+                    accessType: CreateRoomAccessType,
+                    isSpace: Bool,
+>>>>>>> release/26.01.0
                     userIDs: [String],
                     avatarURL: URL?,
                     aliasLocalPart: String?) async -> Result<String, ClientProxyError>
@@ -194,7 +216,9 @@ protocol ClientProxyProtocol: AnyObject {
     func setUserAvatar(media: MediaInfo) async -> Result<Void, ClientProxyError>
     
     func removeUserAvatar() async -> Result<Void, ClientProxyError>
-
+    
+    func linkNewDeviceService() -> LinkNewDeviceServiceProtocol
+    
     func deactivateAccount(password: String?, eraseData: Bool) async -> Result<Void, ClientProxyError>
     
     func logout() async
@@ -212,6 +236,10 @@ protocol ClientProxyProtocol: AnyObject {
     func isAliasAvailable(_ alias: String) async -> Result<Bool, ClientProxyError>
     
     @discardableResult func clearCaches() async -> Result<Void, ClientProxyError>
+    
+    @discardableResult func optimizeStores() async -> Result<Void, ClientProxyError>
+    
+    func storeSizes() async -> Result<StoreSizes, ClientProxyError>
     
     func fetchMediaPreviewConfiguration() async -> Result<MediaPreviewConfig?, ClientProxyError>
 

@@ -236,7 +236,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         
         Task {
             do {
-                result.latestEvent = await room.newLatestEvent()
+                result.latestEvent = await room.latestEvent()
                 result.roomInfo = try await room.roomInfo()
             } catch {
                 MXLog.error("Failed fetching room info with error: \(error)")
@@ -260,11 +260,19 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         
         if let latestRoomMessage = roomDetails.latestEvent {
             switch latestRoomMessage {
-            case .local(let timestamp, let senderID, let profile, let content, let isSending):
+            case .local(let timestamp, let senderID, let profile, let content, let state):
                 let sender = TimelineItemSender(senderID: senderID, senderProfile: profile)
                 attributedLastMessage = eventStringBuilder.buildAttributedString(for: content, sender: sender, isOutgoing: true)
                 lastMessageDate = Date(timeIntervalSince1970: TimeInterval(timestamp / 1000))
-                lastMessageState = isSending ? .sending : .failed // No need to worry about sent for .local: https://github.com/matrix-org/matrix-rust-sdk/issues/3941
+                
+                switch state {
+                case .isSending:
+                    lastMessageState = .sending
+                case .cannotBeSent:
+                    lastMessageState = .failed
+                case .hasBeenSent:
+                    lastMessageState = nil
+                }
             case .remote(let timestamp, let senderID, let isOwn, let profile, let content):
                 let sender = TimelineItemSender(senderID: senderID, senderProfile: profile)
                 attributedLastMessage = eventStringBuilder.buildAttributedString(for: content, sender: sender, isOutgoing: isOwn)

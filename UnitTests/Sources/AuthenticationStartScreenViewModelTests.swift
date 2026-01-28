@@ -14,7 +14,11 @@ import XCTest
 @testable import TchapX_Production
 #else
 @testable import ElementX
+<<<<<<< HEAD
 #endif
+=======
+import MatrixRustSDKMocks
+>>>>>>> release/26.01.0
 
 @MainActor
 class AuthenticationStartScreenViewModelTests: XCTestCase {
@@ -178,6 +182,7 @@ class AuthenticationStartScreenViewModelTests: XCTestCase {
                              deviceVerificationURL: appSettings.deviceVerificationURL,
                              chatBackupDetailsURL: appSettings.chatBackupDetailsURL,
                              identityPinningViolationDetailsURL: appSettings.identityPinningViolationDetailsURL,
+                             historySharingDetailsURL: appSettings.historySharingDetailsURL,
                              elementWebHosts: appSettings.elementWebHosts,
                              accountProvisioningHost: appSettings.accountProvisioningHost,
                              bugReportApplicationID: appSettings.bugReportApplicationID,

@@ -39,12 +39,22 @@ struct HomeScreen: View {
         }
         .backportSharedBackgroundVisibility(.hidden)
         
+<<<<<<< HEAD
         // Tchap: display `new room` button only if user is NOT external.
         if !MatrixIdFromString(context.viewState.userID).isExternalTchapUser {
             ToolbarItem(placement: .primaryAction) {
                 newRoomButton
             }
             .backportSharedBackgroundVisibility(.hidden)
+=======
+        ToolbarItem(placement: .primaryAction) {
+            if #available(iOS 26, *) {
+                newRoomButton
+            } else {
+                newRoomButton
+                    .buttonStyle(.compound(.super, size: .toolbarIcon))
+            }
+>>>>>>> release/26.01.0
         }
     }
     
@@ -74,9 +84,12 @@ struct HomeScreen: View {
             } label: {
                 CompoundIcon(\.plus)
             }
+<<<<<<< HEAD
             // Tchap: make the "start chat" button in Tchap style (Tchap primary color).
 //            .buttonStyle(.compound(.super, size: .toolbarIcon))
             .buttonStyle(.compound(.primary, size: .toolbarIcon))
+=======
+>>>>>>> release/26.01.0
             .accessibilityLabel(L10n.actionStartChat)
             .accessibilityIdentifier(A11yIdentifiers.homeScreen.startChat)
         default:

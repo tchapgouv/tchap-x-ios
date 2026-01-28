@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import MatrixRustSDKMocks
 import XCTest
 
 // Tchap: specify target for unit tests
@@ -330,6 +331,7 @@ class ServerConfirmationScreenViewModelTests: XCTestCase {
                                  deviceVerificationURL: appSettings.deviceVerificationURL,
                                  chatBackupDetailsURL: appSettings.chatBackupDetailsURL,
                                  identityPinningViolationDetailsURL: appSettings.identityPinningViolationDetailsURL,
+                                 historySharingDetailsURL: appSettings.historySharingDetailsURL,
                                  elementWebHosts: appSettings.elementWebHosts,
                                  accountProvisioningHost: appSettings.accountProvisioningHost,
                                  bugReportApplicationID: appSettings.bugReportApplicationID,

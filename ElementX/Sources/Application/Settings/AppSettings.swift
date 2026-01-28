@@ -32,6 +32,7 @@ final class AppSettings {
         case seenInvites
         case hasSeenSpacesAnnouncement
         case hasSeenNewSoundBanner
+        case acknowledgedHistoryVisibleRooms
         case appLockNumberOfPINAttempts
         case appLockNumberOfBiometricAttempts
         case timelineStyle
@@ -64,8 +65,12 @@ final class AppSettings {
         case threadsEnabled
         case developerOptionsEnabled
         case linkPreviewsEnabled
-        case spaceSettingsEnabled
         case focusEventOnNotificationTap
+        case linkNewDeviceEnabled
+        
+        // Spaces
+        case spaceSettingsEnabled
+        case createSpaceEnabled
         
         // Doug's tweaks 🔧
         case hideUnreadMessagesBadge
@@ -126,6 +131,7 @@ final class AppSettings {
                   deviceVerificationURL: URL,
                   chatBackupDetailsURL: URL,
                   identityPinningViolationDetailsURL: URL,
+                  historySharingDetailsURL: URL,
                   elementWebHosts: [String],
                   accountProvisioningHost: String,
                   bugReportApplicationID: String,
@@ -145,6 +151,7 @@ final class AppSettings {
         self.deviceVerificationURL = deviceVerificationURL
         self.chatBackupDetailsURL = chatBackupDetailsURL
         self.identityPinningViolationDetailsURL = identityPinningViolationDetailsURL
+        self.historySharingDetailsURL = historySharingDetailsURL
         self.elementWebHosts = elementWebHosts
         self.accountProvisioningHost = accountProvisioningHost
         self.bugReportApplicationID = bugReportApplicationID
@@ -171,6 +178,10 @@ final class AppSettings {
     /// Defaults to `true` for new users, and we use a migration to set it to `false` for existing users.
     @UserPreference(key: UserDefaultsKeys.hasSeenNewSoundBanner, defaultValue: true, storageType: .userDefaults(store))
     var hasSeenNewSoundBanner
+    
+    /// The Set of room identifiers that the user has acknowledged have visible history.
+    @UserPreference(key: UserDefaultsKeys.acknowledgedHistoryVisibleRooms, defaultValue: [], storageType: .userDefaults(store))
+    var acknowledgedHistoryVisibleRooms: Set<String>
     
     /// The initial set of account providers shown to the user in the authentication flow.
     ///
@@ -263,7 +274,12 @@ final class AppSettings {
     private(set) var chatBackupDetailsURL: URL = "https://element.io/help#encryption5"
     /// A URL where users can go read more about identity pinning violations
     private(set) var identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
+<<<<<<< HEAD
     // Tchap: handle Tchap permalinks
+=======
+    /// A URL describing how history sharing works
+    private(set) var historySharingDetailsURL: URL = "https://element.io/en/help#e2ee-history-sharing"
+>>>>>>> release/26.01.0
     /// Any domains that Element web may be hosted on - used for handling links.
     #if IS_TCHAP_DEVELOPMENT
     private(set) var elementWebHosts = ["https://www.tchap.incubateur.net"]
@@ -492,9 +508,21 @@ final class AppSettings {
     
     // MARK: - Feature Flags
     
+<<<<<<< HEAD
     // Tchap: enable `publicSearchEnabled` feature flag by default. It is Tchap `join a forum` action.
 //    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
     @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: true, storageType: .userDefaults(store))
+=======
+    // Spaces
+    @UserPreference(key: UserDefaultsKeys.spaceSettingsEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var spaceSettingsEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.createSpaceEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var createSpaceEnabled
+    
+    // Others
+    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
+>>>>>>> release/26.01.0
     var publicSearchEnabled
     
     @UserPreference(key: UserDefaultsKeys.fuzzyRoomListSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
@@ -521,12 +549,12 @@ final class AppSettings {
     
     @UserPreference(key: UserDefaultsKeys.focusEventOnNotificationTap, defaultValue: false, storageType: .userDefaults(store))
     var focusEventOnNotificationTap
-    
-    @UserPreference(key: UserDefaultsKeys.spaceSettingsEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var spaceSettingsEnabled
         
     @UserPreference(key: UserDefaultsKeys.linkPreviewsEnabled, defaultValue: false, storageType: .userDefaults(store))
     var linkPreviewsEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.linkNewDeviceEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var linkNewDeviceEnabled
     
     @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
     var developerOptionsEnabled

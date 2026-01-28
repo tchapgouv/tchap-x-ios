@@ -557,7 +557,8 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
     
     private func startStartChatFlow(animated: Bool) {
         let navigationStackCoordinator = NavigationStackCoordinator()
-        let coordinator = StartChatFlowCoordinator(userDiscoveryService: UserDiscoveryService(clientProxy: userSession.clientProxy),
+        let coordinator = StartChatFlowCoordinator(isSpace: false,
+                                                   userDiscoveryService: UserDiscoveryService(clientProxy: userSession.clientProxy),
                                                    navigationStackCoordinator: navigationStackCoordinator,
                                                    flowParameters: flowParameters)
         

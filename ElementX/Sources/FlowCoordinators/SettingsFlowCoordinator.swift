@@ -28,6 +28,8 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
     private var bugReportFlowCoordinator: BugReportFlowCoordinator?
     // periphery:ignore - retaining purpose
     private var encryptionSettingsFlowCoordinator: EncryptionSettingsFlowCoordinator?
+    // periphery:ignore - retaining purpose
+    private var linkNewDeviceFlowCoordinator: LinkNewDeviceFlowCoordinator?
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -83,6 +85,8 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
                     startEncryptionSettingsFlow(animated: true)
                 case .userDetails:
                     presentUserDetailsEditScreen()
+                case .linkNewDevice:
+                    startLinkNewDeviceFlow()
                 case let .manageAccount(url):
                     presentAccountManagementURL(url)
                 case .analytics:
@@ -167,6 +171,31 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
         navigationStackCoordinator.push(coordinator)
     }
     
+    private func startLinkNewDeviceFlow() {
+        let stackCoordinator = NavigationStackCoordinator()
+        let flowCoordinator = LinkNewDeviceFlowCoordinator(navigationStackCoordinator: stackCoordinator,
+                                                           flowParameters: flowParameters)
+        flowCoordinator.actionsPublisher
+            .sink { [weak self] action in
+                guard let self else { return }
+                
+                switch action {
+                case .dismiss:
+                    navigationStackCoordinator.setSheetCoordinator(nil)
+                case .requestOIDCAuthorisation(let url, let continuation):
+                    presentAccountManagementURL(url, continuation: continuation)
+                }
+            }
+            .store(in: &cancellables)
+        
+        linkNewDeviceFlowCoordinator = flowCoordinator
+        flowCoordinator.start()
+        
+        navigationStackCoordinator.setSheetCoordinator(stackCoordinator) { [weak self] in
+            self?.linkNewDeviceFlowCoordinator = nil
+        }
+    }
+    
     private func presentAnalyticsScreen() {
         let coordinator = AnalyticsSettingsScreenCoordinator(parameters: .init(appSettings: flowParameters.appSettings,
                                                                                analytics: flowParameters.analytics))
@@ -223,7 +252,9 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private func presentDeveloperOptions() {
-        let coordinator = DeveloperOptionsScreenCoordinator(appSettings: flowParameters.appSettings, appHooks: flowParameters.appHooks)
+        let coordinator = DeveloperOptionsScreenCoordinator(appSettings: flowParameters.appSettings,
+                                                            appHooks: flowParameters.appHooks,
+                                                            clientProxy: flowParameters.userSession.clientProxy)
         
         coordinator.actions
             .sink { [weak self] action in
@@ -257,16 +288,17 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
         
         navigationStackCoordinator.push(coordinator)
     }
-
+    
     // MARK: OIDC Account Management
-        
+    
     private var accountSettingsPresenter: OIDCAccountSettingsPresenter?
-    private func presentAccountManagementURL(_ url: URL) {
+    private func presentAccountManagementURL(_ url: URL, continuation: OIDCAccountSettingsPresenter.Continuation? = nil) {
         // Note to anyone in the future if you come back here to make this open in Safari instead of a WAS.
         // As of iOS 16, there is an issue on the simulator with accessing the cookie but it works on a device. 🤷‍♂️
         accountSettingsPresenter = OIDCAccountSettingsPresenter(accountURL: url,
                                                                 presentationAnchor: flowParameters.windowManager.mainWindow,
-                                                                appSettings: flowParameters.appSettings)
+                                                                appSettings: flowParameters.appSettings,
+                                                                continuation: continuation)
         accountSettingsPresenter?.start()
     }
 }

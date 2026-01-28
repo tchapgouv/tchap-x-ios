@@ -18,8 +18,10 @@ struct SpaceListScreenViewState: BindableState {
     var userDisplayName: String?
     var userAvatarURL: URL?
     
-    var joinedSpaces: [SpaceRoomProxyProtocol]
+    var topLevelSpaces: [SpaceServiceRoomProtocol]
     var selectedSpaceID: String?
+    
+    var isCreateSpaceEnabled: Bool
     
     var bindings: SpaceListScreenViewStateBindings
 }
@@ -33,4 +35,5 @@ enum SpaceListScreenViewAction {
     case showSettings
     case screenAppeared
     case featureAnnouncementAppeared
+    case createSpace
 }

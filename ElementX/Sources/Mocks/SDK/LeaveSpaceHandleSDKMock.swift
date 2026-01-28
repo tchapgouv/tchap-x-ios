@@ -8,6 +8,7 @@
 
 import Foundation
 import MatrixRustSDK
+import MatrixRustSDKMocks
 
 extension LeaveSpaceHandleSDKMock {
     struct Configuration {
@@ -22,14 +23,18 @@ extension LeaveSpaceHandleSDKMock {
 }
 
 extension [LeaveSpaceRoom] {
-    static func mockLastSpaceAdmin(spaceRoomProxy: SpaceRoomProxyProtocol) -> [LeaveSpaceRoom] {
-        mockRooms + [LeaveSpaceRoom(spaceRoom: SpaceRoom(id: spaceRoomProxy.id,
-                                                         name: spaceRoomProxy.name,
-                                                         avatarURL: spaceRoomProxy.avatarURL,
-                                                         isSpace: true,
-                                                         memberCount: UInt64(spaceRoomProxy.joinedMembersCount),
-                                                         joinRule: spaceRoomProxy.joinRule),
-                                    isLastAdmin: true)]
+    static func mockRoomsWithSpace(spaceServiceRoom: SpaceServiceRoomProtocol, isLastAdmin: Bool) -> [LeaveSpaceRoom] {
+        mockRooms + mockSingleSpace(spaceServiceRoom: spaceServiceRoom, isLastAdmin: isLastAdmin)
+    }
+    
+    static func mockSingleSpace(spaceServiceRoom: SpaceServiceRoomProtocol, isLastAdmin: Bool) -> [LeaveSpaceRoom] {
+        [LeaveSpaceRoom(spaceRoom: SpaceRoom(id: spaceServiceRoom.id,
+                                             name: spaceServiceRoom.name,
+                                             avatarURL: spaceServiceRoom.avatarURL,
+                                             isSpace: true,
+                                             memberCount: UInt64(spaceServiceRoom.joinedMembersCount),
+                                             joinRule: spaceServiceRoom.joinRule),
+                        isLastAdmin: isLastAdmin)]
     }
     
     static var mockAdminRooms: [LeaveSpaceRoom] {

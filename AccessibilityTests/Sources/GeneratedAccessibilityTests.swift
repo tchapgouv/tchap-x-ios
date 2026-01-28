@@ -55,10 +55,6 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "BadgeLabel_Previews")
     }
 
-    func testBigIcon() async throws {
-        try await performAccessibilityAudit(named: "BigIcon_Previews")
-    }
-
     func testBlockedUsersScreen() async throws {
         try await performAccessibilityAudit(named: "BlockedUsersScreen_Previews")
     }
@@ -279,6 +275,10 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "LegalInformationScreen_Previews")
     }
 
+    func testLinkNewDeviceScreen() async throws {
+        try await performAccessibilityAudit(named: "LinkNewDeviceScreen_Previews")
+    }
+
     func testLoadableImage() async throws {
         try await performAccessibilityAudit(named: "LoadableImage_Previews")
     }
@@ -413,6 +413,10 @@ extension AccessibilityTests {
 
     func testPollView() async throws {
         try await performAccessibilityAudit(named: "PollView_Previews")
+    }
+
+    func testQRCodeErrorView() async throws {
+        try await performAccessibilityAudit(named: "QRCodeErrorView_Previews")
     }
 
     func testQRCodeLoginScreen() async throws {
