@@ -46,6 +46,13 @@ screen_create_room_room_visibility_section_title = "Type de salon";
 screen_create_room_externals_are_presents_warning = "Ce salon contient des invités externes. ";
 screen_create_room_externals_are_presents_link = "En savoir +";
 
+screen_create_room_room_access_section_public_federated_title = "Tout le monde";
+screen_create_room_room_access_section_public_federated_description = "Tout le monde peut joindre";
+screen_create_room_room_access_section_public_not_federated_title = "Tous les membres du domaine";
+screen_create_room_room_access_section_public_not_federated_description = "Seuls les membres du domaine peuvent joindre";
+screen_create_room_room_access_section_private_unencrypted_title = "Privé";
+screen_create_room_room_access_section_private_unencrypted_description = "Seules les personnes invitées peuvent joindre";
+
 screen_invite_external_user_dialog_title = "Invitation d’un externe";
 screen_invite_external_user_dialog_message = "En invitant un externe, ce salon deviendra accessible aux invités externes.\nCette modification est définitive et irréversible.";
 

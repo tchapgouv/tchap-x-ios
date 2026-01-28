@@ -54,9 +54,9 @@ extension ClientBuilder {
                 .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .crossSignedOrLegacy))
         } else {
             builder = builder
-                    // Tchap: [Beta DINUM] - allow sending messages even if non-verified device is present on the account.
+                // Tchap: [Beta DINUM] - allow sending messages even if non-verified device is present on the account.
 //                    .roomKeyRecipientStrategy(strategy: .errorOnVerifiedUserProblem)
-                    .roomKeyRecipientStrategy(strategy: .allDevices)
+                .roomKeyRecipientStrategy(strategy: .allDevices)
         }
         
         if let httpProxy {

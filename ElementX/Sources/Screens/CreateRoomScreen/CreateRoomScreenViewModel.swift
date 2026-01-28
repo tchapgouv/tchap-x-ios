@@ -37,9 +37,7 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
         self.userIndicatorController = userIndicatorController
 
         let bindings = CreateRoomScreenViewStateBindings(roomTopic: "",
-                                                         selectedAccessType: .private,
-                                                         isRoomFederated: parameters.isRoomFederated, // Tchap: additional property
-														)
+                                                         selectedAccessType: .private)
 
         super.init(initialViewState: CreateRoomScreenViewState(isSpace: isSpace,
                                                                roomName: "",
@@ -224,7 +222,6 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
                                                         topic: state.bindings.roomTopic.isBlank ? nil : state.bindings.roomTopic,
                                                         accessType: state.bindings.selectedAccessType,
                                                         isSpace: state.isSpace,
-                                                        isRoomEncrypted: state.bindings.selectedAccessType.isEncrypted, // Tchap: additional property
                                                         userIDs: [], // The invite users screen is shown next so we don't need to invite anyone right now.
                                                         avatarURL: avatarURL,
                                                         aliasLocalPart: state.bindings.selectedAccessType.isPrivate ? nil : state.aliasLocalPart) {

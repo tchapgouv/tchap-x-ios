@@ -48,11 +48,10 @@ enum SlidingSyncConstants {
     static let maximumVisibleRangeSize = 30
 }
 
-
 enum CreateRoomAccessType: CaseIterable {
     // Tchap: handle `isFederated` associated value for `public` room. CaseIterable is not automatically implement then.
     // case `public`
-    case `public`(Bool)
+    case `public`(federated: Bool)
     case askToJoin
     case `private`
     // Tchap: add private unencrypted room type
@@ -71,11 +70,11 @@ enum CreateRoomAccessType: CaseIterable {
     }
     
     // Tchap: add CaseIterable conformance because of associated value on `public` case.
-    static var allCases: [CreateRoomAccessType] = [.`public`(true), .`public`(false), .askToJoin, .private, .privateUnencrypted]
+    static var allCases: [CreateRoomAccessType] = [.public(federated: true), .public(federated: false), .askToJoin, .private, .privateUnencrypted]
 }
 
 // Tchap: add CaseIterable conformance for Create Room screen needing Equatable.
-extension CreateRoomAccessType: Hashable {}
+extension CreateRoomAccessType: Hashable { }
 
 /// This struct represents the configuration that we are using to register the application through Pusher to Sygnal
 /// using the Matrix Rust SDK, more info here:
@@ -187,7 +186,6 @@ protocol ClientProxyProtocol: AnyObject {
                     topic: String?,
                     accessType: CreateRoomAccessType,
                     isSpace: Bool,
-                    isRoomEncrypted: Bool, // Tchap: additional property
                     userIDs: [String],
                     avatarURL: URL?,
                     aliasLocalPart: String?) async -> Result<String, ClientProxyError>

@@ -57,7 +57,29 @@ struct CreateRoomScreenViewState: BindableState {
 struct CreateRoomScreenViewStateBindings {
     var roomTopic: String
     var selectedAccessType: CreateRoomAccessType
-    var isRoomFederated: Bool // Tchap: add possibility to not federate public room. True for private room.
+    // Tchap: add possibility to not federate public room. True for private room.
+    // This computed property is only used to set the correct `selectedAccessType` when .public is selected.
+    var isRoomFederated: Bool {
+        get {
+            switch selectedAccessType {
+            case .public(let federated):
+                federated
+            case .askToJoin:
+                true
+            case .private:
+                true
+            case .privateUnencrypted:
+                true
+            }
+        }
+        
+        set {
+            if case .public = selectedAccessType {
+                selectedAccessType = .public(federated: newValue)
+            }
+        }
+    }
+    
     var showAttachmentConfirmationDialog = false
     
     /// Information describing the currently displayed alert.

@@ -39,7 +39,8 @@ struct CreateRoomScreen: View {
         Form {
             roomSection
             topicSection
-            roomAccessSection
+            // Tchap: mask Element new way of choosing room type. And keep Tchap way of choosing room type (by security).
+//            roomAccessSection
             securitySection
             // Tchap: allow to disable federated state on Public room.
             if !context.selectedAccessType.isPrivate {
@@ -170,14 +171,14 @@ struct CreateRoomScreen: View {
                                     icon: \.lockSolid,
                                     role: .coloredIcon(CompoundCoreColorTokens.green800),
                                     iconAlignment: .top),
-                    kind: .selection(isSelected: context.selectedAccessType == .private) { context.selectedAccessType = .private })
+                    kind: .selection(isSelected: context.selectedAccessType == .private) { context.selectedAccessType = .private; context.isRoomFederated = true })
             if let TchapFeatureFlagInstance = TchapFeatureFlag.Instance.instance(for: context.viewState.serverName),
                TchapFeatureFlag.Configuration.unencryptedPrivateRoom.isActivated(for: TchapFeatureFlagInstance) {
                 ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
                                         description: TchapL10n.screenCreateRoomPrivateOptionDescription,
                                         icon: \.lockOff,
                                         iconAlignment: .top),
-                        kind: .selection(isSelected: context.selectedAccessType == .privateUnencrypted) { context.selectedAccessType = .privateUnencrypted })
+                        kind: .selection(isSelected: context.selectedAccessType == .privateUnencrypted) { context.selectedAccessType = .privateUnencrypted; context.isRoomFederated = true })
             }
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPublicOptionTitle,
                                     attributedDescriptionWhenDisabled: warningPublicRoomIsNotOpenToExterns,
@@ -185,7 +186,9 @@ struct CreateRoomScreen: View {
                                     iconAlignment: .top),
                     // Tchap: add `isRoomEncrypted` flag becasue of new Tchap room type "Private not encrypted"
 //                    kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
-                    kind: .selection(isSelected: context.selectedAccessType == .public) { context.selectedAccessType = .public })
+                    kind: .selection(isSelected: context.selectedAccessType == .public(federated: true) || context.selectedAccessType == .public(federated: false)) {
+                        context.selectedAccessType = .public(federated: $context.isRoomFederated.wrappedValue ? true : false)
+                    })
         } header: {
             Text(TchapL10n.screenCreateRoomRoomVisibilitySectionTitle)
                 .compoundListSectionHeader()
@@ -266,29 +269,35 @@ private struct CreateRoomAccessRow: View {
     
     var title: String {
         switch access {
-        case .public:
-            L10n.screenCreateRoomRoomAccessSectionPublicOptionTitle
+        // Tchap: handle public federated/not federated
+//        case .public:
+//            L10n.screenCreateRoomRoomAccessSectionPublicOptionTitle
+        case .public(let federated):
+            federated ? TchapL10n.screenCreateRoomRoomAccessSectionPublicFederatedTitle : TchapL10n.screenCreateRoomRoomAccessSectionPublicNotFederatedTitle
         case .askToJoin:
             L10n.screenCreateRoomRoomAccessSectionKnockingOptionTitle
         case .private:
             L10n.screenCreateRoomRoomAccessSectionPrivateOptionTitle
         // Tchap: handle private unencrypted room type
         case .privateUnencrypted:
-            "TCHAP PRIVATE UNENCRYPTED TITLE"
+            TchapL10n.screenCreateRoomRoomAccessSectionPrivateUnencryptedTitle
         }
     }
     
     var description: String {
         switch access {
-        case .public:
-            L10n.screenCreateRoomRoomAccessSectionPublicOptionDescription
+        // Tchap: handle public federated/not federated
+//        case .public:
+//            L10n.screenCreateRoomRoomAccessSectionPublicOptionDescription
+        case .public(let federated):
+            federated ? TchapL10n.screenCreateRoomRoomAccessSectionPublicFederatedDescription : TchapL10n.screenCreateRoomRoomAccessSectionPublicNotFederatedDescription
         case .askToJoin:
             L10n.screenCreateRoomRoomAccessSectionKnockingOptionDescription
         case .private:
             L10n.screenCreateRoomRoomAccessSectionPrivateOptionDescription
         // Tchap: handle private unencrypted room type
         case .privateUnencrypted:
-            "TCHAP PRIVATE UNENCRYPTED DESCRIPTION"
+            TchapL10n.screenCreateRoomRoomAccessSectionPrivateUnencryptedDescription
         }
     }
     
@@ -347,7 +356,7 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
                                                   analytics: ServiceLocator.shared.analytics,
                                                   userIndicatorController: UserIndicatorControllerMock(),
                                                   appSettings: ServiceLocator.shared.settings)
-        viewModel.context.selectedAccessType = .public(true) // Tchap: add `isFederated` asosciated value.
+        viewModel.context.selectedAccessType = .public(federated: true) // Tchap: add `isFederated` asosciated value.
         return viewModel
     }()
     
@@ -373,7 +382,7 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
                                                   analytics: ServiceLocator.shared.analytics,
                                                   userIndicatorController: UserIndicatorControllerMock(),
                                                   appSettings: ServiceLocator.shared.settings)
-        viewModel.context.selectedAccessType = .public(true) // Tchap: add `isFederated` asosciated value.
+        viewModel.context.selectedAccessType = .public(federated: true) // Tchap: add `isFederated` asosciated value.
         viewModel.context.send(viewAction: .updateAliasLocalPart("#:"))
         return viewModel
     }()
@@ -388,7 +397,7 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
                                                   analytics: ServiceLocator.shared.analytics,
                                                   userIndicatorController: UserIndicatorControllerMock(),
                                                   appSettings: ServiceLocator.shared.settings)
-        viewModel.context.selectedAccessType = .public(true) // Tchap: add `isFederated` asosciated value.
+        viewModel.context.selectedAccessType = .public(federated: true) // Tchap: add `isFederated` asosciated value.
         viewModel.context.send(viewAction: .updateAliasLocalPart("existing"))
         return viewModel
     }()

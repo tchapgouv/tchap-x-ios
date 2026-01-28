@@ -479,16 +479,13 @@ class ClientProxy: ClientProxyProtocol {
                     topic: String?,
                     accessType: CreateRoomAccessType,
                     isSpace: Bool,
-                    isRoomEncrypted: Bool, // Tchap: additional parameter
                     userIDs: [String],
                     avatarURL: URL?,
                     aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
         do {
             let parameters = CreateRoomParameters(name: name,
                                                   topic: topic,
-                                                  // Tchap: handle correctly additional property
-                                                  // isEncrypted: accessType.isEncrypted,
-                                                  isEncrypted: isRoomEncrypted,
+                                                  isEncrypted: accessType.isEncrypted,
                                                   isDirect: false,
                                                   visibility: accessType.visibility,
                                                   preset: accessType.preset,
@@ -500,9 +497,9 @@ class ClientProxy: ClientProxyProtocol {
                                                   // This is an FFI naming mistake, what is required is the `aliasLocalPart` not the whole alias
                                                   canonicalAlias: aliasLocalPart,
                                                   isSpace: isSpace)
-			// Tchap: change `createRoom` call with `isFederatd` parameter becasue of BWI-specific Rust side.
+            // Tchap: change `createRoom` call with `isFederated` parameter becasue of BWI-specific Rust side.
             // let roomID = try await client.createRoom(request: parameters)
-            let roomID = try await client.createRoom(request: parameters, isFederated: true)
+            let roomID = try await client.createRoom(request: parameters, isFederated: accessType.isFederated)
             
             await waitForRoomToSync(roomID: roomID)
             
@@ -1311,7 +1308,7 @@ private extension TimelineMediaVisibility {
 }
 
 // Tchap: make this extension accessible outside (usage of `isEncrypted` property)
-//private extension CreateRoomAccessType {
+// private extension CreateRoomAccessType {
 extension CreateRoomAccessType {
     var isEncrypted: Bool {
         switch self {
@@ -1346,6 +1343,16 @@ extension CreateRoomAccessType {
         // Tchap: handle private unencrypted room type
         case .privateUnencrypted:
             nil
+        }
+    }
+    
+    // Tchap: handle `.public`(federated) parameter
+    var isFederated: Bool {
+        switch self {
+        case .askToJoin, .private, .privateUnencrypted:
+            true
+        case .public(let federated):
+            federated
         }
     }
 }
