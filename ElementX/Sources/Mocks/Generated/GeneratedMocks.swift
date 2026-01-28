@@ -2847,27 +2847,15 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     }
     //MARK: - createRoom
 
-<<<<<<< HEAD
-    var createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = 0
-    var createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCallsCount: Int {
+    var createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = 0
+    var createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount
+                return createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount
-=======
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = 0
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCount: Int {
-        get {
-            if Thread.isMainThread {
-                return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount
-            } else {
-                var returnValue: Int? = nil
-                DispatchQueue.main.sync {
-                    returnValue = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount
->>>>>>> release/26.01.0
+                    returnValue = createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -2875,54 +2863,29 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-<<<<<<< HEAD
-                createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = newValue
+                createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = newValue
-=======
-                createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = newValue
->>>>>>> release/26.01.0
+                    createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-<<<<<<< HEAD
-    var createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled: Bool {
-        return createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCallsCount > 0
+    var createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartCalled: Bool {
+        return createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartCallsCount > 0
     }
-    var createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReceivedArguments: (name: String, topic: String?, isRoomPrivate: Bool, isRoomEncrypted: Bool, isKnockingOnly: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)?
-    var createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReceivedInvocations: [(name: String, topic: String?, isRoomPrivate: Bool, isRoomEncrypted: Bool, isKnockingOnly: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)] = []
+    var createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartReceivedArguments: (name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, isRoomEncrypted: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)?
+    var createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartReceivedInvocations: [(name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, isRoomEncrypted: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)] = []
 
-    var createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue: Result<String, ClientProxyError>!
-    var createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReturnValue: Result<String, ClientProxyError>! {
+    var createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue: Result<String, ClientProxyError>!
+    var createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartReturnValue: Result<String, ClientProxyError>! {
         get {
             if Thread.isMainThread {
-                return createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue
+                return createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue
             } else {
                 var returnValue: Result<String, ClientProxyError>? = nil
                 DispatchQueue.main.sync {
-                    returnValue = createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue
-=======
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled: Bool {
-        return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCount > 0
-    }
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments: (name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)?
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedInvocations: [(name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)] = []
-
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue: Result<String, ClientProxyError>!
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue: Result<String, ClientProxyError>! {
-        get {
-            if Thread.isMainThread {
-                return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue
-            } else {
-                var returnValue: Result<String, ClientProxyError>? = nil
-                DispatchQueue.main.sync {
-                    returnValue = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue
->>>>>>> release/26.01.0
+                    returnValue = createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -2930,48 +2893,26 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-<<<<<<< HEAD
-                createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue = newValue
+                createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue = newValue
-=======
-                createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue = newValue
->>>>>>> release/26.01.0
+                    createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-<<<<<<< HEAD
-    var createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure: ((String, String?, Bool, Bool, Bool, [String], URL?, String?) async -> Result<String, ClientProxyError>)?
+    var createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartClosure: ((String, String?, CreateRoomAccessType, Bool, Bool, [String], URL?, String?) async -> Result<String, ClientProxyError>)?
 
-    func createRoom(name: String, topic: String?, isRoomPrivate: Bool, isRoomEncrypted: Bool, isKnockingOnly: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
-        createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCallsCount += 1
-        createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReceivedArguments = (name: name, topic: topic, isRoomPrivate: isRoomPrivate, isRoomEncrypted: isRoomEncrypted, isKnockingOnly: isKnockingOnly, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart)
+    func createRoom(name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, isRoomEncrypted: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
+        createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartCallsCount += 1
+        createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartReceivedArguments = (name: name, topic: topic, accessType: accessType, isSpace: isSpace, isRoomEncrypted: isRoomEncrypted, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart)
         DispatchQueue.main.async {
-            self.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReceivedInvocations.append((name: name, topic: topic, isRoomPrivate: isRoomPrivate, isRoomEncrypted: isRoomEncrypted, isKnockingOnly: isKnockingOnly, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart))
+            self.createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartReceivedInvocations.append((name: name, topic: topic, accessType: accessType, isSpace: isSpace, isRoomEncrypted: isRoomEncrypted, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart))
         }
-        if let createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure {
-            return await createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure(name, topic, isRoomPrivate, isRoomEncrypted, isKnockingOnly, userIDs, avatarURL, aliasLocalPart)
+        if let createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartClosure = createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartClosure {
+            return await createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartClosure(name, topic, accessType, isSpace, isRoomEncrypted, userIDs, avatarURL, aliasLocalPart)
         } else {
-            return createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReturnValue
-=======
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure: ((String, String?, CreateRoomAccessType, Bool, [String], URL?, String?) async -> Result<String, ClientProxyError>)?
-
-    func createRoom(name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
-        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCount += 1
-        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments = (name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart)
-        DispatchQueue.main.async {
-            self.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedInvocations.append((name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart))
-        }
-        if let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure {
-            return await createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure(name, topic, accessType, isSpace, userIDs, avatarURL, aliasLocalPart)
-        } else {
-            return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue
->>>>>>> release/26.01.0
+            return createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartReturnValue
         }
     }
     //MARK: - joinRoom
@@ -10011,17 +9952,17 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
             return clearDraftThreadRootEventIDReturnValue
         }
     }
-    //MARK: - accessRules
+    //MARK: - accessRule
 
-    var accessRulesUnderlyingCallsCount = 0
-    var accessRulesCallsCount: Int {
+    var accessRuleUnderlyingCallsCount = 0
+    var accessRuleCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return accessRulesUnderlyingCallsCount
+                return accessRuleUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = accessRulesUnderlyingCallsCount
+                    returnValue = accessRuleUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -10029,27 +9970,27 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                accessRulesUnderlyingCallsCount = newValue
+                accessRuleUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    accessRulesUnderlyingCallsCount = newValue
+                    accessRuleUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    var accessRulesCalled: Bool {
-        return accessRulesCallsCount > 0
+    var accessRuleCalled: Bool {
+        return accessRuleCallsCount > 0
     }
 
-    var accessRulesUnderlyingReturnValue: Result<AccessRule?, RoomProxyError>!
-    var accessRulesReturnValue: Result<AccessRule?, RoomProxyError>! {
+    var accessRuleUnderlyingReturnValue: Result<AccessRule?, RoomProxyError>!
+    var accessRuleReturnValue: Result<AccessRule?, RoomProxyError>! {
         get {
             if Thread.isMainThread {
-                return accessRulesUnderlyingReturnValue
+                return accessRuleUnderlyingReturnValue
             } else {
                 var returnValue: Result<AccessRule?, RoomProxyError>? = nil
                 DispatchQueue.main.sync {
-                    returnValue = accessRulesUnderlyingReturnValue
+                    returnValue = accessRuleUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -10057,22 +9998,162 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                accessRulesUnderlyingReturnValue = newValue
+                accessRuleUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    accessRulesUnderlyingReturnValue = newValue
+                    accessRuleUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-    var accessRulesClosure: (() async -> Result<AccessRule?, RoomProxyError>)?
+    var accessRuleClosure: (() async -> Result<AccessRule?, RoomProxyError>)?
 
-    func accessRules() async -> Result<AccessRule?, RoomProxyError> {
-        accessRulesCallsCount += 1
-        if let accessRulesClosure = accessRulesClosure {
-            return await accessRulesClosure()
+    func accessRule() async -> Result<AccessRule?, RoomProxyError> {
+        accessRuleCallsCount += 1
+        if let accessRuleClosure = accessRuleClosure {
+            return await accessRuleClosure()
         } else {
-            return accessRulesReturnValue
+            return accessRuleReturnValue
+        }
+    }
+    //MARK: - applyAccessRulesChanges
+
+    var applyAccessRulesChangesUnderlyingCallsCount = 0
+    var applyAccessRulesChangesCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return applyAccessRulesChangesUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = applyAccessRulesChangesUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                applyAccessRulesChangesUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    applyAccessRulesChangesUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var applyAccessRulesChangesCalled: Bool {
+        return applyAccessRulesChangesCallsCount > 0
+    }
+    var applyAccessRulesChangesReceivedChanges: AccessRule?
+    var applyAccessRulesChangesReceivedInvocations: [AccessRule] = []
+
+    var applyAccessRulesChangesUnderlyingReturnValue: Result<Void, RoomProxyError>!
+    var applyAccessRulesChangesReturnValue: Result<Void, RoomProxyError>! {
+        get {
+            if Thread.isMainThread {
+                return applyAccessRulesChangesUnderlyingReturnValue
+            } else {
+                var returnValue: Result<Void, RoomProxyError>? = nil
+                DispatchQueue.main.sync {
+                    returnValue = applyAccessRulesChangesUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                applyAccessRulesChangesUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    applyAccessRulesChangesUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    var applyAccessRulesChangesClosure: ((AccessRule) async -> Result<Void, RoomProxyError>)?
+
+    func applyAccessRulesChanges(_ changes: AccessRule) async -> Result<Void, RoomProxyError> {
+        applyAccessRulesChangesCallsCount += 1
+        applyAccessRulesChangesReceivedChanges = changes
+        DispatchQueue.main.async {
+            self.applyAccessRulesChangesReceivedInvocations.append(changes)
+        }
+        if let applyAccessRulesChangesClosure = applyAccessRulesChangesClosure {
+            return await applyAccessRulesChangesClosure(changes)
+        } else {
+            return applyAccessRulesChangesReturnValue
+        }
+    }
+    //MARK: - accessRuleNeedToBeUpdated
+
+    var accessRuleNeedToBeUpdatedForUnderlyingCallsCount = 0
+    var accessRuleNeedToBeUpdatedForCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return accessRuleNeedToBeUpdatedForUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = accessRuleNeedToBeUpdatedForUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                accessRuleNeedToBeUpdatedForUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    accessRuleNeedToBeUpdatedForUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var accessRuleNeedToBeUpdatedForCalled: Bool {
+        return accessRuleNeedToBeUpdatedForCallsCount > 0
+    }
+    var accessRuleNeedToBeUpdatedForReceivedInvitedUsers: [String]?
+    var accessRuleNeedToBeUpdatedForReceivedInvocations: [[String]] = []
+
+    var accessRuleNeedToBeUpdatedForUnderlyingReturnValue: Bool!
+    var accessRuleNeedToBeUpdatedForReturnValue: Bool! {
+        get {
+            if Thread.isMainThread {
+                return accessRuleNeedToBeUpdatedForUnderlyingReturnValue
+            } else {
+                var returnValue: Bool? = nil
+                DispatchQueue.main.sync {
+                    returnValue = accessRuleNeedToBeUpdatedForUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                accessRuleNeedToBeUpdatedForUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    accessRuleNeedToBeUpdatedForUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    var accessRuleNeedToBeUpdatedForClosure: (([String]) async -> Bool)?
+
+    func accessRuleNeedToBeUpdated(for invitedUsers: [String]) async -> Bool {
+        accessRuleNeedToBeUpdatedForCallsCount += 1
+        accessRuleNeedToBeUpdatedForReceivedInvitedUsers = invitedUsers
+        DispatchQueue.main.async {
+            self.accessRuleNeedToBeUpdatedForReceivedInvocations.append(invitedUsers)
+        }
+        if let accessRuleNeedToBeUpdatedForClosure = accessRuleNeedToBeUpdatedForClosure {
+            return await accessRuleNeedToBeUpdatedForClosure(invitedUsers)
+        } else {
+            return accessRuleNeedToBeUpdatedForReturnValue
         }
     }
 }

@@ -13,20 +13,6 @@ import SwiftUI
 typealias CreateRoomScreenViewModelType = StateStoreViewModel<CreateRoomScreenViewState, CreateRoomScreenViewAction>
 
 class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreenViewModelProtocol {
-<<<<<<< HEAD
-    struct Parameters {
-        var name = ""
-        var topic = ""
-        var isRoomPrivate = true
-        var isRoomEncrypted = true // Tchap: add encrypted option to private
-        var isRoomFederated = true // Tchap: add option to not federate public room. Always True for private room. Always starts at true for any type of room.
-        var isKnockingOnly = false
-        var avatarImageMedia: MediaInfo?
-        var aliasLocalPart: String?
-    }
-    
-=======
->>>>>>> release/26.01.0
     private let userSession: UserSessionProtocol
     private let mediaUploadingPreprocessor: MediaUploadingPreprocessor
     private let analytics: AnalyticsService
@@ -49,17 +35,11 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
         mediaUploadingPreprocessor = MediaUploadingPreprocessor(appSettings: appSettings)
         self.analytics = analytics
         self.userIndicatorController = userIndicatorController
-        
-<<<<<<< HEAD
-        let bindings = CreateRoomScreenViewStateBindings(roomTopic: parameters.topic,
-                                                         isRoomPrivate: parameters.isRoomPrivate,
-                                                         isRoomEncrypted: parameters.isRoomEncrypted, // Tchap: additional property
-                                                         isRoomFederated: parameters.isRoomFederated, // Tchap: additional property
-                                                         isKnockingOnly: appSettings.knockingEnabled ? parameters.isKnockingOnly : false)
-=======
+
         let bindings = CreateRoomScreenViewStateBindings(roomTopic: "",
-                                                         selectedAccessType: .private)
->>>>>>> release/26.01.0
+                                                         selectedAccessType: .private,
+                                                         isRoomFederated: parameters.isRoomFederated, // Tchap: additional property
+														)
 
         super.init(initialViewState: CreateRoomScreenViewState(isSpace: isSpace,
                                                                roomName: "",
@@ -145,26 +125,6 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
             .store(in: &cancellables)
         
         context.$viewState
-<<<<<<< HEAD
-            .throttle(for: 0.5, scheduler: DispatchQueue.main, latest: true)
-            .removeDuplicates { old, new in
-                old.roomName == new.roomName &&
-                    old.bindings.roomTopic == new.bindings.roomTopic &&
-                    old.bindings.isRoomPrivate == new.bindings.isRoomPrivate &&
-                    old.bindings.isRoomEncrypted == new.bindings.isRoomEncrypted && // Tchap: additional property
-                    old.bindings.isRoomFederated == new.bindings.isRoomFederated && // Tchap: additional property
-                    old.bindings.isKnockingOnly == new.bindings.isKnockingOnly &&
-                    old.aliasLocalPart == new.aliasLocalPart
-            }
-            .sink { [weak self] state in
-                guard let self else { return }
-                updateParameters(state: state)
-            }
-            .store(in: &cancellables)
-        
-        context.$viewState
-=======
->>>>>>> release/26.01.0
             .map(\.aliasLocalPart)
             .removeDuplicates()
             .debounce(for: 1, scheduler: DispatchQueue.main)
@@ -207,23 +167,6 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
             .store(in: &cancellables)
     }
     
-<<<<<<< HEAD
-    private func updateParameters(state: CreateRoomScreenViewState) {
-        parameters.name = state.roomName
-        parameters.topic = state.bindings.roomTopic
-        parameters.isRoomPrivate = state.bindings.isRoomPrivate
-        parameters.isRoomEncrypted = state.bindings.isRoomEncrypted // Tchap: additional property
-        parameters.isRoomFederated = state.bindings.isRoomFederated // Tchap: additional property
-        parameters.isKnockingOnly = state.bindings.isKnockingOnly
-        if state.isKnockingFeatureEnabled, !state.aliasLocalPart.isEmpty {
-            parameters.aliasLocalPart = state.aliasLocalPart
-        } else {
-            parameters.aliasLocalPart = nil
-        }
-    }
-    
-=======
->>>>>>> release/26.01.0
     private func createRoom() async {
         defer {
             hideLoadingIndicator()
@@ -277,20 +220,11 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
             avatarURL = nil
         }
         
-<<<<<<< HEAD
-        switch await userSession.clientProxy.createRoom(name: parameters.name,
-                                                        topic: parameters.topic.isBlank ? nil : parameters.topic,
-                                                        isRoomPrivate: parameters.isRoomPrivate,
-                                                        isRoomEncrypted: parameters.isRoomEncrypted, // Tchap: additional property
-                                                        // TODO: add parameter       isRoomFederated: createRoomParameters.isRoomPrivate || createRoomParameters. , // Tchap: additional property `isRoomFederated`. And Private room is always federated. Only Public room can be non-federated.
-                                                        // As of right now we don't want to make private rooms with the knock rule
-                                                        isKnockingOnly: parameters.isRoomPrivate ? false : parameters.isKnockingOnly,
-=======
         switch await userSession.clientProxy.createRoom(name: state.roomName,
                                                         topic: state.bindings.roomTopic.isBlank ? nil : state.bindings.roomTopic,
                                                         accessType: state.bindings.selectedAccessType,
                                                         isSpace: state.isSpace,
->>>>>>> release/26.01.0
+                                                        isRoomEncrypted: state.bindings.selectedAccessType.isEncrypted, // Tchap: additional property
                                                         userIDs: [], // The invite users screen is shown next so we don't need to invite anyone right now.
                                                         avatarURL: avatarURL,
                                                         aliasLocalPart: state.bindings.selectedAccessType.isPrivate ? nil : state.aliasLocalPart) {

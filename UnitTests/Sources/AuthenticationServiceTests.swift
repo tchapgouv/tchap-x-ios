@@ -14,11 +14,8 @@ import XCTest
 @testable import TchapX_Production
 #else
 @testable import ElementX
-<<<<<<< HEAD
 #endif
-=======
 import MatrixRustSDKMocks
->>>>>>> release/26.01.0
 
 class AuthenticationServiceTests: XCTestCase {
     var client: ClientSDKMock!

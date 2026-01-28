@@ -43,20 +43,6 @@ extension ClientBuilder {
                 .backupDownloadStrategy(backupDownloadStrategy: .afterDecryptionFailure)
                 .enableShareHistoryOnInvite(enableShareHistoryOnInvite: enableKeyShareOnInvite)
                 .autoEnableBackups(autoEnableBackups: true)
-<<<<<<< HEAD
-                
-            if enableOnlySignedDeviceIsolationMode {
-                builder = builder
-                    .roomKeyRecipientStrategy(strategy: .identityBasedStrategy)
-                    .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .crossSignedOrLegacy))
-            } else {
-                builder = builder
-                    // Tchap: [Beta DINUM] - allow sending messages even if non-verified device is present on the account.
-//                    .roomKeyRecipientStrategy(strategy: .errorOnVerifiedUserProblem)
-                    .roomKeyRecipientStrategy(strategy: .allDevices)
-                    .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .untrusted))
-            }
-=======
         }
 
         // Set recipient strategy and trust requirement even if `setupEncryption` is false to ensure messages
@@ -68,9 +54,9 @@ extension ClientBuilder {
                 .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .crossSignedOrLegacy))
         } else {
             builder = builder
-                .roomKeyRecipientStrategy(strategy: .errorOnVerifiedUserProblem)
-                .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .untrusted))
->>>>>>> release/26.01.0
+                    // Tchap: [Beta DINUM] - allow sending messages even if non-verified device is present on the account.
+//                    .roomKeyRecipientStrategy(strategy: .errorOnVerifiedUserProblem)
+                    .roomKeyRecipientStrategy(strategy: .allDevices)
         }
         
         if let httpProxy {

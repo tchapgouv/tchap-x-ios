@@ -72,13 +72,9 @@ jobs:
           if-no-files-found: ignore
 
       - name: Collect coverage
-<<<<<<< HEAD
-        run: xcresultparser -q -o cobertura -t TchapX -p $(pwd) fastlane/test_output/IntegrationTests.xcresult > fastlane/test_output/integration-cobertura.xml
-=======
         # Skip if not successful and in forks
         if: ${{ success() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
-        run: xcresultparser -q -o cobertura -t ElementX -p $(pwd) fastlane/test_output/IntegrationTests.xcresult > fastlane/test_output/integration-cobertura.xml
->>>>>>> release/26.01.0
+        run: xcresultparser -q -o cobertura -t TchapX -p $(pwd) fastlane/test_output/IntegrationTests.xcresult > fastlane/test_output/integration-cobertura.xml
 
       - name: Upload coverage to Codecov
         # Skip if not successful and in forks

@@ -244,12 +244,8 @@
 "common_message_layout" = "Mode d’affichage des messages";
 "common_message_removed" = "Message supprimé";
 "common_modern" = "Moderne";
-<<<<<<< HEAD
 "common_mute" = "Sourdine"; // Tchap
-=======
-"common_mute" = "Mettre en sourdine";
 "common_name" = "Nom";
->>>>>>> release/26.01.0
 "common_name_and_id" = "%1$@ (%2$@)";
 "common_no_results" = "Aucun résultat";
 "common_no_room_name" = "Salon sans nom";

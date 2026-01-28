@@ -274,12 +274,9 @@ final class AppSettings {
     private(set) var chatBackupDetailsURL: URL = "https://element.io/help#encryption5"
     /// A URL where users can go read more about identity pinning violations
     private(set) var identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
-<<<<<<< HEAD
-    // Tchap: handle Tchap permalinks
-=======
     /// A URL describing how history sharing works
     private(set) var historySharingDetailsURL: URL = "https://element.io/en/help#e2ee-history-sharing"
->>>>>>> release/26.01.0
+    // Tchap: handle Tchap permalinks
     /// Any domains that Element web may be hosted on - used for handling links.
     #if IS_TCHAP_DEVELOPMENT
     private(set) var elementWebHosts = ["https://www.tchap.incubateur.net"]
@@ -508,11 +505,6 @@ final class AppSettings {
     
     // MARK: - Feature Flags
     
-<<<<<<< HEAD
-    // Tchap: enable `publicSearchEnabled` feature flag by default. It is Tchap `join a forum` action.
-//    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
-    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: true, storageType: .userDefaults(store))
-=======
     // Spaces
     @UserPreference(key: UserDefaultsKeys.spaceSettingsEnabled, defaultValue: false, storageType: .userDefaults(store))
     var spaceSettingsEnabled
@@ -521,8 +513,9 @@ final class AppSettings {
     var createSpaceEnabled
     
     // Others
-    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
->>>>>>> release/26.01.0
+    // Tchap: enable `publicSearchEnabled` feature flag by default. It is Tchap `join a forum` action.
+//    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
+    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: true, storageType: .userDefaults(store))
     var publicSearchEnabled
     
     @UserPreference(key: UserDefaultsKeys.fuzzyRoomListSearchEnabled, defaultValue: false, storageType: .userDefaults(store))

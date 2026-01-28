@@ -56,14 +56,8 @@ struct CreateRoomScreenViewState: BindableState {
 
 struct CreateRoomScreenViewStateBindings {
     var roomTopic: String
-<<<<<<< HEAD
-    var isRoomPrivate: Bool
-    var isRoomEncrypted: Bool // Tchap: add encrypted option to private
-    var isRoomFederated: Bool // Tchap: add possibility to not federate public room. True for private room.
-    var isKnockingOnly: Bool
-=======
     var selectedAccessType: CreateRoomAccessType
->>>>>>> release/26.01.0
+    var isRoomFederated: Bool // Tchap: add possibility to not federate public room. True for private room.
     var showAttachmentConfirmationDialog = false
     
     /// Information describing the currently displayed alert.

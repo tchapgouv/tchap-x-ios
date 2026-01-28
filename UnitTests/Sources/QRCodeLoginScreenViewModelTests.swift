@@ -9,7 +9,6 @@
 import Combine
 import XCTest
 
-<<<<<<< HEAD
 import MatrixRustSDK
 
 // Tchap: specify target for unit tests
@@ -19,10 +18,7 @@ import MatrixRustSDK
 #else
 @testable import ElementX
 #endif
-=======
-@testable import ElementX
 import MatrixRustSDKMocks
->>>>>>> release/26.01.0
 
 @MainActor
 final class QRCodeLoginScreenViewModelTests: XCTestCase {
