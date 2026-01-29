@@ -1307,9 +1307,7 @@ private extension TimelineMediaVisibility {
     }
 }
 
-// Tchap: make this extension accessible outside (usage of `isEncrypted` property)
-// private extension CreateRoomAccessType {
-extension CreateRoomAccessType {
+private extension CreateRoomAccessType {
     var isEncrypted: Bool {
         switch self {
         case .public:
