@@ -49,6 +49,7 @@ struct HomeScreen: View {
                         .buttonStyle(.compound(.super, size: .toolbarIcon))
                 }
             }
+            .backportSharedBackgroundVisibility(.hidden)
         }
     }
     
