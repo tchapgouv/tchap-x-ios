@@ -18,6 +18,7 @@ struct ClientProxyMockConfiguration {
     var roomSummaryProvider: RoomSummaryProviderProtocol = RoomSummaryProviderMock(.init())
     var spaceServiceConfiguration: SpaceServiceProxyMock.Configuration = .init()
     var roomPreviews: [RoomPreviewProxyProtocol]?
+    var defaultRoomMembers: [RoomMemberProxyMock] = .allMembers
     var roomDirectorySearchProxy: RoomDirectorySearchProxyProtocol?
     var overrides = Overrides()
     
@@ -73,7 +74,7 @@ extension ClientProxyMock {
         canDeactivateAccount = false
         directRoomForUserIDReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         createDirectRoomWithExpectedRoomNameReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
-        createRoomNameTopicAccessTypeIsSpaceIsRoomEncryptedUserIDsAvatarURLAliasLocalPartReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
+        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         canJoinRoomWithReturnValue = true
         joinRoomViaClosure = { roomID, _ in
             configuration.overrides.joinedRoomIDs.insert(roomID)
