@@ -62,7 +62,9 @@ struct ThreadTimelineScreen: View {
         // as the latter disables interaction in the action button for rooms with long names
         ToolbarItem(placement: .principal) {
             RoomHeaderView(roomName: L10n.commonThread,
-                           roomSubtitle: context.viewState.roomTitle,
+                           // Tchap: remove subtitle (not enough space)
+//                           roomSubtitle: context.viewState.roomTitle,
+                           roomSubtitle: nil,
                            roomAvatar: context.viewState.roomAvatar,
                            dmRecipientVerificationState: context.viewState.dmRecipientVerificationState,
                            roomPropertiesBadgesView: .sample, // Tchap addition
