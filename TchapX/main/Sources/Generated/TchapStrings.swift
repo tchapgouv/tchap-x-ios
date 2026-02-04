@@ -114,6 +114,16 @@ internal enum TchapL10n {
   internal static var screenLoginTitleRegister: String { return TchapL10n.tr("TchapLocalizable", "screen_login_title_register") }
   /// The civil servants instant messaging system
   internal static var screenOnboardingWelcomeMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_message") }
+  /// Audio and video group calls
+  internal static var screenOnboardingWelcomeNewTchapFeatureGroupCall: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_new_tchap_feature_group_call") }
+  /// New chat room: private, unencrypted
+  internal static var screenOnboardingWelcomeNewTchapFeatureNewRoomType: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_new_tchap_feature_new_room_type") }
+  /// Workspaces
+  internal static var screenOnboardingWelcomeNewTchapFeatureSpaces: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_new_tchap_feature_spaces") }
+  /// Totaly rebuilt for greater simplicity and new features
+  internal static var screenOnboardingWelcomeNewTchapMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_new_tchap_message") }
+  /// Welcome to the new Tchap iOS
+  internal static var screenOnboardingWelcomeNewTchapTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_new_tchap_title") }
   /// or
   internal static var screenOnboardingWelcomeOrBetweenButtons: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_or_between_buttons") }
   /// Already logged on a computer?
