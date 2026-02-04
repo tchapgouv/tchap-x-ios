@@ -54,7 +54,7 @@ jobs:
       run: zip -r Logs/CompoundTests.xcresult.zip Logs/CompoundTests.xcresult/
 
     - name: Archive artifacts
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       if: failure() # We only care about artefacts if the tests fail
       with:
         name: test-results
@@ -63,7 +63,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
       with:
         fail_ci_if_error: false
         token: ${{ secrets.CODECOV_TOKEN }}

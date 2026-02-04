@@ -23,12 +23,13 @@ enum CreateRoomScreenViewModelAction {
 }
 
 struct CreateRoomScreenViewState: BindableState {
+    let isSpace: Bool
     var roomName: String
     let serverName: String
     let isKnockingFeatureEnabled: Bool
     var aliasLocalPart: String
     var bindings: CreateRoomScreenViewStateBindings
-    var avatarURL: URL?
+    var avatarMediaInfo: MediaInfo?
     var canCreateRoom: Bool {
         !roomName.isEmpty && aliasErrors.isEmpty
     }
@@ -43,14 +44,42 @@ struct CreateRoomScreenViewState: BindableState {
             nil
         }
     }
+    
+    var availableAccessTypes: [CreateRoomAccessType] {
+        var availableTypes = CreateRoomAccessType.allCases
+        if !isKnockingFeatureEnabled {
+            availableTypes.removeAll { $0 == .askToJoin }
+        }
+        return availableTypes
+    }
 }
 
 struct CreateRoomScreenViewStateBindings {
     var roomTopic: String
-    var isRoomPrivate: Bool
-    var isRoomEncrypted: Bool // Tchap: add encrypted option to private
-    var isRoomFederated: Bool // Tchap: add possibility to not federate public room. True for private room.
-    var isKnockingOnly: Bool
+    var selectedAccessType: CreateRoomAccessType
+    // Tchap: add possibility to not federate public room. True for private room.
+    // This computed property is only used to set the correct `selectedAccessType` when .public is selected.
+    var isRoomFederated: Bool {
+        get {
+            switch selectedAccessType {
+            case .public(let federated):
+                federated
+            case .askToJoin:
+                true
+            case .private:
+                true
+            case .privateUnencrypted:
+                true
+            }
+        }
+        
+        set {
+            if case .public = selectedAccessType {
+                selectedAccessType = .public(federated: newValue)
+            }
+        }
+    }
+    
     var showAttachmentConfirmationDialog = false
     
     /// Information describing the currently displayed alert.

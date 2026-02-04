@@ -21,6 +21,14 @@ struct DeveloperOptionsScreen: View {
     
     var body: some View {
         Form {
+            if let storeSizes = context.viewState.storeSizes {
+                Section("Usage") {
+                    ForEach(storeSizes) { storeSize in
+                        LabeledContent(storeSize.name, value: storeSize.size)
+                    }
+                }
+            }
+            
             Section("Logging") {
                 LogLevelConfigurationView(logLevel: $context.logLevel)
                 
@@ -34,13 +42,23 @@ struct DeveloperOptionsScreen: View {
             }
             
             Section("General") {
-                Toggle(isOn: $context.spaceSettingsEnabled) {
-                    Text("Space settings")
+                Toggle(isOn: $context.linkNewDeviceEnabled) {
+                    Text("Link new device with QR code")
                 }
                 
                 context.viewState.appHooks
                     .developerOptionsScreenHook
                     .generalSectionRows()
+            }
+            
+            Section("Spaces") {
+                Toggle(isOn: $context.spaceSettingsEnabled) {
+                    Text("Space settings")
+                }
+                
+                Toggle(isOn: $context.createSpaceEnabled) {
+                    Text("Create space")
+                }
             }
             
             Section("Room List") {
@@ -204,7 +222,8 @@ private extension Set<TraceLogPack> {
 struct DeveloperOptionsScreen_Previews: PreviewProvider {
     static let viewModel = DeveloperOptionsScreenViewModel(developerOptions: ServiceLocator.shared.settings,
                                                            elementCallBaseURL: ServiceLocator.shared.settings.elementCallBaseURL,
-                                                           appHooks: AppHooks())
+                                                           appHooks: AppHooks(),
+                                                           clientProxy: ClientProxyMock(.init()))
     static var previews: some View {
         NavigationStack {
             DeveloperOptionsScreen(context: viewModel.context)

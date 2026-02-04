@@ -43,18 +43,20 @@ extension ClientBuilder {
                 .backupDownloadStrategy(backupDownloadStrategy: .afterDecryptionFailure)
                 .enableShareHistoryOnInvite(enableShareHistoryOnInvite: enableKeyShareOnInvite)
                 .autoEnableBackups(autoEnableBackups: true)
-                
-            if enableOnlySignedDeviceIsolationMode {
-                builder = builder
-                    .roomKeyRecipientStrategy(strategy: .identityBasedStrategy)
-                    .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .crossSignedOrLegacy))
-            } else {
-                builder = builder
-                    // Tchap: [Beta DINUM] - allow sending messages even if non-verified device is present on the account.
+        }
+
+        // Set recipient strategy and trust requirement even if `setupEncryption` is false to ensure messages
+        // from insecure devices aren't displayed in push notifications.
+        // See https://github.com/element-hq/element-x-ios/issues/4702.
+        if enableOnlySignedDeviceIsolationMode {
+            builder = builder
+                .roomKeyRecipientStrategy(strategy: .identityBasedStrategy)
+                .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .crossSignedOrLegacy))
+        } else {
+            builder = builder
+                // Tchap: [Beta DINUM] - allow sending messages even if non-verified device is present on the account.
 //                    .roomKeyRecipientStrategy(strategy: .errorOnVerifiedUserProblem)
-                    .roomKeyRecipientStrategy(strategy: .allDevices)
-                    .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .untrusted))
-            }
+                .roomKeyRecipientStrategy(strategy: .allDevices)
         }
         
         if let httpProxy {

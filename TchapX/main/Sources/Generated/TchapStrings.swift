@@ -67,6 +67,18 @@ internal enum TchapL10n {
   }
   /// Limited to my domain
   internal static var screenCreateRoomPublicOptionUnfederatedTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_public_option_unfederated_title") }
+  /// Only people invited can join.
+  internal static var screenCreateRoomRoomAccessSectionPrivateUnencryptedDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_access_section_private_unencrypted_description") }
+  /// Private
+  internal static var screenCreateRoomRoomAccessSectionPrivateUnencryptedTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_access_section_private_unencrypted_title") }
+  /// Anyone can join.
+  internal static var screenCreateRoomRoomAccessSectionPublicFederatedDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_access_section_public_federated_description") }
+  /// Public
+  internal static var screenCreateRoomRoomAccessSectionPublicFederatedTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_access_section_public_federated_title") }
+  /// Any member of the domain can join.
+  internal static var screenCreateRoomRoomAccessSectionPublicNotFederatedDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_access_section_public_not_federated_description") }
+  /// Public restricted to domain
+  internal static var screenCreateRoomRoomAccessSectionPublicNotFederatedTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_access_section_public_not_federated_title") }
   /// Room type
   internal static var screenCreateRoomRoomVisibilitySectionTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_visibility_section_title") }
   /// Members

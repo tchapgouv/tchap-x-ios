@@ -90,12 +90,6 @@ extension PreviewTests {
         }
     }
 
-    func testBigIcon() async throws {
-        for (index, preview) in BigIcon_Previews._allPreviews.enumerated() {
-            try await assertSnapshots(matching: preview, step: index)
-        }
-    }
-
     func testBlockedUsersScreen() async throws {
         for (index, preview) in BlockedUsersScreen_Previews._allPreviews.enumerated() {
             try await assertSnapshots(matching: preview, step: index)
@@ -426,6 +420,12 @@ extension PreviewTests {
         }
     }
 
+    func testLinkNewDeviceScreen() async throws {
+        for (index, preview) in LinkNewDeviceScreen_Previews._allPreviews.enumerated() {
+            try await assertSnapshots(matching: preview, step: index)
+        }
+    }
+
     func testLoadableImage() async throws {
         for (index, preview) in LoadableImage_Previews._allPreviews.enumerated() {
             try await assertSnapshots(matching: preview, step: index)
@@ -626,6 +626,12 @@ extension PreviewTests {
 
     func testPollView() async throws {
         for (index, preview) in PollView_Previews._allPreviews.enumerated() {
+            try await assertSnapshots(matching: preview, step: index)
+        }
+    }
+
+    func testQRCodeErrorView() async throws {
+        for (index, preview) in QRCodeErrorView_Previews._allPreviews.enumerated() {
             try await assertSnapshots(matching: preview, step: index)
         }
     }

@@ -14,6 +14,7 @@
 @testable import ElementX
 #endif
 import MatrixRustSDK
+import MatrixRustSDKMocks
 import XCTest
 
 final class MediaLoaderTests: XCTestCase {

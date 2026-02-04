@@ -34,17 +34,20 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         clientProxy.roomForIdentifierClosure = { roomID in .joined(JoinedRoomProxyMock(.init(id: roomID))) }
         userSession = UserSessionMock(.init(clientProxy: clientProxy))
         ServiceLocator.shared.settings.knockingEnabled = true
-        let viewModel = CreateRoomScreenViewModel(userSession: userSession,
+        let viewModel = CreateRoomScreenViewModel(isSpace: false,
+                                                  userSession: userSession,
                                                   analytics: ServiceLocator.shared.analytics,
                                                   userIndicatorController: UserIndicatorControllerMock(),
                                                   appSettings: ServiceLocator.shared.settings)
         self.viewModel = viewModel
     }
     
-    func testDefaulSecurity() {
-        // Tchap: handle `isRoomEncrypted` and `isFederated` additional properties
-//        XCTAssertTrue(context.viewState.bindings.isRoomPrivate)
-        XCTAssertTrue(context.viewState.bindings.isRoomPrivate && context.viewState.bindings.isRoomEncrypted && context.viewState.bindings.isRoomFederated)
+    override func tearDown() {
+        AppSettings.resetAllSettings()
+    }
+    
+    func testDefaultSecurity() {
+        XCTAssertEqual(context.viewState.bindings.selectedAccessType, .private)
     }
     
     func testCreateRoomRequirements() {
@@ -57,12 +60,11 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         // Given a form with a blank topic.
         context.send(viewAction: .updateRoomName("A"))
         context.roomTopic = ""
-        context.isRoomPrivate = false
+        context.selectedAccessType = .private
         XCTAssertTrue(context.viewState.canCreateRoom)
         
         // When creating the room.
-        // Tchap: adapted test adding `isEncrypted`
-        clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
+        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
         let deferred = deferFulfillment(viewModel.actions) { action in
             guard case .createdRoom(let roomProxy) = action, roomProxy.id == "1" else { return false }
             return true
@@ -71,29 +73,24 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         try await deferred.fulfill()
         
         // Then the room should be created and a topic should not be set.
-        // Tchap: adapted test adding `isEncrypted`
-        XCTAssertTrue(clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
-        XCTAssertEqual(clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReceivedArguments?.name, "A")
-        XCTAssertNil(clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReceivedArguments?.topic,
+        XCTAssertTrue(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
+        XCTAssertEqual(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.name, "A")
+        XCTAssertNil(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.topic,
                      "The topic should be sent as nil when it is empty.")
     }
     
     func testCreateKnockingRoom() async {
         context.send(viewAction: .updateRoomName("A"))
         context.roomTopic = "B"
-        context.isRoomPrivate = false
+        context.selectedAccessType = .askToJoin
         // When setting the room as private we always reset the knocking state to the default value of false
         // so we need to wait a main actor cycle to ensure the view state is updated
         await Task.yield()
-        context.isKnockingOnly = true
         XCTAssertTrue(context.viewState.canCreateRoom)
         
         let expectation = expectation(description: "Wait for the room to be created")
-        // Tchap: adapted test adding `isEncrypted`
-//        clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, isKnockingOnly, _, _, localAliasPart in
-        clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, _, isKnockingOnly, _, _, localAliasPart in
-            XCTAssertTrue(isKnockingOnly)
-            XCTAssertFalse(isPrivate)
+        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure = { _, _, accessType, _, _, _, localAliasPart in
+            XCTAssertEqual(accessType, .askToJoin)
             XCTAssertEqual(localAliasPart, "a")
             defer { expectation.fulfill() }
             return .success("")
@@ -105,7 +102,7 @@ class CreateRoomScreenViewModelTests: XCTestCase {
     func testCreatePublicRoomFailsForInvalidAlias() async throws {
         context.send(viewAction: .updateRoomName("A"))
         context.roomTopic = "B"
-        context.isRoomPrivate = false
+        context.selectedAccessType = .public
         // When setting the room as private we always reset the alias
         // so we need to wait a main actor cycle to ensure the view state is updated
         await Task.yield()
@@ -121,16 +118,14 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         // blocked it
         context.send(viewAction: .createRoom)
         await Task.yield()
-        // Tchap: adapted test adding `isEncrypted`
-//        XCTAssertFalse(clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
-        XCTAssertFalse(clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
+        XCTAssertFalse(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
     }
     
     func testCreatePublicRoomFailsForExistingAlias() async throws {
         clientProxy.isAliasAvailableReturnValue = .success(false)
         context.send(viewAction: .updateRoomName("A"))
         context.roomTopic = "B"
-        context.isRoomPrivate = false
+        context.selectedAccessType = .public
         // When setting the room as private we always reset the alias
         // so we need to wait a main actor cycle to ensure the view state is updated
         await Task.yield()
@@ -154,31 +149,11 @@ class CreateRoomScreenViewModelTests: XCTestCase {
         context.send(viewAction: .createRoom)
         await fulfillment(of: [expectation])
         XCTAssertEqual(clientProxy.isAliasAvailableCallsCount, 2)
-        // Tchap: adapted test adding `isEncrypted`
-//        XCTAssertFalse(clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
-        XCTAssertFalse(clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartCalled)
-    }
-    
-    func testCreatePrivateRoomCantHaveKnockRule() async {
-        context.send(viewAction: .updateRoomName("A"))
-        context.roomTopic = "B"
-        context.isRoomPrivate = true
-        context.isKnockingOnly = true
-        context.send(viewAction: .createRoom)
-        let expectation = expectation(description: "Wait for the room to be created")
-        // Tchap: adapted test adding `isEncrypted`
-//        clientProxy.createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, isKnockingOnly, _, _, _ in
-        clientProxy.createRoomNameTopicIsRoomPrivateIsRoomEncryptedIsKnockingOnlyUserIDsAvatarURLAliasLocalPartClosure = { _, _, isPrivate, _, isKnockingOnly, _, _, _ in
-            XCTAssertFalse(isKnockingOnly)
-            XCTAssertTrue(isPrivate)
-            expectation.fulfill()
-            return .success("")
-        }
-        await fulfillment(of: [expectation])
+        XCTAssertFalse(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
     }
     
     func testNameAndAddressSync() async {
-        context.isRoomPrivate = true
+        context.selectedAccessType = .private
         await Task.yield()
         context.send(viewAction: .updateRoomName("abc"))
         XCTAssertEqual(context.viewState.aliasLocalPart, "abc")

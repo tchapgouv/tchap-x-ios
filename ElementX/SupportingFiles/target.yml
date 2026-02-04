@@ -221,10 +221,12 @@ targets:
     dependencies:
     - target: NSE
     - target: ShareExtension
+    - target: MatrixRustSDKMocks
     - package: MatrixRustSDK
       embed: true
     - package: Compound
     - package: Algorithms
+    - package: AsyncAlgorithms
     - package: AnalyticsEvents
     - package: Collections
     - package: DeviceKit
@@ -234,8 +236,7 @@ targets:
     - package: KZFileWatchers
     - package: LoremSwiftum
     - package: LRUCache
-    - package: Mapbox
-    - package: Mutex
+    - package: MapLibre
     - package: PostHog
     - package: SwiftState
     - package: GZIP

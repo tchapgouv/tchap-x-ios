@@ -9,7 +9,6 @@
 import AVKit
 import Combine
 import Compound
-import MatrixRustSDK
 import SwiftState
 import SwiftUI
 
@@ -288,8 +287,11 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             }
             .store(in: &cancellables)
         
-        userSession.clientProxy.spaceService.joinedSpacesPublisher
-            .map { $0.isEmpty ? .hidden : nil }
+        userSession.clientProxy.spaceService.topLevelSpacesPublisher
+            .combineLatest(flowParameters.appSettings.$createSpaceEnabled)
+            .map { topLevelSpaces, isCreateSpaceEnabled in
+                !isCreateSpaceEnabled && topLevelSpaces.isEmpty ? .hidden : nil
+            }
             .weakAssign(to: \.chatsTabDetails.barVisibilityOverride, on: self)
             .store(in: &cancellables)
     }

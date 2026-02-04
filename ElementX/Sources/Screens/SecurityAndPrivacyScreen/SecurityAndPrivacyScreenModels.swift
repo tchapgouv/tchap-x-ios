@@ -15,20 +15,12 @@ enum SecurityAndPrivacyScreenViewModelAction {
 }
 
 struct SecurityAndPrivacyScreenViewState: BindableState {
-    private static let accessSectionFooterAttributedString = {
-        let linkPlaceholder = "{link}"
-        var footer = AttributedString(L10n.screenSecurityAndPrivacyRoomAccessFooter(linkPlaceholder))
-        var linkString = AttributedString(L10n.screenSecurityAndPrivacyRoomAccessFooterManageSpacesAction)
-        // Doesn't really matter
-        linkString.link = .init(stringLiteral: "action://manageSpace")
-        linkString.bold()
-        footer.replace(linkPlaceholder, with: linkString)
-        return footer
-    }()
-    
     let serverName: String
+    
     var currentSettings: SecurityAndPrivacySettings
     var bindings: SecurityAndPrivacyScreenViewStateBindings
+    let strings: SecurityAndPrivacyScreenStrings
+    
     var canonicalAlias: String?
     var isKnockingEnabled: Bool
     var isSpaceSettingsEnabled: Bool
@@ -38,11 +30,13 @@ struct SecurityAndPrivacyScreenViewState: BindableState {
     var canEditJoinRule = false
     var canEnableEncryption = false
     var canEditHistoryVisibility = false
-    var joinedParentSpaces: [SpaceRoomProxyProtocol] = []
+    
+    /// The union of joined parent spaces and the joined spaces in the current access type
+    var selectableJoinedSpaces: [SpaceServiceRoomProtocol] = []
     
     /// The count of the intersection between the set of joined parent spaces and the set of spaces in the current access type
     var selectableSpacesCount: Int {
-        Set(joinedParentSpaces.map(\.id) + currentSettings.accessType.spaceIDs).count
+        Set(selectableJoinedSpaces.map(\.id) + currentSettings.accessType.spaceIDs).count
     }
     
     private var hasChanges: Bool {
@@ -57,28 +51,36 @@ struct SecurityAndPrivacyScreenViewState: BindableState {
     }
     
     var availableVisibilityOptions: [SecurityAndPrivacyHistoryVisibility] {
-        var options = [SecurityAndPrivacyHistoryVisibility.sinceSelection]
+        var options = [SecurityAndPrivacyHistoryVisibility.shared]
         if !bindings.desiredSettings.isEncryptionEnabled, bindings.desiredSettings.accessType == .anyone {
-            options.append(.anyone)
+            options.append(.worldReadable)
         } else {
-            options.append(.sinceInvite)
+            options.append(.invited)
         }
-        return options
+        return options.sorted()
     }
     
     var isSpaceMembersOptionAvailable: Bool {
-        currentSettings.accessType.isSpaceUsers || isSpaceMembersOptionSelectable
+        currentSettings.accessType.isSpaceMembers || isSpaceMembersOptionSelectable
     }
     
     var isSpaceMembersOptionSelectable: Bool {
         isSpaceSettingsEnabled && selectableSpacesCount > 0
     }
     
+    var isAskToJoinWithSpaceMembersOptionAvailable: Bool {
+        currentSettings.accessType.isAskToJoinWithSpaceMembers || isAskToJoinWithSpaceMembersOptionSelectable
+    }
+    
+    var isAskToJoinWithSpaceMembersOptionSelectable: Bool {
+        isSpaceMembersOptionSelectable && isKnockingEnabled
+    }
+    
     var spaceMembersDescription: String {
         if isSpaceMembersOptionSelectable {
             switch spaceSelection {
-            case .singleJoined(let joinedParentSpace):
-                L10n.screenSecurityAndPrivacyRoomAccessSpaceMembersOptionSingleParentDescription(joinedParentSpace.name)
+            case .singleJoined(let joinedSpace):
+                L10n.screenSecurityAndPrivacyRoomAccessSpaceMembersOptionSingleParentDescription(joinedSpace.name)
             case .singleUnknown(let id):
                 L10n.screenSecurityAndPrivacyRoomAccessSpaceMembersOptionSingleParentDescription(id)
             case .multiple, .empty:
@@ -89,19 +91,34 @@ struct SecurityAndPrivacyScreenViewState: BindableState {
         }
     }
     
-    var accessSectionFooter: AttributedString? {
-        if bindings.desiredSettings.accessType.isSpaceUsers,
-           isSpaceMembersOptionSelectable,
-           case .multiple = spaceSelection {
-            Self.accessSectionFooterAttributedString
+    var askToJoinWithSpaceMembersDescription: String {
+        if isAskToJoinWithSpaceMembersOptionSelectable {
+            switch spaceSelection {
+            case .singleJoined(let joinedSpace):
+                L10n.screenSecurityAndPrivacyAskToJoinSingleSpaceMembersOptionDescription(joinedSpace.name)
+            case .singleUnknown(let id):
+                L10n.screenSecurityAndPrivacyAskToJoinSingleSpaceMembersOptionDescription(id)
+            case .multiple, .empty:
+                L10n.screenSecurityAndPrivacyAskToJoinMultipleSpacesMembersOptionDescription
+            }
         } else {
-            nil
+            L10n.screenSecurityAndPrivacyRoomAccessSpaceMembersOptionUnavailableDescription
         }
+    }
+    
+    var shouldShowAccessSectionFooter: Bool {
+        if (bindings.desiredSettings.accessType.isSpaceMembers && isSpaceMembersOptionSelectable) ||
+            (bindings.desiredSettings.accessType.isAskToJoinWithSpaceMembers && isAskToJoinWithSpaceMembersOptionSelectable),
+            case .multiple = spaceSelection {
+            return true
+        }
+        
+        return false
     }
     
     enum SpaceSelection {
         /// There is only one available parent space for selection and is joined by the user
-        case singleJoined(SpaceRoomProxyProtocol)
+        case singleJoined(SpaceServiceRoomProtocol)
         /// There is only one available space for selection and is unknown to the user
         case singleUnknown(id: String)
         /// Multiple spaces are available for selection
@@ -115,17 +132,17 @@ struct SecurityAndPrivacyScreenViewState: BindableState {
             .empty
         } else if selectableSpacesCount > 1 {
             .multiple
-        } else if let joinedParent = joinedParentSpaces.first {
-            if case let .spaceUsers(ids) = currentSettings.accessType {
-                if ids.isEmpty {
+        } else if let joinedSpace = selectableJoinedSpaces.first {
+            if currentSettings.accessType.isSpaceMembers || currentSettings.accessType.isAskToJoinWithSpaceMembers {
+                if currentSettings.accessType.spaceIDs.isEmpty {
                     // Edge case where the access type is already space members, but it does not contain any id
                     // So if the user wants to add their own parent they need to do it from the selection menu
                     .multiple
                 } else {
-                    .singleJoined(joinedParent)
+                    .singleJoined(joinedSpace)
                 }
             } else {
-                .singleJoined(joinedParent)
+                .singleJoined(joinedSpace)
             }
         } else if let unknownSpaceID = currentSettings.accessType.spaceIDs.first {
             // The space is not joined by the user but is currently selected
@@ -143,7 +160,8 @@ struct SecurityAndPrivacyScreenViewState: BindableState {
          historyVisibility: SecurityAndPrivacyHistoryVisibility,
          isSpace: Bool,
          isKnockingEnabled: Bool,
-         isSpaceSettingsEnabled: Bool) {
+         isSpaceSettingsEnabled: Bool,
+         historySharingDetailsURL: URL) {
         self.serverName = serverName
         self.isKnockingEnabled = isKnockingEnabled
         self.isSpace = isSpace
@@ -154,6 +172,7 @@ struct SecurityAndPrivacyScreenViewState: BindableState {
                                                   historyVisibility: historyVisibility)
         currentSettings = settings
         bindings = SecurityAndPrivacyScreenViewStateBindings(desiredSettings: settings)
+        strings = SecurityAndPrivacyScreenStrings(historySharingDetailsURL: historySharingDetailsURL)
     }
 }
 
@@ -172,13 +191,22 @@ struct SecurityAndPrivacySettings: Equatable {
 enum SecurityAndPrivacyRoomAccessType: Equatable {
     case inviteOnly
     case askToJoin
-    case askToJoinWithSpaceUsers(spaceIDs: [String])
+    case askToJoinWithSpaceMembers(spaceIDs: [String])
     case anyone
-    case spaceUsers(spaceIDs: [String])
+    case spaceMembers(spaceIDs: [String])
     
-    var isSpaceUsers: Bool {
+    var isSpaceMembers: Bool {
         switch self {
-        case .spaceUsers:
+        case .spaceMembers:
+            true
+        default:
+            false
+        }
+    }
+    
+    var isAskToJoinWithSpaceMembers: Bool {
+        switch self {
+        case .askToJoinWithSpaceMembers:
             true
         default:
             false
@@ -187,16 +215,16 @@ enum SecurityAndPrivacyRoomAccessType: Equatable {
     
     var isAddressRequired: Bool {
         switch self {
-        case .inviteOnly, .spaceUsers:
+        case .inviteOnly, .spaceMembers:
             false
-        case .anyone, .askToJoin, .askToJoinWithSpaceUsers:
+        case .anyone, .askToJoin, .askToJoinWithSpaceMembers:
             true
         }
     }
     
     var spaceIDs: [String] {
         switch self {
-        case .spaceUsers(let spaceIDs), .askToJoinWithSpaceUsers(let spaceIDs):
+        case .spaceMembers(let spaceIDs), .askToJoinWithSpaceMembers(let spaceIDs):
             return spaceIDs
         case .inviteOnly, .askToJoin, .anyone:
             return []
@@ -215,20 +243,48 @@ enum SecurityAndPrivacyScreenViewAction {
     case tryUpdatingEncryption(Bool)
     case editAddress
     case selectedSpaceMembersAccess
+    case selectedAskToJoinWithSpaceMembersAccess
     case manageSpaces
 }
 
-enum SecurityAndPrivacyHistoryVisibility {
-    case sinceSelection
-    case sinceInvite
-    case anyone
+enum SecurityAndPrivacyHistoryVisibility: Int, Comparable {
+    case invited
+    case shared
+    case worldReadable
     
     var fallbackOption: Self {
         switch self {
-        case .sinceInvite, .sinceSelection:
-            return .sinceSelection
-        case .anyone:
-            return .sinceInvite
+        case .invited, .shared:
+            return .shared
+        case .worldReadable:
+            return .invited
         }
+    }
+    
+    static func < (lhs: SecurityAndPrivacyHistoryVisibility, rhs: SecurityAndPrivacyHistoryVisibility) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
+}
+
+struct SecurityAndPrivacyScreenStrings {
+    let accessSectionFooterString: AttributedString
+    let historySectionFooterString: AttributedString
+    
+    init(historySharingDetailsURL: URL) {
+        let linkPlaceholder = "{link}"
+        
+        var accessFooterString = AttributedString(L10n.screenSecurityAndPrivacyRoomAccessFooter(linkPlaceholder))
+        var accessLinkString = AttributedString(L10n.screenSecurityAndPrivacyRoomAccessFooterManageSpacesAction)
+        accessLinkString.link = .init(stringLiteral: "action://manageSpace") // The link address doesn't matter
+        accessLinkString.bold()
+        accessFooterString.replace(linkPlaceholder, with: accessLinkString)
+        accessSectionFooterString = accessFooterString
+        
+        var historyFooterString = AttributedString(L10n.screenSecurityAndPrivacyRoomHistorySectionFooter(linkPlaceholder))
+        var historyLinkString = AttributedString(L10n.actionLearnMore)
+        historyLinkString.link = historySharingDetailsURL
+        historyLinkString.bold()
+        historyFooterString.replace(linkPlaceholder, with: historyLinkString)
+        historySectionFooterString = historyFooterString
     }
 }

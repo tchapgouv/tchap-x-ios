@@ -48,6 +48,34 @@ enum SlidingSyncConstants {
     static let maximumVisibleRangeSize = 30
 }
 
+enum CreateRoomAccessType: CaseIterable {
+    // Tchap: handle `isFederated` associated value for `public` room. CaseIterable is not automatically implement then.
+    // case `public`
+    case `public`(federated: Bool)
+    case askToJoin
+    case `private`
+    // Tchap: add private unencrypted room type
+    case privateUnencrypted
+    
+    var isPrivate: Bool {
+        switch self {
+        case .private:
+            true
+        case .public, .askToJoin:
+            false
+        // Tchap: handle private unencrypted room type
+        case .privateUnencrypted:
+            true
+        }
+    }
+    
+    // Tchap: add CaseIterable conformance because of associated value on `public` case.
+    static var allCases: [CreateRoomAccessType] = [.public(federated: true), .public(federated: false), .askToJoin, .private, .privateUnencrypted]
+}
+
+// Tchap: add CaseIterable conformance for Create Room screen needing Equatable.
+extension CreateRoomAccessType: Hashable { }
+
 /// This struct represents the configuration that we are using to register the application through Pusher to Sygnal
 /// using the Matrix Rust SDK, more info here:
 /// https://github.com/matrix-org/sygnal
@@ -132,6 +160,8 @@ protocol ClientProxyProtocol: AnyObject {
     
     var isLiveKitRTCSupported: Bool { get async }
     
+    var isLoginWithQRCodeSupported: Bool { get async }
+    
     var maxMediaUploadSize: Result<UInt, ClientProxyError> { get async }
     
     func isOnlyDeviceLeft() async -> Result<Bool, ClientProxyError>
@@ -154,10 +184,8 @@ protocol ClientProxyProtocol: AnyObject {
     
     func createRoom(name: String,
                     topic: String?,
-                    isRoomPrivate: Bool,
-                    isRoomEncrypted: Bool, // Tchap: additional property
-                    // TODO: add parameter                   isRoomFederated: Bool, // Tchap: additional property.
-                    isKnockingOnly: Bool,
+                    accessType: CreateRoomAccessType,
+                    isSpace: Bool,
                     userIDs: [String],
                     avatarURL: URL?,
                     aliasLocalPart: String?) async -> Result<String, ClientProxyError>
@@ -194,7 +222,9 @@ protocol ClientProxyProtocol: AnyObject {
     func setUserAvatar(media: MediaInfo) async -> Result<Void, ClientProxyError>
     
     func removeUserAvatar() async -> Result<Void, ClientProxyError>
-
+    
+    func linkNewDeviceService() -> LinkNewDeviceServiceProtocol
+    
     func deactivateAccount(password: String?, eraseData: Bool) async -> Result<Void, ClientProxyError>
     
     func logout() async
@@ -212,6 +242,10 @@ protocol ClientProxyProtocol: AnyObject {
     func isAliasAvailable(_ alias: String) async -> Result<Bool, ClientProxyError>
     
     @discardableResult func clearCaches() async -> Result<Void, ClientProxyError>
+    
+    @discardableResult func optimizeStores() async -> Result<Void, ClientProxyError>
+    
+    func storeSizes() async -> Result<StoreSizes, ClientProxyError>
     
     func fetchMediaPreviewConfiguration() async -> Result<MediaPreviewConfig?, ClientProxyError>
 

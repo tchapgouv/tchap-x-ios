@@ -9,11 +9,14 @@
 import Foundation
 import LoremSwiftum
 import MatrixRustSDK
+import MatrixRustSDKMocks
 
 struct EventTimelineItemSDKMockConfiguration {
     var eventID: String = UUID().uuidString
     var sender = ""
     var senderProfile: ProfileDetails?
+    var forwarder: String?
+    var forwarderProfile: ProfileDetails?
     var isOwn = false
     var content: TimelineItemContent = .msgLike(content: .init(kind: .redacted,
                                                                reactions: [],
@@ -28,6 +31,8 @@ extension EventTimelineItem {
                   eventOrTransactionId: .eventId(eventId: configuration.eventID),
                   sender: configuration.sender,
                   senderProfile: configuration.senderProfile ?? .pending,
+                  forwarder: configuration.forwarder,
+                  forwarderProfile: configuration.forwarderProfile,
                   isOwn: configuration.isOwn,
                   isEditable: false,
                   content: configuration.content,

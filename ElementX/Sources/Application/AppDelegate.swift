@@ -33,7 +33,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         CompoundDesignTokensResources.registerFonts()
         
         // Tchap: set appearance from Compound Design Tokens
-        CompoundDesignTokensResources.setNavigationBarAppearance()
+        UINavigationBarAppearance.setNavigationBarAppearance()
         
         return true
     }

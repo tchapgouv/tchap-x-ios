@@ -24,6 +24,7 @@ options:
     - AccessibilityTests
     - IntegrationTests
     - DevelopmentAssets
+    - SDKMocks
     - Secrets
     - Tools
   - pattern: ElementX
@@ -51,19 +52,20 @@ settings:
   ENABLE_BITCODE: false
   APP_NAME: ElementX
   KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).$(BASE_BUNDLE_IDENTIFIER)"
-  MARKETING_VERSION: 25.12.0
+  MARKETING_VERSION: 26.01.0
   CURRENT_PROJECT_VERSION: 1
   SUPPORTS_MACCATALYST: false
 
 include:
 - path: app.yml
 - path: ElementX/SupportingFiles/target.yml
+- path: NSE/SupportingFiles/target.yml
+- path: ShareExtension/SupportingFiles/target.yml
+- path: SDKMocks/SupportingFiles/target.yml
 - path: UnitTests/SupportingFiles/target.yml
 - path: PreviewTests/SupportingFiles/target.yml
 - path: UITests/SupportingFiles/target.yml
 - path: IntegrationTests/SupportingFiles/target.yml
-- path: NSE/SupportingFiles/target.yml
-- path: ShareExtension/SupportingFiles/target.yml
 - path: AccessibilityTests/SupportingFiles/target.yml
 # - path: MyAppVariant/override.yml
 
@@ -76,22 +78,22 @@ packages:
 # Tchap
 #
 # Use the Github hosted version of Tchap Matrix-rust-SDK
-    url: https://github.com/tchapgouv/matrix-rust-components-swift
-    exactVersion: 25.12.2-bwi-main
+#    url: https://github.com/tchapgouv/matrix-rust-components-swift
+#    exactVersion: 25.12.2-bwi-main
 # Use the local version of Tchap Matrix-rust-SDK
-#    path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
+    path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
   Compound:
     path: compound-ios
   AnalyticsEvents:
     url: https://github.com/matrix-org/matrix-analytics-events
-    minorVersion: 0.29.2
+    minorVersion: 0.30.0
     # path: ../matrix-analytics-events
   EmbeddedElementCall:
     url: https://github.com/element-hq/element-call-swift
-    exactVersion: 0.16.0-rc.4
+    exactVersion: 0.16.3
   Emojibase:
     url: https://github.com/matrix-org/emojibase-bindings
-    minorVersion: 1.4.2
+    minorVersion: 1.5.0
     # path: ../emojibase-bindings
   SwiftOGG:
     url: https://github.com/element-hq/swift-ogg
@@ -99,7 +101,7 @@ packages:
     # path: ../swift-ogg
   WysiwygComposer:
     url: https://github.com/element-hq/matrix-rich-text-editor-swift
-    exactVersion: 2.37.12
+    exactVersion: 2.41.0
     # path: ../matrix-rich-text-editor/platforms/ios/lib/WysiwygComposer
   
   # External dependencies
@@ -108,19 +110,19 @@ packages:
     minorVersion: 1.2.1
   AsyncAlgorithms:
     url: https://github.com/apple/swift-async-algorithms
-    minorVersion: 1.0.0
+    minorVersion: 1.1.1
   Clocks:
     url: https://github.com/pointfreeco/swift-clocks
     from: 1.0.6
   Collections:
     url: https://github.com/apple/swift-collections
-    minorVersion: 1.2.0
+    minorVersion: 1.3.0
   DeviceKit:
     url: https://github.com/devicekit/DeviceKit
-    minorVersion: 5.6.0
+    minorVersion: 5.7.0
   DSWaveformImage:
     url: https://github.com/dmrschmidt/DSWaveformImage
-    exactVersion: 14.1.1
+    exactVersion: 14.2.2
   Dynamic:
     url: https://github.com/mhdhejazi/Dynamic
     exactVersion: 1.2.0
@@ -132,34 +134,31 @@ packages:
     minorVersion: 4.2.2
   Kingfisher:
     url: https://github.com/onevcat/Kingfisher
-    minorVersion: 8.3.2
+    minorVersion: 8.6.2
   KZFileWatchers:
     url: https://github.com/krzysztofzablocki/KZFileWatchers
     minorVersion: 1.2.0
   LoremSwiftum:
     url: https://github.com/lukaskubanek/LoremSwiftum
-    minorVersion: 2.2.1
+    minorVersion: 2.2.3
   LRUCache:
     url: https://github.com/nicklockwood/LRUCache
-    minorVersion: 1.0.4
-  Mapbox:
+    minorVersion: 1.2.0
+  MapLibre:
     url: https://github.com/maplibre/maplibre-gl-native-distribution
-    minorVersion: 5.13.0
-  Mutex: # Backports Swift's built in Mutex so we can use it on iOS 17.
-    url: https://github.com/swhitty/swift-mutex
-    minorVersion: 0.0.6
+    minorVersion: 6.22.1
   PostHog:
     url: https://github.com/PostHog/posthog-ios
-    minorVersion: 3.27.0
+    minorVersion: 3.37.1
   Sentry:
     url: https://github.com/getsentry/sentry-cocoa
-    minorVersion: 8.52.1
+    minorVersion: 9.1.0
   SnapshotTesting:
     url: https://github.com/pointfreeco/swift-snapshot-testing
-    minorVersion: 1.18.3
+    minorVersion: 1.18.7
   SwiftSoup:
     url: https://github.com/scinfu/SwiftSoup.git
-    minorVersion: 2.8.8
+    minorVersion: 2.11.2
   SwiftState:
     url: https://github.com/ReactKit/SwiftState
     minorVersion: 6.0.0

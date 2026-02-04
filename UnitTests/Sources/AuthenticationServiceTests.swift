@@ -15,6 +15,7 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import MatrixRustSDKMocks
 
 class AuthenticationServiceTests: XCTestCase {
     var client: ClientSDKMock!

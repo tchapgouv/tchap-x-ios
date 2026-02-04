@@ -42,7 +42,12 @@ struct HomeScreen: View {
         // Tchap: display `new room` button only if user is NOT external.
         if !MatrixIdFromString(context.viewState.userID).isExternalTchapUser {
             ToolbarItem(placement: .primaryAction) {
-                newRoomButton
+                if #available(iOS 26, *) {
+                    newRoomButton
+                } else {
+                    newRoomButton
+                        .buttonStyle(.compound(.super, size: .toolbarIcon))
+                }
             }
             .backportSharedBackgroundVisibility(.hidden)
         }

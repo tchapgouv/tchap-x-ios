@@ -17,6 +17,7 @@ import Combine
 #else
 @testable import ElementX
 #endif
+import MatrixRustSDKMocks
 
 @MainActor
 class RoomFlowCoordinatorTests: XCTestCase {

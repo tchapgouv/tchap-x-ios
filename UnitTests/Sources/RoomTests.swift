@@ -7,6 +7,7 @@
 //
 
 import MatrixRustSDK
+import MatrixRustSDKMocks
 import XCTest
 
 // Tchap: specify target for unit tests
