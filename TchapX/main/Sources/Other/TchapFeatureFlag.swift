@@ -95,7 +95,6 @@ extension TchapFeatureFlag {
         #elseif IS_TCHAP_DEVELOPMENT
         case dev01 = "dev01.tchap.incubateur.net"
         case dev02 = "dev02.tchap.incubateur.net"
-        case raphoid_test = "int.private-unencrypted-android.tchap.incubateur.net"
         #endif
         case all // To allow a feature for any instance
 
@@ -108,23 +107,20 @@ extension TchapFeatureFlag {
 }
 
 extension TchapFeatureFlag {
-    enum Configuration { // Use empty Enum rather than empty Struct. (Linter advice)
+    enum Configuration {
         #if IS_TCHAP_PRODUCTION
-        // certificatePinning can only be activated for .all or none because it is used before any activae session.
+        // certificatePinning can only be activated for .all or none because it is used before any activated session.
 //        static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
         // Tchap: don't use pinning for v0.7.0
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
-        static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
-        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [.all])
+        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
         static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
         #elseif IS_TCHAP_STAGING
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
-        static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
-        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
+        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [.all])
         static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
         #elseif IS_TCHAP_DEVELOPMENT
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
-        static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
         static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [.all])
         static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
         #endif
