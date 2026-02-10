@@ -344,15 +344,6 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
             state.canAcceptKnocks = powerLevels.canOwnUserInvite()
             state.canDeclineKnocks = powerLevels.canOwnUserKick()
             state.canBan = powerLevels.canOwnUserBan()
-        
-            // Tchap: fill room properties
-            state.bindings.isEncrypted = roomProxy.details.isEncrypted
-            state.bindings.isPublic = roomProxy.details.isPublic
-            // Tchap: read the `external access` value in the `accessRules` of the room.
-            // Used to display "open to external users" badge.
-            state.bindings.accessRule = roomProxy.details.accessRule
-            state.bindings.canDisplayPublicBadge = roomProxy.details.canDisplayPublicBadge
-            state.bindings.roomAvatar = roomProxy.details.avatar
         }
         
         let isHistoryVisible = roomInfo.historyVisibility == .shared || roomInfo.historyVisibility == .worldReadable
@@ -368,6 +359,15 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
                 state.historyVisibleDetails = nil
             }
         }
+      
+        // Tchap: fill room properties
+        state.bindings.isEncrypted = roomProxy.details.isEncrypted
+        state.bindings.isPublic = roomProxy.details.isPublic
+        // Tchap: read the `external access` value in the `accessRules` of the room.
+        // Used to display "open to external users" badge.
+        state.bindings.accessRule = roomProxy.details.accessRule
+        state.bindings.canDisplayPublicBadge = roomProxy.details.canDisplayPublicBadge
+        state.bindings.roomAvatar = roomProxy.details.avatar
     }
     
     private func setupPinnedEventsTimelineItemProviderIfNeeded() {

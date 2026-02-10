@@ -8,6 +8,9 @@
 
 import Foundation
 
+// Tchap: Add Matrix SDK dependency for RoomVisibility type.
+import MatrixRustSDK
+
 enum ThreadTimelineScreenViewModelAction {
     case displayMessageForwarding(MessageForwardingItem)
 }
@@ -24,6 +27,15 @@ struct ThreadTimelineScreenViewState: BindableState {
 struct ThreadTimelineScreenViewStateBindings {
     /// The view model used to present a QuickLook media preview.
     var mediaPreviewViewModel: TimelineMediaPreviewViewModel?
+    
+    // Tchap: display room properties badges. As they are queried async, make them Bindable.
+    var isEncrypted: Bool?
+    var isPublic: Bool?
+    var accessRule: AccessRule?
+    var visibilityInRoomDirectory: RoomVisibility!
+    var canDisplayPublicBadge: Bool!
+    var roomAvatar: RoomAvatar?
+    // Tchap: end
 }
 
 enum ThreadTimelineScreenViewAction { }

@@ -106,5 +106,14 @@ class ThreadTimelineScreenViewModel: ThreadTimelineScreenViewModelType, ThreadTi
         if let powerLevels = roomInfo.powerLevels {
             state.canSendMessage = powerLevels.canOwnUser(sendMessage: .roomMessage)
         }
+        
+        // Tchap: fill room properties
+        state.bindings.isEncrypted = roomProxy.details.isEncrypted
+        state.bindings.isPublic = roomProxy.details.isPublic
+        // Tchap: read the `external access` value in the `accessRules` of the room.
+        // Used to display "open to external users" badge.
+        state.bindings.accessRule = roomProxy.details.accessRule
+        state.bindings.canDisplayPublicBadge = roomProxy.details.canDisplayPublicBadge
+        state.bindings.roomAvatar = roomProxy.details.avatar
     }
 }
