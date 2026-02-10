@@ -138,9 +138,13 @@ public struct CompoundButtonStyle: ButtonStyle {
                 Capsule().strokeBorder(strokeColor(configuration: configuration))
             }
         case .primary:
-            Capsule().fill(fillColor(configuration: configuration))
+            // Tchap: make buttons more DSFR-like.
+//            Capsule().fill(fillColor(configuration: configuration))
+            contentShape.fill(fillColor(configuration: configuration))
         case .secondary:
-            Capsule().strokeBorder(strokeColor(configuration: configuration))
+            // Tchap: make buttons more DSFR-like.
+//            Capsule().strokeBorder(strokeColor(configuration: configuration))
+            contentShape.stroke(strokeColor(configuration: configuration))
         case .tertiary:
             EmptyView()
         case .textLink:
@@ -151,7 +155,9 @@ public struct CompoundButtonStyle: ButtonStyle {
     private var contentShape: AnyShape {
         switch kind {
         case .super, .primary, .secondary, .tertiary:
-            return AnyShape(Capsule())
+            // Tchap: make buttons more DSFR-like.
+//            return AnyShape(Capsule())
+            return AnyShape(RoundedRectangle(cornerSize: CGSize(width: 4.0, height: 4.0)))
         case .textLink:
             return AnyShape(Rectangle())
         }
