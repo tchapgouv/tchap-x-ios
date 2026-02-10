@@ -57,7 +57,15 @@ struct CreateRoomScreen: View {
         .alert(item: $context.alertInfo)
         .shouldScrollOnKeyboardDidShow(focus == .alias, to: Focus.alias)
     }
-    
+
+    private var nameTextFieldShape: AnyShape {
+        if #available(iOS 26, *) {
+            AnyShape(ConcentricRectangle(corners: .concentric(minimum: 26)))
+        } else {
+            AnyShape(RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
     private var roomSection: some View {
         Section {
             HStack(alignment: .center, spacing: 16) {
@@ -84,7 +92,7 @@ struct CreateRoomScreen: View {
                         .accessibilityIdentifier(A11yIdentifiers.createRoomScreen.roomName)
                         .padding(.horizontal, ListRowPadding.horizontal)
                         .padding(.vertical, ListRowPadding.vertical)
-                        .background(.compound.bgCanvasDefaultLevel1, in: RoundedRectangle(cornerRadius: 12))
+                        .background(.compound.bgCanvasDefaultLevel1, in: nameTextFieldShape)
                 }
             }
             .listRowInsets(.init())
