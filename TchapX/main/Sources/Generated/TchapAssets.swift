@@ -29,7 +29,7 @@ internal enum TchapAsset {
   }
   internal enum TargetAssets {
     internal enum Images {
-      internal static let appLogo = TchapImage(name: "images/app-logo")
+      internal static let tchapAppLogo = TchapImage(name: "images/tchap-app-logo")
     }
   }
 }
