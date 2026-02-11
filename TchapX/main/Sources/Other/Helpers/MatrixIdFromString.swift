@@ -31,9 +31,16 @@
 //
 
 import Foundation
+import MatrixRustSDK
+
+enum TchapUserType {
+    case external(needInviteByEmail: Bool)
+    case agent(needInviteByEmail: Bool)
+}
 
 struct MatrixIdFromString {
     private static let MATRIXID_PARTS_SEPARATOR: Character = ":"
+    private static let HOMESERVER_SPECIAL_SUFFIX_TCHAP_EMAIL_INVITATION = TchapConstants().inviteByEmailSuffixMarker()
 
     private var mxIdString: String
 
@@ -41,9 +48,34 @@ struct MatrixIdFromString {
         self.mxIdString = mxIdString
     }
     
+    /// Get the email part of a matrix identifier.
+    ///
+    /// - Returns: the email of a Tcvhap user, if any,  `nil`  otherwise.
+    ///
+    /// The identifier type may be any matrix identifier type: user id, room id, ...
+    ///
+    /// For example in case of "@jean-philippe.martin-modernisation.fr:matrix.test.org", this will return "matrix.test.org".
+    ///
+    /// In case of "aaa@bbb.com:matrix.test.org", this will return "aaa@bbb.com".
+    ///
+    /// In case of "aaa-bbb.com:matrix.test.org", this will return `nil` (because the prefix part is not an email address).
+    ///
+    /// The "invite by email' Rust suffix marker is handled:
+    /// - in case of "aaa@bbb.com:matrix.test.org.tchap-email-invitation", this will return "aaa@bbb.com" because the suffix part is after the Matrix ID separator.
+
+    var tchapEmail: Substring? {
+        guard let splitIndex = mxIdString.firstIndex(of: Self.MATRIXID_PARTS_SEPARATOR) else {
+            return nil
+        }
+        // get substring except first char because it is Matrix `@`.
+        let emailPrefix = mxIdString[mxIdString.index(after: mxIdString.startIndex)...mxIdString.index(before: splitIndex)]
+
+        return String(emailPrefix).isEmailAddress ? emailPrefix : nil
+    }
+    
     /// Get the homeserver name of a matrix identifier.
     ///
-    /// - Returns: the homeserver name, if any, `nil` otherwise.
+    /// - Returns: the homeserver name, if any, empty string  otherwise.
     ///
     /// The identifier type may be any matrix identifier type: user id, room id, ...
     ///
@@ -89,8 +121,14 @@ struct MatrixIdFromString {
     ///
     /// - Returns: true if external.
     
-    var isExternalTchapUser: Bool {
-        isExternalTchapServer
+    var userType: TchapUserType {
+        let homeServer = HomeServerName(homeServerName)
+        
+        if homeServer.isExternalTchapServer {
+            return .external(needInviteByEmail: homeServer.isUserNeedingInviteByEmail)
+        } else {
+            return .agent(needInviteByEmail: homeServer.isUserNeedingInviteByEmail)
+        }
     }
 
     /// Build a display name from the tchap user identifier.
@@ -178,6 +216,7 @@ struct MatrixIdFromString {
 
 struct HomeServerName {
     private static let HOMESERVER_SPECIAL_SUFFIX_TCHAP = "tchap.gouv.fr"
+    private static let HOMESERVER_SPECIAL_SUFFIX_TCHAP_EMAIL_INVITATION = TchapConstants().inviteByEmailSuffixMarker()
     private static let HOMESERVER_PARTS_SEPARATOR: Character = "."
     #if IS_TCHAP_DEVELOPMENT
     private static let HOMESERVER_EXTERN_PREFIX_LIST = ["ext01."]
@@ -222,8 +261,12 @@ struct HomeServerName {
     /// - Returns: true if external.
     
     var isExternalTchapServer: Bool {
-        let homeServer = serverName
-        return homeServer.isEmpty || Self.HOMESERVER_EXTERN_PREFIX_LIST.contains { homeServer.hasPrefix($0) }
+        serverName.isEmpty ||
+            Self.HOMESERVER_EXTERN_PREFIX_LIST.contains { serverName.hasPrefix($0) }
+    }
+    
+    var isUserNeedingInviteByEmail: Bool {
+        serverName.hasSuffix(Self.HOMESERVER_SPECIAL_SUFFIX_TCHAP_EMAIL_INVITATION)
     }
     
     /// Tells whether the provided tchap identifier corresponds to an extern user.

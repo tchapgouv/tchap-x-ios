@@ -450,6 +450,29 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
     
+    // Tchap: invite by email
+    private enum TchapInviteByEmailType: Equatable {
+        case notInviteByEmail
+        case inviteByEmail(isExternalUser: Bool)
+    }
+    
+    // Tchap: invite by email
+    private func getTchapInviteByEmailType(userID: String, roomAccessRule: AccessRule) -> TchapInviteByEmailType {
+        guard roomAccessRule == .direct else {
+            return .notInviteByEmail
+        }
+        switch MatrixIdFromString(userID).userType {
+        case .external(needInviteByEmail: true):
+            return .inviteByEmail(isExternalUser: true)
+        case .external(needInviteByEmail: false):
+            return .notInviteByEmail
+        case .agent(needInviteByEmail: true):
+            return .inviteByEmail(isExternalUser: false)
+        case .agent(needInviteByEmail: false):
+            return .notInviteByEmail
+        }
+    }
+    
     func createDirectRoom(with userID: String, expectedRoomName: String?) async -> Result<String, ClientProxyError> {
         do {
             let parameters = CreateRoomParameters(name: nil,

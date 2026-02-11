@@ -55,7 +55,7 @@ struct TchapRoomHeaderViewRoomPropertiesBadgesView: View {
             } else if accessRule == .direct,
                       case let .heroes(heroes) = avatar,
                       let otherParticipant = heroes.first?.userID,
-                      MatrixIdFromString(otherParticipant).isExternalTchapUser {
+                      case .external = MatrixIdFromString(otherParticipant).userType {
                 BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .roomIsAccessibleToExternals(useSmallSize: true))
             }
         }

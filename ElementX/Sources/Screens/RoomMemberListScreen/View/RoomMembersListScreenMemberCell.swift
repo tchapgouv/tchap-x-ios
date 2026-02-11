@@ -41,7 +41,7 @@ struct RoomMembersListScreenMemberCell: View {
                                 .lineLimit(1)
                         }
                         #endif
-                        if MatrixIdFromString(listEntry.member.id).isExternalTchapUser {
+                        if case .external = MatrixIdFromString(listEntry.member.id).userType {
                             BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
                         }
                     }

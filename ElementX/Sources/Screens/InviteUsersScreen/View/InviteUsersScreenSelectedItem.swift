@@ -20,11 +20,21 @@ struct InviteUsersScreenSelectedItem: View {
             
             // Tchap: calculate displayname from userId if necessary and displays it in badge if user is external..
             //            Text(user.displayName ?? user.userID)
-            if MatrixIdFromString(user.userID).isExternalTchapUser {
+            switch MatrixIdFromString(user.userID).userType {
+            case .external(needInviteByEmail: false):
                 Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
                     .lineLimit(1)
                     .tchapExternalLabelView()
-            } else {
+            case .external(needInviteByEmail: true):
+                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                    .lineLimit(1)
+                    .tchapInivteByEmailLabelView()
+            case .agent(needInviteByEmail: false):
+                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                    .font(.compound.bodyMD)
+                    .foregroundColor(.compound.textPrimary)
+                    .lineLimit(1)
+            case .agent(needInviteByEmail: true):
                 Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
                     .font(.compound.bodyMD)
                     .foregroundColor(.compound.textPrimary)
