@@ -485,9 +485,18 @@ class ClientProxy: ClientProxyProtocol {
                                                   invite: [userID],
                                                   avatar: nil,
                                                   powerLevelContentOverride: Self.roomCreationPowerLevelOverrides)
-            // Tchap: change `createRoom` call with `isFederatd` parameter becasue of BWI-specific Rust side.
+
+            // Tchap: invite by email
+            let inviteByEmail = getTchapInviteByEmailType(userID: userID, roomAccessRule: .direct)
+            
+            // Tchap: change `createRoom` call with:
+            //   - `isFederatd` parameter becasue of BWI-specific Rust side
+            //   - `isTchapInvite` and `isTchapInviteExternal` because of Tchap `invite by email` feature
 //            let roomID = try await client.createRoom(request: parameters)
-            let roomID = try await client.createRoom(request: parameters, isFederated: true)
+            let roomID = try await client.createRoom(request: parameters,
+                                                     isFederated: false,
+                                                     isTchapInvite: { if case .inviteByEmail = inviteByEmail { true } else { false } }(),
+                                                     isTchapInviteExternal: { if case .inviteByEmail(let isExternalUser) = inviteByEmail { isExternalUser } else { false } }())
 
             await waitForRoomToSync(roomID: roomID)
             
@@ -520,10 +529,19 @@ class ClientProxy: ClientProxyProtocol {
                                                   // This is an FFI naming mistake, what is required is the `aliasLocalPart` not the whole alias
                                                   canonicalAlias: aliasLocalPart,
                                                   isSpace: isSpace)
-            // Tchap: change `createRoom` call with `isFederated` parameter becasue of BWI-specific Rust side.
+            // Tchap: change `createRoom` call with:
+            //   - `isFederatd` parameter becasue of BWI-specific Rust side
+            //   - `isTchapInvite` and `isTchapInviteExternal` because of Tchap `invite by email` feature
+            //
+            // `isTchapInvite` and `isTchapInviteExternal` are set to false because invitations will be resolved
+            // on next step when choosing room initial members.
+            //
             // let roomID = try await client.createRoom(request: parameters)
-            let roomID = try await client.createRoom(request: parameters, isFederated: accessType.isFederated)
-            
+            let roomID = try await client.createRoom(request: parameters,
+                                                     isFederated: accessType.isFederated,
+                                                     isTchapInvite: false,
+                                                     isTchapInviteExternal: false)
+
             await waitForRoomToSync(roomID: roomID)
             
             return .success(roomID)
