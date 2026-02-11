@@ -364,6 +364,9 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     func invite(userID: String) async -> Result<Void, RoomProxyError> {
         do {
+            // Tchap: enable Tchap invitation by email
+//            MXLog.info("Inviting user \(userID)")
+//            return try await .success(room.inviteUserById(userId: userID))
             switch MatrixIdFromString(userID).userType {
             case .external(needInviteByEmail: false), .agent(needInviteByEmail: false):
                 // Don't need invite by email: send invite by legacy userId.
