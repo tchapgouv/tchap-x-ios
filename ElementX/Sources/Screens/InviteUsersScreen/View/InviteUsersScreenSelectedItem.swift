@@ -39,6 +39,7 @@ struct InviteUsersScreenSelectedItem: View {
                     .font(.compound.bodyMD)
                     .foregroundColor(.compound.textPrimary)
                     .lineLimit(1)
+                    .tchapInivteByEmailLabelView()
             }
         }
         .frame(maxWidth: 100.0)

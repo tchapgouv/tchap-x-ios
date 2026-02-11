@@ -11,6 +11,7 @@ import SwiftUI
 // Tchap: usage of badges in Tchap.
 public enum TchapBadgeLabelUsage {
     case userIsExternal(useSmallSize: Bool = false)
+    case inviteByEmail(useSmallSize: Bool = false)
     case roomIsEncrypted(useSmallSize: Bool = false)
     case roomIsNotEncrypted(useSmallSize: Bool = false)
     case roomIsPublic(useSmallSize: Bool = false)
@@ -20,6 +21,7 @@ public enum TchapBadgeLabelUsage {
     var iconSize: CompoundIcon.Size {
         switch self {
         case .userIsExternal(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
+        case .inviteByEmail(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
         case .roomIsEncrypted(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
         case .roomIsNotEncrypted(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
         case .roomIsPublic(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
@@ -30,6 +32,7 @@ public enum TchapBadgeLabelUsage {
     var titleColor: Color {
         switch self {
         case .userIsExternal: .compound.textBadgeExternal
+        case .inviteByEmail: .compound.textBadgeDefault
         case .roomIsEncrypted: .compound.textBadgeAccent
         case .roomIsNotEncrypted: .compound.textBadgeDefault
         case .roomIsPublic: .compound.textBadgeDefault
@@ -40,6 +43,7 @@ public enum TchapBadgeLabelUsage {
     var iconColor: Color {
         switch self {
         case .userIsExternal: .compound.iconBadgeExternal
+        case .inviteByEmail: .compound.iconBadgeDefault
         case .roomIsEncrypted: .compound.iconBadgeAccent
         case .roomIsNotEncrypted: .compound.iconBadgeDefault
         case .roomIsPublic: .compound.iconBadgeDefault
@@ -50,6 +54,7 @@ public enum TchapBadgeLabelUsage {
     var backgroundColor: Color {
         switch self {
         case .userIsExternal: .compound.bgBadgeExternal
+        case .inviteByEmail: .compound.bgBadgeDefault
         case .roomIsEncrypted: .compound.bgBadgeAccent
         case .roomIsNotEncrypted: .compound.bgBadgeDefault
         case .roomIsPublic: .compound.bgBadgeDefault
@@ -60,6 +65,8 @@ public enum TchapBadgeLabelUsage {
     var font: Font {
         switch self {
         case .userIsExternal(let useSmallSize):
+            if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
+        case .inviteByEmail(let useSmallSize):
             if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
         case .roomIsEncrypted(let useSmallSize):
             if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
@@ -75,6 +82,7 @@ public enum TchapBadgeLabelUsage {
     var leadingPadding: CGFloat {
         switch self {
         case .userIsExternal(let useSmallSize),
+             .inviteByEmail(let useSmallSize),
              .roomIsEncrypted(let useSmallSize), .roomIsNotEncrypted(let useSmallSize),
              .roomIsPublic(let useSmallSize),
              .roomIsAccessibleToExternals(let useSmallSize):
@@ -85,6 +93,7 @@ public enum TchapBadgeLabelUsage {
     var trailingPadding: CGFloat {
         switch self {
         case .userIsExternal(let useSmallSize),
+             .inviteByEmail(let useSmallSize),
              .roomIsEncrypted(let useSmallSize),
              .roomIsNotEncrypted(let useSmallSize),
              .roomIsPublic(let useSmallSize),
@@ -96,6 +105,7 @@ public enum TchapBadgeLabelUsage {
     var verticalPadding: CGFloat {
         switch self {
         case .userIsExternal(let useSmallSize),
+             .inviteByEmail(let useSmallSize),
              .roomIsEncrypted(let useSmallSize),
              .roomIsNotEncrypted(let useSmallSize),
              .roomIsPublic(let useSmallSize),
