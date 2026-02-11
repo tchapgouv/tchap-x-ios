@@ -31,6 +31,7 @@ struct InviteUsersScreen: View {
                               disablesInteractiveDismiss: true,
                               accessibilityFocusOnStart: true)
             .compoundSearchField()
+            .textInputAutocapitalization(.never) // Tchap: don't capitalize search input
             .alert(item: $context.alertInfo)
             .navigationBarBackButtonHidden(context.viewState.isSkippable)
     }

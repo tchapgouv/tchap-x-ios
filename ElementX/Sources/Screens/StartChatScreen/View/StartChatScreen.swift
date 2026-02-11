@@ -31,6 +31,7 @@ struct StartChatScreen: View {
                           showsCancelButton: false,
                           disablesInteractiveDismiss: true)
         .compoundSearchField()
+        .textInputAutocapitalization(.never) // Tchap: don't capitalize search input
         .alert(item: $context.alertInfo)
         .sheet(item: $context.selectedUserToInvite) { user in
             SendInviteConfirmationView(userToInvite: user, mediaProvider: context.mediaProvider) {
