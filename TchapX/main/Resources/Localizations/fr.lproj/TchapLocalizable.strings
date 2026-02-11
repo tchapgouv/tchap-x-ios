@@ -6,25 +6,29 @@
   Copyright © 2024 Tchap. All rights reserved.
 */
 
+// Common
 common_legal = "Mentions légales";
 common_faq = "Foire Aux Questions";
 common_user_is_external = "INVITÉ EXTERNE";
 common_email = "Email";
 
+// Legal
 legal_terms_of_use = "Modalités d'utilisation";
 legal_privacy_policy = "Politique de confidentialité";
 
+// Onboarding
 screen_onboarding_welcome_title = "Bienvenue dans\n%1$@";
 screen_onboarding_welcome_message = "La messagerie instantanée du secteur public";
 screen_onboarding_welcome_qrcode_header = "Déjà connecté sur un ordinateur ?";
 screen_onboarding_welcome_or_between_buttons = "ou";
 
+// Login
 screen_login_title_login = "Se connecter à Tchap";
 screen_login_title_register = "Créer un compte sur Tchap";
 screen_login_description_with_tchap = "La messagerie instantanée du secteur public";
 screen_login_input_email_label = "Saisissez votre mail professionnelle";
 
-// Tchap: login by MAS.
+// Login by MAS.
 screen_decide_homeserver_error_get_instance_title = "Erreur";
 screen_decide_homeserver_error_get_instance_message = "Impossible de déterminer à quel serveur est rattaché votre compte.";
 screen_decide_homeserver_error_homeserver_configuration_unreachable_title = "Erreur";
@@ -32,6 +36,7 @@ screen_decide_homeserver_error_homeserver_configuration_unreachable_message = "I
 screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_title = "Erreur";
 screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_message = "Votre serveur de rattachement ne supporte pas l'authentification OIDC.";
 
+// Create room
 screen_create_room_selected_users_label = "Membres";
 screen_create_room_private_encrypted_option_title = "Salon privé sécurisé";
 screen_create_room_private_encrypted_option_description = "• Chiffré de bout en bout\n• Accessible uniquement sur invitation\n• Conseillé jusqu'à 500 membres";
@@ -53,21 +58,24 @@ screen_create_room_room_access_section_public_not_federated_description = "Seuls
 screen_create_room_room_access_section_private_unencrypted_title = "Privé";
 screen_create_room_room_access_section_private_unencrypted_description = "Seules les personnes invitées peuvent joindre";
 
+// Invite by email
+invite_by_email_message = "INVITATION PAR EMAIL";
+
+// Invite external
 screen_invite_external_user_dialog_title = "Invitation d’un externe";
 screen_invite_external_user_dialog_message = "En invitant un externe, ce salon deviendra accessible aux invités externes.\nCette modification est définitive et irréversible.";
-
 screen_invite_external_user_error_modifying_access_rule_title = "Impossible d’ouvrir le salon aux externes";
 screen_invite_external_user_error_modifying_access_rule_message = "L’ouverture du salon aux externes a échoué. Aucune invitation n’a été envoyée.";
 
+// Room header
 room_header_badge_encrypted = "SÉCURISÉ";
 room_header_badge_not_encrypted = "NON CHIFFRÉ";
 room_header_badge_public = "PUBLIC";
 room_header_badge_authorized_to_external = "EXTERNES";
 
+// Divers
 start_chat_action_join_forum = "Rejoindre un salon public";
-
 screen_room_directory_search_title = "Rejoindre un salon public";
-
 state_event_room_access_rule = "Règle d'accès au salon modifiée";
 
 // Tchap: BWI content-scanner

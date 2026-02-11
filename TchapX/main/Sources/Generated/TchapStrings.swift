@@ -26,6 +26,8 @@ internal enum TchapL10n {
   internal static var contentScannerScanStatusInfected: String { return TchapL10n.tr("TchapLocalizable", "content_scanner_scan_status_infected") }
   /// File no longer available
   internal static var contentScannerScanStatusNotFound: String { return TchapL10n.tr("TchapLocalizable", "content_scanner_scan_status_not_found") }
+  /// INVITE BY EMAIL
+  internal static var inviteByEmailMessage: String { return TchapL10n.tr("TchapLocalizable", "invite_by_email_message") }
   /// Privacy policy
   internal static var legalPrivacyPolicy: String { return TchapL10n.tr("TchapLocalizable", "legal_privacy_policy") }
   /// Terms of use
