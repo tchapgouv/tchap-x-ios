@@ -59,7 +59,7 @@ screen_create_room_room_access_section_private_unencrypted_title = "Private";
 screen_create_room_room_access_section_private_unencrypted_description = "Only people invited can join.";
 
 // Invite by email
-invite_by_email_message = "INVITE BY EMAIL";
+invite_by_email_message = "This contact will be invited to join Tchap.";
 
 // Invite external
 screen_invite_external_user_dialog_title = "Invitation of an external";

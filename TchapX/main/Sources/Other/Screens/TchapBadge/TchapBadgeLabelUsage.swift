@@ -25,14 +25,14 @@ public enum TchapBadgeLabelUsage {
         case .roomIsEncrypted(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
         case .roomIsNotEncrypted(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
         case .roomIsPublic(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
-        case .roomIsAccessibleToExternals(let useSmallSize): useSmallSize ? .custom(8.0) : .xSmall
+        case .roomIsAccessibleToExternals(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
         }
     }
 
     var titleColor: Color {
         switch self {
         case .userIsExternal: .compound.textBadgeExternal
-        case .inviteByEmail: .compound.textBadgeDefault
+        case .inviteByEmail: .compound.textSecondary
         case .roomIsEncrypted: .compound.textBadgeAccent
         case .roomIsNotEncrypted: .compound.textBadgeDefault
         case .roomIsPublic: .compound.textBadgeDefault
@@ -43,7 +43,7 @@ public enum TchapBadgeLabelUsage {
     var iconColor: Color {
         switch self {
         case .userIsExternal: .compound.iconBadgeExternal
-        case .inviteByEmail: .compound.iconBadgeDefault
+        case .inviteByEmail: .compound.iconCriticalPrimary
         case .roomIsEncrypted: .compound.iconBadgeAccent
         case .roomIsNotEncrypted: .compound.iconBadgeDefault
         case .roomIsPublic: .compound.iconBadgeDefault
@@ -54,7 +54,7 @@ public enum TchapBadgeLabelUsage {
     var backgroundColor: Color {
         switch self {
         case .userIsExternal: .compound.bgBadgeExternal
-        case .inviteByEmail: .compound.bgBadgeDefault
+        case .inviteByEmail: .clear
         case .roomIsEncrypted: .compound.bgBadgeAccent
         case .roomIsNotEncrypted: .compound.bgBadgeDefault
         case .roomIsPublic: .compound.bgBadgeDefault
@@ -82,23 +82,23 @@ public enum TchapBadgeLabelUsage {
     var leadingPadding: CGFloat {
         switch self {
         case .userIsExternal(let useSmallSize),
-             .inviteByEmail(let useSmallSize),
              .roomIsEncrypted(let useSmallSize), .roomIsNotEncrypted(let useSmallSize),
              .roomIsPublic(let useSmallSize),
              .roomIsAccessibleToExternals(let useSmallSize):
             if useSmallSize == true { 4.0 } else { 8.0 }
+        case .inviteByEmail: 0.0
         }
     }
     
     var trailingPadding: CGFloat {
         switch self {
         case .userIsExternal(let useSmallSize),
-             .inviteByEmail(let useSmallSize),
              .roomIsEncrypted(let useSmallSize),
              .roomIsNotEncrypted(let useSmallSize),
              .roomIsPublic(let useSmallSize),
              .roomIsAccessibleToExternals(let useSmallSize):
             if useSmallSize == true { 5.0 } else { 12.0 }
+        case .inviteByEmail: 0.0
         }
     }
     

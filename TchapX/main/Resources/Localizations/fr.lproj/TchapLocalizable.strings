@@ -59,7 +59,7 @@ screen_create_room_room_access_section_private_unencrypted_title = "Privé";
 screen_create_room_room_access_section_private_unencrypted_description = "Seules les personnes invitées peuvent joindre";
 
 // Invite by email
-invite_by_email_message = "INVITATION PAR EMAIL";
+invite_by_email_message = "Ce contact sera invité à rejoindre Tchap.";
 
 // Invite external
 screen_invite_external_user_dialog_title = "Invitation d’un externe";

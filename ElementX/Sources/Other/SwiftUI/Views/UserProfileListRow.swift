@@ -63,11 +63,10 @@ struct UserProfileListRow: View {
                 BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
                     .offset(x: tchapBadgesOffsetX, y: -8.0)
             case .external(needInviteByEmail: true):
-                HStack(spacing: 4.0) {
-                    BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
-                    BadgeLabel(title: TchapL10n.inviteByEmailMessage, icon: \.email, style: .info, tchapUsage: .inviteByEmail(useSmallSize: true))
-                }
-                .offset(x: tchapBadgesOffsetX, y: -8.0) // 60 is 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
+                BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
+                    .offset(x: tchapBadgesOffsetX, y: -8.0)
+                BadgeLabel(title: TchapL10n.inviteByEmailMessage, icon: \.errorSolid, style: .info, tchapUsage: .inviteByEmail(useSmallSize: true))
+                    .offset(x: tchapBadgesOffsetX, y: -8.0)
             case .agent:
                 EmptyView()
             }
