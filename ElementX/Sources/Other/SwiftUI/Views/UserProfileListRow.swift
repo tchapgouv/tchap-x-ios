@@ -36,6 +36,14 @@ struct UserProfileListRow: View {
         }
     }
     
+    // Tchap: compute BadgeLabel offsetX
+    var tchapBadgesOffsetX: CGFloat {
+        return switch kind {
+        case .multiSelection: 104.0 // 100 is 40 (radio button width) + 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
+        default: 64.0 // 60 is 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
+        }
+    }
+        
     var body: some View {
         // Tchap: add external badge if necessary
 //        ListRow(label: .avatar(title: user.displayName ?? user.userID,
