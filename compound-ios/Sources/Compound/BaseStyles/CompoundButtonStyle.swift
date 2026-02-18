@@ -35,6 +35,8 @@ public struct CompoundButtonStyle: ButtonStyle {
         case tertiary
         /// A plain button with no padding.
         case textLink
+        // Tchap: handle Tchap circle button (used for Home new Chat button for instance).
+        case tchapCircle
     }
     
     var size: Size
@@ -149,6 +151,9 @@ public struct CompoundButtonStyle: ButtonStyle {
             EmptyView()
         case .textLink:
             EmptyView()
+        // Tchap: handle Tchap circle button
+        case .tchapCircle:
+            contentShape.fill(fillColor(configuration: configuration))
         }
     }
 
@@ -160,6 +165,9 @@ public struct CompoundButtonStyle: ButtonStyle {
             return AnyShape(RoundedRectangle(cornerSize: CGSize(width: 4.0, height: 4.0)))
         case .textLink:
             return AnyShape(Rectangle())
+        // Tchap: handle Tchap circle button
+        case .tchapCircle:
+            return AnyShape(Circle())
         }
     }
 
@@ -181,7 +189,9 @@ public struct CompoundButtonStyle: ButtonStyle {
     }
     
     private func textColor(configuration: Configuration) -> Color {
-        if kind == .primary {
+        // Tchap: handle Tchap circle button
+//        if kind == .primary {
+        if kind == .primary || kind == .tchapCircle {
             return .compound.textOnSolidPrimary
         } else {
             guard isEnabled else { return .compound.textDisabled }
