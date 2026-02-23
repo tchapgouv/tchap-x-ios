@@ -14,7 +14,7 @@ struct TchapWelcomeScreen: View {
     @ObservedObject var context: TchapWelcomeScreenViewModel.Context
     
     var body: some View {
-        FullscreenDialog(topPadding: 32.0, background: .gradient) {
+        FullscreenDialog(topPadding: 32.0) {
             mainContent
         } bottomContent: {
             buttons
