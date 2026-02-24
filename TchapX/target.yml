@@ -93,7 +93,8 @@ targetTemplates:
             CFBundleTypeRole: Editor,
             CFBundleURLName: "Application",
             CFBundleURLSchemes: [
-              io.element
+              $(BASE_BUNDLE_IDENTIFIER), # The app's own scheme for custom routes
+              "matrix" # Matrix URI scheme for permalinks
             ]
           }
         ]
@@ -133,7 +134,25 @@ targetTemplates:
           LSHandlerRank: Owner
           LSItemContentTypes: $(PILLS_UT_TYPE_IDENTIFIER)
         LSSupportsOpeningDocumentsInPlace: false
-        mapLibreAPIKey: $(MAPLIBRE_API_KEY)
+        
+    entitlements:
+      path: ElementX.entitlements
+      properties:
+        aps-environment: development
+        com.apple.developer.associated-domains:
+        - applinks:$(BASE_BUNDLE_IDENTIFIER)
+        - applinks:www.$(BASE_BUNDLE_IDENTIFIER)
+        - applinks:call.element.io
+        - applinks:matrix.to
+        # - applinks:localhost?mode=developer # developer mode only works with https (but self-signed is fine).
+        - webcredentials:www.$(BASE_BUNDLE_IDENTIFIER)
+        com.apple.developer.usernotifications.communication: true
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups:
+        - $(APP_GROUP_IDENTIFIER)
+        com.apple.security.network.client: true
+        keychain-access-groups:
+        - $(KEYCHAIN_ACCESS_GROUP_IDENTIFIER)
         
     settings:
       BASE_APP_GROUP_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
@@ -276,6 +295,9 @@ targets:
           }
         }
 
+    entitlements:
+      path: production/SupportingFiles/tchapx.entitlements
+
     settings:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx
       PRODUCTION_APP_NAME: TchapX PRODUCTION
@@ -354,6 +376,9 @@ targets:
           }
         }
 
+    entitlements:
+      path: staging/SupportingFiles/tchapx.entitlements
+
     settings:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.staging
       PRODUCTION_APP_NAME: TchapX STAGING
@@ -431,6 +456,9 @@ targets:
             }
           }
         }
+
+    entitlements:
+      path: development/SupportingFiles/tchapx.entitlements
 
     settings:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.dev
