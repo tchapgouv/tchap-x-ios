@@ -143,7 +143,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
         }
         
         // Tchap: skip analytics opt-in.
-        // Will force Onboarding flow from `nextSkippingIdentityConfirmed` to `finished`.
+//         Will force Onboarding flow from `nextSkippingIdentityConfirmed` to `finished`.
 //        analyticsService.shouldShowAnalyticsPrompt
         return false
     }
@@ -165,7 +165,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
             }
             
             // Tchap: add welcome screen
-            //            switch (fromState, requiresVerification, requiresAppLockSetup, requiresAnalyticsSetup, requiresNotificationsSetup) {
+//            switch (fromState, requiresVerification, requiresAppLockSetup, requiresAnalyticsSetup, requiresNotificationsSetup) {
             switch (fromState, requiresVerification, requiresAppLockSetup, requiresAnalyticsSetup, requiresTchapWelcomeScreen, requiresNotificationsSetup) {
             case (.initial, true, _, _, _, _): // Tchap: add welcome screen state
                 return .identityConfirmation
@@ -228,8 +228,8 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
             case (.tchapWelcome, _, _, _, _, true): // Tchap: add welcome screen state
                 return .notificationPermissions
             // Tchap: add welcome screen
-            //            case (.notificationPermissions, _, _, _, _, _): // Tchap: add welcome screen state
-            //                return .finished
+//            case (.notificationPermissions, _, _, _, _, _): // Tchap: add welcome screen state
+//                return .finished
             case (.tchapWelcome, _, _, _, _, _): // Tchap: add welcome screen state
                 return .finished
             case (.notificationPermissions, _, _, _, _, _): // Tchap: add welcome screen state
