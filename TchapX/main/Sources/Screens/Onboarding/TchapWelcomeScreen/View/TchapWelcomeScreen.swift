@@ -29,7 +29,7 @@ struct TchapWelcomeScreen: View {
     /// The main content of the screen that is shown inside the scroll view.
     private var mainContent: some View {
         VStack(spacing: 8) {
-            Image(asset: TchapAsset.TargetAssets.Images.appLogo)
+            Image(asset: TchapAsset.TargetAssets.Images.tchapAppLogo)
             
             Text(TchapL10n.screenOnboardingWelcomeNewTchapTitle)
                 .padding(.horizontal, 32.0)
