@@ -14,6 +14,8 @@ struct NotificationPermissionsScreen: View {
     @ObservedObject var context: NotificationPermissionsScreenViewModel.Context
     
     var body: some View {
+        // Tchap: add welcome screen
+//        FullscreenDialog(topPadding: UIConstants.startScreenBreakerScreenTopPadding, background: .gradient) {
         FullscreenDialog(topPadding: UIConstants.startScreenBreakerScreenTopPadding) {
             mainContent
         } bottomContent: {
