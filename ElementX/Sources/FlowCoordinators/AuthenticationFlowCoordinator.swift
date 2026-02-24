@@ -518,6 +518,11 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
             case .failure:
                 stateMachine.tryEvent(.cancelledOIDCAuthentication(previousState: fromState))
                 // Nothing more to do, the alerts are handled by the presenter.
+                // Tchap: handle reset of `DecideHomeServerScreenCoordinator` if login failed or is canceled by user.
+                //        It enable the user to modify the email instead of being stuck on unmodifiable screen.
+                if let tchapDecideHomeServerCoordinator = navigationStackCoordinator.stackCoordinators.first(where: { $0 is DecideHomeServerScreenCoordinator }) as? DecideHomeServerScreenCoordinator {
+                    tchapDecideHomeServerCoordinator.resetLoadingState()
+                }
             }
             oidcPresenter = nil
         }

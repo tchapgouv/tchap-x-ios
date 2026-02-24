@@ -63,7 +63,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
         }
     }
     
-    private func resetLoadingState() {
+    func resetLoadingState() {
         stopLoading()
         state.blockUserInteraction = false
     }
