@@ -481,6 +481,7 @@ class ClientProxy: ClientProxyProtocol {
                                                   isDirect: true,
                                                   visibility: .private,
                                                   accessRuleOverride: .direct, // Tchap: make access rule `direct` for Direct room.
+                                                  isRoomFederated: false, // Tchap: BWI-specific Rust side
                                                   preset: .trustedPrivateChat,
                                                   invite: [userID],
                                                   avatar: nil,
@@ -490,11 +491,9 @@ class ClientProxy: ClientProxyProtocol {
             let inviteByEmail = getTchapInviteByEmailType(userID: userID, roomAccessRule: .direct)
             
             // Tchap: change `createRoom` call with:
-            //   - `isFederatd` parameter becasue of BWI-specific Rust side
             //   - `isTchapInvite` and `isTchapInviteExternal` because of Tchap `invite by email` feature
 //            let roomID = try await client.createRoom(request: parameters)
             let roomID = try await client.createRoom(request: parameters,
-                                                     isFederated: false,
                                                      isTchapInvite: { if case .inviteByEmail = inviteByEmail { true } else { false } }(),
                                                      isTchapInviteExternal: { if case .inviteByEmail(let isExternalUser) = inviteByEmail { isExternalUser } else { false } }())
 
@@ -520,6 +519,7 @@ class ClientProxy: ClientProxyProtocol {
                                                   isEncrypted: accessType.isEncrypted,
                                                   isDirect: false,
                                                   visibility: accessType.visibility,
+                                                  isRoomFederated: accessType.isFederated, // Tchap: BWI-specific Rust side
                                                   preset: accessType.preset,
                                                   invite: userIDs,
                                                   avatar: avatarURL?.absoluteString,
@@ -530,7 +530,6 @@ class ClientProxy: ClientProxyProtocol {
                                                   canonicalAlias: aliasLocalPart,
                                                   isSpace: isSpace)
             // Tchap: change `createRoom` call with:
-            //   - `isFederatd` parameter becasue of BWI-specific Rust side
             //   - `isTchapInvite` and `isTchapInviteExternal` because of Tchap `invite by email` feature
             //
             // `isTchapInvite` and `isTchapInviteExternal` are set to false because invitations will be resolved
@@ -538,7 +537,6 @@ class ClientProxy: ClientProxyProtocol {
             //
             // let roomID = try await client.createRoom(request: parameters)
             let roomID = try await client.createRoom(request: parameters,
-                                                     isFederated: accessType.isFederated,
                                                      isTchapInvite: false,
                                                      isTchapInviteExternal: false)
 
