@@ -39,6 +39,8 @@ final class AppSettings {
         
         case analyticsConsentState
         case hasRunNotificationPermissionsOnboarding
+        // Tchap: add welcome screen
+        case hasRunTchapWelcomeOnboarding
         case hasRunIdentityConfirmationOnboarding
         
         case frequentlyUsedSystemEmojis
@@ -433,6 +435,10 @@ final class AppSettings {
     
     @UserPreference(key: UserDefaultsKeys.hasRunNotificationPermissionsOnboarding, defaultValue: false, storageType: .userDefaults(store))
     var hasRunNotificationPermissionsOnboarding
+    
+    // Tchap: add welcome screen
+    @UserPreference(key: UserDefaultsKeys.hasRunTchapWelcomeOnboarding, defaultValue: false, storageType: .userDefaults(store))
+    var hasRunTchapWelcomeOnboarding
     
     @UserPreference(key: UserDefaultsKeys.hasRunIdentityConfirmationOnboarding, defaultValue: false, storageType: .userDefaults(store))
     var hasRunIdentityConfirmationOnboarding

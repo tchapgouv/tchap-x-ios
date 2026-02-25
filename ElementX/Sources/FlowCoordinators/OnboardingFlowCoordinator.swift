@@ -34,6 +34,8 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
         case identityConfirmed
         case appLockSetup
         case analyticsPrompt
+        // Tchap: add welcome screen
+        case tchapWelcome
         case notificationPermissions
         case finished
     }
@@ -100,7 +102,9 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
             return false
         }
         
-        return isNewLogin || requiresVerification || requiresAppLockSetup || requiresAnalyticsSetup || requiresNotificationsSetup
+        // Tchap: add welcome screen
+//        return isNewLogin || requiresVerification || requiresAppLockSetup || requiresAnalyticsSetup || requiresNotificationsSetup
+        return isNewLogin || requiresVerification || requiresAppLockSetup || requiresAnalyticsSetup || requiresTchapWelcomeScreen || requiresNotificationsSetup
     }
     
     func start(animated: Bool) {
@@ -139,13 +143,18 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
         }
         
         // Tchap: skip analytics opt-in.
-        // Will force Onboarding flow from `nextSkippingIdentityConfirmed` to `finished`.
+//         Will force Onboarding flow from `nextSkippingIdentityConfirmed` to `finished`.
 //        analyticsService.shouldShowAnalyticsPrompt
         return false
     }
     
     private var requiresNotificationsSetup: Bool {
         !appSettings.hasRunNotificationPermissionsOnboarding
+    }
+    
+    // Tchap: add welcome screen
+    private var requiresTchapWelcomeScreen: Bool {
+        !appSettings.hasRunTchapWelcomeOnboarding
     }
     
     private func configureStateMachine() {
@@ -155,53 +164,75 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
                 return nil
             }
             
-            switch (fromState, requiresVerification, requiresAppLockSetup, requiresAnalyticsSetup, requiresNotificationsSetup) {
-            case (.initial, true, _, _, _):
+            // Tchap: add welcome screen
+//            switch (fromState, requiresVerification, requiresAppLockSetup, requiresAnalyticsSetup, requiresNotificationsSetup) {
+            switch (fromState, requiresVerification, requiresAppLockSetup, requiresAnalyticsSetup, requiresTchapWelcomeScreen, requiresNotificationsSetup) {
+            case (.initial, true, _, _, _, _): // Tchap: add welcome screen state
                 return .identityConfirmation
-            case (.initial, false, true, _, _):
+            case (.initial, false, true, _, _, _): // Tchap: add welcome screen state
                 return .appLockSetup
-            case (.initial, false, false, true, _):
+            case (.initial, false, false, true, _, _): // Tchap: add welcome screen state
                 return .analyticsPrompt
-            case (.initial, false, false, false, true):
+            case (.initial, false, false, false, true, _): // Tchap: add welcome screen state
+                return .tchapWelcome
+            case (.initial, false, false, false, false, true): // Tchap: add welcome screen state
                 return .notificationPermissions
-            case (.initial, false, false, false, false):
+            case (.initial, false, false, false, false, _): // Tchap: add welcome screen state
                 return .finished
-            case (.identityConfirmation, _, _, _, _):
+            case (.identityConfirmation, _, _, _, _, _): // Tchap: add welcome screen state
                 if event == .nextSkippingIdentityConfirmed {
                     // Used when the verification state has updated to verified
                     // after starting the onboarding flow
-                    switch (requiresAppLockSetup, requiresAnalyticsSetup, requiresNotificationsSetup) {
-                    case (true, _, _):
+                    // Tchap: add welcome screen
+                    //                    switch (requiresAppLockSetup, requiresAnalyticsSetup, requiresNotificationsSetup) {
+                    switch (requiresAppLockSetup, requiresAnalyticsSetup, requiresTchapWelcomeScreen, requiresNotificationsSetup) {
+                    case (true, _, _, _): // Tchap: add welcome screen state
                         return .appLockSetup
-                    case (false, true, _):
+                    case (false, true, _, _): // Tchap: add welcome screen state
                         return .analyticsPrompt
-                    case (false, false, true):
+                    case (false, false, true, _): // Tchap: add welcome screen state
+                        return .tchapWelcome
+                    case (false, false, false, true): // Tchap: add welcome screen state
                         return .notificationPermissions
-                    case (false, false, false):
+                    case (false, false, false, _): // Tchap: add welcome screen state
                         return .finished
                     }
                 } else {
                     return .identityConfirmed
                 }
-            case (.identityConfirmed, _, true, _, _):
+            case (.identityConfirmed, _, true, _, _, _): // Tchap: add welcome screen state
                 return .appLockSetup
-            case (.identityConfirmed, _, false, true, _):
+            case (.identityConfirmed, _, false, true, _, _): // Tchap: add welcome screen state
                 return .analyticsPrompt
-            case (.identityConfirmed, _, false, false, true):
+            case (.identityConfirmed, _, false, false, true, _): // Tchap: add welcome screen state
+                return .tchapWelcome
+            case (.identityConfirmed, _, false, false, false, true): // Tchap: add welcome screen state
                 return .notificationPermissions
-            case (.identityConfirmed, _, false, false, false):
+            case (.identityConfirmed, _, false, false, false, _): // Tchap: add welcome screen state
                 return .finished
-            case (.appLockSetup, _, _, true, _):
+            case (.appLockSetup, _, _, true, _, _): // Tchap: add welcome screen state
                 return .analyticsPrompt
-            case (.appLockSetup, _, _, false, true):
+            case (.appLockSetup, _, _, false, true, _): // Tchap: add welcome screen state
+                return .tchapWelcome
+            case (.appLockSetup, _, _, false, false, true): // Tchap: add welcome screen state
                 return .notificationPermissions
-            case (.appLockSetup, _, _, false, false):
+            case (.appLockSetup, _, _, false, false, _): // Tchap: add welcome screen state
                 return .finished
-            case (.analyticsPrompt, _, _, _, true):
+            case (.analyticsPrompt, _, _, _, true, _): // Tchap: add welcome screen state
+                return .tchapWelcome
+            case (.analyticsPrompt, _, _, _, false, true): // Tchap: add welcome screen state
                 return .notificationPermissions
-            case (.analyticsPrompt, _, _, _, false):
+            case (.analyticsPrompt, _, _, _, false, _): // Tchap: add welcome screen state
                 return .finished
-            case (.notificationPermissions, _, _, _, _):
+            // Tchap: add welcome screen
+            case (.tchapWelcome, _, _, _, _, true): // Tchap: add welcome screen state
+                return .notificationPermissions
+            // Tchap: add welcome screen
+//            case (.notificationPermissions, _, _, _, _, _): // Tchap: add welcome screen state
+//                return .finished
+            case (.tchapWelcome, _, _, _, _, _): // Tchap: add welcome screen state
+                return .finished
+            case (.notificationPermissions, _, _, _, _, _): // Tchap: add welcome screen state
                 return .finished
             default:
                 return nil
@@ -220,6 +251,9 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
                 presentAppLockSetupFlow()
             case (_, _, .analyticsPrompt):
                 presentAnalyticsPromptScreen()
+            // Tchap: add welcome screen
+            case (_, _, .tchapWelcome):
+                presentTchapWelcomeScreen()
             case (_, _, .notificationPermissions):
                 presentNotificationPermissionsScreen()
             case (_, _, .finished):
@@ -404,6 +438,24 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
                 switch action {
                 case .done:
                     appSettings.hasRunNotificationPermissionsOnboarding = true
+                    stateMachine.tryEvent(.next)
+                }
+            }
+            .store(in: &cancellables)
+        
+        presentCoordinator(coordinator)
+    }
+    
+    // Tchap: add welcome screen
+    private func presentTchapWelcomeScreen() {
+        let coordinator = TchapWelcomeScreenCoordinator(parameters: .init())
+        
+        coordinator.actions
+            .sink { [weak self] action in
+                guard let self else { return }
+                switch action {
+                case .done:
+                    appSettings.hasRunTchapWelcomeOnboarding = true
                     stateMachine.tryEvent(.next)
                 }
             }

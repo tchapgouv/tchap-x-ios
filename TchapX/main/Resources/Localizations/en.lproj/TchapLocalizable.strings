@@ -19,6 +19,12 @@ screen_onboarding_welcome_message = "The civil servants instant messaging system
 screen_onboarding_welcome_qrcode_header = "Already logged on a computer?";
 screen_onboarding_welcome_or_between_buttons = "or";
 
+screen_onboarding_welcome_new_tchap_title = "Welcome to the new Tchap iOS";
+screen_onboarding_welcome_new_tchap_message = "Totaly rebuilt for greater simplicity and new features";
+screen_onboarding_welcome_new_tchap_feature_group_call = "Audio and video group calls";
+screen_onboarding_welcome_new_tchap_feature_new_room_type = "New chat room: private, unencrypted";
+screen_onboarding_welcome_new_tchap_feature_spaces = "Workspaces";
+
 screen_login_title_login = "Sign in to Tchap";
 screen_login_title_register = "Create an account on Tchap";
 screen_login_description_with_tchap = "Instant messaging of public sector";
