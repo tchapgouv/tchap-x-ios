@@ -64,12 +64,18 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
             //            } else {
             //                placeholderImage
             //            }
-            let mapLoader = TchapStaticMapLoader(mapUrlBuilder: mapURLBuilder,
-                                                 style: colorScheme.mapStyle,
-                                                 location: coordinates,
-                                                 zoom: zoomLevel,
-                                                 size: mapSize,
-                                                 attribution: mapTilerAttributionPlacement)
+            let mapLoader = TchapStaticMapLoader.buildMapLoader(mapUrlBuilder: mapURLBuilder,
+                                                                style: colorScheme.mapStyle,
+                                                                location: coordinates,
+                                                                zoom: zoomLevel,
+                                                                size: mapSize,
+                                                                attribution: mapTilerAttributionPlacement)
+//            TchapStaticMapLoader(mapUrlBuilder: mapURLBuilder,
+//                                                 style: colorScheme.mapStyle,
+//                                                 location: coordinates,
+//                                                 zoom: zoomLevel,
+//                                                 size: mapSize,
+//                                                 attribution: mapTilerAttributionPlacement)
             TchapStaticMapView(mapLoader: mapLoader,
                                placeholderView: placeholderImage,
                                pinAnnotationView: pinAnnotationView,
