@@ -139,13 +139,6 @@ targetTemplates:
       path: ElementX.entitlements
       properties:
         aps-environment: development
-        com.apple.developer.associated-domains:
-        - applinks:$(BASE_BUNDLE_IDENTIFIER)
-        - applinks:www.$(BASE_BUNDLE_IDENTIFIER)
-        - applinks:call.element.io
-        - applinks:matrix.to
-        # - applinks:localhost?mode=developer # developer mode only works with https (but self-signed is fine).
-        - webcredentials:www.$(BASE_BUNDLE_IDENTIFIER)
         com.apple.developer.usernotifications.communication: true
         com.apple.security.app-sandbox: true
         com.apple.security.application-groups:
@@ -297,6 +290,14 @@ targets:
 
     entitlements:
       path: production/SupportingFiles/tchapx.entitlements
+      properties:
+        com.apple.developer.associated-domains:
+        - applinks:tchap.gouv.fr
+        - applinks:www.tchap.gouv.fr
+        - applinks:call.element.io
+        - applinks:matrix.to
+        # - applinks:localhost?mode=developer # developer mode only works with https (but self-signed is fine).
+        - webcredentials:www.tchap.gouv.fr
 
     settings:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx
@@ -378,6 +379,14 @@ targets:
 
     entitlements:
       path: staging/SupportingFiles/tchapx.entitlements
+      properties:
+        com.apple.developer.associated-domains:
+        - applinks:beta.tchap.gouv.fr
+        - applinks:www.beta.tchap.gouv.fr
+        - applinks:call.element.io
+        - applinks:matrix.to
+        # - applinks:localhost?mode=developer # developer mode only works with https (but self-signed is fine).
+        - webcredentials:www.beta.tchap.gouv.fr
 
     settings:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.staging
@@ -459,6 +468,14 @@ targets:
 
     entitlements:
       path: development/SupportingFiles/tchapx.entitlements
+      properties:
+        com.apple.developer.associated-domains:
+        - applinks:tchap.incubateur.net
+        - applinks:www.tchap.incubateur.net
+        - applinks:call.element.io
+        - applinks:matrix.to
+        # - applinks:localhost?mode=developer # developer mode only works with https (but self-signed is fine).
+        - webcredentials:www.tchap.incubateur.net
 
     settings:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.dev
