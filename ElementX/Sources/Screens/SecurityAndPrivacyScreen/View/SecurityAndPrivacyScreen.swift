@@ -28,7 +28,9 @@ struct SecurityAndPrivacyScreen: View {
             }
             
             if !context.viewState.isSpace {
-                if context.viewState.canEnableEncryption {
+                // Tchap: Hide encryption section for public rooms
+//                if context.viewState.canEnableEncryption {
+                if context.viewState.canEnableEncryption, context.desiredSettings.accessType != .anyone {
                     encryptionSection
                 }
                 if context.viewState.canEditHistoryVisibility {
