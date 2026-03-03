@@ -48,12 +48,15 @@ struct SecurityAndPrivacyScreen: View {
     
     private var roomAccessSection: some View {
         Section {
-            ListRow(label: .default(title: L10n.screenSecurityAndPrivacyRoomAccessAnyoneOptionTitle,
-                                    description: L10n.screenSecurityAndPrivacyRoomAccessAnyoneOptionDescription,
-                                    icon: \.public,
-                                    iconAlignment: .top),
-                    kind: .selection(isSelected: context.desiredSettings.accessType == .anyone) { context.desiredSettings.accessType = .anyone })
-            
+            // Tchap: Hide public option for invite-only rooms
+            if context.viewState.currentSettings.accessType != .inviteOnly {
+                ListRow(label: .default(title: L10n.screenSecurityAndPrivacyRoomAccessAnyoneOptionTitle,
+                                        description: L10n.screenSecurityAndPrivacyRoomAccessAnyoneOptionDescription,
+                                        icon: \.public,
+                                        iconAlignment: .top),
+                        kind: .selection(isSelected: context.desiredSettings.accessType == .anyone) { context.desiredSettings.accessType = .anyone })
+            }
+
             if context.viewState.isSpaceMembersOptionAvailable {
                 ListRow(label: .default(title: L10n.screenSecurityAndPrivacyRoomAccessSpaceMembersOptionTitle,
                                         description: context.viewState.spaceMembersDescription,
