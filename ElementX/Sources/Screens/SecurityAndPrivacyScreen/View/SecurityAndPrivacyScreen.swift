@@ -173,7 +173,9 @@ struct SecurityAndPrivacyScreen: View {
     private func addressSection(canonicalAlias: String) -> some View {
         Section {
             ListRow(label: .plain(title: canonicalAlias),
-                    kind: .navigationLink { context.send(viewAction: .editAddress) })
+                    // Tchap: Make address read-only
+//                    kind: .navigationLink { context.send(viewAction: .editAddress) })
+                    kind: .label)
             roomDirectoryVisibilityRow
         } header: {
             Text(L10n.screenSecurityAndPrivacyRoomAddressSectionHeader)
