@@ -85,9 +85,9 @@ extension ClientBuilder {
                 }
                 
                 // If necessary, to get the real certificate format:
-                //    let certificate = SecCertificateCreateWithData(nil, certDataDER as CFData)
+                //    let certificateData = SecCertificateCreateWithData(nil, derCertificates as CFData)
                 // Then, if necessary to get the public key:
-                //    let publicKey = SecCertificateCopyKey(certificate)
+                //    let publicKey = SecCertificateCopyKey(certificateData)
                 
                 // If any failure occured, ignore ALL certificates.
                 if derCertificates.count == pemCertificates.count {
