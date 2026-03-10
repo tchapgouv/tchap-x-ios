@@ -108,7 +108,8 @@ struct AvatarHeaderView<Footer: View>: View {
         self.footer = footer
         
         // Tchap: store `accessRule` parameter based on dmRecipient only because DM creator can't be external user.
-        accessRule = .constant(MatrixIdFromString(dmRecipient.id).isExternalTchapUser ? .unrestricted : .restricted)
+        let isExternalTchapUser = { if case .external = MatrixIdFromString(dmRecipient.id).userType { true } else { false } }()
+        accessRule = .constant(isExternalTchapUser ? .unrestricted : .restricted)
         dmRecipientId = .constant(dmRecipient.id)
         
         // In EL-X a DM is by definition always encrypted
@@ -217,8 +218,9 @@ struct AvatarHeaderView<Footer: View>: View {
             }
             
             // Tchap: add `External` badge if necessary.
-            if (accessRule.wrappedValue ?? .restricted) == .unrestricted ||
-                (dmRecipientId.wrappedValue != nil && MatrixIdFromString(dmRecipientId.wrappedValue!).isExternalTchapUser) { // swiftlint:disable:this force_unwrapping
+            let roomAccessRuleIsUnrestricted = (accessRule.wrappedValue ?? .restricted) == .unrestricted
+            let dmRecipientIsExternal = { if dmRecipientId.wrappedValue != nil, case .external = MatrixIdFromString(dmRecipientId.wrappedValue!).userType { true } else { false } }() // swiftlint:disable:this force_unwrapping
+            if roomAccessRuleIsUnrestricted || dmRecipientIsExternal {
                 BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
             }
         }

@@ -38,6 +38,14 @@ struct UserProfileListRow: View {
         }
     }
     
+    // Tchap: compute BadgeLabel offsetX
+    var tchapBadgesOffsetX: CGFloat {
+        return switch kind {
+        case .multiSelection: 104.0 // 100 is 40 (radio button width) + 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
+        default: 64.0 // 60 is 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
+        }
+    }
+        
     var body: some View {
         // Tchap: add external badge if necessary
 //        ListRow(label: .avatar(title: user.displayName ?? user.userID,
@@ -51,9 +59,18 @@ struct UserProfileListRow: View {
                                    icon: avatar,
                                    role: isUnknownProfile ? .error : nil),
                     kind: kind)
-            if MatrixIdFromString(user.userID).isExternalTchapUser {
+
+            switch MatrixIdFromString(user.userID).userType {
+            case .external(needInviteByEmail: false):
                 BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
-                    .offset(x: 60.0, y: -8.0) // 60 is 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
+                    .offset(x: tchapBadgesOffsetX, y: -8.0)
+            case .external(needInviteByEmail: true):
+                BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
+                    .offset(x: tchapBadgesOffsetX, y: -8.0)
+                BadgeLabel(title: TchapL10n.inviteByEmailMessage, icon: \.errorSolid, style: .info, tchapUsage: .inviteByEmail(useSmallSize: true))
+                    .offset(x: tchapBadgesOffsetX, y: -8.0)
+            case .agent:
+                EmptyView()
             }
         }
         // Cancel list row insets added because of VStack inside List.

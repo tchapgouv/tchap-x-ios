@@ -373,8 +373,22 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     func invite(userID: String) async -> Result<Void, RoomProxyError> {
         do {
-            MXLog.info("Inviting user \(userID)")
-            return try await .success(room.inviteUserById(userId: userID))
+            // Tchap: enable Tchap invitation by email
+//            MXLog.info("Inviting user \(userID)")
+//            return try await .success(room.inviteUserById(userId: userID))
+            switch MatrixIdFromString(userID).userType {
+            case .external(needInviteByEmail: false), .agent(needInviteByEmail: false):
+                // Don't need invite by email: send invite by legacy userId.
+                MXLog.info("Inviting user \(userID)")
+                return try await .success(room.inviteUserById(userId: userID))
+            case .external(needInviteByEmail: true), .agent(needInviteByEmail: true):
+                // Need invite by email.
+                guard let userEmail = MatrixIdFromString(userID).tchapEmail else {
+                    throw RoomProxyError.unableToInviteByEmail
+                }
+                MXLog.info("Inviting user by email \(userEmail)")
+                return try await .success(room.inviteUserByEmail(emailToInvite: String(userEmail)))
+            }
         } catch {
             MXLog.error("Failed inviting user \(userID) with error: \(error)")
             return .failure(.sdkError(error))

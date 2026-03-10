@@ -6,14 +6,17 @@
   Copyright © 2024 Tchap. All rights reserved.
 */
 
+// Common
 common_legal = "Legals";
 common_faq = "Frequently Asked Questions";
 common_user_is_external = "EXTERNAL GUEST";
 common_email = "Email";
 
+// Legal
 legal_terms_of_use = "Terms of use";
 legal_privacy_policy = "Privacy policy";
 
+// Onboarding
 screen_onboarding_welcome_title = "Welcome to\n%1$@";
 screen_onboarding_welcome_message = "The civil servants instant messaging system";
 screen_onboarding_welcome_qrcode_header = "Already logged on a computer?";
@@ -25,12 +28,13 @@ screen_onboarding_welcome_new_tchap_feature_group_call = "Audio and video group 
 screen_onboarding_welcome_new_tchap_feature_new_room_type = "New chat room: private, unencrypted";
 screen_onboarding_welcome_new_tchap_feature_spaces = "Workspaces";
 
+// Login
 screen_login_title_login = "Sign in to Tchap";
 screen_login_title_register = "Create an account on Tchap";
 screen_login_description_with_tchap = "Instant messaging of public sector";
 screen_login_input_email_label = "Enter your professional email address";
 
-// Tchap: login by MAS.
+// Login by MAS.
 screen_decide_homeserver_error_get_instance_title = "Erreur";
 screen_decide_homeserver_error_get_instance_message = "Unable to determine which server your account is attached to.";
 screen_decide_homeserver_error_homeserver_configuration_unreachable_title = "Erreur";
@@ -38,6 +42,7 @@ screen_decide_homeserver_error_homeserver_configuration_unreachable_message = "U
 screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_title = "Erreur";
 screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_message = "Your attachment server doesn't support OIDC authentication.";
 
+// Create room
 screen_create_room_selected_users_label = "Members";
 screen_create_room_private_encrypted_option_title = "Private secured room";
 screen_create_room_private_encrypted_option_description = "- End-to-end encrypted\n- Only people invited can access this room\n- Advised up to 500 members";
@@ -59,21 +64,24 @@ screen_create_room_room_access_section_public_not_federated_description = "Any m
 screen_create_room_room_access_section_private_unencrypted_title = "Private";
 screen_create_room_room_access_section_private_unencrypted_description = "Only people invited can join.";
 
+// Invite by email
+invite_by_email_message = "This contact will be invited to join Tchap.";
+
+// Invite external
 screen_invite_external_user_dialog_title = "Invitation of an external";
 screen_invite_external_user_dialog_message = "By inviting an external guest, this room will become accessible to any external guest.\nThis change is final and irreversible.";
-
 screen_invite_external_user_error_modifying_access_rule_title = "Unable to open the room to externals";
 screen_invite_external_user_error_modifying_access_rule_message = "The opening of the room to external users failed. No invitations were sent.";
 
+// Room header
 room_header_badge_encrypted = "ENCRYPTED";
 room_header_badge_not_encrypted = "NOT ENCRYPTED";
 room_header_badge_public = "PUBLIC";
 room_header_badge_authorized_to_external = "EXTERNALS";
 
+// Miscellaneous
 start_chat_action_join_forum = "Join a public room";
-
 screen_room_directory_search_title = "Join a public room";
-
 state_event_room_access_rule = "Room access rule updated";
 
 // Tchap: BWI content-scanner

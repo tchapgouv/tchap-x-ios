@@ -680,16 +680,16 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
 
     //MARK: - createRoom
 
-    open var createRoomRequestThrowableError: Error?
-    open var createRoomRequestUnderlyingCallsCount = 0
-    open var createRoomRequestCallsCount: Int {
+    open var createRoomRequestIsTchapInviteIsTchapInviteExternalThrowableError: Error?
+    open var createRoomRequestIsTchapInviteIsTchapInviteExternalUnderlyingCallsCount = 0
+    open var createRoomRequestIsTchapInviteIsTchapInviteExternalCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return createRoomRequestUnderlyingCallsCount
+                return createRoomRequestIsTchapInviteIsTchapInviteExternalUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = createRoomRequestUnderlyingCallsCount
+                    returnValue = createRoomRequestIsTchapInviteIsTchapInviteExternalUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -697,29 +697,29 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                createRoomRequestUnderlyingCallsCount = newValue
+                createRoomRequestIsTchapInviteIsTchapInviteExternalUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    createRoomRequestUnderlyingCallsCount = newValue
+                    createRoomRequestIsTchapInviteIsTchapInviteExternalUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    open var createRoomRequestCalled: Bool {
-        return createRoomRequestCallsCount > 0
+    open var createRoomRequestIsTchapInviteIsTchapInviteExternalCalled: Bool {
+        return createRoomRequestIsTchapInviteIsTchapInviteExternalCallsCount > 0
     }
-    open var createRoomRequestReceivedRequest: CreateRoomParameters?
-    open var createRoomRequestReceivedInvocations: [CreateRoomParameters] = []
+    open var createRoomRequestIsTchapInviteIsTchapInviteExternalReceivedArguments: (request: CreateRoomParameters, isTchapInvite: Bool, isTchapInviteExternal: Bool)?
+    open var createRoomRequestIsTchapInviteIsTchapInviteExternalReceivedInvocations: [(request: CreateRoomParameters, isTchapInvite: Bool, isTchapInviteExternal: Bool)] = []
 
-    open var createRoomRequestUnderlyingReturnValue: String!
-    open var createRoomRequestReturnValue: String! {
+    open var createRoomRequestIsTchapInviteIsTchapInviteExternalUnderlyingReturnValue: String!
+    open var createRoomRequestIsTchapInviteIsTchapInviteExternalReturnValue: String! {
         get {
             if Thread.isMainThread {
-                return createRoomRequestUnderlyingReturnValue
+                return createRoomRequestIsTchapInviteIsTchapInviteExternalUnderlyingReturnValue
             } else {
                 var returnValue: String? = nil
                 DispatchQueue.main.sync {
-                    returnValue = createRoomRequestUnderlyingReturnValue
+                    returnValue = createRoomRequestIsTchapInviteIsTchapInviteExternalUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -727,29 +727,29 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                createRoomRequestUnderlyingReturnValue = newValue
+                createRoomRequestIsTchapInviteIsTchapInviteExternalUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    createRoomRequestUnderlyingReturnValue = newValue
+                    createRoomRequestIsTchapInviteIsTchapInviteExternalUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-    open var createRoomRequestClosure: ((CreateRoomParameters) async throws -> String)?
+    open var createRoomRequestIsTchapInviteIsTchapInviteExternalClosure: ((CreateRoomParameters, Bool, Bool) async throws -> String)?
 
     open override func createRoom(request: CreateRoomParameters, isTchapInvite: Bool, isTchapInviteExternal: Bool) async throws -> String {
-        if let error = createRoomRequestThrowableError {
+        if let error = createRoomRequestIsTchapInviteIsTchapInviteExternalThrowableError {
             throw error
         }
-        createRoomRequestCallsCount += 1
-        createRoomRequestReceivedRequest = request
+        createRoomRequestIsTchapInviteIsTchapInviteExternalCallsCount += 1
+        createRoomRequestIsTchapInviteIsTchapInviteExternalReceivedArguments = (request: request, isTchapInvite: isTchapInvite, isTchapInviteExternal: isTchapInviteExternal)
         DispatchQueue.main.async {
-            self.createRoomRequestReceivedInvocations.append(request)
+            self.createRoomRequestIsTchapInviteIsTchapInviteExternalReceivedInvocations.append((request: request, isTchapInvite: isTchapInvite, isTchapInviteExternal: isTchapInviteExternal))
         }
-        if let createRoomRequestClosure = createRoomRequestClosure {
-            return try await createRoomRequestClosure(request)
+        if let createRoomRequestIsTchapInviteIsTchapInviteExternalClosure = createRoomRequestIsTchapInviteIsTchapInviteExternalClosure {
+            return try await createRoomRequestIsTchapInviteIsTchapInviteExternalClosure(request, isTchapInvite, isTchapInviteExternal)
         } else {
-            return createRoomRequestReturnValue
+            return createRoomRequestIsTchapInviteIsTchapInviteExternalReturnValue
         }
     }
 

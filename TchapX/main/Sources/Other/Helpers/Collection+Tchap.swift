@@ -11,7 +11,10 @@ extension Collection where Element == String {
     // Tchap: check if a list of room's members contains any external user.
     var containsExternalTchapUser: Bool {
         !filter {
-            MatrixIdFromString($0).isExternalTchapUser
+            switch MatrixIdFromString($0).userType {
+            case .external: true
+            case .agent: false
+            }
         }.isEmpty
     }
 }

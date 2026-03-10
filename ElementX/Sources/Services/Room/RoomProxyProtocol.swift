@@ -22,6 +22,7 @@ enum RoomProxyError: Error {
     case timelineError(TimelineProxyError)
     // Tchap:
     case unableToUpdateAccessRule(Error)
+    case unableToInviteByEmail
 }
 
 /// An enum that describes the relationship between the current user and the room, and contains a reference to the specific implementation of the `RoomProxy`.

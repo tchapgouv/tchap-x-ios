@@ -39,10 +39,12 @@ public struct TchapLabelViewModifier: ViewModifier {
     
     public enum Usage {
         case userIsExternal
-        
+        case inviteByEmail
+
         var colors: (foregroundColor: Color, backgroundColor: Color) {
             switch self {
-            case .userIsExternal: (foregroundColor: CompoundCoreColorTokens.orange1200, backgroundColor: CompoundCoreColorTokens.orange400)
+            case .userIsExternal: (foregroundColor: .compound.textBadgeExternal, backgroundColor: .compound.bgBadgeExternal)
+            case .inviteByEmail: (foregroundColor: .compound.textBadgeDefault, backgroundColor: .compound.bgBadgeDefault)
             }
         }
     }
@@ -59,6 +61,10 @@ public struct TchapLabelViewModifier: ViewModifier {
 extension View {
     func tchapExternalLabelView() -> some View {
         modifier(TchapLabelViewModifier(font: .compound.bodySMSemibold, usage: .userIsExternal))
+    }
+    
+    func tchapInivteByEmailLabelView() -> some View {
+        modifier(TchapLabelViewModifier(font: .compound.bodySMSemibold, usage: .inviteByEmail))
     }
 }
 

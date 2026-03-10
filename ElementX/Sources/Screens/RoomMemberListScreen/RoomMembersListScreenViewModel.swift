@@ -119,7 +119,7 @@ class RoomMembersListScreenViewModel: RoomMembersListScreenViewModelType, RoomMe
 //                self.state.canInviteUsers = powerLevels.canOwnUserInvite()
 //                self.state.canKickUsers = powerLevels.canOwnUserKick()
 //                self.state.canBanUsers = powerLevels.canOwnUserBan()
-                if MatrixIdFromString(roomProxy.ownUserID).isExternalTchapUser {
+                if case .external = MatrixIdFromString(roomProxy.ownUserID).userType {
                     self.state.canInviteUsers = false
                     self.state.canKickUsers = false
                     self.state.canBanUsers = false

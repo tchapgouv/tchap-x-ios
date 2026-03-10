@@ -311,7 +311,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
 //            state.canJoinCall = powerLevels.canOwnUserJoinCall()
 //            state.canEditRolesOrPermissions = powerLevels.canOwnUserEditRolesAndPermissions()
 //            state.canEditSecurityAndPrivacy = powerLevels.canOwnUserEditSecurityAndPrivacy()
-            if MatrixIdFromString(userSession.clientProxy.userID).isExternalTchapUser {
+            if case .external = MatrixIdFromString(userSession.clientProxy.userID).userType {
                 state.canEditRoomName = false
                 state.canEditRoomTopic = false
                 state.canEditRoomAvatar = false
