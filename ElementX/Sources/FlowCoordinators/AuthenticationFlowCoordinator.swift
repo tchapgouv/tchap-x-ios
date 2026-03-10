@@ -390,13 +390,14 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 return
             }
             switch action {
+            case .startOver:
+                fatalError("QR code login shouldn't request to start over as it's handled within the screen.")
+            case .requestOIDCAuthorisation, .linkedDevice:
+                fatalError("QR code login shouldn't request an OIDC flow or link a device.")
             case .signInManually:
                 navigationStackCoordinator.setSheetCoordinator(nil)
                 stateMachine.tryEvent(.cancelledLoginWithQR)
                 stateMachine.tryEvent(.confirmServer(.login))
-            case .dismiss:
-                navigationStackCoordinator.setSheetCoordinator(nil)
-                stateMachine.tryEvent(.cancelledLoginWithQR)
             case .signedIn(let userSession):
                 navigationStackCoordinator.setSheetCoordinator(nil)
                 // Since the qr code login flow includes verification
@@ -404,8 +405,9 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 DispatchQueue.main.async {
                     self.stateMachine.tryEvent(.signedIn, userInfo: userSession)
                 }
-            case .requestOIDCAuthorisation, .linkedDevice:
-                fatalError("QR code login shouldn't request an OIDC flow or link a device.")
+            case .cancel:
+                navigationStackCoordinator.setSheetCoordinator(nil)
+                stateMachine.tryEvent(.cancelledLoginWithQR)
             }
         }
         .store(in: &cancellables)
@@ -518,6 +520,11 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
             case .failure:
                 stateMachine.tryEvent(.cancelledOIDCAuthentication(previousState: fromState))
                 // Nothing more to do, the alerts are handled by the presenter.
+                // Tchap: handle reset of `DecideHomeServerScreenCoordinator` if login failed or is canceled by user.
+                //        It enable the user to modify the email instead of being stuck on unmodifiable screen.
+                if let tchapDecideHomeServerCoordinator = navigationStackCoordinator.stackCoordinators.first(where: { $0 is DecideHomeServerScreenCoordinator }) as? DecideHomeServerScreenCoordinator {
+                    tchapDecideHomeServerCoordinator.resetLoadingState()
+                }
             }
             oidcPresenter = nil
         }

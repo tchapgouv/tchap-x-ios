@@ -17,7 +17,6 @@ struct UserIndicatorPresenter: View {
             .animation(.elementDefault, value: userIndicatorController.activeIndicator)
     }
     
-    @ViewBuilder
     private func indicatorViewFor(indicator: UserIndicator?) -> some View {
         ZStack { // Need a container to properly animate transitions
             if let indicator {
@@ -29,6 +28,5 @@ struct UserIndicatorPresenter: View {
                 }
             }
         }
-        .alert(item: $userIndicatorController.alertInfo)
     }
 }

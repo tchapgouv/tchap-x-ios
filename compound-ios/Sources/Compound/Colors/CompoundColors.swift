@@ -16,7 +16,9 @@ public extension Color {
 
 public extension ShapeStyle where Self == Color {
     /// The colours used by Element as defined in Compound Design Tokens.
-    static var compound: CompoundColors { Self.compound }
+    static var compound: CompoundColors {
+        Self.compound
+    }
 }
 
 /// The colours used by Element as defined in Compound Design Tokens.
@@ -40,7 +42,7 @@ public class CompoundColors {
     
     /// Customise the colour at the specified key path with the supplied colour.
     /// Supplying `nil` as the colour will remove any existing customisation.
-    @MainActor public func override(_ keyPath: KeyPath<CompoundColorTokens, Color>, with color: Color?) {
+    public func override(_ keyPath: KeyPath<CompoundColorTokens, Color>, with color: Color?) {
         overrides[keyPath] = color
     }
     
@@ -108,7 +110,9 @@ public class CompoundColors {
 
 private extension UITraitCollection {
     /// Whether or not the trait collection contains a `userInterfaceStyle` of `.light`.
-    var isLight: Bool { userInterfaceStyle == .light }
+    var isLight: Bool {
+        userInterfaceStyle == .light
+    }
 }
 
 public struct DecorativeColor: Equatable {

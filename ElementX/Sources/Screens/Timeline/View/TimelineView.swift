@@ -81,10 +81,9 @@ struct TimelineViewRepresentable: UIViewControllerRepresentable {
     @EnvironmentObject private var viewModelContext: TimelineViewModel.Context
 
     func makeUIViewController(context: Context) -> TimelineTableViewController {
-        let tableViewController = TimelineTableViewController(coordinator: context.coordinator,
-                                                              isScrolledToBottom: $viewModelContext.isScrolledToBottom,
-                                                              scrollToBottomPublisher: viewModelContext.viewState.timelineState.scrollToBottomPublisher)
-        return tableViewController
+        TimelineTableViewController(coordinator: context.coordinator,
+                                    isScrolledToBottom: $viewModelContext.isScrolledToBottom,
+                                    scrollToBottomPublisher: viewModelContext.viewState.timelineState.scrollToBottomPublisher)
     }
     
     func updateUIViewController(_ uiViewController: TimelineTableViewController, context: Context) {
@@ -140,7 +139,7 @@ struct TimelineViewRepresentable: UIViewControllerRepresentable {
 
 // MARK: - Previews
 
-struct TimelineView_Previews: PreviewProvider, TestablePreview {
+struct TimelineView_Previews: PreviewProvider { // Not testable as this preview is built the same way as RoomScreen.
     static let roomProxyMock = JoinedRoomProxyMock(.init(id: "stable_id",
                                                          name: "Preview room"))
     static let roomViewModel = RoomScreenViewModel.mock(roomProxyMock: roomProxyMock)
@@ -157,7 +156,7 @@ struct TimelineView_Previews: PreviewProvider, TestablePreview {
                                                      timelineControllerFactory: TimelineControllerFactoryMock(.init()))
 
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             RoomScreen(context: roomViewModel.context,
                        timelineContext: timelineViewModel.context,
                        composerToolbar: ComposerToolbar.mock())

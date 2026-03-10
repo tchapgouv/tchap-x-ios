@@ -79,11 +79,10 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
     
     private func toggleUser(_ user: UserProfileProxy) {
         if state.selectedUsers.contains(user) {
-            state.scrollToLastID = nil
             state.selectedUsers.removeAll { $0.userID == user.userID }
         } else {
-            state.scrollToLastID = user.userID
             state.selectedUsers.append(user)
+            withElementAnimation(.easeInOut) { state.bindings.selectedUsersPosition = user.userID }
         }
     }
     
@@ -116,9 +115,9 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
                 return
             }
             
-            userIndicatorController.alertInfo = .init(id: .init(),
-                                                      title: L10n.commonUnableToInviteTitle,
-                                                      message: L10n.commonUnableToInviteMessage)
+            state.bindings.alertInfo = .init(id: .unknown,
+                                             title: L10n.commonUnableToInviteTitle,
+                                             message: L10n.commonUnableToInviteMessage)
         }
     }
     
@@ -126,7 +125,7 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
     // before inviting the first external user.
     // The user can decline or confirm the operation.
     private func displayAlertAboutOpeningRoomToExternalUsers(users: [String], in room: JoinedRoomProxyProtocol) {
-        let continueButton = AlertInfo<UUID>.AlertButton(title: L10n.actionContinue) {
+        let continueButton = AlertInfo<InviteUsersScreenErrorType>.AlertButton(title: L10n.actionContinue) {
             Task { [weak self] in
                 self?.showLoadingIndicator()
                 defer {
@@ -137,18 +136,18 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
                     // We can safely invite external users now that the room's access rule is `.unrestricted`.
                     self?.inviteUsers(users, roomProxy: room)
                 case .failure:
-                    self?.userIndicatorController.alertInfo = .init(id: .init(),
-                                                                    title: TchapL10n.screenInviteExternalUserErrorModifyingAccessRuleTitle,
-                                                                    message: TchapL10n.screenInviteExternalUserErrorModifyingAccessRuleMessage)
+                    self?.state.bindings.alertInfo = .init(id: .unknown,
+                                                           title: TchapL10n.screenInviteExternalUserErrorModifyingAccessRuleTitle,
+                                                           message: TchapL10n.screenInviteExternalUserErrorModifyingAccessRuleMessage)
                 }
             }
         }
-        let cancelButton = AlertInfo<UUID>.AlertButton(title: L10n.actionCancel, action: nil)
-        userIndicatorController.alertInfo = .init(id: .init(),
-                                                  title: TchapL10n.screenInviteExternalUserDialogTitle,
-                                                  message: TchapL10n.screenInviteExternalUserDialogMessage,
-                                                  primaryButton: continueButton,
-                                                  secondaryButton: cancelButton)
+        let cancelButton = AlertInfo<InviteUsersScreenErrorType>.AlertButton(title: L10n.actionCancel, action: nil)
+        state.bindings.alertInfo = .init(id: .unknown,
+                                         title: TchapL10n.screenInviteExternalUserDialogTitle,
+                                         message: TchapL10n.screenInviteExternalUserDialogMessage,
+                                         primaryButton: continueButton,
+                                         secondaryButton: cancelButton)
     }
     
     private func buildMembershipStateIfNeeded(members: [RoomMemberProxyProtocol]) {

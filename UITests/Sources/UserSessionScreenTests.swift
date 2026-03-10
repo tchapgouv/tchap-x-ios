@@ -21,12 +21,16 @@ class UserSessionScreenTests: XCTestCase {
         static let homeScreen = 1
         static let roomScreen = 2
         static let composerAttachments = 3
-        static let spacesTabBar = 4
-        static let spaceList = 5
+        static let homeScreenWithTabBar = 4
+        static let spacesScreen = 5
         static let spaceScreen = 6
         static let subspaceScreen = 7
         static let subspaceRoomScreen = 8
         static let spaceJoinRoomScreen = 9
+        static let spaceAddRoomsScreen = 10
+        static let spaceMembersListScreen = 11
+        static let spaceSettingsScreen = 12
+        static let createSpaceRoomScreen = 13
     }
     
     func testUserSessionFlows() async throws {
@@ -37,7 +41,7 @@ class UserSessionScreenTests: XCTestCase {
         try await app.assertScreenshot(step: Step.homeScreen)
 
         app.buttons[A11yIdentifiers.homeScreen.roomName(firstRoomName)].tap()
-        XCTAssert(app.staticTexts[firstRoomName].waitForExistence(timeout: 5.0))
+        XCTAssert(app.buttons[firstRoomName].waitForExistence(timeout: 5.0))
         try await Task.sleep(for: .seconds(1))
         try await app.assertScreenshot(step: Step.roomScreen)
 
@@ -48,7 +52,7 @@ class UserSessionScreenTests: XCTestCase {
     func testUserSessionReply() async throws {
         let app = Application.launch(.userSessionScreenReply, disableTimelineAccessibility: false)
         app.buttons[A11yIdentifiers.homeScreen.roomName(firstRoomName)].tap()
-        XCTAssert(app.staticTexts[firstRoomName].waitForExistence(timeout: 5.0))
+        XCTAssert(app.buttons[firstRoomName].waitForExistence(timeout: 5.0))
         try await Task.sleep(for: .seconds(1))
 
         let cell = app.cells.element(boundBy: 1) // Skip the typing indicator cell
@@ -57,11 +61,11 @@ class UserSessionScreenTests: XCTestCase {
         try await app.assertScreenshot()
     }
 
-    func testElementCall() async throws {
+    func testElementCall() {
         let app = Application.launch(.userSessionScreen)
 
         app.buttons[A11yIdentifiers.homeScreen.roomName(firstRoomName)].tap()
-        XCTAssert(app.staticTexts[firstRoomName].waitForExistence(timeout: 5.0))
+        XCTAssert(app.buttons[firstRoomName].waitForExistence(timeout: 5.0))
 
         app.buttons[A11yIdentifiers.roomScreen.joinCall].tap()
         
@@ -77,25 +81,61 @@ class UserSessionScreenTests: XCTestCase {
         
         app.swipeDown() // Make sure the header shows a large title
         
-        try await app.assertScreenshot(step: Step.spacesTabBar)
+        try await app.assertScreenshot(step: Step.homeScreenWithTabBar)
         
         // app.tabBars doesn't work on iPadOS 18 😐
         app.buttons["Spaces"].firstMatch.tap(.center)
         
-        try await app.assertScreenshot(step: Step.spaceList)
+        try await app.assertScreenshot(step: Step.spacesScreen)
         
-        app.buttons[A11yIdentifiers.spaceListScreen.spaceRoomName(firstSpaceName)].tap()
+        app.buttons[A11yIdentifiers.spacesScreen.spaceRoomName(firstSpaceName)].tap()
         XCTAssert(app.staticTexts[firstSpaceName].waitForExistence(timeout: 5.0))
         try await Task.sleep(for: .seconds(1))
         try await app.assertScreenshot(step: Step.spaceScreen)
         
-        app.buttons[A11yIdentifiers.spaceListScreen.spaceRoomName(joinedSubspaceName)].tap()
+        app.buttons[A11yIdentifiers.spacesScreen.spaceRoomName(joinedSubspaceName)].tap()
         XCTAssert(app.staticTexts[joinedSubspaceName].waitForExistence(timeout: 5.0))
         try await Task.sleep(for: .seconds(1))
         try await app.assertScreenshot(step: Step.subspaceScreen)
         
-        app.buttons[A11yIdentifiers.spaceListScreen.spaceRoomName(joinedSubspaceRoomName)].tap()
-        XCTAssert(app.staticTexts[joinedSubspaceRoomName].waitForExistence(timeout: 5.0))
+        app.buttons[A11yIdentifiers.spaceScreen.moreMenu].tap()
+        app.buttons[A11yIdentifiers.spaceScreen.createRoom].tap()
+        XCTAssertTrue(app.buttons[A11yIdentifiers.createRoomScreen.cancel].waitForExistence(timeout: 5.0))
+        try await Task.sleep(for: .seconds(1))
+        try await app.assertScreenshot(step: Step.createSpaceRoomScreen)
+        
+        app.buttons[A11yIdentifiers.createRoomScreen.cancel].tap()
+        XCTAssert(app.staticTexts[joinedSubspaceName].waitForExistence(timeout: 5.0))
+        
+        app.buttons[A11yIdentifiers.spaceScreen.moreMenu].tap()
+        app.buttons[A11yIdentifiers.spaceScreen.addExistingRooms].tap()
+        XCTAssert(app.buttons[A11yIdentifiers.spaceAddRoomsScreen.cancel].waitForExistence(timeout: 5.0))
+        try await Task.sleep(for: .seconds(1))
+        try await app.assertScreenshot(step: Step.spaceAddRoomsScreen)
+        
+        app.buttons[A11yIdentifiers.spaceAddRoomsScreen.cancel].tap()
+        XCTAssert(app.staticTexts[joinedSubspaceName].waitForExistence(timeout: 5.0))
+        
+        app.buttons[A11yIdentifiers.spaceScreen.moreMenu].tap()
+        app.buttons[A11yIdentifiers.spaceScreen.viewMembers].tap()
+        XCTAssert(app.buttons[A11yIdentifiers.roomMembersListScreen.invite].waitForExistence(timeout: 5.0))
+        try await Task.sleep(for: .seconds(1))
+        try await app.assertScreenshot(step: Step.spaceMembersListScreen)
+        
+        app.navigationBars.buttons[joinedSubspaceName].firstMatch.tap(.center)
+        XCTAssert(app.staticTexts[joinedSubspaceName].waitForExistence(timeout: 5.0))
+        
+        app.buttons[A11yIdentifiers.spaceScreen.moreMenu].tap()
+        app.buttons[A11yIdentifiers.spaceScreen.settings].tap()
+        XCTAssert(app.buttons[A11yIdentifiers.spaceSettingsScreen.editBaseInfo].waitForExistence(timeout: 5.0))
+        try await Task.sleep(for: .seconds(1))
+        try await app.assertScreenshot(step: Step.spaceSettingsScreen)
+        
+        app.navigationBars.buttons[joinedSubspaceName].firstMatch.tap(.center)
+        XCTAssert(app.staticTexts[joinedSubspaceName].waitForExistence(timeout: 5.0))
+        
+        app.buttons[A11yIdentifiers.spacesScreen.spaceRoomName(joinedSubspaceRoomName)].tap()
+        XCTAssert(app.buttons[joinedSubspaceRoomName].waitForExistence(timeout: 5.0))
         try await Task.sleep(for: .seconds(1))
         try await app.assertScreenshot(step: Step.subspaceRoomScreen)
         
@@ -105,7 +145,7 @@ class UserSessionScreenTests: XCTestCase {
         app.navigationBars.buttons[firstSpaceName].firstMatch.tap(.center)
         XCTAssert(app.staticTexts[firstSpaceName].waitForExistence(timeout: 5.0))
         
-        app.buttons[A11yIdentifiers.spaceListScreen.spaceRoomName(unjoinedSpaceRoomName)].tap()
+        app.buttons[A11yIdentifiers.spacesScreen.spaceRoomName(unjoinedSpaceRoomName)].tap()
         XCTAssert(app.staticTexts[unjoinedSpaceRoomName].waitForExistence(timeout: 5.0))
         try await Task.sleep(for: .seconds(1))
         try await app.assertScreenshot(step: Step.spaceJoinRoomScreen)
@@ -116,7 +156,7 @@ class UserSessionScreenTests: XCTestCase {
         
         app.swipeDown() // Make sure the header shows a large title
         
-        try await app.assertScreenshot(step: Step.spacesTabBar)
+        try await app.assertScreenshot(step: Step.homeScreenWithTabBar)
         
         // Tap the space invite cell.
         app.staticTexts[A11yIdentifiers.homeScreen.roomName(spaceInviteName)].tap()
@@ -126,7 +166,7 @@ class UserSessionScreenTests: XCTestCase {
         
         // Tap join on the join room screen.
         app.buttons[A11yIdentifiers.joinRoomScreen.join].tap()
-        XCTAssert(app.staticTexts[A11yIdentifiers.roomScreen.name].waitForExistence(timeout: 5.0)) // The space screen reuses the room screen header
+        XCTAssert(app.buttons[A11yIdentifiers.roomScreen.name].waitForExistence(timeout: 5.0)) // The space screen reuses the room screen header
         try await Task.sleep(for: .seconds(1))
         try await app.assertScreenshot(step: Step.spaceScreen)
         
@@ -144,7 +184,7 @@ class UserSessionScreenTests: XCTestCase {
         app.buttons.matching(NSPredicate(format: "identifier == %@ && label == %@",
                                          A11yIdentifiers.homeScreen.roomName(spaceInviteName),
                                          "Accept")).firstMatch.tap()
-        XCTAssert(app.staticTexts[A11yIdentifiers.roomScreen.name].waitForExistence(timeout: 5.0)) // The space screen reuses the room screen header
+        XCTAssert(app.buttons[A11yIdentifiers.roomScreen.name].waitForExistence(timeout: 5.0)) // The space screen reuses the room screen header
         try await Task.sleep(for: .seconds(1))
         try await app.assertScreenshot(step: Step.spaceScreen)
     }

@@ -12,7 +12,9 @@ import SwiftUI
 struct RoomChangeRolesScreen: View {
     @Bindable var context: RoomChangeRolesScreenViewModel.Context
     
-    var showTopSection: Bool { !context.viewState.membersWithRole.isEmpty }
+    var showTopSection: Bool {
+        !context.viewState.membersWithRole.isEmpty
+    }
     
     var body: some View {
         mainContent
@@ -91,15 +93,15 @@ struct RoomChangeRolesScreen: View {
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .confirmationAction) {
-            Button(L10n.actionSave) {
+            ToolbarButton(role: .save) {
                 context.send(viewAction: .save)
             }
             .disabled(!context.viewState.hasChanges)
         }
         
-        if context.viewState.hasChanges {
+        if context.viewState.mode == .owner || context.viewState.hasChanges {
             ToolbarItem(placement: .cancellationAction) {
-                Button(L10n.actionCancel) {
+                ToolbarButton(role: .cancel) {
                     context.send(viewAction: .cancel)
                 }
             }
@@ -116,22 +118,22 @@ struct RoomChangeRolesScreen_Previews: PreviewProvider, TestablePreview {
     static let moderatorViewModel = makeViewModel(mode: .moderator, ownRole: .administrator)
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             RoomChangeRolesScreen(context: ownerViewModel.context)
         }
         .previewDisplayName("Owners")
         
-        NavigationStack {
+        ElementNavigationStack {
             RoomChangeRolesScreen(context: administratorOrOwnerViewModel.context)
         }
         .previewDisplayName("Administrator or Owners")
         
-        NavigationStack {
+        ElementNavigationStack {
             RoomChangeRolesScreen(context: administratorViewModel.context)
         }
         .previewDisplayName("Administrators")
         
-        NavigationStack {
+        ElementNavigationStack {
             RoomChangeRolesScreen(context: moderatorViewModel.context)
         }
         .previewDisplayName("Moderators")

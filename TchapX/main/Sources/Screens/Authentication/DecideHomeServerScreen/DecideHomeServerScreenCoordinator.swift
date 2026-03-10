@@ -82,6 +82,10 @@ final class DecideHomeServerScreenCoordinator: CoordinatorProtocol {
         viewModel.stopLoading()
     }
     
+    func resetLoadingState() {
+        viewModel.resetLoadingState()
+    }
+
     func toPresentable() -> AnyView {
         AnyView(DecideHomeServerScreen(context: viewModel.context))
     }

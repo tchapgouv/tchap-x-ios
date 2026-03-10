@@ -14,15 +14,17 @@
 @testable import ElementX
 #endif
 import Foundation
-import XCTest
+import Testing
 
-final class UserPreferenceTests: XCTestCase {
-    override func setUpWithError() throws {
+@Suite
+struct UserPreferenceTests {
+    init() {
         UserDefaults.testDefaults.removeVolatileDomain(forName: .userDefaultsSuiteName)
         UserDefaults.testDefaults.removePersistentDomain(forName: .userDefaultsSuiteName)
     }
 
-    func testStorePlistValue() throws {
+    @Test
+    func storePlistValue() {
         let setPreference = {
             let value = TestPreferences()
             value.plist = "Hello"
@@ -32,12 +34,13 @@ final class UserPreferenceTests: XCTestCase {
         
         let value = TestPreferences()
         
-        XCTAssertEqual(value.plist, "Hello")
-        XCTAssertNotNil(UserDefaults.testDefaults.string(forKey: .key2), "Hello")
-        XCTAssertNil(UserDefaults.testDefaults.data(forKey: .key2), "Hello")
+        #expect(value.plist == "Hello")
+        #expect(UserDefaults.testDefaults.string(forKey: .key2) != nil)
+        #expect(UserDefaults.testDefaults.data(forKey: .key2) == nil)
     }
     
-    func testStoreCodableValue() throws {
+    @Test
+    func storeCodableValue() {
         let storedType = CodableTestType(a: "some", b: [1, 2, 3])
         
         let setPreference = {
@@ -49,11 +52,12 @@ final class UserPreferenceTests: XCTestCase {
         
         let value = TestPreferences()
         
-        XCTAssertEqual(value.codable, storedType)
-        XCTAssertNotNil(UserDefaults.testDefaults.data(forKey: .key3))
+        #expect(value.codable == storedType)
+        #expect(UserDefaults.testDefaults.data(forKey: .key3) != nil)
     }
     
-    func testStorePlistValueOnVolatileStorage() throws {
+    @Test
+    func storePlistValueOnVolatileStorage() {
         let setPreference = {
             let value = TestPreferences()
             value.volatileVar = "Hello"
@@ -63,10 +67,11 @@ final class UserPreferenceTests: XCTestCase {
         
         let value = TestPreferences()
         
-        XCTAssertNil(value.volatileVar)
+        #expect(value.volatileVar == nil)
     }
     
-    func testStoreCodableValueOnVolatileStorage() throws {
+    @Test
+    func storeCodableValueOnVolatileStorage() {
         let storedType = CodableTestType(a: "some", b: [1, 2, 3])
         
         let setPreference = {
@@ -78,11 +83,12 @@ final class UserPreferenceTests: XCTestCase {
         
         let value = TestPreferences()
         
-        XCTAssertNil(value.volatileCodable)
-        XCTAssertNil(UserDefaults.testDefaults.data(forKey: .key4))
+        #expect(value.volatileCodable == nil)
+        #expect(UserDefaults.testDefaults.data(forKey: .key4) == nil)
     }
     
-    func testStorePlistArray() throws {
+    @Test
+    func storePlistArray() {
         let setPreference = {
             let value = TestPreferences()
             value.plistArray = [1, 2, 3]
@@ -92,12 +98,13 @@ final class UserPreferenceTests: XCTestCase {
         
         let value = TestPreferences()
         
-        XCTAssertEqual(value.plistArray, [1, 2, 3])
-        XCTAssertEqual(UserDefaults.testDefaults.array(forKey: .key5) as? [Int], [1, 2, 3])
-        XCTAssertNil(UserDefaults.testDefaults.data(forKey: .key5), "Hello")
+        #expect(value.plistArray == [1, 2, 3])
+        #expect(UserDefaults.testDefaults.array(forKey: .key5) as? [Int] == [1, 2, 3])
+        #expect(UserDefaults.testDefaults.data(forKey: .key5) == nil)
     }
     
-    func testAssignNilToPlistType() throws {
+    @Test
+    func assignNilToPlistType() {
         let setPreference = {
             let value = TestPreferences()
             value.plist = "Hello"
@@ -108,11 +115,12 @@ final class UserPreferenceTests: XCTestCase {
         let value = TestPreferences()
         value.plist = nil
         
-        XCTAssertNil(value.plist)
-        XCTAssertNil(UserDefaults.testDefaults.string(forKey: .key2))
+        #expect(value.plist == nil)
+        #expect(UserDefaults.testDefaults.string(forKey: .key2) == nil)
     }
     
-    func testAssignNilToCodableType() throws {
+    @Test
+    func assignNilToCodableType() {
         let storedType = CodableTestType(a: "some", b: [1, 2, 3])
         
         let setPreference = {
@@ -125,31 +133,33 @@ final class UserPreferenceTests: XCTestCase {
         let value = TestPreferences()
         value.codable = nil
 
-        XCTAssertNil(value.codable)
-        XCTAssertNil(UserDefaults.testDefaults.data(forKey: .key3))
+        #expect(value.codable == nil)
+        #expect(UserDefaults.testDefaults.data(forKey: .key3) == nil)
     }
     
-    func testLocalOverRemoteValue() {
+    @Test
+    func localOverRemoteValue() {
         @UserPreference(key: "testKey", defaultValue: "", storageType: .userDefaults(.testDefaults)) var preference
-        XCTAssertEqual(preference, "")
+        #expect(preference == "")
         
         _preference.remoteValue = "remote"
-        XCTAssertEqual(preference, "remote")
+        #expect(preference == "remote")
         
         preference = "local"
-        XCTAssertEqual(preference, "local")
+        #expect(preference == "local")
     }
     
-    func testRemoteOverLocalValue() {
+    @Test
+    func remoteOverLocalValue() {
         @UserPreference(key: "testKey", defaultValue: "", storageType: .userDefaults(.testDefaults), mode: .remoteOverLocal) var preference
-        XCTAssertEqual(preference, "")
+        #expect(preference == "")
         
         _preference.remoteValue = "remote"
-        XCTAssertEqual(preference, "remote")
+        #expect(preference == "remote")
         
         preference = "local"
-        XCTAssertEqual(preference, "remote")
-        XCTAssertTrue(_preference.isLockedToRemote)
+        #expect(preference == "remote")
+        #expect(_preference.isLockedToRemote)
     }
 }
 

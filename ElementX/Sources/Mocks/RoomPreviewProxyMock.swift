@@ -80,7 +80,7 @@ extension RoomPreviewProxyMock {
                                                       roomType: configuration.roomType,
                                                       isHistoryWorldReadable: nil,
                                                       membership: configuration.membership,
-                                                      joinRule: configuration.joinRule,
+                                                      joinRule: configuration.joinRule.rustValue,
                                                       isDirect: configuration.isDirect,
                                                       heroes: nil))
         
@@ -98,7 +98,7 @@ extension RoomPreviewProxyMock {
         underlyingOwnMembershipDetails = roomMembershipDetails
     }
     
-    convenience init(spaceServiceRoom: SpaceServiceRoomProtocol) {
+    convenience init(spaceServiceRoom: SpaceServiceRoom) {
         self.init(Configuration(roomID: spaceServiceRoom.id,
                                 canonicalAlias: spaceServiceRoom.canonicalAlias ?? "",
                                 name: spaceServiceRoom.name,

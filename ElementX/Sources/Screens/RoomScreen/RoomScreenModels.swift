@@ -7,8 +7,6 @@
 //
 
 import Foundation
-
-// Tchap: Add Matrix SDK dependency for RoomVisibility type.
 import MatrixRustSDK
 import OrderedCollections
 
@@ -83,18 +81,10 @@ struct RoomScreenViewState: BindableState {
             (canAcceptKnocks || canDeclineKnocks || canBan)
     }
     
-    var identityViolationDetails: RoomScreenFooterViewDetails?
-    var historyVisibleDetails: RoomScreenFooterViewDetails?
+    /// If `enableKeyShareOnInvite` is set, determines the current history sharing state.
+    var roomHistorySharingState: RoomHistorySharingState?
     
-    var footerDetails: RoomScreenFooterViewDetails? {
-        if let identityViolationDetails {
-            return identityViolationDetails
-        }
-        guard canSendMessage else {
-            return nil
-        }
-        return historyVisibleDetails
-    }
+    var footerDetails: RoomScreenFooterViewDetails?
     
     var bindings = RoomScreenViewStateBindings()
 }
@@ -102,6 +92,7 @@ struct RoomScreenViewState: BindableState {
 struct RoomScreenViewStateBindings {
     /// The view model used to present a QuickLook media preview.
     var mediaPreviewViewModel: TimelineMediaPreviewViewModel?
+    var alertInfo: AlertInfo<RoomScreenAlertType>?
     // Tchap: display room properties badges. As they are queried async, make them Bindable.
     var isEncrypted: Bool?
     var isPublic: Bool?
@@ -112,18 +103,21 @@ struct RoomScreenViewStateBindings {
     // Tchap: end
 }
 
+enum RoomScreenAlertType {
+    case unknown
+}
+
 enum RoomScreenFooterViewAction {
     case resolvePinViolation(userID: String)
     case resolveVerificationViolation(userID: String)
-    case dismissHistoryVisibleAlert
 }
 
 enum RoomScreenFooterViewDetails {
     case pinViolation(member: RoomMemberProxyProtocol, learnMoreURL: URL)
     case verificationViolation(member: RoomMemberProxyProtocol, learnMoreURL: URL)
-    case historyVisible(learnMoreURL: URL)
 }
 
+@MainActor
 enum PinnedEventsBannerState: Equatable {
     case loading(numbersOfEvents: Int)
     case loaded(state: PinnedEventsState)
@@ -214,9 +208,9 @@ enum PinnedEventsBannerState: Equatable {
         }
     }
     
-    // Note that if we are setting this value, this is definitely sent from the pinned events timeline
-    // so we can assume that the pinned events timeline is already loaded and we only need to set the
-    // selection for the loaded state
+    /// Note that if we are setting this value, this is definitely sent from the pinned events timeline
+    /// so we can assume that the pinned events timeline is already loaded and we only need to set the
+    /// selection for the loaded state
     mutating func setSelectedPinnedEventID(_ eventID: String) {
         switch self {
         case .loaded(var state):
@@ -228,6 +222,7 @@ enum PinnedEventsBannerState: Equatable {
     }
 }
 
+@MainActor
 struct PinnedEventsState: Equatable {
     var pinnedEventContents: OrderedDictionary<String, AttributedString> = [:] {
         didSet {

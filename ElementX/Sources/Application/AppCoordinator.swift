@@ -82,6 +82,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         appMediator = AppMediator(windowManager: windowManager, networkMonitor: networkMonitor)
         
         let appSettings = appHooks.appSettingsHook.configure(AppSettings())
+        ServiceLocator.shared.register(appSettings: appSettings)
         
         targetConfiguration = Target.mainApp.configure(logLevel: appSettings.logLevel,
                                                        traceLogPacks: appSettings.traceLogPacks,
@@ -101,7 +102,15 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         self.appDelegate = appDelegate
         self.appSettings = appSettings
         self.appHooks = appHooks
+        
         appRouteURLParser = AppRouteURLParser(appSettings: appSettings)
+        
+        ServiceLocator.shared.register(userIndicatorController: UserIndicatorController())
+        
+        let posthogAnalyticsClient = PostHogAnalyticsClient()
+        posthogAnalyticsClient.updateSuperProperties(AnalyticsEvent.SuperProperties(appPlatform: .EXI, cryptoSDK: .Rust, cryptoSDKVersion: sdkGitSha()))
+        let analyticsService = AnalyticsService(client: posthogAnalyticsClient, appSettings: appSettings)
+        ServiceLocator.shared.register(analytics: analyticsService)
         
         elementCallService = ElementCallService()
         
@@ -113,7 +122,11 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
 
         let keychainController = KeychainController(service: .sessions,
                                                     accessGroup: InfoPlistReader.main.keychainAccessGroupIdentifier)
-        userSessionStore = UserSessionStore(keychainController: keychainController, appSettings: appSettings, appHooks: appHooks, networkMonitor: networkMonitor)
+        userSessionStore = UserSessionStore(keychainController: keychainController,
+                                            appSettings: appSettings,
+                                            analyticsService: analyticsService,
+                                            appHooks: appHooks,
+                                            networkMonitor: networkMonitor)
         
         let appLockService = AppLockService(keychainController: keychainController, appSettings: appSettings)
         let appLockNavigationCoordinator = NavigationRootCoordinator()
@@ -127,13 +140,11 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         bugReportService = BugReportService(rageshakeURLPublisher: appSettings.bugReportRageshakeURL.publisher,
                                             applicationID: appSettings.bugReportApplicationID,
                                             sdkGitSHA: sdkGitSha(),
-                                            maxUploadSize: appSettings.bugReportMaxUploadSize,
                                             appHooks: appHooks)
-        Self.setupServiceLocator(appSettings: appSettings, appHooks: appHooks)
+        
         Self.setupSentry(bugReportService: bugReportService, appSettings: appSettings)
         
-        ServiceLocator.shared.analytics.signpost.start()
-        ServiceLocator.shared.analytics.startIfEnabled()
+        analyticsService.startIfEnabled()
         
         windowManager.delegate = self
         
@@ -204,30 +215,28 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     }
     
     func toPresentable() -> AnyView {
-        AnyView(
-            navigationRootCoordinator.toPresentable()
-                .environment(\.analyticsService, ServiceLocator.shared.analytics)
-                .onReceive(appSettings.$appAppearance) { [weak self] appAppearance in
-                    guard let self else { return }
+        AnyView(navigationRootCoordinator.toPresentable()
+            .environment(\.analyticsService, ServiceLocator.shared.analytics)
+            .onReceive(appSettings.$appAppearance) { [weak self] appAppearance in
+                guard let self else { return }
                     
-                    windowManager.windows.forEach { window in
-                        // Unfortunately .preferredColorScheme doesn't propagate properly throughout the app when changed
-                        window.overrideUserInterfaceStyle = appAppearance.interfaceStyle
-                    }
+                windowManager.windows.forEach { window in
+                    // Unfortunately .preferredColorScheme doesn't propagate properly throughout the app when changed
+                    window.overrideUserInterfaceStyle = appAppearance.interfaceStyle
                 }
-        )
+            })
     }
     
     func handlePotentialPhishingAttempt(url: URL, openURLAction: @escaping (URL) -> Void) -> Bool {
         guard let confirmationParameters = url.confirmationParameters else {
             return false
         }
-        ServiceLocator.shared.userIndicatorController.alertInfo = .init(id: .init(),
-                                                                        title: L10n.dialogConfirmLinkTitle,
-                                                                        message: L10n.dialogConfirmLinkMessage(confirmationParameters.displayString,
-                                                                                                               confirmationParameters.internalURL.absoluteString),
-                                                                        primaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil),
-                                                                        secondaryButton: .init(title: L10n.actionContinue) { openURLAction(confirmationParameters.internalURL) })
+        navigationRootCoordinator.alertInfo = .init(id: .init(),
+                                                    title: L10n.dialogConfirmLinkTitle,
+                                                    message: L10n.dialogConfirmLinkMessage(confirmationParameters.displayString,
+                                                                                           confirmationParameters.internalURL.absoluteString),
+                                                    primaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil),
+                                                    secondaryButton: .init(title: L10n.actionContinue) { openURLAction(confirmationParameters.internalURL) })
         return true
     }
 
@@ -364,6 +373,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         } else if appSettings.threadsEnabled, let threadRootEventID = content.threadRootEventID {
             handleAppRoute(.thread(roomID: roomID, threadRootEventID: threadRootEventID, focusEventID: eventID))
         } else if let eventID {
+            // Only track main timeline event deeplinking
+            ServiceLocator.shared.analytics.signpost.startTransaction(.notificationToMessage)
             handleAppRoute(.event(eventID: eventID, roomID: roomID, via: []))
         } else {
             handleAppRoute(.room(roomID: roomID, via: []))
@@ -387,16 +398,6 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     }
     
     // MARK: - Private
-    
-    private static func setupServiceLocator(appSettings: AppSettings, appHooks: AppHooks) {
-        ServiceLocator.shared.register(userIndicatorController: UserIndicatorController())
-        ServiceLocator.shared.register(appSettings: appSettings)
-        
-        let posthogAnalyticsClient = PostHogAnalyticsClient()
-        posthogAnalyticsClient.updateSuperProperties(AnalyticsEvent.SuperProperties(appPlatform: .EXI, cryptoSDK: .Rust, cryptoSDKVersion: sdkGitSha()))
-        ServiceLocator.shared.register(analytics: AnalyticsService(client: posthogAnalyticsClient,
-                                                                   appSettings: appSettings))
-    }
     
     /// Perform any required migrations for the app to function correctly.
     private func performMigrationsIfNecessary(from oldVersion: Version, to newVersion: Version) {
@@ -456,7 +457,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         userSessionMigrationsOldVersion = nil
     }
     
-    // This could be removed once the adoption of 25.06.x is widespread.
+    /// This could be removed once the adoption of 25.06.x is widespread.
     private func performSettingsToAccountDataMigration(userSession: UserSessionProtocol) {
         guard let userDefaults = UserDefaults(suiteName: InfoPlistReader.main.appGroupIdentifier) else {
             return
@@ -698,6 +699,14 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private func setupUserSession(isNewLogin: Bool) {
         guard let userSession else {
             fatalError("User session not setup")
+        }
+        
+        if let serverName = userSession.clientProxy.userIDServerName {
+            ServiceLocator.shared.analytics.signpost.addGlobalTag(.homeserver, value: serverName)
+        }
+        
+        if !isNewLogin {
+            ServiceLocator.shared.analytics.signpost.startTransaction(.cachedRoomList)
         }
         
         let flowParameters = CommonFlowParameters(userSession: userSession,
@@ -956,8 +965,14 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
 
         options.dsn = bugReportSentryURL.absoluteString
         
-        if AppSettings.isDevelopmentBuild {
-            options.environment = "development"
+        // Matches android, at least for now.
+        switch AppSettings.appBuildType {
+        case .debug:
+            options.environment = "DEBUG"
+        case .nightly:
+            options.environment = "NIGHTLY"
+        case .release:
+            options.environment = "RELEASE"
         }
         
         // Sentry swizzling shows up quite often as the heaviest stack trace when profiling
@@ -982,15 +997,9 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         // Uniform sample rate: 1.0 captures 100% of transactions
         // In Production you will probably want a smaller number such as 0.5 for 50%
-        if AppSettings.isDevelopmentBuild {
-            options.sampleRate = 1.0
-            options.tracesSampleRate = 1.0
-            options.configureProfiling = { $0.sessionSampleRate = 1.0 }
-        } else {
-            options.sampleRate = 0.5
-            options.tracesSampleRate = 0.5
-            options.configureProfiling = { $0.sessionSampleRate = 1.0 }
-        }
+        options.sampleRate = 1.0
+        options.tracesSampleRate = 1.0
+        options.configureProfiling = { $0.sessionSampleRate = 1.0 }
 
         // This callback is only executed once during the entire run of the program to avoid
         // multiple callbacks if there are multiple crash events to send (see method documentation)
@@ -1068,9 +1077,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private func startSync() {
         guard let userSession else { return }
         
-        let serverName = String(userSession.clientProxy.userIDServerName ?? "Unknown")
-        
-        ServiceLocator.shared.analytics.signpost.beginFirstSync(serverName: serverName)
+        ServiceLocator.shared.analytics.signpost.startTransaction(.upToDateRoomList)
+    
         userSession.clientProxy.startSync()
         
         guard clientProxyObserver == nil else {
@@ -1079,6 +1087,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         clientProxyObserver = userSession.clientProxy
             .loadingStatePublisher
+            .dropFirst()
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
@@ -1091,7 +1100,7 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
                         ServiceLocator.shared.userIndicatorController.submitIndicator(.init(id: toastIdentifier, type: .toast(progress: .indeterminate), title: L10n.commonSyncing, persistent: true))
                     }
                 case .notLoading:
-                    ServiceLocator.shared.analytics.signpost.endFirstSync()
+                    ServiceLocator.shared.analytics.signpost.finishTransaction(.upToDateRoomList)
                     ServiceLocator.shared.userIndicatorController.retractIndicatorWithId(toastIdentifier)
                 }
             }
@@ -1205,12 +1214,12 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         // This is important for the app to keep refreshing in the background
         scheduleBackgroundAppRefresh()
         
-        /// We have a lot of crashes stemming here which we previously believed are caused by stopSync not being async
-        /// on the client proxy side (see the comment on that method). We have now realised that will likely not fix anything but
-        /// we also noticed this does not crash on the main thread, even though the whole AppCoordinator is on the Main actor.
-        /// As such, we introduced a MainActor conformance on the expirationHandler but we are also assuming main actor
-        /// isolated in the `stopSync` method above.
-        /// https://sentry.tools.element.io/organizations/element/issues/4477794/
+        // We have a lot of crashes stemming here which we previously believed are caused by stopSync not being async
+        // on the client proxy side (see the comment on that method). We have now realised that will likely not fix anything but
+        // we also noticed this does not crash on the main thread, even though the whole AppCoordinator is on the Main actor.
+        // As such, we introduced a MainActor conformance on the expirationHandler but we are also assuming main actor
+        // isolated in the `stopSync` method above.
+        // https://sentry.tools.element.io/organizations/element/issues/4477794/
         task.expirationHandler = { @Sendable [weak self] in
             MXLog.info("Background app refresh task is about to expire.")
             

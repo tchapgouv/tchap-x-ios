@@ -118,7 +118,6 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
         startLoading(isInteractionBlocking: true)
 
         Task {
-            analytics.signpost.beginLogin()
             // Tchap: convert email to matrixID if necessary.
 //            switch await authenticationService.login(username: state.bindings.username,
             switch await authenticationService.login(username: tchapConvertEmailToMatrixId(identifier: state.bindings.username),
@@ -127,11 +126,9 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
                                                      deviceID: nil) {
             case .success(let userSession):
                 actionsSubject.send(.signedIn(userSession))
-                analytics.signpost.endLogin()
                 stopLoading()
             case .failure(let error):
                 stopLoading()
-                analytics.signpost.endLogin()
                 handleError(error)
             }
         }

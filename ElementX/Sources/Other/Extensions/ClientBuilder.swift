@@ -22,12 +22,12 @@ extension ClientBuilder {
                             maxRequestRetryTime: UInt64? = nil,
                             threadsEnabled: Bool) -> ClientBuilder {
         var builder = ClientBuilder()
-            .crossProcessStoreLocksHolderName(holderName: InfoPlistReader.main.bundleIdentifier)
+            .crossProcessLockConfig(crossProcessLockConfig: .multiProcess(holderName: InfoPlistReader.main.bundleIdentifier))
             .enableOidcRefreshLock()
             .setSessionDelegate(sessionDelegate: sessionDelegate)
             .userAgent(userAgent: UserAgentBuilder.makeASCIIUserAgent())
             .threadsEnabled(enabled: threadsEnabled, threadSubscriptions: threadsEnabled)
-            .requestConfig(config: .init(retryLimit: 0,
+            .requestConfig(config: .init(retryLimit: 3, // Must be non-zero for the SDK to retry API calls when rate-limited.
                                          timeout: requestTimeout,
                                          maxConcurrentRequests: nil,
                                          maxRetryTime: maxRequestRetryTime))
@@ -85,9 +85,9 @@ extension ClientBuilder {
                 }
                 
                 // If necessary, to get the real certificate format:
-                //    let certificate = SecCertificateCreateWithData(nil, certDataDER as CFData)
+                //    let certificateData = SecCertificateCreateWithData(nil, derCertificates as CFData)
                 // Then, if necessary to get the public key:
-                //    let publicKey = SecCertificateCopyKey(certificate)
+                //    let publicKey = SecCertificateCopyKey(certificateData)
                 
                 // If any failure occured, ignore ALL certificates.
                 if derCertificates.count == pemCertificates.count {

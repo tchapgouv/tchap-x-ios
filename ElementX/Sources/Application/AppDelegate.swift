@@ -37,15 +37,15 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         
         return true
     }
-
+    
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         callbacks.send(.registeredNotifications(deviceToken: deviceToken))
     }
-
+    
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
         callbacks.send(.failedToRegisteredNotifications(error: error))
     }
-
+    
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
         orientationLock
     }

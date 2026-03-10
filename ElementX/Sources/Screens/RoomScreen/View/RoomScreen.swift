@@ -67,19 +67,18 @@ struct RoomScreen: View {
             .toolbar { toolbar }
             .toolbarBackground(.visible, for: .navigationBar) // Fix the toolbar's background.
             .overlay { loadingIndicator }
+            .alert(item: $context.alertInfo)
             .timelineMediaPreview(viewModel: $context.mediaPreviewViewModel)
             .track(screen: .Room)
             .sentryTrace("\(Self.self)")
     }
     
-    @ViewBuilder
     private var pinnedItemsBanner: some View {
         PinnedItemsBannerView(state: context.viewState.pinnedEventsBannerState,
                               onMainButtonTap: { context.send(viewAction: .tappedPinnedEventsBanner) },
                               onViewAllButtonTap: { context.send(viewAction: .viewAllPins) })
     }
     
-    @ViewBuilder
     private var knockRequestsBanner: some View {
         KnockRequestsBannerView(requests: context.viewState.displayedKnockRequests,
                                 onDismiss: dismissKnockRequestsBanner,
@@ -159,19 +158,17 @@ struct RoomScreen: View {
             RoomHeaderView(roomName: context.viewState.roomTitle,
                            roomAvatar: context.viewState.roomAvatar,
                            dmRecipientVerificationState: context.viewState.dmRecipientVerificationState,
-                           roomPropertiesBadgesView:
+                           roomHistorySharingState: context.viewState.roomHistorySharingState,
                            // Tchap: add badges
+                           roomPropertiesBadgesView:
                            TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: $context.isEncrypted,
                                                                        isPublic: $context.canDisplayPublicBadge,
                                                                        // Tchap: added parameters to display or not "external" badge.
                                                                        accessRule: $context.accessRule,
                                                                        avatar: $context.roomAvatar),
-                           mediaProvider: context.mediaProvider)
-                // Using a button stops it from getting truncated in the navigation bar
-                .contentShape(.rect)
-                .onTapGesture {
-                    context.send(viewAction: .displayRoomDetails)
-                }
+                           mediaProvider: context.mediaProvider) {
+                context.send(viewAction: .displayRoomDetails)
+            }
         }
         
         if !ProcessInfo.processInfo.isiOSAppOnMac {
@@ -187,14 +184,9 @@ struct RoomScreen: View {
     @ViewBuilder
     private var callButton: some View {
         if context.viewState.hasOngoingCall {
-            Button {
+            JoinCallButton {
                 context.send(viewAction: .displayCall)
-            } label: {
-                Label(L10n.actionJoin, icon: \.videoCallSolid)
-                    .labelStyle(.titleAndIcon)
             }
-            .buttonStyle(ElementCallButtonStyle())
-            .accessibilityLabel(L10n.a11yJoinCall)
             .accessibilityIdentifier(A11yIdentifiers.roomScreen.joinCall)
         } else {
             Button {
@@ -216,14 +208,14 @@ struct RoomScreen_Previews: PreviewProvider, TestablePreview {
     static let tombstonedViewModels = makeViewModels(hasSuccessor: true)
 
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             RoomScreen(context: viewModels.room.context,
                        timelineContext: viewModels.timeline.context,
                        composerToolbar: ComposerToolbar.mock())
         }
         .previewDisplayName("Normal")
         
-        NavigationStack {
+        ElementNavigationStack {
             RoomScreen(context: readOnlyViewModels.room.context,
                        timelineContext: readOnlyViewModels.timeline.context,
                        composerToolbar: ComposerToolbar.mock())
@@ -231,7 +223,7 @@ struct RoomScreen_Previews: PreviewProvider, TestablePreview {
         .previewDisplayName("Read-only")
         .snapshotPreferences(expect: readOnlyViewModels.room.context.$viewState.map { !$0.canSendMessage })
         
-        NavigationStack {
+        ElementNavigationStack {
             RoomScreen(context: tombstonedViewModels.room.context,
                        timelineContext: tombstonedViewModels.timeline.context,
                        composerToolbar: ComposerToolbar.mock())

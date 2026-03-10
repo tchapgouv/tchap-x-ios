@@ -64,12 +64,18 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
             //            } else {
             //                placeholderImage
             //            }
-            let mapLoader = TchapStaticMapLoader(mapUrlBuilder: mapURLBuilder,
-                                                 style: colorScheme.mapStyle,
-                                                 location: coordinates,
-                                                 zoom: zoomLevel,
-                                                 size: mapSize,
-                                                 attribution: mapTilerAttributionPlacement)
+            let mapLoader = TchapStaticMapLoader.buildMapLoader(mapUrlBuilder: mapURLBuilder,
+                                                                style: colorScheme.mapStyle,
+                                                                location: coordinates,
+                                                                zoom: zoomLevel,
+                                                                size: mapSize,
+                                                                attribution: mapTilerAttributionPlacement)
+//            TchapStaticMapLoader(mapUrlBuilder: mapURLBuilder,
+//                                                 style: colorScheme.mapStyle,
+//                                                 location: coordinates,
+//                                                 zoom: zoomLevel,
+//                                                 size: mapSize,
+//                                                 attribution: mapTilerAttributionPlacement)
             TchapStaticMapView(mapLoader: mapLoader,
                                placeholderView: placeholderImage,
                                pinAnnotationView: pinAnnotationView,
@@ -127,7 +133,9 @@ struct MapLibreStaticMapView_Previews: PreviewProvider, TestablePreview {
 }
 
 private struct MapTilerURLBuilderMock: MapTilerURLBuilderProtocol {
-    func interactiveMapURL(for style: MapTilerStyle) -> URL? { nil }
+    func interactiveMapURL(for style: MapTilerStyle) -> URL? {
+        nil
+    }
     
     func staticMapTileImageURL(for style: MapTilerStyle,
                                coordinates: CLLocationCoordinate2D,

@@ -14,4 +14,6 @@ protocol DecideHomeServerScreenViewModelProtocol {
     
     /// Update the view to reflect that loaded has finished.
     func stopLoading()
+    /// reset loading state in case OIDC login failed or is canceled by user.
+    func resetLoadingState()
 }

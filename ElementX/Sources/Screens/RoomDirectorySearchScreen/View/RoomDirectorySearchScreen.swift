@@ -13,7 +13,7 @@ struct RoomDirectorySearchScreen: View {
     @ObservedObject var context: RoomDirectorySearchScreenViewModel.Context
     
     var body: some View {
-        NavigationStack {
+        ElementNavigationStack {
             List {
                 Section {
                     ForEach(context.viewState.rooms) { room in
@@ -60,7 +60,7 @@ struct RoomDirectorySearchScreen: View {
         }
     }
     
-    // The greedy size of Rectangle can create an issue with the navigation bar when the search is highlighted, so is best to use a fixed frame instead of hidden() or EmptyView()
+    /// The greedy size of Rectangle can create an issue with the navigation bar when the search is highlighted, so is best to use a fixed frame instead of hidden() or EmptyView()
     private var emptyRectangle: some View {
         Rectangle()
             .frame(width: 0, height: 0)

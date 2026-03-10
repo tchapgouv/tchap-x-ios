@@ -9,6 +9,7 @@ import Compound
 import SwiftUI
 
 // Tchap: usage of badges in Tchap.
+@MainActor
 public enum TchapBadgeLabelUsage {
     case userIsExternal(useSmallSize: Bool = false)
     case inviteByEmail(useSmallSize: Bool = false)

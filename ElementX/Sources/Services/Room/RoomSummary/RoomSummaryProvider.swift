@@ -60,7 +60,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
          eventStringBuilder: RoomEventStringBuilder,
          name: String,
          shouldUpdateVisibleRange: Bool = false,
-         roomListPageSize: UInt32 = 200,
+         roomListPageSize: UInt32 = 100,
          notificationSettings: NotificationSettingsProxyProtocol,
          appSettings: AppSettings) {
         self.roomListService = roomListService
@@ -133,6 +133,16 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
                 [.normalizedMatchRoomName(pattern: query)] + baseFilter
             }
             _ = listUpdatesSubscriptionResult?.controller().setFilter(kind: .all(filters: filters))
+        case .rooms(let roomIDs, let filters):
+            var rustFilters = filters.map(\.rustFilter) + baseFilter
+            
+            rustFilters.append(.identifiers(identifiers: Array(roomIDs)))
+            
+            if !filters.contains(.lowPriority), appSettings.lowPriorityFilterEnabled {
+                rustFilters.append(.nonLowPriority)
+            }
+            
+            _ = listUpdatesSubscriptionResult?.controller().setFilter(kind: .all(filters: rustFilters))
         case let .all(filters):
             var rustFilters = filters.map(\.rustFilter) + baseFilter
             
@@ -277,6 +287,15 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
                 let sender = TimelineItemSender(senderID: senderID, senderProfile: profile)
                 attributedLastMessage = eventStringBuilder.buildAttributedString(for: content, sender: sender, isOutgoing: isOwn)
                 lastMessageDate = Date(timeIntervalSince1970: TimeInterval(timestamp / 1000))
+            case .remoteInvite(let timestamp, let senderID, let profile):
+                lastMessageDate = Date(timeIntervalSince1970: TimeInterval(timestamp / 1000))
+                
+                if let senderID {
+                    let sender = TimelineItemSender(senderID: senderID, senderProfile: profile)
+                    let senderDisplayName = sender.displayName ?? sender.id
+                    let invitedYouString = eventStringBuilder.stateEventStringBuilder.buildInvitedYouString(senderDisplayName)
+                    attributedLastMessage = AttributedString(invitedYouString)
+                }
             case .none:
                 break
             }

@@ -22,6 +22,12 @@ screen_onboarding_welcome_message = "La messagerie instantanée du secteur publi
 screen_onboarding_welcome_qrcode_header = "Déjà connecté sur un ordinateur ?";
 screen_onboarding_welcome_or_between_buttons = "ou";
 
+screen_onboarding_welcome_new_tchap_title = "Bienvenue dans le nouveau Tchap iOS";
+screen_onboarding_welcome_new_tchap_message = "Entièrement rebâti pour plus de simplicité et de nouvelles fonctionnalités";
+screen_onboarding_welcome_new_tchap_feature_group_call = "Appels audio et vidéo de groupe";
+screen_onboarding_welcome_new_tchap_feature_new_room_type = "Nouveau salon : privé non chiffré";
+screen_onboarding_welcome_new_tchap_feature_spaces = "Espaces de travail";
+
 // Login
 screen_login_title_login = "Se connecter à Tchap";
 screen_login_title_register = "Créer un compte sur Tchap";

@@ -67,6 +67,7 @@ struct ThreadTimelineScreen: View {
                            roomSubtitle: nil,
                            roomAvatar: context.viewState.roomAvatar,
                            dmRecipientVerificationState: context.viewState.dmRecipientVerificationState,
+                           roomHistorySharingState: context.viewState.roomHistorySharingState,
                            roomPropertiesBadgesView:
                            // Tchap: add badges
                            TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: $context.isEncrypted,
@@ -74,9 +75,9 @@ struct ThreadTimelineScreen: View {
                                                                        // Tchap: added parameters to display or not "external" badge.
                                                                        accessRule: $context.accessRule,
                                                                        avatar: $context.roomAvatar),
-                           mediaProvider: context.mediaProvider)
-                // Using a button stops it from getting truncated in the navigation bar
-                .contentShape(.rect)
+                           mediaProvider: context.mediaProvider) {
+                // There is no action but the iOS 26 designs have it looking like a button.
+            }
         }
     }
     

@@ -27,6 +27,7 @@ struct JoinedRoomProxyMockConfiguration {
     var canonicalAlias: String?
     var alternativeAliases: [String] = []
     var pinnedEventIDs: Set<String> = []
+    var historyVisibility: RoomHistoryVisibility = .shared
     
     var timelineStartReached = false
     
@@ -190,7 +191,7 @@ extension RoomInfoProxyMock {
         unreadMentionsCount = 0
         pinnedEventIDs = configuration.pinnedEventIDs
         joinRule = configuration.joinRule
-        historyVisibility = .shared
+        historyVisibility = configuration.historyVisibility
         
         powerLevels = RoomPowerLevelsProxyMock(configuration: configuration.powerLevelsConfiguration)
     }
@@ -201,5 +202,16 @@ private extension RoomHero {
         self.init(userId: memberProxy.userID,
                   displayName: memberProxy.displayName,
                   avatarUrl: memberProxy.avatarURL?.absoluteString)
+    }
+}
+
+@MainActor
+extension Array where Element == JoinedRoomProxyProtocol {
+    static var mockRooms: [JoinedRoomProxyProtocol] {
+        [
+            JoinedRoomProxyMock(.init(id: "1", name: "Room Name", canonicalAlias: "#room-name:example.com")),
+            JoinedRoomProxyMock(.init(id: "2", name: "Room Name", canonicalAlias: "#room-name:example.com")),
+            JoinedRoomProxyMock(.init(id: "3", name: "Room Name", canonicalAlias: "#room-name:example.com"))
+        ]
     }
 }

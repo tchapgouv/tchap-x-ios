@@ -10,9 +10,6 @@ import Foundation
 import MatrixRustSDK
 
 enum Tracing {
-    /// The base filename used for log files. This may be suffixed by the target
-    /// name and other log management metadata during rotation.
-    static let filePrefix = "console"
     /// The directory that stores all of the log files.
     static var logsDirectory: URL {
         if ProcessInfo.isRunningIntegrationTests {
@@ -26,24 +23,17 @@ enum Tracing {
     /// This basically only affects ``logFiles``, and doesn't inform the SDK to write
     /// the logs to a different directory, which should be done before setting this.
     static var logsDirectoryOverride: URL?
-    static var legacyLogsDirectory: URL { .appGroupContainerDirectory }
+    static var legacyLogsDirectory: URL {
+        .appGroupContainerDirectory
+    }
     
-    static let fileExtension = "log"
+    static let fileExtension = ".log"
     
-    static func buildConfiguration(logLevel: LogLevel, traceLogPacks: Set<TraceLogPack>,
+    static func buildConfiguration(logLevel: LogLevel,
+                                   traceLogPacks: Set<TraceLogPack>,
                                    currentTarget: String,
-                                   filePrefix: String?,
+                                   filePrefix: String,
                                    sentryURL: URL?) -> TracingConfiguration {
-        let fileName = if let filePrefix {
-            "\(Tracing.filePrefix)-\(filePrefix)"
-        } else {
-            Tracing.filePrefix
-        }
-        
-        // Keep a minimum of 1 week of log files. In reality it will be longer
-        // as the app is unlikely to be running continuously.
-        let maxFiles: UInt64 = 24 * 7
-        
         // Log everything on integration tests to check whether
         // the logs contain any sensitive data. See `integration-tests.yml`
         let level: LogLevel = ProcessInfo.isRunningIntegrationTests ? .trace : logLevel
@@ -53,14 +43,18 @@ enum Tracing {
                      extraTargets: [currentTarget],
                      writeToStdoutOrSystem: true,
                      writeToFiles: .init(path: logsDirectory.path(percentEncoded: false),
-                                         filePrefix: fileName,
+                                         filePrefix: filePrefix,
                                          fileSuffix: fileExtension,
-                                         maxFiles: maxFiles),
+                                         // Total compressed size needs to be under CloudFlare's max request size of 50Mb
+                                         maxTotalSizeBytes: 100 * 1024 * 1024, // 100Mb
+                                         maxAgeSeconds: 7 * 24 * 60 * 60), // One week
                      sentryDsn: sentryURL?.absoluteString)
     }
     
     /// A list of all log file URLs, sorted chronologically.
-    static var logFiles: [URL] { logFiles(in: logsDirectory) }
+    static var logFiles: [URL] {
+        logFiles(in: logsDirectory)
+    }
     
     /// Collect all of the logs in the given directory, sorting them chronologically.
     private static func logFiles(in directory: URL) -> [URL] {
@@ -77,7 +71,7 @@ enum Tracing {
                   let modificationDate = resourceValues.contentModificationDate
             else { continue }
             
-            if logURL.lastPathComponent.hasPrefix(filePrefix) {
+            if logURL.lastPathComponent.hasSuffix(fileExtension) {
                 logFiles.append((logURL, modificationDate))
             }
         }

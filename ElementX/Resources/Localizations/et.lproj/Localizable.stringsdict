@@ -130,6 +130,22 @@
 			<string>%1$d jututuba</string>
 		</dict>
 	</dict>
+	<key>common_selected_count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d on valitud</string>
+			<key>other</key>
+			<string>%1$d on valitud</string>
+		</dict>
+	</dict>
 	<key>common_spaces</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -176,6 +192,22 @@
 			<string>%d teavitus</string>
 			<key>other</key>
 			<string>%d teavitust</string>
+		</dict>
+	</dict>
+	<key>notification_fallback_n_content</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Sul on %d uus sõnum.</string>
+			<key>other</key>
+			<string>Sul on %d uut sõnumit.</string>
 		</dict>
 	</dict>
 	<key>notification_invitations</key>
@@ -448,6 +480,22 @@
 			<string>%1$@ kirjutab</string>
 			<key>other</key>
 			<string>%1$@ kirjutavad</string>
+		</dict>
+	</dict>
+	<key>screen_space_remove_rooms_confirmation_title</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Eemalda %1$d jututuba „%2$@“ kogukonnast</string>
+			<key>other</key>
+			<string>Eemalda %1$d jututuba „%2$@“ kogukonnast</string>
 		</dict>
 	</dict>
 	<key>troubleshoot_notifications_test_blocked_users_result_some</key>

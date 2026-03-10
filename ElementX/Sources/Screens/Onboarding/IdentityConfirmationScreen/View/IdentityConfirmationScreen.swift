@@ -35,7 +35,6 @@ struct IdentityConfirmationScreen: View {
     
     // MARK: - Private
     
-    @ViewBuilder
     private var screenHeader: some View {
         VStack(spacing: 0) {
             BigIcon(icon: \.lockSolid)
@@ -60,7 +59,6 @@ struct IdentityConfirmationScreen: View {
         }
     }
     
-    @ViewBuilder
     private var actionButtons: some View {
         VStack(spacing: 16) {
             if let availableActions = context.viewState.availableActions {
@@ -121,7 +119,7 @@ struct IdentityConfirmationScreen_Previews: PreviewProvider, TestablePreview {
     static var loadingViewModel = makeViewModel(recoveryState: .unknown)
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             IdentityConfirmationScreen(context: viewModel.context)
         }
         .previewDisplayName("Actions")
@@ -129,7 +127,7 @@ struct IdentityConfirmationScreen_Previews: PreviewProvider, TestablePreview {
             actions?.contains([.interactiveVerification, .recovery]) == true
         })
         
-        NavigationStack {
+        ElementNavigationStack {
             IdentityConfirmationScreen(context: loadingViewModel.context)
         }
         .previewDisplayName("Loading")
