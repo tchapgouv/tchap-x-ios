@@ -37,6 +37,7 @@ public struct TchapLabelViewModifier: ViewModifier {
     let font: Font
     let usage: Usage
     
+    @MainActor
     public enum Usage {
         case userIsExternal
         case inviteByEmail
