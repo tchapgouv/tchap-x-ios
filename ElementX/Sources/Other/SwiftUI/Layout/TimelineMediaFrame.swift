@@ -32,44 +32,7 @@ extension View {
             }
         }
     }
-    
-    // Tchap: BWI content-scanner - timelineMediaFrame does not work for contentScanner views
-    @ViewBuilder
-    func contentScannerFrame(imageInfo: ImageInfoProxy?) -> some View {
-        let minMediaHeight = 100.0
-        let minMediaWidth = 200.0
-        let maxMediaHeight = 520.0
-        let maxMediaWidth = 400.0
-        
-        let contentAspectRatio = imageInfo?.aspectRatio ?? 1.0
-        
-        if let contentHeight = imageInfo?.size?.height, contentHeight < minMediaHeight { // Special case very small images
-            frame(minWidth: minMediaHeight * contentAspectRatio, maxWidth: minMediaHeight * contentAspectRatio, minHeight: minMediaHeight, maxHeight: minMediaHeight)
-                
-        } else {
-            if let mediaSize = imageInfo?.size {
-                if mediaSize.width / maxMediaWidth < mediaSize.height / maxMediaHeight {
-                    let height = min(maxMediaHeight, max(minMediaHeight, mediaSize.height))
-                    
-                    let width = min(maxMediaWidth, height * contentAspectRatio)
-                    aspectRatio(contentAspectRatio, contentMode: .fit)
-                        .frame(minWidth: width, maxWidth: width, minHeight: height, maxHeight: height)
-                        .aspectRatio(contentAspectRatio, contentMode: .fit)
-                } else {
-                    let width = min(maxMediaWidth, max(minMediaWidth, mediaSize.width))
-                    
-                    let height = min(maxMediaHeight, width / contentAspectRatio)
-                    
-                    aspectRatio(contentAspectRatio, contentMode: .fit)
-                        .frame(minWidth: width, maxWidth: width, minHeight: height, maxHeight: height)
-                        .aspectRatio(contentAspectRatio, contentMode: .fit)
-                }
-            } else {
-                frame(minWidth: maxMediaWidth, maxWidth: maxMediaWidth, minHeight: maxMediaHeight, maxHeight: maxMediaHeight)
-            }
-        }
-    }
-    
+
     @ViewBuilder
     func mediaGalleryTimelineAspectRatio(imageInfo: ImageInfoProxy?) -> some View {
         aspectRatio(imageInfo?.aspectRatio, contentMode: .fill)
