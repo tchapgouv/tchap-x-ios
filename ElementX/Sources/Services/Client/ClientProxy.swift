@@ -558,7 +558,7 @@ class ClientProxy: ClientProxyProtocol {
             let powerLevelContentOverride = if isSpace {
                 // Tchap: ignore `federated` assocaited value for space for the moment.
 //                if accessType == .public {
-                if case .public(let isFederated) = accessType {
+                if case .public = accessType {
                     Self.publicSpaceCreationPowerLevelOverrides
                 } else {
                     Self.standardSpaceCreationPowerLevelOverrides
