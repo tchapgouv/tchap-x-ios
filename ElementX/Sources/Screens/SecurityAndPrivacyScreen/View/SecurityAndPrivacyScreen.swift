@@ -14,23 +14,29 @@ struct SecurityAndPrivacyScreen: View {
     
     var body: some View {
         Form {
-            if context.viewState.canEditJoinRule {
-                roomAccessSection
-            }
-            
-            if context.desiredSettings.accessType.isAddressRequired, context.viewState.canEditAddress {
-                visibilitySection
-                if let canonicalAlias = context.viewState.canonicalAlias {
-                    addressSection(canonicalAlias: canonicalAlias)
-                } else {
-                    addAddressSection
-                }
-            }
-            
+            // TCHAP: Disable room security and privacy options
+//            if context.viewState.canEditJoinRule {
+//                roomAccessSection
+//            }
+//
+//            if context.desiredSettings.accessType.isAddressRequired, context.viewState.canEditAddress {
+//                visibilitySection
+//                if let canonicalAlias = context.viewState.canonicalAlias {
+//                    addressSection(canonicalAlias: canonicalAlias)
+//                } else {
+//                    addAddressSection
+//                }
+//            }
+//
+//            if !context.viewState.isSpace {
+//                if context.viewState.canEnableEncryption {
+//                    encryptionSection
+//                }
+//                if context.viewState.canEditHistoryVisibility {
+//                    historySection
+//                }
+//            }
             if !context.viewState.isSpace {
-                if context.viewState.canEnableEncryption {
-                    encryptionSection
-                }
                 if context.viewState.canEditHistoryVisibility {
                     historySection
                 }
