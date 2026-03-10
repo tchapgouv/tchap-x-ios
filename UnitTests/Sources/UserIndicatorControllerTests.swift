@@ -6,10 +6,6 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-import Foundation
-
-import XCTest
-
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
@@ -17,39 +13,44 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Foundation
+import Testing
 
 @MainActor
-class UserIndicatorControllerTests: XCTestCase {
-    private var indicatorController: UserIndicatorController!
+@Suite
+struct UserIndicatorControllerTests {
+    private var indicatorController: UserIndicatorController
     
-    override func setUp() {
+    init() {
         indicatorController = UserIndicatorController()
     }
     
-    func testIndicatorQueueing() {
+    @Test
+    mutating func indicatorQueueing() {
         indicatorController.minimumDisplayDuration = 0.0
         
         indicatorController.submitIndicator(.init(id: "First", title: ""))
         indicatorController.submitIndicator(.init(id: "Second", title: ""))
         indicatorController.submitIndicator(.init(id: "Third", title: ""))
         
-        XCTAssertEqual(indicatorController.indicatorQueue.count, 3)
-        XCTAssertEqual(indicatorController.indicatorQueue[2].id, "Third")
-        XCTAssertEqual(indicatorController.indicatorQueue[1].id, "Second")
-        XCTAssertEqual(indicatorController.indicatorQueue[0].id, "First")
+        #expect(indicatorController.indicatorQueue.count == 3)
+        #expect(indicatorController.indicatorQueue[2].id == "Third")
+        #expect(indicatorController.indicatorQueue[1].id == "Second")
+        #expect(indicatorController.indicatorQueue[0].id == "First")
         
         indicatorController.retractIndicatorWithId("Second")
         
-        XCTAssertEqual(indicatorController.indicatorQueue.count, 2)
-        XCTAssertEqual(indicatorController.indicatorQueue[1].id, "Third")
-        XCTAssertEqual(indicatorController.indicatorQueue[0].id, "First")
+        #expect(indicatorController.indicatorQueue.count == 2)
+        #expect(indicatorController.indicatorQueue[1].id == "Third")
+        #expect(indicatorController.indicatorQueue[0].id == "First")
         
         indicatorController.retractAllIndicators()
         
-        XCTAssertEqual(indicatorController.indicatorQueue.count, 0)
+        #expect(indicatorController.indicatorQueue.count == 0)
     }
     
-    func testChainedPresentation() async throws {
+    @Test
+    mutating func chainedPresentation() async throws {
         indicatorController.minimumDisplayDuration = 0.25
         indicatorController.nonPersistentDisplayDuration = 2.5
         
@@ -57,19 +58,21 @@ class UserIndicatorControllerTests: XCTestCase {
         indicatorController.submitIndicator(.init(id: "Second", title: ""))
         indicatorController.submitIndicator(.init(id: "Third", title: ""))
         
-        XCTAssertEqual(indicatorController.activeIndicator?.id, "Third")
+        #expect(indicatorController.activeIndicator?.id == "Third")
         
-        let fulfillment = deferFulfillment(indicatorController.$activeIndicator, message: "Waiting for last indicator to be dismissed") { indicator in
+        let fulfillment = deferFulfillment(indicatorController.$activeIndicator,
+                                           message: "Waiting for last indicator to be dismissed") { indicator in
             indicator?.id == "Second"
         }
         
         try await fulfillment.fulfill()
         
-        XCTAssertEqual(indicatorController.indicatorQueue.count, 2)
-        XCTAssertEqual(indicatorController.activeIndicator?.id, "Second")
+        #expect(indicatorController.indicatorQueue.count == 2)
+        #expect(indicatorController.activeIndicator?.id == "Second")
     }
     
-    func testMinimumDisplayDuration() async throws {
+    @Test
+    mutating func minimumDisplayDuration() async throws {
         indicatorController.minimumDisplayDuration = 0.25
         indicatorController.nonPersistentDisplayDuration = 2.5
         
@@ -77,9 +80,10 @@ class UserIndicatorControllerTests: XCTestCase {
         indicatorController.submitIndicator(.init(id: "Second", title: ""))
         indicatorController.submitIndicator(.init(id: "Third", title: ""))
         
-        XCTAssertEqual(indicatorController.indicatorQueue.count, 3)
+        #expect(indicatorController.indicatorQueue.count == 3)
         
-        var fulfillment = deferFulfillment(indicatorController.$activeIndicator, message: "Waiting for minimum display duration to pass") { indicator in
+        var fulfillment = deferFulfillment(indicatorController.$activeIndicator,
+                                           message: "Waiting for minimum display duration to pass") { indicator in
             indicator?.id == "First"
         }
         
@@ -87,16 +91,17 @@ class UserIndicatorControllerTests: XCTestCase {
         
         try await fulfillment.fulfill()
         
-        XCTAssertEqual(indicatorController.indicatorQueue.count, 1)
-        XCTAssertEqual(indicatorController.activeIndicator?.id, "First")
+        #expect(indicatorController.indicatorQueue.count == 1)
+        #expect(indicatorController.activeIndicator?.id == "First")
         
-        fulfillment = deferFulfillment(indicatorController.$activeIndicator, message: "Waiting for last indicator to be dismissed") { indicator in
+        fulfillment = deferFulfillment(indicatorController.$activeIndicator,
+                                       message: "Waiting for last indicator to be dismissed") { indicator in
             indicator == nil
         }
         
         try await fulfillment.fulfill()
         
-        XCTAssertEqual(indicatorController.indicatorQueue.count, 0)
-        XCTAssertNil(indicatorController.activeIndicator)
+        #expect(indicatorController.indicatorQueue.count == 0)
+        #expect(indicatorController.activeIndicator == nil)
     }
 }

@@ -112,8 +112,8 @@ extension TchapFeatureFlag {
         // CertificatePinning can only be activated for .all or none because it is used before any activated session.
         // See `TchapX/target.yml` file to know how to generate certificate pinning.
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
-        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
-        static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
+        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [.dinum])
+        static let enableMAS = TchapFeatureFlag(allowedInstances: [.dinum])
         #elseif IS_TCHAP_STAGING
         // CertificatePinning can only be activated for .all or none because it is used before any activated session.
         // See `TchapX/target.yml` file to know how to generate certificate pinning.

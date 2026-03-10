@@ -57,8 +57,13 @@ import SwiftUI
         let module: NavigationModule
         let details: TabDetails
         
-        var id: ObjectIdentifier { module.id }
-        @MainActor var coordinator: CoordinatorProtocol? { module.coordinator }
+        var id: ObjectIdentifier {
+            module.id
+        }
+
+        @MainActor var coordinator: CoordinatorProtocol? {
+            module.coordinator
+        }
     }
     
     fileprivate var tabModules = [TabModule]() {
@@ -125,7 +130,6 @@ import SwiftUI
     /// - Parameters:
     ///   - coordinator: the coordinator to display
     ///   - animated: whether to animate the transition or not. Default is true
-
     ///   - dismissalCallback: called when the sheet has been dismissed, programatically or otherwise
     func setSheetCoordinator(_ coordinator: (any CoordinatorProtocol)?, animated: Bool = true, dismissalCallback: (() -> Void)? = nil) {
         guard let coordinator else {

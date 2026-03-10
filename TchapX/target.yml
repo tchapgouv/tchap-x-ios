@@ -231,6 +231,8 @@ targetTemplates:
     - package: WysiwygComposer
     - package: SwiftOGG
     - package: SwiftSoup
+    - package: SwiftFlow
+      product: Flow
     - package: DSWaveformImage
       product: DSWaveformImageViews
 

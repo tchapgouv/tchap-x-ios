@@ -6,8 +6,6 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-import XCTest
-
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
@@ -15,15 +13,18 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Testing
 
-class PINTextFieldTests: XCTestCase {
-    func testSanitize() {
+@Suite
+struct PINTextFieldTests {
+    @Test
+    func sanitize() {
         let textField = PINTextField(pinCode: .constant(""))
-        XCTAssertEqual(textField.sanitize("2"), "2")
-        XCTAssertEqual(textField.sanitize("2023"), "2023")
-        XCTAssertEqual(textField.sanitize("20233"), "2023")
-        XCTAssertEqual(textField.sanitize("20x"), "20")
-        XCTAssertEqual(textField.sanitize("20!"), "20")
-        XCTAssertEqual(textField.sanitize("boop"), "")
+        #expect(textField.sanitize("2") == "2")
+        #expect(textField.sanitize("2023") == "2023")
+        #expect(textField.sanitize("20233") == "2023")
+        #expect(textField.sanitize("20x") == "20")
+        #expect(textField.sanitize("20!") == "20")
+        #expect(textField.sanitize("boop") == "")
     }
 }

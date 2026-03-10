@@ -45,7 +45,6 @@ struct EncryptionResetPasswordScreen: View {
         .onAppear { textFieldFocus = true }
     }
     
-    @ViewBuilder
     private var passwordSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.commonPassword)
@@ -74,7 +73,7 @@ struct EncryptionResetPasswordScreen_Previews: PreviewProvider, TestablePreview 
     static let passwordPublisher = PassthroughSubject<String, Never>()
     static let viewModel = EncryptionResetPasswordScreenViewModel(passwordPublisher: passwordPublisher)
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             EncryptionResetPasswordScreen(context: viewModel.context)
         }
     }

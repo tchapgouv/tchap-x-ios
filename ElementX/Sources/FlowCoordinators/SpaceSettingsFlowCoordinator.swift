@@ -27,14 +27,16 @@ final class SpaceSettingsFlowCoordinator: FlowCoordinatorProtocol {
         case securityAndPrivacy
         /// The edit address screen
         case editAddress
+        /// The manage authorized spaces screen
+        case manageAuthorizedSpacesScreen
+        /// The screen that allows a user to transfer their ownership of the space.
+        case transferOwnership
         
-        // Other flows
+        /// Other flows
         /// The roles and permissions screen
         case rolesAndPermissionsFlow
         /// The members flow screen
         case membersFlow
-        
-        case manageAuthorizedSpacesScreen
     }
     
     enum Event: EventType {
@@ -51,15 +53,18 @@ final class SpaceSettingsFlowCoordinator: FlowCoordinatorProtocol {
         case presentEditAddress
         case dismissedEditAddress
         
+        case presentManageAuthorizedSpacesScreen
+        case dismissedManageAuthorizedSpacesScreen
+
+        case presentTransferOwnership
+        case dismissedTransferOwnership
+        
         // Other flows
         case startMembersListFlow
         case stopMembersListFlow
         
         case startRolesAndPermissionsFlow
         case stopRolesAndPermissionsFlow
-        
-        case presentManageAuthorizedSpacesScreen
-        case dismissedManageAuthorizedSpacesScreen
     }
     
     private let roomProxy: JoinedRoomProxyProtocol
@@ -135,6 +140,11 @@ final class SpaceSettingsFlowCoordinator: FlowCoordinatorProtocol {
                 return .manageAuthorizedSpacesScreen
             case (.manageAuthorizedSpacesScreen, .dismissedManageAuthorizedSpacesScreen):
                 return .securityAndPrivacy
+
+            case (.spaceSettings, .presentTransferOwnership):
+                return .transferOwnership
+            case (.transferOwnership, .dismissedTransferOwnership):
+                return .spaceSettings
                 
             case (.spaceSettings, .startMembersListFlow):
                 return .membersFlow
@@ -181,7 +191,12 @@ final class SpaceSettingsFlowCoordinator: FlowCoordinatorProtocol {
                 presentManageAuthorizedSpacesScreen(selection: selection)
             case (.manageAuthorizedSpacesScreen, .dismissedManageAuthorizedSpacesScreen, .securityAndPrivacy):
                 break
-                
+
+            case (.spaceSettings, .presentTransferOwnership, .transferOwnership):
+                presentTransferOwnershipScreen()
+            case (.transferOwnership, .dismissedTransferOwnership, .spaceSettings):
+                break
+
             case (.spaceSettings, .startMembersListFlow, .membersFlow):
                 startMembersListFlow()
             case (.membersFlow, .stopMembersListFlow, .spaceSettings):
@@ -222,10 +237,11 @@ final class SpaceSettingsFlowCoordinator: FlowCoordinatorProtocol {
             case .leftRoom:
                 leftRoom = true
                 navigationStackCoordinator.pop()
-            case .presentRecipientDetails, .presentNotificationSettingsScreen, .transferOwnership,
+            case .transferOwnership:
+                stateMachine.tryEvent(.presentTransferOwnership)
+            case .presentRecipientDetails, .presentNotificationSettingsScreen, .presentReportRoomScreen,
                  .presentInviteUsersScreen, .presentPollsHistory, .presentCall,
-                 .presentPinnedEventsTimeline, .presentMediaEventsTimeline, .presentKnockingRequestsListScreen,
-                 .presentReportRoomScreen:
+                 .presentPinnedEventsTimeline, .presentMediaEventsTimeline, .presentKnockingRequestsListScreen:
                 fatalError("Not handled in the space context")
             }
         }
@@ -323,6 +339,28 @@ final class SpaceSettingsFlowCoordinator: FlowCoordinatorProtocol {
         navigationStack.setRootCoordinator(coordinator)
         navigationStackCoordinator.setSheetCoordinator(navigationStack) { [weak self] in
             self?.stateMachine.tryEvent(.dismissedManageAuthorizedSpacesScreen)
+        }
+    }
+    
+    private func presentTransferOwnershipScreen() {
+        let parameters = RoomChangeRolesScreenCoordinatorParameters(mode: .owner,
+                                                                    roomProxy: roomProxy,
+                                                                    mediaProvider: flowParameters.userSession.mediaProvider,
+                                                                    userIndicatorController: flowParameters.userIndicatorController,
+                                                                    analytics: flowParameters.analytics)
+        let stackCoordinator = NavigationStackCoordinator()
+        let coordinator = RoomChangeRolesScreenCoordinator(parameters: parameters)
+        coordinator.actionsPublisher.sink { [weak self] action in
+            switch action {
+            case .complete:
+                self?.navigationStackCoordinator.setSheetCoordinator(nil)
+            }
+        }
+        .store(in: &cancellables)
+        
+        stackCoordinator.setRootCoordinator(coordinator)
+        navigationStackCoordinator.setSheetCoordinator(stackCoordinator) { [weak self] in
+            self?.stateMachine.tryEvent(.dismissedTransferOwnership)
         }
     }
     

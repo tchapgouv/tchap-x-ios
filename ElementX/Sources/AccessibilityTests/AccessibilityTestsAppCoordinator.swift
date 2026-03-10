@@ -104,11 +104,8 @@ struct PreviewsWrapperView: View {
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
     
     var body: some View {
-        if wrapper.currentIndex < 0 || wrapper.isDone {
-            EmptyView()
-        } else {
+        if wrapper.currentIndex >= 0, !wrapper.isDone {
             wrapper.currentPreview.content
-                // This ID raises UIKit assertions on iOS 26 but is needed otherwise toolbars go missing and some timeline items won't resize.
                 .id("\(wrapper.previewName)-\(dynamicTypeSize)")
         }
     }
@@ -118,7 +115,9 @@ struct PreviewsWrapperView: View {
     private let name: String
     private let previews: [_Preview]
     private(set) var currentIndex = -1
-    var currentPreview: _Preview { previews[currentIndex] }
+    var currentPreview: _Preview {
+        previews[currentIndex]
+    }
     
     private(set) var isDone = false
     

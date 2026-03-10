@@ -157,6 +157,8 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
         !appSettings.hasRunTchapWelcomeOnboarding
     }
     
+    // Tchap: disable SwiftLint body length error.
+    // swiftlint:disable:next function_body_length
     private func configureStateMachine() {
         stateMachine.addRoute(.init(fromState: .finished, toState: .initial))
         stateMachine.addRouteMapping { [weak self] event, fromState, _ in

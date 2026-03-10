@@ -6,10 +6,6 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-import MatrixRustSDK
-import MatrixRustSDKMocks
-import XCTest
-
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
@@ -17,26 +13,31 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import MatrixRustSDK
+import MatrixRustSDKMocks
+import Testing
 
-class RoomTests: XCTestCase {
-    func testCallIntent() async throws {
+@Suite
+struct RoomTests {
+    @Test
+    func callIntent() async {
         let room = RoomSDKMock()
         room.hasActiveRoomCallReturnValue = false
         room.isDirectReturnValue = false
         
         var callIntent = await room.joinCallIntent
-        XCTAssertEqual(callIntent, .startCall)
+        #expect(callIntent == .startCall)
         
         room.isDirectReturnValue = true
         callIntent = await room.joinCallIntent
-        XCTAssertEqual(callIntent, .startCallDm)
+        #expect(callIntent == .startCallDm)
         
         room.hasActiveRoomCallReturnValue = true
         callIntent = await room.joinCallIntent
-        XCTAssertEqual(callIntent, .joinExistingDm)
+        #expect(callIntent == .joinExistingDm)
         
         room.isDirectReturnValue = false
         callIntent = await room.joinCallIntent
-        XCTAssertEqual(callIntent, .joinExisting)
+        #expect(callIntent == .joinExisting)
     }
 }

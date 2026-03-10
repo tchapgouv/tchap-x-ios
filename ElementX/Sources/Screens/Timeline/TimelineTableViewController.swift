@@ -9,9 +9,8 @@
 import Combine
 import Compound
 import MatrixRustSDK
-import SwiftUI
-
 import OrderedCollections
+import SwiftUI
 
 /// A table view cell that displays a timeline item in a room. The cell is intended
 /// to be configured to display a SwiftUI view and not use any UIKit.
@@ -109,7 +108,7 @@ class TimelineTableViewController: UIViewController {
     }
     
     /// The state of pagination (in both directions) of the current timeline.
-    var paginationState: PaginationState = .initial {
+    var paginationState: TimelinePaginationState = .initial {
         didSet {
             // Paginate again if the threshold hasn't been satisfied.
             paginatePublisher.send(())
@@ -238,7 +237,9 @@ class TimelineTableViewController: UIViewController {
     }
     
     @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError("init(coder:) is not available.") }
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) is not available.")
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)

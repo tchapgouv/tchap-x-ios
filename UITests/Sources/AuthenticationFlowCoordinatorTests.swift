@@ -26,8 +26,11 @@ class AuthenticationFlowCoordinatorUITests: XCTestCase {
         // Server Selection: Clear the default, enter OIDC server and continue.
         app.textFields[A11yIdentifiers.changeServerScreen.server].clearAndTypeText("example.com\n", app: app)
         
+        // Await for the button to be hittable, since a loader may appear
+        let serverConfirmationContinueButton = app.buttons[A11yIdentifiers.serverConfirmationScreen.continue]
+        XCTAssertTrue(serverConfirmationContinueButton.wait(for: \.isHittable, toEqual: true, timeout: 2.0))
         // Server Confirmation: Tap continue button
-        app.buttons[A11yIdentifiers.serverConfirmationScreen.continue].tap()
+        serverConfirmationContinueButton.tap()
         
         // Login Screen: Wait for continue button to appear
         let continueButton = app.buttons[A11yIdentifiers.loginScreen.continue]
@@ -43,7 +46,7 @@ class AuthenticationFlowCoordinatorUITests: XCTestCase {
         app.buttons[A11yIdentifiers.loginScreen.continue].tap()
     }
     
-    func testLoginWithIncorrectPassword() async throws {
+    func testLoginWithIncorrectPassword() {
         // Given the authentication flow.
         let app = Application.launch(.authenticationFlow)
         
@@ -56,8 +59,11 @@ class AuthenticationFlowCoordinatorUITests: XCTestCase {
         // Server Selection: Clear the default, enter OIDC server and continue.
         app.textFields[A11yIdentifiers.changeServerScreen.server].clearAndTypeText("example.com\n", app: app)
         
+        // Await for the button to be hittable, since a loader may appear
+        let serverConfirmationContinueButton = app.buttons[A11yIdentifiers.serverConfirmationScreen.continue]
+        XCTAssertTrue(serverConfirmationContinueButton.wait(for: \.isHittable, toEqual: true, timeout: 2.0))
         // Server Confirmation: Tap continue button
-        app.buttons[A11yIdentifiers.serverConfirmationScreen.continue].tap()
+        serverConfirmationContinueButton.tap()
         
         // Login Screen: Wait for continue button to appear
         let continueButton = app.buttons[A11yIdentifiers.loginScreen.continue]
@@ -88,8 +94,11 @@ class AuthenticationFlowCoordinatorUITests: XCTestCase {
         // Server Selection: Clear the default, enter OIDC server and continue.
         app.textFields[A11yIdentifiers.changeServerScreen.server].clearAndTypeText("example.com\n", app: app)
         
+        // Await for the button to be hittable, since a loader may appear
+        let serverConfirmationContinueButton = app.buttons[A11yIdentifiers.serverConfirmationScreen.continue]
+        XCTAssertTrue(serverConfirmationContinueButton.wait(for: \.isHittable, toEqual: true, timeout: 2.0))
         // Server Confirmation: Tap continue button
-        app.buttons[A11yIdentifiers.serverConfirmationScreen.continue].tap()
+        serverConfirmationContinueButton.tap()
         
         // Login Screen: Wait for continue button to appear
         let continueButton = app.buttons[A11yIdentifiers.loginScreen.continue]
@@ -102,8 +111,8 @@ class AuthenticationFlowCoordinatorUITests: XCTestCase {
         try await app.assertScreenshot()
     }
     
-    // Disabled for now as the looping isn't 100% fool-proof and we have OIDC on the integration tests
-    // so this mock version doesn't really add anything to the tests as a whole.
+    /// Disabled for now as the looping isn't 100% fool-proof and we have OIDC on the integration tests
+    /// so this mock version doesn't really add anything to the tests as a whole.
     func disabled_testSelectingOIDCServer() {
         // Allow this test to run for longer to help with the loop whilst waiting to resolve the
         // webcredentials for the Web Authentication Session (see below).

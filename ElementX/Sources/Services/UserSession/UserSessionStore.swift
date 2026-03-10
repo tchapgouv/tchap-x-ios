@@ -12,22 +12,32 @@ import MatrixRustSDK
 class UserSessionStore: UserSessionStoreProtocol {
     private let keychainController: KeychainControllerProtocol
     private let appSettings: AppSettings
+    private let analyticsService: AnalyticsService
     private let networkMonitor: NetworkMonitorProtocol
     private let appHooks: AppHooks
     
     /// Whether or not there are sessions in the store.
-    var hasSessions: Bool { !keychainController.restorationTokens().isEmpty }
+    var hasSessions: Bool {
+        !keychainController.restorationTokens().isEmpty
+    }
+
     /// All the user IDs managed by the store.
-    var userIDs: [String] { keychainController.restorationTokens().map(\.userID) }
+    var userIDs: [String] {
+        keychainController.restorationTokens().map(\.userID)
+    }
     
-    var clientSessionDelegate: ClientSessionDelegate { keychainController }
+    var clientSessionDelegate: ClientSessionDelegate {
+        keychainController
+    }
     
     init(keychainController: KeychainControllerProtocol,
          appSettings: AppSettings,
+         analyticsService: AnalyticsService,
          appHooks: AppHooks,
          networkMonitor: NetworkMonitorProtocol) {
         self.keychainController = keychainController
         self.appSettings = appSettings
+        self.analyticsService = analyticsService
         self.appHooks = appHooks
         self.networkMonitor = networkMonitor
     }
@@ -152,7 +162,8 @@ class UserSessionStore: UserSessionStoreProtocol {
         do {
             return try await ClientProxy(client: client,
                                          networkMonitor: networkMonitor,
-                                         appSettings: appSettings)
+                                         appSettings: appSettings,
+                                         analyticsService: analyticsService)
         } catch {
             throw UserSessionStoreError.failedSettingUpClientProxy(error)
         }

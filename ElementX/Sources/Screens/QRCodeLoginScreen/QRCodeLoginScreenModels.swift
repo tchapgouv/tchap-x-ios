@@ -9,19 +9,26 @@
 import SwiftUI
 
 enum QRCodeLoginScreenViewModelAction: CustomStringConvertible {
-    case dismiss
+    /// Restart the flow.
+    ///
+    /// This action should only be sent when linking a new device. When logging in it
+    /// is handled internally within the screen.
+    case startOver
     case signInManually
     case signedIn(userSession: UserSessionProtocol)
     case requestOIDCAuthorisation(URL, OIDCAccountSettingsPresenter.Continuation)
     case linkedDevice
+    /// Cancel the flow (dismiss the modal).
+    case cancel
     
     var description: String {
         switch self {
-        case .dismiss: "dismiss"
+        case .startOver: "startOver"
         case .signInManually: "signInManually"
         case .signedIn: "signedIn"
         case .requestOIDCAuthorisation: "requestOIDCAuthorisation"
         case .linkedDevice: "linkedDevice"
+        case .cancel: "cancel"
         }
     }
 }
@@ -37,33 +44,36 @@ enum QRCodeLoginScreenMode {
 
 struct QRCodeLoginScreenViewState: BindableState {
     var state: QRCodeLoginState
+    let mode: QRCodeLoginScreenMode
     /// Whether or not it is possible for the screen to start the manual sign in flow. This was added to avoid
     /// having to handle server configuration when ``AppSettings.allowOtherAccountProviders`` is false.
     let canSignInManually: Bool
-    let isPresentedModally: Bool
     
     let instructions = QRCodeLoginScreenInstructions()
     var bindings = QRCodeLoginScreenViewStateBindings()
     
     var shouldDisplayCancelButton: Bool {
-        // TODO: Simplify/validate these assumptions.
-        if isPresentedModally {
+        switch mode {
+        case .login:
             switch state {
-            case .loginInstructions, .scan, .error(.noCameraPermission): true
-            default: false
+            case .loginInstructions, .scan: true
+            case .error: false
+            case .linkDesktopInstructions, .displayCode, .displayQR, .confirmCode: false // Unreachable states.
             }
-        } else {
+        case .linkDesktop, .linkMobile:
             switch state {
-            case .displayCode, .confirmCode, .scan, .error(.noCameraPermission): true
-            case .loginInstructions, .linkDesktopInstructions, .displayQR, .error: false
+            case .displayCode, .confirmCode, .scan: true
+            case .linkDesktopInstructions, .displayQR, .error: false
+            case .loginInstructions: false // Unreachable state.
             }
         }
     }
 
     var shouldDisplayBackButton: Bool {
-        if isPresentedModally {
-            false
-        } else {
+        switch mode {
+        case .login:
+            false // Login is presented modally, never show the back button.
+        case .linkDesktop, .linkMobile:
             switch state {
             case .loginInstructions, .linkDesktopInstructions, .displayQR: true
             case .displayCode, .confirmCode, .scan, .error: false
@@ -78,7 +88,8 @@ struct QRCodeLoginScreenViewStateBindings {
 }
 
 enum QRCodeLoginScreenViewAction {
-    case dismiss
+    /// Cancel the entire flow (dismiss the modal).
+    case cancel
     case startScan
     case sendCheckCode
     case errorAction(QRCodeErrorView.Action)
@@ -104,13 +115,17 @@ enum QRCodeLoginState: Equatable {
     case error(ErrorState)
     
     enum ErrorState: Equatable, CaseIterable {
+        /// The account provider doesn't support the use of QR codes.
+        case notSupported
         case noCameraPermission
         case connectionNotSecure
         case cancelled
         case declined
         case expired
+        /// The other device does not support linking Element X by QR code.
         case linkingNotSupported
-        case deviceNotSupported
+        /// Login cannot be continued due to a lack of Sliding Sync.
+        case slidingSyncNotAvailable
         /// Expected a QR code for a new device, however the processed code belongs to a device that is already signed in.
         case deviceAlreadySignedIn
         case unknown

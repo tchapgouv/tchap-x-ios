@@ -30,7 +30,7 @@ class UserFlowTests: XCTestCase {
         app.logout()
     }
     
-    // Assumes app is on the home screen
+    /// Assumes app is on the home screen
     private func checkRoomFlows() {
         // Wait for the room list to paginate and correctly compute the room display names otherwise the test room
         // won't be found
@@ -182,7 +182,7 @@ class UserFlowTests: XCTestCase {
     
     private func checkRoomDetails() {
         // Open the room details
-        let roomHeader = app.staticTexts[A11yIdentifiers.roomScreen.name]
+        let roomHeader = app.buttons[A11yIdentifiers.roomScreen.name]
         XCTAssertTrue(roomHeader.waitForExistence(timeout: 10.0))
         roomHeader.tap(.center)
         

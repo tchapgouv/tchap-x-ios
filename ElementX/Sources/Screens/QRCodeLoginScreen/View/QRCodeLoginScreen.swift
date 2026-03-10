@@ -116,7 +116,7 @@ struct QRCodeLoginScreen: View {
                 }
             } bottomContent: {
                 Button(L10n.actionCancel) {
-                    context.send(viewAction: .dismiss)
+                    context.send(viewAction: .cancel)
                 }
                 .buttonStyle(.compound(.secondary))
             }
@@ -202,9 +202,7 @@ struct QRCodeLoginScreen: View {
             .frame(maxWidth: 312)
             .readFrame($qrFrame)
             .background(.compound.bgCanvasDefault)
-            .overlay(
-                QRScannerViewOverlay(length: qrFrame.height)
-            )
+            .overlay(QRScannerViewOverlay(length: qrFrame.height))
     }
     
     @ViewBuilder
@@ -221,6 +219,7 @@ struct QRCodeLoginScreen: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 200, height: 200)
+                        .accessibilityLabel(L10n.a11yQrCode)
                     
                     SFNumberedListView(items: context.viewState.instructions.linkMobileItems)
                 }
@@ -283,7 +282,7 @@ struct QRCodeLoginScreen: View {
         ToolbarItem(placement: .cancellationAction) {
             if context.viewState.shouldDisplayCancelButton {
                 Button(L10n.actionCancel) {
-                    context.send(viewAction: .dismiss)
+                    context.send(viewAction: .cancel)
                 }
             }
         }
@@ -324,7 +323,7 @@ struct QRCodeLoginScreen_Previews: PreviewProvider, TestablePreview {
     static let loginInstructionsStateViewModel = QRCodeLoginScreenViewModel.mock(state: .loginInstructions)
     static let linkInstructionsStateViewModel = QRCodeLoginScreenViewModel.mock(state: .linkDesktopInstructions)
     
-    // Scanning
+    /// Scanning
     static let scanningStateViewModel = QRCodeLoginScreenViewModel.mock(state: .scan(.scanning))
     
     static let connectingStateViewModel = QRCodeLoginScreenViewModel.mock(state: .scan(.connecting))
@@ -337,7 +336,7 @@ struct QRCodeLoginScreen_Previews: PreviewProvider, TestablePreview {
     
     static let deviceNotSignedInStateViewModel = QRCodeLoginScreenViewModel.mock(state: .scan(.scanFailed(.deviceNotSignedIn)))
     
-    // Showing
+    /// Showing
     static let showingStateViewModel = QRCodeLoginScreenViewModel.mock(state: .displayQR(LinkNewDeviceServiceMock.mockQRCodeImage))
     
     // Displaying codes
@@ -348,42 +347,42 @@ struct QRCodeLoginScreen_Previews: PreviewProvider, TestablePreview {
     static let confirmCodeEnteredStateViewModel = QRCodeLoginScreenViewModel.mock(state: .confirmCode(.inputCode(CheckCodeSenderProxy(underlyingSender: CheckCodeSenderSDKMock()))), checkCodeInput: "12")
     static let confirmCodeInvalidStateViewModel = QRCodeLoginScreenViewModel.mock(state: .confirmCode(.invalidCode))
     
-    // Errors (no need to test them all QRCodeErrorView covers that).
+    /// Errors (no need to test them all QRCodeErrorView covers that).
     static let errorStateViewModel = QRCodeLoginScreenViewModel.mock(state: .error(.declined))
     
     static var previews: some View {
-        NavigationStack { QRCodeLoginScreen(context: loginInstructionsStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: loginInstructionsStateViewModel.context) }
             .previewDisplayName("Login instructions")
-        NavigationStack { QRCodeLoginScreen(context: linkInstructionsStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: linkInstructionsStateViewModel.context) }
             .previewDisplayName("Link instructions")
         
-        NavigationStack { QRCodeLoginScreen(context: scanningStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: scanningStateViewModel.context) }
             .previewDisplayName("Scanning")
-        NavigationStack { QRCodeLoginScreen(context: connectingStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: connectingStateViewModel.context) }
             .previewDisplayName("Connecting")
-        NavigationStack { QRCodeLoginScreen(context: invalidStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: invalidStateViewModel.context) }
             .previewDisplayName("Invalid")
-        NavigationStack { QRCodeLoginScreen(context: notAllowedStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: notAllowedStateViewModel.context) }
             .previewDisplayName("Not allowed")
-        NavigationStack { QRCodeLoginScreen(context: deviceNotSignedInStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: deviceNotSignedInStateViewModel.context) }
             .previewDisplayName("Device not signed in")
         
-        NavigationStack { QRCodeLoginScreen(context: showingStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: showingStateViewModel.context) }
             .previewDisplayName("Showing")
         
-        NavigationStack { QRCodeLoginScreen(context: deviceCodeStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: deviceCodeStateViewModel.context) }
             .previewDisplayName("Device code")
-        NavigationStack { QRCodeLoginScreen(context: verificationCodeStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: verificationCodeStateViewModel.context) }
             .previewDisplayName("Verification code")
         
-        NavigationStack { QRCodeLoginScreen(context: confirmCodeStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: confirmCodeStateViewModel.context) }
             .previewDisplayName("Confirm code")
-        NavigationStack { QRCodeLoginScreen(context: confirmCodeEnteredStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: confirmCodeEnteredStateViewModel.context) }
             .previewDisplayName("Confirm code entered")
-        NavigationStack { QRCodeLoginScreen(context: confirmCodeInvalidStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: confirmCodeInvalidStateViewModel.context) }
             .previewDisplayName("Confirm code invalid")
         
-        NavigationStack { QRCodeLoginScreen(context: errorStateViewModel.context) }
+        ElementNavigationStack { QRCodeLoginScreen(context: errorStateViewModel.context) }
             .previewDisplayName("Error")
     }
 }

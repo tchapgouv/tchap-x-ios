@@ -7,15 +7,15 @@
 //
 
 import Foundation
-import MatrixRustSDK
-import UserNotifications
-
 import Intents
+import MatrixRustSDK
 import SwiftUI
+import UserNotifications
 import Version
 
 struct NotificationContentBuilder {
     let messageEventStringBuilder: RoomMessageEventStringBuilder
+    let notificationSoundName: UNNotificationSoundName
     let userSession: NSEUserSessionProtocol
     
     /// Process the given notification item proxy
@@ -49,7 +49,7 @@ struct NotificationContentBuilder {
         notificationContent.threadIdentifier = threadIdentifier.replacingOccurrences(of: "@", with: "")
         
         MXLog.info("isNoisy: \(notificationItem.isNoisy)")
-        notificationContent.sound = notificationItem.isNoisy ? UNNotificationSound(named: UNNotificationSoundName(rawValue: "message.caf")) : nil
+        notificationContent.sound = notificationItem.isNoisy ? .init(named: notificationSoundName) : nil
         
         switch notificationItem.event {
         case .none:
@@ -345,7 +345,7 @@ private struct NotificationIcon {
     }
     
     let mediaSource: MediaSourceProxy?
-    // Required as the key to set images for groups
+    /// Required as the key to set images for groups
     let groupInfo: GroupInfo?
     
     var shouldDisplayAsGroup: Bool {

@@ -14,7 +14,7 @@ struct TimelineItemDebugView: View {
     let info: TimelineItemDebugInfo
     
     var body: some View {
-        NavigationStack {
+        ElementNavigationStack {
             ScrollView {
                 VStack(spacing: 8) {
                     TimelineItemInfoDisclosureGroup(title: "Model", text: info.model)
@@ -67,7 +67,6 @@ struct TimelineItemDebugView: View {
             }
         }
         
-        @ViewBuilder
         var disclosureGroupContent: some View {
             VStack(alignment: .leading, spacing: 0) {
                 Divider()

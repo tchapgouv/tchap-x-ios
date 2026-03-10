@@ -21,6 +21,7 @@
   },
   "testTargets" : [
     {
+      "parallelizable" : false,
       "target" : {
         "containerPath" : "container:TchapX.xcodeproj",
         "identifier" : "A307AE776E1E01CC080003D8",

@@ -67,10 +67,17 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         self.initialSelectedPinnedEventID = initialSelectedPinnedEventID
         pinnedEventStringBuilder = .pinnedEventStringBuilder(userID: roomProxy.ownUserID)
 
+        let roomHistorySharingState: RoomHistorySharingState? = if appSettings.enableKeyShareOnInvite {
+            roomProxy.infoPublisher.value.historySharingState
+        } else {
+            nil
+        }
+        
         let viewState = RoomScreenViewState(roomTitle: roomProxy.infoPublisher.value.displayName ?? roomProxy.id,
                                             roomAvatar: roomProxy.infoPublisher.value.avatar,
                                             hasOngoingCall: roomProxy.infoPublisher.value.hasRoomCall,
-                                            hasSuccessor: roomProxy.infoPublisher.value.successor != nil)
+                                            hasSuccessor: roomProxy.infoPublisher.value.successor != nil,
+                                            roomHistorySharingState: roomHistorySharingState)
         super.init(initialViewState: appHooks.roomScreenHook.update(viewState),
                    mediaProvider: userSession.mediaProvider)
         
@@ -101,9 +108,6 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
                 Task { await resolveIdentityPinningViolation(userID) }
             case .resolveVerificationViolation(let userID):
                 Task { await resolveIdentityVerificationViolation(userID) }
-            case .dismissHistoryVisibleAlert:
-                appSettings.acknowledgedHistoryVisibleRooms.insert(roomProxy.id)
-                state.historyVisibleDetails = nil
             }
         case .acceptKnock(let eventID):
             Task { await acceptKnock(eventID: eventID) }
@@ -247,13 +251,13 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         }
         
         if let member = identityVerificationViolations.values.first {
-            state.identityViolationDetails = .verificationViolation(member: member,
-                                                                    learnMoreURL: appSettings.identityPinningViolationDetailsURL)
+            state.footerDetails = .verificationViolation(member: member,
+                                                         learnMoreURL: appSettings.identityPinningViolationDetailsURL)
         } else if let member = identityPinningViolations.values.first {
-            state.identityViolationDetails = .pinViolation(member: member,
-                                                           learnMoreURL: appSettings.identityPinningViolationDetailsURL)
+            state.footerDetails = .pinViolation(member: member,
+                                                learnMoreURL: appSettings.identityPinningViolationDetailsURL)
         } else {
-            state.identityViolationDetails = nil
+            state.footerDetails = nil
         }
     }
     
@@ -282,7 +286,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         showLoadingIndicator()
         
         if case .failure = await clientProxy.pinUserIdentity(userID) {
-            userIndicatorController.alertInfo = .init(id: .init(), title: L10n.commonError)
+            state.bindings.alertInfo = .init(id: .unknown, title: L10n.commonError)
         }
     }
     
@@ -294,7 +298,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         showLoadingIndicator()
 
         if case .failure = await clientProxy.withdrawUserIdentityVerification(userID) {
-            userIndicatorController.alertInfo = .init(id: .init(), title: L10n.commonError)
+            state.bindings.alertInfo = .init(id: .unknown, title: L10n.commonError)
         }
     }
     
@@ -346,18 +350,12 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
             state.canBan = powerLevels.canOwnUserBan()
         }
         
-        let isHistoryVisible = roomInfo.historyVisibility == .shared || roomInfo.historyVisibility == .worldReadable
-        let isHistoryVisibleBannerAcknowledged = appSettings.acknowledgedHistoryVisibleRooms.contains(roomInfo.id)
-
-        if appSettings.enableKeyShareOnInvite, roomInfo.isEncrypted {
-            if isHistoryVisible, !isHistoryVisibleBannerAcknowledged {
-                // Whenever the user opens an encrypted room with shared/world-readable history visbility, we show them a warning banner if they have not already dismissed it.
-                state.historyVisibleDetails = .historyVisible(learnMoreURL: appSettings.historySharingDetailsURL)
-            } else if !isHistoryVisible, isHistoryVisibleBannerAcknowledged {
-                // Whenever the user opens a room with non-shared history visibility, we clear the dismiss flag to ensure that the banner is displayed again if the history is made visible in the future.
-                appSettings.acknowledgedHistoryVisibleRooms.remove(roomInfo.id)
-                state.historyVisibleDetails = nil
-            }
+        // This causes the UI to become inconsistent with the user's mental model if the user
+        // does not restart the app after disabling the feature flag. We can probably ignore
+        // such cases, since we explicitly ask for an app restart in the caption of the feature
+        // flag switch.
+        if appSettings.enableKeyShareOnInvite {
+            state.roomHistorySharingState = roomInfo.historySharingState
         }
       
         // Tchap: fill room properties

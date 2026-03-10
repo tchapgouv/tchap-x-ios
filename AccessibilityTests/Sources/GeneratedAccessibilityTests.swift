@@ -75,6 +75,14 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "CallNotificationRoomTimelineView_Previews")
     }
 
+    func testChatsSpaceFilterCell() async throws {
+        try await performAccessibilityAudit(named: "ChatsSpaceFilterCell_Previews")
+    }
+
+    func testChatsSpaceFiltersScreen() async throws {
+        try await performAccessibilityAudit(named: "ChatsSpaceFiltersScreen_Previews")
+    }
+
     func testCollapsibleRoomTimelineView() async throws {
         try await performAccessibilityAudit(named: "CollapsibleRoomTimelineView_Previews")
     }
@@ -89,6 +97,10 @@ extension AccessibilityTests {
 
     func testCopyTextButton() async throws {
         try await performAccessibilityAudit(named: "CopyTextButton_Previews")
+    }
+
+    func testCreateRoomSpaceSelectionSheet() async throws {
+        try await performAccessibilityAudit(named: "CreateRoomSpaceSelectionSheet_Previews")
     }
 
     func testCreateRoom() async throws {
@@ -399,6 +411,10 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "PlaceholderScreen_Previews")
     }
 
+    func testPlaybackSpeedButton() async throws {
+        try await performAccessibilityAudit(named: "PlaybackSpeedButton_Previews")
+    }
+
     func testPollFormScreen() async throws {
         try await performAccessibilityAudit(named: "PollFormScreen_Previews")
     }
@@ -623,6 +639,14 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "SoftLogoutScreen_Previews")
     }
 
+    func testSpaceAddRoomsScreenSelectedItem() async throws {
+        try await performAccessibilityAudit(named: "SpaceAddRoomsScreenSelectedItem_Previews")
+    }
+
+    func testSpaceAddRoomsScreen() async throws {
+        try await performAccessibilityAudit(named: "SpaceAddRoomsScreen_Previews")
+    }
+
     func testSpaceHeaderTopicSheetView() async throws {
         try await performAccessibilityAudit(named: "SpaceHeaderTopicSheetView_Previews")
     }
@@ -631,8 +655,8 @@ extension AccessibilityTests {
         try await performAccessibilityAudit(named: "SpaceHeaderView_Previews")
     }
 
-    func testSpaceListScreen() async throws {
-        try await performAccessibilityAudit(named: "SpaceListScreen_Previews")
+    func testSpaceRemoveChildrenConfirmationView() async throws {
+        try await performAccessibilityAudit(named: "SpaceRemoveChildrenConfirmationView_Previews")
     }
 
     func testSpaceRoomCell() async throws {
@@ -649,6 +673,10 @@ extension AccessibilityTests {
 
     func testSpacesAnnouncementSheetView() async throws {
         try await performAccessibilityAudit(named: "SpacesAnnouncementSheetView_Previews")
+    }
+
+    func testSpacesScreen() async throws {
+        try await performAccessibilityAudit(named: "SpacesScreen_Previews")
     }
 
     func testSplashScreen() async throws {
@@ -741,10 +769,6 @@ extension AccessibilityTests {
 
     func testTimelineThreadSummaryView() async throws {
         try await performAccessibilityAudit(named: "TimelineThreadSummaryView_Previews")
-    }
-
-    func testTimelineView() async throws {
-        try await performAccessibilityAudit(named: "TimelineView_Previews")
     }
 
     func testTombstonedAvatarImage() async throws {

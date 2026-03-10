@@ -77,7 +77,7 @@ struct ManageAuthorizedSpacesScreen: View {
         }
     }
     
-    private func avatar(space: SpaceServiceRoomProtocol) -> some View {
+    private func avatar(space: SpaceServiceRoom) -> some View {
         RoomAvatarImage(avatar: space.avatar,
                         avatarSize: .room(on: .authorizedSpaces),
                         mediaProvider: context.mediaProvider)
@@ -112,7 +112,7 @@ struct ManageAuthorizedSpacesScreen_Previews: PreviewProvider, TestablePreview {
                                                                  mediaProvider: MediaProviderMock(configuration: .init()))
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             ManageAuthorizedSpacesScreen(context: viewModel.context)
         }
     }

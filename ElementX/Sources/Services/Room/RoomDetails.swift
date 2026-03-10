@@ -19,6 +19,7 @@ struct RoomDetails {
     let isEncrypted: Bool
     let isPublic: Bool
     let isDirect: Bool
+    var historySharingState: RoomHistorySharingState?
     // Tchap: add AccessRule and visibility values
     let accessRule: AccessRule?
     let visibility: RoomVisibility

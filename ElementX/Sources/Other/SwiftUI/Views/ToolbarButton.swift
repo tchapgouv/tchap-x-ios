@@ -9,19 +9,20 @@ import Compound
 import SwiftUI
 
 struct ToolbarButton: View {
+    @MainActor
     enum Role {
-        case cancel
-        case done
-        case save
+        static let cancel = Role.cancel(title: L10n.actionCancel)
+        static let done = Role.confirm(title: L10n.actionDone)
+        static let save = Role.confirm(title: L10n.actionSave)
+
+        case cancel(title: String)
+        case confirm(title: String)
+        case destructive(title: String)
         
         var title: String {
             switch self {
-            case .cancel:
-                L10n.actionCancel
-            case .done:
-                L10n.actionDone
-            case .save:
-                L10n.actionSave
+            case .cancel(let title), .confirm(let title), .destructive(let title):
+                title
             }
         }
         
@@ -31,8 +32,11 @@ struct ToolbarButton: View {
             case .cancel:
                 CompoundIcon(\.close)
                     .foregroundStyle(.compound.iconPrimary)
-            case .done, .save:
+            case .confirm:
                 CompoundIcon(\.check)
+                    .foregroundStyle(.compound.iconOnSolidPrimary)
+            case .destructive:
+                CompoundIcon(\.delete)
                     .foregroundStyle(.compound.iconOnSolidPrimary)
             }
         }
@@ -41,8 +45,10 @@ struct ToolbarButton: View {
             switch self {
             case .cancel:
                 .compound.bgCanvasDefault
-            case .done, .save:
+            case .confirm:
                 .compound.bgAccentRest
+            case .destructive:
+                .compound.bgCriticalPrimary
             }
         }
     }
@@ -57,30 +63,16 @@ struct ToolbarButton: View {
                     .accessibilityLabel(role.title)
             }
             .tint(role.tint)
-            .buttonStyleGlassProminent()
+            .backportButtonStyleGlassProminent()
         } else {
             Button(role.title, action: action)
         }
     }
 }
 
-@available(iOS 26, *)
-private extension View {
-    @ViewBuilder
-    func buttonStyleGlassProminent() -> some View {
-        // `.glassProminent` breaks our preview tests so we need to disable it when running tests.
-        // https://github.com/pointfreeco/swift-snapshot-testing/issues/1029#issuecomment-3366942138
-        if ProcessInfo.isRunningTests {
-            self
-        } else {
-            buttonStyle(.glassProminent)
-        }
-    }
-}
-
 struct ToolbarButton_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             Color.clear
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
@@ -88,6 +80,9 @@ struct ToolbarButton_Previews: PreviewProvider, TestablePreview {
                     }
                     ToolbarItem(placement: .cancellationAction) {
                         ToolbarButton(role: .cancel) { }
+                    }
+                    ToolbarItem(placement: .primaryAction) {
+                        ToolbarButton(role: .destructive(title: L10n.actionRemove)) { }
                     }
                 }
         }

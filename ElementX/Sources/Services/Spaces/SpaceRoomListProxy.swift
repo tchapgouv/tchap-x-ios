@@ -10,19 +10,21 @@ import Combine
 import MatrixRustSDK
 
 class SpaceRoomListProxy: SpaceRoomListProxyProtocol {
-    var id: String { spaceServiceRoomPublisher.value.id }
+    var id: String {
+        spaceServiceRoomPublisher.value.id
+    }
     
     private let spaceRoomList: SpaceRoomListProtocol
     
     private var spaceServiceRoomHandle: TaskHandle?
-    private let spaceServiceRoomSubject: CurrentValueSubject<SpaceServiceRoomProtocol, Never>
-    var spaceServiceRoomPublisher: CurrentValuePublisher<SpaceServiceRoomProtocol, Never> {
+    private let spaceServiceRoomSubject: CurrentValueSubject<SpaceServiceRoom, Never>
+    var spaceServiceRoomPublisher: CurrentValuePublisher<SpaceServiceRoom, Never> {
         spaceServiceRoomSubject.asCurrentValuePublisher()
     }
     
     private var spaceRoomsHandle: TaskHandle?
-    private let spaceRoomsSubject = CurrentValueSubject<[SpaceServiceRoomProtocol], Never>([])
-    var spaceRoomsPublisher: CurrentValuePublisher<[SpaceServiceRoomProtocol], Never> {
+    private let spaceRoomsSubject = CurrentValueSubject<[SpaceServiceRoom], Never>([])
+    var spaceRoomsPublisher: CurrentValuePublisher<[SpaceServiceRoom], Never> {
         spaceRoomsSubject.asCurrentValuePublisher()
     }
     
@@ -58,6 +60,10 @@ class SpaceRoomListProxy: SpaceRoomListProxyProtocol {
         } catch {
             MXLog.error("Pagination failure: \(error)")
         }
+    }
+    
+    func reset() async {
+        await spaceRoomList.reset()
     }
     
     // MARK: - Private

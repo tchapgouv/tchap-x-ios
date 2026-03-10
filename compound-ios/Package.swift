@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.2
 
 import PackageDescription
 
@@ -10,7 +10,7 @@ let package = Package(
     ],
     dependencies: [
 // Use the Github hosted version of Tchap Compound-design--tokens
-//       .package(url: "https://github.com/tchapgouv/compound-design-tokens", branch: "angelo-uikit-ev2"),
+//       .package(url: "https://github.com/tchapgouv/compound-design-tokens", exact: "6.9.0"),
 // Use the local version of Tchap Compound-design--tokens
         .package(path: "../../tchap-x-compound/compound-design-tokens"),
         .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "26.0.0"),
@@ -24,6 +24,9 @@ let package = Package(
                 .product(name: "CompoundDesignTokens", package: "compound-design-tokens"),
                 .product(name: "SwiftUIIntrospect", package: "SwiftUI-Introspect"),
                 .product(name: "SFSafeSymbols", package: "SFSafeSymbols")
+            ],
+            swiftSettings: [
+                .defaultIsolation(MainActor.self)
             ]
         ),
         .testTarget(
@@ -34,6 +37,9 @@ let package = Package(
             ],
             exclude: [
                 "__Snapshots__"
+            ],
+            swiftSettings: [
+                .defaultIsolation(MainActor.self)
             ]
         )
     ]
