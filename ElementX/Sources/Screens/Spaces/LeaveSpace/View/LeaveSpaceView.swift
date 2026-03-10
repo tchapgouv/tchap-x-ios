@@ -66,11 +66,11 @@ struct LeaveSpaceView: View {
                 Section {
                     ForEach(context.viewState.leaveHandle.rooms, id: \.spaceServiceRoom.id) { room in
                         LeaveSpaceRoomDetailsCell(room: room,
-                                                  hideSelection: context.viewState.leaveHandle.mode == .onlyAdminRooms,
+                                                  hideSelection: !room.canLeave,
                                                   mediaProvider: context.mediaProvider) {
                             context.send(viewAction: .toggleRoom(roomID: room.spaceServiceRoom.id))
                         }
-                        .disabled(room.isLastAdmin)
+                        .disabled(!room.canLeave)
                     }
                 } header: {
                     if context.viewState.leaveHandle.mode == .manyRooms {
@@ -90,18 +90,28 @@ struct LeaveSpaceView: View {
     
     var buttons: some View {
         VStack(spacing: 16) {
-            if context.viewState.leaveHandle.canLeave {
+            switch context.viewState.leaveHandle.mode {
+            case .spaceNeedsNewOwner(let useTransferOwnershipFlow):
+                if context.viewState.canEditRolesAndPermissions {
+                    if useTransferOwnershipFlow {
+                        Button(L10n.leaveRoomAlertSelectNewOwnerAction, role: .destructive) {
+                            context.send(viewAction: .transferOwnership)
+                        }
+                        .buttonStyle(.compound(.primary))
+                    } else {
+                        Button {
+                            context.send(viewAction: .rolesAndPermissions)
+                        } label: {
+                            Label(L10n.actionGoToRolesAndPermissions, icon: \.settings)
+                        }
+                        .buttonStyle(.compound(.primary))
+                    }
+                }
+            default:
                 Button(role: .destructive) {
                     context.send(viewAction: .confirmLeaveSpace)
                 } label: {
                     Label(context.viewState.confirmationTitle, icon: \.leave)
-                }
-                .buttonStyle(.compound(.primary))
-            } else if context.viewState.canEditRolesAndPermissions {
-                Button {
-                    context.send(viewAction: .rolesAndPermissions)
-                } label: {
-                    Label(L10n.actionGoToRolesAndPermissions, icon: \.settings)
                 }
                 .buttonStyle(.compound(.primary))
             }
@@ -121,9 +131,10 @@ import MatrixRustSDKMocks
 
 struct LeaveSpaceView_Previews: PreviewProvider, TestablePreview {
     static let manyViewModel = makeViewModel(mode: .manyRooms)
-    static let onlyAdminViewModel = makeViewModel(mode: .onlyAdminRooms)
+    static let onlyAdminViewModel = makeViewModel(mode: .roomsNeedNewOwner)
     static let noRoomsViewModel = makeViewModel(mode: .noRooms)
-    static let lastAdminViewModel = makeViewModel(mode: .lastSpaceAdmin)
+    static let lastAdminViewModel = makeViewModel(mode: .spaceNeedsNewOwner(useTransferOwnershipFlow: false))
+    static let lastOwnerViewModel = makeViewModel(mode: .spaceNeedsNewOwner(useTransferOwnershipFlow: true))
     
     static var previews: some View {
         LeaveSpaceView(context: manyViewModel.context)
@@ -134,23 +145,29 @@ struct LeaveSpaceView_Previews: PreviewProvider, TestablePreview {
             .previewDisplayName("No Rooms")
         LeaveSpaceView(context: lastAdminViewModel.context)
             .previewDisplayName("Last Space Admin")
+        LeaveSpaceView(context: lastOwnerViewModel.context)
+            .previewDisplayName("Last Space Owner")
     }
     
-    static let spaceServiceRoom = SpaceServiceRoomMock(.init(id: "!eng-space:matrix.org",
-                                                             name: "Engineering Team",
-                                                             isSpace: true,
-                                                             childrenCount: 30,
-                                                             joinedMembersCount: 76,
-                                                             heroes: [.mockDan, .mockBob, .mockCharlie, .mockVerbose],
-                                                             topic: "Description of the space goes right here. Lorem ipsum dolor sit amet consectetur. Leo viverra morbi habitant in.",
-                                                             joinRule: .knockRestricted(rules: [.roomMembership(roomId: "")])))
+    static let spaceServiceRoom = SpaceServiceRoom.mock(id: "!eng-space:matrix.org",
+                                                        name: "Engineering Team",
+                                                        isSpace: true,
+                                                        childrenCount: 30,
+                                                        joinedMembersCount: 76,
+                                                        heroes: [.mockDan, .mockBob, .mockCharlie, .mockVerbose],
+                                                        topic: "Description of the space goes right here. Lorem ipsum dolor sit amet consectetur. Leo viverra morbi habitant in.",
+                                                        joinRule: .knockRestricted(rules: [.roomMembership(roomID: "")]))
     
     static func makeViewModel(mode: LeaveSpaceHandleProxy.Mode) -> LeaveSpaceViewModel {
         let rooms: [LeaveSpaceRoom] = switch mode {
         case .manyRooms: .mockRooms
-        case .onlyAdminRooms: .mockAdminRooms
-        case .noRooms: .mockSingleSpace(spaceServiceRoom: spaceServiceRoom, isLastAdmin: false)
-        case .lastSpaceAdmin: .mockRoomsWithSpace(spaceServiceRoom: spaceServiceRoom, isLastAdmin: true)
+        case .roomsNeedNewOwner: .mockNeedNewOwnerRooms
+        case .noRooms: .mockSingleSpace(spaceServiceRoom: spaceServiceRoom,
+                                        isLastOwner: false,
+                                        areCreatorsPrivileged: false)
+        case .spaceNeedsNewOwner(let useTransferOwnershipFlow): .mockRoomsWithSpace(spaceServiceRoom: spaceServiceRoom,
+                                                                                    isLastOwner: true,
+                                                                                    areCreatorsPrivileged: useTransferOwnershipFlow)
         }
         
         let leaveHandle = LeaveSpaceHandleProxy(spaceID: spaceServiceRoom.id,

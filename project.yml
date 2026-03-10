@@ -52,7 +52,7 @@ settings:
   ENABLE_BITCODE: false
   APP_NAME: ElementX
   KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).$(BASE_BUNDLE_IDENTIFIER)"
-  MARKETING_VERSION: 26.01.0
+  MARKETING_VERSION: 26.03.0
   CURRENT_PROJECT_VERSION: 1
   SUPPORTS_MACCATALYST: false
 
@@ -72,6 +72,7 @@ include:
 packages:
   # Element/Matrix dependencies
   MatrixRustSDK:
+<<<<<<< HEAD
 #    url: https://github.com/element-hq/matrix-rust-components-swift
 #    exactVersion: 25.03.13
 #
@@ -82,6 +83,11 @@ packages:
 #    exactVersion: 25.12.2-bwi-main
 # Use the local version of Tchap Matrix-rust-SDK
     path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
+=======
+    url: https://github.com/element-hq/matrix-rust-components-swift
+    exactVersion: 26.02.24
+    # path: ../matrix-rust-sdk
+>>>>>>> release/26.03.0
   Compound:
     path: compound-ios
   AnalyticsEvents:
@@ -152,10 +158,13 @@ packages:
     minorVersion: 3.37.1
   Sentry:
     url: https://github.com/getsentry/sentry-cocoa
-    minorVersion: 9.1.0
+    minorVersion: 9.2.0
   SnapshotTesting:
     url: https://github.com/pointfreeco/swift-snapshot-testing
     minorVersion: 1.18.7
+  SwiftFlow:
+    url: https://github.com/tevelee/SwiftUI-Flow.git
+    minorVersion: 3.1.1
   SwiftSoup:
     url: https://github.com/scinfu/SwiftSoup.git
     minorVersion: 2.11.2

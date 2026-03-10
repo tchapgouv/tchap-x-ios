@@ -79,11 +79,10 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
     
     private func toggleUser(_ user: UserProfileProxy) {
         if state.selectedUsers.contains(user) {
-            state.scrollToLastID = nil
             state.selectedUsers.removeAll { $0.userID == user.userID }
         } else {
-            state.scrollToLastID = user.userID
             state.selectedUsers.append(user)
+            withElementAnimation(.easeInOut) { state.bindings.selectedUsersPosition = user.userID }
         }
     }
     
@@ -116,9 +115,9 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
                 return
             }
             
-            userIndicatorController.alertInfo = .init(id: .init(),
-                                                      title: L10n.commonUnableToInviteTitle,
-                                                      message: L10n.commonUnableToInviteMessage)
+            state.bindings.alertInfo = .init(id: .unknown,
+                                             title: L10n.commonUnableToInviteTitle,
+                                             message: L10n.commonUnableToInviteMessage)
         }
     }
     

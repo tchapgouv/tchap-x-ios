@@ -17,7 +17,7 @@ struct CallScreen: View {
     @ObservedObject var context: CallScreenViewModel.Context
     
     var body: some View {
-        NavigationStack {
+        ElementNavigationStack {
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
@@ -123,6 +123,8 @@ private struct CallView: UIViewRepresentable {
             webView.navigationDelegate = self
             webView.isInspectable = true
             
+            webView.customUserAgent = UserAgentBuilder.makeASCIIUserAgent()
+            
             // https://stackoverflow.com/a/77963877/730924
             webView.allowsLinkPreview = true
             
@@ -195,8 +197,8 @@ private struct CallView: UIViewRepresentable {
             }
         }
         
-        // This function is called by the webview output routing button
-        // it allows to open the OS output selector using the hidden button.
+        /// This function is called by the webview output routing button
+        /// it allows to open the OS output selector using the hidden button.
         private func tapRoutePickerView() {
             guard let button = routePickerView.subviews.first(where: { $0 is UIButton }) as? UIButton else {
                 return

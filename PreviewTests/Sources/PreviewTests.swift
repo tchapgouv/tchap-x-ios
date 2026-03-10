@@ -7,14 +7,22 @@
 //
 
 import Combine
+<<<<<<< HEAD
 import SwiftUI
 import XCTest
 
 @testable import SnapshotTesting
 @testable import TchapX_Production // Tchap: adjustement
+=======
+@testable import ElementX
+@testable import SnapshotTesting
+import SwiftUI
+import Testing
+>>>>>>> release/26.03.0
 
+@Suite
 @MainActor
-class PreviewTests: XCTestCase {
+struct PreviewTests {
     private struct SnapshotDevice {
         let name: String
         let device: String
@@ -23,15 +31,13 @@ class PreviewTests: XCTestCase {
     private let deviceConfig: ViewImageConfig = .iPhoneX
     private let simulatorDevice: String? = "iPhone14,6" // iPhone SE 3rd Generation
     private let requiredOSVersion = (major: 26, minor: 1)
-    // The key is the name we will give to the snapshot
-    // The value is the actual device that will be used to render the preview
+    /// The key is the name we will give to the snapshot
+    /// The value is the actual device that will be used to render the preview
     private let snapshotDevices: [SnapshotDevice] = [.init(name: "iPhone", device: "iPhone 17"),
                                                      .init(name: "iPad", device: "iPad")]
     private var recordMode: SnapshotTestingConfiguration.Record = .missing
 
-    override func setUp() {
-        super.setUp()
-        
+    init() {
         if ProcessInfo().environment["RECORD_FAILURES"].map(Bool.init) == true {
             recordMode = .failed
         }
@@ -60,7 +66,10 @@ class PreviewTests: XCTestCase {
     
     // MARK: - Snapshots
 
-    func assertSnapshots(matching preview: _Preview, testName: String = #function, step: Int) async throws {
+    func assertSnapshots(matching preview: _Preview,
+                         step: Int,
+                         testName: String = #function,
+                         sourceLocation: SourceLocation = #_sourceLocation) async throws {
         let preferences = SnapshotPreferences()
         
         let preferenceReadingView = preview.content
@@ -83,7 +92,7 @@ class PreviewTests: XCTestCase {
             break
         }
         
-        var sanitizedSuiteName = String(testName.suffix(testName.count - "test".count).dropLast(2))
+        var sanitizedSuiteName = String(testName.dropLast(2))
         sanitizedSuiteName = sanitizedSuiteName.prefix(1).lowercased() + sanitizedSuiteName.dropFirst()
         
         for snapshotDevice in snapshotDevices {
@@ -113,7 +122,7 @@ class PreviewTests: XCTestCase {
                                              testName: sanitizedSuiteName,
                                              traits: traits,
                                              preferences: preferences) {
-                XCTFail(failure)
+                Issue.record(Comment(rawValue: failure), sourceLocation: sourceLocation)
             }
         }
     }
@@ -142,8 +151,7 @@ class PreviewTests: XCTestCase {
                                  preferences: SnapshotPreferences) -> String? {
         let matchingView = isScreen ? AnyView(view) : AnyView(view
             .frame(width: device.size?.width)
-            .fixedSize(horizontal: false, vertical: true)
-        )
+            .fixedSize(horizontal: false, vertical: true))
         
         return withSnapshotTesting(record: recordMode) {
             verifySnapshot(of: matchingView,
@@ -153,14 +161,6 @@ class PreviewTests: XCTestCase {
                            named: name,
                            testName: testName)
         }
-    }
-    
-    private func wait(for duration: TimeInterval) {
-        let expectation = XCTestExpectation(description: "Wait")
-        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
-            expectation.fulfill()
-        }
-        _ = XCTWaiter.wait(for: [expectation], timeout: duration + 1)
     }
 }
 
@@ -255,5 +255,7 @@ private extension Diffing where Value == UIImage {
 private extension UIEdgeInsets {
     /// A custom inset that prevents the snapshotting library from rendering the
     /// origin at (10000, 10000) which breaks some of our views such as MessageText.
-    static var one: UIEdgeInsets { UIEdgeInsets(top: 1, left: 1, bottom: 1, right: 1) }
+    static var one: UIEdgeInsets {
+        UIEdgeInsets(top: 1, left: 1, bottom: 1, right: 1)
+    }
 }

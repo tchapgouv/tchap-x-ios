@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+<<<<<<< HEAD
 import XCTest
 
 // Tchap: specify target for unit tests
@@ -15,22 +16,19 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+=======
+@testable import ElementX
+import Testing
+>>>>>>> release/26.03.0
 
 @MainActor
-class AnalyticsSettingsScreenViewModelTests: XCTestCase {
+@Suite
+final class AnalyticsSettingsScreenViewModelTests {
     private var appSettings: AppSettings!
     private var viewModel: AnalyticsSettingsScreenViewModelProtocol!
     private var context: AnalyticsSettingsScreenViewModelType.Context!
     
-    override func setUp() {
-        AppSettings.resetAllSettings()
-    }
-    
-    override func tearDown() {
-        AppSettings.resetAllSettings()
-    }
-    
-    @MainActor override func setUpWithError() throws {
+    init() {
         AppSettings.resetAllSettings()
         appSettings = AppSettings()
         let analyticsClient = AnalyticsClientMock()
@@ -42,20 +40,27 @@ class AnalyticsSettingsScreenViewModelTests: XCTestCase {
                                                      analytics: ServiceLocator.shared.analytics)
         context = viewModel.context
     }
-
-    func testInitialState() {
-        XCTAssertFalse(context.enableAnalytics)
+    
+    deinit {
+        AppSettings.resetAllSettings()
     }
 
-    func testOptIn() {
+    @Test
+    func initialState() {
+        #expect(!context.enableAnalytics)
+    }
+
+    @Test
+    func optIn() {
         appSettings.analyticsConsentState = .optedOut
         context.send(viewAction: .toggleAnalytics)
-        XCTAssertTrue(context.enableAnalytics)
+        #expect(context.enableAnalytics)
     }
     
-    func testOptOut() {
+    @Test
+    func optOut() {
         appSettings.analyticsConsentState = .optedIn
         context.send(viewAction: .toggleAnalytics)
-        XCTAssertFalse(context.enableAnalytics)
+        #expect(!context.enableAnalytics)
     }
 }

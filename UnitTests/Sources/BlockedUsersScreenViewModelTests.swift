@@ -7,6 +7,7 @@
 //
 
 import Combine
+<<<<<<< HEAD
 import XCTest
 
 // Tchap: specify target for unit tests
@@ -16,24 +17,32 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+=======
+@testable import ElementX
+import Foundation
+import Testing
+>>>>>>> release/26.03.0
 
 @MainActor
-class BlockedUsersScreenViewModelTests: XCTestCase {
-    func testInitialState() async throws {
+@Suite
+struct BlockedUsersScreenViewModelTests {
+    @Test
+    func initialState() async throws {
         let clientProxy = ClientProxyMock(.init(userID: RoomMemberProxyMock.mockMe.userID))
         
         let viewModel = BlockedUsersScreenViewModel(hideProfiles: true,
                                                     userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                                     userIndicatorController: ServiceLocator.shared.userIndicatorController)
         
-        let deferred = deferFailure(viewModel.context.observe(\.viewState.blockedUsers), timeout: 1) { $0.contains { $0.displayName != nil } }
+        let deferred = deferFailure(viewModel.context.observe(\.viewState.blockedUsers), timeout: .seconds(1)) { $0.contains { $0.displayName != nil } }
         try await deferred.fulfill()
         
-        XCTAssertFalse(viewModel.context.viewState.blockedUsers.isEmpty)
-        XCTAssertFalse(clientProxy.profileForCalled)
+        #expect(!viewModel.context.viewState.blockedUsers.isEmpty)
+        #expect(!clientProxy.profileForCalled)
     }
     
-    func testProfiles() async throws {
+    @Test
+    func profiles() async throws {
         let clientProxy = ClientProxyMock(.init(userID: RoomMemberProxyMock.mockMe.userID))
         
         let viewModel = BlockedUsersScreenViewModel(hideProfiles: false,
@@ -43,7 +52,7 @@ class BlockedUsersScreenViewModelTests: XCTestCase {
         let deferred = deferFulfillment(viewModel.context.observe(\.viewState.blockedUsers)) { $0.contains { $0.displayName != nil } }
         try await deferred.fulfill()
         
-        XCTAssertFalse(viewModel.context.viewState.blockedUsers.isEmpty)
-        XCTAssertTrue(clientProxy.profileForCalled)
+        #expect(!viewModel.context.viewState.blockedUsers.isEmpty)
+        #expect(clientProxy.profileForCalled)
     }
 }

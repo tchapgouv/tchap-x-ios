@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+<<<<<<< HEAD
 import XCTest
 
 // Tchap: specify target for unit tests
@@ -15,17 +16,24 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+=======
+@testable import ElementX
+import Foundation
+import Testing
+>>>>>>> release/26.03.0
 
 @MainActor
-class NavigationRootCoordinatorTests: XCTestCase {
-    private var navigationRootCoordinator: NavigationRootCoordinator!
+@Suite
+struct NavigationRootCoordinatorTests {
+    private var navigationRootCoordinator: NavigationRootCoordinator
     
-    override func setUp() {
+    init() {
         navigationRootCoordinator = NavigationRootCoordinator()
     }
     
-    func testRootChanges() {
-        XCTAssertNil(navigationRootCoordinator.rootCoordinator)
+    @Test
+    func rootChanges() {
+        #expect(navigationRootCoordinator.rootCoordinator == nil)
         
         let firstRootCoordinator = SomeTestCoordinator()
         navigationRootCoordinator.setRootCoordinator(firstRootCoordinator)
@@ -38,7 +46,8 @@ class NavigationRootCoordinatorTests: XCTestCase {
         assertCoordinatorsEqual(secondRootCoordinator, navigationRootCoordinator.rootCoordinator)
     }
     
-    func testOverlay() {
+    @Test
+    func overlay() {
         let rootCoordinator = SomeTestCoordinator()
         navigationRootCoordinator.setRootCoordinator(rootCoordinator)
         
@@ -51,35 +60,37 @@ class NavigationRootCoordinatorTests: XCTestCase {
         navigationRootCoordinator.setOverlayCoordinator(nil)
         
         assertCoordinatorsEqual(rootCoordinator, navigationRootCoordinator.rootCoordinator)
-        XCTAssertNil(navigationRootCoordinator.overlayCoordinator)
+        #expect(navigationRootCoordinator.overlayCoordinator == nil)
     }
     
     // MARK: - Dismissal Callbacks
     
-    func testReplacementDismissalCallbacks() {
-        XCTAssertNil(navigationRootCoordinator.rootCoordinator)
+    @Test
+    func replacementDismissalCallbacks() async {
+        #expect(navigationRootCoordinator.rootCoordinator == nil)
         
         let rootCoordinator = SomeTestCoordinator()
         
-        let expectation = expectation(description: "Wait for callback")
-        navigationRootCoordinator.setRootCoordinator(rootCoordinator) {
-            expectation.fulfill()
+        await confirmation("Wait for callback") { confirm in
+            navigationRootCoordinator.setRootCoordinator(rootCoordinator) {
+                confirm()
+            }
+            
+            navigationRootCoordinator.setRootCoordinator(nil)
         }
-        
-        navigationRootCoordinator.setRootCoordinator(nil)
-        waitForExpectations(timeout: 1.0)
     }
     
-    func testOverlayDismissalCallback() {
+    @Test
+    func overlayDismissalCallback() async {
         let overlayCoordinator = SomeTestCoordinator()
         
-        let expectation = expectation(description: "Wait for callback")
-        navigationRootCoordinator.setOverlayCoordinator(overlayCoordinator) {
-            expectation.fulfill()
+        await confirmation("Wait for callback") { confirm in
+            navigationRootCoordinator.setOverlayCoordinator(overlayCoordinator) {
+                confirm()
+            }
+            
+            navigationRootCoordinator.setOverlayCoordinator(nil)
         }
-        
-        navigationRootCoordinator.setOverlayCoordinator(nil)
-        waitForExpectations(timeout: 1.0)
     }
     
     // MARK: - Private
@@ -87,11 +98,11 @@ class NavigationRootCoordinatorTests: XCTestCase {
     private func assertCoordinatorsEqual(_ lhs: CoordinatorProtocol?, _ rhs: CoordinatorProtocol?) {
         guard let lhs = lhs as? SomeTestCoordinator,
               let rhs = rhs as? SomeTestCoordinator else {
-            XCTFail("Coordinators are not the same")
+            Issue.record("Coordinators are not the same")
             return
         }
         
-        XCTAssertEqual(lhs.id, rhs.id)
+        #expect(lhs.id == rhs.id)
     }
 }
 

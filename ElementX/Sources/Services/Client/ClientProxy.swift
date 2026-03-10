@@ -9,14 +9,15 @@
 @preconcurrency import Combine
 import CryptoKit
 import Foundation
+import MatrixRustSDK
 import OrderedCollections
 
-import MatrixRustSDK
-
+// swiftlint:disable:next type_body_length
 class ClientProxy: ClientProxyProtocol {
     private let client: ClientProtocol
     private let networkMonitor: NetworkMonitorProtocol
     private let appSettings: AppSettings
+    private let analyticsService: AnalyticsService
     
     let mediaLoader: MediaLoaderProtocol
     private let clientQueue: DispatchQueue
@@ -38,7 +39,10 @@ class ClientProxy: ClientProxyProtocol {
     private var verificationStateListenerTaskHandle: TaskHandle?
     
     // periphery:ignore - required for instance retention in the rust codebase
-    private var sendQueueListenerTaskHandle: TaskHandle?
+    private var sendQueueStatusListenerTaskHandle: TaskHandle?
+    
+    // periphery:ignore - required for instance retention in the rust codebase
+    private var sendQueueUpdatesListenerTaskHandle: TaskHandle?
     
     // periphery:ignore - required for instance retention in the rust codebase
     private var mediaPreviewConfigListenerTaskHandle: TaskHandle?
@@ -67,7 +71,7 @@ class ClientProxy: ClientProxyProtocol {
               ban: nil,
               kick: nil,
               redact: nil,
-              invite: nil,
+              invite: Int32(0),
               notifications: nil,
               users: [:],
               events: [
@@ -90,6 +94,32 @@ class ClientProxy: ClientProxyProtocol {
                   "m.call.member": Int32(0),
                   "org.matrix.msc3401.call.member": Int32(0)
               ])
+    }
+    
+    private static var standardSpaceCreationPowerLevelOverrides: PowerLevels {
+        .init(usersDefault: nil,
+              eventsDefault: Int32(100),
+              stateDefault: nil,
+              ban: nil,
+              kick: nil,
+              redact: nil,
+              invite: Int32(50),
+              notifications: nil,
+              users: [:],
+              events: [:])
+    }
+    
+    private static var publicSpaceCreationPowerLevelOverrides: PowerLevels {
+        .init(usersDefault: nil,
+              eventsDefault: Int32(100),
+              stateDefault: nil,
+              ban: nil,
+              kick: nil,
+              redact: nil,
+              invite: Int32(0),
+              notifications: nil,
+              users: [:],
+              events: [:])
     }
 
     private var loadCachedAvatarURLTask: Task<Void, Never>?
@@ -159,10 +189,12 @@ class ClientProxy: ClientProxyProtocol {
     
     init(client: ClientProtocol,
          networkMonitor: NetworkMonitorProtocol,
-         appSettings: AppSettings) async throws {
+         appSettings: AppSettings,
+         analyticsService: AnalyticsService) async throws {
         self.client = client
         self.networkMonitor = networkMonitor
         self.appSettings = appSettings
+        self.analyticsService = analyticsService
         
         clientQueue = .init(label: "ClientProxyQueue", attributes: .concurrent)
         
@@ -192,6 +224,19 @@ class ClientProxy: ClientProxyProtocol {
         delegateHandle = try client.setDelegate(delegate: ClientDelegateWrapper { [weak self] isSoftLogout in
             self?.hasEncounteredAuthError = true
             self?.actionsSubject.send(.receivedAuthError(isSoftLogout: isSoftLogout))
+        } backgroundTaskErrorCallback: { error in
+            switch error {
+            case .panic(let message, let backtrace):
+                MXLog.error("Received background task panic: \(message ?? "Missing message")\nBacktrace:\n\(backtrace ?? "Missing backtrace")")
+                
+                if AppSettings.appBuildType == .debug || AppSettings.appBuildType == .nightly {
+                    fatalError(message ?? "")
+                }
+            case .error(let error):
+                MXLog.error("Received background task error: \(error)")
+            case .earlyTermination:
+                MXLog.error("Received background task early termination")
+            }
         })
         
         try await client.setUtdDelegate(utdDelegate: ClientDecryptionErrorDelegate(actionsSubject: actionsSubject))
@@ -218,9 +263,20 @@ class ClientProxy: ClientProxyProtocol {
             Task { await self?.updateVerificationState(verificationState) }
         })
         
-        sendQueueListenerTaskHandle = client.subscribeToSendQueueStatus(listener: SDKListener { [weak self] roomID, error in
+        sendQueueStatusListenerTaskHandle = client.subscribeToSendQueueStatus(listener: SDKListener { [weak self] roomID, error in
             MXLog.error("Send queue failed in room: \(roomID) with error: \(error)")
             self?.sendQueueStatusSubject.send(false)
+        })
+        
+        sendQueueUpdatesListenerTaskHandle = try? await client.subscribeToSendQueueUpdates(listener: SDKListener { _, update in
+            switch update {
+            case .newLocalEvent(let transactionID):
+                analyticsService.signpost.startTransaction(.sendMessage(uuid: transactionID))
+            case .sentEvent(let transactionID, _):
+                analyticsService.signpost.finishTransaction(.sendMessage(uuid: transactionID))
+            default:
+                break
+            }
         })
         
         sendQueueStatusSubject
@@ -461,11 +517,18 @@ class ClientProxy: ClientProxyProtocol {
                                                   preset: .trustedPrivateChat,
                                                   invite: [userID],
                                                   avatar: nil,
+<<<<<<< HEAD
                                                   powerLevelContentOverride: Self.roomCreationPowerLevelOverrides)
             // Tchap: change `createRoom` call with `isFederatd` parameter becasue of BWI-specific Rust side.
 //            let roomID = try await client.createRoom(request: parameters)
             let roomID = try await client.createRoom(request: parameters, isFederated: true)
 
+=======
+                                                  powerLevelContentOverride: Self.roomCreationPowerLevelOverrides,
+                                                  historyVisibilityOverride: .invited)
+            let roomID = try await client.createRoom(request: parameters)
+            
+>>>>>>> release/26.03.0
             await waitForRoomToSync(roomID: roomID)
             
             return .success(roomID)
@@ -483,6 +546,20 @@ class ClientProxy: ClientProxyProtocol {
                     avatarURL: URL?,
                     aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
         do {
+            let powerLevelContentOverride = if isSpace {
+                if accessType == .public {
+                    Self.publicSpaceCreationPowerLevelOverrides
+                } else {
+                    Self.standardSpaceCreationPowerLevelOverrides
+                }
+            } else {
+                if accessType.isAskToJoin {
+                    Self.knockingRoomCreationPowerLevelOverrides
+                } else {
+                    Self.roomCreationPowerLevelOverrides
+                }
+            }
+            
             let parameters = CreateRoomParameters(name: name,
                                                   topic: topic,
                                                   isEncrypted: accessType.isEncrypted,
@@ -491,8 +568,8 @@ class ClientProxy: ClientProxyProtocol {
                                                   preset: accessType.preset,
                                                   invite: userIDs,
                                                   avatar: avatarURL?.absoluteString,
-                                                  powerLevelContentOverride: accessType == .askToJoin ? Self.knockingRoomCreationPowerLevelOverrides : Self.roomCreationPowerLevelOverrides,
-                                                  joinRuleOverride: accessType.joinRuleOverride,
+                                                  powerLevelContentOverride: powerLevelContentOverride,
+                                                  joinRuleOverride: accessType.joinRuleOverride?.rustValue,
                                                   historyVisibilityOverride: accessType.historyVisibilityOverride,
                                                   // This is an FFI naming mistake, what is required is the `aliasLocalPart` not the whole alias
                                                   canonicalAlias: aliasLocalPart,
@@ -875,20 +952,35 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
     
-    func recentlyVisitedRooms() async -> Result<[String], ClientProxyError> {
-        do {
-            let result = try await client.getRecentlyVisitedRooms()
-            return .success(result)
-        } catch {
-            MXLog.error("Failed retrieving recently visited rooms with error: \(error)")
-            return .failure(.sdkError(error))
+    func recentlyVisitedRooms(filter: (JoinedRoomProxyProtocol) -> Bool) async -> [JoinedRoomProxyProtocol] {
+        let maxResultsToReturn = 5
+        
+        guard case let .success(roomIdentifiers) = await recentlyVisitedRoomIDs() else {
+            return []
         }
+        
+        var rooms: [JoinedRoomProxyProtocol] = []
+        
+        for roomID in roomIdentifiers {
+            guard case let .joined(roomProxy) = await roomForIdentifier(roomID),
+                  filter(roomProxy) else {
+                continue
+            }
+            
+            rooms.append(roomProxy)
+            
+            if rooms.count >= maxResultsToReturn {
+                return rooms
+            }
+        }
+        
+        return rooms
     }
     
     func recentConversationCounterparts() async -> [UserProfileProxy] {
         let maxResultsToReturn = 5
         
-        guard case let .success(roomIdentifiers) = await recentlyVisitedRooms() else {
+        guard case let .success(roomIdentifiers) = await recentlyVisitedRoomIDs() else {
             return []
         }
         
@@ -912,6 +1004,16 @@ class ClientProxy: ClientProxyProtocol {
         }
         
         return users.elements
+    }
+    
+    private func recentlyVisitedRoomIDs() async -> Result<[String], ClientProxyError> {
+        do {
+            let result = try await client.getRecentlyVisitedRooms()
+            return .success(result)
+        } catch {
+            MXLog.error("Failed retrieving recently visited rooms with error: \(error)")
+            return .failure(.sdkError(error))
+        }
     }
     
     // MARK: Moderation & Safety
@@ -1077,7 +1179,8 @@ class ClientProxy: ClientProxyProtocol {
             case .joined:
                 let roomProxy = try await JoinedRoomProxy(roomListService: roomListService,
                                                           room: room,
-                                                          appSettings: appSettings)
+                                                          appSettings: appSettings,
+                                                          analyticsService: analyticsService)
                 
                 return .joined(roomProxy)
             case .left:
@@ -1184,9 +1287,12 @@ class ClientProxy: ClientProxyProtocol {
 
 private final class ClientDelegateWrapper: ClientDelegate {
     private let authErrorCallback: @Sendable (Bool) -> Void
+    private let backgroundTaskErrorCallback: @Sendable (MatrixRustSDK.BackgroundTaskFailureReason) -> Void
     
-    init(authErrorCallback: @escaping @Sendable (Bool) -> Void) {
+    init(authErrorCallback: @escaping @Sendable (Bool) -> Void,
+         backgroundTaskErrorCallback: @escaping @Sendable (MatrixRustSDK.BackgroundTaskFailureReason) -> Void) {
         self.authErrorCallback = authErrorCallback
+        self.backgroundTaskErrorCallback = backgroundTaskErrorCallback
     }
     
     // MARK: - ClientDelegate
@@ -1198,6 +1304,10 @@ private final class ClientDelegateWrapper: ClientDelegate {
     
     func didRefreshTokens() {
         MXLog.info("Delegating session updates to the ClientSessionDelegate.")
+    }
+    
+    func onBackgroundTaskErrorReport(taskName: String, error: MatrixRustSDK.BackgroundTaskFailureReason) {
+        backgroundTaskErrorCallback(error)
     }
 }
 
@@ -1226,7 +1336,6 @@ private struct ClientProxyServices {
          appSettings: AppSettings) async throws {
         let syncService = try await client
             .syncService()
-            .withCrossProcessLock()
             .withOfflineMode()
             .withSharePos(enable: true)
             .finish()
@@ -1312,7 +1421,7 @@ private extension CreateRoomAccessType {
         switch self {
         case .public:
             false
-        case .askToJoin, .private:
+        default:
             true
         // Tchap: handle private unencrypted room type
         case .privateUnencrypted:
@@ -1321,21 +1430,25 @@ private extension CreateRoomAccessType {
     }
     
     var visibility: RoomVisibility {
-        isPrivate ? .private : .public
+        isVisibilityPrivate ? .private : .public
     }
     
     var preset: RoomPreset {
-        isPrivate ? .privateChat : .publicChat
+        isVisibilityPrivate ? .privateChat : .publicChat
     }
     
     var historyVisibilityOverride: RoomHistoryVisibility? {
-        isPrivate ? .invited : nil
+        isVisibilityPrivate ? .invited : nil
     }
     
     var joinRuleOverride: JoinRule? {
         switch self {
         case .askToJoin:
             .knock
+        case .spaceMembers(let spaceID):
+            .restricted(rules: [.roomMembership(roomID: spaceID)])
+        case .askToJoinWithSpaceMembers(let spaceID):
+            .knockRestricted(rules: [.roomMembership(roomID: spaceID)])
         case .private, .public:
             nil
         // Tchap: handle private unencrypted room type
@@ -1351,6 +1464,15 @@ private extension CreateRoomAccessType {
             true
         case .public(let federated):
             federated
+        }
+    }
+    
+    var isAskToJoin: Bool {
+        switch self {
+        case .askToJoin, .askToJoinWithSpaceMembers:
+            true
+        default:
+            false
         }
     }
 }

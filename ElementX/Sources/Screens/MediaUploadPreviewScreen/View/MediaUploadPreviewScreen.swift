@@ -21,8 +21,13 @@ struct MediaUploadPreviewScreen: View {
     @State private var currentIndex = 0
     @FocusState private var isComposerFocussed
     
-    private var title: String { ProcessInfo.processInfo.isiOSAppOnMac ? context.viewState.title ?? "" : "" }
-    private var colorSchemeOverride: ColorScheme { ProcessInfo.processInfo.isiOSAppOnMac ? colorScheme : .dark }
+    private var title: String {
+        ProcessInfo.processInfo.isiOSAppOnMac ? context.viewState.title ?? "" : ""
+    }
+
+    private var colorSchemeOverride: ColorScheme {
+        ProcessInfo.processInfo.isiOSAppOnMac ? colorScheme : .dark
+    }
     
     var body: some View {
         mainContent
@@ -275,7 +280,7 @@ struct MediaUploadPreviewScreen_Previews: PreviewProvider, TestablePreview {
                                                              clientProxy: ClientProxyMock(.init()),
                                                              userIndicatorController: UserIndicatorControllerMock.default)
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             MediaUploadPreviewScreen(context: viewModel.context)
         }
         

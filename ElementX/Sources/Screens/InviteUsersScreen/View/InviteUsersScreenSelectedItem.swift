@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import SwiftUI
 
 struct InviteUsersScreenSelectedItem: View {
@@ -14,10 +15,11 @@ struct InviteUsersScreenSelectedItem: View {
     let dismissAction: () -> Void
     
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 10) {
             avatar
                 .accessibilityHidden(true)
             
+<<<<<<< HEAD
             // Tchap: calculate displayname from userId if necessary and displays it in badge if user is external..
             //            Text(user.displayName ?? user.userID)
             if MatrixIdFromString(user.userID).isExternalTchapUser {
@@ -30,6 +32,12 @@ struct InviteUsersScreenSelectedItem: View {
                     .foregroundColor(.compound.textPrimary)
                     .lineLimit(1)
             }
+=======
+            Text(user.displayName ?? user.userID)
+                .font(.compound.bodySM)
+                .foregroundColor(.compound.textSecondary)
+                .lineLimit(1)
+>>>>>>> release/26.03.0
         }
         .frame(maxWidth: 100.0)
         .accessibilityElement(children: .combine)
@@ -44,15 +52,14 @@ struct InviteUsersScreenSelectedItem: View {
                             contentID: user.userID,
                             avatarSize: .user(on: .inviteUsers),
                             mediaProvider: mediaProvider)
-            .overlay(alignment: .topTrailing) {
-                Button(action: dismissAction) {
-                    Image(systemName: "xmark.circle.fill")
-                        .resizable()
-                        .scaledFrame(size: 20)
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(Color.compound.iconOnSolidPrimary, Color.compound.iconPrimary)
-                }
-            }
+            .overlayRemoveItemButton(action: dismissAction)
+    }
+    
+    var closeButtonLabel: some View {
+        CompoundIcon(\.close, size: .custom(12), relativeTo: .compound.bodySM)
+            .foregroundStyle(.compound.iconOnSolidPrimary)
+            .padding(2)
+            .background(.compound.iconPrimary, in: Circle())
     }
 }
 
@@ -61,10 +68,10 @@ struct InviteUsersScreenSelectedItem_Previews: PreviewProvider, TestablePreview 
     
     static var previews: some View {
         ScrollView(.horizontal) {
-            HStack(spacing: 28) {
+            HStack(spacing: 8) {
                 ForEach(people, id: \.userID) { user in
                     InviteUsersScreenSelectedItem(user: user, mediaProvider: MediaProviderMock(configuration: .init())) { }
-                        .frame(width: 72)
+                        .frame(width: 80)
                 }
             }
         }

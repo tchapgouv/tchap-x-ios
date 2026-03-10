@@ -57,21 +57,16 @@ struct FormattedBodyText: View {
                   boostFontSize: boostFontSize)
     }
     
-    // These is needed to create the slightly off inlined timestamp effect
+    /// These is needed to create the slightly off inlined timestamp effect
     private var additionalWhitespacesSuffix: String {
         .generateBreakableWhitespaceEnd(whitespaceCount: additionalWhitespacesCount, layoutDirection: layoutDirection)
     }
     
     var body: some View {
-        mainContent
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text(attributedString))
-    }
-    
-    @ViewBuilder
-    var mainContent: some View {
         layout
             .tint(.compound.textLinkExternal)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(attributedString))
     }
     
     /// The attributed components laid out for the bubbles timeline style.
@@ -81,99 +76,185 @@ struct FormattedBodyText: View {
                 // Ignore if the string contains only the layout correction
                 if String(component.attributedString.characters) == layoutDirection.isolateLayoutUnicodeString {
                     EmptyView()
-                } else if component.isBlockquote {
-                    // The rendered blockquote with a greedy width. The custom layout prevents the
-                    // infinite width from increasing the overall width of the view.
-                    MessageText(attributedString: component.attributedString.mergingAttributes(blockquoteAttributes))
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 12.0)
-                        .overlay(alignment: .leading) {
-                            // User an overlay here so that the rectangle's infinite height doesn't take priority
-                            Capsule()
-                                .frame(width: 2.0)
-                                .padding(.leading, 5.0)
-                                .foregroundColor(.compound.textSecondary)
-                                .padding(.vertical, 2)
-                        }
-                        .layoutPriority(TimelineBubbleLayout.Priority.visibleQuote)
                 } else {
-                    MessageText(attributedString: component.attributedString)
-                        .padding(.horizontal, 4)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .layoutPriority(TimelineBubbleLayout.Priority.regularText)
+                    switch component.type {
+                    case .blockquote:
+                        BlockquoteView(attributedString: component.attributedString, mode: .rendering)
+                            .timelineBubbleLayoutSize(.bubbleWidth(mode: .rendering))
+                    case .codeBlock:
+                        CodeBlockView(attributedString: component.attributedString, mode: .rendering)
+                            .timelineBubbleLayoutSize(.bubbleWidth(mode: .rendering))
+                            .contextMenu {
+                                Button(L10n.actionCopy) {
+                                    UIPasteboard.general.string = component.attributedString.string
+                                }
+                            }
+                    case .plainText:
+                        MessageText(attributedString: component.attributedString)
+                            .padding(.horizontal, 4)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .timelineBubbleLayoutSize(.natural)
+                    }
                 }
             }
             
-            // Make a second iteration through the components adding fixed width blockquotes
-            // which are used for layout calculations but won't be rendered.
+            // Make a second iteration through the components adding naturally sized versions of the
+            // block quotes and code blocks which are used for layout calculations but won't be rendered.
             ForEach(attributedComponents) { component in
-                if component.isBlockquote {
-                    MessageText(attributedString: component.attributedString.mergingAttributes(blockquoteAttributes))
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.leading, 12.0)
-                        .layoutPriority(TimelineBubbleLayout.Priority.hiddenQuote)
+                switch component.type {
+                case .blockquote:
+                    BlockquoteView(attributedString: component.attributedString, mode: .layout)
+                        .timelineBubbleLayoutSize(.bubbleWidth(mode: .layout))
                         .hidden()
+                case .codeBlock:
+                    CodeBlockView(attributedString: component.attributedString, mode: .layout)
+                        .timelineBubbleLayoutSize(.bubbleWidth(mode: .layout))
+                        .hidden()
+                case .plainText:
+                    EmptyView()
                 }
             }
         }
     }
     
-    private var blockquoteAttributes: AttributeContainer {
-        // The paragraph style removes the block style paragraph that the parser adds by default
-        // Set directly in the constructor to avoid `Conformance to 'Sendable'` warnings
-        var container = AttributeContainer([.paragraphStyle: NSParagraphStyle.default])
-        // Sadly setting SwiftUI fonts do not work so we would need UIFont equivalents for compound, this one is bodyMD
-        container.font = UIFont.preferredFont(forTextStyle: .subheadline)
-        container.foregroundColor = UIColor.compound.textSecondary
+    // MARK: - Component Views
+    
+    /// The view used to render a blockquote component. It can be configured in one of 2 modes:
+    /// - `.layout`: The view is given it's natural size to be used for layout calculations.
+    /// - `.rendering`: The view has a greedy width that, in combination with the custom layout,
+    /// will fill any available space, whilst remaining constrained by the bubble's calculated width.
+    struct BlockquoteView: View {
+        let attributedString: AttributedString
+        let mode: TimelineBubbleLayout.Size.BubbleWidthMode
         
-        return container
+        var body: some View {
+            MessageText(attributedString: attributedString.mergingAttributes(blockquoteAttributes))
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: mode == .rendering ? .infinity : nil, alignment: .leading)
+                .padding(.leading, 12.0)
+                .overlay(alignment: .leading) {
+                    // Use an overlay here so that the rectangle's infinite height doesn't take priority
+                    if mode == .rendering {
+                        Capsule()
+                            .frame(width: 2.0)
+                            .padding(.leading, 5.0)
+                            .foregroundColor(.compound.textSecondary)
+                            .padding(.vertical, 2)
+                    }
+                }
+        }
+        
+        private var blockquoteAttributes: AttributeContainer {
+            // The paragraph style removes the block style paragraph that the parser adds by default
+            // Set directly in the constructor to avoid `Conformance to 'Sendable'` warnings
+            var container = AttributeContainer([.paragraphStyle: NSParagraphStyle.default])
+            // Sadly setting SwiftUI fonts do not work so we would need UIFont equivalents for compound, this one is bodyMD
+            container.font = UIFont.preferredFont(forTextStyle: .subheadline)
+            container.foregroundColor = UIColor.compound.textSecondary
+            
+            return container
+        }
+    }
+    
+    /// The view used to render a code block component. It can be configured in one of 2 modes:
+    /// - `.layout`: The view is given it's natural size to be used for layout calculations.
+    /// - `.rendering`: The view has a greedy width that, in combination with the custom layout,
+    /// will fill any available space, whilst remaining constrained by the bubble's calculated width.
+    private struct CodeBlockView: View {
+        let attributedString: AttributedString
+        let mode: TimelineBubbleLayout.Size.BubbleWidthMode
+        
+        @State private var maxWidth: CGFloat = .zero
+        
+        var body: some View {
+            ScrollView(.horizontal) {
+                MessageText(attributedString: attributedString)
+                    .padding([.horizontal, .top], 4)
+                    .padding(.bottom, 8)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { maxWidth = $0 }
+            }
+            .frame(maxWidth: mode == .layout ? maxWidth : nil)
+            .background(.compound._bgCodeBlock)
+            .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+            .scrollIndicatorsFlash(onAppear: true)
+            .padding(.horizontal, 4)
+        }
     }
 }
 
 // MARK: - Previews
 
 struct FormattedBodyText_Previews: PreviewProvider, TestablePreview {
+    static let attributedStringBuilder = AttributedStringBuilder(cacheKey: "FormattedBodyText", mentionBuilder: MentionBuilder())
     static var previews: some View {
-        body(AttributedStringBuilder(cacheKey: "FormattedBodyText", mentionBuilder: MentionBuilder()))
+        htmlFixtures
+        
+        basicText
             .previewLayout(.sizeThatFits)
+            .previewDisplayName("basicText")
+        
+        singleColumnComponents
+            .previewLayout(.sizeThatFits)
+            .previewDisplayName("singleColumnComponents")
+    }
+    
+    static var basicText: some View {
+        VStack(alignment: .leading, spacing: 4.0) {
+            FormattedBodyText(attributedString: AttributedString("Some plain text wrapped in an AttributedString."))
+                .bubbleBackground()
+            
+            FormattedBodyText(text: "Some plain text that's not an attributed component.")
+                .bubbleBackground()
+            
+            FormattedBodyText(text: "❤️", boostFontSize: true)
+                .bubbleBackground()
+        }
+        .padding()
+    }
+    
+    /// A preview to help ensure that none of the component types we support result
+    /// in a bubble's width becoming wider than the natural width of its contents.
+    @ViewBuilder
+    static var singleColumnComponents: some View {
+        let html = """
+        <blockquote>A</blockquote>
+        <pre><code>B</code></pre>
+        <p>C</p>
+        """
+        
+        if let attributedString = attributedStringBuilder.fromHTML(html) {
+            FormattedBodyText(attributedString: attributedString)
+                .bubbleBackground()
+                .padding(4.0)
+        }
     }
     
     @ViewBuilder
-    static func body(_ attributedStringBuilder: AttributedStringBuilderProtocol) -> some View {
-        let htmlStrings = HTMLFixtures.allCases.map(\.rawValue)
+    static var htmlFixtures: some View {
+        let htmlFixtures = HTMLFixtures.allCases
         
-        ScrollView {
-            VStack(alignment: .leading, spacing: 4.0) {
-                ForEach(htmlStrings, id: \.self) { htmlString in
-                    HStack(alignment: .top, spacing: 0) {
-                        Text(htmlString)
-                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                            .padding(4.0)
-                        
-                        Divider()
-                            .background(.black)
-                        
-                        if let attributedString = attributedStringBuilder.fromHTML(htmlString) {
-                            FormattedBodyText(attributedString: attributedString)
-                                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                                .bubbleBackground()
-                                .padding(4.0)
-                        }
-                    }
-                    .border(.black)
+        ForEach(htmlFixtures, id: \.rawValue) { htmlFixture in
+            HStack(alignment: .top, spacing: 0) {
+                let htmlString = htmlFixture.rawValue
+                Text(htmlString)
+                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                    .padding(4.0)
+                
+                Divider()
+                    .background(.black)
+                
+                if let attributedString = attributedStringBuilder.fromHTML(htmlString) {
+                    FormattedBodyText(attributedString: attributedString)
+                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                        .bubbleBackground()
+                        .padding(4.0)
                 }
-                
-                FormattedBodyText(attributedString: AttributedString("Some plain text wrapped in an AttributedString."))
-                    .bubbleBackground()
-                
-                FormattedBodyText(text: "Some plain text that's not an attributed component.")
-                    .bubbleBackground()
-                
-                FormattedBodyText(text: "❤️", boostFontSize: true)
-                    .bubbleBackground()
             }
+            .fixedSize(horizontal: false, vertical: true)
+            .border(.black)
             .padding()
+            .previewLayout(.sizeThatFits)
+            .previewDisplayName("\(htmlFixture)")
         }
     }
 }

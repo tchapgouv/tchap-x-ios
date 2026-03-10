@@ -42,6 +42,7 @@ enum TimelineViewPollAction {
 enum TimelineAudioPlayerAction {
     case playPause(itemID: TimelineItemIdentifier)
     case seek(itemID: TimelineItemIdentifier, progress: Double)
+    case changePlaybackSpeed(itemID: TimelineItemIdentifier)
 }
 
 enum TimelineViewAction {
@@ -117,8 +118,8 @@ struct TimelineViewState: BindableState {
     
     let hasPredecessor: Bool
         
-    // The `pinnedEventIDs` are used only to determine if an item is already pinned or not.
-    // It's updated from the room info, so it's faster than using the timeline
+    /// The `pinnedEventIDs` are used only to determine if an item is already pinned or not.
+    /// It's updated from the room info, so it's faster than using the timeline
     var pinnedEventIDs: Set<String> = []
     
     /// A closure providing the associated audio player state for an item in the timeline.
@@ -138,6 +139,8 @@ struct TimelineViewState: BindableState {
     var linkMetadataProvider: LinkMetadataProviderProtocol?
     
     var mapTilerConfiguration: MapTilerConfiguration
+
+    var enableKeyShareOnInvite: Bool
     
     var bindings: TimelineViewStateBindings
 }
@@ -196,6 +199,10 @@ enum TimelineAlertInfoType: Hashable {
     case pollEndConfirmation(String)
     case sendingFailed
     case encryptionAuthenticity(String)
+    case encryptionForwarder(String)
+    case inviteAgain
+    case unableToInvite
+    case unknown
 }
 
 struct RoomMemberState {
@@ -207,7 +214,7 @@ struct RoomMemberState {
 /// Is also nice to have this as a wrapper for any state that is directly connected to the timeline.
 struct TimelineState {
     var isLive = true
-    var paginationState = PaginationState.initial
+    var paginationState = TimelinePaginationState.initial
     
     /// The room is in the process of loading items from a new timeline (switching to/from a detached timeline).
     var isSwitchingTimelines = false
@@ -231,7 +238,7 @@ struct TimelineState {
     /// A focussed event that was navigated to via a permalink.
     var focussedEvent: FocussedEvent?
     
-    // These can be removed when we have full swiftUI and moved as @State values in the view
+    /// These can be removed when we have full swiftUI and moved as @State values in the view
     var scrollToBottomPublisher = PassthroughSubject<Void, Never>()
     
     var itemsDictionary = OrderedDictionary<TimelineItemIdentifier.UniqueID, RoomTimelineItemViewState>()

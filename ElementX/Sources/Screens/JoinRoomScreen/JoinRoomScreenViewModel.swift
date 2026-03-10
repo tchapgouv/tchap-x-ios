@@ -200,7 +200,7 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
                                                       spaceVisibility: nil)
     }
     
-    private func updateSpaceRoomDetails(spaceServiceRoom: SpaceServiceRoomProtocol, inviter: RoomInviterDetails?) async {
+    private func updateSpaceRoomDetails(spaceServiceRoom: SpaceServiceRoom, inviter: RoomInviterDetails?) async {
         state.roomDetails = JoinRoomScreenRoomDetails(name: spaceServiceRoom.name,
                                                       topic: spaceServiceRoom.topic,
                                                       canonicalAlias: spaceServiceRoom.canonicalAlias,
@@ -235,7 +235,7 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
                 state.mode = .banned(sender: nil, reason: nil)
             default:
                 switch spaceServiceRoom.joinRule {
-                case .private, .invite:
+                case .invite:
                     state.mode = .inviteRequired
                 case .knock, .knockRestricted:
                     state.mode = appSettings.knockingEnabled ? .knockable : .joinable
@@ -258,7 +258,7 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
                                      reason: membershipDetails?.ownRoomMember.membershipChangeReason)
             default:
                 switch roomPreview.info.joinRule {
-                case .private, .invite:
+                case .invite:
                     state.mode = .inviteRequired
                 case .knock, .knockRestricted:
                     state.mode = appSettings.knockingEnabled ? .knockable : .joinable

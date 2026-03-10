@@ -70,7 +70,9 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
     private let navigationStackCoordinator: NavigationStackCoordinator
     private let flowParameters: CommonFlowParameters
     
-    private var userSession: UserSessionProtocol { flowParameters.userSession }
+    private var userSession: UserSessionProtocol {
+        flowParameters.userSession
+    }
     
     private var roomProxy: JoinedRoomProxyProtocol!
     
@@ -112,8 +114,6 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         self.flowParameters = flowParameters
         
         setupStateMachine()
-        
-        flowParameters.analytics.signpost.beginRoomFlow(roomID)
     }
         
     // MARK: - FlowCoordinatorProtocol
@@ -130,6 +130,7 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         
         switch appRoute {
         case .room(let roomID, let via):
+            flowParameters.analytics.signpost.startTransaction(.openRoom)
             Task {
                 await handleRoomRoute(roomID: roomID, via: via, animated: animated)
             }
@@ -215,7 +216,7 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
                     await storeAndSubscribeToRoomProxy(roomProxy)
                 }
                 
-                presentTransferOwnershipScreen()
+                stateMachine.tryEvent(.presentTransferOwnershipScreen)
             }
         }
     }
@@ -275,7 +276,9 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         .store(in: &cancellables)
         
         stackCoordinator.setRootCoordinator(coordinator)
-        navigationStackCoordinator.setSheetCoordinator(stackCoordinator, animated: true)
+        navigationStackCoordinator.setSheetCoordinator(stackCoordinator) { [weak self] in
+            self?.stateMachine.tryEvent(.dismissedTransferOwnershipScreen)
+        }
     }
     
     private func handleRoomRoute(roomID: String, via: [String], presentationAction: PresentationAction? = nil, animated: Bool) async {
@@ -536,6 +539,9 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
                 
             case (_, .presentInviteUsersScreen, .inviteUsersScreen):
                 presentInviteUsersScreen()
+                
+            case (_, .presentTransferOwnershipScreen, .transferOwnershipScreen):
+                presentTransferOwnershipScreen()
                     
             default:
                 break
@@ -897,7 +903,6 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         } else {
             actionsSubject.send(.finished)
         }
-        flowParameters.analytics.signpost.endRoomFlow()
     }
     
     private func presentRoomDetails(isRoot: Bool, animated: Bool) async {
@@ -942,7 +947,7 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
             case .presentReportRoomScreen:
                 stateMachine.tryEvent(.presentReportRoomScreen)
             case .transferOwnership:
-                presentTransferOwnershipScreen()
+                stateMachine.tryEvent(.presentTransferOwnershipScreen)
             }
         }
         .store(in: &cancellables)

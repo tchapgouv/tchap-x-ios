@@ -16,26 +16,26 @@ class BugReportService: NSObject, BugReportServiceProtocol {
     private var rageshakeURL: RageshakeConfiguration
     private let applicationID: String
     private let sdkGitSHA: String
-    private let maxUploadSize: Int
     private let session: URLSession
     private let appHooks: AppHooks
     
     private let progressSubject = PassthroughSubject<Double, Never>()
     private var cancellables = Set<AnyCancellable>()
     
-    var isEnabled: Bool { rageshakeURL != .disabled }
+    var isEnabled: Bool {
+        rageshakeURL != .disabled
+    }
+
     var lastCrashEventID: String?
     
     init(rageshakeURLPublisher: CurrentValuePublisher<RageshakeConfiguration, Never>,
          applicationID: String,
          sdkGitSHA: String,
-         maxUploadSize: Int,
          session: URLSession = .shared,
          appHooks: AppHooks) {
         rageshakeURL = rageshakeURLPublisher.value
         self.applicationID = applicationID
         self.sdkGitSHA = sdkGitSHA
-        self.maxUploadSize = maxUploadSize
         self.session = session
         self.appHooks = appHooks
         
@@ -207,7 +207,7 @@ class BugReportService: NSObject, BugReportServiceProtocol {
     private func zipFiles(_ logFiles: [URL]) async -> Logs {
         MXLog.info("zipFiles")
         
-        var compressedLogs = Logs(maxFileSize: maxUploadSize)
+        var compressedLogs = Logs()
         
         for url in logFiles {
             do {
@@ -242,9 +242,6 @@ class BugReportService: NSObject, BugReportServiceProtocol {
     
     /// A collection of logs to be uploaded to the bug report service.
     struct Logs {
-        /// The maximum total size of all the files.
-        let maxFileSize: Int
-        
         /// The files included.
         private(set) var files: [URL] = []
         /// The total size of the files after compression.
@@ -253,10 +250,6 @@ class BugReportService: NSObject, BugReportServiceProtocol {
         private(set) var originalSize = 0
         
         mutating func appendFile(at url: URL, zippedSize: Int, originalSize: Int) {
-            guard self.zippedSize + zippedSize < maxFileSize else {
-                MXLog.error("Logs too large, skipping attachment: \(url.lastPathComponent)")
-                return
-            }
             files.append(url)
             self.originalSize += originalSize
             self.zippedSize += zippedSize

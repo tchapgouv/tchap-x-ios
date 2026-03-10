@@ -6,10 +6,11 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-import Foundation
+import SwiftUI
 
 enum CreateRoomScreenErrorType: Error {
     case failedCreatingRoom
+    case failedProcessingMedia
     case failedUploadingMedia
     case fileTooLarge
     case mediaFileError
@@ -17,19 +18,35 @@ enum CreateRoomScreenErrorType: Error {
 }
 
 enum CreateRoomScreenViewModelAction {
-    case createdRoom(JoinedRoomProxyProtocol)
+    case createdRoom(JoinedRoomProxyProtocol, SpaceRoomListProxyProtocol?)
     case displayMediaPicker
     case displayCameraPicker
+    case dismiss
 }
 
 struct CreateRoomScreenViewState: BindableState {
     let isSpace: Bool
+    let shouldShowCancelButton: Bool
     var roomName: String
     let serverName: String
     let isKnockingFeatureEnabled: Bool
+    let canSelectSpace: Bool
     var aliasLocalPart: String
+    var editableSpaces: [SpaceServiceRoom] = []
     var bindings: CreateRoomScreenViewStateBindings
-    var avatarMediaInfo: MediaInfo?
+    var avatarMediaInfo: MediaInfo? {
+        didSet {
+            switch avatarMediaInfo {
+            case .image(_, let thumbnailURL, _):
+                avatarImage = UIImage(contentsOfFile: thumbnailURL.path(percentEncoded: false))
+            default:
+                avatarImage = nil
+            }
+        }
+    }
+    
+    var avatarImage: UIImage?
+    
     var canCreateRoom: Bool {
         !roomName.isEmpty && aliasErrors.isEmpty
     }
@@ -44,18 +61,45 @@ struct CreateRoomScreenViewState: BindableState {
             nil
         }
     }
-    
-    var availableAccessTypes: [CreateRoomAccessType] {
-        var availableTypes = CreateRoomAccessType.allCases
-        if !isKnockingFeatureEnabled {
-            availableTypes.removeAll { $0 == .askToJoin }
+        
+    var availableAccessTypes: [CreateRoomScreenAccessType] {
+        var availableAccessTypes: [CreateRoomScreenAccessType] = []
+        if isSpace {
+            availableAccessTypes = [.public]
+        } else if let selectedSpace = bindings.selectedSpace, selectedSpace.joinRule != .public {
+            availableAccessTypes = [.spaceMembers]
+            if isKnockingFeatureEnabled {
+                availableAccessTypes.append(.askToJoinWithSpaceMembers)
+            }
+        } else {
+            availableAccessTypes = [.public]
+            if isKnockingFeatureEnabled {
+                availableAccessTypes.append(.askToJoin)
+            }
         }
-        return availableTypes
+        availableAccessTypes.append(.private)
+        return availableAccessTypes
+    }
+    
+    var roomAccessType: CreateRoomAccessType {
+        switch bindings.selectedAccessType {
+        case .public:
+            return .public
+        case .spaceMembers:
+            return .spaceMembers(spaceID: bindings.selectedSpace?.id ?? "")
+        case .askToJoinWithSpaceMembers:
+            return .askToJoinWithSpaceMembers(spaceID: bindings.selectedSpace?.id ?? "")
+        case .askToJoin:
+            return .askToJoin
+        case .private:
+            return .private
+        }
     }
 }
 
 struct CreateRoomScreenViewStateBindings {
     var roomTopic: String
+<<<<<<< HEAD
     var selectedAccessType: CreateRoomAccessType
     // Tchap: add possibility to not federate public room. True for private room.
     // This computed property is only used to set the correct `selectedAccessType` when .public is selected.
@@ -79,14 +123,20 @@ struct CreateRoomScreenViewStateBindings {
             }
         }
     }
+=======
+    var selectedAccessType: CreateRoomScreenAccessType
+    var selectedSpace: SpaceServiceRoom?
+>>>>>>> release/26.03.0
     
     var showAttachmentConfirmationDialog = false
+    var showSpaceSelectionSheet = false
     
     /// Information describing the currently displayed alert.
     var alertInfo: AlertInfo<CreateRoomScreenErrorType>?
 }
 
 enum CreateRoomScreenViewAction {
+    case dismiss
     case createRoom
     case displayCameraPicker
     case displayMediaPicker
@@ -109,4 +159,17 @@ extension Set<CreateRoomScreenAliasErrorState> {
         }
         return nil
     }
+}
+
+enum CreateRoomScreenAccessType {
+    case `public`
+    case spaceMembers
+    case askToJoinWithSpaceMembers
+    case askToJoin
+    case `private`
+}
+
+enum CreateRoomScreenSpaceSelectionMode {
+    case editableSpacesList(preSelectedSpace: SpaceServiceRoom?)
+    case none
 }

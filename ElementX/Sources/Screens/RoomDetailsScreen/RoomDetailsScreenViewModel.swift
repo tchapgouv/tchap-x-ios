@@ -61,7 +61,13 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         
         let topic = attributedStringBuilder.fromPlain(roomProxy.infoPublisher.value.topic)
         
-        super.init(initialViewState: .init(details: roomProxy.details,
+        // Clear details.historySharingState manually while we are still behind a feature flag.
+        var details = roomProxy.details
+        if !appSettings.enableKeyShareOnInvite {
+            details.historySharingState = nil
+        }
+        
+        super.init(initialViewState: .init(details: details,
                                            isEncrypted: roomProxy.infoPublisher.value.isEncrypted,
                                            isDirect: roomProxy.infoPublisher.value.isDirect,
                                            topic: topic,
@@ -226,6 +232,9 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 case .didLeaveSpace:
                     state.bindings.leaveSpaceViewModel = nil
                     actionsSubject.send(.leftRoom)
+                case .presentTransferOwnership:
+                    state.bindings.leaveSpaceViewModel = nil
+                    actionsSubject.send(.transferOwnership)
                 }
             }
             .store(in: &cancellables)
@@ -271,6 +280,14 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         state.joinedMembersCount = roomInfo.joinedMembersCount
         
         state.details = roomProxy.details
+        
+        // Set state.details.historySharingState manually while we are still behind
+        // a feature flag.
+        if appSettings.enableKeyShareOnInvite {
+            state.details.historySharingState = roomInfo.historySharingState
+        } else {
+            state.details.historySharingState = nil
+        }
         
         let topic = attributedStringBuilder.fromPlain(roomInfo.topic)
         state.topic = topic

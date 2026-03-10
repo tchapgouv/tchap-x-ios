@@ -7,6 +7,7 @@
 //
 
 import Combine
+<<<<<<< HEAD
 import XCTest
 
 // Tchap: specify target for unit tests
@@ -16,11 +17,18 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+=======
+@testable import ElementX
+import Testing
+>>>>>>> release/26.03.0
 
 @MainActor
-class HomeScreenViewModelTests: XCTestCase {
+@Suite
+final class HomeScreenViewModelTests {
     var viewModel: HomeScreenViewModelProtocol!
-    var context: HomeScreenViewModelType.Context! { viewModel.context }
+    var context: HomeScreenViewModelType.Context! {
+        viewModel.context
+    }
     
     var clientProxy: ClientProxyMock!
     var roomSummaryProvider: RoomSummaryProviderMock!
@@ -29,19 +37,18 @@ class HomeScreenViewModelTests: XCTestCase {
     
     var cancellables = Set<AnyCancellable>()
     
-    override func setUp() {
-        cancellables.removeAll()
-        
+    init() {
         AppSettings.resetAllSettings()
         appSettings = AppSettings()
         ServiceLocator.shared.register(appSettings: appSettings)
     }
     
-    override func tearDown() {
+    deinit {
         AppSettings.resetAllSettings()
     }
     
-    func testSelectRoom() async throws {
+    @Test
+    func selectRoom() async {
         setupViewModel()
         
         let mockRoomID = "mock_room_id"
@@ -62,11 +69,12 @@ class HomeScreenViewModelTests: XCTestCase {
         
         context.send(viewAction: .selectRoom(roomIdentifier: mockRoomID))
         await Task.yield()
-        XCTAssert(correctResult)
-        XCTAssertEqual(mockRoomID, selectedRoomID)
+        #expect(correctResult)
+        #expect(mockRoomID == selectedRoomID)
     }
-
-    func testTapUserAvatar() async throws {
+    
+    @Test
+    func tapUserAvatar() async {
         setupViewModel()
         
         var correctResult = false
@@ -84,10 +92,11 @@ class HomeScreenViewModelTests: XCTestCase {
         
         context.send(viewAction: .showSettings)
         await Task.yield()
-        XCTAssert(correctResult)
+        #expect(correctResult)
     }
     
-    func testLeaveRoomAlert() async throws {
+    @Test
+    func leaveRoomAlert() async throws {
         setupViewModel()
         
         let mockRoomID = "1"
@@ -102,10 +111,11 @@ class HomeScreenViewModelTests: XCTestCase {
         
         try await deferred.fulfill()
         
-        XCTAssertEqual(context.leaveRoomAlertItem?.roomID, mockRoomID)
+        #expect(context.leaveRoomAlertItem?.roomID == mockRoomID)
     }
     
-    func testLeaveRoomError() async throws {
+    @Test
+    func leaveRoomError() async throws {
         setupViewModel()
         
         let mockRoomID = "1"
@@ -113,7 +123,7 @@ class HomeScreenViewModelTests: XCTestCase {
         room.leaveRoomClosure = { .failure(.sdkError(ClientProxyMockError.generic)) }
         
         clientProxy.roomForIdentifierClosure = { _ in .joined(room) }
-
+        
         let deferred = deferFulfillment(context.$viewState) { value in
             value.bindings.alertInfo != nil
         }
@@ -121,39 +131,35 @@ class HomeScreenViewModelTests: XCTestCase {
         context.send(viewAction: .confirmLeaveRoom(roomIdentifier: mockRoomID))
         
         try await deferred.fulfill()
-                
-        XCTAssertNotNil(context.alertInfo)
+        
+        #expect(context.alertInfo != nil)
     }
     
-    func testLeaveRoomSuccess() async throws {
+    @Test
+    func leaveRoomSuccess() async throws {
         setupViewModel()
         
         let mockRoomID = "1"
-        var correctResult = false
-        let expectation = expectation(description: #function)
-        viewModel.actions
-            .sink { action in
-                switch action {
-                case .roomLeft(let roomIdentifier):
-                    correctResult = roomIdentifier == mockRoomID
-                default:
-                    break
-                }
-                expectation.fulfill()
-            }
-            .store(in: &cancellables)
+        
         let room = JoinedRoomProxyMock(.init(id: mockRoomID, name: "Some room"))
         room.leaveRoomClosure = { .success(()) }
         
         clientProxy.roomForIdentifierClosure = { _ in .joined(room) }
         
+        let deferred = deferFulfillment(viewModel.actions) { action in
+            if case .roomLeft(let roomIdentifier) = action {
+                return roomIdentifier == mockRoomID
+            }
+            return false
+        }
+        
         context.send(viewAction: .confirmLeaveRoom(roomIdentifier: mockRoomID))
-        await fulfillment(of: [expectation])
-        XCTAssertNil(context.alertInfo)
-        XCTAssertTrue(correctResult)
+        try await deferred.fulfill()
+        #expect(context.alertInfo == nil)
     }
     
-    func testShowRoomDetails() async throws {
+    @Test
+    func showRoomDetails() async {
         setupViewModel()
         
         let mockRoomID = "1"
@@ -170,45 +176,49 @@ class HomeScreenViewModelTests: XCTestCase {
             .store(in: &cancellables)
         context.send(viewAction: .showRoomDetails(roomIdentifier: mockRoomID))
         await Task.yield()
-        XCTAssertNil(context.alertInfo)
-        XCTAssertTrue(correctResult)
+        #expect(context.alertInfo == nil)
+        #expect(correctResult)
     }
     
-    func testFilters() async throws {
+    @Test
+    func filters() async throws {
         setupViewModel()
         
         context.filtersState.activateFilter(.people)
         try await Task.sleep(for: .milliseconds(100))
-        XCTAssertEqual(roomSummaryProvider.roomListPublisher.value.count, 2)
-        XCTAssertEqual(roomSummaryProvider.roomListPublisher.value.first?.name, "Foundation and Earth")
+        #expect(roomSummaryProvider.roomListPublisher.value.count == 2)
+        #expect(roomSummaryProvider.roomListPublisher.value.first?.name == "Foundation and Earth")
     }
     
-    func testSearch() async throws {
+    @Test
+    func search() async throws {
         setupViewModel()
         
         context.isSearchFieldFocused = true
         context.searchQuery = "lude to Found"
         try await Task.sleep(for: .milliseconds(100))
-        XCTAssertEqual(roomSummaryProvider.roomListPublisher.value.first?.name, "Prelude to Foundation")
-        XCTAssertEqual(roomSummaryProvider.roomListPublisher.value.count, 1)
+        #expect(roomSummaryProvider.roomListPublisher.value.first?.name == "Prelude to Foundation")
+        #expect(roomSummaryProvider.roomListPublisher.value.count == 1)
     }
     
-    func testFiltersEmptyState() async throws {
+    @Test
+    func filtersEmptyState() async throws {
         setupViewModel()
         
         context.filtersState.activateFilter(.people)
         context.filtersState.activateFilter(.favourites)
         try await Task.sleep(for: .milliseconds(100))
-        XCTAssertTrue(context.viewState.shouldShowEmptyFilterState)
+        #expect(context.viewState.shouldShowEmptyFilterState)
         context.isSearchFieldFocused = true
-        XCTAssertFalse(context.viewState.shouldShowEmptyFilterState)
+        #expect(!context.viewState.shouldShowEmptyFilterState)
     }
     
-    func testSetUpRecoveryBannerState() async throws {
+    @Test
+    func setUpRecoveryBannerState() async throws {
         // Given a view model without a visible security banner.
         let securityStateStateSubject = CurrentValueSubject<SessionSecurityState, Never>(.init(verificationState: .verified, recoveryState: .unknown))
         setupViewModel(securityStatePublisher: securityStateStateSubject.asCurrentValuePublisher())
-        XCTAssertEqual(context.viewState.securityBannerMode, .none)
+        #expect(context.viewState.securityBannerMode == .none)
         
         // When the recovery state comes through as disabled.
         var deferred = deferFulfillment(context.$viewState) { $0.requiresExtraAccountSetup == true }
@@ -216,7 +226,7 @@ class HomeScreenViewModelTests: XCTestCase {
         try await deferred.fulfill()
         
         // Then the banner should be shown to set up recovery.
-        XCTAssertEqual(context.viewState.securityBannerMode, .show(.setUpRecovery))
+        #expect(context.viewState.securityBannerMode == .show(.setUpRecovery))
         
         // When the recovery is enabled.
         deferred = deferFulfillment(context.$viewState) { $0.requiresExtraAccountSetup == false }
@@ -224,10 +234,11 @@ class HomeScreenViewModelTests: XCTestCase {
         try await deferred.fulfill()
         
         // Then the banner should no longer be shown.
-        XCTAssertEqual(context.viewState.securityBannerMode, .none)
+        #expect(context.viewState.securityBannerMode == .none)
     }
     
-    func testDismissSetUpRecoveryBannerState() async throws {
+    @Test
+    func dismissSetUpRecoveryBannerState() async throws {
         // Given a view model with the setup recovery banner shown.
         let securityStateStateSubject = CurrentValueSubject<SessionSecurityState, Never>(.init(verificationState: .verified, recoveryState: .unknown))
         setupViewModel(securityStatePublisher: securityStateStateSubject.asCurrentValuePublisher())
@@ -243,16 +254,17 @@ class HomeScreenViewModelTests: XCTestCase {
         try await deferred.fulfill()
         
         // And when the recovery state comes through a second time the banner should still not be shown.
-        let failure = deferFailure(context.$viewState, timeout: 1) { $0.securityBannerMode != .dismissed }
+        let failure = deferFailure(context.$viewState, timeout: .seconds(1)) { $0.securityBannerMode != .dismissed }
         securityStateStateSubject.send(.init(verificationState: .verified, recoveryState: .disabled))
         try await failure.fulfill()
     }
     
-    func testOutOfSyncRecoveryBannerState() async throws {
+    @Test
+    func outOfSyncRecoveryBannerState() async throws {
         // Given a view model without a visible security banner.
         let securityStateStateSubject = CurrentValueSubject<SessionSecurityState, Never>(.init(verificationState: .verified, recoveryState: .unknown))
         setupViewModel(securityStatePublisher: securityStateStateSubject.asCurrentValuePublisher())
-        XCTAssertEqual(context.viewState.securityBannerMode, .none)
+        #expect(context.viewState.securityBannerMode == .none)
         
         // When the recovery state comes through as incomplete.
         var deferred = deferFulfillment(context.$viewState) { $0.requiresExtraAccountSetup == true }
@@ -260,7 +272,7 @@ class HomeScreenViewModelTests: XCTestCase {
         try await deferred.fulfill()
         
         // Then the banner should be shown for out of sync recovery.
-        XCTAssertEqual(context.viewState.securityBannerMode, .show(.recoveryOutOfSync))
+        #expect(context.viewState.securityBannerMode == .show(.recoveryOutOfSync))
         
         // When the recovery is enabled.
         deferred = deferFulfillment(context.$viewState) { $0.requiresExtraAccountSetup == false }
@@ -268,16 +280,17 @@ class HomeScreenViewModelTests: XCTestCase {
         try await deferred.fulfill()
         
         // Then the banner should no longer be shown.
-        XCTAssertEqual(context.viewState.securityBannerMode, .none)
+        #expect(context.viewState.securityBannerMode == .none)
     }
     
-    func testInviteUnreadBadge() async throws {
+    @Test
+    func inviteUnreadBadge() async throws {
         setupViewModel(invites: .rooms)
         var invites = context.viewState.rooms.invites
-        XCTAssertEqual(invites.count, 2)
+        #expect(invites.count == 2)
         
         for invite in invites {
-            XCTAssertTrue(invite.badges.isDotShown)
+            #expect(invite.badges.isDotShown)
         }
         
         let deferred = deferFulfillment(context.$viewState) { state in
@@ -290,75 +303,82 @@ class HomeScreenViewModelTests: XCTestCase {
         invites = context.viewState.rooms.invites
         
         for invite in invites {
-            XCTAssertFalse(invite.badges.isDotShown)
+            #expect(!invite.badges.isDotShown)
         }
     }
     
-    func testAcceptInvite() async throws {
+    @Test
+    func acceptInvite() async throws {
         setupViewModel(invites: .rooms)
         
         let invitedRoomIDs = context.viewState.rooms.invites.compactMap(\.roomID)
         appSettings.seenInvites = Set(invitedRoomIDs)
-        XCTAssertEqual(invitedRoomIDs.count, 2)
+        #expect(invitedRoomIDs.count == 2)
         
         let deferred = deferFulfillment(viewModel.actions) { $0 == .presentRoom(roomIdentifier: invitedRoomIDs[0]) }
         context.send(viewAction: .acceptInvite(roomIdentifier: invitedRoomIDs[0]))
         try await deferred.fulfill()
         
-        XCTAssertEqual(appSettings.seenInvites, [invitedRoomIDs[1]])
-        XCTAssertFalse(notificationManager.removeDeliveredMessageNotificationsForCalled, "The notification will be dismissed when opening the room.")
+        #expect(appSettings.seenInvites == [invitedRoomIDs[1]])
+        #expect(!notificationManager.removeDeliveredMessageNotificationsForCalled, "The notification will be dismissed when opening the room.")
     }
     
-    func testAcceptSpaceInvite() async throws {
+    @Test
+    func acceptSpaceInvite() async throws {
         setupViewModel(invites: .spaces)
         
         let invitedRoomIDs = context.viewState.rooms.invites.compactMap(\.roomID)
         appSettings.seenInvites = Set(invitedRoomIDs)
-        XCTAssertEqual(invitedRoomIDs.count, 2)
+        #expect(invitedRoomIDs.count == 2)
         
         let deferred = deferFulfillment(viewModel.actions) {
-            $0 == .presentSpace(SpaceRoomListProxyMock(.init(spaceServiceRoom: SpaceServiceRoomMock(.init(id: invitedRoomIDs[0], isSpace: true)))))
+            $0 == .presentSpace(SpaceRoomListProxyMock(.init(spaceServiceRoom: SpaceServiceRoom.mock(id: invitedRoomIDs[0], isSpace: true))))
         }
         context.send(viewAction: .acceptInvite(roomIdentifier: invitedRoomIDs[0]))
         try await deferred.fulfill()
         
-        XCTAssertEqual(appSettings.seenInvites, [invitedRoomIDs[1]])
-        XCTAssertFalse(notificationManager.removeDeliveredMessageNotificationsForCalled, "The notification will be dismissed when opening the room.")
+        #expect(appSettings.seenInvites == [invitedRoomIDs[1]])
+        #expect(!notificationManager.removeDeliveredMessageNotificationsForCalled, "The notification will be dismissed when opening the room.")
     }
     
-    func testDeclineInvite() async throws {
+    @Test
+    func declineInvite() async throws {
         setupViewModel(invites: .rooms)
         let invitedRoomIDs = context.viewState.rooms.invites.compactMap(\.roomID)
         appSettings.seenInvites = Set(invitedRoomIDs)
-        XCTAssertEqual(invitedRoomIDs.count, 2)
+        #expect(invitedRoomIDs.count == 2)
         
         let deferred = deferFulfillment(context.$viewState) { $0.bindings.alertInfo != nil }
         context.send(viewAction: .declineInvite(roomIdentifier: invitedRoomIDs[0]))
         try await deferred.fulfill()
         
-        let rejectExpectation = expectation(description: "Expected rejectInvitation to be called.")
+        var rejectCalled = false
         clientProxy.roomForIdentifierClosure = { _ in
             let roomProxy = InvitedRoomProxyMock(.init())
             roomProxy.rejectInvitationClosure = {
-                rejectExpectation.fulfill()
+                rejectCalled = true
                 return .success(())
             }
             
             return .invited(roomProxy)
         }
         context.viewState.bindings.alertInfo?.verticalButtons?[0].action?()
-        await fulfillment(of: [rejectExpectation], timeout: 1.0)
         
-        XCTAssertEqual(appSettings.seenInvites, [invitedRoomIDs[1]])
-        XCTAssertTrue(notificationManager.removeDeliveredMessageNotificationsForCalled)
-        XCTAssertEqual(notificationManager.removeDeliveredMessageNotificationsForReceivedInvocations, [invitedRoomIDs[0]])
+        // Wait for the async action to complete
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(rejectCalled)
+        
+        #expect(appSettings.seenInvites == [invitedRoomIDs[1]])
+        #expect(notificationManager.removeDeliveredMessageNotificationsForCalled)
+        #expect(notificationManager.removeDeliveredMessageNotificationsForReceivedInvocations == [invitedRoomIDs[0]])
     }
     
-    func testDeclineAndBlockInvite() async throws {
+    @Test
+    func declineAndBlockInvite() async throws {
         setupViewModel(invites: .rooms)
         let invitedRoomIDs = context.viewState.rooms.invites.compactMap(\.roomID)
         appSettings.seenInvites = Set(invitedRoomIDs)
-        XCTAssertEqual(invitedRoomIDs.count, 2)
+        #expect(invitedRoomIDs.count == 2)
         
         let deferred = deferFulfillment(context.$viewState) { $0.bindings.alertInfo != nil }
         context.send(viewAction: .declineInvite(roomIdentifier: invitedRoomIDs[0]))
@@ -369,17 +389,18 @@ class HomeScreenViewModelTests: XCTestCase {
         try await deferredAction.fulfill()
     }
     
-    func testNewSoundBanner() {
+    @Test
+    func newSoundBanner() {
         appSettings.hasSeenNewSoundBanner = false
         
         setupViewModel()
-        XCTAssertTrue(context.viewState.shouldShowBanner)
-        XCTAssertTrue(context.viewState.shouldShowNewSoundBanner)
+        #expect(context.viewState.shouldShowBanner)
+        #expect(context.viewState.shouldShowNewSoundBanner)
         
         context.send(viewAction: .dismissNewSoundBanner)
-        XCTAssertFalse(context.viewState.shouldShowBanner)
-        XCTAssertFalse(context.viewState.shouldShowNewSoundBanner)
-        XCTAssertTrue(appSettings.hasSeenNewSoundBanner)
+        #expect(!context.viewState.shouldShowBanner)
+        #expect(!context.viewState.shouldShowNewSoundBanner)
+        #expect(appSettings.hasSeenNewSoundBanner)
     }
     
     // MARK: - Helpers
@@ -387,6 +408,8 @@ class HomeScreenViewModelTests: XCTestCase {
     enum InviteType { case rooms, spaces }
     
     private func setupViewModel(securityStatePublisher: CurrentValuePublisher<SessionSecurityState, Never>? = nil, invites: InviteType? = nil) {
+        cancellables.removeAll()
+        
         var rooms: [RoomSummary] = .mockRooms
         
         switch invites {
@@ -414,7 +437,7 @@ class HomeScreenViewModelTests: XCTestCase {
             
             let spaceServiceProxy = SpaceServiceProxyMock(.init())
             spaceServiceProxy.spaceRoomListSpaceIDClosure = { spaceID in
-                .success(SpaceRoomListProxyMock(.init(spaceServiceRoom: SpaceServiceRoomMock(.init(id: spaceID, isSpace: true)))))
+                .success(SpaceRoomListProxyMock(.init(spaceServiceRoom: SpaceServiceRoom.mock(id: spaceID, isSpace: true))))
             }
             clientProxy.underlyingSpaceService = spaceServiceProxy
         case nil:

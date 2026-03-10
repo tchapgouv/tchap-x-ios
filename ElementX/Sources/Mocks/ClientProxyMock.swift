@@ -94,7 +94,7 @@ extension ClientProxyMock {
         unignoreUserReturnValue = .success(())
         
         trackRecentlyVisitedRoomReturnValue = .success(())
-        recentlyVisitedRoomsReturnValue = .success([])
+        recentlyVisitedRoomsFilterReturnValue = []
         recentConversationCounterpartsReturnValue = []
         
         let mediaLoader = MediaLoaderMock()
@@ -119,7 +119,7 @@ extension ClientProxyMock {
                     let roomProxy = await KnockedRoomProxyMock(.init(id: room.id, name: room.name))
                     return .knocked(roomProxy)
                 default:
-                    let roomProxy = await JoinedRoomProxyMock(.init(id: room.id, name: room.name, isSpace: room.isSpace))
+                    let roomProxy = await JoinedRoomProxyMock(.init(id: room.id, name: room.name, isSpace: room.isSpace, members: configuration.defaultRoomMembers))
                     roomProxy.loadOrFetchEventDetailsForReturnValue = .success(TimelineEventSDKMock())
                     return .joined(roomProxy)
                 }

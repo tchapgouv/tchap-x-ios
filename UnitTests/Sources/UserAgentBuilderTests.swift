@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+<<<<<<< HEAD
 import XCTest
 
 // Tchap: specify target for unit tests
@@ -15,19 +16,27 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+=======
+@testable import ElementX
+import Testing
+>>>>>>> release/26.03.0
 
-class UserAgentBuilderTests: XCTestCase {
-    func testIsNotNil() {
-        XCTAssertNotNil(UserAgentBuilder.makeASCIIUserAgent())
+@Suite
+struct UserAgentBuilderTests {
+    @Test
+    func isNotUnknow() {
+        #expect(UserAgentBuilder.makeASCIIUserAgent() != "unknown")
     }
     
-    func testContainsClientName() {
+    @Test
+    func containsClientName() {
         let userAgent = UserAgentBuilder.makeASCIIUserAgent()
-        XCTAssert(userAgent.contains(InfoPlistReader.main.bundleDisplayName) == true, "\(userAgent) does not contain client name")
+        #expect(userAgent.contains(InfoPlistReader.main.bundleDisplayName) == true, "\(userAgent) does not contain client name")
     }
     
-    func testContainsClientVersion() {
+    @Test
+    func containsClientVersion() {
         let userAgent = UserAgentBuilder.makeASCIIUserAgent()
-        XCTAssert(userAgent.contains(InfoPlistReader.main.bundleShortVersionString) == true, "\(userAgent) does not contain client version")
+        #expect(userAgent.contains(InfoPlistReader.main.bundleShortVersionString) == true, "\(userAgent) does not contain client version")
     }
 }

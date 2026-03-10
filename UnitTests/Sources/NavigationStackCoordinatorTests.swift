@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+<<<<<<< HEAD
 import XCTest
 
 // Tchap: specify target for unit tests
@@ -15,17 +16,24 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+=======
+@testable import ElementX
+import Foundation
+import Testing
+>>>>>>> release/26.03.0
 
 @MainActor
-class NavigationStackCoordinatorTests: XCTestCase {
-    private var navigationStackCoordinator: NavigationStackCoordinator!
+@Suite
+struct NavigationStackCoordinatorTests {
+    private var navigationStackCoordinator: NavigationStackCoordinator
     
-    override func setUp() {
+    init() {
         navigationStackCoordinator = NavigationStackCoordinator()
     }
     
-    func testRoot() {
-        XCTAssertNil(navigationStackCoordinator.rootCoordinator)
+    @Test
+    func root() {
+        #expect(navigationStackCoordinator.rootCoordinator == nil)
         
         let rootCoordinator = SomeTestCoordinator()
         navigationStackCoordinator.setRootCoordinator(rootCoordinator)
@@ -33,7 +41,8 @@ class NavigationStackCoordinatorTests: XCTestCase {
         assertCoordinatorsEqual(rootCoordinator, navigationStackCoordinator.rootCoordinator)
     }
     
-    func testSingleSheet() {
+    @Test
+    mutating func singleSheet() {
         let rootCoordinator = SomeTestCoordinator()
         navigationStackCoordinator.setRootCoordinator(rootCoordinator)
         
@@ -46,10 +55,11 @@ class NavigationStackCoordinatorTests: XCTestCase {
         navigationStackCoordinator.setSheetCoordinator(nil)
         
         assertCoordinatorsEqual(rootCoordinator, navigationStackCoordinator.rootCoordinator)
-        XCTAssertNil(navigationStackCoordinator.sheetCoordinator)
+        #expect(navigationStackCoordinator.sheetCoordinator == nil)
     }
     
-    func testMultipleSheets() {
+    @Test
+    mutating func multipleSheets() {
         let rootCoordinator = SomeTestCoordinator()
         navigationStackCoordinator.setRootCoordinator(rootCoordinator)
         
@@ -57,18 +67,19 @@ class NavigationStackCoordinatorTests: XCTestCase {
         navigationStackCoordinator.setSheetCoordinator(sheetCoordinator)
         
         assertCoordinatorsEqual(rootCoordinator, navigationStackCoordinator.rootCoordinator)
-        XCTAssert(navigationStackCoordinator.stackCoordinators.isEmpty)
+        #expect(navigationStackCoordinator.stackCoordinators.isEmpty)
         assertCoordinatorsEqual(sheetCoordinator, navigationStackCoordinator.sheetCoordinator)
         
         let someOtherSheetCoordinator = SomeTestCoordinator()
         navigationStackCoordinator.setSheetCoordinator(someOtherSheetCoordinator)
         
         assertCoordinatorsEqual(rootCoordinator, navigationStackCoordinator.rootCoordinator)
-        XCTAssert(navigationStackCoordinator.stackCoordinators.isEmpty)
+        #expect(navigationStackCoordinator.stackCoordinators.isEmpty)
         assertCoordinatorsEqual(someOtherSheetCoordinator, navigationStackCoordinator.sheetCoordinator)
     }
     
-    func testSinglePush() {
+    @Test
+    mutating func singlePush() {
         let rootCoordinator = SomeTestCoordinator()
         navigationStackCoordinator.setRootCoordinator(rootCoordinator)
         
@@ -81,10 +92,11 @@ class NavigationStackCoordinatorTests: XCTestCase {
         navigationStackCoordinator.pop()
         
         assertCoordinatorsEqual(rootCoordinator, navigationStackCoordinator.rootCoordinator)
-        XCTAssert(navigationStackCoordinator.stackCoordinators.isEmpty)
+        #expect(navigationStackCoordinator.stackCoordinators.isEmpty)
     }
     
-    func testMultiplePushes() {
+    @Test
+    mutating func multiplePushes() {
         let rootCoordinator = SomeTestCoordinator()
         navigationStackCoordinator.setRootCoordinator(rootCoordinator)
         
@@ -96,7 +108,7 @@ class NavigationStackCoordinatorTests: XCTestCase {
         }
         
         assertCoordinatorsEqual(rootCoordinator, navigationStackCoordinator.rootCoordinator)
-        XCTAssertEqual(navigationStackCoordinator.stackCoordinators.count, coordinators.count)
+        #expect(navigationStackCoordinator.stackCoordinators.count == coordinators.count)
         
         for index in coordinators.indices {
             assertCoordinatorsEqual(coordinators[index], navigationStackCoordinator.stackCoordinators[index])
@@ -105,10 +117,11 @@ class NavigationStackCoordinatorTests: XCTestCase {
         navigationStackCoordinator.popToRoot()
         
         assertCoordinatorsEqual(rootCoordinator, navigationStackCoordinator.rootCoordinator)
-        XCTAssert(navigationStackCoordinator.stackCoordinators.isEmpty)
+        #expect(navigationStackCoordinator.stackCoordinators.isEmpty)
     }
     
-    func testRootReplacementDimissesTheRest() {
+    @Test
+    mutating func rootReplacementDimissesTheRest() {
         let rootCoordinator = SomeTestCoordinator()
         navigationStackCoordinator.setRootCoordinator(rootCoordinator)
         
@@ -126,10 +139,11 @@ class NavigationStackCoordinatorTests: XCTestCase {
         navigationStackCoordinator.setRootCoordinator(newRootCoordinator)
         
         assertCoordinatorsEqual(newRootCoordinator, navigationStackCoordinator.rootCoordinator)
-        XCTAssert(navigationStackCoordinator.stackCoordinators.isEmpty)
+        #expect(navigationStackCoordinator.stackCoordinators.isEmpty)
     }
     
-    func testPushesDontReplaceSheet() {
+    @Test
+    mutating func pushesDontReplaceSheet() {
         let sheetCoordinator = SomeTestCoordinator()
         navigationStackCoordinator.setSheetCoordinator(sheetCoordinator)
         
@@ -149,54 +163,57 @@ class NavigationStackCoordinatorTests: XCTestCase {
     
     // MARK: - Dismissal Callbacks
     
-    func testPopDismissalCallbacks() {
+    @Test
+    mutating func popDismissalCallbacks() async {
         let pushedCoordinator = SomeTestCoordinator()
         
-        let expectation = expectation(description: "Wait for callback")
-        navigationStackCoordinator.push(pushedCoordinator) {
-            expectation.fulfill()
+        await confirmation("Wait for callback") { confirm in
+            navigationStackCoordinator.push(pushedCoordinator) {
+                confirm()
+            }
+            
+            navigationStackCoordinator.pop()
         }
-        
-        navigationStackCoordinator.pop()
-        waitForExpectations(timeout: 1.0)
     }
     
-    func testPopToRootDismissalCallbacks() {
+    @Test
+    mutating func popToRootDismissalCallbacks() async {
         navigationStackCoordinator.push(SomeTestCoordinator())
         navigationStackCoordinator.push(SomeTestCoordinator())
         
         let coordinator = SomeTestCoordinator()
-        let expectation = expectation(description: "Wait for callback")
-        navigationStackCoordinator.push(coordinator) {
-            expectation.fulfill()
+        await confirmation("Wait for callback") { confirm in
+            navigationStackCoordinator.push(coordinator) {
+                confirm()
+            }
+            
+            navigationStackCoordinator.popToRoot()
         }
-        
-        navigationStackCoordinator.popToRoot()
-        waitForExpectations(timeout: 1.0)
     }
     
-    func testSheetDismissalCallback() {
+    @Test
+    mutating func sheetDismissalCallback() async {
         let coordinator = SomeTestCoordinator()
-        let expectation = expectation(description: "Wait for callback")
-        navigationStackCoordinator.setSheetCoordinator(coordinator) {
-            expectation.fulfill()
+        await confirmation("Wait for callback") { confirm in
+            navigationStackCoordinator.setSheetCoordinator(coordinator) {
+                confirm()
+            }
+            
+            navigationStackCoordinator.setSheetCoordinator(nil)
         }
-        
-        navigationStackCoordinator.setSheetCoordinator(nil)
-        waitForExpectations(timeout: 1.0)
     }
     
-    func testRootReplacementCallbacks() {
+    @Test
+    mutating func rootReplacementCallbacks() async {
         navigationStackCoordinator.setRootCoordinator(SomeTestCoordinator())
         
-        let popExpectation = expectation(description: "Waiting for callback")
-        navigationStackCoordinator.push(SomeTestCoordinator()) {
-            popExpectation.fulfill()
+        await confirmation("Waiting for callback") { confirm in
+            navigationStackCoordinator.push(SomeTestCoordinator()) {
+                confirm()
+            }
+            
+            navigationStackCoordinator.setRootCoordinator(SomeTestCoordinator())
         }
-        
-        navigationStackCoordinator.setRootCoordinator(SomeTestCoordinator())
-        
-        waitForExpectations(timeout: 1.0)
     }
     
     // MARK: - Private
@@ -204,11 +221,11 @@ class NavigationStackCoordinatorTests: XCTestCase {
     private func assertCoordinatorsEqual(_ lhs: CoordinatorProtocol?, _ rhs: CoordinatorProtocol?) {
         guard let lhs = lhs as? SomeTestCoordinator,
               let rhs = rhs as? SomeTestCoordinator else {
-            XCTFail("Coordinators are not the same")
+            Issue.record("Coordinators are not the same")
             return
         }
         
-        XCTAssertEqual(lhs.id, rhs.id)
+        #expect(lhs.id == rhs.id)
     }
 }
 

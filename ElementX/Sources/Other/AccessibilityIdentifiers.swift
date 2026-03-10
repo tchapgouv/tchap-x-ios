@@ -43,8 +43,12 @@ enum A11yIdentifiers {
     static let notificationSettingsEditScreen = NotificationSettingsEditScreen()
     static let pollFormScreen = PollFormScreen()
     static let roomPollsHistoryScreen = RoomPollsHistoryScreen()
+    static let roomMembersListScreen = RoomMembersListScreen()
     static let manageRoomMemberSheet = ManageRoomMemberSheet()
-    static let spaceListScreen = SpaceListScreen()
+    static let spacesScreen = SpacesScreen()
+    static let spaceScreen = SpaceScreen()
+    static let spaceAddRoomsScreen = SpaceAddRoomsScreen()
+    static let spaceSettingsScreen = SpaceSettingsScreen()
     static let linkNewDeviceScreen = LinkNewDeviceScreen()
     
     struct AlertInfo {
@@ -53,7 +57,9 @@ enum A11yIdentifiers {
     }
     
     struct AppLockScreen {
-        func numpad(_ digit: Int) -> String { "app_lock-numpad_\(digit)" }
+        func numpad(_ digit: Int) -> String {
+            "app_lock-numpad_\(digit)"
+        }
     }
     
     struct AppLockSetupBiometricsScreen {
@@ -105,6 +111,7 @@ enum A11yIdentifiers {
         let userAvatar = "home_screen-user_avatar"
         let recoveryKeyConfirmationBannerContinue = "home_screen-recovery_key_confirmation_continue"
         let startChat = "home_screen-start_chat"
+        let spaceFilters = "home_screen-space_filters"
         
         let roomNamePrefix = "home_screen-room_name"
         func roomName(_ name: String) -> String {
@@ -228,7 +235,6 @@ enum A11yIdentifiers {
         let acceptVerificationRequest = "session_verification-accept_verification_request"
         let ignoreVerificationRequest = "session_verification-ignore_verification_request"
         let requestVerification = "session_verification-request_verification"
-        let startSasVerification = "session_verification-start_sas_verification"
         let acceptChallenge = "session_verification-accept_challenge"
         let declineChallenge = "session_verification-decline_challenge"
         let emojiWrapper = "session_verification-emojis"
@@ -270,6 +276,7 @@ enum A11yIdentifiers {
     
     struct CreateRoomScreen {
         let create = "create_room-create"
+        let cancel = "create_room-cancel"
         let roomAvatar = "create_room-room_avatar"
         let roomName = "create_room-room_name"
         let roomTopic = "create_room-room_topic"
@@ -303,17 +310,37 @@ enum A11yIdentifiers {
         let loadMore = "room_polls_history_screen-load_more"
     }
     
+    struct RoomMembersListScreen {
+        let invite = "room_members_list_screen-invite"
+    }
+    
     struct ManageRoomMemberSheet {
         let viewProfile = "manage_room_member_sheet-view_profile"
     }
     
-    struct SpaceListScreen {
-        let userAvatar = "space_list_screen-user_avatar"
+    struct SpacesScreen {
+        let userAvatar = "spaces_screen-user_avatar"
         
-        let roomNamePrefix = "space_list_screen-room_name"
+        let roomNamePrefix = "spaces_screen-room_name"
         func spaceRoomName(_ name: String) -> String {
             "\(roomNamePrefix):\(name)"
         }
+    }
+    
+    struct SpaceScreen {
+        let moreMenu = "space_screen-more_menu"
+        let createRoom = "space_screen-create_room"
+        let addExistingRooms = "space_screen-add_existing_rooms"
+        let viewMembers = "space_screen-view_members"
+        let settings = "space_screen-settings"
+    }
+    
+    struct SpaceAddRoomsScreen {
+        let cancel = "space_add_rooms_screen-cancel"
+    }
+    
+    struct SpaceSettingsScreen {
+        let editBaseInfo = "space_settings_screen-edit_space_info"
     }
     
     struct LinkNewDeviceScreen {

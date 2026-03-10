@@ -19,6 +19,7 @@ struct RoomDetails {
     let isEncrypted: Bool
     let isPublic: Bool
     let isDirect: Bool
+<<<<<<< HEAD
     // Tchap: add AccessRule and visibility values
     let accessRule: AccessRule?
     let visibility: RoomVisibility
@@ -26,4 +27,7 @@ struct RoomDetails {
     // But their `visibility` is `.private` in order to not be listed in room directories.
     // The AccessRule.visibility value makes the difference between (Forums) which are `.public`, and (Private Unencrypted rooms accessible by link) which are `.private`.
     var canDisplayPublicBadge: Bool { visibility == .public }
+=======
+    var historySharingState: RoomHistorySharingState?
+>>>>>>> release/26.03.0
 }

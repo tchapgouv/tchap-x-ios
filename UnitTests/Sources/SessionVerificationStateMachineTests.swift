@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+<<<<<<< HEAD
 import XCTest
 
 // Tchap: specify target for unit tests
@@ -15,104 +16,111 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+=======
+@testable import ElementX
+import Testing
+>>>>>>> release/26.03.0
 
 @MainActor
-class SessionVerificationStateMachineTests: XCTestCase {
-    private var stateMachine: SessionVerificationScreenStateMachine!
+@Suite
+struct SessionVerificationStateMachineTests {
+    private var stateMachine: SessionVerificationScreenStateMachine
     
-    @MainActor
-    override func setUpWithError() throws {
+    init() {
         stateMachine = SessionVerificationScreenStateMachine(state: .initial)
     }
     
-    func testAcceptChallenge() {
-        XCTAssertEqual(stateMachine.state, .initial)
+    @Test
+    func acceptChallenge() {
+        #expect(stateMachine.state == .initial)
         
         stateMachine.processEvent(.requestVerification)
-        XCTAssertEqual(stateMachine.state, .requestingVerification)
+        #expect(stateMachine.state == .requestingVerification)
         
         stateMachine.processEvent(.didAcceptVerificationRequest)
-        XCTAssertEqual(stateMachine.state, .verificationRequestAccepted)
+        #expect(stateMachine.state == .verificationRequestAccepted)
         
         stateMachine.processEvent(.didStartSasVerification)
-        XCTAssertEqual(stateMachine.state, .sasVerificationStarted)
+        #expect(stateMachine.state == .sasVerificationStarted)
         
         stateMachine.processEvent(.didReceiveChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
-        XCTAssertEqual(stateMachine.state, .showingChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
+        #expect(stateMachine.state == .showingChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
         
         stateMachine.processEvent(.acceptChallenge)
-        XCTAssertEqual(stateMachine.state, .acceptingChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
+        #expect(stateMachine.state == .acceptingChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
         
         stateMachine.processEvent(.didAcceptChallenge)
-        XCTAssertEqual(stateMachine.state, .verified)
+        #expect(stateMachine.state == .verified)
     }
     
-    func testDeclineChallenge() {
-        XCTAssertEqual(stateMachine.state, .initial)
+    @Test
+    func declineChallenge() {
+        #expect(stateMachine.state == .initial)
         
         stateMachine.processEvent(.requestVerification)
-        XCTAssertEqual(stateMachine.state, .requestingVerification)
+        #expect(stateMachine.state == .requestingVerification)
         
         stateMachine.processEvent(.didAcceptVerificationRequest)
-        XCTAssertEqual(stateMachine.state, .verificationRequestAccepted)
+        #expect(stateMachine.state == .verificationRequestAccepted)
         
         stateMachine.processEvent(.didStartSasVerification)
-        XCTAssertEqual(stateMachine.state, .sasVerificationStarted)
+        #expect(stateMachine.state == .sasVerificationStarted)
         
         stateMachine.processEvent(.didReceiveChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
-        XCTAssertEqual(stateMachine.state, .showingChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
+        #expect(stateMachine.state == .showingChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
         
         stateMachine.processEvent(.declineChallenge)
-        XCTAssertEqual(stateMachine.state, .decliningChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
+        #expect(stateMachine.state == .decliningChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
         
         stateMachine.processEvent(.didCancel)
-        XCTAssertEqual(stateMachine.state, .cancelled)
+        #expect(stateMachine.state == .cancelled)
         
         stateMachine.processEvent(.restart)
-        XCTAssertEqual(stateMachine.state, .initial)
+        #expect(stateMachine.state == .initial)
     }
     
-    func testCancellation() {
-        XCTAssertEqual(stateMachine.state, .initial)
+    @Test
+    func cancellation() {
+        #expect(stateMachine.state == .initial)
         
         stateMachine.processEvent(.requestVerification)
-        XCTAssertEqual(stateMachine.state, .requestingVerification)
+        #expect(stateMachine.state == .requestingVerification)
         
         stateMachine.processEvent(.cancel)
-        XCTAssertEqual(stateMachine.state, .cancelling)
+        #expect(stateMachine.state == .cancelling)
         
         stateMachine.processEvent(.didCancel)
-        XCTAssertEqual(stateMachine.state, .cancelled)
+        #expect(stateMachine.state == .cancelled)
         
         // This duplication is intentional
         stateMachine.processEvent(.didCancel)
-        XCTAssertEqual(stateMachine.state, .cancelled)
+        #expect(stateMachine.state == .cancelled)
         
         stateMachine.processEvent(.restart)
-        XCTAssertEqual(stateMachine.state, .initial)
+        #expect(stateMachine.state == .initial)
         
         stateMachine.processEvent(.requestVerification)
-        XCTAssertEqual(stateMachine.state, .requestingVerification)
+        #expect(stateMachine.state == .requestingVerification)
         
         stateMachine.processEvent(.didAcceptVerificationRequest)
-        XCTAssertEqual(stateMachine.state, .verificationRequestAccepted)
+        #expect(stateMachine.state == .verificationRequestAccepted)
         
         stateMachine.processEvent(.didStartSasVerification)
-        XCTAssertEqual(stateMachine.state, .sasVerificationStarted)
+        #expect(stateMachine.state == .sasVerificationStarted)
         
         stateMachine.processEvent(.didReceiveChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
-        XCTAssertEqual(stateMachine.state, .showingChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
+        #expect(stateMachine.state == .showingChallenge(emojis: SessionVerificationControllerProxyMock.emojis))
         
         stateMachine.processEvent(.cancel)
-        XCTAssertEqual(stateMachine.state, .cancelling)
+        #expect(stateMachine.state == .cancelling)
         
         stateMachine.processEvent(.didCancel)
-        XCTAssertEqual(stateMachine.state, .cancelled)
+        #expect(stateMachine.state == .cancelled)
         
         stateMachine.processEvent(.restart)
-        XCTAssertEqual(stateMachine.state, .initial)
+        #expect(stateMachine.state == .initial)
         
         stateMachine.processEvent(.restart)
-        XCTAssertEqual(stateMachine.state, .initial)
+        #expect(stateMachine.state == .initial)
     }
 }

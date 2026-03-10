@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+<<<<<<< HEAD
 import XCTest
 
 // Tchap: specify target for unit tests
@@ -15,22 +16,28 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+=======
+@testable import ElementX
+import Testing
+>>>>>>> release/26.03.0
 
 @MainActor
-class ManageRoomMemberSheetViewModelTests: XCTestCase {
+@Suite
+struct ManageRoomMemberSheetViewModelTests {
     private var viewModel: ManageRoomMemberSheetViewModel!
     private var context: ManageRoomMemberSheetViewModel.Context! {
         viewModel.context
     }
     
-    func testKick() async throws {
+    @Test
+    mutating func kick() async throws {
         let testReason = "Kick Test"
         let roomProxy = JoinedRoomProxyMock(.init(members: [RoomMemberProxyMock.mockAdmin, RoomMemberProxyMock.mockAlice]))
-        let expectation = XCTestExpectation(description: "Kick member")
+        var kickCalled = false
         roomProxy.kickUserReasonClosure = { userID, reason in
-            defer { expectation.fulfill() }
-            XCTAssertEqual(userID, RoomMemberProxyMock.mockAlice.userID)
-            XCTAssertEqual(reason, testReason)
+            kickCalled = true
+            #expect(userID == RoomMemberProxyMock.mockAlice.userID)
+            #expect(reason == testReason)
             return .success(())
         }
         
@@ -50,18 +57,19 @@ class ManageRoomMemberSheetViewModelTests: XCTestCase {
         
         context.alertInfo?.textFields?[0].text.wrappedValue = testReason
         context.alertInfo?.secondaryButton?.action?()
-        await fulfillment(of: [expectation])
         try await deferredAction.fulfill()
+        #expect(kickCalled)
     }
     
-    func testBan() async throws {
+    @Test
+    mutating func ban() async throws {
         let testReason = "Ban Test"
         let roomProxy = JoinedRoomProxyMock(.init(members: [RoomMemberProxyMock.mockAdmin, RoomMemberProxyMock.mockAlice]))
-        let expectation = XCTestExpectation(description: "Ban member")
+        var banCalled = false
         roomProxy.banUserReasonClosure = { userID, reason in
-            defer { expectation.fulfill() }
-            XCTAssertEqual(userID, RoomMemberProxyMock.mockAlice.userID)
-            XCTAssertEqual(reason, testReason)
+            banCalled = true
+            #expect(userID == RoomMemberProxyMock.mockAlice.userID)
+            #expect(reason == testReason)
             return .success(())
         }
         
@@ -81,11 +89,12 @@ class ManageRoomMemberSheetViewModelTests: XCTestCase {
         }
         context.alertInfo?.textFields?[0].text.wrappedValue = testReason
         context.alertInfo?.secondaryButton?.action?()
-        await fulfillment(of: [expectation])
         try await deferredAction.fulfill()
+        #expect(banCalled)
     }
     
-    func testDisplayDetails() async throws {
+    @Test
+    mutating func displayDetails() async throws {
         let roomProxy = JoinedRoomProxyMock(.init(members: [RoomMemberProxyMock.mockAdmin, RoomMemberProxyMock.mockAlice]))
         viewModel = ManageRoomMemberSheetViewModel(memberDetails: .memberDetails(roomMember: .init(withProxy: RoomMemberProxyMock.mockAlice)),
                                                    permissions: .init(canKick: true, canBan: true, ownPowerLevel: RoomMemberProxyMock.mockAdmin.powerLevel),
@@ -99,6 +108,6 @@ class ManageRoomMemberSheetViewModelTests: XCTestCase {
         }
         context.send(viewAction: .displayDetails)
         try await deferredAction.fulfill()
-        XCTAssertNil(context.alertInfo)
+        #expect(context.alertInfo == nil)
     }
 }

@@ -7,6 +7,7 @@
 //
 
 import Combine
+<<<<<<< HEAD
 import XCTest
 
 // Tchap: specify target for unit tests
@@ -16,15 +17,18 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+=======
+@testable import ElementX
+import Testing
+>>>>>>> release/26.03.0
 
 @MainActor
-class SettingsScreenViewModelTests: XCTestCase {
-    var viewModel: SettingsScreenViewModelProtocol!
-    var context: SettingsScreenViewModelType.Context!
-    var cancellables = Set<AnyCancellable>()
+@Suite
+struct SettingsScreenViewModelTests {
+    private var viewModel: SettingsScreenViewModelProtocol
+    private var context: SettingsScreenViewModelType.Context
     
-    @MainActor override func setUpWithError() throws {
-        cancellables.removeAll()
+    init() {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: ""))))
         viewModel = SettingsScreenViewModel(userSession: userSession,
                                             appSettings: ServiceLocator.shared.settings,
@@ -32,19 +36,22 @@ class SettingsScreenViewModelTests: XCTestCase {
         context = viewModel.context
     }
 
-    @MainActor func testLogout() async throws {
+    @Test
+    func logout() async throws {
         let deferred = deferFulfillment(viewModel.actions) { $0 == .logout }
         context.send(viewAction: .logout)
         try await deferred.fulfill()
     }
 
-    func testReportBug() async throws {
+    @Test
+    func reportBug() async throws {
         let deferred = deferFulfillment(viewModel.actions) { $0 == .reportBug }
         context.send(viewAction: .reportBug)
         try await deferred.fulfill()
     }
     
-    func testAnalytics() async throws {
+    @Test
+    func analytics() async throws {
         let deferred = deferFulfillment(viewModel.actions) { $0 == .analytics }
         context.send(viewAction: .analytics)
         try await deferred.fulfill()

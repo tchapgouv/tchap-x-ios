@@ -13,9 +13,9 @@ enum AudioPlayerError: Error {
     case genericError
 }
 
-// There used to be a MediaPlayerProtocol that AudioPlayerProtocol inherited from.
-// This should be called something else but we already have an AudioPlayerState,
-// AudioPlayerPlaybackState and InternalAudioPlayerState so who knows what to call this.
+/// There used to be a MediaPlayerProtocol that AudioPlayerProtocol inherited from.
+/// This should be called something else but we already have an AudioPlayerState,
+/// AudioPlayerPlaybackState and InternalAudioPlayerState so who knows what to call this.
 enum MediaPlayerState {
     case loading
     case playing
@@ -40,6 +40,7 @@ protocol AudioPlayerProtocol: AnyObject {
     var currentTime: TimeInterval { get }
     var playbackURL: URL? { get }
     var state: MediaPlayerState { get }
+    var playbackSpeed: Float { get }
     
     var actions: AnyPublisher<AudioPlayerAction, Never> { get }
     
@@ -49,6 +50,7 @@ protocol AudioPlayerProtocol: AnyObject {
     func pause()
     func stop()
     func seek(to progress: Double) async
+    func setPlaybackSpeed(_ speed: Float)
 }
 
 // sourcery: AutoMockable

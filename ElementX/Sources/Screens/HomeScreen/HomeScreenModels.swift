@@ -43,6 +43,7 @@ enum HomeScreenViewAction {
     case dismissNewSoundBanner
     case updateVisibleItemRange(Range<Int>)
     case globalSearch
+    case spaceFilters
     case markRoomAsUnread(roomIdentifier: String)
     case markRoomAsRead(roomIdentifier: String)
     case markRoomAsFavourite(roomIdentifier: String, isFavourite: Bool)
@@ -109,6 +110,11 @@ struct HomeScreenViewState: BindableState {
     
     var reportRoomEnabled = false
     
+    var spaceFiltersEnabled = false
+    
+    var shouldShowSpaceFilters = false
+    var selectedSpaceFilter: SpaceServiceFilter?
+    
     var visibleRooms: [HomeScreenRoom] {
         if roomListMode == .skeletons {
             return placeholderRooms
@@ -125,13 +131,15 @@ struct HomeScreenViewState: BindableState {
         }
     }
     
-    // Used to hide all the rooms when the search field is focused and the query is empty
+    /// Used to hide all the rooms when the search field is focused and the query is empty
     var shouldHideRoomList: Bool {
         bindings.isSearchFieldFocused && bindings.searchQuery.isEmpty
     }
     
     var shouldShowEmptyFilterState: Bool {
-        !bindings.isSearchFieldFocused && bindings.filtersState.isFiltering && visibleRooms.isEmpty
+        !bindings.isSearchFieldFocused &&
+            (bindings.filtersState.isFiltering || selectedSpaceFilter != nil) &&
+            visibleRooms.isEmpty
     }
     
     var shouldShowFilters: Bool {
@@ -150,6 +158,8 @@ struct HomeScreenViewStateBindings {
     
     var alertInfo: AlertInfo<UUID>?
     var leaveRoomAlertItem: LeaveRoomAlertItem?
+    
+    var spaceFiltersViewModel: ChatsSpaceFiltersScreenViewModel?
 }
 
 struct HomeScreenRoom: Identifiable, Equatable {

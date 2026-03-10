@@ -68,6 +68,11 @@ enum CodeBlockAttribute: AttributedStringKey {
     static let name = "MXCodeBlockAttribute"
 }
 
+enum InlineCodeAttribute: AttributedStringKey {
+    typealias Value = Bool
+    static let name = "MXInlineCodeAttribute"
+}
+
 // periphery: ignore - required to make NSAttributedString to AttributedString conversion even if not used directly
 extension AttributeScopes {
     struct ElementXAttributes: AttributeScope {
@@ -84,12 +89,15 @@ extension AttributeScopes {
         let allUsersMention: AllUsersMentionAttribute
         
         let codeBlock: CodeBlockAttribute
+        let inlineCode: InlineCodeAttribute
         
         let swiftUI: SwiftUIAttributes
         let uiKit: UIKitAttributes
     }
     
-    var elementX: ElementXAttributes.Type { ElementXAttributes.self }
+    var elementX: ElementXAttributes.Type {
+        ElementXAttributes.self
+    }
 }
 
 // periphery: ignore - required to make NSAttributedString to AttributedString conversion even if not used directly

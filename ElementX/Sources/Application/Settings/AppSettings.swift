@@ -13,8 +13,11 @@ import EmbeddedElementCall
 import Foundation
 import SwiftUI
 
-// Common settings between app and NSE
-protocol CommonSettingsProtocol {
+/// Common settings between app and NSE
+protocol CommonSettingsProtocol: AnyObject {
+    var lastNotificationBootTime: TimeInterval? { get set }
+    var notificationSoundName: RemotePreference<UNNotificationSoundName> { get }
+    
     var logLevel: LogLevel { get }
     var traceLogPacks: Set<TraceLogPack> { get }
     var bugReportRageshakeURL: RemotePreference<RageshakeConfiguration> { get }
@@ -25,6 +28,12 @@ protocol CommonSettingsProtocol {
     var hideQuietNotificationAlerts: Bool { get }
 }
 
+enum AppBuildType {
+    case debug
+    case nightly
+    case release
+}
+
 /// Store Element specific app settings.
 final class AppSettings {
     private enum UserDefaultsKeys: String {
@@ -32,7 +41,6 @@ final class AppSettings {
         case seenInvites
         case hasSeenSpacesAnnouncement
         case hasSeenNewSoundBanner
-        case acknowledgedHistoryVisibleRooms
         case appLockNumberOfPINAttempts
         case appLockNumberOfBiometricAttempts
         case timelineStyle
@@ -48,6 +56,7 @@ final class AppSettings {
         case enableNotifications
         case enableInAppNotifications
         case pusherProfileTag
+        case lastNotificationBootTime
         case logLevel
         case traceLogPacks
         case viewSourceEnabled
@@ -71,9 +80,12 @@ final class AppSettings {
         case linkNewDeviceEnabled
         
         // Spaces
+        case spaceFiltersEnabled
         case spaceSettingsEnabled
         case createSpaceEnabled
         
+        case voiceMessagePlaybackSpeed
+
         // Doug's tweaks 🔧
         case hideUnreadMessagesBadge
         case hideQuietNotificationAlerts
@@ -84,18 +96,26 @@ final class AppSettings {
     /// UserDefaults to be used on reads and writes.
     private static var store: UserDefaults! = UserDefaults(suiteName: suiteName)
     
-    /// Whether or not the app is a development build that isn't in production.
-    static var isDevelopmentBuild: Bool = {
+    static var appBuildType: AppBuildType {
         #if DEBUG
-        true
+        return .debug
         #else
+<<<<<<< HEAD
         // Tchap: set Development Build flag to false if not in DEBUG mode
 //        let apps = ["io.element.elementx.nightly", "io.element.elementx.pr"]
 //        return apps.contains(InfoPlistReader.main.baseBundleIdentifier)
         return false
+=======
+        switch InfoPlistReader.main.baseBundleIdentifier {
+        case "io.element.elementx.nightly":
+            return .nightly
+        default:
+            return .release
+        }
+>>>>>>> release/26.03.0
         #endif
-    }()
-        
+    }
+    
     static func resetAllSettings() {
         MXLog.warning("Resetting the AppSettings.")
         store.removePersistentDomain(forName: suiteName)
@@ -180,10 +200,6 @@ final class AppSettings {
     /// Defaults to `true` for new users, and we use a migration to set it to `false` for existing users.
     @UserPreference(key: UserDefaultsKeys.hasSeenNewSoundBanner, defaultValue: true, storageType: .userDefaults(store))
     var hasSeenNewSoundBanner
-    
-    /// The Set of room identifiers that the user has acknowledged have visible history.
-    @UserPreference(key: UserDefaultsKeys.acknowledgedHistoryVisibleRooms, defaultValue: [], storageType: .userDefaults(store))
-    var acknowledgedHistoryVisibleRooms: Set<String>
     
     /// The initial set of account providers shown to the user in the authentication flow.
     ///
@@ -278,7 +294,11 @@ final class AppSettings {
     private(set) var identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
     /// A URL describing how history sharing works
     private(set) var historySharingDetailsURL: URL = "https://element.io/en/help#e2ee-history-sharing"
+<<<<<<< HEAD
     // Tchap: handle Tchap permalinks
+=======
+
+>>>>>>> release/26.03.0
     /// Any domains that Element web may be hosted on - used for handling links.
     #if IS_TCHAP_DEVELOPMENT
     private(set) var elementWebHosts = ["https://www.tchap.incubateur.net"]
@@ -359,6 +379,7 @@ final class AppSettings {
         InfoPlistReader.main.baseBundleIdentifier + ".ios.prod"
     }
     
+<<<<<<< HEAD
     // Tchap: use Tchap Sygnal as push notification server.
 //    private(set) var pushGatewayBaseURL: URL = "https://matrix.org"
     #if IS_TCHAP_DEVELOPMENT
@@ -371,6 +392,12 @@ final class AppSettings {
     var pushGatewayBaseURL: URL = "https://matrix.org"
     #endif
     var pushGatewayNotifyEndpoint: URL { pushGatewayBaseURL.appending(path: "_matrix/push/v1/notify") }
+=======
+    private(set) var pushGatewayBaseURL: URL = "https://matrix.org"
+    var pushGatewayNotifyEndpoint: URL {
+        pushGatewayBaseURL.appending(path: "_matrix/push/v1/notify")
+    }
+>>>>>>> release/26.03.0
     
     @UserPreference(key: UserDefaultsKeys.enableNotifications, defaultValue: true, storageType: .userDefaults(store))
     var enableNotifications
@@ -384,6 +411,13 @@ final class AppSettings {
     /// Tag describing which set of device specific rules a pusher executes.
     @UserPreference(key: UserDefaultsKeys.pusherProfileTag, storageType: .userDefaults(store))
     var pusherProfileTag: String?
+    
+    /// The device's last boot time as recorded by the NSE.
+    @UserPreference(key: UserDefaultsKeys.lastNotificationBootTime, storageType: .userDefaults(store))
+    var lastNotificationBootTime: TimeInterval?
+    
+    /// The name of sound played when delivering noisy notifications.
+    var notificationSoundName: RemotePreference<UNNotificationSoundName> = .init(.init("message.caf"))
     
     // MARK: - Logging
         
@@ -410,10 +444,14 @@ final class AppSettings {
     private(set) var bugReportApplicationID = "tchap-x-production-ios"
     #else
     private(set) var bugReportApplicationID = "element-x-ios"
+<<<<<<< HEAD
     #endif
     /// The maximum size of the upload request. Default value is just below CloudFlare's max request size.
     let bugReportMaxUploadSize = 10 * 1024 * 1024
 
+=======
+    
+>>>>>>> release/26.03.0
     // MARK: - Analytics
     
     /// The configuration to use for analytics. Set to `nil` to disable analytics.
@@ -423,7 +461,14 @@ final class AppSettings {
     /// The URL to open with more information about analytics terms. When this is `nil` the "Learn more" link will be hidden.
     private(set) var analyticsTermsURL: URL? = "https://tchap.numerique.gouv.fr/politique-de-confidentialite"
     /// Whether or not there the app is able ask for user consent to enable analytics or sentry reporting.
+<<<<<<< HEAD
     var canPromptForAnalytics: Bool { analyticsConfiguration != nil || bugReportSentryURL != nil }
+=======
+    var canPromptForAnalytics: Bool {
+        analyticsConfiguration != nil || bugReportSentryURL != nil
+    }
+    
+>>>>>>> release/26.03.0
     private static func makeAnalyticsConfiguration() -> AnalyticsConfiguration? {
         guard let host = Secrets.postHogHost, let apiKey = Secrets.postHogAPIKey else { return nil }
         return AnalyticsConfiguration(host: host, apiKey: apiKey)
@@ -453,12 +498,15 @@ final class AppSettings {
     
     // MARK: - Room Screen
     
-    @UserPreference(key: UserDefaultsKeys.viewSourceEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
+    @UserPreference(key: UserDefaultsKeys.viewSourceEnabled, defaultValue: appBuildType == .debug, storageType: .userDefaults(store))
     var viewSourceEnabled
     
     @UserPreference(key: UserDefaultsKeys.optimizeMediaUploads, defaultValue: true, storageType: .userDefaults(store))
     var optimizeMediaUploads
-    
+
+    @UserPreference(key: UserDefaultsKeys.voiceMessagePlaybackSpeed, defaultValue: AudioPlaybackSpeed.default, storageType: .userDefaults(store))
+    var voiceMessagePlaybackSpeed: AudioPlaybackSpeed
+
     /// Whether or not to show a warning on the media caption composer so the user knows
     /// that captions might not be visible to users who are using other Matrix clients.
     let shouldShowMediaCaptionWarning = true
@@ -485,6 +533,7 @@ final class AppSettings {
     
     // MARK: - Maps
     
+<<<<<<< HEAD
     // maptiler base url
     // Tchap: customize map tiler url for Tchap.
     #if IS_TCHAP_DEVELOPMENT || IS_TCHAP_STAGING || IS_TCHAP_PRODUCTION
@@ -498,6 +547,9 @@ final class AppSettings {
                                                                    lightStyleID: "osm-bright",
                                                                    darkStyleID: "fiord-color")
     #else
+=======
+    /// maptiler base url
+>>>>>>> release/26.03.0
     private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
                                                                    apiKey: Secrets.mapLibreAPIKey,
                                                                    lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
@@ -511,17 +563,25 @@ final class AppSettings {
     
     // MARK: - Feature Flags
     
-    // Spaces
-    @UserPreference(key: UserDefaultsKeys.spaceSettingsEnabled, defaultValue: false, storageType: .userDefaults(store))
+    /// Spaces
+    @UserPreference(key: UserDefaultsKeys.spaceSettingsEnabled, defaultValue: true, storageType: .volatile)
     var spaceSettingsEnabled
     
-    @UserPreference(key: UserDefaultsKeys.createSpaceEnabled, defaultValue: false, storageType: .userDefaults(store))
+    @UserPreference(key: UserDefaultsKeys.createSpaceEnabled, defaultValue: true, storageType: .volatile)
     var createSpaceEnabled
     
+<<<<<<< HEAD
     // Others
     // Tchap: enable `publicSearchEnabled` feature flag by default. It is Tchap `join a forum` action.
 //    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
     @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: true, storageType: .userDefaults(store))
+=======
+    @UserPreference(key: UserDefaultsKeys.spaceFiltersEnabled, defaultValue: true, storageType: .volatile)
+    var spaceFiltersEnabled
+    
+    /// Others
+    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
+>>>>>>> release/26.03.0
     var publicSearchEnabled
     
     @UserPreference(key: UserDefaultsKeys.fuzzyRoomListSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
@@ -555,7 +615,7 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.linkNewDeviceEnabled, defaultValue: false, storageType: .userDefaults(store))
     var linkNewDeviceEnabled
     
-    @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
+    @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: appBuildType == .debug, storageType: .userDefaults(store))
     var developerOptionsEnabled
 }
 

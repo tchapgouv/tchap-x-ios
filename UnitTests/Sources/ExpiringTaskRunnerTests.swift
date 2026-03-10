@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+<<<<<<< HEAD
 import Foundation
 
 import XCTest
@@ -17,23 +18,31 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+=======
+@testable import ElementX
+import Foundation
+import Testing
+>>>>>>> release/26.03.0
 
-class ExpiringTaskRunnerTests: XCTestCase {
+@Suite
+struct ExpiringTaskRunnerTests {
     enum ExpiringTaskTestError: Error {
         case failed
     }
     
-    func testSuccedingTask() async {
+    @Test
+    func succedingTask() async throws {
         let runner = ExpiringTaskRunner {
             try? await Task.sleep(for: .milliseconds(300))
             return true
         }
         
-        let result = try? await runner.run(timeout: .seconds(1))
-        XCTAssertEqual(result, true)
+        let result = try await runner.run(timeout: .seconds(1))
+        #expect(result == true)
     }
     
-    func testFailingTask() async {
+    @Test
+    func failingTask() async {
         let runner: ExpiringTaskRunner<Result<String, ExpiringTaskTestError>> = ExpiringTaskRunner {
             try? await Task.sleep(for: .milliseconds(300))
             return .failure(.failed)
@@ -42,20 +51,21 @@ class ExpiringTaskRunnerTests: XCTestCase {
         do {
             _ = try await runner.run(timeout: .seconds(1))
         } catch {
-            XCTAssertEqual(error as? ExpiringTaskTestError, ExpiringTaskTestError.failed)
+            #expect(error as? ExpiringTaskTestError == ExpiringTaskTestError.failed)
         }
     }
     
-    func testTimeoutTask() async {
+    @Test
+    func timeoutTask() async {
         let runner = ExpiringTaskRunner {
             try? await Task.sleep(for: .milliseconds(300))
             return true
         }
-
+        
         do {
             _ = try await runner.run(timeout: .milliseconds(100))
         } catch {
-            XCTAssertEqual(error as? ExpiringTaskRunnerError, ExpiringTaskRunnerError.timeout)
+            #expect(error as? ExpiringTaskRunnerError == ExpiringTaskRunnerError.timeout)
         }
     }
 }

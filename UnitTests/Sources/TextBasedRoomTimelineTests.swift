@@ -12,11 +12,18 @@
 @testable import TchapX_Production
 #else
 @testable import ElementX
+<<<<<<< HEAD
 #endif
 import XCTest
+=======
+import Foundation
+import Testing
+>>>>>>> release/26.03.0
 
-final class TextBasedRoomTimelineTests: XCTestCase {
-    func testTextRoomTimelineItemWhitespaceEnd() {
+@Suite
+struct TextBasedRoomTimelineTests {
+    @Test
+    func textRoomTimelineItemWhitespaceEnd() {
         let timestamp = Calendar.current.startOfDay(for: .now).addingTimeInterval(60 * 60) // 1:00 am
         let timelineItem = TextRoomTimelineItem(id: .randomEvent,
                                                 timestamp: timestamp,
@@ -25,10 +32,11 @@ final class TextBasedRoomTimelineTests: XCTestCase {
                                                 canBeRepliedTo: true,
                                                 sender: .init(id: UUID().uuidString),
                                                 content: .init(body: "Test"))
-        XCTAssertEqual(timelineItem.additionalWhitespaces(), timestamp.formattedTime().count + 1)
+        #expect(timelineItem.additionalWhitespaces() == timestamp.formattedTime().count + 1)
     }
 
-    func testTextRoomTimelineItemWhitespaceEndLonger() {
+    @Test
+    func textRoomTimelineItemWhitespaceEndLonger() {
         let timestamp = Calendar.current.startOfDay(for: .now).addingTimeInterval(-60) // 11:59 pm
         let timelineItem = TextRoomTimelineItem(id: .randomEvent,
                                                 timestamp: timestamp,
@@ -37,10 +45,11 @@ final class TextBasedRoomTimelineTests: XCTestCase {
                                                 canBeRepliedTo: true,
                                                 sender: .init(id: UUID().uuidString),
                                                 content: .init(body: "Test"))
-        XCTAssertEqual(timelineItem.additionalWhitespaces(), timestamp.formattedTime().count + 1)
+        #expect(timelineItem.additionalWhitespaces() == timestamp.formattedTime().count + 1)
     }
 
-    func testTextRoomTimelineItemWhitespaceEndWithEdit() {
+    @Test
+    func textRoomTimelineItemWhitespaceEndWithEdit() {
         let timestamp = Date.mock
         var timelineItem = TextRoomTimelineItem(id: .randomEvent,
                                                 timestamp: timestamp,
@@ -51,10 +60,11 @@ final class TextBasedRoomTimelineTests: XCTestCase {
                                                 content: .init(body: "Test"))
         timelineItem.properties.isEdited = true
         let editedCount = L10n.commonEditedSuffix.count
-        XCTAssertEqual(timelineItem.additionalWhitespaces(), timestamp.formattedTime().count + editedCount + 2)
+        #expect(timelineItem.additionalWhitespaces() == timestamp.formattedTime().count + editedCount + 2)
     }
 
-    func testTextRoomTimelineItemWhitespaceEndWithEditAndAlert() {
+    @Test
+    func textRoomTimelineItemWhitespaceEndWithEditAndAlert() {
         let timestamp = Date.mock
         var timelineItem = TextRoomTimelineItem(id: .randomEvent,
                                                 timestamp: timestamp,
@@ -66,6 +76,6 @@ final class TextBasedRoomTimelineTests: XCTestCase {
         timelineItem.properties.isEdited = true
         timelineItem.properties.deliveryStatus = .sendingFailed(.unknown)
         let editedCount = L10n.commonEditedSuffix.count
-        XCTAssertEqual(timelineItem.additionalWhitespaces(), timestamp.formattedTime().count + editedCount + 5)
+        #expect(timelineItem.additionalWhitespaces() == timestamp.formattedTime().count + editedCount + 5)
     }
 }

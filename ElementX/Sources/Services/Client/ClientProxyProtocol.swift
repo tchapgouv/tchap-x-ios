@@ -48,18 +48,25 @@ enum SlidingSyncConstants {
     static let maximumVisibleRangeSize = 30
 }
 
+<<<<<<< HEAD
 enum CreateRoomAccessType: CaseIterable {
     // Tchap: handle `isFederated` associated value for `public` room. CaseIterable is not automatically implement then.
     // case `public`
     case `public`(federated: Bool)
+=======
+enum CreateRoomAccessType: Equatable {
+    case `public`
+    case spaceMembers(spaceID: String)
+    case askToJoinWithSpaceMembers(spaceID: String)
+>>>>>>> release/26.03.0
     case askToJoin
     case `private`
     // Tchap: add private unencrypted room type
     case privateUnencrypted
     
-    var isPrivate: Bool {
+    var isVisibilityPrivate: Bool {
         switch self {
-        case .private:
+        case .private, .spaceMembers, .askToJoinWithSpaceMembers:
             true
         case .public, .askToJoin:
             false
@@ -94,7 +101,7 @@ enum SessionVerificationState {
     case unverified
 }
 
-// The `Decodable` conformance is just for the purpose of migration
+/// The `Decodable` conformance is just for the purpose of migration
 enum TimelineMediaVisibility: Decodable {
     case always
     case privateOnly
@@ -259,8 +266,7 @@ protocol ClientProxyProtocol: AnyObject {
     
     func trackRecentlyVisitedRoom(_ roomID: String) async -> Result<Void, ClientProxyError>
     
-    func recentlyVisitedRooms() async -> Result<[String], ClientProxyError>
-    
+    func recentlyVisitedRooms(filter: (JoinedRoomProxyProtocol) -> Bool) async -> [JoinedRoomProxyProtocol]
     func recentConversationCounterparts() async -> [UserProfileProxy]
     
     // MARK: - Crypto

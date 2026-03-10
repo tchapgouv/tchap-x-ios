@@ -417,7 +417,13 @@ class TimelineInteractionHandler {
     }
     
     // MARK: Audio Playback
-    
+
+    func changePlaybackSpeed(for itemID: TimelineItemIdentifier) {
+        let nextSpeed = appSettings.voiceMessagePlaybackSpeed.next
+        appSettings.voiceMessagePlaybackSpeed = nextSpeed
+        audioPlayerState(for: itemID)?.setPlaybackSpeed(nextSpeed)
+    }
+
     func playPauseAudio(for itemID: TimelineItemIdentifier) async {
         MXLog.info("Toggle play/pause audio for itemID \(itemID)")
         guard let timelineItem = timelineController.timelineItems.firstUsingStableID(itemID) else {
@@ -503,7 +509,9 @@ class TimelineInteractionHandler {
         let playerState = AudioPlayerState(id: .timelineItemIdentifier(itemID),
                                            title: L10n.commonVoiceMessage,
                                            duration: voiceMessageRoomTimelineItem.content.duration,
-                                           waveform: voiceMessageRoomTimelineItem.content.waveform)
+                                           waveform: voiceMessageRoomTimelineItem.content.waveform,
+                                           playbackSpeed: appSettings.voiceMessagePlaybackSpeed,
+                                           playbackSpeedPublisher: appSettings.$voiceMessagePlaybackSpeed)
         mediaPlayerProvider.register(audioPlayerState: playerState)
         return playerState
     }

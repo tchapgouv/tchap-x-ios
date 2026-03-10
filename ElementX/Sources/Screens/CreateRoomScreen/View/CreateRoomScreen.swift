@@ -39,12 +39,20 @@ struct CreateRoomScreen: View {
         Form {
             roomSection
             topicSection
+<<<<<<< HEAD
             // Tchap: mask Element new way of choosing room type. And keep Tchap way of choosing room type (by security).
 //            roomAccessSection
             securitySection
             // Tchap: allow to disable federated state on Public room.
             if !context.selectedAccessType.isPrivate {
                 tchapNonFederatedPublicRoomSection
+=======
+            if context.viewState.canSelectSpace {
+                selectSpaceSection
+            }
+            roomAccessSection
+            if !context.viewState.roomAccessType.isVisibilityPrivate {
+>>>>>>> release/26.03.0
                 roomAliasSection
             }
         }
@@ -56,6 +64,17 @@ struct CreateRoomScreen: View {
         .toolbar { toolbar }
         .alert(item: $context.alertInfo)
         .shouldScrollOnKeyboardDidShow(focus == .alias, to: Focus.alias)
+        .sheet(isPresented: $context.showSpaceSelectionSheet) {
+            CreateRoomSpaceSelectionSheet(context: context)
+        }
+    }
+    
+    private var nameTextFieldShape: AnyShape {
+        if #available(iOS 26, *) {
+            AnyShape(ConcentricRectangle(corners: .concentric(minimum: 26)))
+        } else {
+            AnyShape(RoundedRectangle(cornerRadius: 12))
+        }
     }
 
     private var nameTextFieldShape: AnyShape {
@@ -68,6 +87,8 @@ struct CreateRoomScreen: View {
 
     private var roomSection: some View {
         Section {
+            EmptyView()
+        } header: {
             HStack(alignment: .center, spacing: 16) {
                 roomAvatarButton
                 let nameLabel = if #available(iOS 26, *) {
@@ -96,7 +117,7 @@ struct CreateRoomScreen: View {
                 }
             }
             .listRowInsets(.init())
-            .listRowBackground(Color.clear)
+            .padding(.top, 16)
         }
     }
     
@@ -105,23 +126,31 @@ struct CreateRoomScreen: View {
             focus = nil
             context.showAttachmentConfirmationDialog = true
         } label: {
-            if let url = context.viewState.avatarMediaInfo?.thumbnailURL {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    ProgressView()
-                }
-                .scaledFrame(size: 70)
-                .clipShape(Circle())
-            } else {
-                CompoundIcon(\.takePhoto, size: .custom(36), relativeTo: .title)
-                    .foregroundColor(.compound.iconSecondary)
+            if let avatarImage = context.viewState.avatarImage {
+                Image(uiImage: avatarImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
                     .scaledFrame(size: 70, relativeTo: .title)
-                    .background(.compound.bgSubtlePrimary, in: Circle())
+                    .clipShape(context.viewState.isSpace ? AnyShape(RoundedRectangle(cornerRadius: 16)) : AnyShape(Circle()))
+                    .overlay(alignment: .bottomTrailing) {
+                        editAvatarBadge
+                            .scaledOffset(x: 12, y: 4, relativeTo: .title)
+                            .accessibilityHidden(true)
+                    }
+            } else {
+                CompoundIcon(\.takePhoto, size: .medium, relativeTo: .title)
+                    .foregroundColor(.compound.iconPrimary)
+                    .scaledFrame(size: 50, relativeTo: .title)
+                    .background(.compound.bgCanvasDefault, in: Circle())
+                    .overlay {
+                        Circle()
+                            .stroke(.compound.borderInteractiveSecondary, lineWidth: 1)
+                    }
+                    .padding(10)
+                    .accessibilityHidden(true)
             }
         }
+        .accessibilityLabel(L10n.a11yEditAvatar)
         .buttonStyle(.plain)
         .accessibilityIdentifier(A11yIdentifiers.createRoomScreen.roomAvatar)
         .confirmationDialog("", isPresented: $context.showAttachmentConfirmationDialog) {
@@ -133,12 +162,29 @@ struct CreateRoomScreen: View {
             }
             .accessibilityIdentifier(A11yIdentifiers.createRoomScreen.mediaPicker)
             
-            if context.viewState.avatarMediaInfo?.thumbnailURL != nil {
+            if context.viewState.avatarImage != nil {
                 Button(L10n.actionRemove, role: .destructive) {
                     context.send(viewAction: .removeImage)
                 }
             }
         }
+    }
+    
+    private var editAvatarBadge: some View {
+        CompoundIcon(\.edit, size: .small, relativeTo: .body)
+            .foregroundStyle(.compound.iconPrimary)
+            .scaledPadding(5, relativeTo: .title)
+            .background {
+                Circle()
+                    .fill(Color.compound.bgCanvasDefault)
+                    .overlay {
+                        Circle()
+                            .inset(by: 0.5)
+                            .stroke(.compound.borderInteractiveSecondary, lineWidth: 1)
+                    }
+            }
+            .scaledPadding(3.5, relativeTo: .title)
+            .background(.compound.bgSubtleSecondaryLevel0, in: Circle())
     }
     
     private var topicSection: some View {
@@ -207,6 +253,7 @@ struct CreateRoomScreen: View {
         Section {
             ForEach(context.viewState.availableAccessTypes, id: \.self) { accessType in
                 CreateRoomAccessRow(access: accessType,
+                                    spaceName: context.selectedSpace?.name ?? "",
                                     isSelected: context.selectedAccessType == accessType) {
                     context.selectedAccessType = accessType
                 }
@@ -258,9 +305,42 @@ struct CreateRoomScreen: View {
         }
     }
     
+    private var selectSpaceSection: some View {
+        Section {
+            if let selectedSpace = context.selectedSpace {
+                ListRow(label: .avatar(title: selectedSpace.name,
+                                       description: selectedSpace.canonicalAlias,
+                                       icon: RoomAvatarImage(avatar: selectedSpace.avatar,
+                                                             avatarSize: .room(on: .createRoomSelectSpace),
+                                                             mediaProvider: context.mediaProvider)),
+                        kind: .navigationLink {
+                            context.showSpaceSelectionSheet = true
+                        })
+            } else {
+                ListRow(label: .plain(title: L10n.screenCreateRoomSpaceSelectionNoSpaceTitle),
+                        kind: .navigationLink {
+                            context.showSpaceSelectionSheet = true
+                        })
+            }
+        } header: {
+            Text(L10n.commonSpace)
+                .compoundListSectionHeader()
+        }
+    }
+    
+    @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
+        if context.viewState.shouldShowCancelButton {
+            ToolbarItem(placement: .topBarLeading) {
+                ToolbarButton(role: .cancel) {
+                    context.send(viewAction: .dismiss)
+                }
+                .accessibilityIdentifier(A11yIdentifiers.createRoomScreen.cancel)
+            }
+        }
+        
         ToolbarItem(placement: .confirmationAction) {
-            Button(L10n.actionCreate) {
+            ToolbarButton(role: .confirm(title: L10n.actionCreate)) {
                 focus = nil
                 context.send(viewAction: .createRoom)
             }
@@ -271,7 +351,8 @@ struct CreateRoomScreen: View {
 }
 
 private struct CreateRoomAccessRow: View {
-    let access: CreateRoomAccessType
+    let access: CreateRoomScreenAccessType
+    let spaceName: String
     let isSelected: Bool
     let onSelection: () -> Void
     
@@ -286,9 +367,16 @@ private struct CreateRoomAccessRow: View {
             L10n.screenCreateRoomRoomAccessSectionKnockingOptionTitle
         case .private:
             L10n.screenCreateRoomRoomAccessSectionPrivateOptionTitle
+<<<<<<< HEAD
         // Tchap: handle private unencrypted room type
         case .privateUnencrypted:
             TchapL10n.screenCreateRoomRoomAccessSectionPrivateUnencryptedTitle
+=======
+        case .spaceMembers:
+            L10n.screenCreateRoomRoomAccessSectionRestrictedOptionTitle
+        case .askToJoinWithSpaceMembers:
+            L10n.screenCreateRoomRoomAccessSectionKnockingRestrictedOptionTitle
+>>>>>>> release/26.03.0
         }
     }
     
@@ -303,9 +391,16 @@ private struct CreateRoomAccessRow: View {
             L10n.screenCreateRoomRoomAccessSectionKnockingOptionDescription
         case .private:
             L10n.screenCreateRoomRoomAccessSectionPrivateOptionDescription
+<<<<<<< HEAD
         // Tchap: handle private unencrypted room type
         case .privateUnencrypted:
             TchapL10n.screenCreateRoomRoomAccessSectionPrivateUnencryptedDescription
+=======
+        case .spaceMembers:
+            L10n.screenCreateRoomRoomAccessSectionRestrictedOptionDescription(spaceName)
+        case .askToJoinWithSpaceMembers:
+            L10n.screenCreateRoomRoomAccessSectionKnockingRestrictedOptionDescription(spaceName)
+>>>>>>> release/26.03.0
         }
     }
     
@@ -317,17 +412,23 @@ private struct CreateRoomAccessRow: View {
             \.userAdd
         case .private:
             \.lock
+<<<<<<< HEAD
         // Tchap: handle private unencrypted room type
         case .privateUnencrypted:
             \.lock
+=======
+        case .spaceMembers:
+            \.space
+        case .askToJoinWithSpaceMembers:
+            \.userAdd
+>>>>>>> release/26.03.0
         }
     }
     
     var body: some View {
         ListRow(label: .default(title: title,
                                 description: description,
-                                icon: icon,
-                                iconAlignment: .top),
+                                icon: icon),
                 kind: .selection(isSelected: isSelected,
                                  action: onSelection))
     }
@@ -336,27 +437,24 @@ private struct CreateRoomAccessRow: View {
 // MARK: - Previews
 
 struct CreateRoom_Previews: PreviewProvider, TestablePreview {
-    static let viewModel = {
-        AppSettings.resetAllSettings()
-        let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@userid:example.com"))))
-        return CreateRoomScreenViewModel(isSpace: false,
-                                         userSession: userSession,
-                                         analytics: ServiceLocator.shared.analytics,
-                                         userIndicatorController: UserIndicatorControllerMock(),
-                                         appSettings: ServiceLocator.shared.settings)
+    static let viewModel = makeViewModel()
+    
+    static let avatarViewModel = {
+        let viewModel = makeViewModel()
+        viewModel.updateAvatar(fileURL: Bundle.main.url(forResource: "preview_avatar_room", withExtension: "jpg") ?? .picturesDirectory)
+        return viewModel
     }()
     
-    static let spaceViewModel = {
-        AppSettings.resetAllSettings()
-        let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@userid:example.com"))))
-        return CreateRoomScreenViewModel(isSpace: true,
-                                         userSession: userSession,
-                                         analytics: ServiceLocator.shared.analytics,
-                                         userIndicatorController: UserIndicatorControllerMock(),
-                                         appSettings: ServiceLocator.shared.settings)
+    static let spaceViewModel = makeViewModel(isSpace: true, selectionMode: .none)
+    
+    static let spaceWithAvatarViewModel = {
+        let viewModel = makeViewModel(isSpace: true, selectionMode: .none)
+        viewModel.updateAvatar(fileURL: Bundle.main.url(forResource: "preview_avatar_room", withExtension: "jpg") ?? .picturesDirectory)
+        return viewModel
     }()
     
     static let publicRoomViewModel = {
+<<<<<<< HEAD
         AppSettings.resetAllSettings()
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
         let viewModel = CreateRoomScreenViewModel(isSpace: false,
@@ -365,24 +463,21 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
                                                   userIndicatorController: UserIndicatorControllerMock(),
                                                   appSettings: ServiceLocator.shared.settings)
         viewModel.context.selectedAccessType = .public(federated: true) // Tchap: add `isFederated` asosciated value.
+=======
+        let viewModel = makeViewModel()
+        viewModel.context.selectedAccessType = .public
+>>>>>>> release/26.03.0
         return viewModel
     }()
     
     static let askToJoinViewModel = {
-        AppSettings.resetAllSettings()
-        let appSettings = AppSettings()
-        appSettings.knockingEnabled = true
-        let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
-        let viewModel = CreateRoomScreenViewModel(isSpace: false,
-                                                  userSession: userSession,
-                                                  analytics: ServiceLocator.shared.analytics,
-                                                  userIndicatorController: UserIndicatorControllerMock(),
-                                                  appSettings: appSettings)
+        let viewModel = makeViewModel(isKnockingEnabled: true)
         viewModel.context.selectedAccessType = .askToJoin
         return viewModel
     }()
     
     static let publicRoomInvalidAliasViewModel = {
+<<<<<<< HEAD
         AppSettings.resetAllSettings()
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
         let viewModel = CreateRoomScreenViewModel(isSpace: false,
@@ -391,11 +486,16 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
                                                   userIndicatorController: UserIndicatorControllerMock(),
                                                   appSettings: ServiceLocator.shared.settings)
         viewModel.context.selectedAccessType = .public(federated: true) // Tchap: add `isFederated` asosciated value.
+=======
+        let viewModel = makeViewModel()
+        viewModel.context.selectedAccessType = .public
+>>>>>>> release/26.03.0
         viewModel.context.send(viewAction: .updateAliasLocalPart("#:"))
         return viewModel
     }()
     
     static let publicRoomExistingAliasViewModel = {
+<<<<<<< HEAD
         AppSettings.resetAllSettings()
         let clientProxy = ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))
         clientProxy.isAliasAvailableReturnValue = .success(false)
@@ -406,41 +506,117 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
                                                   userIndicatorController: UserIndicatorControllerMock(),
                                                   appSettings: ServiceLocator.shared.settings)
         viewModel.context.selectedAccessType = .public(federated: true) // Tchap: add `isFederated` asosciated value.
+=======
+        let viewModel = makeViewModel(isAliasAvailable: false)
+        viewModel.context.selectedAccessType = .public
+>>>>>>> release/26.03.0
         viewModel.context.send(viewAction: .updateAliasLocalPart("existing"))
+        return viewModel
+    }()
+    
+    static let selectedSpaceViewModel = makeViewModel(selectionMode: .editableSpacesList(preSelectedSpace: SpaceServiceRoom.mock(id: "awesome-space-id",
+                                                                                                                                 name: "Awesome Space",
+                                                                                                                                 isSpace: true,
+                                                                                                                                 joinRule: .invite)))
+    
+    static let selectedSpaceWithListViewModel = {
+        let viewModel = makeViewModel()
+        viewModel.context.selectedSpace = [SpaceServiceRoom].mockJoinedSpaces2.first
+        return viewModel
+    }()
+    
+    static let selectedSpaceWithAskToJoinViewModel = {
+        let viewModel = makeViewModel(isKnockingEnabled: true,
+                                      selectionMode: .editableSpacesList(preSelectedSpace: SpaceServiceRoom.mock(id: "awesome-space-id",
+                                                                                                                 name: "Awesome Space",
+                                                                                                                 isSpace: true,
+                                                                                                                 joinRule: .invite)))
+        viewModel.context.selectedAccessType = .askToJoinWithSpaceMembers
         return viewModel
     }()
 
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             CreateRoomScreen(context: viewModel.context)
         }
         .previewDisplayName("Create Room")
         
-        NavigationStack {
+        ElementNavigationStack {
+            CreateRoomScreen(context: avatarViewModel.context)
+        }
+        .previewDisplayName("Create Room with avatar")
+        .snapshotPreferences(expect: avatarViewModel.context.$viewState.map { $0.avatarImage != nil })
+        
+        ElementNavigationStack {
             CreateRoomScreen(context: spaceViewModel.context)
         }
         .previewDisplayName("Create Space")
         
-        NavigationStack {
+        ElementNavigationStack {
+            CreateRoomScreen(context: spaceWithAvatarViewModel.context)
+        }
+        .previewDisplayName("Create Space with avatar")
+        .snapshotPreferences(expect: spaceWithAvatarViewModel.context.$viewState.map { $0.avatarImage != nil })
+        
+        ElementNavigationStack {
             CreateRoomScreen(context: publicRoomViewModel.context)
         }
         .previewDisplayName("Create Public Room")
         
-        NavigationStack {
+        ElementNavigationStack {
             CreateRoomScreen(context: askToJoinViewModel.context)
         }
         .previewDisplayName("Create Knockable Room")
         
-        NavigationStack {
+        ElementNavigationStack {
             CreateRoomScreen(context: publicRoomInvalidAliasViewModel.context)
         }
         .snapshotPreferences(expect: publicRoomInvalidAliasViewModel.context.$viewState.map { !$0.aliasErrors.isEmpty })
         .previewDisplayName("Create Public Room, invalid alias")
         
-        NavigationStack {
+        ElementNavigationStack {
             CreateRoomScreen(context: publicRoomExistingAliasViewModel.context)
         }
         .snapshotPreferences(expect: publicRoomExistingAliasViewModel.context.$viewState.map { !$0.aliasErrors.isEmpty })
         .previewDisplayName("Create Public Room, existing alias")
+        
+        ElementNavigationStack {
+            CreateRoomScreen(context: selectedSpaceViewModel.context)
+        }
+        .previewDisplayName("Create Room with already selected Space")
+        
+        ElementNavigationStack {
+            CreateRoomScreen(context: selectedSpaceWithListViewModel.context)
+        }
+        .previewDisplayName("Create Room with a selected Space from the list")
+        
+        ElementNavigationStack {
+            CreateRoomScreen(context: selectedSpaceWithAskToJoinViewModel.context)
+        }
+        .previewDisplayName("Create Knockable Room with already selected Space")
+    }
+    
+    private static func makeViewModel(isKnockingEnabled: Bool = false,
+                                      isSpace: Bool = false,
+                                      selectionMode: CreateRoomScreenSpaceSelectionMode = .editableSpacesList(preSelectedSpace: nil),
+                                      isAliasAvailable: Bool = true) -> CreateRoomScreenViewModel {
+        AppSettings.resetAllSettings()
+        let appSettings = AppSettings()
+        appSettings.knockingEnabled = isKnockingEnabled
+        
+        let clientProxy = ClientProxyMock(.init(userIDServerName: "example.org",
+                                                userID: "@userid:example.com"))
+        clientProxy.isAliasAvailableReturnValue = .success(isAliasAvailable)
+        let spaces = [SpaceServiceRoom].mockJoinedSpaces2
+        clientProxy.spaceService = SpaceServiceProxyMock(.init(editableSpaces: spaces))
+        let userSession = UserSessionMock(.init(clientProxy: clientProxy))
+        
+        return CreateRoomScreenViewModel(isSpace: isSpace,
+                                         spaceSelectionMode: selectionMode,
+                                         shouldShowCancelButton: isSpace,
+                                         userSession: userSession,
+                                         analytics: ServiceLocator.shared.analytics,
+                                         userIndicatorController: UserIndicatorControllerMock(),
+                                         appSettings: appSettings)
     }
 }

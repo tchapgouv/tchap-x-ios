@@ -134,7 +134,7 @@ lane :accessibility_tests do |options|
   
   run_tests(
     scheme: "AccessibilityTests",
-    device: "iPhone 16 (18.5)", # The tests are randomly crashing on iOS 26
+    device: "iPhone 17 (#{simulator_version})",
     ensure_devices_found: true,
     prelaunch_simulator: false,
     result_bundle: true,
@@ -197,6 +197,7 @@ end
 # Tchap: Disable upload to Sentry for the moment,
 # $sentry_retry=0
 lane :upload_dsyms_to_sentry do |options|
+<<<<<<< HEAD
 #   auth_token = ENV["SENTRY_AUTH_TOKEN"]
 #   UI.user_error!("Invalid Sentry Auth token.") unless !auth_token.to_s.empty?
 # 
@@ -221,6 +222,32 @@ lane :upload_dsyms_to_sentry do |options|
 #       raise exception
 #     end
 #   end
+=======
+  auth_token = ENV["SENTRY_AUTH_TOKEN"]
+  UI.user_error!("Invalid Sentry Auth token.") unless !auth_token.to_s.empty?
+
+  dsym_path = options[:dsym_path]
+  UI.user_error!("Invalid DSYM path.") unless !dsym_path.to_s.empty?
+
+  begin
+    sentry_debug_files_upload(
+      auth_token: auth_token,
+      org_slug: 'element',
+      project_slug: 'element-x-ios',
+      url: 'https://sentry.tools.element.io/',
+      path: dsym_path,
+    )
+  rescue => exception
+    $sentry_retry += 1
+
+    if $sentry_retry <= 5
+      UI.message "Sentry failed, retrying."
+      upload_dsyms_to_sentry options
+    else
+      raise exception
+    end
+  end
+>>>>>>> release/26.03.0
 end
 
 lane :release_to_github do
@@ -376,9 +403,12 @@ private_lane :create_simulator_if_necessary do |options|
   
   # device_id is unused right now but is useful to check e.g. the boot status of a simulator.
 end
+<<<<<<< HEAD
 
 lane :config_secrets do
   Dir.chdir "../Secrets" do
     sh("pkl eval --cache-dir vendor -o Secrets.swift Secrets.pkl")
   end
 end
+=======
+>>>>>>> release/26.03.0

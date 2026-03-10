@@ -33,6 +33,7 @@ extension View {
         }
     }
     
+<<<<<<< HEAD
     // Tchap: BWI content-scanner - timelineMediaFrame does not work for contentScanner views
     @ViewBuilder
     func contentScannerFrame(imageInfo: ImageInfoProxy?) -> some View {
@@ -71,6 +72,8 @@ extension View {
     }
     
     @ViewBuilder
+=======
+>>>>>>> release/26.03.0
     func mediaGalleryTimelineAspectRatio(imageInfo: ImageInfoProxy?) -> some View {
         aspectRatio(imageInfo?.aspectRatio, contentMode: .fill)
     }
