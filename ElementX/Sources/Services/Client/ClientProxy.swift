@@ -71,7 +71,20 @@ class ClientProxy: ClientProxyProtocol {
               ban: nil,
               kick: nil,
               redact: nil,
-              invite: Int32(0),
+              // Tchap: Room creation failed with `invite` property set to 0.
+              // If we set it to nil, room creation succeed.
+              // Tchap X Android v0.6.0 (based on the same rebase) doesn't use this `invite` property.
+              // TODO: check with Tchap Backend why ot  returns a 400 error:
+              //
+              // 2026-03-10T16:05:28.199157Z DEBUG matrix_sdk::http_client: Error while sending request:
+              // Api(Server(ClientApi(Error { status_code: 400, body: Standard(StandardErrorBody
+              // { kind: Unknown, message: "Invalid power levels content override" }) }))) |
+              // crates/matrix-sdk/src/http_client/mod.rs:218 | spans: root > send{request_id="REQ-134"
+              // method=POST uri="https://matrix.dev01.tchap.incubateur.net/_matrix/client/v3/createRoom"
+              // request_size="623B" status=400 response_size="71B"
+              //
+//              invite: Int32(0),
+              invite: nil,
               notifications: nil,
               users: [:],
               events: [
