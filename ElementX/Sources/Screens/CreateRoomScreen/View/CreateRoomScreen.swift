@@ -48,7 +48,7 @@ struct CreateRoomScreen: View {
             // Tchap: allow to disable federated state on Public room.
             if !context.viewState.roomAccessType.isVisibilityPrivate {
                 tchapNonFederatedPublicRoomSection
-                // Tchap: hide Room alias creation for Public room.
+                // Tchap: hide Room alias creation for Public room (the option is not proposed for private room).
 //                roomAliasSection
             }
         }
