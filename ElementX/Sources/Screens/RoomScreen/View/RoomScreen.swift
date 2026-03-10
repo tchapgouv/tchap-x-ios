@@ -158,26 +158,16 @@ struct RoomScreen: View {
             RoomHeaderView(roomName: context.viewState.roomTitle,
                            roomAvatar: context.viewState.roomAvatar,
                            dmRecipientVerificationState: context.viewState.dmRecipientVerificationState,
-<<<<<<< HEAD
-                           roomPropertiesBadgesView:
+                           roomHistorySharingState: context.viewState.roomHistorySharingState,
                            // Tchap: add badges
                            TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: $context.isEncrypted,
                                                                        isPublic: $context.canDisplayPublicBadge,
                                                                        // Tchap: added parameters to display or not "external" badge.
                                                                        accessRule: $context.accessRule,
                                                                        avatar: $context.roomAvatar),
-                           mediaProvider: context.mediaProvider)
-                // Using a button stops it from getting truncated in the navigation bar
-                .contentShape(.rect)
-                .onTapGesture {
-                    context.send(viewAction: .displayRoomDetails)
-                }
-=======
-                           roomHistorySharingState: context.viewState.roomHistorySharingState,
                            mediaProvider: context.mediaProvider) {
                 context.send(viewAction: .displayRoomDetails)
             }
->>>>>>> release/26.03.0
         }
         
         if !ProcessInfo.processInfo.isiOSAppOnMac {

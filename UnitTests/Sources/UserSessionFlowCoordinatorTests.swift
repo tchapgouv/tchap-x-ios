@@ -14,12 +14,9 @@ import Combine
 @testable import TchapX_Production
 #else
 @testable import ElementX
-<<<<<<< HEAD
 #endif
-=======
 import Foundation
 import Testing
->>>>>>> release/26.03.0
 
 @MainActor
 @Suite

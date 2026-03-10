@@ -103,13 +103,10 @@ public struct ListRowLabel<Icon: View>: View {
     
     var iconForegroundColor: Color {
         guard isEnabled else { return .compound.iconTertiaryAlpha }
-<<<<<<< HEAD
         // Tchap: handle icon color
         if case .coloredIcon(let iconColor) = role {
             return iconColor
         }
-        return hideIconBackground ? .compound.iconPrimary : .compound.iconTertiaryAlpha
-=======
         if role == .destructive { return .compound.iconCriticalPrimary }
         if hideIconBackground {
             return .compound.iconTertiaryAlpha
@@ -120,7 +117,6 @@ public struct ListRowLabel<Icon: View>: View {
                 return .compound.iconPrimary
             }
         }
->>>>>>> release/26.03.0
     }
     
     var iconBackgroundColor: Color {

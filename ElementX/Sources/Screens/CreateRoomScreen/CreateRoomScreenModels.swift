@@ -99,8 +99,8 @@ struct CreateRoomScreenViewState: BindableState {
 
 struct CreateRoomScreenViewStateBindings {
     var roomTopic: String
-<<<<<<< HEAD
-    var selectedAccessType: CreateRoomAccessType
+    var selectedAccessType: CreateRoomScreenAccessType
+    var selectedSpace: SpaceServiceRoom?
     // Tchap: add possibility to not federate public room. True for private room.
     // This computed property is only used to set the correct `selectedAccessType` when .public is selected.
     var isRoomFederated: Bool {
@@ -123,10 +123,6 @@ struct CreateRoomScreenViewStateBindings {
             }
         }
     }
-=======
-    var selectedAccessType: CreateRoomScreenAccessType
-    var selectedSpace: SpaceServiceRoom?
->>>>>>> release/26.03.0
     
     var showAttachmentConfirmationDialog = false
     var showSpaceSelectionSheet = false

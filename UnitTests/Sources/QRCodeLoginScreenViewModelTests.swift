@@ -7,18 +7,11 @@
 //
 
 import Combine
-<<<<<<< HEAD
-import XCTest
-
-import MatrixRustSDK
-
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
 @testable import TchapX_Production
 #else
-=======
->>>>>>> release/26.03.0
 @testable import ElementX
 #endif
 import MatrixRustSDKMocks

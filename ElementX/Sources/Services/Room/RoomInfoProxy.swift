@@ -142,18 +142,14 @@ struct RoomInfoProxy: RoomInfoProxyProtocol {
         roomInfo.historyVisibility
     }
     
-<<<<<<< HEAD
-    var powerLevels: RoomPowerLevelsProxyProtocol? { RoomPowerLevelsProxy(roomInfo.powerLevels) }
-    
+    var powerLevels: RoomPowerLevelsProxyProtocol? {
+        RoomPowerLevelsProxy(roomInfo.powerLevels)
+    }
+
     // Tchap: accessRule property accessor
     var accessRule: AccessRule? { roomInfo.accessRule }
     var isEncryptedFromAccessRules: Bool? { roomInfo.isEncrypted }
     var visibility: RoomVisibility! { roomInfo.visiblity }
-=======
-    var powerLevels: RoomPowerLevelsProxyProtocol? {
-        RoomPowerLevelsProxy(roomInfo.powerLevels)
-    }
->>>>>>> release/26.03.0
 }
 
 struct RoomPreviewInfoProxy: BaseRoomInfoProxyProtocol {

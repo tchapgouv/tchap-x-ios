@@ -8,12 +8,6 @@
 
 import AsyncAlgorithms
 import Combine
-@testable import ElementX
-import MatrixRustSDK
-import SwiftUI
-<<<<<<< HEAD
-import XCTest
-
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
@@ -21,9 +15,9 @@ import XCTest
 #else
 @testable import ElementX
 #endif
-=======
+import MatrixRustSDK
+import SwiftUI
 import Testing
->>>>>>> release/26.03.0
 
 @Suite
 @MainActor
@@ -539,13 +533,10 @@ struct RoomDetailsScreenViewModelTests {
         notificationSettingsProxyMock.callbacks.send(.settingsDidChange)
         try await deferred.fulfill()
         
-<<<<<<< HEAD
         // Tchap: adapt test
-//        XCTAssertEqual(context.viewState.notificationSettingsState.label, "Default")
-        XCTAssertEqual(context.viewState.notificationSettingsState.label, L10n.screenRoomDetailsNotificationModeDefault)
-=======
-        #expect(context.viewState.notificationSettingsState.label == "Default")
->>>>>>> release/26.03.0
+//        #expect(context.viewState.notificationSettingsState.label == "Default")
+        #expect(context.viewState.notificationSettingsState.label == L10n.screenRoomDetailsNotificationModeDefault)
+
     }
     
     @Test
@@ -557,13 +548,10 @@ struct RoomDetailsScreenViewModelTests {
         notificationSettingsProxyMock.callbacks.send(.settingsDidChange)
         try await deferred.fulfill()
         
-<<<<<<< HEAD
         // Tchap: adapt test
-//        XCTAssertEqual(context.viewState.notificationSettingsState.label, "Custom")
-        XCTAssertEqual(context.viewState.notificationSettingsState.label, L10n.screenRoomDetailsNotificationModeCustom)
-=======
-        #expect(context.viewState.notificationSettingsState.label == "Custom")
->>>>>>> release/26.03.0
+//        #expect(context.viewState.notificationSettingsState.label == "Custom")
+        #expect(context.viewState.notificationSettingsState.label == L10n.screenRoomDetailsNotificationModeCustom)
+
     }
     
     @Test

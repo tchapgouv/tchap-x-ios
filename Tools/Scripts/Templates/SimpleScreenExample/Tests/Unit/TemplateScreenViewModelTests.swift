@@ -5,7 +5,6 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-<<<<<<< HEAD
 import XCTest
 
 // Tchap: specify target for unit tests
@@ -15,10 +14,6 @@ import XCTest
 #else
 @testable import ElementX
 #endif
-=======
-@testable import ElementX
-import Testing
->>>>>>> release/26.03.0
 
 @Suite
 @MainActor

@@ -207,18 +207,6 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
 
 extension JoinedRoomProxyProtocol {
     var details: RoomDetails {
-<<<<<<< HEAD
-        RoomDetails(id: id,
-                    name: infoPublisher.value.displayName,
-                    avatar: infoPublisher.value.avatar,
-                    canonicalAlias: infoPublisher.value.canonicalAlias,
-                    isEncrypted: infoPublisher.value.isEncrypted,
-                    isPublic: !(infoPublisher.value.isPrivate ?? false),
-                    isDirect: infoPublisher.value.isDirect,
-                    // Tchap: add accessRule publied value
-                    accessRule: infoPublisher.value.accessRule,
-                    visibility: infoPublisher.value.visibility)
-=======
         let historySharingState: RoomHistorySharingState? = if infoPublisher.value.isEncrypted {
             infoPublisher.value.historySharingState
         } else {
@@ -232,8 +220,10 @@ extension JoinedRoomProxyProtocol {
                            isEncrypted: infoPublisher.value.isEncrypted,
                            isPublic: !(infoPublisher.value.isPrivate ?? false),
                            isDirect: infoPublisher.value.isDirect,
-                           historySharingState: historySharingState)
->>>>>>> release/26.03.0
+                           historySharingState: historySharingState,
+                           // Tchap: add accessRule publied value
+                           accessRule: infoPublisher.value.accessRule,
+                           visibility: infoPublisher.value.visibility)
     }
     
     var isDirectOneToOneRoom: Bool {

@@ -7,11 +7,6 @@
 //
 
 import Foundation
-<<<<<<< HEAD
-
-// Tchap: Add Matrix SDK dependency for RoomVisibility type.
-=======
->>>>>>> release/26.03.0
 import MatrixRustSDK
 import OrderedCollections
 
@@ -97,7 +92,7 @@ struct RoomScreenViewState: BindableState {
 struct RoomScreenViewStateBindings {
     /// The view model used to present a QuickLook media preview.
     var mediaPreviewViewModel: TimelineMediaPreviewViewModel?
-<<<<<<< HEAD
+    var alertInfo: AlertInfo<RoomScreenAlertType>?
     // Tchap: display room properties badges. As they are queried async, make them Bindable.
     var isEncrypted: Bool?
     var isPublic: Bool?
@@ -106,13 +101,10 @@ struct RoomScreenViewStateBindings {
     var canDisplayPublicBadge: Bool!
     var roomAvatar: RoomAvatar?
     // Tchap: end
-=======
-    var alertInfo: AlertInfo<RoomScreenAlertType>?
 }
 
 enum RoomScreenAlertType {
     case unknown
->>>>>>> release/26.03.0
 }
 
 enum RoomScreenFooterViewAction {

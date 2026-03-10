@@ -6,12 +6,6 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-@testable import ElementX
-import MatrixRustSDK
-import MatrixRustSDKMocks
-import Testing
-
-<<<<<<< HEAD
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
@@ -19,14 +13,17 @@ import Testing
 #else
 @testable import ElementX
 #endif
-=======
+import MatrixRustSDK
+import MatrixRustSDKMocks
+import Testing
+
+
 @Suite
 @MainActor
 final class RoomSummaryProviderTests {
     private let baseFilters: [RoomListEntriesDynamicFilterKind] = [.any(filters: [.all(filters: [.nonSpace, .nonLeft]),
                                                                                   .all(filters: [.space, .invite])]),
                                                                    .deduplicateVersions]
->>>>>>> release/26.03.0
 
     var appSettings: AppSettings!
     var roomList: RoomListSDKMock!

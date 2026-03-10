@@ -517,18 +517,11 @@ class ClientProxy: ClientProxyProtocol {
                                                   preset: .trustedPrivateChat,
                                                   invite: [userID],
                                                   avatar: nil,
-<<<<<<< HEAD
-                                                  powerLevelContentOverride: Self.roomCreationPowerLevelOverrides)
+                                                  powerLevelContentOverride: Self.roomCreationPowerLevelOverrides,
+                                                  historyVisibilityOverride: .invited)
             // Tchap: change `createRoom` call with `isFederatd` parameter becasue of BWI-specific Rust side.
 //            let roomID = try await client.createRoom(request: parameters)
             let roomID = try await client.createRoom(request: parameters, isFederated: true)
-
-=======
-                                                  powerLevelContentOverride: Self.roomCreationPowerLevelOverrides,
-                                                  historyVisibilityOverride: .invited)
-            let roomID = try await client.createRoom(request: parameters)
-            
->>>>>>> release/26.03.0
             await waitForRoomToSync(roomID: roomID)
             
             return .success(roomID)

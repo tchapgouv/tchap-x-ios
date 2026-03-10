@@ -118,14 +118,9 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
         startLoading(isInteractionBlocking: true)
 
         Task {
-<<<<<<< HEAD
-            analytics.signpost.beginLogin()
             // Tchap: convert email to matrixID if necessary.
 //            switch await authenticationService.login(username: state.bindings.username,
             switch await authenticationService.login(username: tchapConvertEmailToMatrixId(identifier: state.bindings.username),
-=======
-            switch await authenticationService.login(username: state.bindings.username,
->>>>>>> release/26.03.0
                                                      password: state.bindings.password,
                                                      initialDeviceName: UIDevice.current.initialDeviceName,
                                                      deviceID: nil) {

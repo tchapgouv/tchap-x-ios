@@ -7,18 +7,11 @@
 //
 
 import Combine
-<<<<<<< HEAD
-import SwiftUI
-import XCTest
-
-@testable import SnapshotTesting
-@testable import TchapX_Production // Tchap: adjustement
-=======
-@testable import ElementX
-@testable import SnapshotTesting
+// Tchap: adjustement
+// @testable import ElementX
+@testable import TchapX_Production@testable import SnapshotTesting
 import SwiftUI
 import Testing
->>>>>>> release/26.03.0
 
 @Suite
 @MainActor

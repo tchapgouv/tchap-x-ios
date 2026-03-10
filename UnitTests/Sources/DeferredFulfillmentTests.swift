@@ -12,14 +12,9 @@
 @testable import TchapX_Production
 #else
 @testable import ElementX
-<<<<<<< HEAD
 #endif
-
-import XCTest
-=======
 import Observation
 import Testing
->>>>>>> release/26.03.0
 
 @MainActor
 @Suite

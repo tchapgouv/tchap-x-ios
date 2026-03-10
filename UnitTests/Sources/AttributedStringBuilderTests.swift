@@ -12,27 +12,19 @@
 @testable import TchapX_Production
 #else
 @testable import ElementX
-<<<<<<< HEAD
 #endif
-import XCTest
-=======
 import SwiftUI
 import Testing
->>>>>>> release/26.03.0
 
 @Suite
 struct AttributedStringBuilderTests {
     private let attributedStringBuilder: AttributedStringBuilder
     private let maxHeaderPointSize = ceil(UIFont.preferredFont(forTextStyle: .body).pointSize * 1.2)
     
-<<<<<<< HEAD
-    // Tchap: adapt test
+   // Tchap: adapt test
     fileprivate let homeServerName = "tchap.gouv.fr"
     
-    override func setUp() async throws {
-=======
     init() async throws {
->>>>>>> release/26.03.0
         attributedStringBuilder = AttributedStringBuilder(mentionBuilder: MentionBuilder())
     }
     
@@ -200,24 +192,17 @@ struct AttributedStringBuilderTests {
     func userIDLink() throws {
         let userID = "@user:matrix.org"
         let string = "The user is \(userID)."
-<<<<<<< HEAD
         // Tchap: adapt test
 //        let expectedLink = "https://matrix.to/#/\(userID)"
         let expectedLink = "https://\(homeServerName)/#/\(userID)"
         checkLinkIn(attributedString: attributedStringBuilder.fromHTML(string), expectedLink: expectedLink, expectedRuns: 3)
         checkLinkIn(attributedString: attributedStringBuilder.fromPlain(string), expectedLink: expectedLink, expectedRuns: 3)
-=======
-        let expectedLink = "https://matrix.to/#/\(userID)"
-        try checkLinkIn(attributedString: attributedStringBuilder.fromHTML(string), expectedLink: expectedLink, expectedRuns: 3)
-        try checkLinkIn(attributedString: attributedStringBuilder.fromPlain(string), expectedLink: expectedLink, expectedRuns: 3)
->>>>>>> release/26.03.0
     }
     
     @Test
     func roomAliasLink() throws {
         let roomAlias = "#room:matrix.org"
         let string = "The room is \(roomAlias)."
-<<<<<<< HEAD
         // Tchap: adapt test
 //        guard let expectedLink = URL(string: "https://matrix.to/#/\(roomAlias)") else {
         guard let expectedLink = URL(string: "https://\(homeServerName)/#/\(roomAlias)") else {
@@ -226,11 +211,6 @@ struct AttributedStringBuilderTests {
         }
         checkLinkIn(attributedString: attributedStringBuilder.fromHTML(string), expectedLink: expectedLink.absoluteString, expectedRuns: 3)
         checkLinkIn(attributedString: attributedStringBuilder.fromPlain(string), expectedLink: expectedLink.absoluteString, expectedRuns: 3)
-=======
-        let expectedLink = try #require(URL(string: "https://matrix.to/#/\(roomAlias)"), "The expected link should be valid.")
-        try checkLinkIn(attributedString: attributedStringBuilder.fromHTML(string), expectedLink: expectedLink.absoluteString, expectedRuns: 3)
-        try checkLinkIn(attributedString: attributedStringBuilder.fromPlain(string), expectedLink: expectedLink.absoluteString, expectedRuns: 3)
->>>>>>> release/26.03.0
     }
     
     @Test
@@ -408,7 +388,6 @@ struct AttributedStringBuilderTests {
     func userIDMentionAtachment() {
         let string = "@test:matrix.org"
         let attributedStringFromHTML = attributedStringBuilder.fromHTML(string)
-<<<<<<< HEAD
         XCTAssertNotNil(attributedStringFromHTML?.attachment)
         XCTAssertEqual(attributedStringFromHTML?.userID, "@test:matrix.org")
         // Tchap: adapt test
@@ -420,15 +399,6 @@ struct AttributedStringBuilderTests {
         // Tchap: adapt test
 //        XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://matrix.to/#/@test:matrix.org")
         XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://\(homeServerName)/#/@test:matrix.org")
-=======
-        #expect(attributedStringFromHTML?.attachment != nil)
-        #expect(attributedStringFromHTML?.userID == "@test:matrix.org")
-        #expect(attributedStringFromHTML?.link?.absoluteString == "https://matrix.to/#/@test:matrix.org")
-        let attributedStringFromPlain = attributedStringBuilder.fromPlain(string)
-        #expect(attributedStringFromPlain?.attachment != nil)
-        #expect(attributedStringFromPlain?.userID == "@test:matrix.org")
-        #expect(attributedStringFromPlain?.link?.absoluteString == "https://matrix.to/#/@test:matrix.org")
->>>>>>> release/26.03.0
     }
     
     @Test
@@ -461,7 +431,6 @@ struct AttributedStringBuilderTests {
     func roomAliasMentionAttachment() {
         let string = "#test:matrix.org"
         let attributedStringFromHTML = attributedStringBuilder.fromHTML(string)
-<<<<<<< HEAD
         XCTAssertNotNil(attributedStringFromHTML?.attachment)
         XCTAssertEqual(attributedStringFromHTML?.roomAlias, "#test:matrix.org")
         // Tchap: adapt test
@@ -473,15 +442,6 @@ struct AttributedStringBuilderTests {
         // Tchap: adapt test
 //        XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://matrix.to/#/%23test:matrix.org")
         XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://\(homeServerName)/#/%23test:matrix.org")
-=======
-        #expect(attributedStringFromHTML?.attachment != nil)
-        #expect(attributedStringFromHTML?.roomAlias == "#test:matrix.org")
-        #expect(attributedStringFromHTML?.link?.absoluteString == "https://matrix.to/#/%23test:matrix.org")
-        let attributedStringFromPlain = attributedStringBuilder.fromPlain(string)
-        #expect(attributedStringFromPlain?.attachment != nil)
-        #expect(attributedStringFromHTML?.roomAlias == "#test:matrix.org")
-        #expect(attributedStringFromPlain?.link?.absoluteString == "https://matrix.to/#/%23test:matrix.org")
->>>>>>> release/26.03.0
     }
     
     @Test

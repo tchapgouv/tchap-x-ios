@@ -105,21 +105,11 @@ struct SpaceScreen: View {
         ToolbarItem(placement: .principal) {
             RoomHeaderView(roomName: context.viewState.space.name,
                            roomAvatar: context.viewState.space.avatar,
-<<<<<<< HEAD
                            roomPropertiesBadgesView: nil, // Tchap addition
-                           mediaProvider: context.mediaProvider)
-                .contentShape(.rect)
-                .onTapGesture {
-                    if context.viewState.isSpaceManagementEnabled,
-                       let roomProxy = context.viewState.roomProxy {
-                        context.send(viewAction: .spaceSettings(roomProxy: roomProxy))
-                    }
-=======
                            mediaProvider: context.mediaProvider) {
                 if context.viewState.isSpaceManagementEnabled,
                    let roomProxy = context.viewState.roomProxy {
                     context.send(viewAction: .spaceSettings(roomProxy: roomProxy))
->>>>>>> release/26.03.0
                 }
             }
         }

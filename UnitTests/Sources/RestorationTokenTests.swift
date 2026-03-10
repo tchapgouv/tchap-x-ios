@@ -6,9 +6,6 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-<<<<<<< HEAD
-import XCTest
-
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
@@ -16,10 +13,7 @@ import XCTest
 #else
 @testable import ElementX
 #endif
-=======
-@testable import ElementX
 import Foundation
->>>>>>> release/26.03.0
 import MatrixRustSDK
 import Testing
 

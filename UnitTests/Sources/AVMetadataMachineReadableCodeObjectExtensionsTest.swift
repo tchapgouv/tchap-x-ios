@@ -7,8 +7,6 @@
 //
 
 import AVKit
-<<<<<<< HEAD
-import XCTest
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
@@ -17,10 +15,7 @@ import XCTest
 #else
 @testable import ElementX
 #endif
-=======
-@testable import ElementX
 import Testing
->>>>>>> release/26.03.0
 
 @Suite
 struct AVMetadataMachineReadableCodeObjectExtensionsTest {

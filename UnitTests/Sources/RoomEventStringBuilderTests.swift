@@ -36,15 +36,10 @@ struct RoomEventStringBuilderTests {
     @Test
     func senderPrefix() {
         let ownMessageString = stringBuilder.buildAttributedString(for: makeMessageItem(senderID: ownUserID, senderDisplayName: "Alice"))
-<<<<<<< HEAD
         // Tchap; adapt test
-//        XCTAssertEqual(ownMessageString?.string, "You: Hello, World!", "Your own messages should be prefixed with 'You'")
-        XCTAssertEqual(ownMessageString?.string, "\(L10n.commonYou): Hello, World!", "Your own messages should be prefixed with 'You'")
+//        #expect(ownMessageString?.string == "You: Hello, World!", "Your own messages should be prefixed with 'You'")
+        #expect(ownMessageString?.string == "\(L10n.commonYou): Hello, World!", "Your own messages should be prefixed with 'You'")
 
-=======
-        #expect(ownMessageString?.string == "You: Hello, World!", "Your own messages should be prefixed with 'You'")
-        
->>>>>>> release/26.03.0
         let otherMessageString = stringBuilder.buildAttributedString(for: makeMessageItem(senderID: "@bob:matrix.org", senderDisplayName: "Bob"))
         #expect(otherMessageString?.string == "Bob: Hello, World!", "Everyone else's messages should be prefixed with their display name.")
         
@@ -67,21 +62,15 @@ struct RoomEventStringBuilderTests {
         #expect(otherEmoteString?.string == "* Bob sighs", "Everyone else's emotes should contain their display name.")
         
         let ownPollString = stringBuilder.buildAttributedString(for: makePollItem(senderID: ownUserID, senderDisplayName: "Alice"))
-<<<<<<< HEAD
         // Tchap; adapt test
-//        XCTAssertEqual(ownPollString?.string, "You: Poll: Which is better?", "Your own polls should be prefixed with 'You'")
-        XCTAssertEqual(ownPollString?.string, "\(L10n.commonYou): \(L10n.commonPollSummary("Which is better?"))", "Your own polls should be prefixed with 'You'")
+//        #expect(ownPollString?.string == "You: Poll: Which is better?", "Your own polls should be prefixed with 'You'")
+        #expect(ownPollString?.string == v"\(L10n.commonYou): \(L10n.commonPollSummary("Which is better?"))", "Your own polls should be prefixed with 'You'")
 
         let otherPollString = stringBuilder.buildAttributedString(for: makePollItem(senderID: "@bob:matrix.org", senderDisplayName: "Bob"))
         // Tchap; adapt test
-//        XCTAssertEqual(otherPollString?.string, "Bob: Poll: Which is better?", "Everyone else's polls should be prefixed with their display name.")
-        XCTAssertEqual(otherPollString?.string, "Bob: \(L10n.commonPollSummary("Which is better?"))", "Everyone else's polls should be prefixed with their display name.")
-=======
-        #expect(ownPollString?.string == "You: Poll: Which is better?", "Your own polls should be prefixed with 'You'")
-        
-        let otherPollString = stringBuilder.buildAttributedString(for: makePollItem(senderID: "@bob:matrix.org", senderDisplayName: "Bob"))
         #expect(otherPollString?.string == "Bob: Poll: Which is better?", "Everyone else's polls should be prefixed with their display name.")
->>>>>>> release/26.03.0
+        #expect(otherPollString?.string == "Bob: \(L10n.commonPollSummary("Which is better?"))", "Everyone else's polls should be prefixed with their display name.")
+
     }
     
     // MARK: - Helpers

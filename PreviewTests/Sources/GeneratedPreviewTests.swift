@@ -4,17 +4,13 @@
 // swiftlint:disable all
 // swiftformat:disable all
 
-<<<<<<< HEAD
-import XCTest
+import Testing
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
 @testable import TchapX_Production
 #else
-=======
-import Testing
->>>>>>> release/26.03.0
 @testable import ElementX
 #endif
 

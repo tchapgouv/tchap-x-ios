@@ -38,9 +38,6 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
         mediaUploadingPreprocessor = MediaUploadingPreprocessor(appSettings: appSettings)
         self.analytics = analytics
         self.userIndicatorController = userIndicatorController
-<<<<<<< HEAD
-
-=======
         
         var selectedSpace: SpaceServiceRoom?
         let canSelectSpace: Bool
@@ -58,7 +55,6 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
             canSelectSpace = false
         }
         
->>>>>>> release/26.03.0
         let bindings = CreateRoomScreenViewStateBindings(roomTopic: "",
                                                          selectedAccessType: selectedAccessType,
                                                          selectedSpace: selectedSpace)

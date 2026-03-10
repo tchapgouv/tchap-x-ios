@@ -6,9 +6,6 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-<<<<<<< HEAD
-import XCTest
-
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
@@ -16,10 +13,7 @@ import XCTest
 #else
 @testable import ElementX
 #endif
-=======
-@testable import ElementX
 import Foundation
->>>>>>> release/26.03.0
 import MatrixRustSDKMocks
 import Testing
 
@@ -99,15 +93,10 @@ struct AuthenticationServiceTests {
             #expect(error == .registrationNotSupported)
         }
         
-<<<<<<< HEAD
-        XCTAssertEqual(service.flow, .login)
-        // Tchap: adapt test
-//        XCTAssertEqual(service.homeserver.value, .init(address: "matrix.org", loginMode: .unknown))
-        XCTAssertEqual(service.homeserver.value, .init(address: "matrix.agent.dinum.tchap.gouv.fr", loginMode: .unknown))
-=======
         #expect(service.flow == .login)
-        #expect(service.homeserver.value == .init(address: "matrix.org", loginMode: .unknown))
->>>>>>> release/26.03.0
+        // Tchap: adapt test
+//        #expect(service.homeserver.value == .init(address: "matrix.org", loginMode: .unknown))
+        #expect(service.homeserver.value == .init(address: "matrix.agent.dinum.tchap.gouv.fr", loginMode: .unknown))
     }
     
     // MARK: - Helpers

@@ -6,12 +6,6 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-@testable import ElementX
-import MatrixRustSDK
-import MatrixRustSDKMocks
-import Testing
-
-<<<<<<< HEAD
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
@@ -19,15 +13,14 @@ import Testing
 #else
 @testable import ElementX
 #endif
+import MatrixRustSDK
+import MatrixRustSDKMocks
+import Testing
 
-class RoomTests: XCTestCase {
-    func testCallIntent() async throws {
-=======
 @Suite
 struct RoomTests {
     @Test
     func callIntent() async {
->>>>>>> release/26.03.0
         let room = RoomSDKMock()
         room.hasActiveRoomCallReturnValue = false
         room.isDirectReturnValue = false

@@ -14,11 +14,8 @@ import Combine
 @testable import TchapX_Production
 #else
 @testable import ElementX
-<<<<<<< HEAD
 #endif
-=======
 import Foundation
->>>>>>> release/26.03.0
 import MatrixRustSDK
 import Testing
 import WysiwygComposer
@@ -31,16 +28,11 @@ final class ComposerToolbarViewModelTests {
     private var viewModel: ComposerToolbarViewModel!
     private var completionSuggestionServiceMock: CompletionSuggestionServiceMock!
     private var draftServiceMock: ComposerDraftServiceMock!
-<<<<<<< HEAD
-
-    // Tchap: adapt test
+    
+   // Tchap: adapt test
     private let homeServerName = "tchap.gouv.fr"
     
-    override func setUp() {
-=======
-    
     init() {
->>>>>>> release/26.03.0
         AppSettings.resetAllSettings()
         appSettings = AppSettings()
         ServiceLocator.shared.register(appSettings: appSettings)
@@ -142,13 +134,9 @@ final class ComposerToolbarViewModelTests {
         viewModel.context.send(viewAction: .selectedSuggestion(suggestion))
         
         // The display name can be used for HTML injection in the rich text editor and it's useless anyway as the clients don't use it when resolving display names
-<<<<<<< HEAD
         // Tchap: adapt test
-//        XCTAssertEqual(wysiwygViewModel.content.html, "<a href=\"https://matrix.to/#/@test:matrix.org\">@test:matrix.org</a> ")
-        XCTAssertEqual(wysiwygViewModel.content.html, "<a href=\"https://\(homeServerName)/#/@test:matrix.org\">@test:matrix.org</a> ")
-=======
-        #expect(wysiwygViewModel.content.html == "<a href=\"https://matrix.to/#/@test:matrix.org\">@test:matrix.org</a> ")
->>>>>>> release/26.03.0
+//        #expect(wysiwygViewModel.content.html == "<a href=\"https://matrix.to/#/@test:matrix.org\">@test:matrix.org</a> ")
+        #expect(wysiwygViewModel.content.html == "<a href=\"https://\(homeServerName)/#/@test:matrix.org\">@test:matrix.org</a> ")
     }
     
     @Test
@@ -163,17 +151,11 @@ final class ComposerToolbarViewModelTests {
         viewModel.context.send(viewAction: .selectedSuggestion(suggestion))
         
         // The display name can be used for HTML injection in the rich text editor and it's useless anyway as the clients don't use it when resolving display names
-<<<<<<< HEAD
 
         // Tchap: adapt test
-//        XCTAssertEqual(wysiwygViewModel.content.html, "<a href=\"https://matrix.to/#/%23room-alias:matrix.org\">#room-alias:matrix.org</a> ")
-        XCTAssertEqual(wysiwygViewModel.content.html, "<a href=\"https://\(homeServerName)/#/%23room-alias:matrix.org\">#room-alias:matrix.org</a> ")
-=======
-        
-        #expect(wysiwygViewModel.content.html == "<a href=\"https://matrix.to/#/%23room-alias:matrix.org\">#room-alias:matrix.org</a> ")
->>>>>>> release/26.03.0
-    }
-    
+//        #expect(wysiwygViewModel.content.html == "<a href=\"https://matrix.to/#/%23room-alias:matrix.org\">#room-alias:matrix.org</a> ")
+       #expect(wysiwygViewModel.content.html == "<a href=\"https://\(homeServerName)/#/%23room-alias:matrix.org\">#room-alias:matrix.org</a> ")
+    }    
     @Test
     func allUsersSuggestion() throws {
         let suggestion = SuggestionItem(suggestionType: .allUsers(.room(id: "", name: nil, avatarURL: nil)), range: .init(), rawSuggestionText: "")

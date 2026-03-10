@@ -250,15 +250,12 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
                 presentDeclineAndBlockScreen(userID: userID, roomID: roomID)
             case (.declineAndBlockUserScreen, .dismissedDeclineAndBlockScreen, .roomList):
                 break
-<<<<<<< HEAD:ElementX/Sources/FlowCoordinators/ChatsFlowCoordinator.swift
-=======
                 
             case (.roomList, .presentTransferOwnershipScreen(let roomID), .transferOwnershipScreen):
                 Task { await self.presentTransferOwnershipScreen(roomID: roomID) }
             case (.transferOwnershipScreen, .dismissedTransferOwnershipScreen, .roomList):
                 break
                 
->>>>>>> release/26.03.0:ElementX/Sources/FlowCoordinators/ChatsTabFlowCoordinator.swift
             case (.roomList(let roomListSelectedRoomID), .showShareExtensionRoomList, .shareExtensionRoomList(let sharePayload)):
                 Task {
                     if roomListSelectedRoomID != nil {

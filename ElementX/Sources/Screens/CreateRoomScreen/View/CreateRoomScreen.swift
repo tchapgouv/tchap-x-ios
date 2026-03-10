@@ -39,20 +39,15 @@ struct CreateRoomScreen: View {
         Form {
             roomSection
             topicSection
-<<<<<<< HEAD
+            if context.viewState.canSelectSpace {
+                selectSpaceSection
+            }
             // Tchap: mask Element new way of choosing room type. And keep Tchap way of choosing room type (by security).
 //            roomAccessSection
             securitySection
             // Tchap: allow to disable federated state on Public room.
-            if !context.selectedAccessType.isPrivate {
-                tchapNonFederatedPublicRoomSection
-=======
-            if context.viewState.canSelectSpace {
-                selectSpaceSection
-            }
-            roomAccessSection
             if !context.viewState.roomAccessType.isVisibilityPrivate {
->>>>>>> release/26.03.0
+                tchapNonFederatedPublicRoomSection
                 roomAliasSection
             }
         }
@@ -367,16 +362,13 @@ private struct CreateRoomAccessRow: View {
             L10n.screenCreateRoomRoomAccessSectionKnockingOptionTitle
         case .private:
             L10n.screenCreateRoomRoomAccessSectionPrivateOptionTitle
-<<<<<<< HEAD
-        // Tchap: handle private unencrypted room type
-        case .privateUnencrypted:
-            TchapL10n.screenCreateRoomRoomAccessSectionPrivateUnencryptedTitle
-=======
         case .spaceMembers:
             L10n.screenCreateRoomRoomAccessSectionRestrictedOptionTitle
         case .askToJoinWithSpaceMembers:
             L10n.screenCreateRoomRoomAccessSectionKnockingRestrictedOptionTitle
->>>>>>> release/26.03.0
+        // Tchap: handle private unencrypted room type
+        case .privateUnencrypted:
+            TchapL10n.screenCreateRoomRoomAccessSectionPrivateUnencryptedTitle
         }
     }
     
@@ -391,16 +383,13 @@ private struct CreateRoomAccessRow: View {
             L10n.screenCreateRoomRoomAccessSectionKnockingOptionDescription
         case .private:
             L10n.screenCreateRoomRoomAccessSectionPrivateOptionDescription
-<<<<<<< HEAD
-        // Tchap: handle private unencrypted room type
-        case .privateUnencrypted:
-            TchapL10n.screenCreateRoomRoomAccessSectionPrivateUnencryptedDescription
-=======
         case .spaceMembers:
             L10n.screenCreateRoomRoomAccessSectionRestrictedOptionDescription(spaceName)
         case .askToJoinWithSpaceMembers:
             L10n.screenCreateRoomRoomAccessSectionKnockingRestrictedOptionDescription(spaceName)
->>>>>>> release/26.03.0
+        // Tchap: handle private unencrypted room type
+        case .privateUnencrypted:
+            TchapL10n.screenCreateRoomRoomAccessSectionPrivateUnencryptedDescription
         }
     }
     
@@ -412,16 +401,13 @@ private struct CreateRoomAccessRow: View {
             \.userAdd
         case .private:
             \.lock
-<<<<<<< HEAD
-        // Tchap: handle private unencrypted room type
-        case .privateUnencrypted:
-            \.lock
-=======
         case .spaceMembers:
             \.space
         case .askToJoinWithSpaceMembers:
             \.userAdd
->>>>>>> release/26.03.0
+        // Tchap: handle private unencrypted room type
+        case .privateUnencrypted:
+            \.lock
         }
     }
     
@@ -454,19 +440,8 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
     }()
     
     static let publicRoomViewModel = {
-<<<<<<< HEAD
-        AppSettings.resetAllSettings()
-        let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
-        let viewModel = CreateRoomScreenViewModel(isSpace: false,
-                                                  userSession: userSession,
-                                                  analytics: ServiceLocator.shared.analytics,
-                                                  userIndicatorController: UserIndicatorControllerMock(),
-                                                  appSettings: ServiceLocator.shared.settings)
-        viewModel.context.selectedAccessType = .public(federated: true) // Tchap: add `isFederated` asosciated value.
-=======
         let viewModel = makeViewModel()
-        viewModel.context.selectedAccessType = .public
->>>>>>> release/26.03.0
+        viewModel.context.selectedAccessType = .public(federated: true) // Tchap: add `isFederated` asosciated value.
         return viewModel
     }()
     
@@ -477,39 +452,15 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
     }()
     
     static let publicRoomInvalidAliasViewModel = {
-<<<<<<< HEAD
-        AppSettings.resetAllSettings()
-        let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))))
-        let viewModel = CreateRoomScreenViewModel(isSpace: false,
-                                                  userSession: userSession,
-                                                  analytics: ServiceLocator.shared.analytics,
-                                                  userIndicatorController: UserIndicatorControllerMock(),
-                                                  appSettings: ServiceLocator.shared.settings)
-        viewModel.context.selectedAccessType = .public(federated: true) // Tchap: add `isFederated` asosciated value.
-=======
         let viewModel = makeViewModel()
-        viewModel.context.selectedAccessType = .public
->>>>>>> release/26.03.0
+        viewModel.context.selectedAccessType = .public(federated: true) // Tchap: add `isFederated` asosciated value.
         viewModel.context.send(viewAction: .updateAliasLocalPart("#:"))
         return viewModel
     }()
     
     static let publicRoomExistingAliasViewModel = {
-<<<<<<< HEAD
-        AppSettings.resetAllSettings()
-        let clientProxy = ClientProxyMock(.init(userIDServerName: "example.org", userID: "@userid:example.com"))
-        clientProxy.isAliasAvailableReturnValue = .success(false)
-        let userSession = UserSessionMock(.init(clientProxy: clientProxy))
-        let viewModel = CreateRoomScreenViewModel(isSpace: false,
-                                                  userSession: userSession,
-                                                  analytics: ServiceLocator.shared.analytics,
-                                                  userIndicatorController: UserIndicatorControllerMock(),
-                                                  appSettings: ServiceLocator.shared.settings)
-        viewModel.context.selectedAccessType = .public(federated: true) // Tchap: add `isFederated` asosciated value.
-=======
         let viewModel = makeViewModel(isAliasAvailable: false)
-        viewModel.context.selectedAccessType = .public
->>>>>>> release/26.03.0
+        viewModel.context.selectedAccessType = .public(federated: true) // Tchap: add `isFederated` asosciated value.
         viewModel.context.send(viewAction: .updateAliasLocalPart("existing"))
         return viewModel
     }()

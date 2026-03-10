@@ -19,8 +19,7 @@ struct InviteUsersScreenSelectedItem: View {
             avatar
                 .accessibilityHidden(true)
             
-<<<<<<< HEAD
-            // Tchap: calculate displayname from userId if necessary and displays it in badge if user is external..
+            // Tchap: calculate displayname from userId if necessary and displays it in badge if user is external.
             //            Text(user.displayName ?? user.userID)
             if MatrixIdFromString(user.userID).isExternalTchapUser {
                 Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
@@ -32,12 +31,6 @@ struct InviteUsersScreenSelectedItem: View {
                     .foregroundColor(.compound.textPrimary)
                     .lineLimit(1)
             }
-=======
-            Text(user.displayName ?? user.userID)
-                .font(.compound.bodySM)
-                .foregroundColor(.compound.textSecondary)
-                .lineLimit(1)
->>>>>>> release/26.03.0
         }
         .frame(maxWidth: 100.0)
         .accessibilityElement(children: .combine)

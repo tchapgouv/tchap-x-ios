@@ -12,12 +12,8 @@
 @testable import TchapX_Production
 #else
 @testable import ElementX
-<<<<<<< HEAD
 #endif
-import XCTest
-=======
 import Testing
->>>>>>> release/26.03.0
 
 @Suite
 struct GeoURITests {

@@ -7,13 +7,9 @@
 //
 
 import Compound
-<<<<<<< HEAD
-
+import Flow
 // Tchap: Used to check if MatrixID is external user.
 import MatrixRustSDK
-=======
-import Flow
->>>>>>> release/26.03.0
 import SwiftUI
 
 struct AvatarHeaderView<Footer: View>: View {
@@ -203,10 +199,6 @@ struct AvatarHeaderView<Footer: View>: View {
                 case .verified:
                     BadgeLabel(title: L10n.commonVerified,
                                icon: \.verified,
-<<<<<<< HEAD
-                               style: .accent,
-                               tchapUsage: .none)
-=======
                                style: .accent)
                 case .historySharingState(.hidden):
                     BadgeLabel(title: L10n.cryptoHistorySharingRoomInfoHiddenBadgeContent,
@@ -220,7 +212,6 @@ struct AvatarHeaderView<Footer: View>: View {
                     BadgeLabel(title: L10n.cryptoHistorySharingRoomInfoWorldReadableBadgeContent,
                                icon: \.userProfileSolid,
                                style: .info)
->>>>>>> release/26.03.0
                 }
             }
             
@@ -316,13 +307,10 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
                                          isEncrypted: true,
                                          isPublic: true,
                                          isDirect: false,
-<<<<<<< HEAD
+                                         historySharingState: nil,
                                          // Tchap: add test value
                                          accessRule: .unrestricted,
                                          visibility: .private),
-=======
-                                         historySharingState: nil),
->>>>>>> release/26.03.0
                              avatarSize: .room(on: .details),
                              mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {

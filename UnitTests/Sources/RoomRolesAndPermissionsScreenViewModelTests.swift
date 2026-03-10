@@ -6,9 +6,6 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-<<<<<<< HEAD
-import XCTest
-
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
@@ -16,10 +13,7 @@ import XCTest
 #else
 @testable import ElementX
 #endif
-=======
-@testable import ElementX
 import Testing
->>>>>>> release/26.03.0
 
 @MainActor
 @Suite
@@ -66,8 +60,7 @@ struct RoomRolesAndPermissionsScreenViewModelTests {
         setup(members: .allMembersAsAdmin)
 
         context.send(viewAction: .editOwnUserRole)
-<<<<<<< HEAD
-        XCTAssertNotNil(context.alertInfo)
+        #expect(context.alertInfo != nil)
         
         context.alertInfo?.verticalButtons?.first {
             // Tchap: adapt test
@@ -75,12 +68,6 @@ struct RoomRolesAndPermissionsScreenViewModelTests {
             $0.title.localizedStandardContains("moderator") || $0.title.localizedStandardContains("modérateur")
         }?.action?()
         
-=======
-        #expect(context.alertInfo != nil)
-
-        context.alertInfo?.verticalButtons?.first { $0.title.localizedStandardContains("moderator") }?.action?()
-
->>>>>>> release/26.03.0
         try await Task.sleep(for: .milliseconds(100))
 
         #expect(roomProxy.updatePowerLevelsForUsersCalled)
@@ -92,21 +79,14 @@ struct RoomRolesAndPermissionsScreenViewModelTests {
         setup(members: .allMembersAsAdmin)
 
         context.send(viewAction: .editOwnUserRole)
-<<<<<<< HEAD
-        XCTAssertNotNil(context.alertInfo)
-        
+        #expect(context.alertInfo != nil)
+
         context.alertInfo?.verticalButtons?.first {
             // Tchap: adapt test
 //            $0.title.localizedStandardContains("member")
             $0.title.localizedStandardContains("member") || $0.title.localizedStandardContains("membre")
         }?.action?()
         
-=======
-        #expect(context.alertInfo != nil)
-
-        context.alertInfo?.verticalButtons?.first { $0.title.localizedStandardContains("member") }?.action?()
-
->>>>>>> release/26.03.0
         try await Task.sleep(for: .milliseconds(100))
 
         #expect(roomProxy.updatePowerLevelsForUsersCalled)

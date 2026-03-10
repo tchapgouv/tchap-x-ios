@@ -317,14 +317,10 @@ struct JoinRoomScreen: View {
                 if let avatar = context.viewState.avatar {
                     RoomHeaderView(roomName: context.viewState.title,
                                    roomAvatar: avatar,
-<<<<<<< HEAD
                                    roomPropertiesBadgesView: nil, // Tchap addition
-                                   mediaProvider: context.mediaProvider)
-=======
                                    mediaProvider: context.mediaProvider) {
                         // There is no action but the iOS 26 designs have it looking like a button.
                     }
->>>>>>> release/26.03.0
                 }
             }
         }

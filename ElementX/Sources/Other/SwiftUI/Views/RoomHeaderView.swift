@@ -15,12 +15,9 @@ struct RoomHeaderView: View {
     var roomSubtitle: String?
     let roomAvatar: RoomAvatar
     var dmRecipientVerificationState: UserIdentityVerificationState?
-<<<<<<< HEAD
+    var roomHistorySharingState: RoomHistorySharingState?
     // Tchap: optional badge reporting room configuration.
     let roomPropertiesBadgesView: TchapRoomHeaderViewRoomPropertiesBadgesView?
-=======
-    var roomHistorySharingState: RoomHistorySharingState?
->>>>>>> release/26.03.0
     
     let mediaProvider: MediaProviderProtocol?
     
@@ -56,13 +53,9 @@ struct RoomHeaderView: View {
                 HStack(spacing: 4) {
                     Text(roomName)
                         .lineLimit(1)
-<<<<<<< HEAD
                         // Tchap: use Tchap custom font (Marianne font) in Room header view.
-//                        .font(.compound.bodyLGSemibold)
+//                        .font(.compound.bodyMDSemibold)
                         .tchapNavigationBarTitleFont()
-=======
-                        .font(.compound.bodyMDSemibold)
->>>>>>> release/26.03.0
                         .accessibilityIdentifier(A11yIdentifiers.roomScreen.name)
                     if let roomSubtitle {
                         Text(roomSubtitle)
@@ -70,18 +63,8 @@ struct RoomHeaderView: View {
                             .font(.compound.bodyXS)
                             .foregroundStyle(.compound.textSecondary)
                     }
-                    
-                    if let dmRecipientVerificationState {
-                        VerificationBadge(verificationState: dmRecipientVerificationState)
-                    }
+
                 }
-<<<<<<< HEAD
-                // Tchap: additional room info
-                if let roomPropertiesBadgesView {
-                    roomPropertiesBadgesView
-                        .zIndex(-1)
-                    Spacer(minLength: 2.0)
-=======
                 
                 if let dmRecipientVerificationState {
                     VerificationBadge(verificationState: dmRecipientVerificationState, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
@@ -90,7 +73,13 @@ struct RoomHeaderView: View {
                 if let historySharingIcon {
                     CompoundIcon(historySharingIcon, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
                         .foregroundStyle(.compound.iconInfoPrimary)
->>>>>>> release/26.03.0
+                }
+                
+                // Tchap: additional room info
+                if let roomPropertiesBadgesView {
+                    roomPropertiesBadgesView
+                        .zIndex(-1)
+                    Spacer(minLength: 2.0)
                 }
             }
             // Take up as much space as possible, with a leading alignment for use in the principal toolbar position.
@@ -165,14 +154,9 @@ struct RoomHeaderView_Previews: PreviewProvider, TestablePreview {
                                          name: "Some Room Name",
                                          avatarURL: avatarURL),
                        dmRecipientVerificationState: verificationState,
-<<<<<<< HEAD
-                       roomPropertiesBadgesView: .sample, // Tchap addition
-                       mediaProvider: MediaProviderMock(configuration: .init()))
-=======
                        roomHistorySharingState: historySharingState,
-                       
+                       roomPropertiesBadgesView: .sample, // Tchap addition
                        mediaProvider: MediaProviderMock(configuration: .init())) { }
->>>>>>> release/26.03.0
             .padding()
     }
 }
