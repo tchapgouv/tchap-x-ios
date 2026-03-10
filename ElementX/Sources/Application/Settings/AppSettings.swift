@@ -247,11 +247,11 @@ final class AppSettings {
     // Tchap: adapt website URL for OIDC / MAS
     //    private(set) var websiteURL: URL = "https://element.io"
     /// A URL where users can go read more about the app.
-    #if IS_TCHAP_DEVELOPMENT
+    #if IS_TCHAP_PRODUCTION
     private(set) var websiteURL: URL = "https://tchap.gouv.fr"
     #elseif IS_TCHAP_STAGING
     private(set) var websiteURL: URL = "https://beta.tchap.gouv.fr"
-    #elseif IS_TCHAP_PRODUCTION
+    #elseif IS_TCHAP_DEVELOPMENT
     private(set) var websiteURL: URL = "https://tchap.incubateur.net"
     #else
     private(set) var websiteURL: URL = "https://element.io"
