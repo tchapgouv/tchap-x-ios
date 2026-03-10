@@ -737,7 +737,7 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
     }
     open var createRoomRequestClosure: ((CreateRoomParameters) async throws -> String)?
 
-    open override func createRoom(request: CreateRoomParameters, isFederated: Bool) async throws -> String {
+    open override func createRoom(request: CreateRoomParameters, isTchapInvite: Bool, isTchapInviteExternal: Bool) async throws -> String {
         if let error = createRoomRequestThrowableError {
             throw error
         }

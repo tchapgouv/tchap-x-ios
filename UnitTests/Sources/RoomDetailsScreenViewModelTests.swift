@@ -8,6 +8,7 @@
 
 import AsyncAlgorithms
 import Combine
+
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
@@ -536,7 +537,6 @@ struct RoomDetailsScreenViewModelTests {
         // Tchap: adapt test
 //        #expect(context.viewState.notificationSettingsState.label == "Default")
         #expect(context.viewState.notificationSettingsState.label == L10n.screenRoomDetailsNotificationModeDefault)
-
     }
     
     @Test
@@ -551,7 +551,6 @@ struct RoomDetailsScreenViewModelTests {
         // Tchap: adapt test
 //        #expect(context.viewState.notificationSettingsState.label == "Custom")
         #expect(context.viewState.notificationSettingsState.label == L10n.screenRoomDetailsNotificationModeCustom)
-
     }
     
     @Test

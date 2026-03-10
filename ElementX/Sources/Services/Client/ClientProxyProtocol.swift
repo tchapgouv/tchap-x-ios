@@ -48,7 +48,7 @@ enum SlidingSyncConstants {
     static let maximumVisibleRangeSize = 30
 }
 
-enum CreateRoomAccessType: Equatable & CaseIterable{
+enum CreateRoomAccessType: Equatable & CaseIterable {
     // Tchap: handle `isFederated` associated value for `public` room. CaseIterable is not automatically implement then.
     // case `public`
     case `public`(federated: Bool)

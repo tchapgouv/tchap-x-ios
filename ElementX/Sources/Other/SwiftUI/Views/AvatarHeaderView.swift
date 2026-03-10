@@ -8,6 +8,7 @@
 
 import Compound
 import Flow
+
 // Tchap: Used to check if MatrixID is external user.
 import MatrixRustSDK
 import SwiftUI
@@ -373,7 +374,10 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
                                          isEncrypted: true,
                                          isPublic: true,
                                          isDirect: false,
-                                         historySharingState: state),
+                                         historySharingState: state,
+                                         // Tchap: add test value
+                                         accessRule: .unrestricted,
+                                         visibility: .private),
                              avatarSize: .room(on: .details),
                              mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {

@@ -70,7 +70,6 @@ struct RoomEventStringBuilderTests {
         // Tchap; adapt test
         #expect(otherPollString?.string == "Bob: Poll: Which is better?", "Everyone else's polls should be prefixed with their display name.")
         #expect(otherPollString?.string == "Bob: \(L10n.commonPollSummary("Which is better?"))", "Everyone else's polls should be prefixed with their display name.")
-
     }
     
     // MARK: - Helpers

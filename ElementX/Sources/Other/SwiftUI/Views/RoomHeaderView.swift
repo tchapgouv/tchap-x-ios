@@ -63,7 +63,6 @@ struct RoomHeaderView: View {
                             .font(.compound.bodyXS)
                             .foregroundStyle(.compound.textSecondary)
                     }
-
                 }
                 
                 if let dmRecipientVerificationState {

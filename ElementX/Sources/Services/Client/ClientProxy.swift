@@ -521,7 +521,10 @@ class ClientProxy: ClientProxyProtocol {
                                                   historyVisibilityOverride: .invited)
             // Tchap: change `createRoom` call with `isFederatd` parameter becasue of BWI-specific Rust side.
 //            let roomID = try await client.createRoom(request: parameters)
-            let roomID = try await client.createRoom(request: parameters, isFederated: true)
+            let roomID = try await client.createRoom(request: parameters,
+                                                     isTchapInvite: false,
+                                                     isTchapInviteExternal: false)
+
             await waitForRoomToSync(roomID: roomID)
             
             return .success(roomID)
@@ -540,7 +543,9 @@ class ClientProxy: ClientProxyProtocol {
                     aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
         do {
             let powerLevelContentOverride = if isSpace {
-                if accessType == .public {
+                // Tchap: ignore `federated` assocaited value for space for the moment.
+//                if accessType == .public {
+                if case .public(let isFederated) = accessType {
                     Self.publicSpaceCreationPowerLevelOverrides
                 } else {
                     Self.standardSpaceCreationPowerLevelOverrides
@@ -569,7 +574,9 @@ class ClientProxy: ClientProxyProtocol {
                                                   isSpace: isSpace)
             // Tchap: change `createRoom` call with `isFederated` parameter becasue of BWI-specific Rust side.
             // let roomID = try await client.createRoom(request: parameters)
-            let roomID = try await client.createRoom(request: parameters, isFederated: accessType.isFederated)
+            let roomID = try await client.createRoom(request: parameters,
+                                                     isTchapInvite: false,
+                                                     isTchapInviteExternal: false)
             
             await waitForRoomToSync(roomID: roomID)
             
@@ -1414,11 +1421,11 @@ private extension CreateRoomAccessType {
         switch self {
         case .public:
             false
-        default:
-            true
         // Tchap: handle private unencrypted room type
         case .privateUnencrypted:
             false
+        default:
+            true
         }
     }
     
@@ -1457,6 +1464,10 @@ private extension CreateRoomAccessType {
             true
         case .public(let federated):
             federated
+        case .spaceMembers(let spaceID), .askToJoinWithSpaceMembers(let spaceID):
+            // Tchap: return false (Space members not federatd) for the moment.
+            // TOOD: check the meaning of federation for Space membership.
+            false
         }
     }
     

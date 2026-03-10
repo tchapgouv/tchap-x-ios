@@ -65,17 +65,23 @@ struct CreateRoomScreenViewState: BindableState {
     var availableAccessTypes: [CreateRoomScreenAccessType] {
         var availableAccessTypes: [CreateRoomScreenAccessType] = []
         if isSpace {
-            availableAccessTypes = [.public]
+            // Tchap: enumerate `public` cases wit hfederated associated value.
+//            availableAccessTypes = [.public]
+            availableAccessTypes = [.public(federated: true), .public(federated: false)]
         } else if let selectedSpace = bindings.selectedSpace, selectedSpace.joinRule != .public {
             availableAccessTypes = [.spaceMembers]
             if isKnockingFeatureEnabled {
                 availableAccessTypes.append(.askToJoinWithSpaceMembers)
             }
         } else {
-            availableAccessTypes = [.public]
+            // Tchap: enumerate `public` cases wit hfederated associated value.
+//            availableAccessTypes = [.public]
+            availableAccessTypes = [.public(federated: true), .public(federated: false)]
             if isKnockingFeatureEnabled {
                 availableAccessTypes.append(.askToJoin)
             }
+            // Tchap: add privateUnencrypted case to room access types.
+            availableAccessTypes.append(.privateUnencrypted)
         }
         availableAccessTypes.append(.private)
         return availableAccessTypes
@@ -83,8 +89,11 @@ struct CreateRoomScreenViewState: BindableState {
     
     var roomAccessType: CreateRoomAccessType {
         switch bindings.selectedAccessType {
-        case .public:
-            return .public
+        // Tchap: handle public case with associated value `federated`.
+//        case .public:
+//            return .public
+        case .public(let federated):
+            return .public(federated: federated)
         case .spaceMembers:
             return .spaceMembers(spaceID: bindings.selectedSpace?.id ?? "")
         case .askToJoinWithSpaceMembers:
@@ -93,6 +102,9 @@ struct CreateRoomScreenViewState: BindableState {
             return .askToJoin
         case .private:
             return .private
+        // Tchap: handle privateUnencrypted case.
+        case .privateUnencrypted:
+            return .privateUnencrypted
         }
     }
 }
@@ -114,6 +126,10 @@ struct CreateRoomScreenViewStateBindings {
                 true
             case .privateUnencrypted:
                 true
+            case .spaceMembers, .askToJoinWithSpaceMembers:
+                // Tchap: return false (Space members not federatd) for the moment.
+                // TOOD: check the meaning of federation for Space membership.
+                false
             }
         }
         
@@ -157,12 +173,18 @@ extension Set<CreateRoomScreenAliasErrorState> {
     }
 }
 
-enum CreateRoomScreenAccessType {
-    case `public`
+// Tchap: Declare CreateRoomScreenAccessType Hashable  (and therefore Equatable) for use in CreateRoomScreen
+enum CreateRoomScreenAccessType: Hashable {
+    // enum CreateRoomScreenAccessType {
+    // Tchap: handle `isFederated` associated value for `public` room. CaseIterable is not automatically implement then.
+    // case `public`
+    case `public`(federated: Bool)
     case spaceMembers
     case askToJoinWithSpaceMembers
     case askToJoin
     case `private`
+    // Tchap: add private unencrypted room type
+    case privateUnencrypted
 }
 
 enum CreateRoomScreenSpaceSelectionMode {

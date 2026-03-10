@@ -100,14 +100,14 @@ final class AppSettings {
         #if DEBUG
         return .debug
         #else
-// Tchap: we only build debug and release versions (production, staging and development are flavors, not build types).
+        // Tchap: we only build debug and release versions (production, staging and development are flavors, not build types).
 //        switch InfoPlistReader.main.baseBundleIdentifier {
 //        case "io.element.elementx.nightly":
 //            return .nightly
 //        default:
 //            return .release
 //        }
-          return .release
+        return .release
         #endif
     }
     
@@ -381,8 +381,8 @@ final class AppSettings {
     #else
     var pushGatewayBaseURL: URL = "https://matrix.org"
     #endif
-    var pushGatewayNotifyEndpoint: URL { 
-        pushGatewayBaseURL.appending(path: "_matrix/push/v1/notify") 
+    var pushGatewayNotifyEndpoint: URL {
+        pushGatewayBaseURL.appending(path: "_matrix/push/v1/notify")
     }
     
     @UserPreference(key: UserDefaultsKeys.enableNotifications, defaultValue: true, storageType: .userDefaults(store))
@@ -543,6 +543,9 @@ final class AppSettings {
     
     @UserPreference(key: UserDefaultsKeys.createSpaceEnabled, defaultValue: true, storageType: .volatile)
     var createSpaceEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.spaceFiltersEnabled, defaultValue: true, storageType: .volatile)
+    var spaceFiltersEnabled
     
     /// Others
     // Tchap: enable `publicSearchEnabled` feature flag by default. It is Tchap `join a forum` action.

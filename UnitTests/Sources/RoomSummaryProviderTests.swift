@@ -17,7 +17,6 @@ import MatrixRustSDK
 import MatrixRustSDKMocks
 import Testing
 
-
 @Suite
 @MainActor
 final class RoomSummaryProviderTests {

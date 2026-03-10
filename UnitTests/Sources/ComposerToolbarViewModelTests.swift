@@ -29,7 +29,7 @@ final class ComposerToolbarViewModelTests {
     private var completionSuggestionServiceMock: CompletionSuggestionServiceMock!
     private var draftServiceMock: ComposerDraftServiceMock!
     
-   // Tchap: adapt test
+    // Tchap: adapt test
     private let homeServerName = "tchap.gouv.fr"
     
     init() {
@@ -154,8 +154,9 @@ final class ComposerToolbarViewModelTests {
 
         // Tchap: adapt test
 //        #expect(wysiwygViewModel.content.html == "<a href=\"https://matrix.to/#/%23room-alias:matrix.org\">#room-alias:matrix.org</a> ")
-       #expect(wysiwygViewModel.content.html == "<a href=\"https://\(homeServerName)/#/%23room-alias:matrix.org\">#room-alias:matrix.org</a> ")
-    }    
+        #expect(wysiwygViewModel.content.html == "<a href=\"https://\(homeServerName)/#/%23room-alias:matrix.org\">#room-alias:matrix.org</a> ")
+    }
+
     @Test
     func allUsersSuggestion() throws {
         let suggestion = SuggestionItem(suggestionType: .allUsers(.room(id: "", name: nil, avatarURL: nil)), range: .init(), rawSuggestionText: "")

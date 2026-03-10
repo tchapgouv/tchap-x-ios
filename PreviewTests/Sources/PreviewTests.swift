@@ -7,10 +7,12 @@
 //
 
 import Combine
+
+import SwiftUI
+
 // Tchap: adjustement
 // @testable import ElementX
 @testable import TchapX_Production@testable import SnapshotTesting
-import SwiftUI
 import Testing
 
 @Suite

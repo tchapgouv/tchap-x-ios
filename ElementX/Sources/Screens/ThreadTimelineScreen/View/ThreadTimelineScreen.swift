@@ -75,7 +75,7 @@ struct ThreadTimelineScreen: View {
                                                                        // Tchap: added parameters to display or not "external" badge.
                                                                        accessRule: $context.accessRule,
                                                                        avatar: $context.roomAvatar),
-                           mediaProvider: context.mediaProvider)
+                           mediaProvider: context.mediaProvider) {
                 // There is no action but the iOS 26 designs have it looking like a button.
             }
         }

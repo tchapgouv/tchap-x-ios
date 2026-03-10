@@ -160,6 +160,7 @@ struct RoomScreen: View {
                            dmRecipientVerificationState: context.viewState.dmRecipientVerificationState,
                            roomHistorySharingState: context.viewState.roomHistorySharingState,
                            // Tchap: add badges
+                           roomPropertiesBadgesView:
                            TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: $context.isEncrypted,
                                                                        isPublic: $context.canDisplayPublicBadge,
                                                                        // Tchap: added parameters to display or not "external" badge.
