@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -21,15 +22,16 @@ struct TimelineControllerFactory: TimelineControllerFactoryProtocol {
                            appSettings: ServiceLocator.shared.settings)
     }
     
-    func buildThreadTimelineController(eventID: String,
+    func buildThreadTimelineController(threadRootEventID: String,
+                                       initialFocussedEventID: String?,
                                        roomProxy: JoinedRoomProxyProtocol,
                                        timelineItemFactory: RoomTimelineItemFactoryProtocol,
                                        mediaProvider: MediaProviderProtocol) async -> Result<TimelineControllerProtocol, TimelineFactoryControllerError> {
-        switch await roomProxy.threadTimeline(eventID: eventID) {
+        switch await roomProxy.threadTimeline(eventID: threadRootEventID) {
         case .success(let timelineProxy):
             return .success(TimelineController(roomProxy: roomProxy,
                                                timelineProxy: timelineProxy,
-                                               initialFocussedEventID: nil,
+                                               initialFocussedEventID: initialFocussedEventID,
                                                timelineItemFactory: timelineItemFactory,
                                                mediaProvider: mediaProvider,
                                                appSettings: ServiceLocator.shared.settings))

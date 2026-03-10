@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -29,7 +30,7 @@ class TimelineController: TimelineControllerProtocol {
     
     private(set) var timelineItems = [RoomTimelineItemProtocol]()
     
-    private(set) var paginationState: PaginationState = .initial {
+    private(set) var paginationState: TimelinePaginationState = .initial {
         didSet {
             callbacks.send(.paginationState(paginationState))
         }
@@ -64,7 +65,7 @@ class TimelineController: TimelineControllerProtocol {
         }
         
         Task {
-            paginationState = PaginationState(backward: .paginating, forward: .paginating)
+            paginationState = TimelinePaginationState(backward: .paginating, forward: .paginating)
             
             switch await focusOnEvent(initialFocussedEventID, timelineSize: 100) {
             case .success:
@@ -249,8 +250,8 @@ class TimelineController: TimelineControllerProtocol {
         await activeTimeline.messageEventContent(for: timelineItemID)
     }
     
-    // Handle this parallel to the timeline items so we're not forced
-    // to bundle the Rust side objects within them
+    /// Handle this parallel to the timeline items so we're not forced
+    /// to bundle the Rust side objects within them
     func debugInfo(for itemID: TimelineItemIdentifier) -> TimelineItemDebugInfo {
         for timelineItemProxy in activeTimelineItemProvider.itemProxies {
             switch timelineItemProxy {
@@ -355,7 +356,7 @@ class TimelineController: TimelineControllerProtocol {
     
     func sendVoiceMessage(url: URL,
                           audioInfo: MatrixRustSDK.AudioInfo,
-                          waveform: [UInt16],
+                          waveform: [Float],
                           requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineControllerError> {
         await activeTimeline.sendVoiceMessage(url: url,
                                               audioInfo: audioInfo,
@@ -395,22 +396,26 @@ class TimelineController: TimelineControllerProtocol {
         isSwitchingTimelines = true
         
         // Inform the world that the initial items are loading from the store
-        paginationState = PaginationState(backward: .paginating, forward: .paginating)
+        paginationState = TimelinePaginationState(backward: .paginating, forward: .paginating)
         callbacks.send(.isLive(activeTimelineItemProvider.kind == .live))
         
-        updateTimelineItemsCancellable = Task { [weak self, activeTimelineItemProvider] in
-            let contentSizeChangePublisher = NotificationCenter.default.publisher(for: UIContentSizeCategory.didChangeNotification)
-            let timelineUpdates = activeTimelineItemProvider.updatePublisher.merge(with: contentSizeChangePublisher.map { _ in
-                (activeTimelineItemProvider.itemProxies, activeTimelineItemProvider.paginationState)
-            })
+        let contentSizeChangePublisher = NotificationCenter.default.publisher(for: UIContentSizeCategory.didChangeNotification)
+        let timelineUpdates = activeTimelineItemProvider.updatePublisher.merge(with: contentSizeChangePublisher.compactMap { [weak self] _ in
+            guard let activeTimelineProvider = self?.activeTimelineItemProvider else {
+                return nil
+            }
             
+            return (activeTimelineProvider.itemProxies, activeTimelineProvider.paginationState)
+        })
+        
+        updateTimelineItemsCancellable = Task { [weak self] in
             for await (items, paginationState) in timelineUpdates.values {
                 await self?.updateTimelineItems(itemProxies: items, paginationState: paginationState)
             }
         }.asCancellable()
     }
     
-    private func updateTimelineItems(itemProxies: [TimelineItemProxy], paginationState: PaginationState) async {
+    private func updateTimelineItems(itemProxies: [TimelineItemProxy], paginationState: TimelinePaginationState) async {
         let isNewTimeline = isSwitchingTimelines
         isSwitchingTimelines = false
         
@@ -427,14 +432,12 @@ class TimelineController: TimelineControllerProtocol {
                 let isLastItem = index == collapsibleChunks.indices.last
                 
                 let items = collapsibleChunk.compactMap { itemProxy in
-                    let timelineItem = self.buildTimelineItem(for: itemProxy,
-                                                              isDM: isDM,
-                                                              hasPredecessor: hasPredecessor,
-                                                              roomDisplayName: displayName,
-                                                              timelineItemFactory: timelineItemFactory,
-                                                              activeTimeline: activeTimeline)
-                    
-                    return timelineItem
+                    self.buildTimelineItem(for: itemProxy,
+                                           isDM: isDM,
+                                           hasPredecessor: hasPredecessor,
+                                           roomDisplayName: displayName,
+                                           timelineItemFactory: timelineItemFactory,
+                                           activeTimeline: activeTimeline)
                 }
                 
                 if items.isEmpty {
@@ -468,14 +471,14 @@ class TimelineController: TimelineControllerProtocol {
         switch paginationState.backward {
         case .paginating:
             newTimelineItems.insert(PaginationIndicatorRoomTimelineItem(position: .start), at: 0)
-        case .idle, .timelineEndReached:
+        case .idle, .endReached:
             break
         }
         
         switch paginationState.forward {
         case .paginating:
             newTimelineItems.insert(PaginationIndicatorRoomTimelineItem(position: .end), at: newTimelineItems.count)
-        case .idle, .timelineEndReached:
+        case .idle, .endReached:
             break
         }
         

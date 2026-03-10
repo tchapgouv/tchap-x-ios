@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -107,21 +108,13 @@ class EventTimelineItemProxy {
 
     lazy var isEditable = item.isEditable
     
-    lazy var sender: TimelineItemSender = {
-        let profile = item.senderProfile
-        
-        switch profile {
-        case let .ready(displayName, isDisplayNameAmbiguous, avatarUrl):
-            return .init(id: item.sender,
-                         displayName: displayName,
-                         isDisplayNameAmbiguous: isDisplayNameAmbiguous,
-                         avatarURL: avatarUrl.flatMap(URL.init(string:)))
-        default:
-            return .init(id: item.sender,
-                         displayName: nil,
-                         isDisplayNameAmbiguous: false,
-                         avatarURL: nil)
+    lazy var sender = TimelineItemSender(senderID: item.sender, senderProfile: item.senderProfile)
+    
+    lazy var forwarder: TimelineItemKeyForwarder? = {
+        guard let forwarderID = item.forwarder, let forwarderProfile = item.forwarderProfile else {
+            return nil
         }
+        return TimelineItemKeyForwarder(forwarderID: forwarderID, forwarderProfile: forwarderProfile)
     }()
     
     lazy var timestamp = Date(timeIntervalSince1970: TimeInterval(item.timestamp / 1000))
@@ -211,7 +204,7 @@ struct SendHandleProxy: Hashable {
     static var mock: SendHandleProxy {
         .init(itemID: .event(uniqueID: .init(UUID().uuidString),
                              eventOrTransactionID: .eventID(UUID().uuidString)),
-              underlyingHandle: .init(noPointer: .init()))
+              underlyingHandle: .init(noHandle: .init()))
     }
 }
 

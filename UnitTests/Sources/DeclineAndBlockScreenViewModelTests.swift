@@ -1,11 +1,10 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
-
-import XCTest
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
@@ -14,17 +13,19 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Testing
 
 @MainActor
-class DeclineAndBlockScreenViewModelTests: XCTestCase {
-    var viewModel: DeclineAndBlockScreenViewModelProtocol!
-    var clientProxy: ClientProxyMock!
+@Suite
+struct DeclineAndBlockScreenViewModelTests {
+    var viewModel: DeclineAndBlockScreenViewModelProtocol
+    var clientProxy: ClientProxyMock
     
     var context: DeclineAndBlockScreenViewModelType.Context {
         viewModel.context
     }
     
-    override func setUp() {
+    init() {
         clientProxy = ClientProxyMock(.init())
         viewModel = DeclineAndBlockScreenViewModel(userID: "@alice:matrix.org",
                                                    roomID: "!room:matrix.org",
@@ -32,39 +33,42 @@ class DeclineAndBlockScreenViewModelTests: XCTestCase {
                                                    userIndicatorController: UserIndicatorControllerMock())
     }
     
-    func testInitialState() {
-        XCTAssertFalse(context.viewState.isDeclineDisabled)
-        XCTAssertFalse(context.shouldReport)
-        XCTAssertTrue(context.shouldBlockUser)
+    @Test
+    func initialState() {
+        #expect(!context.viewState.isDeclineDisabled)
+        #expect(!context.shouldReport)
+        #expect(context.shouldBlockUser)
     }
     
-    func testDeclineDisabled() {
+    @Test
+    mutating func declineDisabled() {
         context.shouldBlockUser = false
-        XCTAssertTrue(context.viewState.isDeclineDisabled)
-        XCTAssertFalse(context.shouldReport)
-        XCTAssertFalse(context.shouldBlockUser)
+        #expect(context.viewState.isDeclineDisabled)
+        #expect(!context.shouldReport)
+        #expect(!context.shouldBlockUser)
         context.shouldReport = true
         // Should report set to `true` always requires a non empty reason
-        XCTAssertTrue(context.viewState.isDeclineDisabled)
+        #expect(context.viewState.isDeclineDisabled)
         context.reportReason = "Test reason"
-        XCTAssertFalse(context.viewState.isDeclineDisabled)
+        #expect(!context.viewState.isDeclineDisabled)
     }
     
-    func testDeclineBlockAndReport() async throws {
+    @Test
+    mutating func declineBlockAndReport() async throws {
         let reason = "Test reason"
         clientProxy.roomForIdentifierClosure = { id in
-            XCTAssertEqual(id, "!room:matrix.org")
+            #expect(id == "!room:matrix.org")
             let roomProxyMock = InvitedRoomProxyMock(.init(id: id))
             roomProxyMock.rejectInvitationReturnValue = .success(())
             return .invited(InvitedRoomProxyMock(.init(id: id)))
         }
         clientProxy.reportRoomForIdentifierReasonClosure = { id, reasonValue in
-            XCTAssertEqual(id, "!room:matrix.org")
-            XCTAssertEqual(reasonValue, reason)
+            #expect(id == "!room:matrix.org")
+            #expect(reasonValue == reason)
             return .success(())
         }
         clientProxy.ignoreUserClosure = { userId in
-            XCTAssertEqual(userId, "@alice:matrix.org")
+            #expect(userId == "@alice:matrix.org")
             return .success(())
         }
         
@@ -76,8 +80,8 @@ class DeclineAndBlockScreenViewModelTests: XCTestCase {
         }
         context.send(viewAction: .decline)
         try await deferredAction.fulfill()
-        XCTAssertTrue(clientProxy.roomForIdentifierCalled)
-        XCTAssertTrue(clientProxy.reportRoomForIdentifierReasonCalled)
-        XCTAssertTrue(clientProxy.ignoreUserCalled)
+        #expect(clientProxy.roomForIdentifierCalled)
+        #expect(clientProxy.reportRoomForIdentifierReasonCalled)
+        #expect(clientProxy.ignoreUserCalled)
     }
 }

@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -10,9 +11,15 @@ import Foundation
 // periphery:ignore - markdown protocol
 @MainActor
 protocol FlowCoordinatorProtocol {
-    func start()
+    func start(animated: Bool)
     func handleAppRoute(_ appRoute: AppRoute, animated: Bool)
     func clearRoute(animated: Bool)
+}
+
+extension FlowCoordinatorProtocol {
+    func start() {
+        start(animated: true)
+    }
 }
 
 /// Core parameters that are shared across the main flows for easy dependency injection.
@@ -34,6 +41,11 @@ struct CommonFlowParameters {
     let notificationManager: NotificationManagerProtocol
     let stateMachineFactory: StateMachineFactoryProtocol
     
-    var windowManager: WindowManagerProtocol { appMediator.windowManager }
-    var ongoingCallRoomIDPublisher: CurrentValuePublisher<String?, Never> { elementCallService.ongoingCallRoomIDPublisher }
+    var windowManager: WindowManagerProtocol {
+        appMediator.windowManager
+    }
+
+    var ongoingCallRoomIDPublisher: CurrentValuePublisher<String?, Never> {
+        elementCallService.ongoingCallRoomIDPublisher
+    }
 }

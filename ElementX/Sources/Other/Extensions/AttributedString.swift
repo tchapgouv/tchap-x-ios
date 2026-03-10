@@ -1,21 +1,26 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
 
 extension AttributedString {
-    // faster than doing `String(characters)`: https://forums.swift.org/t/attributedstring-to-string/61667
+    /// faster than doing `String(characters)`: https://forums.swift.org/t/attributedstring-to-string/61667
     var string: String {
         String(characters[...])
     }
     
     var formattedComponents: [AttributedStringBuilderComponent] {
-        runs[\.blockquote].map { value, range in
-            var attributedString = AttributedString(self[range])
+        var components = [AttributedStringBuilderComponent]()
+        
+        for run in runs[\.blockquote, \.codeBlock] {
+            let isBlockquote = run.0 != nil
+            let isCodeBlock = run.1 != nil
+            var attributedString = AttributedString(self[run.2])
             
             // Remove trailing new lines if any
             if attributedString.characters.last?.isNewline ?? false,
@@ -23,10 +28,21 @@ extension AttributedString {
                 attributedString.removeSubrange(range)
             }
             
-            let isBlockquote = value != nil
-            
-            return AttributedStringBuilderComponent(id: String(attributedString.characters), attributedString: attributedString, isBlockquote: isBlockquote)
+            let componentType: AttributedStringBuilderComponent.ComponentType = switch (isBlockquote, isCodeBlock) {
+            case (true, _):
+                .blockquote
+            case (false, true):
+                .codeBlock
+            case (false, false):
+                .plainText
+            }
+                    
+            components.append(AttributedStringBuilderComponent(id: String(attributedString.characters),
+                                                               attributedString: attributedString,
+                                                               type: componentType))
         }
+        
+        return components
     }
     
     /// Replaces the specified placeholder with a string that links to the specified URL.

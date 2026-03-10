@@ -1,11 +1,15 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
+
+// Tchap: Used to check if MatrixID is external user.
+import MatrixRustSDK
 import SwiftUI
 
 // MARK: - Coordinator
@@ -56,6 +60,7 @@ struct RoomDetailsScreenViewState: BindableState {
     var canEditRoomTopic = false
     var canEditRoomAvatar = false
     var canEditRolesOrPermissions = false
+    var canEditSecurityAndPrivacy = false
     var canKickUsers = false
     var canBanUsers = false
     var notificationSettingsState: RoomDetailsNotificationSettingsState = .loading
@@ -73,10 +78,10 @@ struct RoomDetailsScreenViewState: BindableState {
     }
     
     var canSeeSecurityAndPrivacy: Bool {
-        knockingEnabled && dmRecipientInfo == nil && canEditRolesOrPermissions
+        dmRecipientInfo == nil && canEditSecurityAndPrivacy
     }
     
-    var canEdit: Bool {
+    var canEditBaseInfo: Bool {
         !isDirect && (canEditRoomName || canEditRoomTopic || canEditRoomAvatar)
     }
     
@@ -172,8 +177,8 @@ struct RoomDetailsScreenViewStateBindings {
     /// A media item that will be previewed with QuickLook.
     var mediaPreviewItem: MediaPreviewItem?
     
-    // Tchap: is the room open to external users to display or hide `External` badge.
-    var isOpenToExternalUsers: Bool?
+    /// The view model used to display the leave space sheet, will only be used if the room is a space.
+    var leaveSpaceViewModel: LeaveSpaceViewModel?
 }
 
 struct LeaveRoomAlertItem: AlertProtocol {

@@ -1,10 +1,12 @@
 //
-// Copyright 2021-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2021-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import SwiftUI
 
 /// A prompt that asks the user whether they would like to enable Analytics or not.
@@ -12,7 +14,9 @@ struct NotificationPermissionsScreen: View {
     @ObservedObject var context: NotificationPermissionsScreenViewModel.Context
     
     var body: some View {
-        FullscreenDialog(topPadding: UIConstants.startScreenBreakerScreenTopPadding, background: .gradient) {
+        // Tchap: add welcome screen
+//        FullscreenDialog(topPadding: UIConstants.startScreenBreakerScreenTopPadding, background: .gradient) {
+        FullscreenDialog(topPadding: UIConstants.startScreenBreakerScreenTopPadding) {
             mainContent
         } bottomContent: {
             buttons

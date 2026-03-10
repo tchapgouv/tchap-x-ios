@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -22,14 +23,16 @@ class RoomChangePermissionsScreenViewModel: RoomChangePermissionsScreenViewModel
     }
     
     init(currentPermissions: RoomPermissions,
-         group: RoomRolesAndPermissionsScreenPermissionsGroup,
+         ownPowerLevel: RoomPowerLevel,
          roomProxy: JoinedRoomProxyProtocol,
          userIndicatorController: UserIndicatorControllerProtocol,
          analytics: AnalyticsService) {
         self.roomProxy = roomProxy
         self.userIndicatorController = userIndicatorController
         self.analytics = analytics
-        super.init(initialViewState: .init(currentPermissions: currentPermissions, group: group))
+        super.init(initialViewState: .init(ownPowerLevel: ownPowerLevel,
+                                           currentPermissions: currentPermissions,
+                                           isSpace: roomProxy.infoPublisher.value.isSpace))
     }
     
     // MARK: - Public
@@ -60,9 +63,11 @@ class RoomChangePermissionsScreenViewModel: RoomChangePermissionsScreenViewModel
         }
         
         var changes = RoomPowerLevelChanges()
-        let changedSettings = state.bindings.settings.filter { state.currentPermissions[keyPath: $0.keyPath] != $0.value }
+        let changedSettings = state.bindings.settings.values
+            .flatMap { $0 }
+            .filter { state.currentPermissions[keyPath: $0.keyPath] != $0.value }
         for setting in changedSettings {
-            changes[keyPath: setting.rustKeyPath] = setting.value.powerLevelValue
+            changes[keyPath: setting.rustKeyPath] = setting.value
         }
         
         switch await roomProxy.applyPowerLevelChanges(changes) {
@@ -104,14 +109,14 @@ class RoomChangePermissionsScreenViewModel: RoomChangePermissionsScreenViewModel
     private func trackChanges(_ settings: [RoomPermissionsSetting]) {
         for setting in settings {
             switch setting.keyPath {
-            case \.ban: analytics.trackRoomModeration(action: .ChangePermissionsBanMembers, role: setting.value)
-            case \.invite: analytics.trackRoomModeration(action: .ChangePermissionsInviteUsers, role: setting.value)
-            case \.kick: analytics.trackRoomModeration(action: .ChangePermissionsKickMembers, role: setting.value)
-            case \.redact: analytics.trackRoomModeration(action: .ChangePermissionsRedactMessages, role: setting.value)
-            case \.eventsDefault: analytics.trackRoomModeration(action: .ChangePermissionsSendMessages, role: setting.value)
-            case \.roomName: analytics.trackRoomModeration(action: .ChangePermissionsRoomName, role: setting.value)
-            case \.roomAvatar: analytics.trackRoomModeration(action: .ChangePermissionsRoomAvatar, role: setting.value)
-            case \.roomTopic: analytics.trackRoomModeration(action: .ChangePermissionsRoomTopic, role: setting.value)
+            case \.ban: analytics.trackRoomModeration(action: .ChangePermissionsBanMembers, role: setting.roleValue)
+            case \.invite: analytics.trackRoomModeration(action: .ChangePermissionsInviteUsers, role: setting.roleValue)
+            case \.kick: analytics.trackRoomModeration(action: .ChangePermissionsKickMembers, role: setting.roleValue)
+            case \.redact: analytics.trackRoomModeration(action: .ChangePermissionsRedactMessages, role: setting.roleValue)
+            case \.eventsDefault: analytics.trackRoomModeration(action: .ChangePermissionsSendMessages, role: setting.roleValue)
+            case \.roomName: analytics.trackRoomModeration(action: .ChangePermissionsRoomName, role: setting.roleValue)
+            case \.roomAvatar: analytics.trackRoomModeration(action: .ChangePermissionsRoomAvatar, role: setting.roleValue)
+            case \.roomTopic: analytics.trackRoomModeration(action: .ChangePermissionsRoomTopic, role: setting.roleValue)
             default: MXLog.warning("Unexpected change: \(setting.keyPath).")
             }
         }

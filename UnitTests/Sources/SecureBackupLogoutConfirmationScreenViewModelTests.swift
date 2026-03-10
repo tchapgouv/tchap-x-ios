@@ -1,12 +1,12 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
-import XCTest
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
@@ -15,16 +15,20 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Testing
 
 @MainActor
-class SecureBackupLogoutConfirmationScreenViewModelTests: XCTestCase {
-    var viewModel: SecureBackupLogoutConfirmationScreenViewModel!
-    var context: SecureBackupLogoutConfirmationScreenViewModel.Context { viewModel.context }
+@Suite
+struct SecureBackupLogoutConfirmationScreenViewModelTests {
+    private var viewModel: SecureBackupLogoutConfirmationScreenViewModel
+    private var context: SecureBackupLogoutConfirmationScreenViewModel.Context {
+        viewModel.context
+    }
     
-    var secureBackupController: SecureBackupControllerMock!
-    var reachabilitySubject: CurrentValueSubject<NetworkMonitorReachability, Never>!
+    private var secureBackupController: SecureBackupControllerMock
+    private var reachabilitySubject: CurrentValueSubject<NetworkMonitorReachability, Never>
     
-    override func setUp() {
+    init() {
         secureBackupController = SecureBackupControllerMock()
         secureBackupController.underlyingKeyBackupState = CurrentValueSubject<SecureBackupKeyBackupState, Never>(.enabled).asCurrentValuePublisher()
         
@@ -34,36 +38,57 @@ class SecureBackupLogoutConfirmationScreenViewModelTests: XCTestCase {
                                                                   homeserverReachabilityPublisher: reachabilitySubject.asCurrentValuePublisher())
     }
     
-    func testInitialState() {
-        XCTAssertEqual(context.viewState.mode, .saveRecoveryKey)
+    @Test
+    func initialState() {
+        #expect(context.viewState.mode == .saveRecoveryKey)
     }
     
-    func testOngoingState() async throws {
-        testInitialState()
+    @Test
+    func ongoingState() async throws {
+        #expect(context.viewState.mode == .saveRecoveryKey)
         
-        let progressExpectation = expectation(description: "The upload progress callback should be called.")
-        secureBackupController.waitForKeyBackupUploadUploadStateSubjectClosure = { stateSubject in
-            try? await Task.sleep(for: .seconds(4))
-            stateSubject.send(.uploading(uploadedKeyCount: 50, totalKeyCount: 100))
-            progressExpectation.fulfill()
-            return .success(())
+        try await confirmation { confirmation in
+            secureBackupController.waitForKeyBackupUploadUploadStateSubjectClosure = { stateSubject in
+                try? await Task.sleep(for: .seconds(4))
+                stateSubject.send(.uploading(uploadedKeyCount: 50, totalKeyCount: 100))
+                confirmation()
+                return .success(())
+            }
+            
+            let deferredWaiting = deferFulfillment(context.observe(\.viewState.mode)) { $0 == .waitingToStart(hasStalled: false) }
+            context.send(viewAction: .logout)
+            _ = try await deferredWaiting.fulfill()
+            
+            // Wait for the 2-second timeout.
+            let deferredHasStalled = deferFulfillment(context.observe(\.viewState.mode)) { $0 == .waitingToStart(hasStalled: true) }
+            _ = try await deferredHasStalled.fulfill()
+            
+            try await deferFulfillment(context.observe(\.viewState.mode)) { $0 == .backupOngoing(progress: 0.5) }.fulfill()
         }
-        
-        let deferredWaiting = deferFulfillment(context.observe(\.viewState.mode)) { $0 == .waitingToStart(hasStalled: false) }
-        context.send(viewAction: .logout)
-        try await deferredWaiting.fulfill()
-        
-        // Wait for the 2-second timeout.
-        let deferredHasStalled = deferFulfillment(context.observe(\.viewState.mode)) { $0 == .waitingToStart(hasStalled: true) }
-        try await deferredHasStalled.fulfill()
-        
-        // Wait for the progress to be reported.
-        await fulfillment(of: [progressExpectation])
-        XCTAssertEqual(context.viewState.mode, .backupOngoing(progress: 0.5))
     }
     
-    func testOfflineState() async throws {
-        try await testOngoingState()
+    @Test
+    func offlineState() async throws {
+        #expect(context.viewState.mode == .saveRecoveryKey)
+        
+        try await confirmation { confirmation in
+            secureBackupController.waitForKeyBackupUploadUploadStateSubjectClosure = { stateSubject in
+                try? await Task.sleep(for: .seconds(4))
+                stateSubject.send(.uploading(uploadedKeyCount: 50, totalKeyCount: 100))
+                confirmation()
+                return .success(())
+            }
+            
+            let deferredWaiting = deferFulfillment(context.observe(\.viewState.mode)) { $0 == .waitingToStart(hasStalled: false) }
+            context.send(viewAction: .logout)
+            try await deferredWaiting.fulfill()
+            
+            // Wait for the 2-second timeout.
+            let deferredHasStalled = deferFulfillment(context.observe(\.viewState.mode)) { $0 == .waitingToStart(hasStalled: true) }
+            try await deferredHasStalled.fulfill()
+            
+            try await deferFulfillment(context.observe(\.viewState.mode)) { $0 == .backupOngoing(progress: 0.5) }.fulfill()
+        }
         
         let deferred = deferFulfillment(context.observe(\.viewState.mode)) { $0 == .offline }
         reachabilitySubject.send(.unreachable)

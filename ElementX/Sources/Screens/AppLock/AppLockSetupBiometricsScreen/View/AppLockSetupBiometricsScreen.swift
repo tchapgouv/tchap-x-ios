@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -76,12 +77,12 @@ struct AppLockSetupBiometricsScreen_Previews: PreviewProvider, TestablePreview {
     static let touchIDViewModel = AppLockSetupBiometricsScreenViewModel(appLockService: AppLockServiceMock.mock(biometryType: .touchID))
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             AppLockSetupBiometricsScreen(context: faceIDViewModel.context)
         }
         .previewDisplayName("Face ID")
         
-        NavigationStack {
+        ElementNavigationStack {
             AppLockSetupBiometricsScreen(context: touchIDViewModel.context)
         }
         .previewDisplayName("Touch ID")

@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 import SwiftUI
@@ -38,14 +39,12 @@ struct CollapsibleReactionLayout: Layout {
                                                                                     rows: collapsedRows,
                                                                                     collapseButton: subviewsByType.collapseButton,
                                                                                     addMoreButton: subviewsByType.addMoreButton)
-                let size = sizeThatFits(rows: collapsedRowsWithButtons)
-                return size
+                return sizeThatFits(rows: collapsedRowsWithButtons)
             } else {
                 // Show all subviews with the button at the end
                 var rowsWithButtons = calculateRows(proposal: proposal, subviews: Array(subviews))
                 ensureCollapseAndAddMoreButtonsAreOnTheSameRow(&rowsWithButtons)
-                let size = sizeThatFits(rows: rowsWithButtons)
-                return size
+                return sizeThatFits(rows: rowsWithButtons)
             }
         } else {
             // Otherwise we are just calculating the size of all items without the button

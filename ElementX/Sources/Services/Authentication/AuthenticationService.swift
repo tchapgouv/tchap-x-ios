@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -20,13 +21,11 @@ class AuthenticationService: AuthenticationServiceProtocol {
     private let appHooks: AppHooks
     
     private let homeserverSubject: CurrentValueSubject<LoginHomeserver, Never>
-    var homeserver: CurrentValuePublisher<LoginHomeserver, Never> { homeserverSubject.asCurrentValuePublisher() }
-    private(set) var flow: AuthenticationFlow
-    
-    private let qrLoginProgressSubject = PassthroughSubject<QrLoginProgress, Never>()
-    var qrLoginProgressPublisher: AnyPublisher<QrLoginProgress, Never> {
-        qrLoginProgressSubject.eraseToAnyPublisher()
+    var homeserver: CurrentValuePublisher<LoginHomeserver, Never> {
+        homeserverSubject.asCurrentValuePublisher()
     }
+
+    private(set) var flow: AuthenticationFlow
     
     init(userSessionStore: UserSessionStoreProtocol,
          encryptionKeyProvider: EncryptionKeyProviderProtocol,
@@ -91,9 +90,10 @@ class AuthenticationService: AuthenticationServiceProtocol {
         guard let client else { return .failure(.oidcError(.urlFailure)) }
         do {
             // The create prompt is broken: https://github.com/element-hq/matrix-authentication-service/issues/3429
-            // let prompt: OidcPrompt = flow == .register ? .create : .consent
+            // Tchap: activate flow even if Element considers it is broken.
+            let prompt: OidcPrompt = flow == .register ? .create : .consent
             let oidcData = try await client.urlForOidc(oidcConfiguration: appSettings.oidcConfiguration.rustValue,
-                                                       prompt: .consent,
+                                                       prompt: prompt,
                                                        loginHint: loginHint,
                                                        deviceId: nil,
                                                        additionalScopes: nil)
@@ -152,44 +152,62 @@ class AuthenticationService: AuthenticationServiceProtocol {
         }
     }
     
-    func loginWithQRCode(data: Data) async -> Result<UserSessionProtocol, AuthenticationServiceError> {
+    func loginWithQRCode(data: Data) -> QRLoginProgressPublisher {
+        let progressSubject = CurrentValueSubject<QRLoginProgress, AuthenticationServiceError>(.starting)
+        
         let qrData: QrCodeData
         do {
             qrData = try QrCodeData.fromBytes(bytes: data)
         } catch {
             MXLog.error("QRCode decode error: \(error)")
-            return .failure(.qrCodeError(.invalidQRCode))
+            progressSubject.send(completion: .failure(.qrCodeError(.invalidQRCode)))
+            return progressSubject.asCurrentValuePublisher()
         }
+        
+        // At some stage the SDK will have a `qrCodeData.intent` which we should check before continuing here.
+        // Note the equivalent check will also happen for linking a device by QR in the LinkNewDeviceService.
         
         guard let scannedServerName = qrData.serverName() else {
             MXLog.error("The QR code is from a device that is not yet signed in.")
-            return .failure(.qrCodeError(.deviceNotSignedIn))
+            progressSubject.send(completion: .failure(.qrCodeError(.deviceNotSignedIn)))
+            return progressSubject.asCurrentValuePublisher()
         }
         
         if !appSettings.allowOtherAccountProviders, !appSettings.accountProviders.contains(scannedServerName) {
             MXLog.error("The scanned device's server is not allowed: \(scannedServerName)")
-            return .failure(.qrCodeError(.providerNotAllowed(scannedProvider: scannedServerName, allowedProviders: appSettings.accountProviders)))
+            progressSubject.send(completion: .failure(.qrCodeError(.providerNotAllowed(scannedProvider: scannedServerName, allowedProviders: appSettings.accountProviders))))
+            return progressSubject.asCurrentValuePublisher()
         }
         
-        let listener = SDKListener { [weak self] progress in
-            self?.qrLoginProgressSubject.send(progress)
+        let listener = SDKListener { progress in
+            guard let progress = QRLoginProgress(rustProgress: progress) else { return }
+            progressSubject.send(progress)
         }
         
-        do {
-            let client = try await makeClient(homeserverAddress: scannedServerName)
-            try await client.loginWithQrCode(qrCodeData: qrData,
-                                             oidcConfiguration: appSettings.oidcConfiguration.rustValue,
-                                             progressListener: listener)
-            return await userSession(for: client)
-        } catch let error as HumanQrLoginError {
-            MXLog.error("QRCode login error: \(error)")
-            return .failure(error.serviceError)
-        } catch RemoteSettingsError.elementProRequired(let serverName) {
-            return .failure(.elementProRequired(serverName: serverName))
-        } catch {
-            MXLog.error("QRCode login unknown error: \(error)")
-            return .failure(.qrCodeError(.unknown))
+        Task {
+            do {
+                let client = try await makeClient(homeserverAddress: scannedServerName)
+                let qrCodeHandler = client.newLoginWithQrCodeHandler(oidcConfiguration: appSettings.oidcConfiguration.rustValue)
+                try await qrCodeHandler.scan(qrCodeData: qrData, progressListener: listener)
+                
+                switch await userSession(for: client) {
+                case .success(let userSession):
+                    progressSubject.send(.signedIn(userSession))
+                case .failure(let error):
+                    progressSubject.send(completion: .failure(error))
+                }
+            } catch let error as HumanQrLoginError {
+                MXLog.error("QRCode login error: \(error)")
+                progressSubject.send(completion: .failure(error.serviceError))
+            } catch RemoteSettingsError.elementProRequired(let serverName) {
+                progressSubject.send(completion: .failure(.elementProRequired(serverName: serverName)))
+            } catch {
+                MXLog.error("QRCode login unknown error: \(error)")
+                progressSubject.send(completion: .failure(.qrCodeError(.unknown)))
+            }
         }
+        
+        return progressSubject.asCurrentValuePublisher()
     }
     
     func reset() {
@@ -242,13 +260,13 @@ private extension HumanQrLoginError {
             .qrCodeError(.declined)
         case .LinkingNotSupported:
             .qrCodeError(.linkingNotSupported)
-        case .Expired:
+        case .Expired, .NotFound: // The most likely cause of a .NotFound is that the rendezvous session expired on the server side
             .qrCodeError(.expired)
         case .SlidingSyncNotAvailable:
-            .qrCodeError(.deviceNotSupported)
+            .qrCodeError(.slidingSyncNotAvailable)
         case .OtherDeviceNotSignedIn:
             .qrCodeError(.deviceNotSignedIn)
-        case .Unknown, .OidcMetadataInvalid:
+        case .Unknown, .OidcMetadataInvalid, .CheckCodeAlreadySent, .CheckCodeCannotBeSent:
             .qrCodeError(.unknown)
         }
     }

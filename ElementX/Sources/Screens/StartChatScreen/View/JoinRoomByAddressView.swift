@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -81,12 +82,11 @@ struct JoinRoomByAddressView_Previews: PreviewProvider, TestablePreview {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@userid:example.com"))))
         let userDiscoveryService = UserDiscoveryServiceMock()
         userDiscoveryService.searchProfilesWithReturnValue = .success([.mockAlice])
-        let viewModel = StartChatScreenViewModel(userSession: userSession,
-                                                 analytics: ServiceLocator.shared.analytics,
-                                                 userIndicatorController: UserIndicatorControllerMock(),
-                                                 userDiscoveryService: userDiscoveryService,
-                                                 appSettings: ServiceLocator.shared.settings)
-        return viewModel
+        return StartChatScreenViewModel(userSession: userSession,
+                                        analytics: ServiceLocator.shared.analytics,
+                                        userIndicatorController: UserIndicatorControllerMock(),
+                                        userDiscoveryService: userDiscoveryService,
+                                        appSettings: ServiceLocator.shared.settings)
     }()
     
     static var previews: some View {

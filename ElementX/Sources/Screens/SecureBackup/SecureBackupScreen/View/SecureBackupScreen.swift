@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -35,7 +36,6 @@ struct SecureBackupScreen: View {
     
     // MARK: - Private
     
-    @ViewBuilder
     private var keyBackupSection: some View {
         Section {
             ListRow(kind: .custom {
@@ -79,15 +79,13 @@ struct SecureBackupScreen: View {
             case .enabled:
                 ListRow(label: .default(title: L10n.screenChatBackupRecoveryActionChange,
                                         description: L10n.screenChatBackupRecoveryActionChangeDescription,
-                                        icon: \.key,
-                                        iconAlignment: .top),
+                                        icon: \.key),
                         kind: .navigationLink { context.send(viewAction: .recoveryKey) })
                     .accessibilityIdentifier(A11yIdentifiers.secureBackupScreen.recoveryKey)
             case .disabled:
                 ListRow(label: .default(title: L10n.screenChatBackupRecoveryActionSetup,
                                         description: L10n.screenChatBackupRecoveryActionChangeDescription,
-                                        icon: \.key,
-                                        iconAlignment: .top),
+                                        icon: \.key),
                         details: .icon(BadgeView(size: 10)),
                         kind: .navigationLink { context.send(viewAction: .recoveryKey) })
                     .accessibilityIdentifier(A11yIdentifiers.secureBackupScreen.recoveryKey)
@@ -125,28 +123,28 @@ struct SecureBackupScreen_Previews: PreviewProvider, TestablePreview {
     static let recoveryIncompleteViewModel = viewModel(keyBackupState: .enabled, recoveryState: .incomplete)
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             SecureBackupScreen(context: bothSetupViewModel.context)
         }
-        .snapshotPreferences(expect: bothSetupViewModel.context.observe(\.viewState.keyBackupState).map { $0 == .enabled }.eraseToStream())
+        .snapshotPreferences(expect: bothSetupViewModel.context.observe(\.viewState.keyBackupState).map { $0 == .enabled })
         .previewDisplayName("Both setup")
         
-        NavigationStack {
+        ElementNavigationStack {
             SecureBackupScreen(context: onlyKeyBackupSetUpViewModel.context)
         }
-        .snapshotPreferences(expect: onlyKeyBackupSetUpViewModel.context.observe(\.viewState.keyBackupState).map { $0 == .enabled }.eraseToStream())
+        .snapshotPreferences(expect: onlyKeyBackupSetUpViewModel.context.observe(\.viewState.keyBackupState).map { $0 == .enabled })
         .previewDisplayName("Only key backup setup")
         
-        NavigationStack {
+        ElementNavigationStack {
             SecureBackupScreen(context: keyBackupDisabledViewModel.context)
         }
-        .snapshotPreferences(expect: keyBackupDisabledViewModel.context.observe(\.viewState.keyBackupState).map { $0 == .unknown }.eraseToStream())
+        .snapshotPreferences(expect: keyBackupDisabledViewModel.context.observe(\.viewState.keyBackupState).map { $0 == .unknown })
         .previewDisplayName("Key backup disabled")
         
-        NavigationStack {
+        ElementNavigationStack {
             SecureBackupScreen(context: recoveryIncompleteViewModel.context)
         }
-        .snapshotPreferences(expect: recoveryIncompleteViewModel.context.observe(\.viewState.recoveryState).map { $0 == .incomplete }.eraseToStream())
+        .snapshotPreferences(expect: recoveryIncompleteViewModel.context.observe(\.viewState.recoveryState).map { $0 == .incomplete })
         .previewDisplayName("Recovery incomplete")
     }
     

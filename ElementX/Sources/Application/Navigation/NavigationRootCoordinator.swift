@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -65,6 +66,9 @@ import SwiftUI
     var overlayCoordinator: (any CoordinatorProtocol)? {
         overlayModule?.coordinator
     }
+    
+    /// The lowest-level `AlertInfo`, directly available to the root of the app.
+    var alertInfo: AlertInfo<UUID>?
     
     /// Sets or replaces the presented coordinator
     /// - Parameter coordinator: the coordinator to display
@@ -158,6 +162,7 @@ private struct NavigationRootCoordinatorView: View {
         ZStack {
             rootCoordinator.rootModule?.coordinator?.toPresentable()
         }
+        .alert(item: $rootCoordinator.alertInfo)
         .animation(.elementDefault, value: rootCoordinator.rootModule)
         .sheet(item: $rootCoordinator.sheetModule) { module in
             module.coordinator?.toPresentable()

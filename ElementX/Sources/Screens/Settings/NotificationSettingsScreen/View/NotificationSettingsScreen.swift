@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -255,10 +256,10 @@ struct NotificationSettingsScreen_Previews: PreviewProvider, TestablePreview {
 
     static var previews: some View {
         NotificationSettingsScreen(context: viewModel.context)
-            .snapshotPreferences(expect: viewModel.context.observe(\.viewState.settings).map { $0 != nil }.eraseToStream())
+            .snapshotPreferences(expect: viewModel.context.observe(\.viewState.settings).map { $0 != nil })
         
         NotificationSettingsScreen(context: viewModelConfigurationMismatch.context)
-            .snapshotPreferences(expect: viewModelConfigurationMismatch.context.observe(\.viewState.settings).map { $0 != nil }.eraseToStream())
+            .snapshotPreferences(expect: viewModelConfigurationMismatch.context.observe(\.viewState.settings).map { $0 != nil })
             .previewDisplayName("Configuration mismatch")
     }
 }

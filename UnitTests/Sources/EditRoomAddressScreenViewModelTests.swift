@@ -1,12 +1,10 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE in the repository root for full details.
 //
-
-import XCTest
-
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
@@ -14,16 +12,19 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Testing
 
+@Suite
 @MainActor
-class EditRoomAddressScreenViewModelTests: XCTestCase {
+struct EditRoomAddressScreenViewModelTests {
     var viewModel: EditRoomAddressScreenViewModelProtocol!
     
     var context: EditRoomAddressScreenViewModelType.Context {
         viewModel.context
     }
     
-    func testCanonicalAliasChosen() async throws {
+    @Test
+    mutating func canonicalAliasChosen() async throws {
         let roomProxy = JoinedRoomProxyMock(.init(name: "Room Name", canonicalAlias: "#room-name:matrix.org",
                                                   alternativeAliases: ["#beta:homeserver.io",
                                                                        "#alternative-room-name:matrix.org"]))
@@ -40,7 +41,8 @@ class EditRoomAddressScreenViewModelTests: XCTestCase {
     }
     
     /// Priority should be given to aliases from the current user's homeserver as they can edit those.
-    func testAlternativeAliasChosen() async throws {
+    @Test
+    mutating func alternativeAliasChosen() async throws {
         let roomProxy = JoinedRoomProxyMock(.init(name: "Room Name", canonicalAlias: "#alpha:homeserver.io",
                                                   alternativeAliases: ["#beta:homeserver.io",
                                                                        "#room-name:matrix.org",
@@ -57,7 +59,8 @@ class EditRoomAddressScreenViewModelTests: XCTestCase {
         try await deferred.fulfill()
     }
     
-    func testBuildAliasFromDisplayName() async throws {
+    @Test
+    mutating func buildAliasFromDisplayName() async throws {
         let roomProxy = JoinedRoomProxyMock(.init(name: "Room Name"))
         
         viewModel = EditRoomAddressScreenViewModel(roomProxy: roomProxy,
@@ -71,7 +74,8 @@ class EditRoomAddressScreenViewModelTests: XCTestCase {
         try await deferred.fulfill()
     }
     
-    func testCorrectMethodsCalledOnSaveWhenNoAliasExists() async throws {
+    @Test
+    mutating func correctMethodsCalledOnSaveWhenNoAliasExists() async {
         let clientProxy = ClientProxyMock(.init(userIDServerName: "matrix.org"))
         clientProxy.isAliasAvailableReturnValue = .success(true)
         let roomProxy = JoinedRoomProxyMock(.init(name: "Room Name"))
@@ -80,30 +84,33 @@ class EditRoomAddressScreenViewModelTests: XCTestCase {
                                                    clientProxy: clientProxy,
                                                    userIndicatorController: UserIndicatorControllerMock())
         
-        XCTAssertNil(roomProxy.infoPublisher.value.canonicalAlias)
-        XCTAssertEqual(viewModel.context.viewState.bindings.desiredAliasLocalPart, "room-name")
-
-        let publishingExpectation = expectation(description: "Wait for publishing")
-        roomProxy.publishRoomAliasInRoomDirectoryClosure = { roomAlias in
-            defer { publishingExpectation.fulfill() }
-            XCTAssertEqual(roomAlias, "#room-name:matrix.org")
-            return .success(true)
+        #expect(roomProxy.infoPublisher.value.canonicalAlias == nil)
+        #expect(viewModel.context.viewState.bindings.desiredAliasLocalPart == "room-name")
+        
+        await waitForConfirmation("Wait for save", expectedCount: 2) { confirm in
+            roomProxy.publishRoomAliasInRoomDirectoryClosure = { roomAlias in
+                #expect(roomAlias == "#room-name:matrix.org")
+                confirm()
+                return .success(true)
+            }
+            
+            roomProxy.updateCanonicalAliasAltAliasesClosure = { roomAlias, altAliases in
+                #expect(altAliases == [])
+                #expect(roomAlias == "#room-name:matrix.org")
+                confirm()
+                return .success(())
+            }
+            
+            context.send(viewAction: .save)
         }
         
-        let updateAliasExpectation = expectation(description: "Wait for alias update")
-        roomProxy.updateCanonicalAliasAltAliasesClosure = { roomAlias, altAliases in
-            defer { updateAliasExpectation.fulfill() }
-            XCTAssertEqual(altAliases, [])
-            XCTAssertEqual(roomAlias, "#room-name:matrix.org")
-            return .success(())
-        }
-        
-        context.send(viewAction: .save)
-        await fulfillment(of: [publishingExpectation, updateAliasExpectation], timeout: 1.0)
-        XCTAssertFalse(roomProxy.removeRoomAliasFromRoomDirectoryCalled)
+        #expect(roomProxy.publishRoomAliasInRoomDirectoryCalled)
+        #expect(roomProxy.updateCanonicalAliasAltAliasesCalled)
+        #expect(!roomProxy.removeRoomAliasFromRoomDirectoryCalled)
     }
     
-    func testCorrectMethodsCalledOnSaveWhenAliasOnSameHomeserverExists() async throws {
+    @Test
+    mutating func correctMethodsCalledOnSaveWhenAliasOnSameHomeserverExists() async {
         let clientProxy = ClientProxyMock(.init(userIDServerName: "matrix.org"))
         clientProxy.isAliasAvailableReturnValue = .success(true)
         let roomProxy = JoinedRoomProxyMock(.init(name: "Room Name", canonicalAlias: "#old-room-name:matrix.org"))
@@ -113,34 +120,37 @@ class EditRoomAddressScreenViewModelTests: XCTestCase {
                                                    userIndicatorController: UserIndicatorControllerMock())
         
         context.desiredAliasLocalPart = "room-name"
-
-        let publishingExpectation = expectation(description: "Wait for publishing")
-        roomProxy.publishRoomAliasInRoomDirectoryClosure = { roomAlias in
-            defer { publishingExpectation.fulfill() }
-            XCTAssertEqual(roomAlias, "#room-name:matrix.org")
-            return .success(true)
+        
+        await waitForConfirmation("Wait for save", expectedCount: 3) { confirm in
+            roomProxy.publishRoomAliasInRoomDirectoryClosure = { roomAlias in
+                #expect(roomAlias == "#room-name:matrix.org")
+                confirm()
+                return .success(true)
+            }
+                
+            roomProxy.updateCanonicalAliasAltAliasesClosure = { roomAlias, altAliases in
+                #expect(altAliases == [])
+                #expect(roomAlias == "#room-name:matrix.org")
+                confirm()
+                return .success(())
+            }
+                
+            roomProxy.removeRoomAliasFromRoomDirectoryClosure = { roomAlias in
+                #expect(roomAlias == "#old-room-name:matrix.org")
+                confirm()
+                return .success(true)
+            }
+                
+            context.send(viewAction: .save)
         }
         
-        let updateAliasExpectation = expectation(description: "Wait for alias update")
-        roomProxy.updateCanonicalAliasAltAliasesClosure = { roomAlias, altAliases in
-            defer { updateAliasExpectation.fulfill() }
-            XCTAssertEqual(altAliases, [])
-            XCTAssertEqual(roomAlias, "#room-name:matrix.org")
-            return .success(())
-        }
-        
-        let removeAliasExpectation = expectation(description: "Wait for alias removal")
-        roomProxy.removeRoomAliasFromRoomDirectoryClosure = { roomAlias in
-            defer { removeAliasExpectation.fulfill() }
-            XCTAssertEqual(roomAlias, "#old-room-name:matrix.org")
-            return .success(true)
-        }
-        
-        context.send(viewAction: .save)
-        await fulfillment(of: [publishingExpectation, updateAliasExpectation, removeAliasExpectation], timeout: 1.0)
+        #expect(roomProxy.publishRoomAliasInRoomDirectoryCalled)
+        #expect(roomProxy.updateCanonicalAliasAltAliasesCalled)
+        #expect(roomProxy.removeRoomAliasFromRoomDirectoryCalled)
     }
     
-    func testCorrectMethodsCalledOnSaveWhenAliasOnOtherHomeserverExists() async throws {
+    @Test
+    mutating func correctMethodsCalledOnSaveWhenAliasOnOtherHomeserverExists() async {
         let clientProxy = ClientProxyMock(.init(userIDServerName: "matrix.org"))
         clientProxy.isAliasAvailableReturnValue = .success(true)
         let roomProxy = JoinedRoomProxyMock(.init(name: "Room Name", canonicalAlias: "#old-room-name:element.io"))
@@ -150,24 +160,26 @@ class EditRoomAddressScreenViewModelTests: XCTestCase {
                                                    userIndicatorController: UserIndicatorControllerMock())
         
         context.desiredAliasLocalPart = "room-name"
-
-        let publishingExpectation = expectation(description: "Wait for publishing")
-        roomProxy.publishRoomAliasInRoomDirectoryClosure = { roomAlias in
-            defer { publishingExpectation.fulfill() }
-            XCTAssertEqual(roomAlias, "#room-name:matrix.org")
-            return .success(true)
+        
+        await waitForConfirmation("Wait for save", expectedCount: 2) { confirm in
+            roomProxy.publishRoomAliasInRoomDirectoryClosure = { roomAlias in
+                #expect(roomAlias == "#room-name:matrix.org")
+                confirm()
+                return .success(true)
+            }
+            
+            roomProxy.updateCanonicalAliasAltAliasesClosure = { roomAlias, altAliases in
+                #expect(altAliases == ["#room-name:matrix.org"])
+                #expect(roomAlias == "#old-room-name:element.io")
+                confirm()
+                return .success(())
+            }
+            
+            context.send(viewAction: .save)
         }
         
-        let updateAliasExpectation = expectation(description: "Wait for alias update")
-        roomProxy.updateCanonicalAliasAltAliasesClosure = { roomAlias, altAliases in
-            defer { updateAliasExpectation.fulfill() }
-            XCTAssertEqual(altAliases, ["#room-name:matrix.org"])
-            XCTAssertEqual(roomAlias, "#old-room-name:element.io")
-            return .success(())
-        }
-        
-        context.send(viewAction: .save)
-        await fulfillment(of: [publishingExpectation, updateAliasExpectation], timeout: 1.0)
-        XCTAssertFalse(roomProxy.removeRoomAliasFromRoomDirectoryCalled)
+        #expect(roomProxy.publishRoomAliasInRoomDirectoryCalled)
+        #expect(roomProxy.updateCanonicalAliasAltAliasesCalled)
+        #expect(!roomProxy.removeRoomAliasFromRoomDirectoryCalled)
     }
 }

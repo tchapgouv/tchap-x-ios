@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -26,6 +27,7 @@ struct JoinedRoomProxyMockConfiguration {
     var canonicalAlias: String?
     var alternativeAliases: [String] = []
     var pinnedEventIDs: Set<String> = []
+    var historyVisibility: RoomHistoryVisibility = .shared
     
     var timelineStartReached = false
     
@@ -122,6 +124,7 @@ extension JoinedRoomProxyMock {
         
         powerLevelsReturnValue = .success(powerLevelsProxyMock)
         
+        inviteUserIDReturnValue = .success(())
         kickUserReasonReturnValue = .success(())
         banUserReasonReturnValue = .success(())
         unbanUserReturnValue = .success(())
@@ -188,7 +191,7 @@ extension RoomInfoProxyMock {
         unreadMentionsCount = 0
         pinnedEventIDs = configuration.pinnedEventIDs
         joinRule = configuration.joinRule
-        historyVisibility = .shared
+        historyVisibility = configuration.historyVisibility
         
         powerLevels = RoomPowerLevelsProxyMock(configuration: configuration.powerLevelsConfiguration)
     }
@@ -199,5 +202,16 @@ private extension RoomHero {
         self.init(userId: memberProxy.userID,
                   displayName: memberProxy.displayName,
                   avatarUrl: memberProxy.avatarURL?.absoluteString)
+    }
+}
+
+@MainActor
+extension Array where Element == JoinedRoomProxyProtocol {
+    static var mockRooms: [JoinedRoomProxyProtocol] {
+        [
+            JoinedRoomProxyMock(.init(id: "1", name: "Room Name", canonicalAlias: "#room-name:example.com")),
+            JoinedRoomProxyMock(.init(id: "2", name: "Room Name", canonicalAlias: "#room-name:example.com")),
+            JoinedRoomProxyMock(.init(id: "3", name: "Room Name", canonicalAlias: "#room-name:example.com"))
+        ]
     }
 }

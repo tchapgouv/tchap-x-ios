@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -34,6 +35,8 @@ public struct CompoundButtonStyle: ButtonStyle {
         case tertiary
         /// A plain button with no padding.
         case textLink
+        // Tchap: handle Tchap circle button (used for Home new Chat button for instance).
+        case tchapCircle
     }
     
     var size: Size
@@ -137,22 +140,34 @@ public struct CompoundButtonStyle: ButtonStyle {
                 Capsule().strokeBorder(strokeColor(configuration: configuration))
             }
         case .primary:
-            Capsule().fill(fillColor(configuration: configuration))
+            // Tchap: make buttons more DSFR-like.
+//            Capsule().fill(fillColor(configuration: configuration))
+            contentShape.fill(fillColor(configuration: configuration))
         case .secondary:
-            Capsule().strokeBorder(strokeColor(configuration: configuration))
+            // Tchap: make buttons more DSFR-like.
+//            Capsule().strokeBorder(strokeColor(configuration: configuration))
+            contentShape.stroke(strokeColor(configuration: configuration))
         case .tertiary:
             EmptyView()
         case .textLink:
             EmptyView()
+        // Tchap: handle Tchap circle button
+        case .tchapCircle:
+            contentShape.fill(fillColor(configuration: configuration))
         }
     }
 
     private var contentShape: AnyShape {
         switch kind {
         case .super, .primary, .secondary, .tertiary:
-            return AnyShape(Capsule())
+            // Tchap: make buttons more DSFR-like.
+//            return AnyShape(Capsule())
+            return AnyShape(RoundedRectangle(cornerSize: CGSize(width: 4.0, height: 4.0)))
         case .textLink:
             return AnyShape(Rectangle())
+        // Tchap: handle Tchap circle button
+        case .tchapCircle:
+            return AnyShape(Circle())
         }
     }
 
@@ -174,7 +189,9 @@ public struct CompoundButtonStyle: ButtonStyle {
     }
     
     private func textColor(configuration: Configuration) -> Color {
-        if kind == .primary {
+        // Tchap: handle Tchap circle button
+//        if kind == .primary {
+        if kind == .primary || kind == .tchapCircle {
             return .compound.textOnSolidPrimary
         } else {
             guard isEnabled else { return .compound.textDisabled }
@@ -235,7 +252,7 @@ public struct CompoundButtonStyle_Previews: PreviewProvider, TestablePreview {
     }
     
     public static func buttons(_ size: CompoundButtonStyle.Size) -> some View {
-        VStack {
+        VStack(spacing: 8) {
             Button("Super") { }
                 .buttonStyle(.compound(.super, size: size))
             

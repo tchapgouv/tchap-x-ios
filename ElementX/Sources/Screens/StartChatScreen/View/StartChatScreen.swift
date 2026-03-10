@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -30,6 +31,7 @@ struct StartChatScreen: View {
                           showsCancelButton: false,
                           disablesInteractiveDismiss: true)
         .compoundSearchField()
+        .textInputAutocapitalization(.never) // Tchap: don't capitalize search input
         .alert(item: $context.alertInfo)
         .sheet(item: $context.selectedUserToInvite) { user in
             SendInviteConfirmationView(userToInvite: user, mediaProvider: context.mediaProvider) {
@@ -161,16 +163,15 @@ struct StartChatScreen_Previews: PreviewProvider, TestablePreview {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@userid:example.com"))))
         let userDiscoveryService = UserDiscoveryServiceMock()
         userDiscoveryService.searchProfilesWithReturnValue = .success([.mockAlice])
-        let viewModel = StartChatScreenViewModel(userSession: userSession,
-                                                 analytics: ServiceLocator.shared.analytics,
-                                                 userIndicatorController: UserIndicatorControllerMock(),
-                                                 userDiscoveryService: userDiscoveryService,
-                                                 appSettings: appSettings)
-        return viewModel
+        return StartChatScreenViewModel(userSession: userSession,
+                                        analytics: ServiceLocator.shared.analytics,
+                                        userIndicatorController: UserIndicatorControllerMock(),
+                                        userDiscoveryService: userDiscoveryService,
+                                        appSettings: appSettings)
     }()
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             StartChatScreen(context: viewModel.context)
         }
     }

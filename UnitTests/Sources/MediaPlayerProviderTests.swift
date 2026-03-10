@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -15,62 +16,68 @@ import Combine
 @testable import ElementX
 #endif
 import Foundation
-import XCTest
+import Testing
 
 @MainActor
-class MediaPlayerProviderTests: XCTestCase {
-    private var mediaPlayerProvider: MediaPlayerProvider!
+@Suite
+struct MediaPlayerProviderTests {
+    private var mediaPlayerProvider: MediaPlayerProvider
     
     private let oggMimeType = "audio/ogg"
     private let someURL = URL.mockMXCAudio
     private let someOtherURL = URL.mockMXCFile
     
-    override func setUp() async throws {
+    init() async {
         mediaPlayerProvider = MediaPlayerProvider()
     }
     
-    func testPlayerStates() async throws {
+    @Test
+    func playerStates() {
         let audioPlayerStateId = AudioPlayerStateIdentifier.timelineItemIdentifier(.randomEvent)
         // By default, there should be no player state
-        XCTAssertNil(mediaPlayerProvider.playerState(for: audioPlayerStateId))
+        #expect(mediaPlayerProvider.playerState(for: audioPlayerStateId) == nil)
         
         let audioPlayerState = AudioPlayerState(id: audioPlayerStateId, title: "", duration: 10.0)
         mediaPlayerProvider.register(audioPlayerState: audioPlayerState)
-        XCTAssertEqual(audioPlayerState, mediaPlayerProvider.playerState(for: audioPlayerStateId))
+        #expect(audioPlayerState == mediaPlayerProvider.playerState(for: audioPlayerStateId))
         
         mediaPlayerProvider.unregister(audioPlayerState: audioPlayerState)
-        XCTAssertNil(mediaPlayerProvider.playerState(for: audioPlayerStateId))
+        #expect(mediaPlayerProvider.playerState(for: audioPlayerStateId) == nil)
     }
     
-    func testDetachAllStates() async throws {
+    @Test
+    func detachAllStates() {
         let audioPlayer = AudioPlayerMock()
         audioPlayer.actions = PassthroughSubject<AudioPlayerAction, Never>().eraseToAnyPublisher()
+        audioPlayer.playbackSpeed = 1.0
         
         let audioPlayerStates = Array(repeating: AudioPlayerState(id: .timelineItemIdentifier(.randomEvent), title: "", duration: 0), count: 10)
         for audioPlayerState in audioPlayerStates {
             mediaPlayerProvider.register(audioPlayerState: audioPlayerState)
             audioPlayerState.attachAudioPlayer(audioPlayer)
             let isAttached = audioPlayerState.isAttached
-            XCTAssertTrue(isAttached)
+            #expect(isAttached)
         }
         
         mediaPlayerProvider.detachAllStates(except: nil)
         for audioPlayerState in audioPlayerStates {
             let isAttached = audioPlayerState.isAttached
-            XCTAssertFalse(isAttached)
+            #expect(!isAttached)
         }
     }
     
-    func testDetachAllStatesWithException() async throws {
+    @Test
+    func detachAllStatesWithException() {
         let audioPlayer = AudioPlayerMock()
         audioPlayer.actions = PassthroughSubject<AudioPlayerAction, Never>().eraseToAnyPublisher()
+        audioPlayer.playbackSpeed = 1.0
         
         let audioPlayerStates = Array(repeating: AudioPlayerState(id: .timelineItemIdentifier(.randomEvent), title: "", duration: 0), count: 10)
         for audioPlayerState in audioPlayerStates {
             mediaPlayerProvider.register(audioPlayerState: audioPlayerState)
             audioPlayerState.attachAudioPlayer(audioPlayer)
             let isAttached = audioPlayerState.isAttached
-            XCTAssertTrue(isAttached)
+            #expect(isAttached)
         }
         
         let exception = audioPlayerStates[1]
@@ -78,9 +85,9 @@ class MediaPlayerProviderTests: XCTestCase {
         for audioPlayerState in audioPlayerStates {
             let isAttached = audioPlayerState.isAttached
             if audioPlayerState == exception {
-                XCTAssertTrue(isAttached)
+                #expect(isAttached)
             } else {
-                XCTAssertFalse(isAttached)
+                #expect(!isAttached)
             }
         }
     }

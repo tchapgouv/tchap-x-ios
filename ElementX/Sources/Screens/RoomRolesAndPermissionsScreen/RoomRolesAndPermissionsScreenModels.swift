@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -11,13 +12,13 @@ enum RoomRolesAndPermissionsScreenViewModelAction {
     /// The user would like to edit member roles.
     case editRoles(RoomRolesAndPermissionsScreenRole)
     /// The user would like to edit room permissions.
-    case editPermissions(permissions: RoomPermissions, group: RoomRolesAndPermissionsScreenPermissionsGroup)
+    case editPermissions(ownPowerLevel: RoomPowerLevel, permissions: RoomPermissions)
     /// The user has demoted themself.
     case demotedOwnUser
 }
 
 struct RoomRolesAndPermissionsScreenViewState: BindableState {
-    var ownRole: RoomRole
+    var ownPowerLevel: RoomPowerLevel
     
     var administratorsAndOwnersCount: Int?
     /// The number of administrators in the room.
@@ -46,17 +47,11 @@ enum RoomRolesAndPermissionsScreenAlertType {
 enum RoomRolesAndPermissionsScreenViewAction {
     case editRoles(RoomRolesAndPermissionsScreenRole)
     case editOwnUserRole
-    case editPermissions(RoomRolesAndPermissionsScreenPermissionsGroup)
+    case editPermissions
     case reset
 }
 
 enum RoomRolesAndPermissionsScreenRole: Hashable {
     case administrators
     case moderators
-}
-
-enum RoomRolesAndPermissionsScreenPermissionsGroup {
-    case roomDetails
-    case messagesAndContent
-    case memberModeration
 }

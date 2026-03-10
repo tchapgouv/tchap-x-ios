@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -11,8 +12,13 @@ struct SessionDirectories: Hashable, Codable {
     let dataDirectory: URL
     let cacheDirectory: URL
     
-    var dataPath: String { dataDirectory.path(percentEncoded: false) }
-    var cachePath: String { cacheDirectory.path(percentEncoded: false) }
+    var dataPath: String {
+        dataDirectory.path(percentEncoded: false)
+    }
+
+    var cachePath: String {
+        cacheDirectory.path(percentEncoded: false)
+    }
     
     // MARK: Data Management
     

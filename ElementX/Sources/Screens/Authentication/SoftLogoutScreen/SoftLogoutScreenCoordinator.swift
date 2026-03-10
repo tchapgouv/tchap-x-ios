@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -33,14 +34,17 @@ enum SoftLogoutScreenCoordinatorResult: CustomStringConvertible {
     }
 }
 
-// Note: This code was brought over from Riot, we should move the authentication service logic into the view model.
+/// Note: This code was brought over from Riot, we should move the authentication service logic into the view model.
 final class SoftLogoutScreenCoordinator: CoordinatorProtocol {
     private let parameters: SoftLogoutScreenCoordinatorParameters
     private var viewModel: SoftLogoutScreenViewModelProtocol
     private let actionsSubject: PassthroughSubject<SoftLogoutScreenCoordinatorResult, Never> = .init()
     private var cancellables = Set<AnyCancellable>()
     
-    private var authenticationService: AuthenticationServiceProtocol { parameters.authenticationService }
+    private var authenticationService: AuthenticationServiceProtocol {
+        parameters.authenticationService
+    }
+
     private var oidcPresenter: OIDCAuthenticationPresenter?
     
     var actions: AnyPublisher<SoftLogoutScreenCoordinatorResult, Never> {

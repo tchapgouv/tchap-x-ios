@@ -1,16 +1,16 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
 import Compound
 import MatrixRustSDK
-import SwiftUI
-
 import OrderedCollections
+import SwiftUI
 
 /// A table view cell that displays a timeline item in a room. The cell is intended
 /// to be configured to display a SwiftUI view and not use any UIKit.
@@ -108,7 +108,7 @@ class TimelineTableViewController: UIViewController {
     }
     
     /// The state of pagination (in both directions) of the current timeline.
-    var paginationState: PaginationState = .initial {
+    var paginationState: TimelinePaginationState = .initial {
         didSet {
             // Paginate again if the threshold hasn't been satisfied.
             paginatePublisher.send(())
@@ -237,7 +237,9 @@ class TimelineTableViewController: UIViewController {
     }
     
     @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError("init(coder:) is not available.") }
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) is not available.")
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -394,7 +396,10 @@ class TimelineTableViewController: UIViewController {
             guard let self else { return }
             if let kvPair = timelineItemsDictionary.first(where: { $0.value.identifier.eventID == eventID }),
                let indexPath = dataSource?.indexPath(for: kvPair.key) {
-                tableView.scrollToRow(at: indexPath, at: .middle, animated: animated)
+                // Scrolling to the middle created a small bump in the timeline
+                // Using top, which is bottom in the reversed timeline helps with rendering
+                // in full long messages and images
+                tableView.scrollToRow(at: indexPath, at: .top, animated: animated)
                 coordinator.send(viewAction: .scrolledToFocussedItem)
                 // Ensure VoiceOver focus happens after the scroll animation (if any)
                 DispatchQueue.main.asyncAfter(deadline: .now() + (animated ? 0.5 : 0.0)) {

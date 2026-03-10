@@ -1,7 +1,8 @@
 //
-// Copyright 2021-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2021-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -29,7 +30,9 @@ class PostHogAnalyticsClient: AnalyticsClientProtocol {
     /// Not persisted for now, should be set on start.
     private var superProperties: AnalyticsEvent.SuperProperties?
     
-    var isRunning: Bool { postHog != nil }
+    var isRunning: Bool {
+        postHog != nil
+    }
     
     func start(analyticsConfiguration: AnalyticsConfiguration) {
         // Only start if analytics have been configured in BuildSettings

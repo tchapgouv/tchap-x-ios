@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -184,7 +185,7 @@ struct TimelineMediaPreviewDetailsView_Previews: PreviewProvider, TestablePrevie
         if case let .media(mediaItem) = viewModel.state.currentItem {
             TimelineMediaPreviewDetailsView(item: mediaItem, context: viewModel.context, sheetHeight: $sheetHeight)
                 .previewDisplayName("Image")
-                .snapshotPreferences(expect: mediaItem.observe(\.fileHandle).map { $0 != nil }.eraseToStream())
+                .snapshotPreferences(expect: mediaItem.observe(\.fileHandle).map { $0 != nil })
         }
         
         if case let .media(mediaItem) = loadingViewModel.state.currentItem {
@@ -195,13 +196,13 @@ struct TimelineMediaPreviewDetailsView_Previews: PreviewProvider, TestablePrevie
         if case let .media(mediaItem) = unknownTypeViewModel.state.currentItem {
             TimelineMediaPreviewDetailsView(item: mediaItem, context: unknownTypeViewModel.context, sheetHeight: $sheetHeight)
                 .previewDisplayName("Unknown type")
-                .snapshotPreferences(expect: mediaItem.observe(\.fileHandle).map { $0 != nil }.eraseToStream())
+                .snapshotPreferences(expect: mediaItem.observe(\.fileHandle).map { $0 != nil })
         }
         
         if case let .media(mediaItem) = presentedOnRoomViewModel.state.currentItem {
             TimelineMediaPreviewDetailsView(item: mediaItem, context: presentedOnRoomViewModel.context, sheetHeight: $sheetHeight)
                 .previewDisplayName("Incoming on Room")
-                .snapshotPreferences(expect: mediaItem.observe(\.fileHandle).map { $0 != nil }.eraseToStream())
+                .snapshotPreferences(expect: mediaItem.observe(\.fileHandle).map { $0 != nil })
         }
     }
     

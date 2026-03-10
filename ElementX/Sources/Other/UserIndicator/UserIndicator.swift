@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -12,8 +13,13 @@ enum UserIndicatorType: Equatable {
     case toast(progress: UserIndicator.Progress?)
     case modal(progress: UserIndicator.Progress?, interactiveDismissDisabled: Bool, allowsInteraction: Bool)
     
-    static var toast: Self { .toast(progress: .none) }
-    static var modal: Self { .modal(progress: .indeterminate, interactiveDismissDisabled: false, allowsInteraction: false) }
+    static var toast: Self {
+        .toast(progress: .none)
+    }
+
+    static var modal: Self {
+        .modal(progress: .indeterminate, interactiveDismissDisabled: false, allowsInteraction: false)
+    }
 }
 
 struct UserIndicator: Equatable, Identifiable {

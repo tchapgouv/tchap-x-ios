@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -50,6 +51,8 @@ enum AppRoute: Hashable {
     case share(ShareExtensionPayload)
     /// The change roles screen of a room with the transfer ownership setting
     case transferOwnership(roomID: String)
+    /// A thread within a room, only to be used to handle tap on notification for threaded events.
+    case thread(roomID: String, threadRootEventID: String, focusEventID: String?)
     
     /// Whether or not the route should be handled by the authentication flow.
     var isAuthenticationRoute: Bool {

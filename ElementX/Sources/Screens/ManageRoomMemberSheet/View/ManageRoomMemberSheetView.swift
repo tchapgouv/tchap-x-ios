@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -38,7 +39,7 @@ struct ManageRoomMemberSheetView: View {
             }
             
             Section {
-                if context.viewState.permissions.canKick {
+                if context.viewState.permissions.canKick, !context.viewState.isMemberBanned {
                     ListRow(label: .default(title: L10n.screenBottomSheetManageRoomMemberRemove,
                                             icon: \.close,
                                             role: .destructive),
@@ -49,17 +50,24 @@ struct ManageRoomMemberSheetView: View {
                 }
                 
                 if context.viewState.permissions.canBan {
-                    let title = context.viewState.isMemberBanned ? L10n.screenBottomSheetManageRoomMemberUnban : L10n.screenBottomSheetManageRoomMemberBan
-                    let icon: KeyPath<CompoundIcons, Image> = context.viewState.isMemberBanned ? \.restart : \.block
-                    let action: ManageRoomMemberSheetViewAction = context.viewState.isMemberBanned ? .unban : .ban
-                    
-                    ListRow(label: .default(title: title,
-                                            icon: icon,
-                                            role: .destructive),
-                            kind: .button {
-                                context.send(viewAction: action)
-                            })
-                            .disabled(context.viewState.isBanUnbanDisabled)
+                    if !context.viewState.isMemberBanned {
+                        ListRow(label: .default(title: L10n.screenBottomSheetManageRoomMemberBan,
+                                                icon: \.block,
+                                                role: .destructive),
+                                kind: .button {
+                                    context.send(viewAction: .ban)
+                                })
+                                .disabled(context.viewState.isBanUnbanDisabled)
+                        // Kick permission is also needed to unban
+                    } else if context.viewState.permissions.canKick {
+                        ListRow(label: .default(title: L10n.screenBottomSheetManageRoomMemberUnban,
+                                                icon: \.restart,
+                                                role: .destructive),
+                                kind: .button {
+                                    context.send(viewAction: .unban)
+                                })
+                                .disabled(context.viewState.isBanUnbanDisabled)
+                    }
                 }
             }
         }
@@ -80,7 +88,7 @@ struct ManageRoomMemberSheetView_Previews: PreviewProvider, TestablePreview {
     
     static let banOnlyViewModel = ManageRoomMemberSheetViewModel.mock(canKick: false)
     
-    static let unbanOnlyViewModel = ManageRoomMemberSheetViewModel.mock(canKick: false, memberIsBanned: true)
+    static let unbanOnlyViewModel = ManageRoomMemberSheetViewModel.mock(canKick: true, memberIsBanned: true)
     
     static var previews: some View {
         ManageRoomMemberSheetView(context: allActionsViewModel.context)

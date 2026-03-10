@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -14,8 +15,13 @@ struct BugReportScreen: View {
     
     @Bindable var context: BugReportScreenViewModel.Context
     
-    var canSendLogFiles: Bool { context.viewState.canSendLogFiles }
-    var photosPickerTitle: String { context.viewState.screenshot == nil ? L10n.screenBugReportAttachScreenshot : L10n.screenBugReportEditScreenshot }
+    var canSendLogFiles: Bool {
+        context.viewState.canSendLogFiles
+    }
+
+    var photosPickerTitle: String {
+        context.viewState.screenshot == nil ? L10n.screenBugReportAttachScreenshot : L10n.screenBugReportEditScreenshot
+    }
     
     var body: some View {
         Form {
@@ -88,7 +94,6 @@ struct BugReportScreen: View {
         }
     }
 
-    @ViewBuilder
     private var attachScreenshotSection: some View {
         Section {
             ListRow(kind: .custom {
@@ -150,7 +155,7 @@ struct BugReportScreen: View {
 
 struct BugReportScreen_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             let clientProxy = ClientProxyMock(.init(userID: "@mock:client.com", roomSummaryProvider: RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))))
             BugReportScreen(context: BugReportScreenViewModel(bugReportService: BugReportServiceMock(.init()),
                                                               clientProxy: clientProxy,
@@ -159,7 +164,7 @@ struct BugReportScreen_Previews: PreviewProvider, TestablePreview {
         }
         .previewDisplayName("Without Screenshot")
         
-        NavigationStack {
+        ElementNavigationStack {
             let clientProxy = ClientProxyMock(.init(userID: "@mock:client.com", roomSummaryProvider: RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))))
             BugReportScreen(context: BugReportScreenViewModel(bugReportService: BugReportServiceMock(.init()),
                                                               clientProxy: clientProxy,

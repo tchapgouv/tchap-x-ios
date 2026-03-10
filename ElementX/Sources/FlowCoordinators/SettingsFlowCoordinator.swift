@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -27,6 +28,8 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
     private var bugReportFlowCoordinator: BugReportFlowCoordinator?
     // periphery:ignore - retaining purpose
     private var encryptionSettingsFlowCoordinator: EncryptionSettingsFlowCoordinator?
+    // periphery:ignore - retaining purpose
+    private var linkNewDeviceFlowCoordinator: LinkNewDeviceFlowCoordinator?
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -43,7 +46,7 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
         self.flowParameters = flowParameters
     }
     
-    func start() {
+    func start(animated: Bool) {
         fatalError("Unavailable")
     }
     
@@ -82,6 +85,8 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
                     startEncryptionSettingsFlow(animated: true)
                 case .userDetails:
                     presentUserDetailsEditScreen()
+                case .linkNewDevice:
+                    startLinkNewDeviceFlow()
                 case let .manageAccount(url):
                     presentAccountManagementURL(url)
                 case .analytics:
@@ -154,8 +159,41 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
                                                                              navigationStackCoordinator: navigationStackCoordinator,
                                                                              userIndicatorController: flowParameters.userIndicatorController,
                                                                              appSettings: flowParameters.appSettings))
+        coordinator.actions
+            .sink { [weak self] action in
+                switch action {
+                case .dismiss:
+                    self?.navigationStackCoordinator.pop()
+                }
+            }
+            .store(in: &cancellables)
         
         navigationStackCoordinator.push(coordinator)
+    }
+    
+    private func startLinkNewDeviceFlow() {
+        let stackCoordinator = NavigationStackCoordinator()
+        let flowCoordinator = LinkNewDeviceFlowCoordinator(navigationStackCoordinator: stackCoordinator,
+                                                           flowParameters: flowParameters)
+        flowCoordinator.actionsPublisher
+            .sink { [weak self] action in
+                guard let self else { return }
+                
+                switch action {
+                case .dismiss:
+                    navigationStackCoordinator.setSheetCoordinator(nil)
+                case .requestOIDCAuthorisation(let url, let continuation):
+                    presentAccountManagementURL(url, continuation: continuation)
+                }
+            }
+            .store(in: &cancellables)
+        
+        linkNewDeviceFlowCoordinator = flowCoordinator
+        flowCoordinator.start()
+        
+        navigationStackCoordinator.setSheetCoordinator(stackCoordinator) { [weak self] in
+            self?.linkNewDeviceFlowCoordinator = nil
+        }
     }
     
     private func presentAnalyticsScreen() {
@@ -214,7 +252,9 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private func presentDeveloperOptions() {
-        let coordinator = DeveloperOptionsScreenCoordinator(appSettings: flowParameters.appSettings)
+        let coordinator = DeveloperOptionsScreenCoordinator(appSettings: flowParameters.appSettings,
+                                                            appHooks: flowParameters.appHooks,
+                                                            clientProxy: flowParameters.userSession.clientProxy)
         
         coordinator.actions
             .sink { [weak self] action in
@@ -248,16 +288,17 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
         
         navigationStackCoordinator.push(coordinator)
     }
-
+    
     // MARK: OIDC Account Management
-        
+    
     private var accountSettingsPresenter: OIDCAccountSettingsPresenter?
-    private func presentAccountManagementURL(_ url: URL) {
+    private func presentAccountManagementURL(_ url: URL, continuation: OIDCAccountSettingsPresenter.Continuation? = nil) {
         // Note to anyone in the future if you come back here to make this open in Safari instead of a WAS.
         // As of iOS 16, there is an issue on the simulator with accessing the cookie but it works on a device. 🤷‍♂️
         accountSettingsPresenter = OIDCAccountSettingsPresenter(accountURL: url,
                                                                 presentationAnchor: flowParameters.windowManager.mainWindow,
-                                                                appSettings: flowParameters.appSettings)
+                                                                appSettings: flowParameters.appSettings,
+                                                                continuation: continuation)
         accountSettingsPresenter?.start()
     }
 }

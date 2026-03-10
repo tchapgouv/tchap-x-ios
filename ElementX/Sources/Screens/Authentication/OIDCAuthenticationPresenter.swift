@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -49,11 +50,7 @@ class OIDCAuthenticationPresenter: NSObject {
         
         guard let url else {
             // Check for user cancellation to avoid showing an alert in that instance.
-            if let nsError = error as? NSError,
-               nsError.domain == ASWebAuthenticationSessionErrorDomain,
-               nsError.code == ASWebAuthenticationSessionError.canceledLogin.rawValue,
-               // If there's a failure reason then the cancellation wasn't made by the user.
-               nsError.localizedFailureReason == nil {
+            if error?.isOIDCUserCancellation == true {
                 // No need to show an error here, just abort and return a failure.
                 await authenticationService.abortOIDCLogin(data: oidcData)
                 return .failure(.oidcError(.userCancellation))
@@ -62,7 +59,7 @@ class OIDCAuthenticationPresenter: NSObject {
             let errorDescription = error.map(String.init(describing:)) ?? "Unknown error"
             MXLog.error("Missing callback URL from the web authentication session: \(errorDescription)")
             
-            userIndicatorController.alertInfo = AlertInfo(id: UUID())
+            showFailureIndicator()
             await authenticationService.abortOIDCLogin(data: oidcData)
             return .failure(.oidcError(.unknown))
         }
@@ -79,7 +76,7 @@ class OIDCAuthenticationPresenter: NSObject {
             return .failure(.oidcError(.userCancellation))
         case .failure(let error):
             MXLog.error("Error occurred: \(error)")
-            userIndicatorController.alertInfo = AlertInfo(id: UUID())
+            showFailureIndicator()
             return .failure(error)
         }
     }
@@ -88,10 +85,16 @@ class OIDCAuthenticationPresenter: NSObject {
         activeSession?.cancel()
     }
     
-    private static let loadingIndicatorID = "\(OIDCAuthenticationPresenter.self)-Loading"
+    private var loadingIndicatorID: String {
+        "\(Self.self)-Loading"
+    }
+
+    private var failureIndicatorID: String {
+        "\(Self.self)-Failure"
+    }
     
     private func startLoading(delay: Duration? = nil) {
-        userIndicatorController.submitIndicator(UserIndicator(id: Self.loadingIndicatorID,
+        userIndicatorController.submitIndicator(UserIndicator(id: loadingIndicatorID,
                                                               type: .modal,
                                                               title: L10n.commonLoading,
                                                               persistent: true),
@@ -99,14 +102,23 @@ class OIDCAuthenticationPresenter: NSObject {
     }
     
     private func stopLoading() {
-        userIndicatorController.retractIndicatorWithId(Self.loadingIndicatorID)
+        userIndicatorController.retractIndicatorWithId(loadingIndicatorID)
+    }
+    
+    private func showFailureIndicator() {
+        userIndicatorController.submitIndicator(UserIndicator(id: failureIndicatorID,
+                                                              type: .toast,
+                                                              title: L10n.errorUnknown,
+                                                              iconName: "xmark"))
     }
 }
 
 // MARK: ASWebAuthenticationPresentationContextProviding
 
 extension OIDCAuthenticationPresenter: ASWebAuthenticationPresentationContextProviding {
-    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor { presentationAnchor }
+    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        presentationAnchor
+    }
 }
 
 extension ASWebAuthenticationSession.Callback {
@@ -118,5 +130,22 @@ extension ASWebAuthenticationSession.Callback {
         } else {
             fatalError("Invalid OIDC redirect URL: \(url)")
         }
+    }
+}
+
+// MARK: - Helpers
+
+extension Error {
+    var isOIDCUserCancellation: Bool {
+        let nsError = self as NSError
+        
+        if nsError.domain == ASWebAuthenticationSessionErrorDomain,
+           nsError.code == ASWebAuthenticationSessionError.canceledLogin.rawValue,
+           // If there's a failure reason then the cancellation wasn't made by the user.
+           nsError.localizedFailureReason == nil {
+            return true
+        }
+        
+        return false
     }
 }

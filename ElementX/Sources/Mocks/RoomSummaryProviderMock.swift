@@ -1,12 +1,14 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
 import Foundation
+import MatrixRustSDKMocks
 
 enum RoomSummaryProviderMockConfigurationState {
     case loading
@@ -49,7 +51,7 @@ extension RoomSummaryProviderMock {
                 }
                 
                 roomListSubject.send(rooms)
-            case let .all(filters):
+            case let .rooms(_, filters), let .all(filters):
                 var rooms = initialRooms
                 
                 if filters.count > 1 {
@@ -82,6 +84,7 @@ extension RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: AttributedString("I do not wish to take the trouble to understand mysticism"),
                     lastMessageDate: .mock,
+                    lastMessageState: nil,
                     unreadMessagesCount: 0,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 0,
@@ -108,6 +111,7 @@ extension Array where Element == RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: AttributedString("I do not wish to take the trouble to understand mysticism"),
                     lastMessageDate: .mock,
+                    lastMessageState: nil,
                     unreadMessagesCount: 0,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 0,
@@ -129,6 +133,7 @@ extension Array where Element == RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: AttributedString("How do you see the Emperor then? You think he keeps office hours?"),
                     lastMessageDate: .mock,
+                    lastMessageState: nil,
                     unreadMessagesCount: 2,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 2,
@@ -150,6 +155,7 @@ extension Array where Element == RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: try? AttributedString(markdown: "He certainly seemed no *mental genius* to me"),
                     lastMessageDate: .mock,
+                    lastMessageState: nil,
                     unreadMessagesCount: 3,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 0,
@@ -171,6 +177,7 @@ extension Array where Element == RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: AttributedString("There's an archaic measure of time that's called the month"),
                     lastMessageDate: .mock,
+                    lastMessageState: nil,
                     unreadMessagesCount: 2,
                     unreadMentionsCount: 2,
                     unreadNotificationsCount: 2,
@@ -192,6 +199,7 @@ extension Array where Element == RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: AttributedString("Clearly, if Earth is powerful enough to do that, it might also be capable of adjusting minds in order to force belief in its radioactivity"),
                     lastMessageDate: .mock,
+                    lastMessageState: nil,
                     unreadMessagesCount: 1,
                     unreadMentionsCount: 1,
                     unreadNotificationsCount: 1,
@@ -213,6 +221,7 @@ extension Array where Element == RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: AttributedString("Are you groping for the word 'paranoia'?"),
                     lastMessageDate: .mock,
+                    lastMessageState: nil,
                     unreadMessagesCount: 6,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 0,
@@ -234,6 +243,7 @@ extension Array where Element == RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: nil,
                     lastMessageDate: .mock,
+                    lastMessageState: nil,
                     unreadMessagesCount: 1,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 1,
@@ -255,6 +265,7 @@ extension Array where Element == RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: nil,
                     lastMessageDate: nil,
+                    lastMessageState: nil,
                     unreadMessagesCount: 0,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 0,
@@ -309,6 +320,7 @@ extension Array where Element == RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: nil,
                     lastMessageDate: nil,
+                    lastMessageState: nil,
                     unreadMessagesCount: 0,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 0,
@@ -330,6 +342,7 @@ extension Array where Element == RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: nil,
                     lastMessageDate: nil,
+                    lastMessageState: nil,
                     unreadMessagesCount: 0,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 0,
@@ -344,7 +357,7 @@ extension Array where Element == RoomSummary {
     
     static let mockSpaceInvites: [Element] = [
         RoomSummary(room: RoomSDKMock(),
-                    id: "someAwesomeSpaceID1",
+                    id: "!space1:matrix.org",
                     joinRequestType: .invite(inviter: RoomMemberProxyMock.mockCharlie),
                     name: "First space",
                     isDirect: false,
@@ -354,6 +367,7 @@ extension Array where Element == RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: nil,
                     lastMessageDate: nil,
+                    lastMessageState: nil,
                     unreadMessagesCount: 0,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 0,
@@ -365,7 +379,7 @@ extension Array where Element == RoomSummary {
                     isFavourite: false,
                     isTombstoned: false),
         RoomSummary(room: RoomSDKMock(),
-                    id: "someAwesomeSpaceID2",
+                    id: "!space2:matrix.org",
                     joinRequestType: .invite(inviter: RoomMemberProxyMock.mockCharlie),
                     name: "Second space",
                     isDirect: false,
@@ -375,6 +389,7 @@ extension Array where Element == RoomSummary {
                     activeMembersCount: 0,
                     lastMessage: nil,
                     lastMessageDate: nil,
+                    lastMessageState: nil,
                     unreadMessagesCount: 0,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 0,

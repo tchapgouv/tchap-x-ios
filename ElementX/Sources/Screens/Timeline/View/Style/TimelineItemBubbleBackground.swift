@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -15,10 +16,10 @@ extension View {
     ///   - color: self explanatory, defaults to subtle secondary
     func bubbleBackground(isOutgoing: Bool = true,
                           insets: EdgeInsets = .init(top: 8, leading: 12, bottom: 8, trailing: 12),
-                          color: Color? = .compound.bgSubtleSecondary) -> some View {
+                          color: @autoclosure @MainActor () -> Color? = .compound.bgSubtleSecondary) -> some View {
         modifier(TimelineItemBubbleBackgroundModifier(isOutgoing: isOutgoing,
                                                       insets: insets,
-                                                      color: color))
+                                                      color: color()))
     }
 }
 

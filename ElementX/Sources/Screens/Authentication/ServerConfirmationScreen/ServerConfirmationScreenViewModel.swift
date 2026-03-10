@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -57,8 +58,12 @@ class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, 
             Task { state.window = window }
         case .confirm:
             switch state.mode {
-            case .confirmation: Task { await confirmServer() }
-            case .picker: Task { await pickServer() }
+            case .confirmation:
+                startLoading()
+                Task { await confirmServer() }
+            case .picker:
+                startLoading()
+                Task { await pickServer() }
             }
         case .changeServer:
             actionsSubject.send(.changeServer)
@@ -68,6 +73,9 @@ class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, 
     // MARK: - Private
     
     private func confirmServer() async {
+        defer { stopLoading() }
+        startLoading()
+        
         let homeserver = authenticationService.homeserver.value
         
         // If the login mode is unknown, the service hasn't been configured and we need to do it now.
@@ -76,11 +84,6 @@ class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, 
             await fetchLoginURLIfNeededAndContinue()
             return
         }
-        
-        // Note: We don't show the spinner until now as it isn't needed if the service is already
-        // configured and we're about to use password based login
-        startLoading()
-        defer { stopLoading() }
         
         switch await authenticationService.configure(for: homeserver.address, flow: authenticationFlow) {
         case .success:
@@ -106,6 +109,9 @@ class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, 
     }
     
     private func pickServer() async {
+        defer { stopLoading() }
+        startLoading()
+        
         guard let accountProvider = state.bindings.pickerSelection else {
             fatalError("It shouldn't be possible to confirm without a selection.")
         }
@@ -116,11 +122,6 @@ class ServerConfirmationScreenViewModel: ServerConfirmationScreenViewModelType, 
             await fetchLoginURLIfNeededAndContinue()
             return
         }
-        
-        // Note: We don't show the spinner until now as it isn't needed if the service is already
-        // configured and we're about to use password based login
-        startLoading()
-        defer { stopLoading() }
         
         switch await authenticationService.configure(for: accountProvider, flow: authenticationFlow) {
         case .success:

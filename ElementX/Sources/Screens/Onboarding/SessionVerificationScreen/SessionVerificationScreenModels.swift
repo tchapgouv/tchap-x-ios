@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -32,25 +33,15 @@ struct SessionVerificationScreenViewState: BindableState {
     
     var headerIcon: (keyPath: KeyPath<CompoundIcons, Image>, style: BigIcon.Style) {
         switch verificationState {
-        case .initial:
+        case .initial, .acceptingVerificationRequest, .requestingVerification,
+             .verificationRequestAccepted, .startingSasVerification, .sasVerificationStarted,
+             .cancelling:
             switch flow {
             case .deviceInitiator, .deviceResponder:
                 return (\.devices, .defaultSolid)
             case .userInitiator, .userResponder:
                 return (\.userProfileSolid, .defaultSolid)
             }
-        case .acceptingVerificationRequest:
-            return (\.devices, .defaultSolid)
-        case .requestingVerification:
-            return (\.devices, .defaultSolid)
-        case .verificationRequestAccepted:
-            return (\.reaction, .defaultSolid)
-        case .startingSasVerification:
-            return (\.devices, .defaultSolid)
-        case .sasVerificationStarted:
-            return (\.devices, .defaultSolid)
-        case .cancelling:
-            return (\.lockSolid, .defaultSolid)
         case .showingChallenge:
             return (\.reaction, .defaultSolid)
         case .acceptingChallenge:
@@ -70,7 +61,9 @@ struct SessionVerificationScreenViewState: BindableState {
     
     var title: String? {
         switch verificationState {
-        case .initial:
+        case .initial, .acceptingVerificationRequest, .requestingVerification,
+             .verificationRequestAccepted, .startingSasVerification, .sasVerificationStarted,
+             .cancelling:
             switch flow {
             case .deviceInitiator:
                 return L10n.screenSessionVerificationUseAnotherDeviceTitle
@@ -79,16 +72,6 @@ struct SessionVerificationScreenViewState: BindableState {
             case .deviceResponder, .userResponder:
                 return L10n.screenSessionVerificationRequestTitle
             }
-        case .acceptingVerificationRequest:
-            return waitingTitle
-        case .requestingVerification:
-            return waitingTitle
-        case .verificationRequestAccepted:
-            return L10n.screenSessionVerificationCompareEmojisTitle
-        case .startingSasVerification:
-            return waitingTitle
-        case .sasVerificationStarted:
-            return waitingTitle
         case .showingChallenge:
             return L10n.screenSessionVerificationCompareEmojisTitle
         case .acceptingChallenge:
@@ -102,25 +85,16 @@ struct SessionVerificationScreenViewState: BindableState {
             case .userInitiator, .userResponder:
                 return L10n.commonVerificationComplete
             }
-        case .cancelling:
-            return waitingTitle
         case .cancelled:
             return L10n.commonVerificationFailed
-        }
-    }
-    
-    private var waitingTitle: String {
-        switch flow {
-        case .deviceInitiator, .deviceResponder:
-            return L10n.screenSessionVerificationWaitingOtherDeviceTitle
-        case .userInitiator, .userResponder:
-            return L10n.screenSessionVerificationWaitingOtherUserTitle
         }
     }
         
     var message: String {
         switch verificationState {
-        case .initial:
+        case .initial, .acceptingVerificationRequest, .requestingVerification,
+             .verificationRequestAccepted, .startingSasVerification, .sasVerificationStarted,
+             .cancelling:
             switch flow {
             case .deviceInitiator:
                 return L10n.screenSessionVerificationUseAnotherDeviceSubtitle
@@ -131,22 +105,10 @@ struct SessionVerificationScreenViewState: BindableState {
             case .userResponder:
                 return L10n.screenSessionVerificationUserResponderSubtitle
             }
-        case .acceptingVerificationRequest:
-            return waitingMessage
-        case .requestingVerification:
-            return waitingMessage
-        case .verificationRequestAccepted:
-            return L10n.screenSessionVerificationRequestAcceptedSubtitle
-        case .startingSasVerification:
-            return waitingMessage
-        case .sasVerificationStarted:
-            return waitingMessage
         case .acceptingChallenge:
             return L10n.screenSessionVerificationCompareEmojisSubtitle
         case .decliningChallenge:
             return L10n.screenSessionVerificationCompareEmojisSubtitle
-        case .cancelling:
-            return waitingMessage
         case .showingChallenge:
             switch flow {
             case .deviceInitiator, .deviceResponder:
@@ -165,8 +127,23 @@ struct SessionVerificationScreenViewState: BindableState {
             return L10n.screenSessionVerificationFailedSubtitle
         }
     }
+        
+    var isWaiting: Bool {
+        switch verificationState {
+        case .acceptingVerificationRequest, .requestingVerification, .verificationRequestAccepted,
+             .startingSasVerification, .sasVerificationStarted, .cancelling:
+            true
+        default:
+            false
+        }
+    }
     
-    private var waitingMessage: String {
-        L10n.screenSessionVerificationWaitingSubtitle
+    var showIgnoreButton: Bool {
+        switch flow {
+        case .deviceResponder, .userResponder:
+            true
+        default:
+            false
+        }
     }
 }

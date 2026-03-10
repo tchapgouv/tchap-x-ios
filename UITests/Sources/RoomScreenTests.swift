@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -12,8 +13,8 @@ class RoomScreenUITests: XCTestCase {
     func testPlainNoAvatar() async throws {
         let app = Application.launch(.roomPlainNoAvatar)
 
-        XCTAssert(app.staticTexts[A11yIdentifiers.roomScreen.name].exists)
-        XCTAssert(app.staticTexts[A11yIdentifiers.roomScreen.avatar].exists)
+        XCTAssert(app.buttons[A11yIdentifiers.roomScreen.name].exists)
+        XCTAssert(app.buttons[A11yIdentifiers.roomScreen.avatar].exists)
 
         try await app.assertScreenshot()
     }

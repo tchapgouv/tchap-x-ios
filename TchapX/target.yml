@@ -93,7 +93,8 @@ targetTemplates:
             CFBundleTypeRole: Editor,
             CFBundleURLName: "Application",
             CFBundleURLSchemes: [
-              io.element
+              $(BASE_BUNDLE_IDENTIFIER), # The app's own scheme for custom routes
+              "matrix" # Matrix URI scheme for permalinks
             ]
           }
         ]
@@ -133,7 +134,25 @@ targetTemplates:
           LSHandlerRank: Owner
           LSItemContentTypes: $(PILLS_UT_TYPE_IDENTIFIER)
         LSSupportsOpeningDocumentsInPlace: false
-        mapLibreAPIKey: $(MAPLIBRE_API_KEY)
+        
+    entitlements:
+      path: ElementX.entitlements
+      properties:
+        aps-environment: development
+        com.apple.developer.associated-domains:
+        - applinks:$(BASE_BUNDLE_IDENTIFIER)
+        - applinks:www.$(BASE_BUNDLE_IDENTIFIER)
+        - applinks:call.element.io
+        - applinks:matrix.to
+        # - applinks:localhost?mode=developer # developer mode only works with https (but self-signed is fine).
+        - webcredentials:www.$(BASE_BUNDLE_IDENTIFIER)
+        com.apple.developer.usernotifications.communication: true
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups:
+        - $(APP_GROUP_IDENTIFIER)
+        com.apple.security.network.client: true
+        keychain-access-groups:
+        - $(KEYCHAIN_ACCESS_GROUP_IDENTIFIER)
         
     settings:
       BASE_APP_GROUP_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
@@ -184,22 +203,22 @@ targetTemplates:
         fi
 
     dependencies:
+    - target: MatrixRustSDKMocks
     - package: MatrixRustSDK
       embed: true
     - package: Compound
     - package: Algorithms
+    - package: AsyncAlgorithms
     - package: AnalyticsEvents
     - package: Collections
     - package: DeviceKit
-    - package: DTCoreText
     - package: EmbeddedElementCall
     - package: KeychainAccess
     - package: Kingfisher
     - package: KZFileWatchers
     - package: LoremSwiftum
     - package: LRUCache
-    - package: Mapbox
-    - package: Mutex
+    - package: MapLibre
     - package: PostHog
     - package: SwiftState
     - package: GZIP
@@ -212,6 +231,8 @@ targetTemplates:
     - package: WysiwygComposer
     - package: SwiftOGG
     - package: SwiftSoup
+    - package: SwiftFlow
+      product: Flow
     - package: DSWaveformImage
       product: DSWaveformImageViews
 
@@ -228,6 +249,14 @@ targetTemplates:
     - path: ../ElementX/Resources
     - path: ../ElementX/SupportingFiles/Settings.bundle
     - path: ../Tools/Scripts/Templates/SimpleScreenExample/ElementX
+
+    # This is required for testing purposes... The problem with unit tests is that if you
+    # try to `@testable import NSE` you can only get the definition of files, but due to a
+    # limitation in how they work, they can only compile files that are part of the main test
+    # target, so linking will fail. The solution is to just have the main app to reference the
+    # extension code, and test it directly.
+    - path: ../NSE/Sources
+
 #--------------------------------------------------------------------------------
 targets:
 #--------------------------------------------------------------------------------
@@ -243,21 +272,25 @@ targets:
       path: production/SupportingFiles/Info.plist
       properties:
         BGTaskSchedulerPermittedIdentifiers: [
-          fr.gouv.tchapx.background.refresh
+          $(BASE_BUNDLE_IDENTIFIER).background.refresh
         ]
-        # Data generated from Tchap Android `certignaservicesrootca.cer` embedded certificate.
-        # Certificate of a website can be obtained as follow: ex +'/BEGIN CERTIFICATE/,/END CERTIFICATE/p' <(echo | openssl s_client -showcerts -connect tchap.gouv.fr:443) -scq > tchap.gouv.fr.crt
-        # Generate PEM: openssl x509 -inform der -in certignaservicesrootca.cer -out certignaservicesrootca.pem
-        # Generate SPKI: cat certignaservicesrootca.pem | openssl x509 -inform pem -noout -outform pem -pubkey | openssl pkey -pubin -inform pem -outform der | openssl dgst -sha256 -binary | openssl enc -base64
         NSAppTransportSecurity: {
           NSPinnedDomains: {
+            # Download the Intermediate Service CA certificate from your browser from url `https://tchap.gouv.fr` (as `.pem` file).
+            # Remove line breaks and paste it in below `PEM` property.
+            # Generate SPKI: cat <certificate.pem> | openssl x509 -inform pem -noout -outform pem -pubkey | openssl pkey -pubin -inform pem -outform der | openssl dgst -sha256 -binary | openssl enc -base64
+            # Copy printed output in below `SPKI-SHA256-BASE64` property.
             "tchap.gouv.fr": {
               NSIncludesSubdomains: true,
               NSPinnedCAIdentities: [
-                "SPKI-SHA256-BASE64": "5JA76xhFakdvHHlo2H5FqC3Ixf5HGrLq6YkNn7JDMeU=",
-                "PEM": "-----BEGIN CERTIFICATE-----MIIFhTCCBG2gAwIBAgIUZC/nHF2pouqOZECc9JYzehjW3kAwDQYJKoZIhvcNAQEMBQAwNDELMAkGA1UEBhMCRlIxEjAQBgNVBAoMCURoaW15b3RpczERMA8GA1UEAwwIQ2VydGlnbmEwHhcNMjUwMjI4MDk0OTA0WhcNMjcwNjI4MDk0OTAzWjB2MQswCQYDVQQGEwJGUjERMA8GA1UECgwIQ2VydGlnbmExHTAbBgNVBGEMFE5UUkZSLTQ4MTQ2MzA4MTAwMDM2MTUwMwYDVQQDDCxDZXJ0aWduYSBTZXJ2ZXIgQXV0aGVudGljYXRpb24gT1ZDUCBFVSBDQSBHMTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBANZ0kTuG6eFTF0KPbtvYBB5zIq+eR03FgyQAyRZE0lqCGRyx96ko+W/yyfxbCgPxMw5jlxdXteXBh8DLc5S4w0ICfOSc8vabFuXKhKa8BAB5/VtdzZosAF1AvFC1WLEVvPiUJRTsY0BkhnFI0UKdLN145hY4EL+CaSUENQ19006BR5P5HeWtmikYHgiq/TBlhTsnaYB6SL8mT40GfBxmp6PEjjrhKLurSQOMbF+6HiEnfZUr3OrKDncxN0GHxFYcIFBTL53JBNFA9qbPYsD6KubJmUqVoImyRKR+eXJHVNfPMhYzQv3EaYh2rpHRsjV96yZBIqBc3QSw82gj8bxh+rZRz8e+QISMlvljhHXqn+Qy4puuMt+3yQmnwFTYJQ13NFv1Uh3cJ5tEHP+yaLLCDqjy+cGCwNGMgsdWhS/67F4/AvRyI424psxuS/RbnKRrva0ZpDLTABgqfnONeU0LdkP817nGKNTKX2BDMD93BzOKzjDSBITJIRR8QICTKtQzmaKhd4UgbqPp+Bq1dMVhk5wW+x+bIHcB+wpqkO534SRMz93ijW2hSKrDWa2CB0Pl5tgcoGZThtjB3/Fm45XQLfW+vcTf+7nH8CRjMXO9swS6TovOXIpa5aG3jM+Dgewg6RbxtO/uIjv1zuIdS02d2h8Is2CvJ9/duOKucuYt1YnfAgMBAAGjggFLMIIBRzBBBggrBgEFBQcBAQQ1MDMwMQYIKwYBBQUHMAKGJWh0dHA6Ly9jZXJ0LmNlcnRpZ25hLmNvbS9DZXJ0aWduYS5jZXIwHwYDVR0jBBgwFoAUGu3+QTmQtCRZvgHyUtVF9lo53BEwEgYDVR0TAQH/BAgwBgEB/wIBADBIBgNVHSAEQTA/MAgGBmeBDAECAjAzBgoqgXoBgTEBAAECMCUwIwYIKwYBBQUHAgEWF2h0dHA6Ly9jcHMuY2VydGlnbmEuY29tMDUGA1UdHwQuMCwwKqAooCaGJGh0dHA6Ly9jcmwuY2VydGlnbmEuY29tL0NlcnRpZ25hLmNybDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBSgcuZGxDBc5K3CHMLVYjiYgVpUpjANBgkqhkiG9w0BAQwFAAOCAQEAkYjFkMa/La7tXDId/3ltDS8PKsxhxmOBA6bRsLeDQWIU2E1M/1A1y0bRkw4Y6ZRGmkVLLdQRD9mJIvxnllTyoeOzJPk0BVW6xVgPncatyhNx0bKEFouetx7k+J7yKhu/k3jJP9XAxtbCWViQ4rZ3BvABYHA8rBmfccbVMr04a/+ILTpT/1QiGzhHcpo2fnlQ+okXq0cuikN5/WMlHNgsTJIG2b5yEFtYY84Hlx0ejJX3cOAd4pot9vHdjv8e2KvIq/jopdB5lyv/wbaQ4EHz9i5Z4dvmECjsx9oEHRDmUoeEoV1sb/I/2np3PHjtYTrzzoOTYUaebmdXkFasRpTx1w==-----END CERTIFICATE-----"
+                "SPKI-SHA256-BASE64": "Vvyvg4+bOEbI6aO7K28ioVsUfckLqCSKqlIqZTEB/uE=",
+                "PEM": "-----BEGIN CERTIFICATE-----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-----END CERTIFICATE-----"
              ]
             },
+            # Download the Intermediate Service CA certificate from your browser from url `https://openmaptiles.geo.data.gouv.fr` (as `.pem` file).
+            # Remove line breaks and paste it in below `PEM` property.
+            # Generate SPKI: cat <certificate.pem> | openssl x509 -inform pem -noout -outform pem -pubkey | openssl pkey -pubin -inform pem -outform der | openssl dgst -sha256 -binary | openssl enc -base64
+            # Copy printed output in below `SPKI-SHA256-BASE64` property.
             "openmaptiles.geo.data.gouv.fr": {
               NSIncludesSubdomains: true,
               NSPinnedCAIdentities: [
@@ -268,11 +301,14 @@ targets:
           }
         }
 
+    entitlements:
+      path: production/SupportingFiles/tchapx.entitlements
+
     settings:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx
       PRODUCTION_APP_NAME: TchapX PRODUCTION
       APP_NAME: TchapX-Production
-      APP_DISPLAY_NAME: TchapX # The name used in the application.
+      APP_DISPLAY_NAME: Tchap X # The name used in the application.
       CODE_SIGN_ENTITLEMENTS: TchapX/production/SupportingFiles/tchapx.entitlements
       OTHER_SWIFT_FLAGS: $(inherited) -D IS_MAIN_APP -D IS_TCHAP_PRODUCTION
 
@@ -283,9 +319,9 @@ targets:
       shell: /bin/sh
       script: |
         export PATH="$PATH:/opt/homebrew/bin"
-        swiftgen config run --config "Tools/SwiftGen/swiftgen-config-tchap-main.yml"
         if which swiftgen >/dev/null; then
             swiftgen config run --config Tools/SwiftGen/swiftgen-config.yml
+            swiftgen config run --config "Tools/SwiftGen/swiftgen-config-tchap-main.yml"
             # inject Xcode target into switgen-config-tchap yaml file.
             source_file="Tools/SwiftGen/swiftgen-config-tchap-target.yml"
             target_file="Tools/SwiftGen/swiftgen-config-tchap-target.tmp"
@@ -321,14 +357,14 @@ targets:
       path: staging/SupportingFiles/Info.plist
       properties:
         BGTaskSchedulerPermittedIdentifiers: [
-          fr.gouv.tchapx.staging.background.refresh
+          $(BASE_BUNDLE_IDENTIFIER).background.refresh
         ]
-        # Data generated from Tchap Android `certignaservicesrootca.cer` embedded certificate.
-        # Certificate of a website can be obtained as follow: ex +'/BEGIN CERTIFICATE/,/END CERTIFICATE/p' <(echo | openssl s_client -showcerts -connect tchap.gouv.fr:443) -scq > tchap.gouv.fr.crt
-        # Generate PEM: openssl x509 -inform der -in certignaservicesrootca.cer -out certignaservicesrootca.pem
-        # Generate SPKI: cat certignaservicesrootca.pem | openssl x509 -inform pem -noout -outform pem -pubkey | openssl pkey -pubin -inform pem -outform der | openssl dgst -sha256 -binary | openssl enc -base64
         NSAppTransportSecurity: {
           NSPinnedDomains: {
+            # Download the Intermediate Service CA certificate from your browser from url `https://beta.tchap.gouv.fr` (as `.pem` file).
+            # Remove line breaks and paste it in below `PEM` property.
+            # Generate SPKI: cat <certificate.pem> | openssl x509 -inform pem -noout -outform pem -pubkey | openssl pkey -pubin -inform pem -outform der | openssl dgst -sha256 -binary | openssl enc -base64
+            # Copy printed output in below `SPKI-SHA256-BASE64` property.
             "tchap.gouv.fr": {
               NSIncludesSubdomains: true,
               NSPinnedCAIdentities: [
@@ -336,6 +372,10 @@ targets:
                 "PEM": "-----BEGIN CERTIFICATE-----MIIFhTCCBG2gAwIBAgIUZC/nHF2pouqOZECc9JYzehjW3kAwDQYJKoZIhvcNAQEMBQAwNDELMAkGA1UEBhMCRlIxEjAQBgNVBAoMCURoaW15b3RpczERMA8GA1UEAwwIQ2VydGlnbmEwHhcNMjUwMjI4MDk0OTA0WhcNMjcwNjI4MDk0OTAzWjB2MQswCQYDVQQGEwJGUjERMA8GA1UECgwIQ2VydGlnbmExHTAbBgNVBGEMFE5UUkZSLTQ4MTQ2MzA4MTAwMDM2MTUwMwYDVQQDDCxDZXJ0aWduYSBTZXJ2ZXIgQXV0aGVudGljYXRpb24gT1ZDUCBFVSBDQSBHMTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBANZ0kTuG6eFTF0KPbtvYBB5zIq+eR03FgyQAyRZE0lqCGRyx96ko+W/yyfxbCgPxMw5jlxdXteXBh8DLc5S4w0ICfOSc8vabFuXKhKa8BAB5/VtdzZosAF1AvFC1WLEVvPiUJRTsY0BkhnFI0UKdLN145hY4EL+CaSUENQ19006BR5P5HeWtmikYHgiq/TBlhTsnaYB6SL8mT40GfBxmp6PEjjrhKLurSQOMbF+6HiEnfZUr3OrKDncxN0GHxFYcIFBTL53JBNFA9qbPYsD6KubJmUqVoImyRKR+eXJHVNfPMhYzQv3EaYh2rpHRsjV96yZBIqBc3QSw82gj8bxh+rZRz8e+QISMlvljhHXqn+Qy4puuMt+3yQmnwFTYJQ13NFv1Uh3cJ5tEHP+yaLLCDqjy+cGCwNGMgsdWhS/67F4/AvRyI424psxuS/RbnKRrva0ZpDLTABgqfnONeU0LdkP817nGKNTKX2BDMD93BzOKzjDSBITJIRR8QICTKtQzmaKhd4UgbqPp+Bq1dMVhk5wW+x+bIHcB+wpqkO534SRMz93ijW2hSKrDWa2CB0Pl5tgcoGZThtjB3/Fm45XQLfW+vcTf+7nH8CRjMXO9swS6TovOXIpa5aG3jM+Dgewg6RbxtO/uIjv1zuIdS02d2h8Is2CvJ9/duOKucuYt1YnfAgMBAAGjggFLMIIBRzBBBggrBgEFBQcBAQQ1MDMwMQYIKwYBBQUHMAKGJWh0dHA6Ly9jZXJ0LmNlcnRpZ25hLmNvbS9DZXJ0aWduYS5jZXIwHwYDVR0jBBgwFoAUGu3+QTmQtCRZvgHyUtVF9lo53BEwEgYDVR0TAQH/BAgwBgEB/wIBADBIBgNVHSAEQTA/MAgGBmeBDAECAjAzBgoqgXoBgTEBAAECMCUwIwYIKwYBBQUHAgEWF2h0dHA6Ly9jcHMuY2VydGlnbmEuY29tMDUGA1UdHwQuMCwwKqAooCaGJGh0dHA6Ly9jcmwuY2VydGlnbmEuY29tL0NlcnRpZ25hLmNybDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBSgcuZGxDBc5K3CHMLVYjiYgVpUpjANBgkqhkiG9w0BAQwFAAOCAQEAkYjFkMa/La7tXDId/3ltDS8PKsxhxmOBA6bRsLeDQWIU2E1M/1A1y0bRkw4Y6ZRGmkVLLdQRD9mJIvxnllTyoeOzJPk0BVW6xVgPncatyhNx0bKEFouetx7k+J7yKhu/k3jJP9XAxtbCWViQ4rZ3BvABYHA8rBmfccbVMr04a/+ILTpT/1QiGzhHcpo2fnlQ+okXq0cuikN5/WMlHNgsTJIG2b5yEFtYY84Hlx0ejJX3cOAd4pot9vHdjv8e2KvIq/jopdB5lyv/wbaQ4EHz9i5Z4dvmECjsx9oEHRDmUoeEoV1sb/I/2np3PHjtYTrzzoOTYUaebmdXkFasRpTx1w==-----END CERTIFICATE-----"
              ]
             },
+            # Download the Intermediate Service CA certificate from your browser from url `https://openmaptiles.geo.data.gouv.fr` (as `.pem` file).
+            # Remove line breaks and paste it in below `PEM` property.
+            # Generate SPKI: cat <certificate.pem> | openssl x509 -inform pem -noout -outform pem -pubkey | openssl pkey -pubin -inform pem -outform der | openssl dgst -sha256 -binary | openssl enc -base64
+            # Copy printed output in below `SPKI-SHA256-BASE64` property.
             "openmaptiles.geo.data.gouv.fr": {
               NSIncludesSubdomains: true,
               NSPinnedCAIdentities: [
@@ -346,11 +386,14 @@ targets:
           }
         }
 
+    entitlements:
+      path: staging/SupportingFiles/tchapx.entitlements
+
     settings:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.staging
       PRODUCTION_APP_NAME: TchapX STAGING
       APP_NAME: TchapX-Staging
-      APP_DISPLAY_NAME: TchapX Staging # The name used in the application.
+      APP_DISPLAY_NAME: Tchap X Staging # The name used in the application.
       CODE_SIGN_ENTITLEMENTS: TchapX/staging/SupportingFiles/tchapx.entitlements
       OTHER_SWIFT_FLAGS: $(inherited) -D IS_MAIN_APP -D IS_TCHAP_STAGING
 
@@ -361,13 +404,13 @@ targets:
       shell: /bin/sh
       script: |
         export PATH="$PATH:/opt/homebrew/bin"
-        swiftgen config run --config "Tools/SwiftGen/swiftgen-config-tchap-main.yml"
         if which swiftgen >/dev/null; then
+            swiftgen config run --config "Tools/SwiftGen/swiftgen-config-tchap-main.yml"
             swiftgen config run --config Tools/SwiftGen/swiftgen-config.yml
             # inject Xcode target into switgen-config-tchap yaml file.
             source_file="Tools/SwiftGen/swiftgen-config-tchap-target.yml"
             target_file="Tools/SwiftGen/swiftgen-config-tchap-target.tmp"
-            scheme="production"
+            scheme="staging"
             rm -f $target_file
             sed "s/%TARGET%/${scheme}/" $source_file > $target_file
             swiftgen config run --config $target_file
@@ -399,36 +442,22 @@ targets:
       path: development/SupportingFiles/Info.plist
       properties:
         BGTaskSchedulerPermittedIdentifiers: [
-          fr.gouv.tchapx.dev.background.refresh
+          $(BASE_BUNDLE_IDENTIFIER).background.refresh
         ]
-        # Data generated from Tchap Android `certignaservicesrootca.cer` embedded certificate.
-        # Certificate of a website can be obtained as follow: ex +'/BEGIN CERTIFICATE/,/END CERTIFICATE/p' <(echo | openssl s_client -showcerts -connect tchap.gouv.fr:443) -scq > tchap.gouv.fr.crt
-        # Generate PEM: openssl x509 -inform der -in certignaservicesrootca.cer -out certignaservicesrootca.pem
-        # Generate SPKI: cat certignaservicesrootca.pem | openssl x509 -inform pem -noout -outform pem -pubkey | openssl pkey -pubin -inform pem -outform der | openssl dgst -sha256 -binary | openssl enc -base64
+        # No certificate pinning in Development environment.
         NSAppTransportSecurity: {
           NSPinnedDomains: {
-            "tchap.gouv.fr": {
-              NSIncludesSubdomains: true,
-              NSPinnedCAIdentities: [
-                "SPKI-SHA256-BASE64": "5JA76xhFakdvHHlo2H5FqC3Ixf5HGrLq6YkNn7JDMeU=",
-                "PEM": "-----BEGIN CERTIFICATE-----MIIFhTCCBG2gAwIBAgIUZC/nHF2pouqOZECc9JYzehjW3kAwDQYJKoZIhvcNAQEMBQAwNDELMAkGA1UEBhMCRlIxEjAQBgNVBAoMCURoaW15b3RpczERMA8GA1UEAwwIQ2VydGlnbmEwHhcNMjUwMjI4MDk0OTA0WhcNMjcwNjI4MDk0OTAzWjB2MQswCQYDVQQGEwJGUjERMA8GA1UECgwIQ2VydGlnbmExHTAbBgNVBGEMFE5UUkZSLTQ4MTQ2MzA4MTAwMDM2MTUwMwYDVQQDDCxDZXJ0aWduYSBTZXJ2ZXIgQXV0aGVudGljYXRpb24gT1ZDUCBFVSBDQSBHMTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBANZ0kTuG6eFTF0KPbtvYBB5zIq+eR03FgyQAyRZE0lqCGRyx96ko+W/yyfxbCgPxMw5jlxdXteXBh8DLc5S4w0ICfOSc8vabFuXKhKa8BAB5/VtdzZosAF1AvFC1WLEVvPiUJRTsY0BkhnFI0UKdLN145hY4EL+CaSUENQ19006BR5P5HeWtmikYHgiq/TBlhTsnaYB6SL8mT40GfBxmp6PEjjrhKLurSQOMbF+6HiEnfZUr3OrKDncxN0GHxFYcIFBTL53JBNFA9qbPYsD6KubJmUqVoImyRKR+eXJHVNfPMhYzQv3EaYh2rpHRsjV96yZBIqBc3QSw82gj8bxh+rZRz8e+QISMlvljhHXqn+Qy4puuMt+3yQmnwFTYJQ13NFv1Uh3cJ5tEHP+yaLLCDqjy+cGCwNGMgsdWhS/67F4/AvRyI424psxuS/RbnKRrva0ZpDLTABgqfnONeU0LdkP817nGKNTKX2BDMD93BzOKzjDSBITJIRR8QICTKtQzmaKhd4UgbqPp+Bq1dMVhk5wW+x+bIHcB+wpqkO534SRMz93ijW2hSKrDWa2CB0Pl5tgcoGZThtjB3/Fm45XQLfW+vcTf+7nH8CRjMXO9swS6TovOXIpa5aG3jM+Dgewg6RbxtO/uIjv1zuIdS02d2h8Is2CvJ9/duOKucuYt1YnfAgMBAAGjggFLMIIBRzBBBggrBgEFBQcBAQQ1MDMwMQYIKwYBBQUHMAKGJWh0dHA6Ly9jZXJ0LmNlcnRpZ25hLmNvbS9DZXJ0aWduYS5jZXIwHwYDVR0jBBgwFoAUGu3+QTmQtCRZvgHyUtVF9lo53BEwEgYDVR0TAQH/BAgwBgEB/wIBADBIBgNVHSAEQTA/MAgGBmeBDAECAjAzBgoqgXoBgTEBAAECMCUwIwYIKwYBBQUHAgEWF2h0dHA6Ly9jcHMuY2VydGlnbmEuY29tMDUGA1UdHwQuMCwwKqAooCaGJGh0dHA6Ly9jcmwuY2VydGlnbmEuY29tL0NlcnRpZ25hLmNybDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBSgcuZGxDBc5K3CHMLVYjiYgVpUpjANBgkqhkiG9w0BAQwFAAOCAQEAkYjFkMa/La7tXDId/3ltDS8PKsxhxmOBA6bRsLeDQWIU2E1M/1A1y0bRkw4Y6ZRGmkVLLdQRD9mJIvxnllTyoeOzJPk0BVW6xVgPncatyhNx0bKEFouetx7k+J7yKhu/k3jJP9XAxtbCWViQ4rZ3BvABYHA8rBmfccbVMr04a/+ILTpT/1QiGzhHcpo2fnlQ+okXq0cuikN5/WMlHNgsTJIG2b5yEFtYY84Hlx0ejJX3cOAd4pot9vHdjv8e2KvIq/jopdB5lyv/wbaQ4EHz9i5Z4dvmECjsx9oEHRDmUoeEoV1sb/I/2np3PHjtYTrzzoOTYUaebmdXkFasRpTx1w==-----END CERTIFICATE-----"
-             ]
-            },
-            "openmaptiles.geo.data.gouv.fr": {
-              NSIncludesSubdomains: true,
-              NSPinnedCAIdentities: [
-                "SPKI-SHA256-BASE64": "5JA76xhFakdvHHlo2H5FqC3Ixf5HGrLq6YkNn7JDMeU=",
-                "PEM": "-----BEGIN CERTIFICATE-----MIIFhTCCBG2gAwIBAgIUZC/nHF2pouqOZECc9JYzehjW3kAwDQYJKoZIhvcNAQEMBQAwNDELMAkGA1UEBhMCRlIxEjAQBgNVBAoMCURoaW15b3RpczERMA8GA1UEAwwIQ2VydGlnbmEwHhcNMjUwMjI4MDk0OTA0WhcNMjcwNjI4MDk0OTAzWjB2MQswCQYDVQQGEwJGUjERMA8GA1UECgwIQ2VydGlnbmExHTAbBgNVBGEMFE5UUkZSLTQ4MTQ2MzA4MTAwMDM2MTUwMwYDVQQDDCxDZXJ0aWduYSBTZXJ2ZXIgQXV0aGVudGljYXRpb24gT1ZDUCBFVSBDQSBHMTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBANZ0kTuG6eFTF0KPbtvYBB5zIq+eR03FgyQAyRZE0lqCGRyx96ko+W/yyfxbCgPxMw5jlxdXteXBh8DLc5S4w0ICfOSc8vabFuXKhKa8BAB5/VtdzZosAF1AvFC1WLEVvPiUJRTsY0BkhnFI0UKdLN145hY4EL+CaSUENQ19006BR5P5HeWtmikYHgiq/TBlhTsnaYB6SL8mT40GfBxmp6PEjjrhKLurSQOMbF+6HiEnfZUr3OrKDncxN0GHxFYcIFBTL53JBNFA9qbPYsD6KubJmUqVoImyRKR+eXJHVNfPMhYzQv3EaYh2rpHRsjV96yZBIqBc3QSw82gj8bxh+rZRz8e+QISMlvljhHXqn+Qy4puuMt+3yQmnwFTYJQ13NFv1Uh3cJ5tEHP+yaLLCDqjy+cGCwNGMgsdWhS/67F4/AvRyI424psxuS/RbnKRrva0ZpDLTABgqfnONeU0LdkP817nGKNTKX2BDMD93BzOKzjDSBITJIRR8QICTKtQzmaKhd4UgbqPp+Bq1dMVhk5wW+x+bIHcB+wpqkO534SRMz93ijW2hSKrDWa2CB0Pl5tgcoGZThtjB3/Fm45XQLfW+vcTf+7nH8CRjMXO9swS6TovOXIpa5aG3jM+Dgewg6RbxtO/uIjv1zuIdS02d2h8Is2CvJ9/duOKucuYt1YnfAgMBAAGjggFLMIIBRzBBBggrBgEFBQcBAQQ1MDMwMQYIKwYBBQUHMAKGJWh0dHA6Ly9jZXJ0LmNlcnRpZ25hLmNvbS9DZXJ0aWduYS5jZXIwHwYDVR0jBBgwFoAUGu3+QTmQtCRZvgHyUtVF9lo53BEwEgYDVR0TAQH/BAgwBgEB/wIBADBIBgNVHSAEQTA/MAgGBmeBDAECAjAzBgoqgXoBgTEBAAECMCUwIwYIKwYBBQUHAgEWF2h0dHA6Ly9jcHMuY2VydGlnbmEuY29tMDUGA1UdHwQuMCwwKqAooCaGJGh0dHA6Ly9jcmwuY2VydGlnbmEuY29tL0NlcnRpZ25hLmNybDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBSgcuZGxDBc5K3CHMLVYjiYgVpUpjANBgkqhkiG9w0BAQwFAAOCAQEAkYjFkMa/La7tXDId/3ltDS8PKsxhxmOBA6bRsLeDQWIU2E1M/1A1y0bRkw4Y6ZRGmkVLLdQRD9mJIvxnllTyoeOzJPk0BVW6xVgPncatyhNx0bKEFouetx7k+J7yKhu/k3jJP9XAxtbCWViQ4rZ3BvABYHA8rBmfccbVMr04a/+ILTpT/1QiGzhHcpo2fnlQ+okXq0cuikN5/WMlHNgsTJIG2b5yEFtYY84Hlx0ejJX3cOAd4pot9vHdjv8e2KvIq/jopdB5lyv/wbaQ4EHz9i5Z4dvmECjsx9oEHRDmUoeEoV1sb/I/2np3PHjtYTrzzoOTYUaebmdXkFasRpTx1w==-----END CERTIFICATE-----"
-             ]
-            }
           }
         }
+
+    entitlements:
+      path: development/SupportingFiles/tchapx.entitlements
 
     settings:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.dev
       PRODUCTION_APP_NAME: TchapX DEVELOPMENT
       APP_NAME: TchapX-Development
-      APP_DISPLAY_NAME: TchapX Development # The name used in the application.
+      APP_DISPLAY_NAME: Tchap X Dev # The name used in the application.
       CODE_SIGN_ENTITLEMENTS: TchapX/development/SupportingFiles/tchapx.entitlements
       OTHER_SWIFT_FLAGS: $(inherited) -D IS_MAIN_APP -D IS_TCHAP_DEVELOPMENT
 
@@ -439,13 +468,13 @@ targets:
       shell: /bin/sh
       script: |
         export PATH="$PATH:/opt/homebrew/bin"
-        swiftgen config run --config "Tools/SwiftGen/swiftgen-config-tchap-main.yml"
         if which swiftgen >/dev/null; then
+            swiftgen config run --config "Tools/SwiftGen/swiftgen-config-tchap-main.yml"
             swiftgen config run --config Tools/SwiftGen/swiftgen-config.yml
             # inject Xcode target into switgen-config-tchap yaml file.
             source_file="Tools/SwiftGen/swiftgen-config-tchap-target.yml"
             target_file="Tools/SwiftGen/swiftgen-config-tchap-target.tmp"
-            scheme="production"
+            scheme="development"
             rm -f $target_file
             sed "s/%TARGET%/${scheme}/" $source_file > $target_file
             swiftgen config run --config $target_file

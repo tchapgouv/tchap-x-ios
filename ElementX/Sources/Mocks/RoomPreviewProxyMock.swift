@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -79,7 +80,7 @@ extension RoomPreviewProxyMock {
                                                       roomType: configuration.roomType,
                                                       isHistoryWorldReadable: nil,
                                                       membership: configuration.membership,
-                                                      joinRule: configuration.joinRule,
+                                                      joinRule: configuration.joinRule.rustValue,
                                                       isDirect: configuration.isDirect,
                                                       heroes: nil))
         
@@ -97,17 +98,17 @@ extension RoomPreviewProxyMock {
         underlyingOwnMembershipDetails = roomMembershipDetails
     }
     
-    convenience init(spaceRoomProxy: SpaceRoomProxyProtocol) {
-        self.init(Configuration(roomID: spaceRoomProxy.id,
-                                canonicalAlias: spaceRoomProxy.canonicalAlias ?? "",
-                                name: spaceRoomProxy.name ?? "",
-                                topic: spaceRoomProxy.topic ?? "",
-                                avatarURL: spaceRoomProxy.avatarURL?.absoluteString ?? "",
-                                numJoinedMembers: UInt64(spaceRoomProxy.joinedMembersCount),
-                                numActiveMembers: UInt64(spaceRoomProxy.joinedMembersCount),
-                                roomType: spaceRoomProxy.isSpace ? .space : .room,
+    convenience init(spaceServiceRoom: SpaceServiceRoom) {
+        self.init(Configuration(roomID: spaceServiceRoom.id,
+                                canonicalAlias: spaceServiceRoom.canonicalAlias ?? "",
+                                name: spaceServiceRoom.name,
+                                topic: spaceServiceRoom.topic ?? "",
+                                avatarURL: spaceServiceRoom.avatarURL?.absoluteString ?? "",
+                                numJoinedMembers: UInt64(spaceServiceRoom.joinedMembersCount),
+                                numActiveMembers: UInt64(spaceServiceRoom.joinedMembersCount),
+                                roomType: spaceServiceRoom.isSpace ? .space : .room,
                                 membership: nil,
-                                joinRule: spaceRoomProxy.joinRule ?? .restricted(rules: []),
+                                joinRule: spaceServiceRoom.joinRule ?? .restricted(rules: []),
                                 isDirect: false))
     }
 }

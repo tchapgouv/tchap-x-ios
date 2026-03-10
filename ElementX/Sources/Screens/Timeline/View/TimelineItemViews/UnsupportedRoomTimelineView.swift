@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -13,19 +14,11 @@ struct UnsupportedRoomTimelineView: View {
     
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {
-            Label {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("\(timelineItem.body): \(timelineItem.eventType)")
-                        .fixedSize(horizontal: false, vertical: true)
-                    
-                    Text(timelineItem.error)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .font(.compound.bodySM)
-                }
-            } icon: {
-                CompoundIcon(\.warning, size: .small, relativeTo: .compound.bodyLG)
-            }
-            .labelStyle(RoomTimelineViewLabelStyle())
+            Label("\(timelineItem.body) (\(timelineItem.eventType)): \(timelineItem.error)",
+                  icon: \.warning,
+                  iconSize: .small,
+                  relativeTo: .compound.bodyLG)
+                .labelStyle(RoomTimelineViewPlaceholderLabelStyle())
         }
     }
 }
@@ -39,7 +32,7 @@ struct UnsupportedRoomTimelineView_Previews: PreviewProvider, TestablePreview {
     
     static var body: some View {
         VStack(alignment: .leading, spacing: 20.0) {
-            UnsupportedRoomTimelineView(timelineItem: itemWith(text: "Text",
+            UnsupportedRoomTimelineView(timelineItem: itemWith(text: "Unsupported",
                                                                timestamp: .mock,
                                                                isOutgoing: false,
                                                                senderId: "Bob"))
@@ -54,8 +47,8 @@ struct UnsupportedRoomTimelineView_Previews: PreviewProvider, TestablePreview {
     private static func itemWith(text: String, timestamp: Date, isOutgoing: Bool, senderId: String) -> UnsupportedRoomTimelineItem {
         UnsupportedRoomTimelineItem(id: .randomEvent,
                                     body: text,
-                                    eventType: "Some Event Type",
-                                    error: "Something went wrong",
+                                    eventType: "event.type",
+                                    error: "something went wrong",
                                     timestamp: timestamp,
                                     isOutgoing: isOutgoing,
                                     isEditable: false,

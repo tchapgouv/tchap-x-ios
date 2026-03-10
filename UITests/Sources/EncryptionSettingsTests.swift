@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -33,7 +34,8 @@ class EncryptionSettingsUITests: XCTestCase {
         // Broken by https://github.com/element-hq/compound-ios/pull/140
         app.switches[A11yIdentifiers.secureBackupScreen.keyStorage].switches.firstMatch.tap()
         
-        try await app.assertScreenshot(step: Step.keyBackupScreen)
+        // Has been failing often on CI, reasons unclear.
+        try await app.assertScreenshot(step: Step.keyBackupScreen, delay: .seconds(1))
         
         // Confirm deletion of keys.
         app.buttons[A11yIdentifiers.secureBackupKeyBackupScreen.deleteKeyStorage].tap()

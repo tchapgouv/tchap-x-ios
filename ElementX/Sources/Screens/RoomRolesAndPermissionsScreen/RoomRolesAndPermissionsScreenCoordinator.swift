@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -16,7 +17,7 @@ struct RoomRolesAndPermissionsScreenCoordinatorParameters {
 
 enum RoomRolesAndPermissionsScreenCoordinatorAction {
     case editRoles(RoomRolesAndPermissionsScreenRole)
-    case editPermissions(permissions: RoomPermissions, group: RoomRolesAndPermissionsScreenPermissionsGroup)
+    case editPermissions(ownPowerLevel: RoomPowerLevel, permissions: RoomPermissions)
     case demotedOwnUser
 }
 
@@ -43,8 +44,8 @@ final class RoomRolesAndPermissionsScreenCoordinator: CoordinatorProtocol {
             switch action {
             case .editRoles(let role):
                 actionsSubject.send(.editRoles(role))
-            case .editPermissions(let permissions, let group):
-                actionsSubject.send(.editPermissions(permissions: permissions, group: group))
+            case .editPermissions(let ownPowerLevel, let permissions):
+                actionsSubject.send(.editPermissions(ownPowerLevel: ownPowerLevel, permissions: permissions))
             case .demotedOwnUser:
                 actionsSubject.send(.demotedOwnUser)
             }

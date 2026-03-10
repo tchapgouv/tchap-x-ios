@@ -1,18 +1,22 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
 import LoremSwiftum
 import MatrixRustSDK
+import MatrixRustSDKMocks
 
 struct EventTimelineItemSDKMockConfiguration {
     var eventID: String = UUID().uuidString
     var sender = ""
     var senderProfile: ProfileDetails?
+    var forwarder: String?
+    var forwarderProfile: ProfileDetails?
     var isOwn = false
     var content: TimelineItemContent = .msgLike(content: .init(kind: .redacted,
                                                                reactions: [],
@@ -27,6 +31,8 @@ extension EventTimelineItem {
                   eventOrTransactionId: .eventId(eventId: configuration.eventID),
                   sender: configuration.sender,
                   senderProfile: configuration.senderProfile ?? .pending,
+                  forwarder: configuration.forwarder,
+                  forwarderProfile: configuration.forwarderProfile,
                   isOwn: configuration.isOwn,
                   isEditable: false,
                   content: configuration.content,

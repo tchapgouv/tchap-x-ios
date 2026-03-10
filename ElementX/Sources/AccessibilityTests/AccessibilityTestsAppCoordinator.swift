@@ -1,4 +1,5 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -103,9 +104,7 @@ struct PreviewsWrapperView: View {
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
     
     var body: some View {
-        if wrapper.currentIndex < 0 || wrapper.isDone {
-            EmptyView()
-        } else {
+        if wrapper.currentIndex >= 0, !wrapper.isDone {
             wrapper.currentPreview.content
                 .id("\(wrapper.previewName)-\(dynamicTypeSize)")
         }
@@ -116,7 +115,9 @@ struct PreviewsWrapperView: View {
     private let name: String
     private let previews: [_Preview]
     private(set) var currentIndex = -1
-    var currentPreview: _Preview { previews[currentIndex] }
+    var currentPreview: _Preview {
+        previews[currentIndex]
+    }
     
     private(set) var isDone = false
     
@@ -152,8 +153,8 @@ struct PreviewsWrapperView: View {
                 // this is a temporary solution
                 .timeout(.seconds(1), scheduler: DispatchQueue.main)
                 .values.first { $0 == true }
-        case .stream(let stream):
-            _ = await stream.first { $0 == true }
+        case .sequence(let sequence):
+            _ = await sequence.first { $0 == true }
         case .none:
             break
         }

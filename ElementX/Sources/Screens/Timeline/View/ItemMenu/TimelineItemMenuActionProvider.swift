@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -90,6 +91,13 @@ struct TimelineItemMenuActionProvider {
 
         if item.isCopyable {
             actions.append(.copy)
+
+            if !ProcessInfo.processInfo.isiOSAppOnMac {
+                // As of macOS 26.2, the sheet isn't presented, but it is easy enough
+                // to select some text and right click on Mac anyway so hide this one.
+                // Tchap: hide translate feature
+//                actions.append(.translate)
+            }
         } else if item.hasMediaCaption {
             actions.append(.copyCaption)
         }
@@ -152,6 +160,6 @@ struct TimelineItemMenuActionProvider {
     }
     
     private func canRedactItem(_ item: EventBasedTimelineItemProtocol) -> Bool {
-        item.isOutgoing ? canCurrentUserRedactSelf : canCurrentUserRedactOthers && !isDM
+        item.isOutgoing ? canCurrentUserRedactSelf : canCurrentUserRedactOthers
     }
 }

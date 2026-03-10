@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -12,13 +13,10 @@ class SessionVerificationUITests: XCTestCase {
     enum Step {
         static let initialState = 0
         static let waitingForOtherDevice = 1
-        static let useEmojiComparisonPrompt = 2
-        static let waitingForEmojis = 3
-        static let compareEmojis = 4
-        static let acceptingEmojis = 5
-        static let verificationComplete = 6
-        
-        static let verificationCancelled = 7
+        static let compareEmojis = 2
+        static let acceptingEmojis = 3
+        static let verificationComplete = 4
+        static let verificationCancelled = 5
     }
     
     func testChallengeMatches() async throws {
@@ -28,13 +26,7 @@ class SessionVerificationUITests: XCTestCase {
         app.buttons[A11yIdentifiers.sessionVerificationScreen.requestVerification].tap()
         try await app.assertScreenshot(step: Step.waitingForOtherDevice)
         
-        XCTAssert(app.buttons[A11yIdentifiers.sessionVerificationScreen.startSasVerification].waitForExistence(timeout: 10.0))
-        try await app.assertScreenshot(step: Step.useEmojiComparisonPrompt)
-        
-        app.buttons[A11yIdentifiers.sessionVerificationScreen.startSasVerification].tap()
-        try await app.assertScreenshot(step: Step.waitingForEmojis)
-        
-        XCTAssert(app.buttons[A11yIdentifiers.sessionVerificationScreen.acceptChallenge].waitForExistence(timeout: 10.0))
+        XCTAssert(app.buttons[A11yIdentifiers.sessionVerificationScreen.acceptChallenge].waitForExistence(timeout: 20.0))
         try await app.assertScreenshot(step: Step.compareEmojis)
         
         app.buttons[A11yIdentifiers.sessionVerificationScreen.acceptChallenge].tap()
@@ -51,13 +43,7 @@ class SessionVerificationUITests: XCTestCase {
         app.buttons[A11yIdentifiers.sessionVerificationScreen.requestVerification].tap()
         try await app.assertScreenshot(step: Step.waitingForOtherDevice)
         
-        XCTAssert(app.buttons[A11yIdentifiers.sessionVerificationScreen.startSasVerification].waitForExistence(timeout: 10.0))
-        try await app.assertScreenshot(step: Step.useEmojiComparisonPrompt)
-        
-        app.buttons[A11yIdentifiers.sessionVerificationScreen.startSasVerification].tap()
-        try await app.assertScreenshot(step: Step.waitingForEmojis)
-        
-        XCTAssert(app.buttons[A11yIdentifiers.sessionVerificationScreen.acceptChallenge].waitForExistence(timeout: 10.0))
+        XCTAssert(app.buttons[A11yIdentifiers.sessionVerificationScreen.acceptChallenge].waitForExistence(timeout: 20.0))
         try await app.assertScreenshot(step: Step.compareEmojis)
         
         app.buttons[A11yIdentifiers.sessionVerificationScreen.declineChallenge].tap()
@@ -71,13 +57,7 @@ class SessionVerificationUITests: XCTestCase {
         app.buttons[A11yIdentifiers.sessionVerificationScreen.requestVerification].tap()
         try await app.assertScreenshot(step: Step.waitingForOtherDevice)
         
-        XCTAssert(app.buttons[A11yIdentifiers.sessionVerificationScreen.startSasVerification].waitForExistence(timeout: 10.0))
-        try await app.assertScreenshot(step: Step.useEmojiComparisonPrompt)
-        
-        app.buttons[A11yIdentifiers.sessionVerificationScreen.startSasVerification].tap()
-        try await app.assertScreenshot(step: Step.waitingForEmojis)
-        
-        XCTAssert(app.buttons[A11yIdentifiers.sessionVerificationScreen.acceptChallenge].waitForExistence(timeout: 10.0))
+        XCTAssert(app.buttons[A11yIdentifiers.sessionVerificationScreen.acceptChallenge].waitForExistence(timeout: 20.0))
         try await app.assertScreenshot(step: Step.compareEmojis)
     }
 }

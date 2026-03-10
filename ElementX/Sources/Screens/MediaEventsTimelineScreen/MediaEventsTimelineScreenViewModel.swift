@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -8,7 +9,7 @@
 import Combine
 import SwiftUI
 
-typealias MediaEventsTimelineScreenViewModelType = StateStoreViewModel<MediaEventsTimelineScreenViewState, MediaEventsTimelineScreenViewAction>
+typealias MediaEventsTimelineScreenViewModelType = StateStoreViewModelV2<MediaEventsTimelineScreenViewState, MediaEventsTimelineScreenViewAction>
 
 class MediaEventsTimelineScreenViewModel: MediaEventsTimelineScreenViewModelType, MediaEventsTimelineScreenViewModelProtocol {
     private let mediaTimelineViewModel: TimelineViewModelProtocol
@@ -53,18 +54,7 @@ class MediaEventsTimelineScreenViewModel: MediaEventsTimelineScreenViewModelType
         }
         
         super.init(initialViewState: .init(activeTimelineContext: activeTimelineContext, bindings: .init(screenMode: initialScreenMode)), mediaProvider: mediaProvider)
-        
-        context.$viewState.map(\.bindings.screenMode)
-            .removeDuplicates()
-            .map {
-                switch $0 {
-                case .media: mediaTimelineViewModel.context
-                case .files: filesTimelineViewModel.context
-                }
-            }
-            .weakAssign(to: \.state.activeTimelineContext, on: self)
-            .store(in: &cancellables)
-        
+                
         mediaTimelineViewModel.context.$viewState.sink { [weak self] timelineViewState in
             guard let self, state.bindings.screenMode == .media else {
                 return
@@ -125,10 +115,15 @@ class MediaEventsTimelineScreenViewModel: MediaEventsTimelineScreenViewModelType
         
         switch viewAction {
         case .changedScreenMode:
+            switch state.bindings.screenMode {
+            case .media: state.activeTimelineContext = mediaTimelineViewModel.context
+            case .files: state.activeTimelineContext = filesTimelineViewModel.context
+            }
+            
             updateWithTimelineViewState(activeTimelineViewModel.context.viewState)
         case .oldestItemDidAppear:
             isOldestItemVisible = true
-            backPaginateIfNecessary(paginationStatus: activeTimelineViewModel.context.viewState.timelineState.paginationState.backward)
+            backPaginateIfNecessary(backPaginationState: activeTimelineViewModel.context.viewState.timelineState.paginationState.backward)
         case .oldestItemDidDisappear:
             isOldestItemVisible = false
         case .tappedItem(let item):
@@ -210,12 +205,12 @@ class MediaEventsTimelineScreenViewModel: MediaEventsTimelineScreenViewModelType
         state.groups = newGroups
         
         state.isBackPaginating = timelineViewState.timelineState.paginationState.backward == .paginating
-        state.shouldShowEmptyState = newGroups.isEmpty && timelineViewState.timelineState.paginationState.backward == .timelineEndReached
-        backPaginateIfNecessary(paginationStatus: timelineViewState.timelineState.paginationState.backward)
+        state.shouldShowEmptyState = newGroups.isEmpty && timelineViewState.timelineState.paginationState.backward == .endReached
+        backPaginateIfNecessary(backPaginationState: timelineViewState.timelineState.paginationState.backward)
     }
     
-    private func backPaginateIfNecessary(paginationStatus: PaginationStatus) {
-        if paginationStatus == .idle, isOldestItemVisible {
+    private func backPaginateIfNecessary(backPaginationState: PaginationState) {
+        if backPaginationState == .idle, isOldestItemVisible {
             activeTimelineViewModel.context.send(viewAction: .paginateBackwards)
         }
     }

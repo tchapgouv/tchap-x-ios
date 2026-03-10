@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -184,11 +185,15 @@ class RoomChangeRolesScreenViewModel: RoomChangeRolesScreenViewModelType, RoomCh
     }
     
     private func confirmDiscardChanges() {
-        state.bindings.alertInfo = AlertInfo(id: .discardChanges,
-                                             title: L10n.screenRoomChangeRoleUnsavedChangesTitle,
-                                             message: L10n.screenRoomChangeRoleUnsavedChangesDescription,
-                                             primaryButton: .init(title: L10n.actionSave) { Task { await self.save() } },
-                                             secondaryButton: .init(title: L10n.actionDiscard, role: .cancel) { self.actionsSubject.send(.complete) })
+        if state.hasChanges {
+            state.bindings.alertInfo = AlertInfo(id: .discardChanges,
+                                                 title: L10n.screenRoomChangeRoleUnsavedChangesTitle,
+                                                 message: L10n.screenRoomChangeRoleUnsavedChangesDescription,
+                                                 primaryButton: .init(title: L10n.actionSave) { Task { await self.save() } },
+                                                 secondaryButton: .init(title: L10n.actionDiscard, role: .cancel) { self.actionsSubject.send(.complete) })
+        } else {
+            actionsSubject.send(.complete)
+        }
     }
     
     // MARK: Loading indicator

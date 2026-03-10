@@ -1,45 +1,84 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
-import Foundation
+import SwiftUI
 
 enum SpaceScreenViewModelAction {
     case selectSpace(SpaceRoomListProxyProtocol)
-    case selectUnjoinedSpace(SpaceRoomProxyProtocol)
+    case selectUnjoinedSpace(SpaceServiceRoom)
     case selectRoom(roomID: String)
     case leftSpace
+    case presentRolesAndPermissions(roomProxy: JoinedRoomProxyProtocol)
+    case presentTransferOwnership(roomProxy: JoinedRoomProxyProtocol)
+    case displayMembers(roomProxy: JoinedRoomProxyProtocol)
+    case displaySpaceSettings(roomProxy: JoinedRoomProxyProtocol)
+    case addExistingChildren
+    case displayCreateChildRoomFlow(space: SpaceServiceRoom)
 }
 
 struct SpaceScreenViewState: BindableState {
-    let space: SpaceRoomProxyProtocol
+    var space: SpaceServiceRoom
     
     var permalink: URL?
+    var roomProxy: JoinedRoomProxyProtocol?
     
-    var isPaginating = false
-    var rooms: [SpaceRoomProxyProtocol]
+    var paginationState: PaginationState = .idle
+    var rooms: [SpaceServiceRoom]
     var selectedSpaceRoomID: String?
     var joiningRoomIDs: Set<String> = []
     
-    var isSpaceManagementEnabled = false
+    var canEditBaseInfo = false
+    var canEditRolesAndPermissions = false
+    var canEditSecurityAndPrivacy = false
+    var canEditChildren = false
+    var canCreateRoom = false
+    
+    var editMode: EditMode = .inactive
+    var editModeSelectedIDs: Set<String> = []
+    var editModeRemovedIDs: Set<String> = []
     
     var bindings = SpaceScreenViewStateBindings()
     
-    var spaceName: String { space.name ?? L10n.commonSpace }
+    var shouldShowEmptyState: Bool {
+        rooms.isEmpty && paginationState == .endReached && canEditChildren
+    }
+    
+    var visibleRooms: [SpaceServiceRoom] {
+        if editMode == .inactive {
+            rooms
+        } else {
+            rooms.filter { !$0.isSpace && !editModeRemovedIDs.contains($0.id) }
+        }
+    }
+    
+    var isSpaceManagementEnabled: Bool {
+        canEditBaseInfo || canEditRolesAndPermissions || canEditSecurityAndPrivacy
+    }
+    
+    func isSpaceIDSelected(_ spaceID: String) -> Bool {
+        selectedSpaceRoomID == spaceID || editModeSelectedIDs.contains(spaceID)
+    }
 }
 
 struct SpaceScreenViewStateBindings {
-    var leaveHandle: LeaveSpaceHandleProxy?
+    var isPresentingRemoveChildrenConfirmation = false
+    var leaveSpaceViewModel: LeaveSpaceViewModel?
 }
 
 enum SpaceScreenViewAction {
     case spaceAction(SpaceRoomCell.Action)
     case leaveSpace
-    case deselectAllLeaveRoomDetails
-    case toggleLeaveSpaceRoomDetails(id: String)
-    case confirmLeaveSpace
-    case spaceSettings
+    case spaceSettings(roomProxy: JoinedRoomProxyProtocol)
+    case displayMembers(roomProxy: JoinedRoomProxyProtocol)
+    case addExistingRooms
+    case createChildRoom
+    case manageChildren
+    case removeSelectedChildren
+    case confirmRemoveSelectedChildren
+    case finishManagingChildren
 }

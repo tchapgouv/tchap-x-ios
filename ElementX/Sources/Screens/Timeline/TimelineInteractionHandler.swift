@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -25,6 +26,7 @@ enum TimelineInteractionHandlerAction {
     
     case viewInRoomTimeline(eventID: String)
     case displayThread(itemID: TimelineItemIdentifier)
+    case showTranslation(text: String)
 }
 
 /// The interaction handler groups logic for dealing with various actions the user can take on a timeline's
@@ -197,6 +199,9 @@ class TimelineInteractionHandler {
             break // Handled inline in the media preview screen with a ShareLink.
         case .save:
             break // Handled inline in the media preview screen.
+        case .translate:
+            guard let messageTimelineItem = timelineItem as? EventBasedMessageTimelineItemProtocol else { return }
+            actionsSubject.send(.showTranslation(text: messageTimelineItem.body))
         }
         
         if action.switchToDefaultComposer {
@@ -412,7 +417,13 @@ class TimelineInteractionHandler {
     }
     
     // MARK: Audio Playback
-    
+
+    func changePlaybackSpeed(for itemID: TimelineItemIdentifier) {
+        let nextSpeed = appSettings.voiceMessagePlaybackSpeed.next
+        appSettings.voiceMessagePlaybackSpeed = nextSpeed
+        audioPlayerState(for: itemID)?.setPlaybackSpeed(nextSpeed)
+    }
+
     func playPauseAudio(for itemID: TimelineItemIdentifier) async {
         MXLog.info("Toggle play/pause audio for itemID \(itemID)")
         guard let timelineItem = timelineController.timelineItems.firstUsingStableID(itemID) else {
@@ -498,7 +509,9 @@ class TimelineInteractionHandler {
         let playerState = AudioPlayerState(id: .timelineItemIdentifier(itemID),
                                            title: L10n.commonVoiceMessage,
                                            duration: voiceMessageRoomTimelineItem.content.duration,
-                                           waveform: voiceMessageRoomTimelineItem.content.waveform)
+                                           waveform: voiceMessageRoomTimelineItem.content.waveform,
+                                           playbackSpeed: appSettings.voiceMessagePlaybackSpeed,
+                                           playbackSpeedPublisher: appSettings.$voiceMessagePlaybackSpeed)
         mediaPlayerProvider.register(audioPlayerState: playerState)
         return playerState
     }

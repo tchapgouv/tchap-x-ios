@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -19,6 +20,9 @@ enum RoomProxyError: Error {
     case missingTransactionID
     case failedCreatingPinnedTimeline
     case timelineError(TimelineProxyError)
+    // Tchap:
+    case unableToUpdateAccessRule(Error)
+    case unableToInviteByEmail
 }
 
 /// An enum that describes the relationship between the current user and the room, and contains a reference to the specific implementation of the `RoomProxy`.
@@ -192,21 +196,35 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func loadDraft(threadRootEventID: String?) async -> Result<ComposerDraft?, RoomProxyError>
     func clearDraft(threadRootEventID: String?) async -> Result<Void, RoomProxyError>
     
-    // Tchap: access rules accessor
-    func accessRules() async -> Result<AccessRule?, RoomProxyError>
+    // Tchap: access rule accessor
+    func accessRule() async -> Result<AccessRule?, RoomProxyError>
+    
+    // Tchap: update access rule on the homeServer.
+    func applyAccessRulesChanges(_ changes: AccessRule) async -> Result<Void, RoomProxyError>
+
+    // Tchap: check if room access rule need to be updated to invite user (check for first external user).
+    func accessRuleNeedToBeUpdated(for invitedUsers: [String]) async -> Bool
 }
 
 extension JoinedRoomProxyProtocol {
     var details: RoomDetails {
-        RoomDetails(id: id,
-                    name: infoPublisher.value.displayName,
-                    avatar: infoPublisher.value.avatar,
-                    canonicalAlias: infoPublisher.value.canonicalAlias,
-                    isEncrypted: infoPublisher.value.isEncrypted,
-                    isPublic: !(infoPublisher.value.isPrivate ?? false),
-                    isDirect: infoPublisher.value.isDirect,
-                    // Tchap: add accessRule publied value
-                    accessRule: infoPublisher.value.accessRule)
+        let historySharingState: RoomHistorySharingState? = if infoPublisher.value.isEncrypted {
+            infoPublisher.value.historySharingState
+        } else {
+            nil
+        }
+        
+        return RoomDetails(id: id,
+                           name: infoPublisher.value.displayName,
+                           avatar: infoPublisher.value.avatar,
+                           canonicalAlias: infoPublisher.value.canonicalAlias,
+                           isEncrypted: infoPublisher.value.isEncrypted,
+                           isPublic: !(infoPublisher.value.isPrivate ?? false),
+                           isDirect: infoPublisher.value.isDirect,
+                           historySharingState: historySharingState,
+                           // Tchap: add accessRule publied value
+                           accessRule: infoPublisher.value.accessRule,
+                           visibility: infoPublisher.value.visibility)
     }
     
     var isDirectOneToOneRoom: Bool {
@@ -218,7 +236,7 @@ extension JoinedRoomProxyProtocol {
         return membersPublisher.value
     }
     
-    // This is a horrible workaround for not having any server names available when using tombstone links with v12 room IDs.
+    /// This is a horrible workaround for not having any server names available when using tombstone links with v12 room IDs.
     func knownServerNames(maxCount: Int) -> any Sequence<String> {
         membersPublisher.value
             .prefix(1000) // No need to go crazy here…

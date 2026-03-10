@@ -1,10 +1,12 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import SwiftUI
 
 struct LoginScreen: View {
@@ -49,7 +51,7 @@ struct LoginScreen: View {
                 .padding(.bottom, 8)
             // Tchap: [Beta DINUM] Customize login title
 //            Text(L10n.screenLoginTitleWithHomeserver(context.viewState.homeserver.address))
-            Text(TchapL10n.screenLoginTitleWithTchap)
+            Text(TchapL10n.screenLoginTitleLogin)
                 .font(.compound.headingMDBold)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.compound.textPrimary)
@@ -88,6 +90,7 @@ struct LoginScreen: View {
             }
             .onSubmit { isPasswordFocused = true }
             .padding(.bottom, 20)
+            .disabled(!context.viewState.loginHintIsEmpty)
             
             SecureField(text: $context.password) {
                 Text(L10n.commonPassword).foregroundColor(.compound.textSecondary)
@@ -142,19 +145,19 @@ struct LoginScreen_Previews: PreviewProvider, TestablePreview {
     static let unconfiguredViewModel = makeViewModel(homeserverAddress: "somethingtofailconfiguration")
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             LoginScreen(context: viewModel.context)
         }
-        .snapshotPreferences(expect: viewModel.context.observe(\.viewState.homeserver.loginMode).map { $0 == .password }.eraseToStream())
+        .snapshotPreferences(expect: viewModel.context.observe(\.viewState.homeserver.loginMode).map { $0 == .password })
         .previewDisplayName("Initial State")
         
-        NavigationStack {
+        ElementNavigationStack {
             LoginScreen(context: credentialsViewModel.context)
         }
-        .snapshotPreferences(expect: credentialsViewModel.context.observe(\.viewState.homeserver.loginMode).map { $0 == .password }.eraseToStream())
+        .snapshotPreferences(expect: credentialsViewModel.context.observe(\.viewState.homeserver.loginMode).map { $0 == .password })
         .previewDisplayName("Credentials Entered")
         
-        NavigationStack {
+        ElementNavigationStack {
             LoginScreen(context: unconfiguredViewModel.context)
         }
         .previewDisplayName("Unsupported")

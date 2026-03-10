@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -64,8 +65,10 @@ class UserDetailsEditScreenViewModel: UserDetailsEditScreenViewModelType, UserDe
     
     override func process(viewAction: UserDetailsEditScreenViewAction) {
         switch viewAction {
+        case .cancel:
+            showUnsavedChangesAlert() // The cancel button is only shown when there are unsaved changes.
         case .save:
-            saveUserDetails()
+            Task { await saveUserDetails() }
         case .presentMediaSource:
             state.bindings.showMediaSheet = true
         case .displayCameraPicker:
@@ -89,7 +92,7 @@ class UserDetailsEditScreenViewModel: UserDetailsEditScreenViewModelType, UserDe
             
             guard case let .success(maxUploadSize) = await clientProxy.maxMediaUploadSize else {
                 MXLog.error("Failed to get max upload size")
-                userIndicatorController.alertInfo = .init(id: .init())
+                state.bindings.alertInfo = .init(id: .unknown)
                 return
             }
             let mediaResult = await mediaUploadingPreprocessor.processMedia(at: url, maxUploadSize: maxUploadSize)
@@ -98,49 +101,57 @@ class UserDetailsEditScreenViewModel: UserDetailsEditScreenViewModelType, UserDe
             case .success(.image):
                 state.localMedia = try? mediaResult.get()
             case .failure, .success:
-                userIndicatorController.alertInfo = .init(id: .init())
+                state.bindings.alertInfo = .init(id: .failedProcessingMedia)
             }
         }
     }
     
     // MARK: - Private
     
-    private func saveUserDetails() {
-        Task {
-            let userIndicatorID = UUID().uuidString
-            defer {
-                userIndicatorController.retractIndicatorWithId(userIndicatorID)
-            }
-            userIndicatorController.submitIndicator(UserIndicator(id: userIndicatorID,
-                                                                  type: .modal(progress: .indeterminate, interactiveDismissDisabled: true, allowsInteraction: false),
-                                                                  title: L10n.screenEditProfileUpdatingDetails,
-                                                                  persistent: true))
-            
-            do {
-                try await withThrowingTaskGroup(of: Void.self) { group in
-                    if state.avatarDidChange {
-                        group.addTask {
-                            if let localMedia = await self.state.localMedia {
-                                try await self.clientProxy.setUserAvatar(media: localMedia).get()
-                            } else if await self.state.selectedAvatarURL == nil {
-                                try await self.clientProxy.removeUserAvatar().get()
-                            }
+    private func showUnsavedChangesAlert() {
+        state.bindings.alertInfo = .init(id: .unsavedChanges,
+                                         title: L10n.dialogUnsavedChangesTitle,
+                                         message: L10n.dialogUnsavedChangesDescription,
+                                         primaryButton: .init(title: L10n.actionSave) { Task { await self.saveUserDetails() } },
+                                         secondaryButton: .init(title: L10n.actionDiscard, role: .cancel) { self.actionsSubject.send(.dismiss) })
+    }
+    
+    private func saveUserDetails() async {
+        let userIndicatorID = UUID().uuidString
+        defer {
+            userIndicatorController.retractIndicatorWithId(userIndicatorID)
+        }
+        userIndicatorController.submitIndicator(UserIndicator(id: userIndicatorID,
+                                                              type: .modal(progress: .indeterminate, interactiveDismissDisabled: true, allowsInteraction: false),
+                                                              title: L10n.screenEditProfileUpdatingDetails,
+                                                              persistent: true))
+        
+        do {
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                if state.avatarDidChange {
+                    group.addTask {
+                        if let localMedia = await self.state.localMedia {
+                            try await self.clientProxy.setUserAvatar(media: localMedia).get()
+                        } else if await self.state.selectedAvatarURL == nil {
+                            try await self.clientProxy.removeUserAvatar().get()
                         }
                     }
-                    
-                    if state.nameDidChange {
-                        group.addTask {
-                            try await self.clientProxy.setUserDisplayName(self.state.bindings.name).get()
-                        }
-                    }
-                    
-                    try await group.waitForAll()
                 }
-            } catch {
-                userIndicatorController.alertInfo = .init(id: .init(),
-                                                          title: L10n.screenEditProfileErrorTitle,
-                                                          message: L10n.screenEditProfileError)
+                
+                if state.nameDidChange {
+                    group.addTask {
+                        try await self.clientProxy.setUserDisplayName(self.state.bindings.name).get()
+                    }
+                }
+                
+                try await group.waitForAll()
             }
+            
+            actionsSubject.send(.dismiss)
+        } catch {
+            state.bindings.alertInfo = .init(id: .saveError,
+                                             title: L10n.screenEditProfileErrorTitle,
+                                             message: L10n.screenEditProfileError)
         }
     }
 }

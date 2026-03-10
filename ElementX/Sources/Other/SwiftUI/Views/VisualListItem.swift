@@ -1,7 +1,8 @@
 //
-// Copyright 2021-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2021-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -57,12 +58,10 @@ private struct VisualListItemLabelStyle: LabelStyle {
 struct VisualListItem_Previews: PreviewProvider, TestablePreview {
     static let strings = AnalyticsPromptScreenStrings(termsURL: ServiceLocator.shared.settings.analyticsTermsURL)
 
-    @ViewBuilder
     static var testImage1: some View {
         Image(systemName: "circle")
     }
 
-    @ViewBuilder
     static var testImage2: some View {
         Image(systemName: "square")
     }

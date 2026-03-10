@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -9,8 +10,8 @@ import SwiftUI
 
 /// A custom layout used for quotes and content when using the bubbles timeline style.
 ///
-/// A custom layout is required as the embedded quote bubbles should fill the entire width of
-/// the message bubble, without causing the width of the bubble to fill all of the available space.
+/// A custom layout is required as the embedded quote bubbles and code blocks should fill the entire
+/// width of the message bubble, without causing the width of the bubble to fill all of the available space.
 struct TimelineBubbleLayout: Layout {
     struct Cache {
         var sizes = [Int: [ProposedViewSize: CGSize]]()
@@ -19,16 +20,39 @@ struct TimelineBubbleLayout: Layout {
     /// The spacing between the components in the bubble.
     let spacing: CGFloat
     
-    /// Layout priority constants for the bubble content. These priorities are abused within
-    /// `TimelineBubbleLayout` to create the layout we would like. They aren't
-    /// used in the expected way that SwiftUI would normally use layout priorities.
-    enum Priority {
-        /// The priority of hidden quote bubbles that are only used for layout calculations.
-        static let hiddenQuote: Double = -1
-        /// The priority of visible quote bubbles that are placed in the view with a full width.
-        static let visibleQuote: Double = 0
-        /// The priority of regular text that is used for layout calculations and placed in the view.
-        static let regularText: Double = 1
+    /// Layout size for the bubble content. These sizing types are used within
+    /// `TimelineBubbleLayout` to create the layout we would like.
+    enum Size: LayoutValueKey, Equatable {
+        static let defaultValue: Size = .natural
+        
+        /// Full width mode used for greedy components like blockquotes and code blocks.
+        enum BubbleWidthMode {
+            /// The view has its natural size and will be used for layout calculations only.
+            case layout
+            /// The view has a greedy width and will fill the available space within the bubble.
+            case rendering
+        }
+        
+        /// The view will fill the available width, with different behaviour depending on the mode.
+        /// Views using the `.layout` mode should be hidden and are used only for width calculations.
+        /// Views using the `.rendering` mode should be visible and are placed to fill the bubble's calculated width.
+        case bubbleWidth(mode: BubbleWidthMode)
+        /// The view uses its natural size for both layout calculations and rendering.
+        case natural
+        
+        var shouldLayout: Bool {
+            switch self {
+            case .natural, .bubbleWidth(mode: .layout): true
+            default: false
+            }
+        }
+        
+        var shouldRender: Bool {
+            switch self {
+            case .natural, .bubbleWidth(mode: .rendering): true
+            default: false
+            }
+        }
     }
     
     func makeCache(subviews: Subviews) -> Cache {
@@ -44,7 +68,7 @@ struct TimelineBubbleLayout: Layout {
         guard !subviews.isEmpty else { return .zero }
         
         // Calculate the natural size using the regular text and non-greedy quote bubbles.
-        let layoutSubviews = subviews.filter { $0.priority != Priority.visibleQuote }
+        let layoutSubviews = subviews.filter { $0[Size.self].shouldLayout }
 
         let subviewSizes = layoutSubviews.map { size(for: $0, subviews: subviews, proposedSize: proposal, cache: &cache) }
         
@@ -58,12 +82,12 @@ struct TimelineBubbleLayout: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) {
         guard !subviews.isEmpty else { return }
         
-        // Calculate the width using the regular text and the non-greedy quote bubbles.
-        let layoutSubviews = subviews.filter { $0.priority != Priority.visibleQuote }
+        // Calculate the width using the regular text along with non-greedy versions of any greedy components.
+        let layoutSubviews = subviews.filter { $0[Size.self].shouldLayout }
         let maxWidth = layoutSubviews.map { size(for: $0, subviews: subviews, proposedSize: proposal, cache: &cache).width }.reduce(0, max)
         
-        // Place the regular text and greedy quote bubbles using the calculated width.
-        let visibleSubviews = subviews.filter { $0.priority != Priority.hiddenQuote }
+        // Place the regular text and greedy components using the calculated width.
+        let visibleSubviews = subviews.filter { $0[Size.self].shouldRender }
 
         let subviewSizes = visibleSubviews.map { size(for: $0, subviews: subviews, proposedSize: ProposedViewSize(width: maxWidth, height: proposal.height), cache: &cache) }
         
@@ -96,5 +120,12 @@ struct TimelineBubbleLayout: Layout {
         
         cache.sizes[index]?[proposedSize] = size
         return size
+    }
+}
+
+extension View {
+    /// Sets the layout size for this view when placed within a `TimelineBubbleLayout`.
+    func timelineBubbleLayoutSize(_ size: TimelineBubbleLayout.Size) -> some View {
+        layoutValue(key: TimelineBubbleLayout.Size.self, value: size)
     }
 }

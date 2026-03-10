@@ -1,11 +1,16 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import Compound
+import Flow
+
+// Tchap: Used to check if MatrixID is external user.
+import MatrixRustSDK
 import SwiftUI
 
 struct AvatarHeaderView<Footer: View>: View {
@@ -16,6 +21,7 @@ struct AvatarHeaderView<Footer: View>: View {
     
     private enum Badge: Hashable {
         case encrypted(Bool)
+        case historySharingState(RoomHistorySharingState)
         case `public`
         case verified
     }
@@ -30,11 +36,12 @@ struct AvatarHeaderView<Footer: View>: View {
     private var onAvatarTap: ((URL) -> Void)?
     @ViewBuilder private var footer: () -> Footer
     
-    // Tchap: add `isOpenToExternalUsers` property
-    var isOpenToExternalUsers: Binding<Bool?>
-    
+    // Tchap: add `accessRule` property
+    var accessRule: Binding<AccessRule?>
+    // Tchap: store `room.name` parameter to use in case of direct message to know if recipient is external user.
+    var dmRecipientId: Binding<String?>
+
     init(room: RoomDetails,
-         isOpenToExternalUsers: Binding<Bool?>, // Tchap: add `isOpenToExternalUsers` parameter
          avatarSize: Avatars.Size,
          mediaProvider: MediaProviderProtocol? = nil,
          onAvatarTap: ((URL) -> Void)? = nil,
@@ -54,20 +61,39 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
-        // Tchap: store `isOpenToExternalUsers` parameter
-        self.isOpenToExternalUsers = isOpenToExternalUsers
+        
+        // Tchap: store `accessRule` parameter
+        accessRule = Binding(get: {
+            room.accessRule
+        }, set: { _ in
+            // Should not be set this way.
+        })
+        
+        // Tchap: store `room.name` parameter to use in case of direct message to know if recipient is external user.
+        dmRecipientId = Binding(get: {
+            if room.isDirect,
+               case .heroes(let heroes) = room.avatar {
+                return heroes.first?.userID
+            } else {
+                return nil
+            }
+        }, set: { _ in
+            // Should not be set this way.
+        })
         
         var badges = [Badge]()
         badges.append(.encrypted(room.isEncrypted))
-        if room.isPublic {
+        if room.canDisplayPublicBadge {
             badges.append(.public)
+        }
+        if let state = room.historySharingState {
+            badges.append(.historySharingState(state))
         }
         self.badges = badges
     }
     
     init(accountOwner: RoomMemberDetails,
          dmRecipient: RoomMemberDetails,
-         isOpenToExternalUsers: Binding<Bool?>, // Tchap: add `isOpenToExternalUsers` parameter
          mediaProvider: MediaProviderProtocol? = nil,
          onAvatarTap: ((URL) -> Void)? = nil,
          @ViewBuilder footer: @escaping () -> Footer) {
@@ -81,8 +107,10 @@ struct AvatarHeaderView<Footer: View>: View {
         self.onAvatarTap = onAvatarTap
         self.footer = footer
         
-        // Tchap: store `isOpenToExternalUsers` parameter
-        self.isOpenToExternalUsers = isOpenToExternalUsers
+        // Tchap: store `accessRule` parameter based on dmRecipient only because DM creator can't be external user.
+        let isExternalTchapUser = { if case .external = MatrixIdFromString(dmRecipient.id).userType { true } else { false } }()
+        accessRule = .constant(isExternalTchapUser ? .unrestricted : .restricted)
+        dmRecipientId = .constant(dmRecipient.id)
         
         // In EL-X a DM is by definition always encrypted
         badges = [.encrypted(true)]
@@ -118,8 +146,9 @@ struct AvatarHeaderView<Footer: View>: View {
         self.mediaProvider = mediaProvider
         self.onAvatarTap = onAvatarTap
         self.footer = footer
-        // Tchap: isOpenToExternalUsers
-        isOpenToExternalUsers = .constant(false)
+        // Tchap: accessRule
+        accessRule = .constant(.restricted)
+        dmRecipientId = .constant(nil)
         
         badges = isVerified ? [.verified] : []
     }
@@ -142,7 +171,10 @@ struct AvatarHeaderView<Footer: View>: View {
     }
     
     private var badgesStack: some View {
-        HStack(spacing: 8) {
+        HFlow(horizontalAlignment: .center,
+              verticalAlignment: .top,
+              horizontalSpacing: 8.0,
+              verticalSpacing: 8.0) {
             ForEach(badges, id: \.self) { badge in
                 switch badge {
                 case .encrypted(true):
@@ -151,32 +183,45 @@ struct AvatarHeaderView<Footer: View>: View {
                     BadgeLabel(title: TchapL10n.roomHeaderBadgeEncrypted,
                                icon: \.lockSolid,
                                style: .accent,
-                               tchapUsage: .roomIsEncrypted(inRoomHeaderView: false))
+                               tchapUsage: .roomIsEncrypted(useSmallSize: true))
                 case .encrypted(false):
                     // Tchap: use Tchap label
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgeNotEncrypted,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgeNotEncrypted,
                                icon: \.lockOff,
                                style: .info,
-                               tchapUsage: .roomIsNotEncrypted(inRoomHeaderView: false))
+                               tchapUsage: .roomIsNotEncrypted(useSmallSize: true))
                 case .public:
                     // Tchap: use Tchap label
 //                    BadgeLabel(title: L10n.screenRoomDetailsBadgePublic,
                     BadgeLabel(title: TchapL10n.roomHeaderBadgePublic,
                                icon: \.public,
                                style: .info,
-                               tchapUsage: .roomIsPublic(inRoomHeaderView: false))
+                               tchapUsage: .roomIsPublic(useSmallSize: true))
                 case .verified:
                     BadgeLabel(title: L10n.commonVerified,
                                icon: \.verified,
-                               style: .accent,
-                               tchapUsage: .none)
+                               style: .accent)
+                case .historySharingState(.hidden):
+                    BadgeLabel(title: L10n.cryptoHistorySharingRoomInfoHiddenBadgeContent,
+                               icon: \.visibilityOff,
+                               style: .info)
+                case .historySharingState(.shared):
+                    BadgeLabel(title: L10n.cryptoHistorySharingRoomInfoSharedBadgeContent,
+                               icon: \.history,
+                               style: .info)
+                case .historySharingState(.worldReadable):
+                    BadgeLabel(title: L10n.cryptoHistorySharingRoomInfoWorldReadableBadgeContent,
+                               icon: \.userProfileSolid,
+                               style: .info)
                 }
             }
             
             // Tchap: add `External` badge if necessary.
-            if isOpenToExternalUsers.wrappedValue ?? false {
-                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal())
+            let roomAccessRuleIsUnrestricted = (accessRule.wrappedValue ?? .restricted) == .unrestricted
+            let dmRecipientIsExternal = { if dmRecipientId.wrappedValue != nil, case .external = MatrixIdFromString(dmRecipientId.wrappedValue!).userType { true } else { false } }() // swiftlint:disable:this force_unwrapping
+            if roomAccessRuleIsUnrestricted || dmRecipientIsExternal {
+                BadgeLabel(title: TchapL10n.roomHeaderBadgeAuthorizedToExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
             }
         }
     }
@@ -265,9 +310,10 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
                                          isEncrypted: true,
                                          isPublic: true,
                                          isDirect: false,
+                                         historySharingState: nil,
                                          // Tchap: add test value
-                                         accessRule: .unrestricted),
-                             isOpenToExternalUsers: .constant(true),
+                                         accessRule: .unrestricted,
+                                         visibility: .private),
                              avatarSize: .room(on: .details),
                              mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {
@@ -282,7 +328,7 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
         .previewDisplayName("Room")
         
         Form {
-            AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice), isOpenToExternalUsers: .constant(true),
+            AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice),
                              mediaProvider: MediaProviderMock(configuration: .init())) {
                 HStack(spacing: 32) {
                     ShareLink(item: "test") {
@@ -313,5 +359,37 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
         .background(Color.compound.bgSubtleSecondaryLevel0)
         .previewLayout(.sizeThatFits)
         .previewDisplayName("Members")
+        
+        makeHistorySharingPreview(state: .hidden).previewDisplayName("History Sharing - Hidden")
+        makeHistorySharingPreview(state: .shared).previewDisplayName("History Sharing - Shared")
+        makeHistorySharingPreview(state: .worldReadable).previewDisplayName("History Sharing - World Readable")
+    }
+    
+    private static func makeHistorySharingPreview(state: RoomHistorySharingState) -> some View {
+        Form {
+            AvatarHeaderView(room: .init(id: "@test:matrix.org",
+                                         name: "Test Room",
+                                         avatar: .room(id: "@test:matrix.org",
+                                                       name: "Test Room",
+                                                       avatarURL: .mockMXCAvatar),
+                                         canonicalAlias: "#test:matrix.org",
+                                         isEncrypted: true,
+                                         isPublic: true,
+                                         isDirect: false,
+                                         historySharingState: state,
+                                         // Tchap: add test value
+                                         accessRule: .unrestricted,
+                                         visibility: .private),
+                             avatarSize: .room(on: .details),
+                             mediaProvider: MediaProviderMock(configuration: .init())) {
+                HStack(spacing: 32) {
+                    ShareLink(item: "test") {
+                        CompoundIcon(\.shareIos)
+                    }
+                    .buttonStyle(FormActionButtonStyle(title: "Test"))
+                }
+                .padding(.top, 32)
+            }
+        }
     }
 }

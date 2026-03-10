@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -57,7 +58,7 @@ struct RoomStateEventStringBuilder {
             if senderIsYou {
                 return L10n.stateEventRoomInviteByYou(member)
             } else if memberIsYou {
-                return L10n.stateEventRoomInviteYou(senderDisplayName)
+                return buildInvitedYouString(senderDisplayName)
             } else {
                 return L10n.stateEventRoomInvite(senderDisplayName, member)
             }
@@ -85,6 +86,10 @@ struct RoomStateEventStringBuilder {
             MXLog.verbose("Filtering timeline item for membership change: \(change)")
             return nil
         }
+    }
+    
+    func buildInvitedYouString(_ senderDisplayName: String) -> String {
+        L10n.stateEventRoomInviteYou(senderDisplayName)
     }
     
     func buildProfileChangeString(displayName: String?, previousDisplayName: String?,
@@ -213,8 +218,13 @@ struct RoomStateEventStringBuilder {
             break
         case .spaceChild, .spaceParent: // Users shouldn't see the timeline of a Space.
             break
-        case .custom: // Won't provide actionable information to the user.
-            break
+        // Tchap: treat access_rule event
+//        case .custom: // Won't provide actionable information to the user.
+//            break
+        case .custom(let eventType, let eventValue): // Won't provide actionable information to the user.
+            if eventType == "im.vector.room.access_rules" {
+                return TchapL10n.stateEventRoomAccessRule
+            }
         }
         
         MXLog.verbose("Filtering timeline item for state: \(state)")

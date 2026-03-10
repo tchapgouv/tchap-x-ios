@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -11,7 +12,7 @@ import SwiftUI
 
 enum TimelineControllerCallback {
     case updatedTimelineItems(timelineItems: [RoomTimelineItemProtocol], isSwitchingTimelines: Bool)
-    case paginationState(PaginationState)
+    case paginationState(TimelinePaginationState)
     case isLive(Bool)
 }
 
@@ -48,7 +49,7 @@ protocol TimelineControllerProtocol {
     var timelineItems: [RoomTimelineItemProtocol] { get }
     
     /// The current pagination state, use only for setting up the intial state
-    var paginationState: PaginationState { get }
+    var paginationState: TimelinePaginationState { get }
     
     var callbacks: PassthroughSubject<TimelineControllerCallback, Never> { get }
     
@@ -129,7 +130,7 @@ protocol TimelineControllerProtocol {
     
     func sendVoiceMessage(url: URL,
                           audioInfo: AudioInfo,
-                          waveform: [UInt16],
+                          waveform: [Float],
                           requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineControllerError>
     
     // MARK: - Poll

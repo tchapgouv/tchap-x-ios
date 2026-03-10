@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -37,9 +38,13 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
         case .none: ""
         }
         
+        // Tchap: handle `loginHintIsEmpty` flag to lock username field if not empty.
+//        let viewState = LoginScreenViewState(homeserver: authenticationService.homeserver.value,
+//                                             bindings: LoginScreenBindings(username: username))
         let viewState = LoginScreenViewState(homeserver: authenticationService.homeserver.value,
-                                             bindings: LoginScreenBindings(username: username))
-        
+                                             bindings: LoginScreenBindings(username: username),
+                                             loginHintIsEmpty: username.isEmpty)
+
         super.init(initialViewState: viewState)
         
         authenticationService.homeserver
@@ -91,7 +96,7 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
     // Tchap: convert matrixID to email if necessary
     func tchapConvertEmailToMatrixId(identifier: String) -> String {
         // If the user email doesn't contain an '@' character, it can be the start of a matrixID (e.g. 'firstname.lastname-myDomain').
-        // Try to replace last hyphen ('-') by an '@' to make it looks like a email address.
+        // Try to replace last '@' by an '-' to make it looks like a matrix ID.
      
         guard identifier.isEmailAddress,
               let indexOfLastArobase = identifier.lastIndex(of: "@") else {
@@ -101,10 +106,10 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
         let prefix = identifier.index(identifier.startIndex, offsetBy: identifier.distance(from: identifier.startIndex, to: indexOfLastArobase))
         let suffix = identifier.index(prefix, offsetBy: 1)
         
-        var email = identifier
-        email.replaceSubrange(prefix..<suffix, with: "-")
+        var matrixId = identifier
+        matrixId.replaceSubrange(prefix..<suffix, with: "-")
         
-        return email
+        return matrixId
     }
     
     /// Requests the authentication coordinator to log in using the specified credentials.
@@ -113,7 +118,6 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
         startLoading(isInteractionBlocking: true)
 
         Task {
-            analytics.signpost.beginLogin()
             // Tchap: convert email to matrixID if necessary.
 //            switch await authenticationService.login(username: state.bindings.username,
             switch await authenticationService.login(username: tchapConvertEmailToMatrixId(identifier: state.bindings.username),
@@ -122,11 +126,9 @@ class LoginScreenViewModel: LoginScreenViewModelType, LoginScreenViewModelProtoc
                                                      deviceID: nil) {
             case .success(let userSession):
                 actionsSubject.send(.signedIn(userSession))
-                analytics.signpost.endLogin()
                 stopLoading()
             case .failure(let error):
                 stopLoading()
-                analytics.signpost.endLogin()
                 handleError(error)
             }
         }

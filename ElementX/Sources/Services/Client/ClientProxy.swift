@@ -1,21 +1,23 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
-import Combine
+@preconcurrency import Combine
 import CryptoKit
 import Foundation
+import MatrixRustSDK
 import OrderedCollections
 
-import MatrixRustSDK
-
+// swiftlint:disable:next type_body_length
 class ClientProxy: ClientProxyProtocol {
     private let client: ClientProtocol
     private let networkMonitor: NetworkMonitorProtocol
     private let appSettings: AppSettings
+    private let analyticsService: AnalyticsService
     
     let mediaLoader: MediaLoaderProtocol
     private let clientQueue: DispatchQueue
@@ -37,7 +39,10 @@ class ClientProxy: ClientProxyProtocol {
     private var verificationStateListenerTaskHandle: TaskHandle?
     
     // periphery:ignore - required for instance retention in the rust codebase
-    private var sendQueueListenerTaskHandle: TaskHandle?
+    private var sendQueueStatusListenerTaskHandle: TaskHandle?
+    
+    // periphery:ignore - required for instance retention in the rust codebase
+    private var sendQueueUpdatesListenerTaskHandle: TaskHandle?
     
     // periphery:ignore - required for instance retention in the rust codebase
     private var mediaPreviewConfigListenerTaskHandle: TaskHandle?
@@ -66,6 +71,19 @@ class ClientProxy: ClientProxyProtocol {
               ban: nil,
               kick: nil,
               redact: nil,
+              // Tchap: Room creation failed with `invite` property set to 0.
+              // If we set it to nil, room creation succeed.
+              // Tchap X Android v0.6.0 (based on the same rebase) doesn't use this `invite` property.
+              // TODO: check with Tchap Backend why ot  returns a 400 error:
+              //
+              // 2026-03-10T16:05:28.199157Z DEBUG matrix_sdk::http_client: Error while sending request:
+              // Api(Server(ClientApi(Error { status_code: 400, body: Standard(StandardErrorBody
+              // { kind: Unknown, message: "Invalid power levels content override" }) }))) |
+              // crates/matrix-sdk/src/http_client/mod.rs:218 | spans: root > send{request_id="REQ-134"
+              // method=POST uri="https://matrix.dev01.tchap.incubateur.net/_matrix/client/v3/createRoom"
+              // request_size="623B" status=400 response_size="71B"
+              //
+//              invite: Int32(0),
               invite: nil,
               notifications: nil,
               users: [:],
@@ -89,6 +107,32 @@ class ClientProxy: ClientProxyProtocol {
                   "m.call.member": Int32(0),
                   "org.matrix.msc3401.call.member": Int32(0)
               ])
+    }
+    
+    private static var standardSpaceCreationPowerLevelOverrides: PowerLevels {
+        .init(usersDefault: nil,
+              eventsDefault: Int32(100),
+              stateDefault: nil,
+              ban: nil,
+              kick: nil,
+              redact: nil,
+              invite: Int32(50),
+              notifications: nil,
+              users: [:],
+              events: [:])
+    }
+    
+    private static var publicSpaceCreationPowerLevelOverrides: PowerLevels {
+        .init(usersDefault: nil,
+              eventsDefault: Int32(100),
+              stateDefault: nil,
+              ban: nil,
+              kick: nil,
+              redact: nil,
+              invite: Int32(0),
+              notifications: nil,
+              users: [:],
+              events: [:])
     }
 
     private var loadCachedAvatarURLTask: Task<Void, Never>?
@@ -158,10 +202,12 @@ class ClientProxy: ClientProxyProtocol {
     
     init(client: ClientProtocol,
          networkMonitor: NetworkMonitorProtocol,
-         appSettings: AppSettings) async throws {
+         appSettings: AppSettings,
+         analyticsService: AnalyticsService) async throws {
         self.client = client
         self.networkMonitor = networkMonitor
         self.appSettings = appSettings
+        self.analyticsService = analyticsService
         
         clientQueue = .init(label: "ClientProxyQueue", attributes: .concurrent)
         
@@ -171,7 +217,7 @@ class ClientProxy: ClientProxyProtocol {
         
         secureBackupController = SecureBackupController(encryption: client.encryption())
         
-        spaceService = SpaceServiceProxy(spaceService: client.spaceService())
+        spaceService = await SpaceServiceProxy(spaceService: client.spaceService())
         
         let configuredAppService = try await ClientProxyServices(client: client,
                                                                  actionsSubject: actionsSubject,
@@ -191,6 +237,19 @@ class ClientProxy: ClientProxyProtocol {
         delegateHandle = try client.setDelegate(delegate: ClientDelegateWrapper { [weak self] isSoftLogout in
             self?.hasEncounteredAuthError = true
             self?.actionsSubject.send(.receivedAuthError(isSoftLogout: isSoftLogout))
+        } backgroundTaskErrorCallback: { error in
+            switch error {
+            case .panic(let message, let backtrace):
+                MXLog.error("Received background task panic: \(message ?? "Missing message")\nBacktrace:\n\(backtrace ?? "Missing backtrace")")
+                
+                if AppSettings.appBuildType == .debug || AppSettings.appBuildType == .nightly {
+                    fatalError(message ?? "")
+                }
+            case .error(let error):
+                MXLog.error("Received background task error: \(error)")
+            case .earlyTermination:
+                MXLog.error("Received background task early termination")
+            }
         })
         
         try await client.setUtdDelegate(utdDelegate: ClientDecryptionErrorDelegate(actionsSubject: actionsSubject))
@@ -207,7 +266,7 @@ class ClientProxy: ClientProxyProtocol {
 
         loadUserAvatarURLFromCache()
         
-        ignoredUsersListenerTaskHandle = client.subscribeToIgnoredUsers(listener: IgnoredUsersListenerProxy { [weak self] ignoredUsers in
+        ignoredUsersListenerTaskHandle = client.subscribeToIgnoredUsers(listener: SDKListener { [weak self] ignoredUsers in
             self?.ignoredUsersSubject.send(ignoredUsers)
         })
         
@@ -217,9 +276,20 @@ class ClientProxy: ClientProxyProtocol {
             Task { await self?.updateVerificationState(verificationState) }
         })
         
-        sendQueueListenerTaskHandle = client.subscribeToSendQueueStatus(listener: SendQueueRoomErrorListenerProxy { [weak self] roomID, error in
+        sendQueueStatusListenerTaskHandle = client.subscribeToSendQueueStatus(listener: SDKListener { [weak self] roomID, error in
             MXLog.error("Send queue failed in room: \(roomID) with error: \(error)")
             self?.sendQueueStatusSubject.send(false)
+        })
+        
+        sendQueueUpdatesListenerTaskHandle = try? await client.subscribeToSendQueueUpdates(listener: SDKListener { _, update in
+            switch update {
+            case .newLocalEvent(let transactionID):
+                analyticsService.signpost.startTransaction(.sendMessage(uuid: transactionID))
+            case .sentEvent(let transactionID, _):
+                analyticsService.signpost.finishTransaction(.sendMessage(uuid: transactionID))
+            default:
+                break
+            }
         })
         
         sendQueueStatusSubject
@@ -312,6 +382,17 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
     
+    var isLoginWithQRCodeSupported: Bool {
+        get async {
+            do {
+                return try await client.isLoginWithQrCodeSupported()
+            } catch {
+                MXLog.error("Failed checking QR code support with error: \(error)")
+                return false
+            }
+        }
+    }
+    
     var maxMediaUploadSize: Result<UInt, ClientProxyError> {
         get async {
             do {
@@ -337,6 +418,16 @@ class ClientProxy: ClientProxyProtocol {
             return .success(result)
         } catch {
             MXLog.error("Failed checking isLastDevice with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+
+    func hasDevicesToVerifyAgainst() async -> Result<Bool, ClientProxyError> {
+        do {
+            let result = try await client.encryption().hasDevicesToVerifyAgainst()
+            return .success(result)
+        } catch {
+            MXLog.error("Failed checking hasDevicesToVerifyAgainst with error: \(error)")
             return .failure(.sdkError(error))
         }
     }
@@ -428,6 +519,29 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
     
+    // Tchap: invite by email
+    private enum TchapInviteByEmailType: Equatable {
+        case notInviteByEmail
+        case inviteByEmail(isExternalUser: Bool)
+    }
+    
+    // Tchap: invite by email
+    private func getTchapInviteByEmailType(userID: String, roomAccessRule: AccessRule) -> TchapInviteByEmailType {
+        guard roomAccessRule == .direct else {
+            return .notInviteByEmail
+        }
+        switch MatrixIdFromString(userID).userType {
+        case .external(needInviteByEmail: true):
+            return .inviteByEmail(isExternalUser: true)
+        case .external(needInviteByEmail: false):
+            return .notInviteByEmail
+        case .agent(needInviteByEmail: true):
+            return .inviteByEmail(isExternalUser: false)
+        case .agent(needInviteByEmail: false):
+            return .notInviteByEmail
+        }
+    }
+    
     func createDirectRoom(with userID: String, expectedRoomName: String?) async -> Result<String, ClientProxyError> {
         do {
             let parameters = CreateRoomParameters(name: nil,
@@ -435,12 +549,24 @@ class ClientProxy: ClientProxyProtocol {
                                                   isEncrypted: true,
                                                   isDirect: true,
                                                   visibility: .private,
+                                                  accessRuleOverride: .direct, // Tchap: make access rule `direct` for Direct room.
+                                                  isRoomFederated: false, // Tchap: BWI-specific Rust side
                                                   preset: .trustedPrivateChat,
                                                   invite: [userID],
                                                   avatar: nil,
-                                                  powerLevelContentOverride: Self.roomCreationPowerLevelOverrides)
-            let roomID = try await client.createRoom(request: parameters, isFederated: true)
+                                                  powerLevelContentOverride: Self.roomCreationPowerLevelOverrides,
+                                                  historyVisibilityOverride: .invited)
+
+            // Tchap: invite by email
+            let inviteByEmail = getTchapInviteByEmailType(userID: userID, roomAccessRule: .direct)
             
+            // Tchap: change `createRoom` call with:
+            //   - `isTchapInvite` and `isTchapInviteExternal` because of Tchap `invite by email` feature
+//            let roomID = try await client.createRoom(request: parameters)
+            let roomID = try await client.createRoom(request: parameters,
+                                                     isTchapInvite: { if case .inviteByEmail = inviteByEmail { true } else { false } }(),
+                                                     isTchapInviteExternal: { if case .inviteByEmail(let isExternalUser) = inviteByEmail { isExternalUser } else { false } }())
+
             await waitForRoomToSync(roomID: roomID)
             
             return .success(roomID)
@@ -452,31 +578,54 @@ class ClientProxy: ClientProxyProtocol {
     
     func createRoom(name: String,
                     topic: String?,
-                    isRoomPrivate: Bool,
-                    isRoomEncrypted: Bool, // Tchap: additional parameter
-                    isKnockingOnly: Bool,
+                    accessType: CreateRoomAccessType,
+                    isSpace: Bool,
                     userIDs: [String],
                     avatarURL: URL?,
                     aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
         do {
+            let powerLevelContentOverride = if isSpace {
+                // Tchap: ignore `federated` assocaited value for space for the moment.
+//                if accessType == .public {
+                if case .public = accessType {
+                    Self.publicSpaceCreationPowerLevelOverrides
+                } else {
+                    Self.standardSpaceCreationPowerLevelOverrides
+                }
+            } else {
+                if accessType.isAskToJoin {
+                    Self.knockingRoomCreationPowerLevelOverrides
+                } else {
+                    Self.roomCreationPowerLevelOverrides
+                }
+            }
+            
             let parameters = CreateRoomParameters(name: name,
                                                   topic: topic,
-                                                  // Tchap: handle correctly additional property
-//                                                  isEncrypted: isRoomPrivate,
-                                                  isEncrypted: isRoomEncrypted,
+                                                  isEncrypted: accessType.isEncrypted,
                                                   isDirect: false,
-                                                  visibility: isRoomPrivate ? .private : .public,
-                                                  accessRuleOverride: .restricted, // Tchap: make access rule `restricted` by default
-                                                  preset: isRoomPrivate ? .privateChat : .publicChat,
+                                                  visibility: accessType.visibility,
+                                                  isRoomFederated: accessType.isFederated, // Tchap: BWI-specific Rust side
+                                                  preset: accessType.preset,
                                                   invite: userIDs,
                                                   avatar: avatarURL?.absoluteString,
-                                                  powerLevelContentOverride: isKnockingOnly ? Self.knockingRoomCreationPowerLevelOverrides : Self.roomCreationPowerLevelOverrides,
-                                                  joinRuleOverride: isKnockingOnly ? .knock : nil,
-                                                  historyVisibilityOverride: isRoomPrivate ? .invited : nil,
+                                                  powerLevelContentOverride: powerLevelContentOverride,
+                                                  joinRuleOverride: accessType.joinRuleOverride?.rustValue,
+                                                  historyVisibilityOverride: accessType.historyVisibilityOverride,
                                                   // This is an FFI naming mistake, what is required is the `aliasLocalPart` not the whole alias
-                                                  canonicalAlias: aliasLocalPart)
-            let roomID = try await client.createRoom(request: parameters, isFederated: true)
-            
+                                                  canonicalAlias: aliasLocalPart,
+                                                  isSpace: isSpace)
+            // Tchap: change `createRoom` call with:
+            //   - `isTchapInvite` and `isTchapInviteExternal` because of Tchap `invite by email` feature
+            //
+            // `isTchapInvite` and `isTchapInviteExternal` are set to false because invitations will be resolved
+            // on next step when choosing room initial members.
+            //
+            // let roomID = try await client.createRoom(request: parameters)
+            let roomID = try await client.createRoom(request: parameters,
+                                                     isTchapInvite: false,
+                                                     isTchapInviteExternal: false)
+          
             await waitForRoomToSync(roomID: roomID)
             
             return .success(roomID)
@@ -584,8 +733,8 @@ class ClientProxy: ClientProxyProtocol {
             return room
         }
         
-        if !roomSummaryProvider.statePublisher.value.isLoaded {
-            _ = await roomSummaryProvider.statePublisher.values.first { $0.isLoaded }
+        if !staticRoomSummaryProvider.statePublisher.value.isLoaded {
+            _ = await staticRoomSummaryProvider.statePublisher.values.first { $0.isLoaded }
         }
         
         if shouldAwait {
@@ -697,13 +846,9 @@ class ClientProxy: ClientProxyProtocol {
             return .failure(.sdkError(error))
         }
     }
-
-    func logout() async {
-        do {
-            try await client.logout()
-        } catch {
-            MXLog.error("Failed logging out with error: \(error)")
-        }
+    
+    func linkNewDeviceService() -> LinkNewDeviceServiceProtocol {
+        LinkNewDeviceService(handler: client.newGrantLoginWithQrCodeHandler())
     }
     
     func deactivateAccount(password: String?, eraseData: Bool) async -> Result<Void, ClientProxyError> {
@@ -713,6 +858,14 @@ class ClientProxy: ClientProxyProtocol {
             return .success(())
         } catch {
             return .failure(.sdkError(error))
+        }
+    }
+    
+    func logout() async {
+        do {
+            try await client.logout()
+        } catch {
+            MXLog.error("Failed logging out with error: \(error)")
         }
     }
     
@@ -785,6 +938,24 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
     
+    func optimizeStores() async -> Result<Void, ClientProxyError> {
+        do {
+            return try await .success(client.optimizeStores())
+        } catch {
+            MXLog.error("Failed optimizing client stores with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func storeSizes() async -> Result<StoreSizes, ClientProxyError> {
+        do {
+            return try await .success(client.getStoreSizes())
+        } catch {
+            MXLog.error("Failed optimizing client stores with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
     func fetchMediaPreviewConfiguration() async -> Result<MediaPreviewConfig?, ClientProxyError> {
         do {
             let config = try await client.fetchMediaPreviewConfig()
@@ -829,20 +1000,35 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
     
-    func recentlyVisitedRooms() async -> Result<[String], ClientProxyError> {
-        do {
-            let result = try await client.getRecentlyVisitedRooms()
-            return .success(result)
-        } catch {
-            MXLog.error("Failed retrieving recently visited rooms with error: \(error)")
-            return .failure(.sdkError(error))
+    func recentlyVisitedRooms(filter: (JoinedRoomProxyProtocol) -> Bool) async -> [JoinedRoomProxyProtocol] {
+        let maxResultsToReturn = 5
+        
+        guard case let .success(roomIdentifiers) = await recentlyVisitedRoomIDs() else {
+            return []
         }
+        
+        var rooms: [JoinedRoomProxyProtocol] = []
+        
+        for roomID in roomIdentifiers {
+            guard case let .joined(roomProxy) = await roomForIdentifier(roomID),
+                  filter(roomProxy) else {
+                continue
+            }
+            
+            rooms.append(roomProxy)
+            
+            if rooms.count >= maxResultsToReturn {
+                return rooms
+            }
+        }
+        
+        return rooms
     }
     
     func recentConversationCounterparts() async -> [UserProfileProxy] {
         let maxResultsToReturn = 5
         
-        guard case let .success(roomIdentifiers) = await recentlyVisitedRooms() else {
+        guard case let .success(roomIdentifiers) = await recentlyVisitedRoomIDs() else {
             return []
         }
         
@@ -866,6 +1052,16 @@ class ClientProxy: ClientProxyProtocol {
         }
         
         return users.elements
+    }
+    
+    private func recentlyVisitedRoomIDs() async -> Result<[String], ClientProxyError> {
+        do {
+            let result = try await client.getRecentlyVisitedRooms()
+            return .success(result)
+        } catch {
+            MXLog.error("Failed retrieving recently visited rooms with error: \(error)")
+            return .failure(.sdkError(error))
+        }
     }
     
     // MARK: Moderation & Safety
@@ -1031,7 +1227,8 @@ class ClientProxy: ClientProxyProtocol {
             case .joined:
                 let roomProxy = try await JoinedRoomProxy(roomListService: roomListService,
                                                           room: room,
-                                                          appSettings: appSettings)
+                                                          appSettings: appSettings,
+                                                          analyticsService: analyticsService)
                 
                 return .joined(roomProxy)
             case .left:
@@ -1090,7 +1287,7 @@ class ClientProxy: ClientProxyProtocol {
         MXLog.info("Pinning current identity for user: \(userID)")
         
         do {
-            guard let userIdentity = try await client.encryption().userIdentity(userId: userID) else {
+            guard let userIdentity = try await client.encryption().userIdentity(userId: userID, fallbackToServer: true) else {
                 MXLog.error("Failed retrieving identity for user: \(userID)")
                 return .failure(.failedRetrievingUserIdentity)
             }
@@ -1106,7 +1303,7 @@ class ClientProxy: ClientProxyProtocol {
         MXLog.info("Withdrawing current identity verification for user: \(userID)")
         
         do {
-            guard let userIdentity = try await client.encryption().userIdentity(userId: userID) else {
+            guard let userIdentity = try await client.encryption().userIdentity(userId: userID, fallbackToServer: true) else {
                 MXLog.error("Failed retrieving identity for user: \(userID)")
                 return .failure(.failedRetrievingUserIdentity)
             }
@@ -1126,9 +1323,9 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
     
-    func userIdentity(for userID: String) async -> Result<UserIdentityProxyProtocol?, ClientProxyError> {
+    func userIdentity(for userID: String, fallBackToServer: Bool) async -> Result<UserIdentityProxyProtocol?, ClientProxyError> {
         do {
-            return try await .success(client.encryption().userIdentity(userId: userID).map(UserIdentityProxy.init))
+            return try await .success(client.encryption().userIdentity(userId: userID, fallbackToServer: fallBackToServer).map(UserIdentityProxy.init))
         } catch {
             MXLog.error("Failed retrieving user identity: \(error)")
             return .failure(.sdkError(error))
@@ -1136,11 +1333,14 @@ class ClientProxy: ClientProxyProtocol {
     }
 }
 
-private class ClientDelegateWrapper: ClientDelegate {
-    private let authErrorCallback: (Bool) -> Void
+private final class ClientDelegateWrapper: ClientDelegate {
+    private let authErrorCallback: @Sendable (Bool) -> Void
+    private let backgroundTaskErrorCallback: @Sendable (MatrixRustSDK.BackgroundTaskFailureReason) -> Void
     
-    init(authErrorCallback: @escaping (Bool) -> Void) {
+    init(authErrorCallback: @escaping @Sendable (Bool) -> Void,
+         backgroundTaskErrorCallback: @escaping @Sendable (MatrixRustSDK.BackgroundTaskFailureReason) -> Void) {
         self.authErrorCallback = authErrorCallback
+        self.backgroundTaskErrorCallback = backgroundTaskErrorCallback
     }
     
     // MARK: - ClientDelegate
@@ -1153,9 +1353,13 @@ private class ClientDelegateWrapper: ClientDelegate {
     func didRefreshTokens() {
         MXLog.info("Delegating session updates to the ClientSessionDelegate.")
     }
+    
+    func onBackgroundTaskErrorReport(taskName: String, error: MatrixRustSDK.BackgroundTaskFailureReason) {
+        backgroundTaskErrorCallback(error)
+    }
 }
 
-private class ClientDecryptionErrorDelegate: UnableToDecryptDelegate {
+private final class ClientDecryptionErrorDelegate: UnableToDecryptDelegate {
     private let actionsSubject: PassthroughSubject<ClientProxyAction, Never>
     
     init(actionsSubject: PassthroughSubject<ClientProxyAction, Never>) {
@@ -1164,30 +1368,6 @@ private class ClientDecryptionErrorDelegate: UnableToDecryptDelegate {
     
     func onUtd(info: UnableToDecryptInfo) {
         actionsSubject.send(.receivedDecryptionError(info))
-    }
-}
-
-private class IgnoredUsersListenerProxy: IgnoredUsersListener {
-    private let onUpdateClosure: ([String]) -> Void
-
-    init(onUpdateClosure: @escaping ([String]) -> Void) {
-        self.onUpdateClosure = onUpdateClosure
-    }
-    
-    func call(ignoredUserIds: [String]) {
-        onUpdateClosure(ignoredUserIds)
-    }
-}
-
-private class SendQueueRoomErrorListenerProxy: SendQueueRoomErrorListener {
-    private let onErrorClosure: (String, ClientError) -> Void
-    
-    init(onErrorClosure: @escaping (String, ClientError) -> Void) {
-        self.onErrorClosure = onErrorClosure
-    }
-    
-    func onError(roomId: String, error: ClientError) {
-        onErrorClosure(roomId, error)
     }
 }
 
@@ -1204,7 +1384,6 @@ private struct ClientProxyServices {
          appSettings: AppSettings) async throws {
         let syncService = try await client
             .syncService()
-            .withCrossProcessLock()
             .withOfflineMode()
             .withSharePos(enable: true)
             .finish()
@@ -1281,6 +1460,71 @@ private extension TimelineMediaVisibility {
             .off
         case .privateOnly:
             .private
+        }
+    }
+}
+
+private extension CreateRoomAccessType {
+    var isEncrypted: Bool {
+        switch self {
+        case .public:
+            false
+        // Tchap: handle private unencrypted room type
+        case .privateUnencrypted:
+            false
+        default:
+            true
+        }
+    }
+    
+    var visibility: RoomVisibility {
+        isVisibilityPrivate ? .private : .public
+    }
+    
+    var preset: RoomPreset {
+        isVisibilityPrivate ? .privateChat : .publicChat
+    }
+    
+    var historyVisibilityOverride: RoomHistoryVisibility? {
+        isVisibilityPrivate ? .invited : nil
+    }
+    
+    var joinRuleOverride: JoinRule? {
+        switch self {
+        case .askToJoin:
+            .knock
+        case .spaceMembers(let spaceID):
+            .restricted(rules: [.roomMembership(roomID: spaceID)])
+        case .askToJoinWithSpaceMembers(let spaceID):
+            .knockRestricted(rules: [.roomMembership(roomID: spaceID)])
+        case .private, .public:
+            nil
+        // Tchap: handle private unencrypted room type
+        case .privateUnencrypted:
+            nil
+        }
+    }
+    
+    // Tchap: handle `.public`(federated) parameter
+    var isFederated: Bool {
+        switch self {
+        case .askToJoin, .private, .privateUnencrypted:
+            true
+        case .public(let federated):
+            federated
+        case .spaceMembers(let spaceID), .askToJoinWithSpaceMembers(let spaceID):
+            // Tchap: return false (Space members not federatd) for the moment.
+            // TOOD: check the meaning of federation for Space membership.
+            false
+        }
+    }
+    
+    var isAskToJoin: Bool {
+        switch self {
+        case .askToJoin, .askToJoinWithSpaceMembers:
+            true
+        default:
+            false
         }
     }
 }

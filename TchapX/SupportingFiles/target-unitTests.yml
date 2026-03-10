@@ -33,6 +33,7 @@ targets:
     dependencies:
     - target: TchapX-Production
     - package: MatrixRustSDK
+    - package: AsyncAlgorithms
 
     info:
       path: ../UnitTests/SupportingFiles/Info.plist

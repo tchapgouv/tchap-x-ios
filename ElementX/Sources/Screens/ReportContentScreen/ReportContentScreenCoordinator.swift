@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -76,12 +77,10 @@ final class ReportContentScreenCoordinator: CoordinatorProtocol {
     private static let loadingIndicatorIdentifier = "\(ReportContentScreenCoordinator.self)-Loading"
 
     private func startLoading() {
-        parameters.userIndicatorController.submitIndicator(
-            UserIndicator(id: Self.loadingIndicatorIdentifier,
-                          type: .modal,
-                          title: L10n.commonSending,
-                          persistent: true)
-        )
+        parameters.userIndicatorController.submitIndicator(UserIndicator(id: Self.loadingIndicatorIdentifier,
+                                                                         type: .modal,
+                                                                         title: L10n.commonSending,
+                                                                         persistent: true))
     }
 
     private func stopLoading() {

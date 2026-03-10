@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -30,7 +31,9 @@ struct LoginScreenViewState: BindableState {
     var bindings = LoginScreenBindings()
     
     /// The types of login supported by the homeserver.
-    var loginMode: LoginMode { homeserver.loginMode }
+    var loginMode: LoginMode {
+        homeserver.loginMode
+    }
     
     /// `true` if the username and password are ready to be submitted.
     var hasValidCredentials: Bool {
@@ -41,6 +44,9 @@ struct LoginScreenViewState: BindableState {
     var canSubmit: Bool {
         hasValidCredentials && !isLoading
     }
+    
+    // Tchap: lock editing if loginHint is not null or empty
+    var loginHintIsEmpty = true
 }
 
 struct LoginScreenBindings {

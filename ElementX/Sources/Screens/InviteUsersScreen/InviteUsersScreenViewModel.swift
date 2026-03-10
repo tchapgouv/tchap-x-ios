@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -12,9 +13,10 @@ import SwiftUI
 typealias InviteUsersScreenViewModelType = StateStoreViewModel<InviteUsersScreenViewState, InviteUsersScreenViewAction>
 
 class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScreenViewModelProtocol {
-    private let roomType: InviteUsersScreenRoomType
+    private let roomProxy: JoinedRoomProxyProtocol
     private let userDiscoveryService: UserDiscoveryServiceProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
+    private let appSettings: AppSettings
     
     private var suggestedUsers = [UserProfileProxy]()
     
@@ -24,19 +26,21 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
     }
     
     init(userSession: UserSessionProtocol,
-         selectedUsers: CurrentValuePublisher<[UserProfileProxy], Never>,
-         roomType: InviteUsersScreenRoomType,
+         roomProxy: JoinedRoomProxyProtocol,
+         isSkippable: Bool,
          userDiscoveryService: UserDiscoveryServiceProtocol,
-         userIndicatorController: UserIndicatorControllerProtocol) {
-        self.roomType = roomType
+         userIndicatorController: UserIndicatorControllerProtocol,
+         appSettings: AppSettings) {
+        self.roomProxy = roomProxy
         self.userDiscoveryService = userDiscoveryService
         self.userIndicatorController = userIndicatorController
+        self.appSettings = appSettings
         
-        super.init(initialViewState: InviteUsersScreenViewState(selectedUsers: selectedUsers.value,
-                                                                isCreatingRoom: roomType.isCreatingRoom),
+        super.init(initialViewState: InviteUsersScreenViewState(selectedUsers: [],
+                                                                isSkippable: isSkippable),
                    mediaProvider: userSession.mediaProvider)
                 
-        setupSubscriptions(selectedUsers: selectedUsers)
+        setupSubscriptions()
         fetchMembersIfNeeded()
         
         Task {
@@ -53,25 +57,101 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
     override func process(viewAction: InviteUsersScreenViewAction) {
         switch viewAction {
         case .cancel:
-            actionsSubject.send(.cancel)
+            actionsSubject.send(.dismiss)
         case .proceed:
-            switch roomType {
-            case .draft:
-                actionsSubject.send(.proceed)
-            case .room:
-                actionsSubject.send(.invite(users: state.selectedUsers.map(\.userID)))
+            // Tchap: check if room access rule need to be updated before inviting users.
+//            inviteUsers(state.selectedUsers.map(\.userID), roomProxy: roomProxy)
+            Task {
+                // Tchap: if room access rule is `restricted` and any invited user is external, update room access_rule to `unrestricted`.
+                let usersToInvite = state.selectedUsers.map(\.userID)
+                guard await !self.roomProxy.accessRuleNeedToBeUpdated(for: usersToInvite) else {
+                    self.displayAlertAboutOpeningRoomToExternalUsers(users: usersToInvite, in: self.roomProxy)
+                    return
+                }
+                self.inviteUsers(usersToInvite, roomProxy: roomProxy)
             }
         case .toggleUser(let user):
-            let willSelectUser = !state.selectedUsers.contains(user)
-            state.scrollToLastID = willSelectUser ? user.userID : nil
-            actionsSubject.send(.toggleUser(user))
+            toggleUser(user)
         }
     }
 
     // MARK: - Private
     
+    private func toggleUser(_ user: UserProfileProxy) {
+        if state.selectedUsers.contains(user) {
+            state.selectedUsers.removeAll { $0.userID == user.userID }
+        } else {
+            state.selectedUsers.append(user)
+            withElementAnimation(.easeInOut) { state.bindings.selectedUsersPosition = user.userID }
+        }
+    }
+    
+    private func inviteUsers(_ users: [String], roomProxy: JoinedRoomProxyProtocol) {
+        if appSettings.enableKeyShareOnInvite {
+            showLoadingIndicator(title: L10n.screenRoomDetailsInvitePeoplePreparing, message: L10n.screenRoomDetailsInvitePeopleDontClose)
+        } else {
+            showLoadingIndicator()
+        }
+        
+        Task {
+            defer {
+                hideLoadingIndicator()
+                actionsSubject.send(.dismiss)
+            }
+            
+            let result: Result<Void, RoomProxyError> = await withTaskGroup(of: Result<Void, RoomProxyError>.self) { group in
+                for user in users {
+                    group.addTask {
+                        await roomProxy.invite(userID: user)
+                    }
+                }
+                
+                return await group.first { inviteResult in
+                    inviteResult.isFailure
+                } ?? .success(())
+            }
+            
+            guard case .failure = result else {
+                return
+            }
+            
+            state.bindings.alertInfo = .init(id: .unknown,
+                                             title: L10n.commonUnableToInviteTitle,
+                                             message: L10n.commonUnableToInviteMessage)
+        }
+    }
+    
+    // Tchap: display dialog box to inform user that the room needs to be configured to accept external users
+    // before inviting the first external user.
+    // The user can decline or confirm the operation.
+    private func displayAlertAboutOpeningRoomToExternalUsers(users: [String], in room: JoinedRoomProxyProtocol) {
+        let continueButton = AlertInfo<InviteUsersScreenErrorType>.AlertButton(title: L10n.actionContinue) {
+            Task { [weak self] in
+                self?.showLoadingIndicator()
+                defer {
+                    self?.hideLoadingIndicator()
+                }
+                switch await room.applyAccessRulesChanges(.unrestricted) {
+                case .success:
+                    // We can safely invite external users now that the room's access rule is `.unrestricted`.
+                    self?.inviteUsers(users, roomProxy: room)
+                case .failure:
+                    self?.state.bindings.alertInfo = .init(id: .unknown,
+                                                           title: TchapL10n.screenInviteExternalUserErrorModifyingAccessRuleTitle,
+                                                           message: TchapL10n.screenInviteExternalUserErrorModifyingAccessRuleMessage)
+                }
+            }
+        }
+        let cancelButton = AlertInfo<InviteUsersScreenErrorType>.AlertButton(title: L10n.actionCancel, action: nil)
+        state.bindings.alertInfo = .init(id: .unknown,
+                                         title: TchapL10n.screenInviteExternalUserDialogTitle,
+                                         message: TchapL10n.screenInviteExternalUserDialogMessage,
+                                         primaryButton: continueButton,
+                                         secondaryButton: cancelButton)
+    }
+    
     private func buildMembershipStateIfNeeded(members: [RoomMemberProxyProtocol]) {
-        showLoader()
+        showLoadingIndicator()
         
         Task.detached { [members] in
             // accessing RoomMember's properties is very slow. We need to do it in a background thread.
@@ -82,7 +162,7 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
             
             Task { @MainActor in
                 self.state.membershipState = membershipState
-                self.hideLoader()
+                self.hideLoadingIndicator()
             }
         }
     }
@@ -91,7 +171,7 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
     @CancellableTask
     private var fetchUsersTask: Task<Void, Never>?
     
-    private func setupSubscriptions(selectedUsers: CurrentValuePublisher<[UserProfileProxy], Never>) {
+    private func setupSubscriptions() {
         context.$viewState
             .map(\.bindings.searchQuery)
             .debounceTextQueriesAndRemoveDuplicates()
@@ -99,23 +179,13 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
                 self?.fetchUsers()
             }
             .store(in: &cancellables)
-        
-        selectedUsers
-            .sink { [weak self] users in
-                self?.state.selectedUsers = users
-            }
-            .store(in: &cancellables)
     }
     
     private func fetchMembersIfNeeded() {
-        guard case let .room(roomProxy) = roomType else {
-            return
-        }
-        
         Task {
-            showLoader()
+            showLoadingIndicator()
             await roomProxy.updateMembers()
-            hideLoader()
+            hideLoadingIndicator()
         }
         
         roomProxy.membersPublisher
@@ -158,22 +228,17 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
     
     private let userIndicatorID = UUID().uuidString
     
-    private func showLoader() {
-        userIndicatorController.submitIndicator(UserIndicator(id: userIndicatorID, type: .modal, title: L10n.commonLoading, persistent: true), delay: .milliseconds(200))
+    private func showLoadingIndicator(title: String = L10n.commonLoading,
+                                      message: String? = nil) {
+        userIndicatorController.submitIndicator(UserIndicator(id: userIndicatorID,
+                                                              type: .modal,
+                                                              title: title,
+                                                              message: message,
+                                                              persistent: true),
+                                                delay: .milliseconds(200))
     }
     
-    private func hideLoader() {
+    private func hideLoadingIndicator() {
         userIndicatorController.retractIndicatorWithId(userIndicatorID)
-    }
-}
-
-private extension InviteUsersScreenRoomType {
-    var isCreatingRoom: Bool {
-        switch self {
-        case .draft:
-            return true
-        case .room:
-            return false
-        }
     }
 }

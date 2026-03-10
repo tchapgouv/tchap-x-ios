@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -17,14 +18,14 @@ struct JoinRoomScreenCoordinatorParameters {
 
 enum JoinRoomScreenSource {
     case generic(roomID: String, via: [String])
-    case space(SpaceRoomProxyProtocol)
+    case space(SpaceServiceRoom)
     
     func roomIDAndVia() -> (roomID: String, via: [String]) {
         switch self {
         case let .generic(roomID: roomID, via: via):
             return (roomID: roomID, via: via)
-        case let .space(spaceRoomProxy):
-            return (roomID: spaceRoomProxy.id, via: spaceRoomProxy.via)
+        case let .space(spaceServiceRoom):
+            return (roomID: spaceServiceRoom.id, via: spaceServiceRoom.via)
         }
     }
 }

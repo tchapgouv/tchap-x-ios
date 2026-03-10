@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -16,7 +17,9 @@ struct UserProfileListRow: View {
     
     let kind: ListRow<LoadableAvatarImage, EmptyView, EmptyView, Bool>.Kind<EmptyView, Bool>
     
-    var isUnknownProfile: Bool { !user.isVerified && membership == nil }
+    var isUnknownProfile: Bool {
+        !user.isVerified && membership == nil
+    }
     
     private var subtitle: String? {
         guard !isUnknownProfile else { return L10n.commonInviteUnknownProfile }
@@ -35,6 +38,14 @@ struct UserProfileListRow: View {
         }
     }
     
+    // Tchap: compute BadgeLabel offsetX
+    var tchapBadgesOffsetX: CGFloat {
+        return switch kind {
+        case .multiSelection: 104.0 // 100 is 40 (radio button width) + 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
+        default: 64.0 // 60 is 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
+        }
+    }
+        
     var body: some View {
         // Tchap: add external badge if necessary
 //        ListRow(label: .avatar(title: user.displayName ?? user.userID,
@@ -48,9 +59,18 @@ struct UserProfileListRow: View {
                                    icon: avatar,
                                    role: isUnknownProfile ? .error : nil),
                     kind: kind)
-            if MatrixIdFromString(user.userID).isExternalTchapUser {
-                BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal())
-                    .offset(x: 60.0, y: -8.0) // 60 is 40 (avatar image width) + 16 (avatar leading offset) + 8 (avatar-text spacing)
+
+            switch MatrixIdFromString(user.userID).userType {
+            case .external(needInviteByEmail: false):
+                BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
+                    .offset(x: tchapBadgesOffsetX, y: -8.0)
+            case .external(needInviteByEmail: true):
+                BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
+                    .offset(x: tchapBadgesOffsetX, y: -8.0)
+                BadgeLabel(title: TchapL10n.inviteByEmailMessage, icon: \.errorSolid, style: .info, tchapUsage: .inviteByEmail(useSmallSize: true))
+                    .offset(x: tchapBadgesOffsetX, y: -8.0)
+            case .agent:
+                EmptyView()
             }
         }
         // Cancel list row insets added because of VStack inside List.

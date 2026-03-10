@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -12,8 +13,11 @@ import EmbeddedElementCall
 import Foundation
 import SwiftUI
 
-// Common settings between app and NSE
-protocol CommonSettingsProtocol {
+/// Common settings between app and NSE
+protocol CommonSettingsProtocol: AnyObject {
+    var lastNotificationBootTime: TimeInterval? { get set }
+    var notificationSoundName: RemotePreference<UNNotificationSoundName> { get }
+    
     var logLevel: LogLevel { get }
     var traceLogPacks: Set<TraceLogPack> { get }
     var bugReportRageshakeURL: RemotePreference<RageshakeConfiguration> { get }
@@ -22,6 +26,12 @@ protocol CommonSettingsProtocol {
     var enableKeyShareOnInvite: Bool { get }
     var threadsEnabled: Bool { get }
     var hideQuietNotificationAlerts: Bool { get }
+}
+
+enum AppBuildType {
+    case debug
+    case nightly
+    case release
 }
 
 /// Store Element specific app settings.
@@ -37,6 +47,8 @@ final class AppSettings {
         
         case analyticsConsentState
         case hasRunNotificationPermissionsOnboarding
+        // Tchap: add welcome screen
+        case hasRunTchapWelcomeOnboarding
         case hasRunIdentityConfirmationOnboarding
         
         case frequentlyUsedSystemEmojis
@@ -44,6 +56,7 @@ final class AppSettings {
         case enableNotifications
         case enableInAppNotifications
         case pusherProfileTag
+        case lastNotificationBootTime
         case logLevel
         case traceLogPacks
         case viewSourceEnabled
@@ -62,10 +75,17 @@ final class AppSettings {
         case knockingEnabled
         case threadsEnabled
         case developerOptionsEnabled
-        case nextGenHTMLParserEnabled
         case linkPreviewsEnabled
-        case latestEventSorterEnabled
+        case focusEventOnNotificationTap
+        case linkNewDeviceEnabled
         
+        // Spaces
+        case spaceFiltersEnabled
+        case spaceSettingsEnabled
+        case createSpaceEnabled
+        
+        case voiceMessagePlaybackSpeed
+
         // Doug's tweaks 🔧
         case hideUnreadMessagesBadge
         case hideQuietNotificationAlerts
@@ -76,18 +96,21 @@ final class AppSettings {
     /// UserDefaults to be used on reads and writes.
     private static var store: UserDefaults! = UserDefaults(suiteName: suiteName)
     
-    /// Whether or not the app is a development build that isn't in production.
-    static var isDevelopmentBuild: Bool = {
+    static var appBuildType: AppBuildType {
         #if DEBUG
-        true
+        return .debug
         #else
-        // Tchap: set Development Build flag to false if not in DEBUG mode
-//        let apps = ["io.element.elementx.nightly", "io.element.elementx.pr"]
-//        return apps.contains(InfoPlistReader.main.baseBundleIdentifier)
-        return false
+        // Tchap: we only build debug and release versions (production, staging and development are flavors, not build types).
+//        switch InfoPlistReader.main.baseBundleIdentifier {
+//        case "io.element.elementx.nightly":
+//            return .nightly
+//        default:
+//            return .release
+//        }
+        return .release
         #endif
-    }()
-        
+    }
+    
     static func resetAllSettings() {
         MXLog.warning("Resetting the AppSettings.")
         store.removePersistentDomain(forName: suiteName)
@@ -125,6 +148,7 @@ final class AppSettings {
                   deviceVerificationURL: URL,
                   chatBackupDetailsURL: URL,
                   identityPinningViolationDetailsURL: URL,
+                  historySharingDetailsURL: URL,
                   elementWebHosts: [String],
                   accountProvisioningHost: String,
                   bugReportApplicationID: String,
@@ -144,6 +168,7 @@ final class AppSettings {
         self.deviceVerificationURL = deviceVerificationURL
         self.chatBackupDetailsURL = chatBackupDetailsURL
         self.identityPinningViolationDetailsURL = identityPinningViolationDetailsURL
+        self.historySharingDetailsURL = historySharingDetailsURL
         self.elementWebHosts = elementWebHosts
         self.accountProvisioningHost = accountProvisioningHost
         self.bugReportApplicationID = bugReportApplicationID
@@ -176,11 +201,38 @@ final class AppSettings {
     /// Account provider is the friendly term for the server name. It should not contain an `https` prefix and should
     /// match the last part of the user ID. For example `example.com` and not `https://matrix.example.com`.
     #if IS_TCHAP_DEVELOPMENT
-    private(set) var accountProviders = ["matrix.dev01.tchap.incubateur.net"]
+    private(set) var accountProviders = [
+        "dev01.tchap.incubateur.net",
+        "dev02.tchap.incubateur.net",
+        "ext01.tchap.incubateur.net"
+    ]
     #elseif IS_TCHAP_STAGING
-    private(set) var accountProviders = ["matrix.i.tchap.gouv.fr"]
+    private(set) var accountProviders = ["i.tchap.gouv.fr",
+                                         "a.tchap.gouv.fr",
+                                         "e.tchap.gouv.fr"]
     #elseif IS_TCHAP_PRODUCTION
-    private(set) var accountProviders = ["matrix.agent.dinum.tchap.gouv.fr"]
+//    private(set) var accountProviders = ["agent.externe.tchap.gouv.fr",
+//                                         "agent.collectivites.tchap.gouv.fr",
+//                                         "agent.tchap.gouv.fr",
+//                                         "agent.elysee.tchap.gouv.fr",
+//                                         "agent.pm.tchap.gouv.fr",
+//                                         "agent.ssi.tchap.gouv.fr",
+//                                         "agent.finances.tchap.gouv.fr",
+//                                         "agent.social.tchap.gouv.fr",
+//                                         "agent.interieur.tchap.gouv.fr",
+//                                         "agent.agriculture.tchap.gouv.fr",
+//                                         "agent.justice.tchap.gouv.fr",
+//                                         "agent.diplomatie.tchap.gouv.fr",
+//                                         "agent.intradef.tchap.gouv.fr",
+//                                         "agent.dinum.tchap.gouv.fr",
+//                                         "agent.culture.tchap.gouv.fr",
+//                                         "agent.dev-durable.tchap.gouv.fr",
+//                                         "agent.education.tchap.gouv.fr"]
+    // TODO: Remove restriction for official release.
+    // Restrict currently to DINUM testers only.
+    private(set) var accountProviders = ["agent.dinum.tchap.gouv.fr"]
+    #elseif IS_TCHAP_UNIT_TESTS
+    private(set) var accountProviders = ["agent.dinum.tchap.gouv.fr"]
     #else
     private(set) var accountProviders = ["matrix.org"]
     #endif
@@ -192,8 +244,19 @@ final class AppSettings {
     /// The task identifier used for background app refresh. Also used in main target's the Info.plist
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
 
+    // Tchap: adapt website URL for OIDC / MAS
+    //    private(set) var websiteURL: URL = "https://element.io"
     /// A URL where users can go read more about the app.
+    #if IS_TCHAP_PRODUCTION
+    private(set) var websiteURL: URL = "https://tchap.gouv.fr"
+    #elseif IS_TCHAP_STAGING
+    private(set) var websiteURL: URL = "https://beta.tchap.gouv.fr"
+    #elseif IS_TCHAP_DEVELOPMENT
+    private(set) var websiteURL: URL = "https://tchap.incubateur.net"
+    #else
     private(set) var websiteURL: URL = "https://element.io"
+    #endif
+    
     /// A URL that contains the app's logo that may be used when showing content in a web view.
     private(set) var logoURL: URL = "https://element.io/mobile-icon.png"
     /// A URL that contains that app's copyright notice.
@@ -213,7 +276,7 @@ final class AppSettings {
     let tchapFaqURL: URL = "https://aide.tchap.numerique.gouv.fr/" // Tchap
     // Tchap: external members FAQ url.
     /// A URL that leads to Tchap FAQ page.
-    let tchapExternalFaqURL: URL = "https://aide.tchap.numerique.gouv.fr/fr/article/comment-inviter-un-partenaire-externe-sur-tchap-iphone-110q735//" // Tchap
+    let tchapExternalFaqURL: URL = "https://aide.tchap.numerique.gouv.fr/fr/article/comment-inviter-un-externe-sur-tchap-iphone-110q735" // Tchap
     /// An email address that should be used for support requests.
     private(set) var supportEmailAddress = "support@element.io"
     /// A URL where users can go read more about encryption in general.
@@ -224,14 +287,16 @@ final class AppSettings {
     private(set) var chatBackupDetailsURL: URL = "https://element.io/help#encryption5"
     /// A URL where users can go read more about identity pinning violations
     private(set) var identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
+    /// A URL describing how history sharing works
+    private(set) var historySharingDetailsURL: URL = "https://element.io/en/help#e2ee-history-sharing"
     // Tchap: handle Tchap permalinks
     /// Any domains that Element web may be hosted on - used for handling links.
     #if IS_TCHAP_DEVELOPMENT
-    private(set) var elementWebHosts = ["https://www.tchap.incubateur.net"]
+    private(set) var elementWebHosts = ["tchap.incubateur.net", "www.tchap.incubateur.net"]
     #elseif IS_TCHAP_STAGING
-    private(set) var elementWebHosts = ["app.preprod.tchap.gouv.fr"]
+    private(set) var elementWebHosts = ["beta.tchap.gouv.fr", "app.preprod.tchap.gouv.fr", "www.beta.tchap.gouv.fr", "www.app.preprod.tchap.gouv.fr"]
     #elseif IS_TCHAP_PRODUCTION
-    private(set) var elementWebHosts = ["www.tchap.gouv.fr", "tchap.gouv.fr"]
+    private(set) var elementWebHosts = ["tchap.gouv.fr", "www.tchap.gouv.fr"]
     #else
     private(set) var elementWebHosts = ["app.element.io", "staging.element.io", "develop.element.io"]
     #endif
@@ -260,9 +325,26 @@ final class AppSettings {
     
     /// Any pre-defined static client registrations for OIDC issuers.
     let oidcStaticRegistrations: [URL: String] = ["https://id.thirdroom.io/realms/thirdroom": "elementx"]
+
+    // Tchap: Customize OIDC Redirect URL (as stated here https://github.com/element-hq/element-x-ios/issues/4119#issuecomment-2879430647)
+    // and now in the `docs/FORKING.md` (https://github.com/element-hq/element-x-ios/blob/develop/docs/FORKING.md)
+    // Use the same Redirect URL as Tchap Legacy.
+    // The fact it is a custom scheme rather than a special web URL avoid the mandatory associated domain declaration: https://developer.apple.com/documentation/xcode/supporting-associated-domains
+    //
+    // It seemd the MAS need an oidc redirect url the match the domain name in reverse notation.
+    //    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
     /// The redirect URL used for OIDC. This no longer uses universal links so we don't need the bundle ID to avoid conflicts between Element X, Nightly and PR builds.
-    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
     
+    #if IS_TCHAP_DEVELOPMENT
+    private(set) var oidcRedirectURL: URL = "net.incubateur.tchap.ios:/"
+    #elseif IS_TCHAP_STAGING
+    private(set) var oidcRedirectURL: URL = "fr.gouv.tchap.beta.ios:/"
+    #elseif IS_TCHAP_PRODUCTION
+    private(set) var oidcRedirectURL: URL = "fr.gouv.tchap.ios:/"
+    #else
+    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
+    #endif
+
     private(set) lazy var oidcConfiguration = OIDCConfiguration(clientName: InfoPlistReader.main.bundleDisplayName,
                                                                 redirectURI: oidcRedirectURL,
                                                                 clientURI: websiteURL,
@@ -299,7 +381,9 @@ final class AppSettings {
     #else
     var pushGatewayBaseURL: URL = "https://matrix.org"
     #endif
-    var pushGatewayNotifyEndpoint: URL { pushGatewayBaseURL.appending(path: "_matrix/push/v1/notify") }
+    var pushGatewayNotifyEndpoint: URL {
+        pushGatewayBaseURL.appending(path: "_matrix/push/v1/notify")
+    }
     
     @UserPreference(key: UserDefaultsKeys.enableNotifications, defaultValue: true, storageType: .userDefaults(store))
     var enableNotifications
@@ -313,6 +397,13 @@ final class AppSettings {
     /// Tag describing which set of device specific rules a pusher executes.
     @UserPreference(key: UserDefaultsKeys.pusherProfileTag, storageType: .userDefaults(store))
     var pusherProfileTag: String?
+    
+    /// The device's last boot time as recorded by the NSE.
+    @UserPreference(key: UserDefaultsKeys.lastNotificationBootTime, storageType: .userDefaults(store))
+    var lastNotificationBootTime: TimeInterval?
+    
+    /// The name of sound played when delivering noisy notifications.
+    var notificationSoundName: RemotePreference<UNNotificationSoundName> = .init(.init("message.caf"))
     
     // MARK: - Logging
         
@@ -352,7 +443,10 @@ final class AppSettings {
     /// The URL to open with more information about analytics terms. When this is `nil` the "Learn more" link will be hidden.
     private(set) var analyticsTermsURL: URL? = "https://tchap.numerique.gouv.fr/politique-de-confidentialite"
     /// Whether or not there the app is able ask for user consent to enable analytics or sentry reporting.
-    var canPromptForAnalytics: Bool { analyticsConfiguration != nil || bugReportSentryURL != nil }
+    var canPromptForAnalytics: Bool {
+        analyticsConfiguration != nil || bugReportSentryURL != nil
+    }
+    
     private static func makeAnalyticsConfiguration() -> AnalyticsConfiguration? {
         guard let host = Secrets.postHogHost, let apiKey = Secrets.postHogAPIKey else { return nil }
         return AnalyticsConfiguration(host: host, apiKey: apiKey)
@@ -364,6 +458,10 @@ final class AppSettings {
     
     @UserPreference(key: UserDefaultsKeys.hasRunNotificationPermissionsOnboarding, defaultValue: false, storageType: .userDefaults(store))
     var hasRunNotificationPermissionsOnboarding
+    
+    // Tchap: add welcome screen
+    @UserPreference(key: UserDefaultsKeys.hasRunTchapWelcomeOnboarding, defaultValue: false, storageType: .userDefaults(store))
+    var hasRunTchapWelcomeOnboarding
     
     @UserPreference(key: UserDefaultsKeys.hasRunIdentityConfirmationOnboarding, defaultValue: false, storageType: .userDefaults(store))
     var hasRunIdentityConfirmationOnboarding
@@ -378,12 +476,15 @@ final class AppSettings {
     
     // MARK: - Room Screen
     
-    @UserPreference(key: UserDefaultsKeys.viewSourceEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
+    @UserPreference(key: UserDefaultsKeys.viewSourceEnabled, defaultValue: appBuildType == .debug, storageType: .userDefaults(store))
     var viewSourceEnabled
     
     @UserPreference(key: UserDefaultsKeys.optimizeMediaUploads, defaultValue: true, storageType: .userDefaults(store))
     var optimizeMediaUploads
-    
+
+    @UserPreference(key: UserDefaultsKeys.voiceMessagePlaybackSpeed, defaultValue: AudioPlaybackSpeed.default, storageType: .userDefaults(store))
+    var voiceMessagePlaybackSpeed: AudioPlaybackSpeed
+
     /// Whether or not to show a warning on the media caption composer so the user knows
     /// that captions might not be visible to users who are using other Matrix clients.
     let shouldShowMediaCaptionWarning = true
@@ -410,7 +511,7 @@ final class AppSettings {
     
     // MARK: - Maps
     
-    // maptiler base url
+    /// maptiler base url
     // Tchap: customize map tiler url for Tchap.
     #if IS_TCHAP_DEVELOPMENT || IS_TCHAP_STAGING || IS_TCHAP_PRODUCTION
     private enum TchapMapProvider: String {
@@ -421,7 +522,7 @@ final class AppSettings {
     private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
                                                                    apiKey: Secrets.mapLibreAPIKey,
                                                                    lightStyleID: "osm-bright",
-                                                                   darkStyleID: "dark-matter")
+                                                                   darkStyleID: "fiord-color")
     #else
     private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
                                                                    apiKey: Secrets.mapLibreAPIKey,
@@ -436,6 +537,17 @@ final class AppSettings {
     
     // MARK: - Feature Flags
     
+    /// Spaces
+    @UserPreference(key: UserDefaultsKeys.spaceSettingsEnabled, defaultValue: true, storageType: .volatile)
+    var spaceSettingsEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.createSpaceEnabled, defaultValue: true, storageType: .volatile)
+    var createSpaceEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.spaceFiltersEnabled, defaultValue: true, storageType: .volatile)
+    var spaceFiltersEnabled
+    
+    /// Others
     // Tchap: enable `publicSearchEnabled` feature flag by default. It is Tchap `join a forum` action.
 //    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
     @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: true, storageType: .userDefaults(store))
@@ -463,16 +575,16 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: true, storageType: .userDefaults(store))
     var threadsEnabled
     
-    @UserPreference(key: UserDefaultsKeys.nextGenHTMLParserEnabled, defaultValue: true, storageType: .userDefaults(store))
-    var nextGenHTMLParserEnabled
-    
+    @UserPreference(key: UserDefaultsKeys.focusEventOnNotificationTap, defaultValue: false, storageType: .userDefaults(store))
+    var focusEventOnNotificationTap
+        
     @UserPreference(key: UserDefaultsKeys.linkPreviewsEnabled, defaultValue: false, storageType: .userDefaults(store))
     var linkPreviewsEnabled
     
-    @UserPreference(key: UserDefaultsKeys.latestEventSorterEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var latestEventSorterEnabled
+    @UserPreference(key: UserDefaultsKeys.linkNewDeviceEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var linkNewDeviceEnabled
     
-    @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
+    @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: appBuildType == .debug, storageType: .userDefaults(store))
     var developerOptionsEnabled
 }
 

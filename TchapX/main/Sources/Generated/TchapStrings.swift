@@ -26,6 +26,8 @@ internal enum TchapL10n {
   internal static var contentScannerScanStatusInfected: String { return TchapL10n.tr("TchapLocalizable", "content_scanner_scan_status_infected") }
   /// File no longer available
   internal static var contentScannerScanStatusNotFound: String { return TchapL10n.tr("TchapLocalizable", "content_scanner_scan_status_not_found") }
+  /// This contact will be invited to join Tchap.
+  internal static var inviteByEmailMessage: String { return TchapL10n.tr("TchapLocalizable", "invite_by_email_message") }
   /// Privacy policy
   internal static var legalPrivacyPolicy: String { return TchapL10n.tr("TchapLocalizable", "legal_privacy_policy") }
   /// Terms of use
@@ -67,22 +69,78 @@ internal enum TchapL10n {
   }
   /// Limited to my domain
   internal static var screenCreateRoomPublicOptionUnfederatedTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_public_option_unfederated_title") }
+  /// Only people invited can join.
+  internal static var screenCreateRoomRoomAccessSectionPrivateUnencryptedDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_access_section_private_unencrypted_description") }
+  /// Private
+  internal static var screenCreateRoomRoomAccessSectionPrivateUnencryptedTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_access_section_private_unencrypted_title") }
+  /// Anyone can join.
+  internal static var screenCreateRoomRoomAccessSectionPublicFederatedDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_access_section_public_federated_description") }
+  /// Public
+  internal static var screenCreateRoomRoomAccessSectionPublicFederatedTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_access_section_public_federated_title") }
+  /// Any member of the domain can join.
+  internal static var screenCreateRoomRoomAccessSectionPublicNotFederatedDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_access_section_public_not_federated_description") }
+  /// Public restricted to domain
+  internal static var screenCreateRoomRoomAccessSectionPublicNotFederatedTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_access_section_public_not_federated_title") }
   /// Room type
   internal static var screenCreateRoomRoomVisibilitySectionTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_visibility_section_title") }
   /// Members
   internal static var screenCreateRoomSelectedUsersLabel: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_selected_users_label") }
+  /// Unable to determine which server your account is attached to.
+  internal static var screenDecideHomeserverErrorGetInstanceMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_get_instance_message") }
+  /// Erreur
+  internal static var screenDecideHomeserverErrorGetInstanceTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_get_instance_title") }
+  /// Unable to read the configuration of your attachment server.
+  internal static var screenDecideHomeserverErrorHomeserverConfigurationUnreachableMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_homeserver_configuration_unreachable_message") }
+  /// Erreur
+  internal static var screenDecideHomeserverErrorHomeserverConfigurationUnreachableTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_homeserver_configuration_unreachable_title") }
+  /// Your attachment server doesn't support OIDC authentication.
+  internal static var screenDecideHomeserverErrorHomeserverDoesntSupportOidcLoginFlowMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_message") }
+  /// Erreur
+  internal static var screenDecideHomeserverErrorHomeserverDoesntSupportOidcLoginFlowTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_title") }
+  /// By inviting an external guest, this room will become accessible to any external guest.
+  /// This change is final and irreversible.
+  internal static var screenInviteExternalUserDialogMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_invite_external_user_dialog_message") }
+  /// Invitation of an external
+  internal static var screenInviteExternalUserDialogTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_invite_external_user_dialog_title") }
+  /// The opening of the room to external users failed. No invitations were sent.
+  internal static var screenInviteExternalUserErrorModifyingAccessRuleMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_invite_external_user_error_modifying_access_rule_message") }
+  /// Unable to open the room to externals
+  internal static var screenInviteExternalUserErrorModifyingAccessRuleTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_invite_external_user_error_modifying_access_rule_title") }
+  /// Instant messaging of public sector
+  internal static var screenLoginDescriptionWithTchap: String { return TchapL10n.tr("TchapLocalizable", "screen_login_description_with_tchap") }
+  /// Enter your professional email address
+  internal static var screenLoginInputEmailLabel: String { return TchapL10n.tr("TchapLocalizable", "screen_login_input_email_label") }
+  /// Sign in to Tchap
+  internal static var screenLoginTitleLogin: String { return TchapL10n.tr("TchapLocalizable", "screen_login_title_login") }
+  /// Create an account on Tchap
+  internal static var screenLoginTitleRegister: String { return TchapL10n.tr("TchapLocalizable", "screen_login_title_register") }
   /// The civil servants instant messaging system
   internal static var screenOnboardingWelcomeMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_message") }
+  /// Audio and video group calls
+  internal static var screenOnboardingWelcomeNewTchapFeatureGroupCall: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_new_tchap_feature_group_call") }
+  /// New chat room: private, unencrypted
+  internal static var screenOnboardingWelcomeNewTchapFeatureNewRoomType: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_new_tchap_feature_new_room_type") }
+  /// Workspaces
+  internal static var screenOnboardingWelcomeNewTchapFeatureSpaces: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_new_tchap_feature_spaces") }
+  /// Totaly rebuilt for greater simplicity and new features
+  internal static var screenOnboardingWelcomeNewTchapMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_new_tchap_message") }
+  /// Welcome to the new Tchap iOS
+  internal static var screenOnboardingWelcomeNewTchapTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_new_tchap_title") }
   /// or
   internal static var screenOnboardingWelcomeOrBetweenButtons: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_or_between_buttons") }
   /// Already logged on a computer?
   internal static var screenOnboardingWelcomeQrcodeHeader: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_qrcode_header") }
-  /// Welcome to Tchap
-  internal static var screenOnboardingWelcomeTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_title") }
+  /// Welcome to
+  /// %1$@
+  internal static func screenOnboardingWelcomeTitle(_ p1: Any) -> String {
+    return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_title", String(describing: p1))
+  }
   /// Join a public room
   internal static var screenRoomDirectorySearchTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_room_directory_search_title") }
   /// Join a public room
   internal static var startChatActionJoinForum: String { return TchapL10n.tr("TchapLocalizable", "start_chat_action_join_forum") }
+  /// Room access rule updated
+  internal static var stateEventRoomAccessRule: String { return TchapL10n.tr("TchapLocalizable", "state_event_room_access_rule") }
 }
 // swiftlint:enable explicit_type_interface function_parameter_count identifier_name line_length
 // swiftlint:enable nesting type_body_length type_name vertical_whitespace_opening_braces

@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -47,6 +48,36 @@ enum SlidingSyncConstants {
     static let maximumVisibleRangeSize = 30
 }
 
+enum CreateRoomAccessType: Equatable & CaseIterable {
+    // Tchap: handle `isFederated` associated value for `public` room. CaseIterable is not automatically implement then.
+    // case `public`
+    case `public`(federated: Bool)
+    case spaceMembers(spaceID: String)
+    case askToJoinWithSpaceMembers(spaceID: String)
+    case askToJoin
+    case `private`
+    // Tchap: add private unencrypted room type
+    case privateUnencrypted
+    
+    var isVisibilityPrivate: Bool {
+        switch self {
+        case .private, .spaceMembers, .askToJoinWithSpaceMembers:
+            true
+        case .public, .askToJoin:
+            false
+        // Tchap: handle private unencrypted room type
+        case .privateUnencrypted:
+            true
+        }
+    }
+    
+    // Tchap: add CaseIterable conformance because of associated value on `public` case.
+    static var allCases: [CreateRoomAccessType] = [.public(federated: true), .public(federated: false), .askToJoin, .private, .privateUnencrypted]
+}
+
+// Tchap: add CaseIterable conformance for Create Room screen needing Equatable.
+extension CreateRoomAccessType: Hashable { }
+
 /// This struct represents the configuration that we are using to register the application through Pusher to Sygnal
 /// using the Matrix Rust SDK, more info here:
 /// https://github.com/matrix-org/sygnal
@@ -65,7 +96,7 @@ enum SessionVerificationState {
     case unverified
 }
 
-// The `Decodable` conformance is just for the purpose of migration
+/// The `Decodable` conformance is just for the purpose of migration
 enum TimelineMediaVisibility: Decodable {
     case always
     case privateOnly
@@ -131,9 +162,13 @@ protocol ClientProxyProtocol: AnyObject {
     
     var isLiveKitRTCSupported: Bool { get async }
     
+    var isLoginWithQRCodeSupported: Bool { get async }
+    
     var maxMediaUploadSize: Result<UInt, ClientProxyError> { get async }
     
     func isOnlyDeviceLeft() async -> Result<Bool, ClientProxyError>
+    
+    func hasDevicesToVerifyAgainst() async -> Result<Bool, ClientProxyError>
     
     func startSync()
 
@@ -151,10 +186,8 @@ protocol ClientProxyProtocol: AnyObject {
     
     func createRoom(name: String,
                     topic: String?,
-                    isRoomPrivate: Bool,
-                    isRoomEncrypted: Bool, // Tchap: additional property
-                    // TODO: add parameter                   isRoomFederated: Bool, // Tchap: additional property.
-                    isKnockingOnly: Bool,
+                    accessType: CreateRoomAccessType,
+                    isSpace: Bool,
                     userIDs: [String],
                     avatarURL: URL?,
                     aliasLocalPart: String?) async -> Result<String, ClientProxyError>
@@ -191,7 +224,9 @@ protocol ClientProxyProtocol: AnyObject {
     func setUserAvatar(media: MediaInfo) async -> Result<Void, ClientProxyError>
     
     func removeUserAvatar() async -> Result<Void, ClientProxyError>
-
+    
+    func linkNewDeviceService() -> LinkNewDeviceServiceProtocol
+    
     func deactivateAccount(password: String?, eraseData: Bool) async -> Result<Void, ClientProxyError>
     
     func logout() async
@@ -210,6 +245,10 @@ protocol ClientProxyProtocol: AnyObject {
     
     @discardableResult func clearCaches() async -> Result<Void, ClientProxyError>
     
+    @discardableResult func optimizeStores() async -> Result<Void, ClientProxyError>
+    
+    func storeSizes() async -> Result<StoreSizes, ClientProxyError>
+    
     func fetchMediaPreviewConfiguration() async -> Result<MediaPreviewConfig?, ClientProxyError>
 
     // MARK: - Ignored users
@@ -222,8 +261,7 @@ protocol ClientProxyProtocol: AnyObject {
     
     func trackRecentlyVisitedRoom(_ roomID: String) async -> Result<Void, ClientProxyError>
     
-    func recentlyVisitedRooms() async -> Result<[String], ClientProxyError>
-    
+    func recentlyVisitedRooms(filter: (JoinedRoomProxyProtocol) -> Bool) async -> [JoinedRoomProxyProtocol]
     func recentConversationCounterparts() async -> [UserProfileProxy]
     
     // MARK: - Crypto
@@ -235,7 +273,7 @@ protocol ClientProxyProtocol: AnyObject {
     func withdrawUserIdentityVerification(_ userID: String) async -> Result<Void, ClientProxyError>
     func resetIdentity() async -> Result<IdentityResetHandle?, ClientProxyError>
     
-    func userIdentity(for userID: String) async -> Result<UserIdentityProxyProtocol?, ClientProxyError>
+    func userIdentity(for userID: String, fallBackToServer: Bool) async -> Result<UserIdentityProxyProtocol?, ClientProxyError>
     
     // MARK: - Moderation & Safety
     

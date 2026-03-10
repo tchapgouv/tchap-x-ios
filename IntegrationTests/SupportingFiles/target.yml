@@ -33,7 +33,6 @@ targets:
     - target: ElementX
     - package: MatrixRustSDK
     - package: DeviceKit
-    - package: DTCoreText
     - package: KeychainAccess
     - package: Kingfisher
     - package: SwiftState
@@ -57,4 +56,3 @@ targets:
     - path: ../../ElementX/Sources/Other/AccessibilityIdentifiers.swift
     - path: ../../ElementX/Sources/Other/Extensions/NSRegularExpresion.swift
     - path: ../../ElementX/Sources/Other/Extensions/XCUIElement.swift
-    - path: ../../ElementX/Sources/Services/Analytics/Signposter.swift

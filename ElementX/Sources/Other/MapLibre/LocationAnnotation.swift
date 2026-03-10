@@ -1,15 +1,16 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
-import Mapbox
+import MapLibre
 import SwiftUI
 
-final class LocationAnnotation: NSObject, MGLAnnotation {
+final class LocationAnnotation: NSObject, MLNAnnotation {
     let coordinate: CLLocationCoordinate2D
     let anchorPoint: CGPoint
     let view: AnyView
@@ -26,10 +27,10 @@ final class LocationAnnotation: NSObject, MGLAnnotation {
     }
 }
 
-final class LocationAnnotationView: MGLUserLocationAnnotationView {
+final class LocationAnnotationView: MLNUserLocationAnnotationView {
     // MARK: - Setup
     
-    override init(annotation: MGLAnnotation?, reuseIdentifier: String?) {
+    override init(annotation: MLNAnnotation?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier:
             reuseIdentifier)
     }

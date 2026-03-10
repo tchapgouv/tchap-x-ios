@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -134,12 +135,29 @@ extension URL {
     
     // MARK: Mocks
     
-    static var mockMXCAudio: URL { "mxc://matrix.org/1234567890AuDiO" }
-    static var mockMXCFile: URL { "mxc://matrix.org/1234567890FiLe" }
-    static var mockMXCImage: URL { "mxc://matrix.org/1234567890ImAgE" }
-    static var mockMXCVideo: URL { "mxc://matrix.org/1234567890ViDeO" }
-    static var mockMXCAvatar: URL { "mxc://matrix.org/1234567890AvAtAr" }
-    static var mockMXCUserAvatar: URL { "mxc://matrix.org/1234567890AvAtArUsEr" }
+    static var mockMXCAudio: URL {
+        "mxc://matrix.org/1234567890AuDiO"
+    }
+
+    static var mockMXCFile: URL {
+        "mxc://matrix.org/1234567890FiLe"
+    }
+
+    static var mockMXCImage: URL {
+        "mxc://matrix.org/1234567890ImAgE"
+    }
+
+    static var mockMXCVideo: URL {
+        "mxc://matrix.org/1234567890ViDeO"
+    }
+
+    static var mockMXCAvatar: URL {
+        "mxc://matrix.org/1234567890AvAtAr"
+    }
+
+    static var mockMXCUserAvatar: URL {
+        "mxc://matrix.org/1234567890AvAtArUsEr"
+    }
 }
 
 // MARK: - Helpers

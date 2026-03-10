@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -31,6 +32,10 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         /// The initial screen shown when you first launch the app.
         case startScreen
         
+        // Tchap: login by MAS
+        /// The screen used to get the user's email and decide its HomeServer. The associated value is the authentication flow: .login or .register.
+        case tchapDecideHomeServerScreen(AuthenticationFlow)
+        
         /// The screen used for the whole QR Code flow.
         case qrCodeLoginScreen
         
@@ -59,6 +64,13 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         
         /// The user would like to login with a QR code.
         case loginWithQR
+        
+        // Tchap: login by MAS
+        /// We want the user's email to decide its HomeServer. The associated value is the authentication flow: .login or .register.
+        case tchapDecideHomeServer(AuthenticationFlow)
+        /// The Decide Home Server step was aborted
+        case tchapCancelledDecideHomeServer
+        
         /// Show the server confirmation screen.
         case confirmServer(AuthenticationFlow)
         /// The user encountered a problem.
@@ -121,7 +133,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         configureStateMachine()
     }
     
-    func start() {
+    func start(animated: Bool) {
         stateMachine.tryEvent(.start)
     }
     
@@ -147,6 +159,9 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         switch stateMachine.state {
         case .initial, .startScreen:
             break
+        // Tchap: login by MAS
+        case .tchapDecideHomeServerScreen:
+            navigationStackCoordinator.popToRoot(animated: animated)
         case .qrCodeLoginScreen:
             navigationStackCoordinator.setSheetCoordinator(nil)
             stateMachine.tryEvent(.cancelledLoginWithQR) // Needs to be handled manually.
@@ -205,19 +220,40 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         }
         stateMachine.addRoutes(event: .dismissedServerSelection, transitions: [.serverSelectionScreen => .serverConfirmationScreen])
         
-        stateMachine.addRoutes(event: .continueWithOIDC, transitions: [.serverConfirmationScreen => .oidcAuthentication,
-                                                                       .startScreen => .oidcAuthentication]) { [weak self] context in
+        // Tchap: login by MAS
+        // Add State transition: `.tchapDecideHomeServerScreen => .oidcAuthentication`
+        // If added later, it triggers strange behavior: `Login with OIDC failed: CallbackUrlInvalid(message: "The supplied callback URL used to complete OIDC is invalid.")`
+//        stateMachine.addRoutes(event: .continueWithOIDC, transitions: [.serverConfirmationScreen => .oidcAuthentication,
+//           .startScreen => .oidcAuthentication]) { [weak self] context in
+//               guard let (oidcData, window) = context.userInfo as? (OIDCAuthorizationDataProxy, UIWindow) else {
+//                   fatalError("Missing the OIDC data and presentation anchor.")
+//               }
+//               self?.showOIDCAuthentication(oidcData: oidcData, presentationAnchor: window, fromState: context.fromState)
+//           }
+        let transitions: [SwiftState.Transition<State>] = if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
+            [.serverConfirmationScreen => .oidcAuthentication,
+             .startScreen => .oidcAuthentication,
+             .tchapDecideHomeServerScreen(.login) => .oidcAuthentication,
+             .tchapDecideHomeServerScreen(.register) => .oidcAuthentication]
+        } else {
+            [.serverConfirmationScreen => .oidcAuthentication,
+             .startScreen => .oidcAuthentication]
+        }
+        stateMachine.addRoutes(event: .continueWithOIDC, transitions: transitions) { [weak self] context in
             guard let (oidcData, window) = context.userInfo as? (OIDCAuthorizationDataProxy, UIWindow) else {
                 fatalError("Missing the OIDC data and presentation anchor.")
             }
             self?.showOIDCAuthentication(oidcData: oidcData, presentationAnchor: window, fromState: context.fromState)
         }
+
         stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .serverConfirmationScreen), transitions: [.oidcAuthentication => .serverConfirmationScreen])
         stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .startScreen), transitions: [.oidcAuthentication => .startScreen])
         
         stateMachine.addRoutes(event: .continueWithPassword, transitions: [.serverConfirmationScreen => .loginScreen,
-                                                                           .startScreen => .loginScreen]) { [weak self] context in
+                                                                           .startScreen => .loginScreen,
+                                                                           .tchapDecideHomeServerScreen(.login) => .loginScreen]) { [weak self] context in
             let loginHint = context.userInfo as? String
+            // Tchap: login with email converted to matrix ID.
             // Tchap: as we skip the homeServer confirmation screen, we have to configure it now before showing login screen.
 //            self?.showLoginScreen(loginHint: loginHint, fromState: context.fromState)
             if let homeserver = self?.authenticationService.homeserver.value {
@@ -227,9 +263,32 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 }
             }
         }
+        
+        // Tchap: login by MAS
+        if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
+            stateMachine.addRoutes(event: .tchapDecideHomeServer(.login), transitions: [.startScreen => .tchapDecideHomeServerScreen(.login)]) { [weak self] context in
+                let loginHint = context.userInfo as? String
+                self?.showDecideHomeServerScreen(flow: .login, loginHint: loginHint, fromState: context.fromState)
+            }
+            stateMachine.addRoutes(event: .tchapDecideHomeServer(.register), transitions: [.startScreen => .tchapDecideHomeServerScreen(.login)]) { [weak self] context in
+                let loginHint = context.userInfo as? String
+                self?.showDecideHomeServerScreen(flow: .register, loginHint: loginHint, fromState: context.fromState)
+            }
+            stateMachine.addRoutes(event: .tchapCancelledDecideHomeServer, transitions: [.tchapDecideHomeServerScreen(.login) => .startScreen,
+                                                                                         .tchapDecideHomeServerScreen(.register) => .startScreen])
+            
+            stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .tchapDecideHomeServerScreen(.login)), transitions: [.oidcAuthentication => .tchapDecideHomeServerScreen(.login)])
+            stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .tchapDecideHomeServerScreen(.register)), transitions: [.oidcAuthentication => .tchapDecideHomeServerScreen(.register)])
+            // Needed to cancel OIDC and stay on `tchapDecideHomeServerScreen` screen, in case of technical error (like "The supplied callback URL used to complete OIDC is invalid.").
+            stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .tchapDecideHomeServerScreen(.login)), transitions: [.tchapDecideHomeServerScreen(.login) => .tchapDecideHomeServerScreen(.login)])
+            stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .tchapDecideHomeServerScreen(.register)), transitions: [.tchapDecideHomeServerScreen(.register) => .tchapDecideHomeServerScreen(.register)])
+        }
+        
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .serverConfirmationScreen), transitions: [.loginScreen => .serverConfirmationScreen])
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .startScreen), transitions: [.loginScreen => .startScreen])
-        
+        // Tchap: cancel login from tchapDecideHomeServerScreen flow.
+        stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .tchapDecideHomeServerScreen(.login)), transitions: [.loginScreen => .tchapDecideHomeServerScreen(.login)])
+
         // Bug Report
         
         stateMachine.addRoutes(event: .reportProblem, transitions: [.startScreen => .bugReportFlow]) { [weak self] _ in
@@ -280,11 +339,27 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 case .loginWithQR:
                     stateMachine.tryEvent(.loginWithQR)
                 case .login:
-                    // Tchap: skip confirm server screen
+                    // Tchap: login customization
 //                    stateMachine.tryEvent(.confirmServer(.login))
-                    stateMachine.tryEvent(.continueWithPassword)
+                    if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
+                        // Tchap: login by MAS.
+                        stateMachine.tryEvent(.tchapDecideHomeServer(.login))
+                    } else {
+                        // Tchap: login with email converted to matrix ID
+                        // Sskip confirm server screen
+                        stateMachine.tryEvent(.continueWithPassword)
+                    }
                 case .register:
-                    stateMachine.tryEvent(.confirmServer(.register))
+                    // Tchap: register customization
+//                    stateMachine.tryEvent(.confirmServer(.register))
+                    if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
+                        // Tchap: register by MAS.
+                        stateMachine.tryEvent(.tchapDecideHomeServer(.register))
+                    } else {
+                        // Tchap: login with email converted to matrix ID
+                        // Sskip confirm server screen
+                        stateMachine.tryEvent(.confirmServer(.register))
+                    }
                 case .reportProblem:
                     stateMachine.tryEvent(.reportProblem)
                 case .loginDirectlyWithOIDC(let oidcData, let window):
@@ -305,7 +380,8 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     // MARK: - QR Code
     
     private func showQRCodeLoginScreen() {
-        let coordinator = QRCodeLoginScreenCoordinator(parameters: .init(qrCodeLoginService: authenticationService,
+        let stackCoordinator = NavigationStackCoordinator()
+        let coordinator = QRCodeLoginScreenCoordinator(parameters: .init(mode: .login(authenticationService),
                                                                          canSignInManually: appSettings.allowOtherAccountProviders, // No need to worry about provisioning links as we hide QR login.
                                                                          orientationManager: appMediator.windowManager,
                                                                          appMediator: appMediator))
@@ -314,28 +390,64 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 return
             }
             switch action {
+            case .startOver:
+                fatalError("QR code login shouldn't request to start over as it's handled within the screen.")
+            case .requestOIDCAuthorisation, .linkedDevice:
+                fatalError("QR code login shouldn't request an OIDC flow or link a device.")
             case .signInManually:
                 navigationStackCoordinator.setSheetCoordinator(nil)
                 stateMachine.tryEvent(.cancelledLoginWithQR)
                 stateMachine.tryEvent(.confirmServer(.login))
-            case .cancel:
-                navigationStackCoordinator.setSheetCoordinator(nil)
-                stateMachine.tryEvent(.cancelledLoginWithQR)
-            case .done(let userSession):
+            case .signedIn(let userSession):
                 navigationStackCoordinator.setSheetCoordinator(nil)
                 // Since the qr code login flow includes verification
                 appSettings.hasRunIdentityConfirmationOnboarding = true
                 DispatchQueue.main.async {
                     self.stateMachine.tryEvent(.signedIn, userInfo: userSession)
                 }
+            case .cancel:
+                navigationStackCoordinator.setSheetCoordinator(nil)
+                stateMachine.tryEvent(.cancelledLoginWithQR)
             }
         }
         .store(in: &cancellables)
-        navigationStackCoordinator.setSheetCoordinator(coordinator) // Don't use the callback (interactive dismiss disabled), choose the event with the action.
+        
+        stackCoordinator.setRootCoordinator(coordinator)
+        navigationStackCoordinator.setSheetCoordinator(stackCoordinator) // Don't use the callback (interactive dismiss disabled), choose the event with the action.
     }
     
     // MARK: - Manual Authentication
     
+    // Tchap: login by MAS.
+    // Ask the user its email to decide its homeserver.
+    private func showDecideHomeServerScreen(flow: AuthenticationFlow, loginHint: String?, fromState: State) {
+        let parameters = DecideHomeServerScreenCoordinatorParameters(authenticationService: authenticationService,
+                                                                     authenticationFlow: flow,
+                                                                     loginHint: loginHint,
+                                                                     userIndicatorController: userIndicatorController,
+                                                                     appSettings: appSettings,
+                                                                     analytics: analytics,
+                                                                     accountProviders: appSettings.accountProviders)
+        let coordinator = DecideHomeServerScreenCoordinator(parameters: parameters)
+        
+        coordinator.actions
+            .sink { [weak self] action in
+                guard let self else { return }
+
+                switch action {
+                case .authenticationServiceConfiguredForLogin(let loginHint):
+                    stateMachine.tryEvent(.continueWithPassword, userInfo: loginHint)
+                case .authenticationServiceConfiguredForOIDC(let oidcData, let window):
+                    stateMachine.tryEvent(.continueWithOIDC, userInfo: (oidcData, window))
+                }
+            }
+            .store(in: &cancellables)
+        
+        navigationStackCoordinator.push(coordinator) { [weak self] in
+            self?.stateMachine.tryEvent(.tchapCancelledDecideHomeServer)
+        }
+    }
+
     private func showServerConfirmationScreen(authenticationFlow: AuthenticationFlow) {
         // Reset the service back to the default homeserver before continuing. This ensures
         // we check that registration is supported if it was previously configured for login.
@@ -408,6 +520,11 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
             case .failure:
                 stateMachine.tryEvent(.cancelledOIDCAuthentication(previousState: fromState))
                 // Nothing more to do, the alerts are handled by the presenter.
+                // Tchap: handle reset of `DecideHomeServerScreenCoordinator` if login failed or is canceled by user.
+                //        It enable the user to modify the email instead of being stuck on unmodifiable screen.
+                if let tchapDecideHomeServerCoordinator = navigationStackCoordinator.stackCoordinators.first(where: { $0 is DecideHomeServerScreenCoordinator }) as? DecideHomeServerScreenCoordinator {
+                    tchapDecideHomeServerCoordinator.resetLoadingState()
+                }
             }
             oidcPresenter = nil
         }

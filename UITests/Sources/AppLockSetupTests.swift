@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -25,7 +26,9 @@ class AppLockSetupUITests: XCTestCase {
         /// Not part of the flow, only to verify the stack is cleared.
         static let clearedStack = 99
         
-        static var isPhone: Bool { UIDevice.current.userInterfaceIdiom == .phone }
+        static var isPhone: Bool {
+            UIDevice.current.userInterfaceIdiom == .phone
+        }
     }
     
     func testCreateFlow() async throws {

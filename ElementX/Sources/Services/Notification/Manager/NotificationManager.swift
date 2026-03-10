@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -55,8 +56,14 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
                 self?.enableNotifications(newValue)
             }
             .store(in: &cancellables)
-    }
         
+        NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
+            .sink { [weak self] _ in
+                self?.removeReceivedWhileOfflineNotification()
+            }
+            .store(in: &cancellables)
+    }
+    
     func requestAuthorization() {
         guard appSettings.enableNotifications, !userSession.isNil else { return }
         Task {
@@ -149,6 +156,10 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
             .map(\.request.identifier)
         
         notificationCenter.removeDeliveredNotifications(withIdentifiers: notificationsIdentifiers)
+    }
+    
+    private func removeReceivedWhileOfflineNotification() {
+        notificationCenter.removeDeliveredNotifications(withIdentifiers: [NotificationServiceExtension.receivedWhileOfflineNotificationID])
     }
 
     private func setPusher(with deviceToken: Data, clientProxy: ClientProxyProtocol) async -> Bool {

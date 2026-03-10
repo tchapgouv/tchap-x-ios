@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -63,6 +64,7 @@ protocol RoomInfoProxyProtocol: BaseRoomInfoProxyProtocol {
     
     // Tchap: implement access_rule accessor
     var accessRule: AccessRule? { get }
+    var visibility: RoomVisibility! { get }
 }
 
 extension BaseRoomInfoProxyProtocol {
@@ -92,7 +94,7 @@ extension RoomInfoProxyProtocol {
         }
         
         return switch joinRule {
-        case .invite, .knock, .restricted, .knockRestricted, .private:
+        case .invite, .knock, .restricted, .knockRestricted:
             true
         case .public:
             false
@@ -135,5 +137,23 @@ extension RoomInfoProxyProtocol {
         
         // And finally return whatever the first alternative alias is
         return alternativeAliases.first
+    }
+    
+    /// If present, the state of history sharing in this room. This *does not* consider the `enableKeyShareOnInvite`
+    /// feature flag, so consumers should be careful to check the flag is true before utilising this property.
+    var historySharingState: RoomHistorySharingState? {
+        guard isEncrypted else {
+            return nil
+        }
+        return switch historyVisibility {
+        case .joined, .invited:
+            .hidden
+        case .shared:
+            .shared
+        case .worldReadable:
+            .worldReadable
+        case .custom:
+            nil
+        }
     }
 }

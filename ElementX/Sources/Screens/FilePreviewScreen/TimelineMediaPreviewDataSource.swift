@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -32,12 +33,12 @@ class TimelineMediaPreviewDataSource: NSObject, QLPreviewControllerDataSource {
     private var backwardPadding: Int
     private var forwardPadding: Int
     
-    var paginationState: PaginationState
+    var paginationState: TimelinePaginationState
     
     init(itemViewStates: [RoomTimelineItemViewState],
          initialItem: EventBasedMessageTimelineItemProtocol,
          initialPadding: Int = 100,
-         paginationState: PaginationState) {
+         paginationState: TimelinePaginationState) {
         previewItems = itemViewStates.compactMap(TimelineMediaPreviewItem.Media.init)
         self.initialItem = initialItem
         
@@ -113,8 +114,13 @@ class TimelineMediaPreviewDataSource: NSObject, QLPreviewControllerDataSource {
     
     // MARK: - QLPreviewControllerDataSource
     
-    var firstPreviewItemIndex: Int { backwardPadding }
-    var lastPreviewItemIndex: Int { backwardPadding + previewItems.count - 1 }
+    var firstPreviewItemIndex: Int {
+        backwardPadding
+    }
+
+    var lastPreviewItemIndex: Int {
+        backwardPadding + previewItems.count - 1
+    }
     
     func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
         previewItems.count + backwardPadding + forwardPadding
@@ -124,9 +130,9 @@ class TimelineMediaPreviewDataSource: NSObject, QLPreviewControllerDataSource {
         let arrayIndex = index - backwardPadding
         
         if index < firstPreviewItemIndex {
-            return paginationState.backward == .timelineEndReached ? TimelineMediaPreviewItem.Loading.timelineStart : .paginatingBackwards
+            return paginationState.backward == .endReached ? TimelineMediaPreviewItem.Loading.timelineStart : .paginatingBackwards
         } else if index > lastPreviewItemIndex {
-            return paginationState.forward == .timelineEndReached ? TimelineMediaPreviewItem.Loading.timelineEnd : .paginatingForwards
+            return paginationState.forward == .endReached ? TimelineMediaPreviewItem.Loading.timelineEnd : .paginatingForwards
         } else {
             return previewItems[arrayIndex]
         }

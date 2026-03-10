@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -22,6 +23,7 @@ enum A11yIdentifiers {
     static let loginScreen = LoginScreen()
     static let authenticationStartScreen = AuthenticationStartScreen()
     static let reportContent = ReportContent()
+    static let joinRoomScreen = JoinRoomScreen()
     static let roomScreen = RoomScreen()
     static let roomDetailsScreen = RoomDetailsScreen()
     static let roomNotificationSettingsScreen = RoomNotificationSettingsScreen()
@@ -41,8 +43,13 @@ enum A11yIdentifiers {
     static let notificationSettingsEditScreen = NotificationSettingsEditScreen()
     static let pollFormScreen = PollFormScreen()
     static let roomPollsHistoryScreen = RoomPollsHistoryScreen()
+    static let roomMembersListScreen = RoomMembersListScreen()
     static let manageRoomMemberSheet = ManageRoomMemberSheet()
-    static let spaceListScreen = SpaceListScreen()
+    static let spacesScreen = SpacesScreen()
+    static let spaceScreen = SpaceScreen()
+    static let spaceAddRoomsScreen = SpaceAddRoomsScreen()
+    static let spaceSettingsScreen = SpaceSettingsScreen()
+    static let linkNewDeviceScreen = LinkNewDeviceScreen()
     
     struct AlertInfo {
         let primaryButton = "alert_info-primary_button"
@@ -50,7 +57,9 @@ enum A11yIdentifiers {
     }
     
     struct AppLockScreen {
-        func numpad(_ digit: Int) -> String { "app_lock-numpad_\(digit)" }
+        func numpad(_ digit: Int) -> String {
+            "app_lock-numpad_\(digit)"
+        }
     }
     
     struct AppLockSetupBiometricsScreen {
@@ -102,6 +111,7 @@ enum A11yIdentifiers {
         let userAvatar = "home_screen-user_avatar"
         let recoveryKeyConfirmationBannerContinue = "home_screen-recovery_key_confirmation_continue"
         let startChat = "home_screen-start_chat"
+        let spaceFilters = "home_screen-space_filters"
         
         let roomNamePrefix = "home_screen-room_name"
         func roomName(_ name: String) -> String {
@@ -130,6 +140,10 @@ enum A11yIdentifiers {
     
     struct ReportContent {
         let ignoreUser = "report_content-ignore_user"
+    }
+    
+    struct JoinRoomScreen {
+        let join = "join-room_join"
     }
     
     struct RoomScreen {
@@ -191,9 +205,7 @@ enum A11yIdentifiers {
     struct RoomRolesAndPermissionsScreen {
         let administrators = "room_roles_and_permissions-administrators"
         let moderators = "room_roles_and_permissions-moderators"
-        let roomDetails = "room_roles_and_permissions-room_details"
-        let messagesAndContent = "room_roles_and_permissions-messages_and_content"
-        let memberModeration = "room_roles_and_permissions-member_moderation"
+        let permissions = "room_roles_and_permissions-permissions"
     }
     
     struct SecureBackupScreen {
@@ -223,7 +235,6 @@ enum A11yIdentifiers {
         let acceptVerificationRequest = "session_verification-accept_verification_request"
         let ignoreVerificationRequest = "session_verification-ignore_verification_request"
         let requestVerification = "session_verification-request_verification"
-        let startSasVerification = "session_verification-start_sas_verification"
         let acceptChallenge = "session_verification-accept_challenge"
         let declineChallenge = "session_verification-decline_challenge"
         let emojiWrapper = "session_verification-emojis"
@@ -264,8 +275,12 @@ enum A11yIdentifiers {
     }
     
     struct CreateRoomScreen {
+        let create = "create_room-create"
+        let cancel = "create_room-cancel"
+        let roomAvatar = "create_room-room_avatar"
         let roomName = "create_room-room_name"
         let roomTopic = "create_room-room_topic"
+        let mediaPicker = "create_room-media_picker"
     }
 
     struct PollFormScreen {
@@ -295,16 +310,42 @@ enum A11yIdentifiers {
         let loadMore = "room_polls_history_screen-load_more"
     }
     
+    struct RoomMembersListScreen {
+        let invite = "room_members_list_screen-invite"
+    }
+    
     struct ManageRoomMemberSheet {
         let viewProfile = "manage_room_member_sheet-view_profile"
     }
     
-    struct SpaceListScreen {
-        let userAvatar = "space_list_screen-user_avatar"
+    struct SpacesScreen {
+        let userAvatar = "spaces_screen-user_avatar"
         
-        let roomNamePrefix = "space_list_screen-room_name"
+        let roomNamePrefix = "spaces_screen-room_name"
         func spaceRoomName(_ name: String) -> String {
             "\(roomNamePrefix):\(name)"
         }
+    }
+    
+    struct SpaceScreen {
+        let moreMenu = "space_screen-more_menu"
+        let createRoom = "space_screen-create_room"
+        let addExistingRooms = "space_screen-add_existing_rooms"
+        let viewMembers = "space_screen-view_members"
+        let settings = "space_screen-settings"
+    }
+    
+    struct SpaceAddRoomsScreen {
+        let cancel = "space_add_rooms_screen-cancel"
+    }
+    
+    struct SpaceSettingsScreen {
+        let editBaseInfo = "space_settings_screen-edit_space_info"
+    }
+    
+    struct LinkNewDeviceScreen {
+        let cancel = "link_new_device_screen-cancel"
+        let mobileDevice = "link_new_device_screen-mobile_device"
+        let desktopComputer = "link_new_device_screen-desktop_computer"
     }
 }

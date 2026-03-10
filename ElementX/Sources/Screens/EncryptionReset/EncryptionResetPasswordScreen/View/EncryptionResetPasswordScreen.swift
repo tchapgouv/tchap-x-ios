@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -44,7 +45,6 @@ struct EncryptionResetPasswordScreen: View {
         .onAppear { textFieldFocus = true }
     }
     
-    @ViewBuilder
     private var passwordSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.commonPassword)
@@ -73,7 +73,7 @@ struct EncryptionResetPasswordScreen_Previews: PreviewProvider, TestablePreview 
     static let passwordPublisher = PassthroughSubject<String, Never>()
     static let viewModel = EncryptionResetPasswordScreenViewModel(passwordPublisher: passwordPublisher)
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             EncryptionResetPasswordScreen(context: viewModel.context)
         }
     }

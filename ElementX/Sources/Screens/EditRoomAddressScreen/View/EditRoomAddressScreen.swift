@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE in the repository root for full details.
 //
 
@@ -31,7 +32,7 @@ struct EditRoomAddressScreen: View {
                             .foregroundStyle(.compound.textCriticalPrimary)
                             .font(.compound.bodySM)
                     }
-                    Text(L10n.screenCreateRoomRoomAddressSectionFooter)
+                    Text(L10n.screenEditRoomAddressRoomAddressSectionFooter)
                         .compoundListSectionFooter()
                         .font(.compound.bodySM)
                 }
@@ -85,17 +86,17 @@ struct EditRoomAddressScreen_Previews: PreviewProvider, TestablePreview {
     }()
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             EditRoomAddressScreen(context: noAliasviewModel.context)
         }
         .previewDisplayName("No alias")
         
-        NavigationStack {
+        ElementNavigationStack {
             EditRoomAddressScreen(context: aliasviewModel.context)
         }
         .previewDisplayName("With alias")
         
-        NavigationStack {
+        ElementNavigationStack {
             EditRoomAddressScreen(context: invalidSymbolsViewModel.context)
         }
         .snapshotPreferences(expect: invalidSymbolsViewModel.context.$viewState.map { state in
@@ -103,7 +104,7 @@ struct EditRoomAddressScreen_Previews: PreviewProvider, TestablePreview {
         })
         .previewDisplayName("Invalid symbols")
         
-        NavigationStack {
+        ElementNavigationStack {
             EditRoomAddressScreen(context: alreadyExistingViewModel.context)
         }
         .snapshotPreferences(expect: alreadyExistingViewModel.context.$viewState.map { state in

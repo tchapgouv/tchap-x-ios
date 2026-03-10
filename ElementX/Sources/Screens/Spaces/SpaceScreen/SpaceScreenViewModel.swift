@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -14,6 +15,8 @@ class SpaceScreenViewModel: SpaceScreenViewModelType, SpaceScreenViewModelProtoc
     private let spaceRoomListProxy: SpaceRoomListProxyProtocol
     private let spaceServiceProxy: SpaceServiceProxyProtocol
     private let clientProxy: ClientProxyProtocol
+    private let mediaProvider: MediaProviderProtocol
+    private let appSettings: AppSettings
     private let userIndicatorController: UserIndicatorControllerProtocol
     
     private let actionsSubject: PassthroughSubject<SpaceScreenViewModelAction, Never> = .init()
@@ -25,16 +28,24 @@ class SpaceScreenViewModel: SpaceScreenViewModelType, SpaceScreenViewModelProtoc
          spaceServiceProxy: SpaceServiceProxyProtocol,
          selectedSpaceRoomPublisher: CurrentValuePublisher<String?, Never>,
          userSession: UserSessionProtocol,
+         appSettings: AppSettings,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.spaceRoomListProxy = spaceRoomListProxy
         self.spaceServiceProxy = spaceServiceProxy
         clientProxy = userSession.clientProxy
+        mediaProvider = userSession.mediaProvider
         self.userIndicatorController = userIndicatorController
+        self.appSettings = appSettings
         
-        super.init(initialViewState: SpaceScreenViewState(space: spaceRoomListProxy.spaceRoomProxy,
+        super.init(initialViewState: SpaceScreenViewState(space: spaceRoomListProxy.spaceServiceRoomPublisher.value,
                                                           rooms: spaceRoomListProxy.spaceRoomsPublisher.value,
                                                           selectedSpaceRoomID: selectedSpaceRoomPublisher.value),
                    mediaProvider: userSession.mediaProvider)
+        
+        spaceRoomListProxy.spaceServiceRoomPublisher
+            .receive(on: DispatchQueue.main)
+            .weakAssign(to: \.state.space, on: self)
+            .store(in: &cancellables)
         
         spaceRoomListProxy.spaceRoomsPublisher
             .receive(on: DispatchQueue.main)
@@ -46,13 +57,16 @@ class SpaceScreenViewModel: SpaceScreenViewModelType, SpaceScreenViewModelProtoc
         spaceRoomListProxy.paginationStatePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] paginationState in
+                guard let self else { return }
+                
                 switch paginationState {
-                case .idle(let endReached):
-                    self?.state.isPaginating = false
-                    guard !endReached else { return }
+                case .idle(endReached: false):
+                    state.paginationState = .idle
                     Task { await spaceRoomListProxy.paginate() }
+                case .idle(endReached: true):
+                    state.paginationState = .endReached
                 case .loading:
-                    self?.state.isPaginating = true
+                    state.paginationState = .paginating
                 }
             }
             .store(in: &cancellables)
@@ -61,10 +75,37 @@ class SpaceScreenViewModel: SpaceScreenViewModelType, SpaceScreenViewModelProtoc
             .weakAssign(to: \.state.selectedSpaceRoomID, on: self)
             .store(in: &cancellables)
         
+        appSettings.$createSpaceEnabled
+            .weakAssign(to: \.state.canCreateRoom, on: self)
+            .store(in: &cancellables)
+        
         Task {
-            if case let .joined(roomProxy) = await userSession.clientProxy.roomForIdentifier(spaceRoomListProxy.spaceRoomProxy.id),
-               case let .success(permalinkURL) = await roomProxy.matrixToPermalink() {
-                state.permalink = permalinkURL
+            if case let .joined(roomProxy) = await userSession.clientProxy.roomForIdentifier(spaceRoomListProxy.id) {
+                // Required to listen for membership updates in the members flow
+                await roomProxy.subscribeForUpdates()
+                state.roomProxy = roomProxy
+                if case let .success(permalinkURL) = await roomProxy.matrixToPermalink() {
+                    state.permalink = permalinkURL
+                }
+                
+                appSettings.$spaceSettingsEnabled
+                    .combineLatest(roomProxy.infoPublisher)
+                    .sink { [weak self] isEnabled, roomInfo in
+                        guard let self else { return }
+                        guard isEnabled, let powerLevels = roomInfo.powerLevels else {
+                            state.canEditBaseInfo = false
+                            state.canEditRolesAndPermissions = false
+                            state.canEditSecurityAndPrivacy = false
+                            state.canEditChildren = false
+                            return
+                        }
+                        state.canEditBaseInfo = powerLevels.canOwnUserEditBaseInfo()
+                        state.canEditRolesAndPermissions = powerLevels.canOwnUserEditRolesAndPermissions()
+                        state.canEditSecurityAndPrivacy = powerLevels.canOwnUserEditSecurityAndPrivacy(isSpace: roomInfo.isSpace,
+                                                                                                       joinRule: roomInfo.joinRule)
+                        state.canEditChildren = powerLevels.canOwnUser(sendStateEvent: .spaceChild)
+                    }
+                    .store(in: &cancellables)
             }
         }
     }
@@ -75,37 +116,52 @@ class SpaceScreenViewModel: SpaceScreenViewModelType, SpaceScreenViewModelProtoc
         MXLog.info("View model: received view action: \(viewAction)")
         
         switch viewAction {
-        case .spaceAction(.select(let spaceRoomProxy)):
-            if spaceRoomProxy.isSpace {
-                if spaceRoomProxy.state != .joined {
-                    actionsSubject.send(.selectUnjoinedSpace(spaceRoomProxy))
+        case .spaceAction(.select(let spaceServiceRoom)) where state.editMode == .inactive:
+            if spaceServiceRoom.isSpace {
+                if spaceServiceRoom.state != .joined {
+                    actionsSubject.send(.selectUnjoinedSpace(spaceServiceRoom))
                 } else {
-                    Task { await selectSpace(spaceRoomProxy) }
+                    Task { await selectSpace(spaceServiceRoom) }
                 }
             } else {
                 // No need to check the join state, the room flow will show an appropriately configured join screen if needed.
-                actionsSubject.send(.selectRoom(roomID: spaceRoomProxy.id))
+                actionsSubject.send(.selectRoom(roomID: spaceServiceRoom.id))
             }
-        case .spaceAction(.join(let spaceRoomProxy)):
-            Task { await join(spaceRoomProxy) }
+        case .spaceAction(.select(let spaceServiceRoom)): // isEditModeActive == true
+            withTransaction(\.disablesAnimations, true) { // The button adds an unwanted animation.
+                if state.editModeSelectedIDs.contains(spaceServiceRoom.id) {
+                    state.editModeSelectedIDs.remove(spaceServiceRoom.id)
+                } else {
+                    state.editModeSelectedIDs.insert(spaceServiceRoom.id)
+                }
+            }
+        case .spaceAction(.join(let spaceServiceRoom)):
+            Task { await join(spaceServiceRoom) }
         case .leaveSpace:
             Task { await showLeaveSpaceConfirmation() }
-        case .deselectAllLeaveRoomDetails:
-            guard let leaveHandle = state.bindings.leaveHandle else { fatalError("The leave handle should be available.") }
-            for room in leaveHandle.rooms {
-                room.isSelected = false
+        case .displayMembers(let roomProxy):
+            actionsSubject.send(.displayMembers(roomProxy: roomProxy))
+        case .spaceSettings(let roomProxy):
+            actionsSubject.send(.displaySpaceSettings(roomProxy: roomProxy))
+        case .addExistingRooms:
+            actionsSubject.send(.addExistingChildren)
+        case .manageChildren:
+            withAnimation(.easeOut(duration: 0.25).disabledDuringTests()) {
+                state.editMode = .transient
             }
-        case .toggleLeaveSpaceRoomDetails(let spaceRoomID):
-            guard let room = state.bindings.leaveHandle?.rooms.first(where: { $0.spaceRoomProxy.id == spaceRoomID }) else {
-                fatalError("The space room to toggle is not in the list of rooms to leave.")
+        case .removeSelectedChildren:
+            state.bindings.isPresentingRemoveChildrenConfirmation = true
+        case .confirmRemoveSelectedChildren:
+            Task { await removeSelectedChildren() }
+        case .finishManagingChildren:
+            withAnimation(.easeOut(duration: 0.25).disabledDuringTests()) {
+                state.editMode = .inactive
+                state.editModeRemovedIDs = []
+            } completion: {
+                self.state.editModeSelectedIDs.removeAll()
             }
-            withTransaction(\.disablesAnimations, true) { // The button is adding an unwanted animation.
-                room.isSelected.toggle()
-            }
-        case .confirmLeaveSpace:
-            Task { await confirmLeaveSpace() }
-        case .spaceSettings:
-            break // Not implemented.
+        case .createChildRoom:
+            Task { await createChildRoom() }
         }
     }
     
@@ -114,29 +170,36 @@ class SpaceScreenViewModel: SpaceScreenViewModelType, SpaceScreenViewModelProtoc
         state.joiningRoomIDs.removeAll()
     }
     
+    func resetRoomList() {
+        Task { await spaceRoomListProxy.resetAndWaitForFullReload(timeout: .seconds(10)) }
+    }
+    
     // MARK: - Private
     
-    private func join(_ spaceRoomProxy: SpaceRoomProxyProtocol) async {
-        state.joiningRoomIDs.insert(spaceRoomProxy.id)
-        defer { state.joiningRoomIDs.remove(spaceRoomProxy.id) }
+    private func createChildRoom() async {
+        switch await spaceServiceProxy.spaceForIdentifier(spaceID: spaceRoomListProxy.id) {
+        case .success(.some(let space)):
+            actionsSubject.send(.displayCreateChildRoomFlow(space: space))
+        default:
+            MXLog.error("Unable to create child room: space not found")
+            userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
+        }
+    }
+    
+    private func join(_ spaceServiceRoom: SpaceServiceRoom) async {
+        state.joiningRoomIDs.insert(spaceServiceRoom.id)
+        defer { state.joiningRoomIDs.remove(spaceServiceRoom.id) }
         
-        guard case .success = await clientProxy.joinRoom(spaceRoomProxy.id, via: spaceRoomProxy.via) else {
+        guard case .success = await clientProxy.joinRoom(spaceServiceRoom.id, via: spaceServiceRoom.via) else {
             showFailureIndicator()
             return
         }
         
-        // If multiple join operations are running, then only show the last one.
-        guard state.joiningRoomIDs == [spaceRoomProxy.id] else { return }
-        
-        if spaceRoomProxy.isSpace {
-            await selectSpace(spaceRoomProxy)
-        } else {
-            actionsSubject.send(.selectRoom(roomID: spaceRoomProxy.id))
-        }
+        // We don't want to show the space room after joining it this way 🤷‍♂️
     }
     
-    private func selectSpace(_ spaceRoomProxy: SpaceRoomProxyProtocol) async {
-        switch await spaceServiceProxy.spaceRoomList(spaceID: spaceRoomProxy.id, parent: spaceRoomListProxy.spaceRoomProxy) {
+    private func selectSpace(_ spaceServiceRoom: SpaceServiceRoom) async {
+        switch await spaceServiceProxy.spaceRoomList(spaceID: spaceServiceRoom.id) {
         case .success(let spaceRoomListProxy):
             actionsSubject.send(.selectSpace(spaceRoomListProxy))
         case .failure(let error):
@@ -145,43 +208,95 @@ class SpaceScreenViewModel: SpaceScreenViewModelType, SpaceScreenViewModelProtoc
         }
     }
     
+    private func removeSelectedChildren() async {
+        showRemovingIndicator()
+        defer { hideRemovingIndicator() }
+        
+        state.bindings.isPresentingRemoveChildrenConfirmation = false
+        
+        MXLog.info("Removing \(state.editModeSelectedIDs.count) children from space \(spaceRoomListProxy.id)")
+        
+        var removedIDs: [String] = [] // Using an intermediate array so the screen doesn't change until the operation finishes.
+        for childID in state.editModeSelectedIDs {
+            switch await spaceServiceProxy.removeChild(childID, from: spaceRoomListProxy.id) {
+            case .success:
+                removedIDs.append(childID)
+            case .failure(let error):
+                MXLog.error("Failed removing room from space: \(error)")
+                showFailureIndicator()
+                
+                // Hide rooms that were successfully removed.
+                state.editModeSelectedIDs = state.editModeSelectedIDs.filter { !removedIDs.contains($0) }
+                state.editModeRemovedIDs.formUnion(removedIDs)
+                
+                return
+            }
+        }
+        
+        MXLog.info("\(state.editModeSelectedIDs.count) children removed from space \(spaceRoomListProxy.id)")
+        
+        await spaceRoomListProxy.resetAndWaitForFullReload(timeout: .seconds(10))
+        
+        process(viewAction: .finishManagingChildren)
+    }
+    
     private func showLeaveSpaceConfirmation() async {
-        guard case let .success(leaveHandle) = await spaceServiceProxy.leaveSpace(spaceID: spaceRoomListProxy.spaceRoomProxy.id) else {
+        guard case let .success(leaveHandle) = await spaceServiceProxy.leaveSpace(spaceID: spaceRoomListProxy.id) else {
             showFailureIndicator()
             return
         }
         
-        state.bindings.leaveHandle = leaveHandle
-    }
-    
-    private func confirmLeaveSpace() async {
-        guard let leaveHandle = state.bindings.leaveHandle else { fatalError("Leaving without a handle is impossible.") }
-        
-        showLeavingIndicator()
-        defer { hideLeavingIndicator() }
-        
-        switch await leaveHandle.leave() {
-        case .success:
-            state.bindings.leaveHandle = nil
-            actionsSubject.send(.leftSpace)
-        case .failure:
-            showFailureIndicator()
+        let leaveSpaceViewModel = LeaveSpaceViewModel(spaceName: state.space.name,
+                                                      canEditRolesAndPermissions: appSettings.spaceSettingsEnabled && state.canEditRolesAndPermissions,
+                                                      leaveHandle: leaveHandle,
+                                                      userIndicatorController: userIndicatorController,
+                                                      mediaProvider: mediaProvider)
+        leaveSpaceViewModel.actions.sink { [weak self] action in
+            guard let self else { return }
+            switch action {
+            case .didCancel:
+                state.bindings.leaveSpaceViewModel = nil
+            case .presentRolesAndPermissions:
+                guard let roomProxy = state.roomProxy else {
+                    fatalError("There should always be a room proxy available for joined spaces.")
+                }
+                state.bindings.leaveSpaceViewModel = nil
+                actionsSubject.send(.presentRolesAndPermissions(roomProxy: roomProxy))
+            case .didLeaveSpace:
+                state.bindings.leaveSpaceViewModel = nil
+                actionsSubject.send(.leftSpace)
+            case .presentTransferOwnership:
+                guard let roomProxy = state.roomProxy else {
+                    fatalError("There should always be a room proxy available for joined spaces.")
+                }
+                state.bindings.leaveSpaceViewModel = nil
+                actionsSubject.send(.presentTransferOwnership(roomProxy: roomProxy))
+            }
         }
+        .store(in: &cancellables)
+        
+        state.bindings.leaveSpaceViewModel = leaveSpaceViewModel
     }
-    
+        
     // MARK: - Indicators
     
-    private static var leavingIndicatorID: String { "\(Self.self)-Leaving" }
-    private static var failureIndicatorID: String { "\(Self.self)-Failure" }
-    
-    private func showLeavingIndicator() {
-        userIndicatorController.submitIndicator(UserIndicator(id: Self.leavingIndicatorID,
-                                                              type: .modal(progress: .indeterminate, interactiveDismissDisabled: true, allowsInteraction: false),
-                                                              title: L10n.commonLeavingSpace))
+    private static var removingIndicatorID: String {
+        "\(Self.self)-Removing"
+    }
+
+    private static var failureIndicatorID: String {
+        "\(Self.self)-Failure"
     }
     
-    private func hideLeavingIndicator() {
-        userIndicatorController.retractIndicatorWithId(Self.leavingIndicatorID)
+    private func showRemovingIndicator() {
+        userIndicatorController.submitIndicator(UserIndicator(id: Self.removingIndicatorID,
+                                                              type: .modal(progress: .indeterminate, interactiveDismissDisabled: true, allowsInteraction: false),
+                                                              title: L10n.commonRemoving,
+                                                              persistent: true))
+    }
+    
+    private func hideRemovingIndicator() {
+        userIndicatorController.retractIndicatorWithId(Self.removingIndicatorID)
     }
     
     private func showFailureIndicator() {

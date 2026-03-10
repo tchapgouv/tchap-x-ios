@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -72,7 +73,7 @@ class UserProfileScreenViewModel: UserProfileScreenViewModelType, UserProfileScr
     
     private func loadProfile() async {
         async let profileResult = userSession.clientProxy.profile(for: state.userID)
-        async let identityResult = userSession.clientProxy.userIdentity(for: state.userID)
+        async let identityResult = userSession.clientProxy.userIdentity(for: state.userID, fallBackToServer: true)
         
         switch await profileResult {
         case .success(let userProfile):
@@ -153,8 +154,13 @@ class UserProfileScreenViewModel: UserProfileScreenViewModelType, UserProfileScr
     
     // MARK: User Indicators
     
-    private var loadingIndicatorIdentifier: String { "\(Self.self)-Loading" }
-    private var statusIndicatorIdentifier: String { "\(Self.self)-Status" }
+    private var loadingIndicatorIdentifier: String {
+        "\(Self.self)-Loading"
+    }
+
+    private var statusIndicatorIdentifier: String {
+        "\(Self.self)-Status"
+    }
     
     private func showLoadingIndicator(allowsInteraction: Bool) {
         userIndicatorController.submitIndicator(UserIndicator(id: loadingIndicatorIdentifier,

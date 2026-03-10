@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -57,6 +58,19 @@ extension FileManager {
         }
         
         return size
+    }
+
+    func sizeForDirectory(at url: URL) throws -> UInt {
+        guard let enumerator = enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey, .isDirectoryKey]) else {
+            throw FileManagerError.invalidFileSize
+        }
+        
+        return try enumerator
+            .compactMap {
+                guard let fileURL = $0 as? URL else { return nil }
+                return try UInt(fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0)
+            }
+            .reduce(0, +)
     }
     
     func numberOfItems(at url: URL) throws -> Int {

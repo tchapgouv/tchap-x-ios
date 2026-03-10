@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -19,7 +20,7 @@ struct EmojiPickerScreen: View {
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .heavy)
     
     var body: some View {
-        NavigationStack {
+        ElementNavigationStack {
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: minimumWidth))], spacing: 16) {
                     ForEach(context.viewState.categories) { category in
@@ -108,7 +109,7 @@ struct EmojiPickerScreen_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
         EmojiPickerScreen(context: viewModel.context)
             .previewDisplayName("Screen")
-            .snapshotPreferences(expect: viewModel.context.observe(\.viewState.categories).map { !$0.isEmpty }.eraseToStream())
+            .snapshotPreferences(expect: viewModel.context.observe(\.viewState.categories).map { !$0.isEmpty })
     }
 }
 

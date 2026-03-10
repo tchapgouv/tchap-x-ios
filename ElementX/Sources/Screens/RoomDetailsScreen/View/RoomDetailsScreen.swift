@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -45,7 +46,7 @@ struct RoomDetailsScreen: View {
                message: blockUserAlertMessage)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                if context.viewState.canEdit {
+                if context.viewState.canEditBaseInfo {
                     Button(L10n.actionEdit) {
                         context.send(viewAction: .processTapEdit)
                     }
@@ -62,7 +63,6 @@ struct RoomDetailsScreen: View {
     
     private var roomHeaderSection: some View {
         AvatarHeaderView(room: context.viewState.details,
-                         isOpenToExternalUsers: $context.isOpenToExternalUsers, // Tchap: pass `isOpenToExternalUsers` binding parameter
                          avatarSize: .room(on: .details),
                          mediaProvider: context.mediaProvider) { url in
             context.send(viewAction: .displayAvatar(url))
@@ -74,7 +74,6 @@ struct RoomDetailsScreen: View {
         .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.avatar)
     }
     
-    @ViewBuilder
     private var headerSectionShortcuts: some View {
         HStack(spacing: 8) {
             ForEach(context.viewState.shortcuts, id: \.self) { shortcut in
@@ -263,8 +262,7 @@ struct RoomDetailsScreen: View {
             Section {
                 ListRow(label: .default(title: L10n.screenRoomDetailsEncryptionEnabledTitle,
                                         description: L10n.screenRoomDetailsEncryptionEnabledSubtitle,
-                                        icon: \.lock,
-                                        iconAlignment: .top),
+                                        icon: \.lock),
                         kind: .label)
                     .accessibilityAddTraits(.isHeader)
             } header: {
@@ -330,36 +328,44 @@ struct RoomDetailsScreen: View {
 
 // MARK: - Previews
 
+import MatrixRustSDK
+
 struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
-    static let genericRoomViewModel = makeGenericRoomViewModel()
+    static let genericWorldReadableRoomViewModel = makeGenericRoomViewModel(historyVisibility: .worldReadable)
+    static let genericJoinedRoomViewModel = makeGenericRoomViewModel(historyVisibility: .joined)
     static let simpleRoomViewModel = makeSimpleRoomViewModel()
     static let dmRoomViewModel = makeDMViewModel(verificationState: .notVerified)
     static let dmRoomVerifiedViewModel = makeDMViewModel(verificationState: .verified)
     static let dmRoomVerificationViolationViewModel = makeDMViewModel(verificationState: .verificationViolation)
     
     static var previews: some View {
-        RoomDetailsScreen(context: genericRoomViewModel.context)
-            .snapshotPreferences(expect: genericRoomViewModel.context.observe(\.viewState.permalink).map { $0 != nil }.eraseToStream())
-            .previewDisplayName("Generic Room")
+        RoomDetailsScreen(context: genericJoinedRoomViewModel.context)
+            .snapshotPreferences(expect: genericJoinedRoomViewModel.context.observe(\.viewState.permalink).map { $0 != nil })
+            .previewDisplayName("Generic Room - Joined History Visibility")
+        
+        RoomDetailsScreen(context: genericWorldReadableRoomViewModel.context)
+            .snapshotPreferences(expect: genericWorldReadableRoomViewModel.context.observe(\.viewState.permalink).map { $0 != nil })
+            .previewDisplayName("Generic Room - World Readable History Visibility")
         
         RoomDetailsScreen(context: simpleRoomViewModel.context)
-            .snapshotPreferences(expect: simpleRoomViewModel.context.observe(\.viewState.permalink).map { $0 != nil }.eraseToStream())
+            .snapshotPreferences(expect: simpleRoomViewModel.context.observe(\.viewState.permalink).map { $0 != nil })
             .previewDisplayName("Simple Room")
         
         RoomDetailsScreen(context: dmRoomViewModel.context)
-            .snapshotPreferences(expect: dmRoomViewModel.context.observe(\.viewState.accountOwner).map { $0 != nil }.eraseToStream())
+            .snapshotPreferences(expect: dmRoomViewModel.context.observe(\.viewState.accountOwner).map { $0 != nil })
             .previewDisplayName("DM Room")
         
         RoomDetailsScreen(context: dmRoomVerifiedViewModel.context)
-            .snapshotPreferences(expect: dmRoomVerifiedViewModel.context.observe(\.viewState.dmRecipientInfo?.verificationState).map { $0 == .verified }.eraseToStream())
+            .snapshotPreferences(expect: dmRoomVerifiedViewModel.context.observe(\.viewState.dmRecipientInfo?.verificationState).map { $0 == .verified })
             .previewDisplayName("DM Room Verified")
         
         RoomDetailsScreen(context: dmRoomVerificationViolationViewModel.context)
-            .snapshotPreferences(expect: dmRoomVerificationViolationViewModel.context.observe(\.viewState.accountOwner).map { $0 != nil }.eraseToStream())
+            .snapshotPreferences(expect: dmRoomVerificationViolationViewModel.context.observe(\.viewState.accountOwner).map { $0 != nil })
             .previewDisplayName("DM Room Verification Violation")
     }
     
-    private static func makeGenericRoomViewModel() -> RoomDetailsScreenViewModel {
+    private static func makeGenericRoomViewModel(historyVisibility: RoomHistoryVisibility) -> RoomDetailsScreenViewModel {
+        ServiceLocator.shared.settings.enableKeyShareOnInvite = true
         ServiceLocator.shared.settings.knockingEnabled = true
         let knockRequests: [KnockRequestProxyMock] = [.init()]
         
@@ -383,6 +389,7 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
                                                   isDirect: false,
                                                   isEncrypted: true,
                                                   canonicalAlias: "#alias:domain.com",
+                                                  historyVisibility: historyVisibility,
                                                   members: members,
                                                   knockRequestsState: .loaded(knockRequests),
                                                   joinRule: .knock))
@@ -402,6 +409,7 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
     }
     
     private static func makeSimpleRoomViewModel() -> RoomDetailsScreenViewModel {
+        ServiceLocator.shared.settings.enableKeyShareOnInvite = true
         ServiceLocator.shared.settings.knockingEnabled = true
         let knockRequests: [KnockRequestProxyMock] = [.init()]
         
@@ -431,6 +439,8 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
     }
     
     private static func makeDMViewModel(verificationState: UserIdentityVerificationState) -> RoomDetailsScreenViewModel {
+        ServiceLocator.shared.settings.enableKeyShareOnInvite = true
+        
         let members: [RoomMemberProxyMock] = [
             .mockMe,
             .mockDan
@@ -446,7 +456,7 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
         
         let clientProxyMock = ClientProxyMock(.init())
         
-        clientProxyMock.userIdentityForClosure = { userID in
+        clientProxyMock.userIdentityForFallBackToServerClosure = { userID, _ in
             let identity = switch userID {
             case RoomMemberProxyMock.mockDan.userID:
                 UserIdentityProxyMock(configuration: .init(verificationState: verificationState))

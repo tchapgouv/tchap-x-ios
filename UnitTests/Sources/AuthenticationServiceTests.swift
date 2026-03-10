@@ -1,11 +1,10 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
-
-import XCTest
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
@@ -14,84 +13,95 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Foundation
+import MatrixRustSDKMocks
+import Testing
 
-class AuthenticationServiceTests: XCTestCase {
+@Suite
+@MainActor
+struct AuthenticationServiceTests {
     var client: ClientSDKMock!
     var userSessionStore: UserSessionStoreMock!
     var encryptionKeyProvider: MockEncryptionKeyProvider!
-    
     var service: AuthenticationService!
     
-    func testPasswordLogin() async {
-        setupMocks(serverAddress: "example.com")
+    @Test
+    mutating func passwordLogin() async {
+        setup(serverAddress: "example.com")
         
         switch await service.configure(for: "example.com", flow: .login) {
         case .success:
             break
         case .failure(let error):
-            XCTFail("Unexpected failure: \(error)")
+            Issue.record("Unexpected failure: \(error)")
         }
         
-        XCTAssertEqual(service.flow, .login)
-        XCTAssertEqual(service.homeserver.value, .mockBasicServer)
+        #expect(service.flow == .login)
+        #expect(service.homeserver.value == .mockBasicServer)
         
         switch await service.login(username: "alice", password: "12345678", initialDeviceName: nil, deviceID: nil) {
         case .success:
-            XCTAssertEqual(client.loginUsernamePasswordInitialDeviceNameDeviceIdCallsCount, 1)
-            XCTAssertEqual(userSessionStore.userSessionForSessionDirectoriesPassphraseCallsCount, 1)
-            XCTAssertEqual(userSessionStore.userSessionForSessionDirectoriesPassphraseReceivedArguments?.passphrase,
-                           encryptionKeyProvider.generateKey().base64EncodedString())
+            #expect(client.loginUsernamePasswordInitialDeviceNameDeviceIdCallsCount == 1)
+            #expect(userSessionStore.userSessionForSessionDirectoriesPassphraseCallsCount == 1)
+            #expect(userSessionStore.userSessionForSessionDirectoriesPassphraseReceivedArguments?.passphrase ==
+                encryptionKeyProvider.generateKey().base64EncodedString())
         case .failure(let error):
-            XCTFail("Unexpected failure: \(error)")
+            Issue.record("Unexpected failure: \(error)")
         }
     }
     
-    func testConfigureLoginWithOIDC() async {
-        setupMocks()
+    @Test
+    mutating func configureLoginWithOIDC() async {
+        setup()
         
         switch await service.configure(for: "matrix.org", flow: .login) {
         case .success:
             break
         case .failure(let error):
-            XCTFail("Unexpected failure: \(error)")
+            Issue.record("Unexpected failure: \(error)")
         }
         
-        XCTAssertEqual(service.flow, .login)
-        XCTAssertEqual(service.homeserver.value, .mockMatrixDotOrg)
+        #expect(service.flow == .login)
+        #expect(service.homeserver.value == .mockMatrixDotOrg)
     }
     
-    func testConfigureRegisterWithOIDC() async {
-        setupMocks()
+    @Test
+    mutating func configureRegisterWithOIDC() async {
+        setup()
         
         switch await service.configure(for: "matrix.org", flow: .register) {
         case .success:
             break
         case .failure(let error):
-            XCTFail("Unexpected failure: \(error)")
+            Issue.record("Unexpected failure: \(error)")
         }
         
-        XCTAssertEqual(service.flow, .register)
-        XCTAssertEqual(service.homeserver.value, .mockMatrixDotOrg)
+        #expect(service.flow == .register)
+        #expect(service.homeserver.value == .mockMatrixDotOrg)
     }
     
-    func testConfigureRegisterNoSupport() async {
+    @Test
+    @MainActor
+    mutating func configureRegisterNoSupport() async {
         let homeserverAddress = "example.com"
-        setupMocks(serverAddress: homeserverAddress)
+        setup(serverAddress: homeserverAddress)
         
         switch await service.configure(for: homeserverAddress, flow: .register) {
         case .success:
-            XCTFail("Configuration should have failed")
+            Issue.record("Configuration should have failed")
         case .failure(let error):
-            XCTAssertEqual(error, .registrationNotSupported)
+            #expect(error == .registrationNotSupported)
         }
         
-        XCTAssertEqual(service.flow, .login)
-        XCTAssertEqual(service.homeserver.value, .init(address: "matrix.org", loginMode: .unknown))
+        #expect(service.flow == .login)
+        // Tchap: adapt test
+//        #expect(service.homeserver.value == .init(address: "matrix.org", loginMode: .unknown))
+        #expect(service.homeserver.value == .init(address: "matrix.agent.dinum.tchap.gouv.fr", loginMode: .unknown))
     }
     
     // MARK: - Helpers
     
-    private func setupMocks(serverAddress: String = "matrix.org") {
+    private mutating func setup(serverAddress: String = "matrix.org") {
         let configuration: AuthenticationClientFactoryMock.Configuration = .init()
         let clientFactory = AuthenticationClientFactoryMock(configuration: configuration)
         

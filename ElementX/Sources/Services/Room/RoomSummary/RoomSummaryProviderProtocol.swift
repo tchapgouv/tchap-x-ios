@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -39,10 +40,15 @@ enum RoomSummaryProviderFilter: Equatable {
     case search(query: String)
     /// Includes only what satisfies the filters used
     case all(filters: Set<RoomListFilter>)
+    /// Include only rooms from the given that satisfy the given filters
+    case rooms(roomsIDs: Set<String>, filters: Set<RoomListFilter>)
 }
 
 // sourcery: AutoMockable
 protocol StaticRoomSummaryProviderProtocol {
+    /// Publishes the current state the summary provider is finding itself in
+    var statePublisher: CurrentValuePublisher<RoomSummaryProviderState, Never> { get }
+    
     /// Publishes the currently available room summaries
     var roomListPublisher: CurrentValuePublisher<[RoomSummary], Never> { get }
     
@@ -51,9 +57,6 @@ protocol StaticRoomSummaryProviderProtocol {
 
 // sourcery: AutoMockable
 protocol RoomSummaryProviderProtocol: StaticRoomSummaryProviderProtocol {
-    /// Publishes the current state the summary provider is finding itself in
-    var statePublisher: CurrentValuePublisher<RoomSummaryProviderState, Never> { get }
-        
     func updateVisibleRange(_ range: Range<Int>)
     
     func setFilter(_ filter: RoomSummaryProviderFilter)

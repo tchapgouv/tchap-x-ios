@@ -1,7 +1,8 @@
 //
-// Copyright 2021-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2021-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -19,7 +20,7 @@ struct CompletionSuggestionView: View {
         // added by the list itself when presenting the divider
         static let listItemSpacing: CGFloat = 4.0
         static let leadingPadding: CGFloat = 16.0
-        // To make the scrolling more apparent we show a factional amount
+        /// To make the scrolling more apparent we show a factional amount
         static let maxVisibleRows: CGFloat = 4.5
     }
 
@@ -85,13 +86,9 @@ struct CompletionSuggestionView: View {
 }
 
 private struct BackgroundView<Content: View>: View {
-    var content: () -> Content
+    @ViewBuilder var content: () -> Content
     
     private let shadowRadius: CGFloat = 20.0
-    
-    init(@ViewBuilder content: @escaping () -> Content) {
-        self.content = content
-    }
     
     var body: some View {
         content()

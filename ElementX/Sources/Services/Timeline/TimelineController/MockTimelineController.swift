@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -20,12 +21,15 @@ class MockTimelineController: TimelineControllerProtocol {
     var roomProxy: JoinedRoomProxyProtocol?
     var timelineProxy: TimelineProxyProtocol?
     
-    var roomID: String { roomProxy?.id ?? "MockRoomIdentifier" }
+    var roomID: String {
+        roomProxy?.id ?? "MockRoomIdentifier"
+    }
+
     var timelineKind: TimelineKind
     
     let callbacks = PassthroughSubject<TimelineControllerCallback, Never>()
     
-    var paginationState: PaginationState = .initial {
+    var paginationState: TimelinePaginationState = .initial {
         didSet {
             callbacks.send(.paginationState(paginationState))
         }
@@ -44,7 +48,7 @@ class MockTimelineController: TimelineControllerProtocol {
     
     static var emptyMediaGallery: MockTimelineController {
         let mock = MockTimelineController(timelineKind: .media(.mediaFilesScreen))
-        mock.paginationState = PaginationState(backward: .timelineEndReached, forward: .timelineEndReached)
+        mock.paginationState = TimelinePaginationState(backward: .endReached, forward: .endReached)
         return mock
     }
     
@@ -85,7 +89,7 @@ class MockTimelineController: TimelineControllerProtocol {
     func paginateBackwards(requestSize: UInt16) async -> Result<Void, TimelineControllerError> {
         paginateBackwardsCallCount += 1
         
-        paginationState = PaginationState(backward: .paginating, forward: .timelineEndReached)
+        paginationState = TimelinePaginationState(backward: .paginating, forward: .endReached)
         
         if client == nil {
             try? await simulateBackPagination()
@@ -140,7 +144,7 @@ class MockTimelineController: TimelineControllerProtocol {
     func unpin(eventID: String) async { }
     
     func messageEventContent(for itemID: TimelineItemIdentifier) -> RoomMessageEventContentWithoutRelation? {
-        .init(noPointer: .init())
+        .init(noHandle: .init())
     }
     
     func debugInfo(for itemID: TimelineItemIdentifier) -> TimelineItemDebugInfo {
@@ -240,7 +244,7 @@ class MockTimelineController: TimelineControllerProtocol {
     
     func sendVoiceMessage(url: URL,
                           audioInfo: MatrixRustSDK.AudioInfo,
-                          waveform: [UInt16],
+                          waveform: [Float],
                           requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineControllerError> {
         if let timelineProxy {
             return await timelineProxy.sendVoiceMessage(url: url,
@@ -330,8 +334,8 @@ class MockTimelineController: TimelineControllerProtocol {
     /// Prepends the next chunk of items to the `timelineItems` array.
     private func simulateBackPagination() async throws {
         defer {
-            paginationState = PaginationState(backward: backPaginationResponses.isEmpty ? .timelineEndReached : .idle,
-                                              forward: .timelineEndReached)
+            paginationState = TimelinePaginationState(backward: backPaginationResponses.isEmpty ? .endReached : .idle,
+                                                      forward: .endReached)
         }
         
         guard !backPaginationResponses.isEmpty else { return }

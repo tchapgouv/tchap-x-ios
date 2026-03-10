@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -22,6 +23,15 @@ public struct ListRowAccessory: View {
         case multiSelected
         /// An empty circle.
         case multiUnselected
+        
+        var isMultiSelection: Bool {
+            switch self {
+            case .multiSelected, .multiUnselected:
+                true
+            default:
+                false
+            }
+        }
     }
     
     /// A chevron to indicate that the button pushes another screen.
@@ -42,7 +52,10 @@ public struct ListRowAccessory: View {
     let kind: Kind
     
     /// Negative padding added to prevent the accessory interfering with the row's padding.
-    private var verticalPaddingFix: CGFloat { -4 }
+    private var verticalPaddingFix: CGFloat {
+        -4
+    }
+
     /// Absolute bodge until we have the circle icon in Compound.
     @ScaledMetric private var circleOverlayInsets = 5
     

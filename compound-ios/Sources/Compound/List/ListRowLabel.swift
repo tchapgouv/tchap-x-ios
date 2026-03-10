@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -72,7 +73,7 @@ public struct ListRowLabel<Icon: View>: View {
         case coloredIcon(Color)
     }
     
-    var iconAlignment: VerticalAlignment = .center
+    var iconAlignment: VerticalAlignment = .top
     var hideIconBackground = false
     
     enum Layout { case `default`, centered, avatar }
@@ -83,7 +84,9 @@ public struct ListRowLabel<Icon: View>: View {
         return role == .destructive ? .compound.textCriticalPrimary : .compound.textPrimary
     }
 
-    var titleLineLimit: Int? { layout == .avatar ? 1 : lineLimit }
+    var titleLineLimit: Int? {
+        layout == .avatar ? 1 : lineLimit
+    }
     
     var statusColor: Color {
         isEnabled ? .compound.textSecondary : .compound.textDisabled
@@ -104,13 +107,26 @@ public struct ListRowLabel<Icon: View>: View {
         if case .coloredIcon(let iconColor) = role {
             return iconColor
         }
-        return hideIconBackground ? .compound.iconPrimary : .compound.iconTertiaryAlpha
+        if role == .destructive { return .compound.iconCriticalPrimary }
+        if hideIconBackground {
+            return .compound.iconTertiaryAlpha
+        } else {
+            if #available(iOS 26, *) {
+                return .compound.iconSecondary
+            } else {
+                return .compound.iconPrimary
+            }
+        }
     }
     
     var iconBackgroundColor: Color {
         if hideIconBackground { return .clear }
-        guard isEnabled else { return .compound._bgSubtleSecondaryAlpha }
-        return role == .destructive ? .compound._bgCriticalSubtleAlpha : .compound._bgSubtleSecondaryAlpha
+        if #available(iOS 26, *) {
+            return .clear
+        } else {
+            guard isEnabled else { return .compound._bgSubtleSecondaryAlpha }
+            return role == .destructive ? .compound._bgCriticalSubtleAlpha : .compound._bgSubtleSecondaryAlpha
+        }
     }
     
     public var body: some View {
@@ -232,7 +248,7 @@ public struct ListRowLabel<Icon: View>: View {
                                  attributedDescriptionWhenDisabled: AttributedString? = nil, // Tchap: add `attributedDescriptionWhenDisabled` parameter
                                  icon: Icon,
                                  role: ListRowLabel.Role? = nil,
-                                 iconAlignment: VerticalAlignment = .center) -> ListRowLabel {
+                                 iconAlignment: VerticalAlignment = .top) -> ListRowLabel {
         ListRowLabel(title: title,
                      description: description,
                      attributedDescriptionWhenDisabled: attributedDescriptionWhenDisabled, // Tchap: add `attributedDescriptionWhenDisabled` parameter
@@ -246,7 +262,7 @@ public struct ListRowLabel<Icon: View>: View {
                                  attributedDescriptionWhenDisabled: AttributedString? = nil, // Tchap: add `attributedDescription` parameter
                                  icon: KeyPath<CompoundIcons, Image>,
                                  role: ListRowLabel.Role? = nil,
-                                 iconAlignment: VerticalAlignment = .center) -> ListRowLabel where Icon == CompoundIcon {
+                                 iconAlignment: VerticalAlignment = .top) -> ListRowLabel where Icon == CompoundIcon {
         .default(title: title,
                  description: description,
                  attributedDescriptionWhenDisabled: attributedDescriptionWhenDisabled, // Tchap: add `attributedDescriptionWhenDisabled` parameter
@@ -259,7 +275,7 @@ public struct ListRowLabel<Icon: View>: View {
                                  description: String? = nil,
                                  systemIcon: SFSymbol,
                                  role: ListRowLabel.Role? = nil,
-                                 iconAlignment: VerticalAlignment = .center) -> ListRowLabel where Icon == Image {
+                                 iconAlignment: VerticalAlignment = .top) -> ListRowLabel where Icon == Image {
         .default(title: title,
                  description: description,
                  icon: Image(systemSymbol: systemIcon),
@@ -331,6 +347,7 @@ public struct ListRowLabel<Icon: View>: View {
                      description: description,
                      icon: icon,
                      role: role,
+                     iconAlignment: .center,
                      layout: .avatar)
     }
 }

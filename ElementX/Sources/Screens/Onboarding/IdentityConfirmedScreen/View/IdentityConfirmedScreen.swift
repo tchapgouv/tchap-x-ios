@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -26,7 +27,6 @@ struct IdentityConfirmedScreen: View {
     
     // MARK: - Private
     
-    @ViewBuilder
     private var screenHeader: some View {
         VStack(spacing: 0) {
             BigIcon(icon: \.checkCircle, style: .successSolid)
@@ -45,7 +45,6 @@ struct IdentityConfirmedScreen: View {
         }
     }
     
-    @ViewBuilder
     private var actionButtons: some View {
         Button(L10n.actionContinue) {
             context.send(viewAction: .done)
@@ -59,7 +58,7 @@ struct IdentityConfirmedScreen: View {
 struct IdentityConfirmedScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModel = IdentityConfirmedScreenViewModel()
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             IdentityConfirmedScreen(context: viewModel.context)
         }
     }

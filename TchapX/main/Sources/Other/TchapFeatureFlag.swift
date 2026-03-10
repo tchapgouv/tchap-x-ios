@@ -95,7 +95,6 @@ extension TchapFeatureFlag {
         #elseif IS_TCHAP_DEVELOPMENT
         case dev01 = "dev01.tchap.incubateur.net"
         case dev02 = "dev02.tchap.incubateur.net"
-        case raphoid_test = "int.private-unencrypted-android.tchap.incubateur.net"
         #endif
         case all // To allow a feature for any instance
 
@@ -108,22 +107,25 @@ extension TchapFeatureFlag {
 }
 
 extension TchapFeatureFlag {
-    enum Configuration { // Use empty Enum rather than empty Struct. (Linter advice)
+    enum Configuration {
         #if IS_TCHAP_PRODUCTION
-        // certificatePinning can only be activated for .all or none because it is used before any activae session.
-//        static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
-        // Tchap: don't use pinning for v0.7.0
-        static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
-        static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
-        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
+        // CertificatePinning can only be activated for .all or none because it is used before any activated session.
+        // See `TchapX/target.yml` file to know how to generate certificate pinning.
+        static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
+        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [.dinum])
+        static let enableMAS = TchapFeatureFlag(allowedInstances: [.dinum])
         #elseif IS_TCHAP_STAGING
-        static let certificatePinning = TchapFeatureFlag(allowedInstances: [.agriculture, .agent])
-        static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
-        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
-        #elseif IS_TCHAP_DEVELOPMENT
+        // CertificatePinning can only be activated for .all or none because it is used before any activated session.
+        // See `TchapX/target.yml` file to know how to generate certificate pinning.
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
-        static let proConnectAuthentication = TchapFeatureFlag(allowedInstances: [])
         static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [.all])
+        static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
+        #elseif IS_TCHAP_DEVELOPMENT
+        // Certificate pinning is disabled in Development version (which uses Let's Encrypt certificates).
+        // See `TchapX/target.yml` file to know how to generate certificate pinning.
+        static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
+        static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [.all])
+        static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
         #endif
     }
 }

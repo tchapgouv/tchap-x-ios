@@ -1,11 +1,10 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
-
-import XCTest
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
@@ -14,14 +13,17 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Foundation
+import Testing
 
+@Suite
 @MainActor
-class RoomPollsHistoryScreenViewModelTests: XCTestCase {
+struct RoomPollsHistoryScreenViewModelTests {
     var viewModel: RoomPollsHistoryScreenViewModelProtocol!
     var interactionHandler: PollInteractionHandlerMock!
     var timelineController: MockTimelineController!
     
-    override func setUpWithError() throws {
+    init() throws {
         interactionHandler = PollInteractionHandlerMock()
         timelineController = MockTimelineController()
         viewModel = RoomPollsHistoryScreenViewModel(pollInteractionHandler: interactionHandler,
@@ -29,7 +31,8 @@ class RoomPollsHistoryScreenViewModelTests: XCTestCase {
                                                     userIndicatorController: UserIndicatorControllerMock())
     }
 
-    func testBackPaginate() async throws {
+    @Test
+    func backPaginate() async throws {
         timelineController.backPaginationResponses = [
             [PollRoomTimelineItem.mock(poll: .emptyDisclosed, isEditable: true),
              PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: true)),
@@ -43,11 +46,12 @@ class RoomPollsHistoryScreenViewModelTests: XCTestCase {
         
         try await deferredViewState.fulfill()
         
-        XCTAssertEqual(viewModel.context.viewState.pollTimelineItems.count, 3)
-        XCTAssertFalse(viewModel.context.viewState.canBackPaginate)
+        #expect(viewModel.context.viewState.pollTimelineItems.count == 3)
+        #expect(!viewModel.context.viewState.canBackPaginate)
     }
     
-    func testBackPaginateCanBackPaginate() async throws {
+    @Test
+    func backPaginateCanBackPaginate() async throws {
         timelineController.backPaginationResponses = [
             [PollRoomTimelineItem.mock(poll: .emptyDisclosed, isEditable: true),
              PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: true)),
@@ -62,11 +66,12 @@ class RoomPollsHistoryScreenViewModelTests: XCTestCase {
         
         try await deferredViewState.fulfill()
         
-        XCTAssertEqual(viewModel.context.viewState.pollTimelineItems.count, 3)
-        XCTAssert(viewModel.context.viewState.canBackPaginate)
+        #expect(viewModel.context.viewState.pollTimelineItems.count == 3)
+        #expect(viewModel.context.viewState.canBackPaginate)
     }
     
-    func testBackPaginateTwice() async throws {
+    @Test
+    func backPaginateTwice() async throws {
         timelineController.backPaginationResponses = [
             [PollRoomTimelineItem.mock(poll: .emptyDisclosed, isEditable: true),
              PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: true)),
@@ -80,11 +85,12 @@ class RoomPollsHistoryScreenViewModelTests: XCTestCase {
         
         try await deferredViewState.fulfill()
         
-        XCTAssertEqual(viewModel.context.viewState.pollTimelineItems.count, 3)
-        XCTAssert(viewModel.context.viewState.canBackPaginate)
+        #expect(viewModel.context.viewState.pollTimelineItems.count == 3)
+        #expect(viewModel.context.viewState.canBackPaginate)
     }
     
-    func testFilters() async throws {
+    @Test
+    func filters() async throws {
         timelineController.backPaginationResponses = [
             [PollRoomTimelineItem.mock(poll: .emptyDisclosed, isEditable: true),
              PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: true)),
@@ -102,13 +108,14 @@ class RoomPollsHistoryScreenViewModelTests: XCTestCase {
         
         try await deferredViewState.fulfill()
         
-        XCTAssertEqual(viewModel.context.viewState.pollTimelineItems.count, 3)
+        #expect(viewModel.context.viewState.pollTimelineItems.count == 3)
         
         viewModel.context.send(viewAction: .filter(.past))
-        XCTAssertEqual(viewModel.context.viewState.pollTimelineItems.count, 1)
+        #expect(viewModel.context.viewState.pollTimelineItems.count == 1)
     }
     
-    func testEndPoll() async throws {
+    @Test
+    func endPoll() async throws {
         let deferred = deferFulfillment(interactionHandler.publisher.delay(for: 0.1, scheduler: DispatchQueue.main)) { _ in true }
             
         interactionHandler.endPollPollStartIDReturnValue = .success(())
@@ -116,11 +123,12 @@ class RoomPollsHistoryScreenViewModelTests: XCTestCase {
 
         try await deferred.fulfill()
         
-        XCTAssert(interactionHandler.endPollPollStartIDCalled)
-        XCTAssertEqual(interactionHandler.endPollPollStartIDReceivedPollStartID, "somePollID")
+        #expect(interactionHandler.endPollPollStartIDCalled)
+        #expect(interactionHandler.endPollPollStartIDReceivedPollStartID == "somePollID")
     }
 
-    func testEndPollFailure() async throws {
+    @Test
+    func endPollFailure() async throws {
         let deferred = deferFulfillment(viewModel.context.$viewState) { value in
             value.bindings.alertInfo != nil
         }
@@ -130,11 +138,12 @@ class RoomPollsHistoryScreenViewModelTests: XCTestCase {
 
         try await deferred.fulfill()
         
-        XCTAssert(interactionHandler.endPollPollStartIDCalled)
-        XCTAssertEqual(interactionHandler.endPollPollStartIDReceivedPollStartID, "somePollID")
+        #expect(interactionHandler.endPollPollStartIDCalled)
+        #expect(interactionHandler.endPollPollStartIDReceivedPollStartID == "somePollID")
     }
     
-    func testSendPollResponse() async throws {
+    @Test
+    func sendPollResponse() async throws {
         let deferred = deferFulfillment(interactionHandler.publisher.delay(for: 0.1, scheduler: DispatchQueue.main)) { _ in true }
             
         interactionHandler.sendPollResponsePollStartIDOptionIDReturnValue = .success(())
@@ -142,12 +151,13 @@ class RoomPollsHistoryScreenViewModelTests: XCTestCase {
 
         try await deferred.fulfill()
         
-        XCTAssert(interactionHandler.sendPollResponsePollStartIDOptionIDCalled)
-        XCTAssertEqual(interactionHandler.sendPollResponsePollStartIDOptionIDReceivedInvocations[0].pollStartID, "somePollID")
-        XCTAssertEqual(interactionHandler.sendPollResponsePollStartIDOptionIDReceivedInvocations[0].optionID, "someOptionID")
+        #expect(interactionHandler.sendPollResponsePollStartIDOptionIDCalled)
+        #expect(interactionHandler.sendPollResponsePollStartIDOptionIDReceivedInvocations[0].pollStartID == "somePollID")
+        #expect(interactionHandler.sendPollResponsePollStartIDOptionIDReceivedInvocations[0].optionID == "someOptionID")
     }
 
-    func testSendPollResponseFailure() async throws {
+    @Test
+    func sendPollResponseFailure() async throws {
         let deferred = deferFulfillment(viewModel.context.$viewState) { value in
             value.bindings.alertInfo != nil
         }
@@ -157,12 +167,13 @@ class RoomPollsHistoryScreenViewModelTests: XCTestCase {
 
         try await deferred.fulfill()
         
-        XCTAssert(interactionHandler.sendPollResponsePollStartIDOptionIDCalled)
-        XCTAssertEqual(interactionHandler.sendPollResponsePollStartIDOptionIDReceivedInvocations[0].pollStartID, "somePollID")
-        XCTAssertEqual(interactionHandler.sendPollResponsePollStartIDOptionIDReceivedInvocations[0].optionID, "someOptionID")
+        #expect(interactionHandler.sendPollResponsePollStartIDOptionIDCalled)
+        #expect(interactionHandler.sendPollResponsePollStartIDOptionIDReceivedInvocations[0].pollStartID == "somePollID")
+        #expect(interactionHandler.sendPollResponsePollStartIDOptionIDReceivedInvocations[0].optionID == "someOptionID")
     }
     
-    func testEditPoll() async throws {
+    @Test
+    func editPoll() async throws {
         let expectedPoll: Poll = .emptyDisclosed
         let expectedPollStartID = "someEventID"
         

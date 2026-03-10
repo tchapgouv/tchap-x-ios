@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -75,28 +76,24 @@ struct UserIndicatorModalView_Previews: PreviewProvider, TestablePreview {
         VStack(spacing: 0) {
             UserIndicatorModalView(indicator: UserIndicator(type: .modal,
                                                             title: "Successfully logged in",
-                                                            iconName: "checkmark")
-            )
+                                                            iconName: "checkmark"))
             
             UserIndicatorModalView(indicator: UserIndicator(type: .modal(progress: .published(CurrentValueSubject<Double, Never>(0.5).asCurrentValuePublisher()),
                                                                          interactiveDismissDisabled: false,
                                                                          allowsInteraction: false),
                                                             title: "Successfully logged in",
-                                                            iconName: "checkmark")
-            )
+                                                            iconName: "checkmark"))
             
             UserIndicatorModalView(indicator: UserIndicator(type: .modal(progress: .none,
                                                                          interactiveDismissDisabled: false,
                                                                          allowsInteraction: false),
                                                             title: "Successfully logged in",
-                                                            iconName: "checkmark")
-            )
+                                                            iconName: "checkmark"))
             
             UserIndicatorModalView(indicator: UserIndicator(type: .modal,
                                                             title: "Successfully logged in",
                                                             message: "You can now be happy.",
-                                                            iconName: "checkmark")
-            )
+                                                            iconName: "checkmark"))
         }
     }
 }

@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -15,14 +16,15 @@ import Combine
 @testable import ElementX
 #endif
 import Foundation
-import XCTest
+import Testing
 
 @MainActor
-class AudioRecorderTests: XCTestCase {
+@Suite
+struct AudioRecorderTests {
     private var audioRecorder: AudioRecorder!
     private var audioSessionMock: AudioSessionMock!
     
-    override func setUp() async throws {
+    init() async {
         audioSessionMock = AudioSessionMock()
         audioSessionMock.requestRecordPermissionClosure = { completion in
             completion(true)
@@ -30,11 +32,8 @@ class AudioRecorderTests: XCTestCase {
         audioRecorder = AudioRecorder(audioSession: audioSessionMock)
     }
     
-    override func tearDown() async throws {
-        await audioRecorder?.cancelRecording()
-    }
-    
-    func testRecordWithoutPermission() async throws {
+    @Test
+    mutating func recordWithoutPermission() async throws {
         audioSessionMock.requestRecordPermissionClosure = { completion in
             completion(false)
         }
@@ -50,6 +49,6 @@ class AudioRecorderTests: XCTestCase {
         let url = URL.temporaryDirectory.appendingPathComponent("test-voice-message").appendingPathExtension("m4a")
         await audioRecorder.record(audioFileURL: url)
         try await deferred.fulfill()
-        XCTAssertFalse(audioRecorder.isRecording)
+        #expect(!audioRecorder.isRecording)
     }
 }

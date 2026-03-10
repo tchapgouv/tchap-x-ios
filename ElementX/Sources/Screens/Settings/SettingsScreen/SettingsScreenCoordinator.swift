@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -24,6 +25,7 @@ enum SettingsScreenCoordinatorAction {
     case bugReport
     case about
     case blockedUsers
+    case linkNewDevice
     case manageAccount(url: URL)
     case notifications
     case advancedSettings
@@ -58,6 +60,8 @@ final class SettingsScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.dismiss)
                 case .userDetails:
                     actionsSubject.send(.userDetails)
+                case .linkNewDevice:
+                    actionsSubject.send(.linkNewDevice)
                 case let .manageAccount(url):
                     actionsSubject.send(.manageAccount(url: url))
                 case .analytics:

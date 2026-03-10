@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -124,10 +125,11 @@ extension String {
             link.insert(contentsOf: "https://", at: link.startIndex)
         }
         
-        // Don't include punctuation characters at the end of links
-        // e.g `https://element.io/blog:` <- which is a valid link but the wrong place
+        // Don't include punctuation characters at the end of links but keep
+        // closing brackets as per https://github.com/element-hq/element-x-ios/issues/4946
+        // e.g `https://element.io/blog:` which is a valid link but the wrong place
         while !link.isEmpty,
-              link.rangeOfCharacter(from: .punctuationCharacters, options: .backwards)?.upperBound == link.endIndex {
+              link.rangeOfCharacter(from: .punctuationWithoutClosingBracketCharacters, options: .backwards)?.upperBound == link.endIndex {
             link = String(link.dropLast())
         }
         

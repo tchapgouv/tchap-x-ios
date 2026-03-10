@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -9,7 +10,7 @@ import Compound
 import SwiftUI
 
 struct MediaEventsTimelineScreen: View {
-    @ObservedObject var context: MediaEventsTimelineScreenViewModel.Context
+    @Bindable var context: MediaEventsTimelineScreenViewModel.Context
     @State private var sheetHeight = CGFloat.zero
     
     var body: some View {
@@ -36,12 +37,12 @@ struct MediaEventsTimelineScreen: View {
             }
     }
     
-    // The scale effects do the following:
-    // * flip the scrollView vertically to keep the items
-    // at the bottom and have pagination working properly
-    // * flip the grid vertically to counteract the scroll view
-    // but also horizontally to preserve the correct item order
-    // * flip the items on both axes have them render correctly
+    /// The scale effects do the following:
+    /// * flip the scrollView vertically to keep the items
+    /// at the bottom and have pagination working properly
+    /// * flip the grid vertically to counteract the scroll view
+    /// but also horizontally to preserve the correct item order
+    /// * flip the items on both axes have them render correctly
     @ViewBuilder
     private var mainContent: some View {
         if context.viewState.shouldShowEmptyState {
@@ -98,7 +99,6 @@ struct MediaEventsTimelineScreen: View {
         .scaleEffect(.init(width: -1, height: 1))
     }
     
-    @ViewBuilder
     private var filesContent: some View {
         LazyVStack(alignment: .center, spacing: 16) {
             ForEach(context.viewState.groups) { group in
@@ -173,7 +173,6 @@ struct MediaEventsTimelineScreen: View {
         }
     }
     
-    @ViewBuilder
     private var emptyState: some View {
         FullscreenDialog(topPadding: UIConstants.iconTopPaddingToNavigationBar, background: .gradient) {
             VStack(spacing: 16) {
@@ -259,7 +258,9 @@ struct MediaEventsTimelineScreen: View {
 }
 
 extension TimelineMediaPreviewViewModel: Identifiable {
-    var id: UUID { instanceID }
+    var id: UUID {
+        instanceID
+    }
 }
 
 // MARK: - Previews
@@ -271,22 +272,22 @@ struct MediaEventsTimelineScreen_Previews: PreviewProvider, TestablePreview {
     static let emptyFilesViewModel = makeViewModel(empty: true, screenMode: .files)
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             MediaEventsTimelineScreen(context: mediaViewModel.context)
         }
         .previewDisplayName("Media")
         
-        NavigationStack {
+        ElementNavigationStack {
             MediaEventsTimelineScreen(context: filesViewModel.context)
         }
         .previewDisplayName("Files")
         
-        NavigationStack {
+        ElementNavigationStack {
             MediaEventsTimelineScreen(context: emptyMediaViewModel.context)
         }
         .previewDisplayName("Empty Media")
         
-        NavigationStack {
+        ElementNavigationStack {
             MediaEventsTimelineScreen(context: emptyFilesViewModel.context)
         }
         .previewDisplayName("Empty Files")

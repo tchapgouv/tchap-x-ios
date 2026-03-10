@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -28,6 +29,10 @@ enum Screen: Hashable, View {
     case buttons
     /// Text field styles.
     case textFields
+    /// The `BigIcon` component.
+    case bigIcon
+    /// The `TitleAndIcon` component.
+    case titleAndIcon
     
     /// The system's confirmation dialog component
     case actionSheet
@@ -52,6 +57,8 @@ enum Screen: Hashable, View {
         case .labels: EmptyView()
         case .buttons: ButtonsScreen()
         case .textFields: EmptyView()
+        case .bigIcon: BigIconScreen()
+        case .titleAndIcon: TitleAndIconScreen()
         
         case .actionSheet: ActionSheetScreen()
         case .alert: AlertScreen()

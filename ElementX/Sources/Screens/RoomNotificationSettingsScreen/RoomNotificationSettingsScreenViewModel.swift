@@ -1,14 +1,15 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
 import SwiftUI
 
-typealias RoomNotificationSettingsScreenViewModelType = StateStoreViewModel<RoomNotificationSettingsScreenViewState, RoomNotificationSettingsScreenViewAction>
+typealias RoomNotificationSettingsScreenViewModelType = StateStoreViewModelV2<RoomNotificationSettingsScreenViewState, RoomNotificationSettingsScreenViewAction>
 
 class RoomNotificationSettingsScreenViewModel: RoomNotificationSettingsScreenViewModelType, RoomNotificationSettingsScreenViewModelProtocol {
     private let actionsSubject: PassthroughSubject<RoomNotificationSettingsScreenViewModelAction, Never> = .init()
@@ -114,7 +115,9 @@ class RoomNotificationSettingsScreenViewModel: RoomNotificationSettingsScreenVie
             } catch {
                 displayError(.restoreDefaultFailed)
             }
-            state.isRestoringDefaultSetting = false
+            await MainActor.run {
+                state.isRestoringDefaultSetting = false
+            }
         }
     }
     
@@ -133,7 +136,9 @@ class RoomNotificationSettingsScreenViewModel: RoomNotificationSettingsScreenVie
             } catch {
                 displayError(.setModeFailed)
             }
-            state.pendingCustomMode = nil
+            await MainActor.run {
+                state.pendingCustomMode = nil
+            }
         }
     }
     

@@ -1,10 +1,12 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import SwiftUI
 
 struct ServerSelectionScreen: View {
@@ -31,8 +33,7 @@ struct ServerSelectionScreen: View {
     /// The title, message and icon at the top of the screen.
     var header: some View {
         VStack(spacing: 8) {
-            Image(asset: Asset.Images.serverSelectionIcon)
-                .bigIcon(insets: 19)
+            BigIcon(icon: \.host)
                 .padding(.bottom, 8)
             
             Text(L10n.screenChangeServerTitle)
@@ -96,15 +97,15 @@ struct ServerSelection_Previews: PreviewProvider, TestablePreview {
     static let invalidViewModel = makeViewModel(for: "thisisbad")
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             ServerSelectionScreen(context: matrixViewModel.context)
         }
         
-        NavigationStack {
+        ElementNavigationStack {
             ServerSelectionScreen(context: emptyViewModel.context)
         }
         
-        NavigationStack {
+        ElementNavigationStack {
             ServerSelectionScreen(context: invalidViewModel.context)
         }
         .snapshotPreferences(expect: invalidViewModel.context.observe(\.viewState.hasValidationError))

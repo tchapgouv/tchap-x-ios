@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -12,7 +13,7 @@ enum PinnedEventsTimelineFlowCoordinatorAction {
     case finished
     case displayUser(userID: String)
     case forwardedMessageToRoom(roomID: String)
-    case displayRoomScreenWithFocussedPin(eventID: String)
+    case displayRoomScreenWithFocussedPin(eventID: String, threadRootEventID: String?)
 }
 
 class PinnedEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
@@ -20,7 +21,9 @@ class PinnedEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
     private let navigationStackCoordinator: NavigationStackCoordinator
     private let flowParameters: CommonFlowParameters
     
-    private var userSession: UserSessionProtocol { flowParameters.userSession }
+    private var userSession: UserSessionProtocol {
+        flowParameters.userSession
+    }
     
     private let actionsSubject: PassthroughSubject<PinnedEventsTimelineFlowCoordinatorAction, Never> = .init()
     var actionsPublisher: AnyPublisher<PinnedEventsTimelineFlowCoordinatorAction, Never> {
@@ -37,7 +40,7 @@ class PinnedEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
         self.flowParameters = flowParameters
     }
     
-    func start() {
+    func start(animated: Bool) {
         Task { await presentPinnedEventsTimeline() }
     }
     
@@ -86,8 +89,8 @@ class PinnedEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
                     presentMapNavigator(geoURI: geoURI, description: description, timelineController: timelineController)
                 case .displayMessageForwarding(let forwardingItem):
                     presentMessageForwarding(with: forwardingItem)
-                case .displayRoomScreenWithFocussedPin(let eventID):
-                    actionsSubject.send(.displayRoomScreenWithFocussedPin(eventID: eventID))
+                case .displayRoomScreenWithFocussedPin(let eventID, let threadRootEventID):
+                    actionsSubject.send(.displayRoomScreenWithFocussedPin(eventID: eventID, threadRootEventID: threadRootEventID))
                 }
             }
             .store(in: &cancellables)

@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -32,20 +33,15 @@ struct RoomScreen: View {
                 .accessibilityIdentifier(A11yIdentifiers.roomScreen.scrollToBottom)
             }
             .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
-            .overlay(alignment: .top) {
-                if !isVoiceOverEnabled {
-                    pinnedItemsBanner
-                }
-            }
+            .topBanner(pinnedItemsBanner, isVisible: context.viewState.shouldShowPinnedEventsBanner && !isVoiceOverEnabled)
             // This can overlay on top of the pinnedItemsBanner
-            .overlay(alignment: .top) {
-                knockRequestsBanner
-            }
+            .topBanner(knockRequestsBanner, isVisible: context.viewState.shouldSeeKnockRequests)
             .safeAreaInset(edge: .top) {
-                // When voice over is on the table view is not reversed
-                // and the scroll gestures are not intercepted
-                // so we render the pinned banner on top.
-                if isVoiceOverEnabled {
+                // When VoiceOver is enabled, the table view isn't reversed and the scroll gestures
+                // don't trigger meaning the banner never hides itself and so the .overlay layout
+                // above permanently obscures the top of the timeline. So whenever VoiceOver is
+                // enabled we use a safe area inset to vertically stack it above the timeline.
+                if context.viewState.shouldShowPinnedEventsBanner, isVoiceOverEnabled {
                     pinnedItemsBanner
                 }
             }
@@ -65,53 +61,31 @@ struct RoomScreen: View {
                         .environment(\.shouldAutomaticallyLoadImages, !timelineContext.viewState.hideTimelineMedia)
                 }
             }
+            .toolbarRole(RoomHeaderView.toolbarRole)
             .navigationTitle(L10n.screenRoomTitle) // Hidden but used for back button text.
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
             .toolbarBackground(.visible, for: .navigationBar) // Fix the toolbar's background.
             .overlay { loadingIndicator }
+            .alert(item: $context.alertInfo)
             .timelineMediaPreview(viewModel: $context.mediaPreviewViewModel)
             .track(screen: .Room)
             .sentryTrace("\(Self.self)")
     }
     
-    @ViewBuilder
     private var pinnedItemsBanner: some View {
-        // Color.clear and clipped() are required for iOS 26 transparent nav bar
-        VStack(spacing: 0) {
-            if context.viewState.shouldShowPinnedEventsBanner {
-                PinnedItemsBannerView(state: context.viewState.pinnedEventsBannerState,
-                                      onMainButtonTap: { context.send(viewAction: .tappedPinnedEventsBanner) },
-                                      onViewAllButtonTap: { context.send(viewAction: .viewAllPins) })
-                    .transition(.move(edge: .top))
-            } else {
-                Color.clear
-                    .allowsHitTesting(false)
-            }
-        }
-        .animation(.elementDefault, value: context.viewState.shouldShowPinnedEventsBanner)
-        .clipped()
+        PinnedItemsBannerView(state: context.viewState.pinnedEventsBannerState,
+                              onMainButtonTap: { context.send(viewAction: .tappedPinnedEventsBanner) },
+                              onViewAllButtonTap: { context.send(viewAction: .viewAllPins) })
     }
     
-    @ViewBuilder
     private var knockRequestsBanner: some View {
-        // Color.clear and clipped() are required for iOS 26 transparent nav bar
-        VStack(spacing: 0) {
-            if context.viewState.shouldSeeKnockRequests {
-                KnockRequestsBannerView(requests: context.viewState.displayedKnockRequests,
-                                        onDismiss: dismissKnockRequestsBanner,
-                                        onAccept: context.viewState.canAcceptKnocks ? acceptKnockRequest : nil,
-                                        onViewAll: onViewAllKnockRequests,
-                                        mediaProvider: context.mediaProvider)
-                    .padding(.top, 16)
-                    .transition(.move(edge: .top))
-            } else {
-                Color.clear
-                    .allowsHitTesting(false)
-            }
-        }
-        .animation(.elementDefault, value: context.viewState.shouldSeeKnockRequests)
-        .clipped()
+        KnockRequestsBannerView(requests: context.viewState.displayedKnockRequests,
+                                onDismiss: dismissKnockRequestsBanner,
+                                onAccept: context.viewState.canAcceptKnocks ? acceptKnockRequest : nil,
+                                onViewAll: onViewAllKnockRequests,
+                                mediaProvider: context.mediaProvider)
+            .padding(.top, 16)
     }
     
     private func dismissKnockRequestsBanner() {
@@ -184,17 +158,17 @@ struct RoomScreen: View {
             RoomHeaderView(roomName: context.viewState.roomTitle,
                            roomAvatar: context.viewState.roomAvatar,
                            dmRecipientVerificationState: context.viewState.dmRecipientVerificationState,
-                           roomPropertiesBadgesView:
+                           roomHistorySharingState: context.viewState.roomHistorySharingState,
                            // Tchap: add badges
+                           roomPropertiesBadgesView:
                            TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: $context.isEncrypted,
-                                                                       isPublic: $context.isPublic,
-                                                                       isOpenToExternalUsers: $context.isOpenToExternalUsers),
-                           mediaProvider: context.mediaProvider)
-                // Using a button stops it from getting truncated in the navigation bar
-                .contentShape(.rect)
-                .onTapGesture {
-                    context.send(viewAction: .displayRoomDetails)
-                }
+                                                                       isPublic: $context.canDisplayPublicBadge,
+                                                                       // Tchap: added parameters to display or not "external" badge.
+                                                                       accessRule: $context.accessRule,
+                                                                       avatar: $context.roomAvatar),
+                           mediaProvider: context.mediaProvider) {
+                context.send(viewAction: .displayRoomDetails)
+            }
         }
         
         if !ProcessInfo.processInfo.isiOSAppOnMac {
@@ -210,14 +184,9 @@ struct RoomScreen: View {
     @ViewBuilder
     private var callButton: some View {
         if context.viewState.hasOngoingCall {
-            Button {
+            JoinCallButton {
                 context.send(viewAction: .displayCall)
-            } label: {
-                Label(L10n.actionJoin, icon: \.videoCallSolid)
-                    .labelStyle(.titleAndIcon)
             }
-            .buttonStyle(ElementCallButtonStyle())
-            .accessibilityLabel(L10n.a11yJoinCall)
             .accessibilityIdentifier(A11yIdentifiers.roomScreen.joinCall)
         } else {
             Button {
@@ -239,14 +208,14 @@ struct RoomScreen_Previews: PreviewProvider, TestablePreview {
     static let tombstonedViewModels = makeViewModels(hasSuccessor: true)
 
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             RoomScreen(context: viewModels.room.context,
                        timelineContext: viewModels.timeline.context,
                        composerToolbar: ComposerToolbar.mock())
         }
         .previewDisplayName("Normal")
         
-        NavigationStack {
+        ElementNavigationStack {
             RoomScreen(context: readOnlyViewModels.room.context,
                        timelineContext: readOnlyViewModels.timeline.context,
                        composerToolbar: ComposerToolbar.mock())
@@ -254,7 +223,7 @@ struct RoomScreen_Previews: PreviewProvider, TestablePreview {
         .previewDisplayName("Read-only")
         .snapshotPreferences(expect: readOnlyViewModels.room.context.$viewState.map { !$0.canSendMessage })
         
-        NavigationStack {
+        ElementNavigationStack {
             RoomScreen(context: tombstonedViewModels.room.context,
                        timelineContext: tombstonedViewModels.timeline.context,
                        composerToolbar: ComposerToolbar.mock())

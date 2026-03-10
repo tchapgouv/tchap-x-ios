@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -15,9 +16,13 @@ final class RoomMemberProxy: RoomMemberProxyProtocol {
         self.member = member
     }
     
-    var userID: String { member.userId }
+    var userID: String {
+        member.userId
+    }
     
-    var displayName: String? { member.displayName }
+    var displayName: String? {
+        member.displayName
+    }
     
     var disambiguatedDisplayName: String? {
         guard let displayName else {
@@ -27,13 +32,23 @@ final class RoomMemberProxy: RoomMemberProxyProtocol {
         return member.isNameAmbiguous ? "\(displayName) (\(userID))" : displayName
     }
     
-    var avatarURL: URL? { member.avatarUrl.flatMap(URL.init(string:)) }
+    var avatarURL: URL? {
+        member.avatarUrl.flatMap(URL.init(string:))
+    }
     
-    var membership: MembershipState { member.membership }
+    var membership: MembershipState {
+        member.membership
+    }
     
-    var membershipChangeReason: String? { member.membershipChangeReason }
+    var membershipChangeReason: String? {
+        member.membershipChangeReason
+    }
     
-    var isIgnored: Bool { member.isIgnored }
+    var isIgnored: Bool {
+        member.isIgnored
+    }
     
-    var powerLevel: RoomPowerLevel { .init(rustPowerLevel: member.powerLevel) }
+    var powerLevel: RoomPowerLevel {
+        .init(rustPowerLevel: member.powerLevel)
+    }
 }

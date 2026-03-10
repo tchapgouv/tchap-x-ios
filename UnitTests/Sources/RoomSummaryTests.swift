@@ -1,11 +1,10 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
-
-import XCTest
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
@@ -14,88 +13,96 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Foundation
+import Testing
 
-class RoomSummaryTests: XCTestCase {
+@Suite
+struct RoomSummaryTests {
     // swiftlint:disable:next large_tuple
     let roomDetails: (id: String, name: String, avatarURL: URL) = ("room_id", "Room Name", "mxc://hs.tld/room/avatar")
     let heroes = [UserProfileProxy(userID: "hero_1", displayName: "Hero 1", avatarURL: "mxc://hs.tld/user/avatar")]
     
-    func testRoomAvatar() {
+    @Test
+    func roomAvatar() {
         let details = makeSummary(isDirect: false, isSpace: false, hasRoomAvatar: true, isTombstoned: false)
         
         switch details.avatar {
         case .room(let id, let name, let avatarURL):
-            XCTAssertEqual(id, roomDetails.id)
-            XCTAssertEqual(name, roomDetails.name)
-            XCTAssertEqual(avatarURL, roomDetails.avatarURL)
+            #expect(id == roomDetails.id)
+            #expect(name == roomDetails.name)
+            #expect(avatarURL == roomDetails.avatarURL)
         case .heroes:
-            XCTFail("A room shouldn't use the heroes for its avatar.")
+            Issue.record("A room shouldn't use the heroes for its avatar.")
         case .space:
-            XCTFail("A room shouldn't use a space avatar.")
+            Issue.record("A room shouldn't use a space avatar.")
         case .tombstoned:
-            XCTFail("A room shouldn't use the tombstone for its avatar.")
+            Issue.record("A room shouldn't use the tombstone for its avatar.")
         }
     }
     
-    func testDMAvatarSet() {
+    @Test
+    func dmAvatarSet() {
         let details = makeSummary(isDirect: true, isSpace: false, hasRoomAvatar: true, isTombstoned: false)
         
         switch details.avatar {
         case .room(let id, let name, let avatarURL):
-            XCTAssertEqual(id, roomDetails.id)
-            XCTAssertEqual(name, roomDetails.name)
-            XCTAssertEqual(avatarURL, roomDetails.avatarURL)
+            #expect(id == roomDetails.id)
+            #expect(name == roomDetails.name)
+            #expect(avatarURL == roomDetails.avatarURL)
         case .heroes:
-            XCTFail("A DM with an avatar set shouldn't use the heroes instead.")
+            Issue.record("A DM with an avatar set shouldn't use the heroes instead.")
         case .space:
-            XCTFail("A DM shouldn't use a space avatar.")
+            Issue.record("A DM shouldn't use a space avatar.")
         case .tombstoned:
-            XCTFail("A room shouldn't use the tombstone for its avatar.")
+            Issue.record("A room shouldn't use the tombstone for its avatar.")
         }
     }
     
-    func testDMAvatarNotSet() {
+    @Test
+    func dmAvatarNotSet() {
         let details = makeSummary(isDirect: true, isSpace: false, hasRoomAvatar: false, isTombstoned: false)
         
         switch details.avatar {
         case .room:
-            XCTFail("A DM without an avatar should defer to the hero for the correct placeholder tint colour.")
+            Issue.record("A DM without an avatar should defer to the hero for the correct placeholder tint colour.")
         case .heroes(let heroes):
-            XCTAssertEqual(heroes, self.heroes)
+            #expect(heroes == self.heroes)
         case .space:
-            XCTFail("A DM shouldn't use a space avatar.")
+            Issue.record("A DM shouldn't use a space avatar.")
         case .tombstoned:
-            XCTFail("A room shouldn't use the tombstone for its avatar.")
+            Issue.record("A room shouldn't use the tombstone for its avatar.")
         }
     }
     
-    func testSpaceAvatar() {
+    @Test
+    func spaceAvatar() {
         let details = makeSummary(isDirect: false, isSpace: true, hasRoomAvatar: true, isTombstoned: false)
         
         switch details.avatar {
         case .room:
-            XCTFail("A space shouldn't use a room avatar.")
+            Issue.record("A space shouldn't use a room avatar.")
         case .heroes:
-            XCTFail("A room shouldn't use the heroes for its avatar.")
+            Issue.record("A room shouldn't use the heroes for its avatar.")
         case .space(let id, let name, let avatarURL):
-            XCTAssertEqual(id, roomDetails.id)
-            XCTAssertEqual(name, roomDetails.name)
-            XCTAssertEqual(avatarURL, roomDetails.avatarURL)
+            #expect(id == roomDetails.id)
+            #expect(name == roomDetails.name)
+            #expect(avatarURL == roomDetails.avatarURL)
         case .tombstoned:
-            XCTFail("A room shouldn't use the tombstone for its avatar.")
+            Issue.record("A room shouldn't use the tombstone for its avatar.")
         }
     }
     
-    func testTombstonedAvatar() {
+    @Test
+    func tombstonedAvatar() {
         let details = makeSummary(isDirect: false, isSpace: false, hasRoomAvatar: true, isTombstoned: true)
         
-        XCTAssertEqual(details.avatar, .tombstoned)
+        #expect(details.avatar == .tombstoned)
     }
     
     // MARK: - Helpers
     
     func makeSummary(isDirect: Bool, isSpace: Bool, hasRoomAvatar: Bool, isTombstoned: Bool) -> RoomSummary {
-        RoomSummary(room: .init(noPointer: .init()),
+        RoomSummary(room: .init(noHandle: .init()),
                     id: roomDetails.id,
                     joinRequestType: nil,
                     name: roomDetails.name,
@@ -106,6 +113,7 @@ class RoomSummaryTests: XCTestCase {
                     activeMembersCount: 0,
                     lastMessage: nil,
                     lastMessageDate: nil,
+                    lastMessageState: nil,
                     unreadMessagesCount: 0,
                     unreadMentionsCount: 0,
                     unreadNotificationsCount: 0,

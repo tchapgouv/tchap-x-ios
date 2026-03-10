@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -48,7 +49,6 @@ struct TimelineStyler<Content: View>: View {
             .animation(.elementDefault, value: adjustedDeliveryStatus)
     }
     
-    @ViewBuilder
     var mainContent: some View {
         TimelineItemBubbledStylerView(timelineItem: timelineItem, adjustedDeliveryStatus: adjustedDeliveryStatus, content: content)
     }
@@ -98,14 +98,13 @@ struct TimelineItemStyler_Previews: PreviewProvider, TestablePreview {
 
     static let sentLast: TextRoomTimelineItem = {
         let id = viewModel.state.timelineState.uniqueIDs.last ?? .init(UUID().uuidString)
-        let result = TextRoomTimelineItem(id: .event(uniqueID: id, eventOrTransactionID: .eventID(UUID().uuidString)),
-                                          timestamp: .mock,
-                                          isOutgoing: true,
-                                          isEditable: false,
-                                          canBeRepliedTo: true,
-                                          sender: .test,
-                                          content: .init(body: "Test"))
-        return result
+        return TextRoomTimelineItem(id: .event(uniqueID: id, eventOrTransactionID: .eventID(UUID().uuidString)),
+                                    timestamp: .mock,
+                                    isOutgoing: true,
+                                    isEditable: false,
+                                    canBeRepliedTo: true,
+                                    sender: .test,
+                                    content: .init(body: "Test"))
     }()
 
     static let ltrString = TextRoomTimelineItem(id: .randomEvent,

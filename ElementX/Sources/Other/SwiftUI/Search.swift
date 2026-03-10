@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -52,7 +53,6 @@ private struct SearchControllerModifier: ViewModifier {
     /// is `false`, checking if this value is `false` is pretty much meaningless.
     @State private var isSearching = false
     
-    @ViewBuilder
     func body(content: Content) -> some View {
         let text: Text? = if let placeholder {
             Text(placeholder)
@@ -190,7 +190,9 @@ private struct SearchController: UIViewControllerRepresentable {
         }
         
         @available(*, unavailable)
-        required init?(coder: NSCoder) { fatalError() }
+        required init?(coder: NSCoder) {
+            fatalError()
+        }
         
         override func willMove(toParent parent: UIViewController?) {
             parent?.navigationItem.searchController = searchController
@@ -227,13 +229,9 @@ private struct FocusSearchIfHardwareKeyboardAvailableModifier: ViewModifier {
     @FocusState private var isFocused
     
     func body(content: Content) -> some View {
-        if #available(iOS 18.0, *) {
-            content
-                .searchFocused($isFocused)
-                .onAppear(perform: focusIfHardwareKeyboardAvailable)
-        } else {
-            content
-        }
+        content
+            .searchFocused($isFocused)
+            .onAppear(perform: focusIfHardwareKeyboardAvailable)
     }
     
     func focusIfHardwareKeyboardAvailable() {

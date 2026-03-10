@@ -1,11 +1,10 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
-
-import XCTest
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
@@ -14,22 +13,16 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Testing
 
 @MainActor
-class AnalyticsSettingsScreenViewModelTests: XCTestCase {
+@Suite
+final class AnalyticsSettingsScreenViewModelTests {
     private var appSettings: AppSettings!
     private var viewModel: AnalyticsSettingsScreenViewModelProtocol!
     private var context: AnalyticsSettingsScreenViewModelType.Context!
     
-    override func setUp() {
-        AppSettings.resetAllSettings()
-    }
-    
-    override func tearDown() {
-        AppSettings.resetAllSettings()
-    }
-    
-    @MainActor override func setUpWithError() throws {
+    init() {
         AppSettings.resetAllSettings()
         appSettings = AppSettings()
         let analyticsClient = AnalyticsClientMock()
@@ -41,20 +34,27 @@ class AnalyticsSettingsScreenViewModelTests: XCTestCase {
                                                      analytics: ServiceLocator.shared.analytics)
         context = viewModel.context
     }
-
-    func testInitialState() {
-        XCTAssertFalse(context.enableAnalytics)
+    
+    deinit {
+        AppSettings.resetAllSettings()
     }
 
-    func testOptIn() {
+    @Test
+    func initialState() {
+        #expect(!context.enableAnalytics)
+    }
+
+    @Test
+    func optIn() {
         appSettings.analyticsConsentState = .optedOut
         context.send(viewAction: .toggleAnalytics)
-        XCTAssertTrue(context.enableAnalytics)
+        #expect(context.enableAnalytics)
     }
     
-    func testOptOut() {
+    @Test
+    func optOut() {
         appSettings.analyticsConsentState = .optedIn
         context.send(viewAction: .toggleAnalytics)
-        XCTAssertFalse(context.enableAnalytics)
+        #expect(!context.enableAnalytics)
     }
 }

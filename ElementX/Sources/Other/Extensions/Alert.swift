@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -12,7 +13,7 @@ protocol AlertProtocol {
 }
 
 extension View {
-    func alert<Item, Actions, Message>(item: Binding<Item?>, @ViewBuilder actions: (Item) -> Actions, @ViewBuilder message: (Item) -> Message) -> some View where Item: AlertProtocol, Actions: View, Message: View {
+    func alert<Item: AlertProtocol, Actions: View, Message: View>(item: Binding<Item?>, @ViewBuilder actions: (Item) -> Actions, @ViewBuilder message: (Item) -> Message) -> some View {
         let binding = Binding<Bool>(get: {
             item.wrappedValue != nil
         }, set: { newValue in
@@ -24,7 +25,7 @@ extension View {
     }
 
     // periphery: ignore - not used yet but might be useful
-    func alert<Item, Actions>(item: Binding<Item?>, @ViewBuilder actions: (Item) -> Actions) -> some View where Item: AlertProtocol, Actions: View {
+    func alert<Item: AlertProtocol, Actions: View>(item: Binding<Item?>, @ViewBuilder actions: (Item) -> Actions) -> some View {
         let binding = Binding<Bool>(get: {
             item.wrappedValue != nil
         }, set: { newValue in

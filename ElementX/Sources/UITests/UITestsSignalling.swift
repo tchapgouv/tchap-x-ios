@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -47,7 +48,9 @@ enum UITestsSignalError: String, LocalizedError {
     /// Failed to send a signal as a connection hasn't been established.
     case notConnected
     
-    var errorDescription: String? { "UITestsSignalError.\(rawValue)" }
+    var errorDescription: String? {
+        "UITestsSignalError.\(rawValue)"
+    }
 }
 
 enum UITestsSignalling {
@@ -93,7 +96,7 @@ enum UITestsSignalling {
                 try rawMessage(.ready).write(to: fileURL, atomically: false, encoding: .utf8)
             case .app:
                 // The app client is started second and checks that there is a ready signal from the tests.
-                guard try String(contentsOf: fileURL) == Message(mode: .tests, signal: .ready).rawValue else { throw UITestsSignalError.testsClientNotReady }
+                guard try String(contentsOf: fileURL, encoding: .utf8) == Message(mode: .tests, signal: .ready).rawValue else { throw UITestsSignalError.testsClientNotReady }
                 isConnected = true
                 // The app client then echoes back to the tests that it is now ready.
                 try send(.ready)

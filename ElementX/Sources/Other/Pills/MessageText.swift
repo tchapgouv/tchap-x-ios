@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -21,7 +22,7 @@ final class MessageTextView: UITextView, PillAttachmentViewProviderDelegate, UIG
         super.addGestureRecognizer(gestureRecognizer)
     }
     
-    // This prevents the magnifying glass from showing up
+    /// This prevents the magnifying glass from showing up
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         if otherGestureRecognizer is UILongPressGestureRecognizer {
             return false
@@ -201,11 +202,10 @@ struct MessageText_Previews: PreviewProvider, TestablePreview {
 
     private static let htmlStringWithQuote =
         """
-        <blockquote>A blockquote that is long and goes onto multiple lines as the first item in the message</blockquote>
-        <p>Then another line of text here to reply to the blockquote, which is also a multiline component.</p>
+        <blockquote>A blockquote that is long and goes onto multiple lines as the first item in the message</blockquote><p>Then another line of text here to reply to the blockquote, which is also a multiline component.</p>
         """
     
-    private static let htmlStringWithList = "<p>This is a list</p>\n<ul>\n<li>One</li>\n<li>Two</li>\n<li>And number 3</li>\n</ul>\n"
+    private static let htmlStringWithList = "<p>This is a list</p>\n<ul><li>One</li>\n<li>Two</li>\n<li>And number 3</li>\n</ul>\n"
 
     private static let attributedStringBuilder = AttributedStringBuilder(mentionBuilder: MentionBuilder())
     

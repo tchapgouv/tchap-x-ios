@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -47,7 +48,8 @@ class AudioPlayer: NSObject, AudioPlayerProtocol {
     private let releaseAudioSessionTimeoutInterval = 5.0
     
     private(set) var playbackURL: URL?
-    
+    private(set) var playbackSpeed: Float = 1.0
+
     private var deinitInProgress = false
     
     var duration: TimeInterval {
@@ -105,7 +107,7 @@ class AudioPlayer: NSObject, AudioPlayerProtocol {
     func play() {
         isStopped = false
         setupAudioSession()
-        internalAudioPlayer?.play()
+        internalAudioPlayer?.rate = playbackSpeed
     }
     
     func pause() {
@@ -127,7 +129,14 @@ class AudioPlayer: NSObject, AudioPlayerProtocol {
         let time = progress * duration
         await internalAudioPlayer.seek(to: CMTime(seconds: time, preferredTimescale: 60))
     }
-    
+
+    func setPlaybackSpeed(_ speed: Float) {
+        playbackSpeed = speed
+        if state == .playing {
+            internalAudioPlayer?.rate = speed
+        }
+    }
+
     // MARK: - Private
     
     private func setupAudioSession() {

@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -20,8 +21,13 @@ struct MediaUploadPreviewScreen: View {
     @State private var currentIndex = 0
     @FocusState private var isComposerFocussed
     
-    private var title: String { ProcessInfo.processInfo.isiOSAppOnMac ? context.viewState.title ?? "" : "" }
-    private var colorSchemeOverride: ColorScheme { ProcessInfo.processInfo.isiOSAppOnMac ? colorScheme : .dark }
+    private var title: String {
+        ProcessInfo.processInfo.isiOSAppOnMac ? context.viewState.title ?? "" : ""
+    }
+
+    private var colorSchemeOverride: ColorScheme {
+        ProcessInfo.processInfo.isiOSAppOnMac ? colorScheme : .dark
+    }
     
     var body: some View {
         mainContent
@@ -274,7 +280,7 @@ struct MediaUploadPreviewScreen_Previews: PreviewProvider, TestablePreview {
                                                              clientProxy: ClientProxyMock(.init()),
                                                              userIndicatorController: UserIndicatorControllerMock.default)
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             MediaUploadPreviewScreen(context: viewModel.context)
         }
         

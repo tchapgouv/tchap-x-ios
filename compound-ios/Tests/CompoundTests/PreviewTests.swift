@@ -1,28 +1,34 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd
 //
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE in the repository root for full details.
 //
 
 import Combine
-import SwiftUI
-import XCTest
-
 @testable import Compound
 @testable import SnapshotTesting
+import SwiftUI
+import Testing
 
-@MainActor
-class PreviewTests: XCTestCase {
+@Suite
+struct PreviewTests {
+    private struct SnapshotDevice {
+        let name: String
+        let device: String
+    }
+    
     private let deviceConfig: ViewImageConfig = .iPhoneX
     private let simulatorDevice: String? = "iPhone14,6" // iPhone SE 3rd Generation
-    private let requiredOSVersion = (major: 18, minor: 5)
-    private let snapshotDevices = ["iPhone 16", "iPad"]
+    private let requiredOSVersion = (major: 26, minor: 1)
+    /// The key is the name we will give to the snapshot
+    /// The value is the actual device that will be used to render the preview
+    private let snapshotDevices: [SnapshotDevice] = [.init(name: "iPhone", device: "iPhone 17"),
+                                                     .init(name: "iPad", device: "iPad")]
     private var recordMode: SnapshotTestingConfiguration.Record = .missing
 
-    override func setUp() {
-        super.setUp()
-        
+    init() {
         if ProcessInfo().environment["RECORD_FAILURES"].map(Bool.init) == true {
             recordMode = .failed
         }
@@ -62,12 +68,11 @@ class PreviewTests: XCTestCase {
         let imageRenderer = ImageRenderer(content: preferenceReadingView)
         _ = imageRenderer.uiImage
         
-        var sanitizedSuiteName = String(testName.suffix(testName.count - "test".count).dropLast(2))
-        sanitizedSuiteName = sanitizedSuiteName.prefix(1).lowercased() + sanitizedSuiteName.dropFirst()
+        let sanitizedSuiteName = String(testName.dropLast(2))
         
-        for deviceName in snapshotDevices {
-            guard var device = PreviewDevice(rawValue: deviceName).snapshotDevice() else {
-                fatalError("Unknown device name: \(deviceName)")
+        for snapshotDevice in snapshotDevices {
+            guard var device = PreviewDevice(rawValue: snapshotDevice.device).snapshotDevice() else {
+                fatalError("Unknown device name: \(snapshotDevice.device)")
             }
             // Ignore specific device safe area (using the workaround value to fix rendering issues).
             device.safeArea = .one
@@ -76,9 +81,9 @@ class PreviewTests: XCTestCase {
             
             var testName = ""
             if let displayName = preview.displayName {
-                testName = "\(displayName)-\(deviceName)-\(localeCode)"
+                testName = "\(displayName)-\(snapshotDevice.name)-\(localeCode)"
             } else {
-                testName = "\(deviceName)-\(localeCode)-\(step)"
+                testName = "\(snapshotDevice.name)-\(localeCode)-\(step)"
             }
             
             let isScreen = switch preview.layout {
@@ -92,7 +97,7 @@ class PreviewTests: XCTestCase {
                                              testName: sanitizedSuiteName,
                                              traits: traits,
                                              preferences: preferences) {
-                XCTFail(failure)
+                Issue.record(Comment(rawValue: failure))
             }
         }
     }
@@ -121,8 +126,7 @@ class PreviewTests: XCTestCase {
                                  preferences: SnapshotPreferences) -> String? {
         let matchingView = isScreen ? AnyView(view) : AnyView(view
             .frame(width: device.size?.width)
-            .fixedSize(horizontal: false, vertical: true)
-        )
+            .fixedSize(horizontal: false, vertical: true))
         
         return withSnapshotTesting(record: recordMode) {
             verifySnapshot(of: matchingView,
@@ -132,14 +136,6 @@ class PreviewTests: XCTestCase {
                            named: name,
                            testName: testName)
         }
-    }
-    
-    private func wait(for duration: TimeInterval) {
-        let expectation = XCTestExpectation(description: "Wait")
-        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
-            expectation.fulfill()
-        }
-        _ = XCTWaiter.wait(for: [expectation], timeout: duration + 1)
     }
 }
 
@@ -154,7 +150,7 @@ private class SnapshotPreferences: @unchecked Sendable {
 private extension PreviewDevice {
     func snapshotDevice() -> ViewImageConfig? {
         switch rawValue {
-        case "iPhone 16", "iPhone 15", "iPhone 14", "iPhone 13", "iPhone 12", "iPhone 11", "iPhone 10":
+        case "iPhone 17", "iPhone 16", "iPhone 15", "iPhone 14", "iPhone 13", "iPhone 12", "iPhone 11", "iPhone 10":
             return .iPhoneX
         case "iPhone 6", "iPhone 6s", "iPhone 7", "iPhone 8":
             return .iPhone8
@@ -176,6 +172,7 @@ private extension PreviewDevice {
 }
 
 private extension Snapshotting where Value: SwiftUI.View, Format == UIImage {
+    @MainActor
     static func prefireImage(drawHierarchyInKeyWindow: Bool = false,
                              preferences: SnapshotPreferences,
                              layout: SwiftUISnapshotLayout = .sizeThatFits,
@@ -197,7 +194,7 @@ private extension Snapshotting where Value: SwiftUI.View, Format == UIImage {
         }
 
         return SimplySnapshotting<UIImage>(pathExtension: "png", diffing: .prefireImage(preferences: preferences, scale: traits.displayScale))
-            .asyncPullback { view in
+            .asyncPullback { @MainActor view in
                 var config = config
 
                 let controller: UIViewController
@@ -234,5 +231,7 @@ private extension Diffing where Value == UIImage {
 private extension UIEdgeInsets {
     /// A custom inset that prevents the snapshotting library from rendering the
     /// origin at (10000, 10000) which breaks some of our views such as MessageText.
-    static var one: UIEdgeInsets { UIEdgeInsets(top: 1, left: 1, bottom: 1, right: 1) }
+    static var one: UIEdgeInsets {
+        UIEdgeInsets(top: 1, left: 1, bottom: 1, right: 1)
+    }
 }

@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -23,7 +24,10 @@ class TimelineMediaPreviewController: QLPreviewController {
     
     private var cancellables: Set<AnyCancellable> = []
     
-    private var navigationBar: UINavigationBar? { view.subviews.first?.subviews.first { $0 is UINavigationBar } as? UINavigationBar }
+    private var navigationBar: UINavigationBar? {
+        view.subviews.first?.subviews.first { $0 is UINavigationBar } as? UINavigationBar
+    }
+
     private var bottomBarItemsContainer: UIView? {
         if #available(iOS 26, *) {
             view.subviews.first?.subviews.last?.subviews.first
@@ -32,8 +36,13 @@ class TimelineMediaPreviewController: QLPreviewController {
         }
     }
 
-    private var pageScrollView: UIScrollView? { view.firstScrollView() }
-    private var captionView: UIView { captionHostingController.view }
+    private var pageScrollView: UIScrollView? {
+        view.firstScrollView()
+    }
+
+    private var captionView: UIView {
+        captionHostingController.view
+    }
     
     override var overrideUserInterfaceStyle: UIUserInterfaceStyle {
         get { .dark }
@@ -254,7 +263,9 @@ class TimelineMediaPreviewController: QLPreviewController {
 
 private struct HeaderView: View {
     @ObservedObject var context: TimelineMediaPreviewViewModel.Context
-    private var currentItem: TimelineMediaPreviewItem { context.viewState.currentItem }
+    private var currentItem: TimelineMediaPreviewItem {
+        context.viewState.currentItem
+    }
     
     var body: some View {
         switch currentItem {
@@ -280,7 +291,9 @@ private struct HeaderView: View {
 
 private struct DetailsButton: View {
     @ObservedObject var context: TimelineMediaPreviewViewModel.Context
-    private var currentItem: TimelineMediaPreviewItem { context.viewState.currentItem }
+    private var currentItem: TimelineMediaPreviewItem {
+        context.viewState.currentItem
+    }
     
     var isHidden: Bool {
         switch currentItem {
@@ -300,7 +313,9 @@ private struct DetailsButton: View {
 
 private struct CaptionView: View {
     @ObservedObject var context: TimelineMediaPreviewViewModel.Context
-    private var currentItem: TimelineMediaPreviewItem { context.viewState.currentItem }
+    private var currentItem: TimelineMediaPreviewItem {
+        context.viewState.currentItem
+    }
     
     var body: some View {
         if case let .media(mediaItem) = currentItem, let caption = mediaItem.caption {
@@ -322,7 +337,9 @@ private struct CaptionView: View {
 
 private struct DownloadIndicatorView: View {
     @ObservedObject var context: TimelineMediaPreviewViewModel.Context
-    private var currentItem: TimelineMediaPreviewItem { context.viewState.currentItem }
+    private var currentItem: TimelineMediaPreviewItem {
+        context.viewState.currentItem
+    }
     
     private var shouldShowDownloadIndicator: Bool {
         switch currentItem {

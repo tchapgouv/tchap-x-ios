@@ -128,6 +128,22 @@
 			<string>%1$d Rum</string>
 		</dict>
 	</dict>
+	<key>common_selected_count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d valgt</string>
+			<key>other</key>
+			<string>%1$d valgt</string>
+		</dict>
+	</dict>
 	<key>common_spaces</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -139,9 +155,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%1$d Klynge</string>
+			<string>%1$d Gruppe</string>
 			<key>other</key>
-			<string>%1$d Klynger</string>
+			<string>%1$d Grupper</string>
 		</dict>
 	</dict>
 	<key>notification_compat_summary_line_for_room</key>
@@ -174,6 +190,22 @@
 			<string>%d notifikation</string>
 			<key>other</key>
 			<string>%d notifikationer</string>
+		</dict>
+	</dict>
+	<key>notification_fallback_n_content</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>You have %d new message.</string>
+			<key>other</key>
+			<string>You have %d new messages.</string>
 		</dict>
 	</dict>
 	<key>notification_invitations</key>
@@ -283,9 +315,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>Forlad %1$d rum og klynge</string>
+			<string>Forlad %1$d rum og gruppe</string>
 			<key>other</key>
-			<string>Forlad %1$d rum og klynger</string>
+			<string>Forlad %1$d rum og Grupper</string>
 		</dict>
 	</dict>
 	<key>screen_pinned_timeline_screen_title</key>
@@ -304,6 +336,22 @@
 			<string>%1$d Fastgjorte beskeder</string>
 		</dict>
 	</dict>
+	<key>screen_room_member_list_banned_header_title</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d Spærret</string>
+			<key>other</key>
+			<string>%1$d Spærret</string>
+		</dict>
+	</dict>
 	<key>screen_room_member_list_header_title</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -318,6 +366,22 @@
 			<string>%1$d person</string>
 			<key>other</key>
 			<string>%1$d personer</string>
+		</dict>
+	</dict>
+	<key>screen_room_member_list_pending_header_title</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d Inviteret</string>
+			<key>other</key>
+			<string>%1$d Inviteret</string>
 		</dict>
 	</dict>
 	<key>screen_room_multiple_knock_requests_title</key>
@@ -414,6 +478,22 @@
 			<string>%1$@ skriver</string>
 			<key>other</key>
 			<string>%1$@ skriver</string>
+		</dict>
+	</dict>
+	<key>screen_space_remove_rooms_confirmation_title</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Fjern %1$d rum fra %2$@</string>
+			<key>other</key>
+			<string>Fjern %1$d rum fra %2$@</string>
 		</dict>
 	</dict>
 	<key>troubleshoot_notifications_test_blocked_users_result_some</key>

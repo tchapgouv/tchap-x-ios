@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -12,7 +13,7 @@ enum Avatars {
     enum Size {
         case user(on: UserAvatarSizeOnScreen)
         case room(on: RoomAvatarSizeOnScreen)
-        //  custom
+        ///  custom
         case custom(CGFloat)
 
         /// Value in UIKit points
@@ -64,6 +65,8 @@ enum UserAvatarSizeOnScreen {
     case timeline
     case settings
     case roomDetails
+    case roomMembersList
+    case roomChangeRoles
     case dmDetails
     case startChat
     case memberDetails
@@ -102,12 +105,16 @@ enum UserAvatarSizeOnScreen {
             return 52
         case .roomDetails:
             return 44
+        case .roomMembersList:
+            return 32
+        case .roomChangeRoles:
+            return 56
         case .startChat:
             return 36
         case .memberDetails:
             return 96
         case .inviteUsers:
-            return 56
+            return 52
         case .editUserDetails:
             return 96
         case .dmDetails:
@@ -133,6 +140,9 @@ enum UserAvatarSizeOnScreen {
 enum RoomAvatarSizeOnScreen {
     case chats
     case spaces
+    case spaceSettings
+    case spaceFilters
+    case authorizedSpaces
     case timeline
     case leaveSpace
     case messageForwarding
@@ -143,26 +153,25 @@ enum RoomAvatarSizeOnScreen {
     case roomDirectorySearch
     case joinRoom
     case spaceHeader
+    case spaceAddRooms
+    case spaceAddRoomsSelected
     case completionSuggestions
+    case createRoomSelectSpace
 
     var value: CGFloat {
         switch self {
-        case .chats, .spaces:
+        case .chats, .spaces, .spaceSettings:
             return 52
-        case .timeline, .leaveSpace:
+        case .timeline, .leaveSpace, .roomDirectorySearch,
+             .completionSuggestions, .authorizedSpaces, .createRoomSelectSpace,
+             .spaceFilters:
             return 32
         case .notificationSettings:
             return 30
-        case .roomDirectorySearch:
-            return 32
-        case .completionSuggestions:
-            return 32
-        case .messageForwarding:
+        case .messageForwarding, .globalSearch, .roomSelection, .spaceAddRooms:
             return 36
-        case .globalSearch:
-            return 36
-        case .roomSelection:
-            return 36
+        case .spaceAddRoomsSelected:
+            return 52
         case .details:
             return 96
         case .joinRoom:

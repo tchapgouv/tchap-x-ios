@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -13,7 +14,7 @@ struct TimelineItemDebugView: View {
     let info: TimelineItemDebugInfo
     
     var body: some View {
-        NavigationStack {
+        ElementNavigationStack {
             ScrollView {
                 VStack(spacing: 8) {
                     TimelineItemInfoDisclosureGroup(title: "Model", text: info.model)
@@ -66,7 +67,6 @@ struct TimelineItemDebugView: View {
             }
         }
         
-        @ViewBuilder
         var disclosureGroupContent: some View {
             VStack(alignment: .leading, spacing: 0) {
                 Divider()

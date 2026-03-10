@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -28,7 +29,9 @@ private struct BloomModifier: ViewModifier {
     
     @State private var height = CGFloat.zero
     
-    private var endPointY: CGFloat { hasSearchBar ? 0.35 : 0.5 }
+    private var endPointY: CGFloat {
+        hasSearchBar ? 0.35 : 0.55
+    }
     
     func body(content: Content) -> some View {
         content
@@ -104,7 +107,9 @@ private struct OldBloomModifier: ViewModifier {
         return bloom
     }
     
-    private var endPointY: CGFloat { hasSearchBar ? 0.5 : 0.7 }
+    private var endPointY: CGFloat {
+        hasSearchBar ? 0.5 : 0.7
+    }
     
     private var bloomGradient: some View {
         LinearGradient(gradient: .compound.subtle,
@@ -119,9 +124,9 @@ private struct OldBloomModifier: ViewModifier {
         bloom.colorScheme == colorScheme && bloom.baseColor == .compound.gradientSubtleStop1
     }
     
-    // This is a class to avoid a "Modifying state during view update" warning when storing
-    // the result on the same run-loop - we want to avoid dispatching that to the next loop as
-    // that can result in further (unnecessary) renders being made.
+    /// This is a class to avoid a "Modifying state during view update" warning when storing
+    /// the result on the same run-loop - we want to avoid dispatching that to the next loop as
+    /// that can result in further (unnecessary) renders being made.
     class Bloom {
         var image: UIImage?
         var colorScheme: ColorScheme?
@@ -133,7 +138,7 @@ private struct OldBloomModifier: ViewModifier {
 
 struct BloomModifier_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             mockScreen
                 .navigationTitle(L10n.screenRoomlistMainSpaceTitle)
                 .searchable(text: .constant(""), placement: .navigationBarDrawer(displayMode: .always))
@@ -141,7 +146,7 @@ struct BloomModifier_Previews: PreviewProvider, TestablePreview {
         }
         .previewDisplayName("Chats")
         
-        NavigationStack {
+        ElementNavigationStack {
             mockScreen
                 .navigationTitle(L10n.screenSpaceListTitle)
                 .toolbarBloom(hasSearchBar: false)

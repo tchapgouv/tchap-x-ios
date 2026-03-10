@@ -1,11 +1,13 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import SwiftUI
+import Translation
 import WysiwygComposer
 
 struct TimelineView: View {
@@ -54,6 +56,13 @@ struct TimelineView: View {
                 ReadReceiptsSummaryView(orderedReadReceipts: $0.orderedReceipts)
                     .environmentObject(timelineContext)
             }
+            .translationPresentation(isPresented: $timelineContext.showTranslation, text: timelineContext.textToBeTranslated ?? "")
+            .onChange(of: timelineContext.showTranslation) { oldValue, newValue in
+                if oldValue, !newValue {
+                    // clear texts after translation was dismissed
+                    timelineContext.textToBeTranslated = nil
+                }
+            }
             .onDrop(of: ["public.item", "public.file-url"], isTargeted: $dragOver) { providers -> Bool in
                 let supportedProviders = providers.filter(\.isSupportedForPasteOrDrop)
                 
@@ -72,10 +81,9 @@ struct TimelineViewRepresentable: UIViewControllerRepresentable {
     @EnvironmentObject private var viewModelContext: TimelineViewModel.Context
 
     func makeUIViewController(context: Context) -> TimelineTableViewController {
-        let tableViewController = TimelineTableViewController(coordinator: context.coordinator,
-                                                              isScrolledToBottom: $viewModelContext.isScrolledToBottom,
-                                                              scrollToBottomPublisher: viewModelContext.viewState.timelineState.scrollToBottomPublisher)
-        return tableViewController
+        TimelineTableViewController(coordinator: context.coordinator,
+                                    isScrolledToBottom: $viewModelContext.isScrolledToBottom,
+                                    scrollToBottomPublisher: viewModelContext.viewState.timelineState.scrollToBottomPublisher)
     }
     
     func updateUIViewController(_ uiViewController: TimelineTableViewController, context: Context) {
@@ -131,7 +139,7 @@ struct TimelineViewRepresentable: UIViewControllerRepresentable {
 
 // MARK: - Previews
 
-struct TimelineView_Previews: PreviewProvider, TestablePreview {
+struct TimelineView_Previews: PreviewProvider { // Not testable as this preview is built the same way as RoomScreen.
     static let roomProxyMock = JoinedRoomProxyMock(.init(id: "stable_id",
                                                          name: "Preview room"))
     static let roomViewModel = RoomScreenViewModel.mock(roomProxyMock: roomProxyMock)
@@ -148,7 +156,7 @@ struct TimelineView_Previews: PreviewProvider, TestablePreview {
                                                      timelineControllerFactory: TimelineControllerFactoryMock(.init()))
 
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             RoomScreen(context: roomViewModel.context,
                        timelineContext: timelineViewModel.context,
                        composerToolbar: ComposerToolbar.mock())

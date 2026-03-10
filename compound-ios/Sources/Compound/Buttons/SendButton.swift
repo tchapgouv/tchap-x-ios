@@ -13,14 +13,16 @@ public struct SendButton: View {
     @Environment(\.colorScheme) private var colorScheme
     
     /// The action to perform when the user triggers the button.
-    public let action: () -> Void
+    private let action: () -> Void
     
     private var iconColor: Color {
         guard isEnabled else { return .compound.iconQuaternary }
         return colorScheme == .light ? .compound.iconOnSolidPrimary : .compound.iconPrimary
     }
     
-    private var gradient: Gradient { isEnabled ? .compound.action : .init(colors: [.clear]) }
+    private var gradient: Gradient {
+        isEnabled ? .compound.action : .init(colors: [.clear])
+    }
     
     /// Creates a send button that performs the provided action.
     public init(action: @escaping () -> Void) {

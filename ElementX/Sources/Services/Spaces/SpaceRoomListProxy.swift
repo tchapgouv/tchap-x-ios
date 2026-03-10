@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -9,12 +10,21 @@ import Combine
 import MatrixRustSDK
 
 class SpaceRoomListProxy: SpaceRoomListProxyProtocol {
+    var id: String {
+        spaceServiceRoomPublisher.value.id
+    }
+    
     private let spaceRoomList: SpaceRoomListProtocol
-    let spaceRoomProxy: SpaceRoomProxyProtocol
+    
+    private var spaceServiceRoomHandle: TaskHandle?
+    private let spaceServiceRoomSubject: CurrentValueSubject<SpaceServiceRoom, Never>
+    var spaceServiceRoomPublisher: CurrentValuePublisher<SpaceServiceRoom, Never> {
+        spaceServiceRoomSubject.asCurrentValuePublisher()
+    }
     
     private var spaceRoomsHandle: TaskHandle?
-    private let spaceRoomsSubject = CurrentValueSubject<[SpaceRoomProxyProtocol], Never>([])
-    var spaceRoomsPublisher: CurrentValuePublisher<[SpaceRoomProxyProtocol], Never> {
+    private let spaceRoomsSubject = CurrentValueSubject<[SpaceServiceRoom], Never>([])
+    var spaceRoomsPublisher: CurrentValuePublisher<[SpaceServiceRoom], Never> {
         spaceRoomsSubject.asCurrentValuePublisher()
     }
     
@@ -25,7 +35,7 @@ class SpaceRoomListProxy: SpaceRoomListProxyProtocol {
         guard let spaceRoom = spaceRoomList.space() else { throw SpaceRoomListProxyError.missingSpace }
         
         self.spaceRoomList = spaceRoomList
-        spaceRoomProxy = SpaceRoomProxy(spaceRoom: spaceRoom)
+        spaceServiceRoomSubject = .init(SpaceServiceRoom(spaceRoom: spaceRoom))
         
         let paginationStateSubject = CurrentValueSubject<SpaceRoomListPaginationState, Never>(spaceRoomList.paginationState())
         paginationStatePublisher = paginationStateSubject.asCurrentValuePublisher()
@@ -37,6 +47,11 @@ class SpaceRoomListProxy: SpaceRoomListProxyProtocol {
         spaceRoomsHandle = spaceRoomList.subscribeToRoomUpdate(listener: SDKListener { [weak self] updates in
             self?.handleUpdates(updates)
         })
+        
+        spaceServiceRoomHandle = spaceRoomList.subscribeToSpaceUpdates(listener: SDKListener { [weak self] spaceRoom in
+            guard let spaceRoom else { return }
+            self?.spaceServiceRoomSubject.send(SpaceServiceRoom(spaceRoom: spaceRoom))
+        })
     }
     
     func paginate() async {
@@ -47,6 +62,10 @@ class SpaceRoomListProxy: SpaceRoomListProxyProtocol {
         }
     }
     
+    func reset() async {
+        await spaceRoomList.reset()
+    }
+    
     // MARK: - Private
     
     private func handleUpdates(_ updates: [SpaceListUpdate]) {
@@ -55,27 +74,27 @@ class SpaceRoomListProxy: SpaceRoomListProxyProtocol {
         for update in updates {
             switch update {
             case .append(let spaceRooms):
-                rooms.append(contentsOf: spaceRooms.map(SpaceRoomProxy.init))
+                rooms.append(contentsOf: spaceRooms.map(SpaceServiceRoom.init))
             case .clear:
                 rooms.removeAll()
             case .pushFront(let spaceRoom):
-                rooms.insert(SpaceRoomProxy(spaceRoom: spaceRoom), at: 0)
+                rooms.insert(SpaceServiceRoom(spaceRoom: spaceRoom), at: 0)
             case .pushBack(let spaceRoom):
-                rooms.append(SpaceRoomProxy(spaceRoom: spaceRoom))
+                rooms.append(SpaceServiceRoom(spaceRoom: spaceRoom))
             case .popFront:
                 rooms.removeFirst()
             case .popBack:
                 rooms.removeLast()
             case .insert(let index, let spaceRoom):
-                rooms.insert(SpaceRoomProxy(spaceRoom: spaceRoom), at: Int(index))
+                rooms.insert(SpaceServiceRoom(spaceRoom: spaceRoom), at: Int(index))
             case .set(let index, let spaceRoom):
-                rooms[Int(index)] = SpaceRoomProxy(spaceRoom: spaceRoom)
+                rooms[Int(index)] = SpaceServiceRoom(spaceRoom: spaceRoom)
             case .remove(let index):
                 rooms.remove(at: Int(index))
             case .truncate(let length):
                 rooms.removeSubrange(Int(length)..<rooms.count)
             case .reset(let spaceRooms):
-                rooms = spaceRooms.map(SpaceRoomProxy.init)
+                rooms = spaceRooms.map(SpaceServiceRoom.init)
             }
         }
         

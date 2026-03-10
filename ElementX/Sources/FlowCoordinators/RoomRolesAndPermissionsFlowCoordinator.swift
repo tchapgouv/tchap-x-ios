@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -76,7 +77,7 @@ class RoomRolesAndPermissionsFlowCoordinator: FlowCoordinatorProtocol {
         configureStateMachine()
     }
     
-    func start() {
+    func start(animated: Bool) {
         stateMachine.tryEvent(.start)
     }
     
@@ -118,10 +119,10 @@ class RoomRolesAndPermissionsFlowCoordinator: FlowCoordinatorProtocol {
         stateMachine.addRoutes(event: .finishedChangingRoles, transitions: [.changingRoles => .rolesAndPermissionsScreen])
         
         stateMachine.addRoutes(event: .changePermissions, transitions: [.rolesAndPermissionsScreen => .changingPermissions]) { [weak self] context in
-            guard let (permissions, group) = context.userInfo as? (RoomPermissions, RoomRolesAndPermissionsScreenPermissionsGroup) else {
+            guard let (ownPowerLevel, permissions) = context.userInfo as? (RoomPowerLevel, RoomPermissions) else {
                 fatalError("Expected a group and the current permissions")
             }
-            self?.presentChangePermissionsScreen(permissions: permissions, group: group)
+            self?.presentChangePermissionsScreen(ownPowerLevel: ownPowerLevel, permissions: permissions)
         }
         stateMachine.addRoutes(event: .finishedChangingPermissions, transitions: [.changingPermissions => .rolesAndPermissionsScreen])
         
@@ -143,8 +144,8 @@ class RoomRolesAndPermissionsFlowCoordinator: FlowCoordinatorProtocol {
             switch action {
             case .editRoles(let role):
                 stateMachine.tryEvent(.changeRoles, userInfo: role)
-            case .editPermissions(let permissions, let group):
-                stateMachine.tryEvent(.changePermissions, userInfo: (permissions, group))
+            case .editPermissions(let ownPowerLevel, let permissions):
+                stateMachine.tryEvent(.changePermissions, userInfo: (ownPowerLevel, permissions))
             case .demotedOwnUser:
                 stateMachine.tryEvent(.demotedOwnUser)
             }
@@ -178,9 +179,9 @@ class RoomRolesAndPermissionsFlowCoordinator: FlowCoordinatorProtocol {
         }
     }
     
-    private func presentChangePermissionsScreen(permissions: RoomPermissions, group: RoomRolesAndPermissionsScreenPermissionsGroup) {
-        let parameters = RoomChangePermissionsScreenCoordinatorParameters(permissions: permissions,
-                                                                          permissionsGroup: group,
+    private func presentChangePermissionsScreen(ownPowerLevel: RoomPowerLevel, permissions: RoomPermissions) {
+        let parameters = RoomChangePermissionsScreenCoordinatorParameters(ownPowerLevel: ownPowerLevel,
+                                                                          permissions: permissions,
                                                                           roomProxy: roomProxy,
                                                                           userIndicatorController: userIndicatorController,
                                                                           analytics: analytics)

@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -54,7 +55,7 @@ class SecureBackupScreenViewModel: SecureBackupScreenViewModelType, SecureBackup
             switch (keyBackupState, enable) {
             case (.unknown, true):
                 state.bindings.keyStorageEnabled = keyBackupState.keyStorageToggleState // Reset the toggle in case enabling fails
-                enableBackup()
+                Task { await enableBackup() }
             case (.enabled, false):
                 state.bindings.keyStorageEnabled = keyBackupState.keyStorageToggleState // Reset the toggle in case the user cancels
                 actionsSubject.send(.disableKeyBackup)
@@ -66,20 +67,18 @@ class SecureBackupScreenViewModel: SecureBackupScreenViewModelType, SecureBackup
     
     // MARK: - Private
     
-    private func enableBackup() {
-        Task {
-            let loadingIndicatorIdentifier = "SecureBackupScreenLoading"
-            userIndicatorController.submitIndicator(.init(id: loadingIndicatorIdentifier, type: .modal, title: L10n.commonLoading, persistent: true))
-            switch await secureBackupController.enable() {
-            case .success:
-                break
-            case .failure(let error):
-                MXLog.error("Failed enabling key backup with error: \(error)")
-                state.bindings.alertInfo = .init(id: .init())
-            }
-            
-            userIndicatorController.retractIndicatorWithId(loadingIndicatorIdentifier)
+    private func enableBackup() async {
+        let loadingIndicatorIdentifier = "SecureBackupScreenLoading"
+        userIndicatorController.submitIndicator(.init(id: loadingIndicatorIdentifier, type: .modal, title: L10n.commonLoading, persistent: true))
+        switch await secureBackupController.enable() {
+        case .success:
+            break
+        case .failure(let error):
+            MXLog.error("Failed enabling key backup with error: \(error)")
+            state.bindings.alertInfo = .init(id: .init())
         }
+        
+        userIndicatorController.retractIndicatorWithId(loadingIndicatorIdentifier)
     }
 }
 

@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -21,12 +22,12 @@ extension ClientBuilder {
                             maxRequestRetryTime: UInt64? = nil,
                             threadsEnabled: Bool) -> ClientBuilder {
         var builder = ClientBuilder()
-            .crossProcessStoreLocksHolderName(holderName: InfoPlistReader.main.bundleIdentifier)
+            .crossProcessLockConfig(crossProcessLockConfig: .multiProcess(holderName: InfoPlistReader.main.bundleIdentifier))
             .enableOidcRefreshLock()
             .setSessionDelegate(sessionDelegate: sessionDelegate)
             .userAgent(userAgent: UserAgentBuilder.makeASCIIUserAgent())
             .threadsEnabled(enabled: threadsEnabled, threadSubscriptions: threadsEnabled)
-            .requestConfig(config: .init(retryLimit: 0,
+            .requestConfig(config: .init(retryLimit: 3, // Must be non-zero for the SDK to retry API calls when rate-limited.
                                          timeout: requestTimeout,
                                          maxConcurrentRequests: nil,
                                          maxRetryTime: maxRequestRetryTime))
@@ -42,18 +43,20 @@ extension ClientBuilder {
                 .backupDownloadStrategy(backupDownloadStrategy: .afterDecryptionFailure)
                 .enableShareHistoryOnInvite(enableShareHistoryOnInvite: enableKeyShareOnInvite)
                 .autoEnableBackups(autoEnableBackups: true)
-                
-            if enableOnlySignedDeviceIsolationMode {
-                builder = builder
-                    .roomKeyRecipientStrategy(strategy: .identityBasedStrategy)
-                    .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .crossSignedOrLegacy))
-            } else {
-                builder = builder
-                    // Tchap: [Beta DINUM] - allow sending messages even if non-verified device is present on the account.
+        }
+
+        // Set recipient strategy and trust requirement even if `setupEncryption` is false to ensure messages
+        // from insecure devices aren't displayed in push notifications.
+        // See https://github.com/element-hq/element-x-ios/issues/4702.
+        if enableOnlySignedDeviceIsolationMode {
+            builder = builder
+                .roomKeyRecipientStrategy(strategy: .identityBasedStrategy)
+                .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .crossSignedOrLegacy))
+        } else {
+            builder = builder
+                // Tchap: [Beta DINUM] - allow sending messages even if non-verified device is present on the account.
 //                    .roomKeyRecipientStrategy(strategy: .errorOnVerifiedUserProblem)
-                    .roomKeyRecipientStrategy(strategy: .allDevices)
-                    .decryptionSettings(decryptionSettings: .init(senderDeviceTrustRequirement: .untrusted))
-            }
+                .roomKeyRecipientStrategy(strategy: .allDevices)
         }
         
         if let httpProxy {
@@ -82,9 +85,9 @@ extension ClientBuilder {
                 }
                 
                 // If necessary, to get the real certificate format:
-                //    let certificate = SecCertificateCreateWithData(nil, certDataDER as CFData)
+                //    let certificateData = SecCertificateCreateWithData(nil, derCertificates as CFData)
                 // Then, if necessary to get the public key:
-                //    let publicKey = SecCertificateCopyKey(certificate)
+                //    let publicKey = SecCertificateCopyKey(certificateData)
                 
                 // If any failure occured, ignore ALL certificates.
                 if derCertificates.count == pemCertificates.count {

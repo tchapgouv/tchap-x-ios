@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -19,13 +20,15 @@ struct AuthenticationStartLogo: View {
     /// The shape that the logo is composed on top of.
     private let outerShape = RoundedRectangle(cornerRadius: 44)
     private let outerShapeShadowColor = Color(red: 0.11, green: 0.11, blue: 0.13)
-    private var isLight: Bool { colorScheme == .light }
+    private var isLight: Bool {
+        colorScheme == .light
+    }
     
     var body: some View {
         if hideBrandChrome {
             // Tchap: use Tchap Logo
 //            Image(asset: Asset.Images.appLogo)
-            Image(asset: TchapAsset.TargetAssets.Images.appLogo)
+            Image(asset: TchapAsset.TargetAssets.Images.tchapAppLogo)
         } else {
             brandLogo
         }
@@ -34,7 +37,7 @@ struct AuthenticationStartLogo: View {
     private var brandLogo: some View {
         // Tchap: use Tchap Logo
 //            Image(asset: Asset.Images.appLogo)
-        Image(asset: TchapAsset.TargetAssets.Images.appLogo)
+        Image(asset: TchapAsset.TargetAssets.Images.tchapAppLogo)
             // Tchap: remove background around App logo.
 //            .background {
 //                Circle()

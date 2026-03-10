@@ -1,5 +1,6 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -66,10 +67,17 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         self.initialSelectedPinnedEventID = initialSelectedPinnedEventID
         pinnedEventStringBuilder = .pinnedEventStringBuilder(userID: roomProxy.ownUserID)
 
+        let roomHistorySharingState: RoomHistorySharingState? = if appSettings.enableKeyShareOnInvite {
+            roomProxy.infoPublisher.value.historySharingState
+        } else {
+            nil
+        }
+        
         let viewState = RoomScreenViewState(roomTitle: roomProxy.infoPublisher.value.displayName ?? roomProxy.id,
                                             roomAvatar: roomProxy.infoPublisher.value.avatar,
                                             hasOngoingCall: roomProxy.infoPublisher.value.hasRoomCall,
-                                            hasSuccessor: roomProxy.infoPublisher.value.successor != nil)
+                                            hasSuccessor: roomProxy.infoPublisher.value.successor != nil,
+                                            roomHistorySharingState: roomHistorySharingState)
         super.init(initialViewState: appHooks.roomScreenHook.update(viewState),
                    mediaProvider: userSession.mediaProvider)
         
@@ -84,11 +92,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
     override func process(viewAction: RoomScreenViewAction) {
         switch viewAction {
         case .tappedPinnedEventsBanner:
-            analyticsService.trackInteraction(name: .PinnedMessageBannerClick)
-            if let eventID = state.pinnedEventsBannerState.selectedPinnedEventID {
-                actionsSubject.send(.focusEvent(eventID: eventID))
-            }
-            state.pinnedEventsBannerState.previousPin()
+            handleTappedPinnedEventsBanner()
         case .viewAllPins:
             analyticsService.trackInteraction(name: .PinnedMessageBannerViewAllButton)
             actionsSubject.send(.displayPinnedEventsTimeline)
@@ -260,7 +264,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
     private func updateVerificationBadge() async {
         guard roomProxy.isDirectOneToOneRoom,
               let dmRecipient = roomProxy.membersPublisher.value.first(where: { $0.userID != roomProxy.ownUserID }),
-              case let .success(userIdentity) = await clientProxy.userIdentity(for: dmRecipient.userID) else {
+              case let .success(userIdentity) = await clientProxy.userIdentity(for: dmRecipient.userID, fallBackToServer: true) else {
             state.dmRecipientVerificationState = .notVerified
             return
         }
@@ -282,7 +286,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         showLoadingIndicator()
         
         if case .failure = await clientProxy.pinUserIdentity(userID) {
-            userIndicatorController.alertInfo = .init(id: .init(), title: L10n.commonError)
+            state.bindings.alertInfo = .init(id: .unknown, title: L10n.commonError)
         }
     }
     
@@ -294,7 +298,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         showLoadingIndicator()
 
         if case .failure = await clientProxy.withdrawUserIdentityVerification(userID) {
-            userIndicatorController.alertInfo = .init(id: .init(), title: L10n.commonError)
+            state.bindings.alertInfo = .init(id: .unknown, title: L10n.commonError)
         }
     }
     
@@ -344,13 +348,24 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
             state.canAcceptKnocks = powerLevels.canOwnUserInvite()
             state.canDeclineKnocks = powerLevels.canOwnUserKick()
             state.canBan = powerLevels.canOwnUserBan()
-        
-            // Tchap: fill room properties
-            state.bindings.isEncrypted = roomProxy.details.isEncrypted
-            state.bindings.isPublic = roomProxy.details.isPublic
-            // Tchap: read the `external access` value in the `accessRules` of the room.
-            state.bindings.isOpenToExternalUsers = roomProxy.details.accessRule == .unrestricted
         }
+        
+        // This causes the UI to become inconsistent with the user's mental model if the user
+        // does not restart the app after disabling the feature flag. We can probably ignore
+        // such cases, since we explicitly ask for an app restart in the caption of the feature
+        // flag switch.
+        if appSettings.enableKeyShareOnInvite {
+            state.roomHistorySharingState = roomInfo.historySharingState
+        }
+      
+        // Tchap: fill room properties
+        state.bindings.isEncrypted = roomProxy.details.isEncrypted
+        state.bindings.isPublic = roomProxy.details.isPublic
+        // Tchap: read the `external access` value in the `accessRules` of the room.
+        // Used to display "open to external users" badge.
+        state.bindings.accessRule = roomProxy.details.accessRule
+        state.bindings.canDisplayPublicBadge = roomProxy.details.canDisplayPublicBadge
+        state.bindings.roomAvatar = roomProxy.details.avatar
     }
     
     private func setupPinnedEventsTimelineItemProviderIfNeeded() {
@@ -405,6 +420,27 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
             return failedIDs
         }
         state.handledEventIDs.subtract(failedIDs)
+    }
+    
+    private func handleTappedPinnedEventsBanner() {
+        analyticsService.trackInteraction(name: .PinnedMessageBannerClick)
+        if let eventID = state.pinnedEventsBannerState.selectedPinnedEventID {
+            Task {
+                switch await roomProxy.loadOrFetchEventDetails(for: eventID) {
+                case .success(let event):
+                    if appSettings.threadsEnabled,
+                       let threadRootEventID = event.threadRootEventId() {
+                        actionsSubject.send(.focusEvent(eventID: threadRootEventID))
+                        actionsSubject.send(.displayThread(threadRootEventID: threadRootEventID, focussedEventID: eventID))
+                    } else {
+                        actionsSubject.send(.focusEvent(eventID: eventID))
+                    }
+                case .failure:
+                    userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
+                }
+            }
+        }
+        state.pinnedEventsBannerState.previousPin()
     }
     
     // MARK: Loading indicators

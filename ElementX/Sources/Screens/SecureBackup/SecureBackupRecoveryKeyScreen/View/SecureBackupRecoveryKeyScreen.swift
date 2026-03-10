@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -34,7 +35,6 @@ struct SecureBackupRecoveryKeyScreen: View {
         .alert(item: $context.alertInfo)
     }
     
-    @ViewBuilder
     private var mainContent: some View {
         VStack(spacing: 48) {
             switch context.viewState.mode {
@@ -177,7 +177,6 @@ struct SecureBackupRecoveryKeyScreen: View {
         context.viewState.mode == .setupRecovery ? L10n.screenRecoveryKeySetupGenerateKey : L10n.screenRecoveryKeyChangeGenerateKey
     }
     
-    @ViewBuilder
     private var confirmRecoveryKeySection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.commonRecoveryKey)
@@ -247,28 +246,28 @@ struct SecureBackupRecoveryKeyScreen_Previews: PreviewProvider, TestablePreview 
     static let unknownViewModel = viewModel(recoveryState: .unknown)
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             SecureBackupRecoveryKeyScreen(context: notSetUpViewModel.context)
         }
         .previewDisplayName("Not set up")
         
-        NavigationStack {
+        ElementNavigationStack {
             SecureBackupRecoveryKeyScreen(context: generatingViewModel.context)
         }
         .previewDisplayName("Generating")
         
-        NavigationStack {
+        ElementNavigationStack {
             SecureBackupRecoveryKeyScreen(context: setupViewModel.context)
         }
-        .snapshotPreferences(expect: setupViewModel.context.observe(\.viewState.recoveryKey).map { $0 != nil }.eraseToStream())
+        .snapshotPreferences(expect: setupViewModel.context.observe(\.viewState.recoveryKey).map { $0 != nil })
         .previewDisplayName("Set up")
         
-        NavigationStack {
+        ElementNavigationStack {
             SecureBackupRecoveryKeyScreen(context: incompleteViewModel.context)
         }
         .previewDisplayName("Incomplete")
         
-        NavigationStack {
+        ElementNavigationStack {
             SecureBackupRecoveryKeyScreen(context: unknownViewModel.context)
         }
         .previewDisplayName("Unknown")

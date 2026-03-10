@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -13,6 +14,12 @@ import MatrixRustSDK
 import PushKit
 import UIKit
 
+/// Keep this class testable
+struct TimeProvider {
+    var clock: any Clock<Duration>
+    var now: () -> Date
+}
+
 class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDelegate, CXProviderDelegate {
     private struct CallID: Equatable {
         let callKitID: UUID
@@ -22,20 +29,8 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
     
     private let pushRegistry: PKPushRegistry
     private let callController = CXCallController()
-    private let callProvider: CXProvider = {
-        let configuration = CXProviderConfiguration()
-        configuration.supportsVideo = true
-        configuration.includesCallsInRecents = true
-        
-        if let callKitIcon = UIImage(named: "images/app-logo") {
-            configuration.iconTemplateImageData = callKitIcon.pngData()
-        }
-        
-        // https://stackoverflow.com/a/46077628/730924
-        configuration.supportedHandleTypes = [.generic]
-        
-        return CXProvider(configuration: configuration)
-    }()
+    private let callProvider: CXProviderProtocol
+    private let timeProvider: TimeProvider
     
     private weak var clientProxy: ClientProxyProtocol? {
         didSet {
@@ -71,15 +66,34 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
     
     private var declineListenerHandle: TaskHandle?
     
-    override init() {
+    init(callProvider: CXProviderProtocol? = nil, timeProvider: TimeProvider? = nil) {
         pushRegistry = PKPushRegistry(queue: nil)
+        
+        self.timeProvider = timeProvider ?? TimeProvider(clock: ContinuousClock(), now: Date.init)
+        
+        if let callProvider {
+            self.callProvider = callProvider
+        } else {
+            let configuration = CXProviderConfiguration()
+            configuration.supportsVideo = true
+            configuration.includesCallsInRecents = true
+            
+            if let callKitIcon = UIImage(named: "images/app-logo") {
+                configuration.iconTemplateImageData = callKitIcon.pngData()
+            }
+            
+            // https://stackoverflow.com/a/46077628/730924
+            configuration.supportedHandleTypes = [.generic]
+            
+            self.callProvider = CXProvider(configuration: configuration)
+        }
         
         super.init()
         
         pushRegistry.delegate = self
         pushRegistry.desiredPushTypes = [.voIP]
         
-        callProvider.setDelegate(self, queue: nil)
+        self.callProvider.setDelegate(self, queue: nil)
     }
     
     func setClientProxy(_ clientProxy: any ClientProxyProtocol) {
@@ -147,21 +161,40 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
     func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
         guard let roomID = payload.dictionaryPayload[ElementCallServiceNotificationKey.roomID.rawValue] as? String else {
             MXLog.error("Something went wrong, missing room identifier for incoming voip call: \(payload)")
+            completion()
             return
         }
         
         guard let rtcNotificationID = payload.dictionaryPayload[ElementCallServiceNotificationKey.rtcNotifyEventID.rawValue] as? String else {
             MXLog.error("Something went wrong, missing rtc notification event identifier for incoming voip call: \(payload)")
+            completion()
             return
         }
         
         guard ongoingCallID?.roomID != roomID else {
             MXLog.warning("Call already ongoing for room \(roomID), ignoring incoming push")
+            completion()
             return
         }
         
         let callID = CallID(callKitID: UUID(), roomID: roomID, rtcNotificationID: rtcNotificationID)
         incomingCallID = callID
+        
+        guard let expirationDate = (payload.dictionaryPayload[ElementCallServiceNotificationKey.expirationDate.rawValue] as? Date) else {
+            MXLog.error("Something went wrong, missing expiration timestamp for incoming voip call: \(payload)")
+            completion()
+            return
+        }
+        
+        let nowDate = timeProvider.now()
+        
+        guard nowDate < expirationDate else {
+            MXLog.warning("Call expired for room \(roomID), ignoring incoming push")
+            completion()
+            return
+        }
+        
+        let ringDuration: Duration = .seconds(min(expirationDate.timeIntervalSince1970 - nowDate.timeIntervalSince1970, 90))
         
         let roomDisplayName = payload.dictionaryPayload[ElementCallServiceNotificationKey.roomDisplayName.rawValue] as? String
         
@@ -182,7 +215,7 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
         }
         
         endUnansweredCallTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(90))
+            try? await self?.timeProvider.clock.sleep(for: ringDuration)
             
             guard let self, !Task.isCancelled else {
                 return

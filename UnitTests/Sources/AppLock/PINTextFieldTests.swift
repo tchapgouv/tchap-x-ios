@@ -1,11 +1,10 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
-
-import XCTest
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
@@ -14,15 +13,18 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Testing
 
-class PINTextFieldTests: XCTestCase {
-    func testSanitize() {
+@Suite
+struct PINTextFieldTests {
+    @Test
+    func sanitize() {
         let textField = PINTextField(pinCode: .constant(""))
-        XCTAssertEqual(textField.sanitize("2"), "2")
-        XCTAssertEqual(textField.sanitize("2023"), "2023")
-        XCTAssertEqual(textField.sanitize("20233"), "2023")
-        XCTAssertEqual(textField.sanitize("20x"), "20")
-        XCTAssertEqual(textField.sanitize("20!"), "20")
-        XCTAssertEqual(textField.sanitize("boop"), "")
+        #expect(textField.sanitize("2") == "2")
+        #expect(textField.sanitize("2023") == "2023")
+        #expect(textField.sanitize("20233") == "2023")
+        #expect(textField.sanitize("20x") == "20")
+        #expect(textField.sanitize("20!") == "20")
+        #expect(textField.sanitize("boop") == "")
     }
 }

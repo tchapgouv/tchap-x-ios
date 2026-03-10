@@ -4,7 +4,7 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>fr.gouv.tchapx.staging.background.refresh</string>
+		<string>$(BASE_BUNDLE_IDENTIFIER).background.refresh</string>
 	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
@@ -54,7 +54,8 @@
 			<string>Application</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>io.element</string>
+				<string>$(BASE_BUNDLE_IDENTIFIER)</string>
+				<string>matrix</string>
 			</array>
 		</dict>
 	</array>
@@ -155,8 +156,6 @@
 	<string>$(BASE_BUNDLE_IDENTIFIER)</string>
 	<key>keychainAccessGroupIdentifier</key>
 	<string>$(KEYCHAIN_ACCESS_GROUP_IDENTIFIER)</string>
-	<key>mapLibreAPIKey</key>
-	<string>$(MAPLIBRE_API_KEY)</string>
 	<key>productionAppName</key>
 	<string>$(PRODUCTION_APP_NAME)</string>
 </dict>

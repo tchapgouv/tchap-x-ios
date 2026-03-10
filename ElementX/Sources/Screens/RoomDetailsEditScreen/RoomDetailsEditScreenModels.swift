@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -14,14 +15,9 @@ enum RoomDetailsEditScreenViewModelAction {
     case displayMediaPicker
 }
 
-struct RoomDetailsEditScreenViewStateBindings {
-    var name: String
-    var topic: String
-    var showMediaSheet = false
-}
-
 struct RoomDetailsEditScreenViewState: BindableState {
     let roomID: String
+    let isSpace: Bool
     let initialAvatarURL: URL?
     let initialName: String
     let initialTopic: String
@@ -39,7 +35,7 @@ struct RoomDetailsEditScreenViewState: BindableState {
     
     /// The string shown for the room's name when it can't be edited.
     var nameRowTitle: String {
-        bindings.name.isEmpty ? L10n.commonRoomName : bindings.name
+        bindings.name.isEmpty ? L10n.commonName : bindings.name
     }
     
     /// The string shown for the room's topic when it can't be edited.
@@ -62,6 +58,21 @@ struct RoomDetailsEditScreenViewState: BindableState {
     var showDeleteImageAction: Bool {
         localMedia != nil || avatarURL != nil
     }
+}
+
+struct RoomDetailsEditScreenViewStateBindings {
+    var name: String
+    var topic: String
+    var showMediaSheet = false
+    
+    var alertInfo: AlertInfo<RoomDetailsEditScreenAlertType>?
+}
+
+enum RoomDetailsEditScreenAlertType {
+    case failedProcessingMedia
+    case unsavedChanges
+    case saveError
+    case unknown
 }
 
 enum RoomDetailsEditScreenViewAction {

@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -14,7 +15,9 @@ struct RoomListFiltersView: View {
     
     /// When you connect a mouse on macOS the scrollbars aren't hidden. This is some extra padding
     /// applied to the scroll view content to make sure the bars don't overlap the filters.
-    private var macScrollBarPadding: CGFloat { ProcessInfo.processInfo.isiOSAppOnMac ? 16 : 0 }
+    private var macScrollBarPadding: CGFloat {
+        ProcessInfo.processInfo.isiOSAppOnMac ? 16 : 0
+    }
     
     var body: some View {
         ScrollViewReader { proxy in

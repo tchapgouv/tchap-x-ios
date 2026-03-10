@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -17,7 +18,9 @@ class AppLockService: AppLockServiceProtocol {
     private let timer: AppLockTimer
     private let unlockPolicy: LAPolicy = .deviceOwnerAuthenticationWithBiometrics
     
-    var isMandatory: Bool { appSettings.appLockIsMandatory }
+    var isMandatory: Bool {
+        appSettings.appLockIsMandatory
+    }
     
     var isEnabled: Bool {
         do {
@@ -30,7 +33,9 @@ class AppLockService: AppLockServiceProtocol {
     }
     
     private var isEnabledSubject: PassthroughSubject<Bool, Never> = .init()
-    var isEnabledPublisher: AnyPublisher<Bool, Never> { isEnabledSubject.eraseToAnyPublisher() }
+    var isEnabledPublisher: AnyPublisher<Bool, Never> {
+        isEnabledSubject.eraseToAnyPublisher()
+    }
     
     var biometryType: LABiometryType {
         updateBiometrics()
@@ -48,7 +53,9 @@ class AppLockService: AppLockServiceProtocol {
         return state == context.evaluatedPolicyDomainState
     }
     
-    var numberOfPINAttempts: AnyPublisher<Int, Never> { appSettings.$appLockNumberOfPINAttempts }
+    var numberOfPINAttempts: AnyPublisher<Int, Never> {
+        appSettings.$appLockNumberOfPINAttempts
+    }
     
     init(keychainController: KeychainControllerProtocol, appSettings: AppSettings, context: LAContext = .init()) {
         self.keychainController = keychainController

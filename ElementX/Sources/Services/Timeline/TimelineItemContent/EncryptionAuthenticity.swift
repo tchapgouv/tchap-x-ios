@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -9,7 +10,7 @@ import Compound
 import MatrixRustSDK
 import SwiftUI
 
-/// Represents and issue with a timeline item's authenticity such as coming from an
+/// Represents an issue with a timeline item's authenticity such as coming from an
 /// unsigned session or being sent unencrypted in an encrypted room. See Rust's
 /// `ShieldStateCode` for more information about the meaning of the cases.
 enum EncryptionAuthenticity: Hashable {
@@ -26,19 +27,19 @@ enum EncryptionAuthenticity: Hashable {
     var message: String {
         switch self {
         case .notGuaranteed:
-            L10n.eventShieldReasonAuthenticityNotGuaranteed
+            L10n.cryptoEventAuthenticityNotGuaranteed
         case .unknownDevice:
-            L10n.eventShieldReasonUnknownDevice
+            L10n.cryptoEventAuthenticityUnknownDevice
         case .unsignedDevice:
-            L10n.eventShieldReasonUnsignedDevice
+            L10n.cryptoEventAuthenticityUnsignedDevice
         case .unverifiedIdentity:
-            L10n.eventShieldReasonUnverifiedIdentity
+            L10n.cryptoEventAuthenticityUnverifiedIdentity
         case .verificationViolation:
-            L10n.eventShieldReasonPreviouslyVerified
+            L10n.cryptoEventAuthenticityPreviouslyVerified
         case .sentInClear:
-            L10n.eventShieldReasonSentInClear
+            L10n.cryptoEventAuthenticitySentInClear
         case .mismatchedSender:
-            L10n.eventShieldMismatchedSender
+            L10n.cryptoEventAuthenticityMismatchedSender
         }
     }
     
@@ -67,16 +68,16 @@ enum EncryptionAuthenticity: Hashable {
 extension EncryptionAuthenticity {
     init?(shieldState: ShieldState) {
         switch shieldState {
-        case .red(let code, _):
+        case .red(let code):
             self.init(shieldStateCode: code, color: .red)
-        case .grey(let code, _):
+        case .grey(let code):
             self.init(shieldStateCode: code, color: .gray)
         case .none:
             return nil
         }
     }
     
-    init(shieldStateCode: ShieldStateCode, color: EncryptionAuthenticity.Color) {
+    init(shieldStateCode: TimelineEventShieldStateCode, color: EncryptionAuthenticity.Color) {
         switch shieldStateCode {
         case .authenticityNotGuaranteed:
             self = .notGuaranteed(color: color)

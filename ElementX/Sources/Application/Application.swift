@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -32,6 +33,12 @@ struct Application: App {
         WindowGroup {
             appCoordinator.toPresentable()
                 .statusBarHidden(shouldHideStatusBar)
+                .overlay(alignment: .top) {
+                    if #available(iOS 26, *), ProcessInfo.processInfo.isiOSAppOnMac {
+                        // Fake an old-school titlebar to reduce the "floaty-ness" of everything with liquid glass.
+                        Divider().ignoresSafeArea()
+                    }
+                }
                 .environment(\.openURL, OpenURLAction { url in
                     if appCoordinator.handleDeepLink(url, isExternalURL: false) {
                         return .handled

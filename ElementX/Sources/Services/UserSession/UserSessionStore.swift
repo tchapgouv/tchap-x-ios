@@ -1,33 +1,43 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import Foundation
-import Kingfisher
 import MatrixRustSDK
 
 class UserSessionStore: UserSessionStoreProtocol {
     private let keychainController: KeychainControllerProtocol
     private let appSettings: AppSettings
+    private let analyticsService: AnalyticsService
     private let networkMonitor: NetworkMonitorProtocol
     private let appHooks: AppHooks
     
     /// Whether or not there are sessions in the store.
-    var hasSessions: Bool { !keychainController.restorationTokens().isEmpty }
+    var hasSessions: Bool {
+        !keychainController.restorationTokens().isEmpty
+    }
+
     /// All the user IDs managed by the store.
-    var userIDs: [String] { keychainController.restorationTokens().map(\.userID) }
+    var userIDs: [String] {
+        keychainController.restorationTokens().map(\.userID)
+    }
     
-    var clientSessionDelegate: ClientSessionDelegate { keychainController }
+    var clientSessionDelegate: ClientSessionDelegate {
+        keychainController
+    }
     
     init(keychainController: KeychainControllerProtocol,
          appSettings: AppSettings,
+         analyticsService: AnalyticsService,
          appHooks: AppHooks,
          networkMonitor: NetworkMonitorProtocol) {
         self.keychainController = keychainController
         self.appSettings = appSettings
+        self.analyticsService = analyticsService
         self.appHooks = appHooks
         self.networkMonitor = networkMonitor
     }
@@ -112,7 +122,7 @@ class UserSessionStore: UserSessionStoreProtocol {
         }
         
         let homeserverURL = credentials.restorationToken.session.homeserverUrl
-        appHooks.remoteSettingsHook.loadCache(forHomeserver: homeserverURL, applyingTo: appSettings)
+        await appHooks.remoteSettingsHook.loadCache(forHomeserver: homeserverURL, applyingTo: appSettings)
         
         let builder = ClientBuilder
             .baseBuilder(httpProxy: URL(string: homeserverURL)?.globalProxy,
@@ -122,11 +132,11 @@ class UserSessionStore: UserSessionStoreProtocol {
                          enableOnlySignedDeviceIsolationMode: appSettings.enableOnlySignedDeviceIsolationMode,
                          enableKeyShareOnInvite: appSettings.enableKeyShareOnInvite,
                          threadsEnabled: appSettings.threadsEnabled)
-            .sessionPaths(dataPath: credentials.restorationToken.sessionDirectories.dataPath,
-                          cachePath: credentials.restorationToken.sessionDirectories.cachePath)
+            .sqliteStore(config: .init(dataPath: credentials.restorationToken.sessionDirectories.dataPath,
+                                       cachePath: credentials.restorationToken.sessionDirectories.cachePath)
+                    .passphrase(passphrase: credentials.restorationToken.passphrase))
             .username(username: credentials.userID)
             .homeserverUrl(url: homeserverURL)
-            .sessionPassphrase(passphrase: credentials.restorationToken.passphrase)
         
         do {
             let client = try await builder.build()
@@ -152,7 +162,8 @@ class UserSessionStore: UserSessionStoreProtocol {
         do {
             return try await ClientProxy(client: client,
                                          networkMonitor: networkMonitor,
-                                         appSettings: appSettings)
+                                         appSettings: appSettings,
+                                         analyticsService: analyticsService)
         } catch {
             throw UserSessionStoreError.failedSettingUpClientProxy(error)
         }

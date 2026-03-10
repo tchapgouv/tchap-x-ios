@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE in the repository root for full details.
 //
 
@@ -32,6 +33,7 @@ struct EditRoomAddressListRow: View {
                     .font(.compound.bodyLG)
                     .foregroundStyle(.compound.textPrimary)
                     .padding(.horizontal, 8)
+                    .accessibilityLabel(L10n.a11yAddress)
                     .accessibilityHint(L10n.a11yEditRoomAddressHint(fullAddress))
                 Text(":\(serverName)")
                     .font(.compound.bodyLG)

@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -15,9 +16,7 @@ class RoomRolesAndPermissionsUITests: XCTestCase {
         static let rolesAndPermissions = 0
         static let administratorsRole = 1
         static let moderatorsRole = 2
-        static let roomDetailsPermissions = 3
-        static let messagesAndContentPermissions = 4
-        static let memberModerationPermissions = 5
+        static let permissions = 3
     }
     
     func testFlow() async throws {
@@ -33,15 +32,8 @@ class RoomRolesAndPermissionsUITests: XCTestCase {
         try await app.assertScreenshot(step: Step.moderatorsRole)
         app.navigationBars.buttons.element(boundBy: 0).tap()
         
-        app.buttons[A11yIdentifiers.roomRolesAndPermissionsScreen.roomDetails].tap()
-        try await app.assertScreenshot(step: Step.roomDetailsPermissions)
+        app.buttons[A11yIdentifiers.roomRolesAndPermissionsScreen.permissions].tap()
+        try await app.assertScreenshot(step: Step.permissions)
         app.navigationBars.buttons.element(boundBy: 0).tap()
-        
-        app.buttons[A11yIdentifiers.roomRolesAndPermissionsScreen.messagesAndContent].tap()
-        try await app.assertScreenshot(step: Step.messagesAndContentPermissions)
-        app.navigationBars.buttons.element(boundBy: 0).tap()
-        
-        app.buttons[A11yIdentifiers.roomRolesAndPermissionsScreen.memberModeration].tap()
-        try await app.assertScreenshot(step: Step.memberModerationPermissions)
     }
 }

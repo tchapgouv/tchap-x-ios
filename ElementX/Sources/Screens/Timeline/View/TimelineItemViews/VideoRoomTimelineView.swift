@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -12,7 +13,9 @@ struct VideoRoomTimelineView: View {
     @Environment(\.timelineContext) private var context
     let timelineItem: VideoRoomTimelineItem
     
-    private var hasMediaCaption: Bool { timelineItem.content.caption != nil }
+    private var hasMediaCaption: Bool {
+        timelineItem.content.caption != nil
+    }
     
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {

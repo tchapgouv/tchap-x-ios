@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -77,7 +78,7 @@ struct AppLockScreen: View {
     /// The row of dots showing how many digits have been entered.
     var pinInputField: some View {
         HStack(spacing: 24) {
-            /// The size of each dot within the PIN input field.
+            // The size of each dot within the PIN input field.
             let pinDotSize: CGFloat = 14
             Circle()
                 .fill(context.viewState.numberOfDigitsEntered > 0 ? .compound.iconPrimary : .compound.bgSubtlePrimary)
@@ -115,7 +116,7 @@ struct AppLockScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModel = AppLockScreenViewModel(appLockService: AppLockServiceMock.mock())
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             AppLockScreen(context: viewModel.context)
         }
     }

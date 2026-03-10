@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -59,7 +60,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
          eventStringBuilder: RoomEventStringBuilder,
          name: String,
          shouldUpdateVisibleRange: Bool = false,
-         roomListPageSize: UInt32 = 200,
+         roomListPageSize: UInt32 = 100,
          notificationSettings: NotificationSettingsProxyProtocol,
          appSettings: AppSettings) {
         self.roomListService = roomListService
@@ -90,7 +91,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         
         do {
             listUpdatesSubscriptionResult = roomList.entriesWithDynamicAdaptersWith(pageSize: UInt32(roomListPageSize),
-                                                                                    enableLatestEventSorter: appSettings.latestEventSorterEnabled,
+                                                                                    enableLatestEventSorter: true,
                                                                                     listener: SDKListener { [weak self] updates in
                                                                                         guard let self else { return }
                                                                                         diffsPublisher.send(updates)
@@ -118,14 +119,9 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
     }
     
     func setFilter(_ filter: RoomSummaryProviderFilter) {
-        let baseFilter: [RoomListEntriesDynamicFilterKind] = if #available(iOS 18.0, *) {
-            [.any(filters: [.all(filters: [.nonSpace, .nonLeft]),
-                            .all(filters: [.space, .invite])]),
-             .deduplicateVersions]
-        } else {
-            // Don't show space invites on iOS 17 given that the tab bar is disabled due to glitches on iPad.
-            [.nonLeft, .nonSpace, .deduplicateVersions]
-        }
+        let baseFilter: [RoomListEntriesDynamicFilterKind] = [.any(filters: [.all(filters: [.nonSpace, .nonLeft]),
+                                                                             .all(filters: [.space, .invite])]),
+                                                              .deduplicateVersions]
         
         switch filter {
         case .excludeAll:
@@ -137,6 +133,16 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
                 [.normalizedMatchRoomName(pattern: query)] + baseFilter
             }
             _ = listUpdatesSubscriptionResult?.controller().setFilter(kind: .all(filters: filters))
+        case .rooms(let roomIDs, let filters):
+            var rustFilters = filters.map(\.rustFilter) + baseFilter
+            
+            rustFilters.append(.identifiers(identifiers: Array(roomIDs)))
+            
+            if !filters.contains(.lowPriority), appSettings.lowPriorityFilterEnabled {
+                rustFilters.append(.nonLowPriority)
+            }
+            
+            _ = listUpdatesSubscriptionResult?.controller().setFilter(kind: .all(filters: rustFilters))
         case let .all(filters):
             var rustFilters = filters.map(\.rustFilter) + baseFilter
             
@@ -229,10 +235,10 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         return updatedItems
     }
 
-    private func fetchRoomDetails(from room: Room) -> (roomInfo: RoomInfo?, latestEvent: EventTimelineItem?) {
+    private func fetchRoomDetails(from room: Room) -> (roomInfo: RoomInfo?, latestEvent: LatestEventValue?) {
         class FetchResult {
             var roomInfo: RoomInfo?
-            var latestEvent: EventTimelineItem?
+            var latestEvent: LatestEventValue?
         }
         
         let semaphore = DispatchSemaphore(value: 0)
@@ -260,11 +266,39 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         
         var attributedLastMessage: AttributedString?
         var lastMessageDate: Date?
+        var lastMessageState: RoomSummary.LastMessageState?
         
         if let latestRoomMessage = roomDetails.latestEvent {
-            let lastMessage = EventTimelineItemProxy(item: latestRoomMessage, uniqueID: .init("0"))
-            lastMessageDate = lastMessage.timestamp
-            attributedLastMessage = eventStringBuilder.buildAttributedString(for: lastMessage)
+            switch latestRoomMessage {
+            case .local(let timestamp, let senderID, let profile, let content, let state):
+                let sender = TimelineItemSender(senderID: senderID, senderProfile: profile)
+                attributedLastMessage = eventStringBuilder.buildAttributedString(for: content, sender: sender, isOutgoing: true)
+                lastMessageDate = Date(timeIntervalSince1970: TimeInterval(timestamp / 1000))
+                
+                switch state {
+                case .isSending:
+                    lastMessageState = .sending
+                case .cannotBeSent:
+                    lastMessageState = .failed
+                case .hasBeenSent:
+                    lastMessageState = nil
+                }
+            case .remote(let timestamp, let senderID, let isOwn, let profile, let content):
+                let sender = TimelineItemSender(senderID: senderID, senderProfile: profile)
+                attributedLastMessage = eventStringBuilder.buildAttributedString(for: content, sender: sender, isOutgoing: isOwn)
+                lastMessageDate = Date(timeIntervalSince1970: TimeInterval(timestamp / 1000))
+            case .remoteInvite(let timestamp, let senderID, let profile):
+                lastMessageDate = Date(timeIntervalSince1970: TimeInterval(timestamp / 1000))
+                
+                if let senderID {
+                    let sender = TimelineItemSender(senderID: senderID, senderProfile: profile)
+                    let senderDisplayName = sender.displayName ?? sender.id
+                    let invitedYouString = eventStringBuilder.stateEventStringBuilder.buildInvitedYouString(senderDisplayName)
+                    attributedLastMessage = AttributedString(invitedYouString)
+                }
+            case .none:
+                break
+            }
         }
         
         var inviterProxy: RoomMemberProxyProtocol?
@@ -291,6 +325,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
                            activeMembersCount: UInt(roomInfo.activeMembersCount),
                            lastMessage: attributedLastMessage,
                            lastMessageDate: lastMessageDate,
+                           lastMessageState: lastMessageState,
                            unreadMessagesCount: UInt(roomInfo.numUnreadMessages),
                            unreadMentionsCount: UInt(roomInfo.numUnreadMentions),
                            unreadNotificationsCount: UInt(roomInfo.numUnreadNotifications),

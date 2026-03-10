@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -106,22 +107,22 @@ struct AppLockSetupPINScreen_Previews: PreviewProvider, TestablePreview {
                                                                       appLockService: failedService)
     
     static var previews: some View {
-        NavigationStack {
+        ElementNavigationStack {
             AppLockSetupPINScreen(context: createViewModel.context)
         }
         .previewDisplayName("Create")
         
-        NavigationStack {
+        ElementNavigationStack {
             AppLockSetupPINScreen(context: confirmViewModel.context)
         }
         .previewDisplayName("Confirm")
         
-        NavigationStack {
+        ElementNavigationStack {
             AppLockSetupPINScreen(context: unlockViewModel.context)
         }
         .previewDisplayName("Unlock")
         
-        NavigationStack {
+        ElementNavigationStack {
             AppLockSetupPINScreen(context: unlockFailedViewModel.context)
         }
         .previewDisplayName("Unlock Failed")

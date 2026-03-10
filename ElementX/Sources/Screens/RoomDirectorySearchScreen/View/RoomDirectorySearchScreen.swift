@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -12,7 +13,7 @@ struct RoomDirectorySearchScreen: View {
     @ObservedObject var context: RoomDirectorySearchScreenViewModel.Context
     
     var body: some View {
-        NavigationStack {
+        ElementNavigationStack {
             List {
                 Section {
                     ForEach(context.viewState.rooms) { room in
@@ -59,7 +60,7 @@ struct RoomDirectorySearchScreen: View {
         }
     }
     
-    // The greedy size of Rectangle can create an issue with the navigation bar when the search is highlighted, so is best to use a fixed frame instead of hidden() or EmptyView()
+    /// The greedy size of Rectangle can create an issue with the navigation bar when the search is highlighted, so is best to use a fixed frame instead of hidden() or EmptyView()
     private var emptyRectangle: some View {
         Rectangle()
             .frame(width: 0, height: 0)

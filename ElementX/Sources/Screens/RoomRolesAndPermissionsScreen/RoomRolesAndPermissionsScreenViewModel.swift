@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -25,7 +26,7 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
         self.roomProxy = roomProxy
         self.userIndicatorController = userIndicatorController
         self.analytics = analytics
-        super.init(initialViewState: RoomRolesAndPermissionsScreenViewState(ownRole: roomProxy.membersPublisher.value.first { $0.userID == roomProxy.ownUserID }?.role ?? .administrator,
+        super.init(initialViewState: RoomRolesAndPermissionsScreenViewState(ownPowerLevel: roomProxy.membersPublisher.value.first { $0.userID == roomProxy.ownUserID }?.powerLevel ?? .value(Int(RoomRole.administrator.powerLevelValue)),
                                                                             permissions: initialPermissions))
         
         // Automatically update the admin/moderator counts.
@@ -70,8 +71,8 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
                                                          Task { await self.updateOwnRole(.user) }
                                                      }
                                                  ])
-        case .editPermissions(let permissionsGroup):
-            editPermissions(group: permissionsGroup)
+        case .editPermissions:
+            editPermissions()
         case .reset:
             state.bindings.alertInfo = AlertInfo(id: .resetConfirmation,
                                                  title: L10n.screenRoomRolesAndPermissionsResetConfirmTitle,
@@ -90,7 +91,7 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
         state.administratorCount = members.filter { $0.role == .administrator && $0.isActive }.count
         state.moderatorCount = members.filter { $0.role == .moderator && $0.isActive }.count
         if let ownUser = members.first(where: { $0.userID == roomProxy.ownUserID }) {
-            state.ownRole = ownUser.role
+            state.ownPowerLevel = ownUser.powerLevel
         }
     }
     
@@ -125,13 +126,13 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
         }
     }
     
-    private func editPermissions(group: RoomRolesAndPermissionsScreenPermissionsGroup) {
+    private func editPermissions() {
         guard let permissions = state.permissions else {
             state.bindings.alertInfo = AlertInfo(id: .error)
             MXLog.error("Missing permissions.")
             return
         }
-        actionsSubject.send(.editPermissions(permissions: permissions, group: group))
+        actionsSubject.send(.editPermissions(ownPowerLevel: state.ownPowerLevel, permissions: permissions))
     }
     
     private func resetPermissions() async {

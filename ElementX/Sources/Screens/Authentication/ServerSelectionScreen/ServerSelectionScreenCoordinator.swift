@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -21,12 +22,14 @@ enum ServerSelectionScreenCoordinatorAction {
     case dismiss
 }
 
-// Note: This code was brought over from Riot, we should move the authentication service logic into the view model.
+/// Note: This code was brought over from Riot, we should move the authentication service logic into the view model.
 final class ServerSelectionScreenCoordinator: CoordinatorProtocol {
     private let parameters: ServerSelectionScreenCoordinatorParameters
     private let userIndicatorController: UserIndicatorControllerProtocol
     private var viewModel: ServerSelectionScreenViewModelProtocol
-    private var authenticationService: AuthenticationServiceProtocol { parameters.authenticationService }
+    private var authenticationService: AuthenticationServiceProtocol {
+        parameters.authenticationService
+    }
 
     private let actionsSubject: PassthroughSubject<ServerSelectionScreenCoordinatorAction, Never> = .init()
     private var cancellables = Set<AnyCancellable>()

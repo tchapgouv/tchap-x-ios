@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -40,7 +41,9 @@ struct RoomMembersListScreenViewState: BindableState {
     private var bannedMembers: [RoomMemberListScreenEntry]
     
     let joinedMembersCount: Int
-    var bannedMembersCount: Int { bannedMembers.count }
+    var bannedMembersCount: Int {
+        bannedMembers.count
+    }
     
     var canInviteUsers = false
     var canKickUsers = false
@@ -73,6 +76,15 @@ struct RoomMembersListScreenViewState: BindableState {
     var visibleBannedMembers: [RoomMemberListScreenEntry] {
         bannedMembers
             .filter { $0.member.matches(searchQuery: bindings.searchQuery) }
+    }
+    
+    var shouldShowEmptyState: Bool {
+        switch bindings.mode {
+        case .banned:
+            visibleBannedMembers.count == 0
+        case .members:
+            visibleInvitedMembers.count + visibleJoinedMembers.count == 0
+        }
     }
 }
 

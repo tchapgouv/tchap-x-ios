@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -329,6 +330,7 @@ private struct NavigationSplitCoordinatorView: View {
     @State private var columnVisibility = NavigationSplitViewVisibility.all
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.scenePhase) private var scenePhase
     
     @Bindable var navigationSplitCoordinator: NavigationSplitCoordinator
     
@@ -352,11 +354,18 @@ private struct NavigationSplitCoordinatorView: View {
             module.coordinator?.toPresentable()
                 .id(module.id)
         }
+        .onChange(of: columnVisibility) { oldValue, _ in
+            // Preserve the current column visibility when backgrounding the app
+            if scenePhase == .background {
+                columnVisibility = oldValue
+            }
+        }
         .ignoresSafeArea() // Necessary when embedded in a TabView on iPadOS otherwise there's a gap at the top (as of 18.5).
     }
     
     /// The NavigationStack that will be used in compact layouts
     var navigationStack: some View {
+        // swiftlint:disable:next prefer_element_navigation_stack
         NavigationStack(path: $navigationSplitCoordinator.compactLayoutStackModules) {
             navigationSplitCoordinator.compactLayoutRootModule?.coordinator?.toPresentable()
                 .id(navigationSplitCoordinator.compactLayoutRootModule?.id) // Is a nil ID ok?
@@ -392,7 +401,7 @@ private struct NavigationSplitCoordinatorView: View {
                 .id(module.id)
         }
         .animation(.elementDefault, value: navigationSplitCoordinator.sidebarModule)
-        .animation(.elementDefault, value: navigationSplitCoordinator.detailModule)
+        .animation(.noAnimation, value: navigationSplitCoordinator.detailModule) // Don't crossfade the detail transition on iPad.
     }
 }
 
@@ -566,12 +575,26 @@ private struct NavigationSplitCoordinatorView: View {
         }
     }
     
+    func pop(to coordinator: CoordinatorProtocol, animated: Bool = true) {
+        if rootCoordinator === coordinator {
+            popToRoot(animated: animated)
+        } else if stackCoordinators.contains(where: { $0 === coordinator }) {
+            var transaction = Transaction()
+            transaction.disablesAnimations = !animated
+            
+            withTransaction(transaction) {
+                while stackCoordinators.last !== coordinator, !stackCoordinators.isEmpty {
+                    _ = stackModules.popLast()
+                }
+            }
+        }
+    }
+    
     /// Present a sheet on top of the stack. If this NavigationStackCoordinator is embedded within a NavigationSplitCoordinator
     /// then the presentation will be proxied to the split
     /// - Parameters:
     ///   - coordinator: the coordinator to display
     ///   - animated: whether to animate the transition or not. Default is true
-
     ///   - dismissalCallback: called when the sheet has been dismissed, programatically or otherwise
     func setSheetCoordinator(_ coordinator: (any CoordinatorProtocol)?, animated: Bool = true, dismissalCallback: (() -> Void)? = nil) {
         if let navigationSplitCoordinator {
@@ -669,6 +692,7 @@ private struct NavigationStackCoordinatorView: View {
     @Bindable var navigationStackCoordinator: NavigationStackCoordinator
     
     var body: some View {
+        // swiftlint:disable:next prefer_element_navigation_stack
         NavigationStack(path: $navigationStackCoordinator.stackModules) {
             navigationStackCoordinator.rootModule?.coordinator?.toPresentable()
                 .id(navigationStackCoordinator.rootModule?.id) // Is a nil ID ok?

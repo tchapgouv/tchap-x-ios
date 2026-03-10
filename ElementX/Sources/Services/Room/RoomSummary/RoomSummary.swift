@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -28,6 +29,8 @@ struct RoomSummary {
             }
         }
     }
+    
+    enum LastMessageState { case sending, failed }
 
     let room: Room
     
@@ -45,6 +48,7 @@ struct RoomSummary {
     
     let lastMessage: AttributedString?
     let lastMessageDate: Date?
+    let lastMessageState: LastMessageState?
     let unreadMessagesCount: UInt
     let unreadMentionsCount: UInt
     let unreadNotificationsCount: UInt
@@ -58,21 +62,33 @@ struct RoomSummary {
     let isFavourite: Bool
     let isTombstoned: Bool
     
-    var hasUnreadMessages: Bool { unreadMessagesCount > 0 }
-    var hasUnreadMentions: Bool { unreadMentionsCount > 0 }
-    var hasUnreadNotifications: Bool { unreadNotificationsCount > 0 }
-    var isMuted: Bool { notificationMode == .mute }
+    var hasUnreadMessages: Bool {
+        unreadMessagesCount > 0
+    }
+
+    var hasUnreadMentions: Bool {
+        unreadMentionsCount > 0
+    }
+
+    var hasUnreadNotifications: Bool {
+        unreadNotificationsCount > 0
+    }
+
+    var isMuted: Bool {
+        notificationMode == .mute
+    }
 }
 
 extension RoomSummary: CustomStringConvertible {
-    var description: String { """
-    RoomSummary: - id: \(id) \
-    - isDirect: \(isDirect) \
-    - unreadMessagesCount: \(unreadMessagesCount) \
-    - unreadMentionsCount: \(unreadMentionsCount) \
-    - unreadNotificationsCount: \(unreadNotificationsCount) \
-    - notificationMode: \(notificationMode?.rawValue ?? "nil")
-    """
+    var description: String {
+        """
+        RoomSummary: - id: \(id) \
+        - isDirect: \(isDirect) \
+        - unreadMessagesCount: \(unreadMessagesCount) \
+        - unreadMentionsCount: \(unreadMentionsCount) \
+        - unreadNotificationsCount: \(unreadNotificationsCount) \
+        - notificationMode: \(notificationMode?.rawValue ?? "nil")
+        """
     }
     
     /// Used where summaries are shown in a list e.g. message forwarding,
@@ -116,6 +132,7 @@ extension RoomSummary {
         
         lastMessage = AttributedString(string)
         lastMessageDate = .mock
+        lastMessageState = nil
         unreadMessagesCount = hasUnreadMessages ? 1 : 0
         unreadMentionsCount = hasUnreadMentions ? 1 : 0
         unreadNotificationsCount = hasUnreadNotifications ? 1 : 0
@@ -130,7 +147,7 @@ extension RoomSummary {
         isTombstoned = false
     }
     
-    // This doesn't have to work properly for DM invites, the heroes are always empty
+    /// This doesn't have to work properly for DM invites, the heroes are always empty
     var avatar: RoomAvatar {
         guard !isTombstoned else {
             return .tombstoned

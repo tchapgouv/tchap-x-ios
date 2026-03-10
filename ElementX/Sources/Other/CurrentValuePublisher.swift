@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -20,7 +21,7 @@ struct CurrentValuePublisher<Output, Failure: Error>: Publisher {
         self.init(CurrentValueSubject(value))
     }
     
-    func receive<S>(subscriber: S) where S: Subscriber, Failure == S.Failure, Output == S.Input {
+    func receive<S: Subscriber>(subscriber: S) where Failure == S.Failure, Output == S.Input {
         subject.receive(subscriber: subscriber)
     }
     

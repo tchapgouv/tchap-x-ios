@@ -1,12 +1,12 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
 import Combine
-import XCTest
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
@@ -15,53 +15,64 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Testing
 
 @MainActor
-class InviteUsersScreenViewModelTests: XCTestCase {
+@Suite
+struct InviteUsersScreenViewModelTests {
     var viewModel: InviteUsersScreenViewModelProtocol!
     var userDiscoveryService: UserDiscoveryServiceMock!
-    
-    private var cancellables = Set<AnyCancellable>()
     
     var context: InviteUsersScreenViewModel.Context {
         viewModel.context
     }
     
-    override func setUp() {
-        cancellables.removeAll()
+    @Test
+    mutating func selectUser() {
+        let roomProxy = JoinedRoomProxyMock(.init(name: "newroom", members: []))
+        roomProxy.inviteUserIDReturnValue = .success(())
+        setupViewModel(roomProxy: roomProxy, isSkippable: true)
+        
+        #expect(context.viewState.selectedUsers.isEmpty)
+        context.send(viewAction: .toggleUser(.mockAlice))
+        #expect(context.viewState.selectedUsers.count == 1)
+        #expect(context.viewState.selectedUsers.first?.userID == UserProfileProxy.mockAlice.userID)
     }
     
-    func testSelectUser() {
-        setupWithRoomType(roomType: .draft)
-        XCTAssertTrue(context.viewState.selectedUsers.isEmpty)
+    @Test
+    mutating func reselectUser() {
+        let roomProxy = JoinedRoomProxyMock(.init(name: "newroom", members: []))
+        roomProxy.inviteUserIDReturnValue = .success(())
+        setupViewModel(roomProxy: roomProxy, isSkippable: true)
+        
+        #expect(context.viewState.selectedUsers.isEmpty)
         context.send(viewAction: .toggleUser(.mockAlice))
-        XCTAssertTrue(context.viewState.selectedUsers.count == 1)
-        XCTAssertEqual(context.viewState.selectedUsers.first?.userID, UserProfileProxy.mockAlice.userID)
+        #expect(context.viewState.selectedUsers.count == 1)
+        #expect(context.viewState.selectedUsers.first?.userID == UserProfileProxy.mockAlice.userID)
+        context.send(viewAction: .toggleUser(.mockAlice))
+        #expect(context.viewState.selectedUsers.isEmpty)
     }
     
-    func testReselectUser() {
-        setupWithRoomType(roomType: .draft)
-        XCTAssertTrue(context.viewState.selectedUsers.isEmpty)
+    @Test
+    mutating func deselectUser() {
+        let roomProxy = JoinedRoomProxyMock(.init(name: "newroom", members: []))
+        roomProxy.inviteUserIDReturnValue = .success(())
+        setupViewModel(roomProxy: roomProxy, isSkippable: true)
+        
+        #expect(context.viewState.selectedUsers.isEmpty)
         context.send(viewAction: .toggleUser(.mockAlice))
-        XCTAssertEqual(context.viewState.selectedUsers.count, 1)
-        XCTAssertEqual(context.viewState.selectedUsers.first?.userID, UserProfileProxy.mockAlice.userID)
+        #expect(context.viewState.selectedUsers.count == 1)
+        #expect(context.viewState.selectedUsers.first?.userID == UserProfileProxy.mockAlice.userID)
         context.send(viewAction: .toggleUser(.mockAlice))
-        XCTAssertTrue(context.viewState.selectedUsers.isEmpty)
+        #expect(context.viewState.selectedUsers.isEmpty)
     }
     
-    func testDeselectUser() {
-        setupWithRoomType(roomType: .draft)
-        XCTAssertTrue(context.viewState.selectedUsers.isEmpty)
-        context.send(viewAction: .toggleUser(.mockAlice))
-        XCTAssertEqual(context.viewState.selectedUsers.count, 1)
-        XCTAssertEqual(context.viewState.selectedUsers.first?.userID, UserProfileProxy.mockAlice.userID)
-        context.send(viewAction: .toggleUser(.mockAlice))
-        XCTAssertTrue(context.viewState.selectedUsers.isEmpty)
-    }
-     
-    func testInviteButton() async throws {
+    @Test
+    mutating func inviteButton() async throws {
         let mockedMembers: [RoomMemberProxyMock] = [.mockAlice, .mockBob]
-        setupWithRoomType(roomType: .room(roomProxy: JoinedRoomProxyMock(.init(name: "test", members: mockedMembers))))
+        let roomProxy = JoinedRoomProxyMock(.init(name: "test", members: mockedMembers))
+        roomProxy.inviteUserIDReturnValue = .success(())
+        setupViewModel(roomProxy: roomProxy, isSkippable: false)
         
         let deferredState = deferFulfillment(viewModel.context.$viewState) { state in
             state.isUserSelected(.mockAlice)
@@ -73,50 +84,27 @@ class InviteUsersScreenViewModelTests: XCTestCase {
         
         let deferredAction = deferFulfillment(viewModel.actions) { action in
             switch action {
-            case .invite:
+            case .dismiss:
                 return true
-            default:
-                return false
             }
         }
         
         context.send(viewAction: .proceed)
         
-        guard case let .invite(members) = try await deferredAction.fulfill() else {
-            XCTFail("Sent action should be 'invite'")
-            return
-        }
-        
-        XCTAssertEqual(members, [RoomMemberProxyMock.mockAlice.userID])
+        try await deferredAction.fulfill()
+        #expect(roomProxy.inviteUserIDReceivedInvocations == [RoomMemberProxyMock.mockAlice.userID])
     }
     
-    private func setupWithRoomType(roomType: InviteUsersScreenRoomType) {
-        let usersSubject = CurrentValueSubject<[UserProfileProxy], Never>([])
+    private mutating func setupViewModel(roomProxy: JoinedRoomProxyProtocol, isSkippable: Bool) {
         userDiscoveryService = UserDiscoveryServiceMock()
         userDiscoveryService.searchProfilesWithReturnValue = .success([])
-        usersSubject.send([])
         let viewModel = InviteUsersScreenViewModel(userSession: UserSessionMock(.init()),
-                                                   selectedUsers: usersSubject.asCurrentValuePublisher(),
-                                                   roomType: roomType,
+                                                   roomProxy: roomProxy,
+                                                   isSkippable: isSkippable,
                                                    userDiscoveryService: userDiscoveryService,
-                                                   userIndicatorController: UserIndicatorControllerMock())
+                                                   userIndicatorController: UserIndicatorControllerMock(),
+                                                   appSettings: ServiceLocator.shared.settings)
         viewModel.state.usersSection = .init(type: .suggestions, users: [.mockAlice, .mockBob, .mockCharlie])
         self.viewModel = viewModel
-        
-        viewModel.actions.sink { action in
-            switch action {
-            case .toggleUser(let user):
-                var selectedUsers = usersSubject.value
-                if let index = selectedUsers.firstIndex(where: { $0.userID == user.userID }) {
-                    selectedUsers.remove(at: index)
-                } else {
-                    selectedUsers.append(user)
-                }
-                usersSubject.send(selectedUsers)
-            default:
-                break
-            }
-        }
-        .store(in: &cancellables)
     }
 }

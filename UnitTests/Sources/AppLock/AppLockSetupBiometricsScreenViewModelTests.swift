@@ -1,11 +1,10 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
-
-import XCTest
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
@@ -14,15 +13,19 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Testing
 
 @MainActor
-class AppLockSetupBiometricsScreenViewModelTests: XCTestCase {
-    var appLockService: AppLockServiceMock!
-    var viewModel: AppLockSetupBiometricsScreenViewModelProtocol!
+@Suite
+final class AppLockSetupBiometricsScreenViewModelTests {
+    var appLockService: AppLockServiceMock
+    var viewModel: AppLockSetupBiometricsScreenViewModelProtocol
     
-    var context: AppLockSetupBiometricsScreenViewModelType.Context { viewModel.context }
+    var context: AppLockSetupBiometricsScreenViewModelType.Context {
+        viewModel.context
+    }
     
-    override func setUp() {
+    init() {
         AppSettings.resetAllSettings()
         
         appLockService = AppLockServiceMock()
@@ -32,27 +35,29 @@ class AppLockSetupBiometricsScreenViewModelTests: XCTestCase {
         viewModel = AppLockSetupBiometricsScreenViewModel(appLockService: appLockService)
     }
     
-    override func tearDown() {
+    deinit {
         AppSettings.resetAllSettings()
     }
 
-    func testAllow() async throws {
+    @Test
+    func allow() async throws {
         // When allowing Touch/Face ID.
         let deferred = deferFulfillment(viewModel.actions) { $0 == .continue }
         context.send(viewAction: .allow)
         try await deferred.fulfill()
         
         // Then the service should now have biometric unlock enabled.
-        XCTAssertEqual(appLockService.enableBiometricUnlockCallsCount, 1)
+        #expect(appLockService.enableBiometricUnlockCallsCount == 1)
     }
 
-    func testSkip() async throws {
+    @Test
+    func skip() async throws {
         // When skipping biometrics.
         let deferred = deferFulfillment(viewModel.actions) { $0 == .continue }
         context.send(viewAction: .skip)
         try await deferred.fulfill()
         
         // Then the service should now have biometric unlock enabled.
-        XCTAssertEqual(appLockService.enableBiometricUnlockCallsCount, 0)
+        #expect(appLockService.enableBiometricUnlockCallsCount == 0)
     }
 }

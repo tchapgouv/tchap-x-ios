@@ -1,5 +1,6 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -7,15 +8,16 @@
 
 import XCTest
 
+@MainActor
 class UserFlowTests: XCTestCase {
     private static let integrationTestsRoomName = "Element X iOS Integration Tests"
     private static let integrationTestsMessage = "Go down in flames!"
     
     private var app: XCUIApplication!
     
-    override func setUp() {
+    override func setUp() async throws {
         app = Application.launch()
-        app.login(currentTestCase: self)
+        try app.login(currentTestCase: self)
     }
     
     func testUserFlow() {
@@ -28,7 +30,7 @@ class UserFlowTests: XCTestCase {
         app.logout()
     }
     
-    // Assumes app is on the home screen
+    /// Assumes app is on the home screen
     private func checkRoomFlows() {
         // Wait for the room list to paginate and correctly compute the room display names otherwise the test room
         // won't be found
@@ -77,7 +79,7 @@ class UserFlowTests: XCTestCase {
         sleep(10) // Wait for the message to be sent
         
         // Switch to the rich text editor
-        tapOnMenu(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
+        tapOnButton(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
         tapOnButton(A11yIdentifiers.roomScreen.attachmentPickerTextFormatting)
         
         composerTextField = app.textViews[A11yIdentifiers.roomScreen.messageComposer].firstMatch
@@ -95,7 +97,7 @@ class UserFlowTests: XCTestCase {
     }
         
     private func checkPhotoSharing() {
-        tapOnMenu(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
+        tapOnButton(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
         tapOnButton(A11yIdentifiers.roomScreen.attachmentPickerPhotoLibrary)
         
         sleep(10) // Wait for the picker to load
@@ -113,7 +115,7 @@ class UserFlowTests: XCTestCase {
     }
     
     private func checkDocumentSharing() {
-        tapOnMenu(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
+        tapOnButton(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
         tapOnButton(A11yIdentifiers.roomScreen.attachmentPickerDocuments)
         
         sleep(10) // Wait for the picker to load
@@ -122,7 +124,7 @@ class UserFlowTests: XCTestCase {
     }
     
     private func checkLocationSharing() {
-        tapOnMenu(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
+        tapOnButton(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
         tapOnButton(A11yIdentifiers.roomScreen.attachmentPickerLocation)
         
         sleep(10) // Wait for the picker to load
@@ -155,9 +157,8 @@ class UserFlowTests: XCTestCase {
         
         tapOnButton(A11yIdentifiers.startChatScreen.createRoom)
         
-        tapOnButton(A11yIdentifiers.inviteUsersScreen.proceed)
-        
-        tapOnBackButton("Invite people")
+        // Don't create the room, it will make the test account very noisy.
+        // The UI tests already test this flow with mocked data.
         
         tapOnBackButton("Start chat")
         
@@ -181,7 +182,7 @@ class UserFlowTests: XCTestCase {
     
     private func checkRoomDetails() {
         // Open the room details
-        let roomHeader = app.staticTexts[A11yIdentifiers.roomScreen.name]
+        let roomHeader = app.buttons[A11yIdentifiers.roomScreen.name]
         XCTAssertTrue(roomHeader.waitForExistence(timeout: 10.0))
         roomHeader.tap(.center)
         
@@ -250,12 +251,6 @@ class UserFlowTests: XCTestCase {
             expectation(for: doesNotExistPredicate, evaluatedWith: button)
             waitForExpectations(timeout: 10.0)
         }
-    }
-    
-    private func tapOnMenu(_ identifier: String) {
-        let button = app.buttons[identifier]
-        XCTAssertTrue(button.waitForExistence(timeout: 10.0))
-        button.tap(.center)
     }
     
     /// Taps on a back button that the system configured with a label but no identifier.

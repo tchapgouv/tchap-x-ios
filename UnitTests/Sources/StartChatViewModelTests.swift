@@ -1,11 +1,10 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
-
-import XCTest
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
@@ -14,18 +13,20 @@ import XCTest
 #else
 @testable import ElementX
 #endif
+import Testing
 
 @MainActor
-class StartChatScreenViewModelTests: XCTestCase {
-    var viewModel: StartChatScreenViewModelProtocol!
-    var clientProxy: ClientProxyMock!
-    var userDiscoveryService: UserDiscoveryServiceMock!
+@Suite
+struct StartChatScreenViewModelTests {
+    private var viewModel: StartChatScreenViewModelProtocol!
+    private var clientProxy: ClientProxyMock!
+    private var userDiscoveryService: UserDiscoveryServiceMock!
     
-    var context: StartChatScreenViewModel.Context {
+    private var context: StartChatScreenViewModel.Context {
         viewModel.context
     }
     
-    override func setUpWithError() throws {
+    init() {
         clientProxy = .init(.init(userID: ""))
         userDiscoveryService = UserDiscoveryServiceMock()
         userDiscoveryService.searchProfilesWithReturnValue = .success([])
@@ -37,21 +38,23 @@ class StartChatScreenViewModelTests: XCTestCase {
                                              appSettings: ServiceLocator.shared.settings)
     }
     
-    func testQueryShowingNoResults() async throws {
+    @Test
+    mutating func queryShowingNoResults() async {
         await search(query: "A")
-        XCTAssertEqual(context.viewState.usersSection.type, .suggestions)
+        #expect(context.viewState.usersSection.type == .suggestions)
         
         await search(query: "AA")
-        XCTAssertEqual(context.viewState.usersSection.type, .suggestions)
-        XCTAssertFalse(userDiscoveryService.searchProfilesWithCalled)
+        #expect(context.viewState.usersSection.type == .suggestions)
+        #expect(!userDiscoveryService.searchProfilesWithCalled)
         
         await search(query: "AAA")
         assertSearchResults(toBe: 0)
         
-        XCTAssertTrue(userDiscoveryService.searchProfilesWithCalled)
+        #expect(userDiscoveryService.searchProfilesWithCalled)
     }
     
-    func testJoinRoomByAddress() async throws {
+    @Test
+    func joinRoomByAddress() async throws {
         clientProxy.resolveRoomAliasReturnValue = .success(.init(roomId: "id", servers: []))
         
         let deferredViewState = deferFulfillment(viewModel.context.$viewState) { viewState in
@@ -61,13 +64,14 @@ class StartChatScreenViewModelTests: XCTestCase {
         try await deferredViewState.fulfill()
         
         let deferredAction = deferFulfillment(viewModel.actions) { action in
-            action == .showRoom(withIdentifier: "id")
+            action == .showRoom(roomID: "id")
         }
         context.send(viewAction: .joinRoomByAddress)
         try await deferredAction.fulfill()
     }
     
-    func testJoinRoomByAddressFailsBecauseInvalid() async throws {
+    @Test
+    func joinRoomByAddressFailsBecauseInvalid() async throws {
         let deferred = deferFulfillment(viewModel.context.$viewState) { viewState in
             viewState.joinByAddressState == .invalidAddress
         }
@@ -76,7 +80,8 @@ class StartChatScreenViewModelTests: XCTestCase {
         try await deferred.fulfill()
     }
     
-    func testJoinRoomByAddressFailsBecauseNotFound() async throws {
+    @Test
+    func joinRoomByAddressFailsBecauseNotFound() async throws {
         clientProxy.resolveRoomAliasReturnValue = .failure(.failedResolvingRoomAlias)
         
         let deferred = deferFulfillment(viewModel.context.$viewState) { viewState in
@@ -90,14 +95,14 @@ class StartChatScreenViewModelTests: XCTestCase {
     // MARK: - Private
     
     private func assertSearchResults(toBe count: Int) {
-        XCTAssertTrue(count >= 0)
-        XCTAssertEqual(context.viewState.usersSection.type, .searchResult)
-        XCTAssertEqual(context.viewState.usersSection.users.count, count)
-        XCTAssertEqual(context.viewState.hasEmptySearchResults, count == 0)
+        #expect(count >= 0)
+        #expect(context.viewState.usersSection.type == .searchResult)
+        #expect(context.viewState.usersSection.users.count == count)
+        #expect(context.viewState.hasEmptySearchResults == (count == 0))
     }
     
     @discardableResult
-    private func search(query: String) async -> StartChatScreenViewState? {
+    private mutating func search(query: String) async -> StartChatScreenViewState? {
         viewModel.context.searchQuery = query
         return await context.$viewState.nextValue
     }

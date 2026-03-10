@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -26,9 +27,15 @@ struct AppLockScreenViewState: BindableState {
     var bindings: AppLockScreenViewStateBindings
     
     /// The number of digits the user has entered so far.
-    var numberOfDigitsEntered: Int { bindings.pinCode.count }
+    var numberOfDigitsEntered: Int {
+        bindings.pinCode.count
+    }
+
     /// Whether the subtitle is in a warning state or not.
-    var isSubtitleWarning: Bool { numberOfPINAttempts > 0 }
+    var isSubtitleWarning: Bool {
+        numberOfPINAttempts > 0
+    }
+
     /// The string shown in the screen's subtitle.
     var subtitle: String {
         if !isSubtitleWarning {
