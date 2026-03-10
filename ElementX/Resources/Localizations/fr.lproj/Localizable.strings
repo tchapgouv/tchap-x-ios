@@ -739,7 +739,7 @@
 "screen_security_and_privacy_room_publishing_section_header" = "Publication du salon";
 "screen_security_and_privacy_room_visibility_section_footer" = "Les adresses permettent de trouver et d'accéder aux salons et aux espaces. Elles facilitent également leur partage avec d'autres personnes.";
 "screen_security_and_privacy_room_visibility_section_header" = "Visibilité";
-"screen_security_and_privacy_title" = "Sécurité & confidentialité";
+"screen_security_and_privacy_title" = "Accès à l'historique";  // Tchap
 "screen_space_add_room_action" = "Salon";
 "screen_space_empty_state_title" = "Ajoutez votre premier salon";
 "screen_space_menu_action_members" = "Voir les membres";
@@ -1458,7 +1458,7 @@
 "screen_room_single_knock_request_view_button_title" = "Voir";
 "screen_room_change_permissions_manage_space_rooms" = "Gérer les salons";
 "screen_room_details_profile_row_title" = "Profil";
-"screen_room_details_security_and_privacy_title" = "Sécurité & confidentialité";
+"screen_room_details_security_and_privacy_title" = "Accès à l'historique"; // Tchap
 "screen_roomlist_knock_event_sent_description" = "Demande de rejoindre le salon envoyée";
 "screen_security_and_privacy_encryption_section_header" = "Chiffrement";
 "screen_security_and_privacy_room_access_footer_manage_spaces_action" = "Gérer les espaces";
