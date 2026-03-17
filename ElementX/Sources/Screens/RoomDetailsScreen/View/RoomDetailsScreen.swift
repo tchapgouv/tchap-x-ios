@@ -239,6 +239,15 @@ struct RoomDetailsScreen: View {
                             context.send(viewAction: .processTapRolesAndPermissions)
                         })
             }
+            
+            // Tchap: Activate link access
+            VStack(alignment: .leading, spacing: 0.0) {
+                ListRow(label: .default(title: TchapL10n.screenCreateRoomAccessViaLinkTitle,
+                                        description: TchapL10n.screenCreateRoomAccessViaLinkDescription,
+                                        icon: \.link),
+                        kind: .toggle($context.isAccessViaLinkEnabled))
+                Image(systemName: "keyboard")
+            }
         }
     }
     
