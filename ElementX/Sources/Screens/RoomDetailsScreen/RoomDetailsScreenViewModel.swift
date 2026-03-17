@@ -300,6 +300,9 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             state.isKnockableRoom = false
         }
         
+        // Tchap: Activate link access
+        state.bindings.isAccessViaLinkEnabled = roomInfo.joinRule == .public
+        
         if let powerLevels = roomInfo.powerLevels {
             // Tchap: if user is external user, don't allow any modification power level.
 //            state.canEditRoomName = powerLevels.canOwnUser(sendStateEvent: .roomName)

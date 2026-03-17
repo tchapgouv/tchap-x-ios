@@ -179,6 +179,9 @@ struct RoomDetailsScreenViewStateBindings {
     
     /// The view model used to display the leave space sheet, will only be used if the room is a space.
     var leaveSpaceViewModel: LeaveSpaceViewModel?
+    
+    // Tchap: Activate link access
+    var isAccessViaLinkEnabled = false
 }
 
 struct LeaveRoomAlertItem: AlertProtocol {
