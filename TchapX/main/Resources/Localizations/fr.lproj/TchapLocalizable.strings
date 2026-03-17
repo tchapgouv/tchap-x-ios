@@ -64,6 +64,9 @@ screen_create_room_room_access_section_public_not_federated_description = "Seuls
 screen_create_room_room_access_section_private_unencrypted_title = "Privé";
 screen_create_room_room_access_section_private_unencrypted_description = "Seules les personnes invitées peuvent joindre";
 
+screen_create_room_access_via_link_title = "Accès par lien";
+screen_create_room_access_via_link_description = "Les agents pourront rejoindre ce salon et inviter d'autres agents via ce lien.";
+
 // Invite by email
 invite_by_email_message = "Ce contact sera invité à rejoindre Tchap.";
 
