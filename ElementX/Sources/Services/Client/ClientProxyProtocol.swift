@@ -42,6 +42,8 @@ enum ClientProxyError: Error {
     case failedResolvingRoomAlias
     case roomNotInLocalStore
     case invalidInvite
+    // Tchap: Activate link access
+    case failedActivatingRoomAccessViaLink
 }
 
 enum SlidingSyncConstants {
@@ -190,7 +192,9 @@ protocol ClientProxyProtocol: AnyObject {
                     isSpace: Bool,
                     userIDs: [String],
                     avatarURL: URL?,
-                    aliasLocalPart: String?) async -> Result<String, ClientProxyError>
+                    aliasLocalPart: String?,
+                    // Tchap: Activate link access
+                    isAccessViaLinkEnabled: Bool) async -> Result<String, ClientProxyError>
     
     func joinRoom(_ roomID: String, via: [String]) async -> Result<Void, ClientProxyError>
     
