@@ -169,6 +169,11 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             actionsSubject.send(.requestRecipientDetailsPresentation(userID: userID))
         case .processTapReport:
             actionsSubject.send(.displayReportRoom)
+        // Tchap: Activate link access
+        case .toggleAccessViaLink(let isEnabled):
+            Task { await toggleAccessViaLink(isEnabled) }
+        case .copyAccessLink(let success):
+            accessLinkCopied(success: success)
         }
     }
     
@@ -456,6 +461,62 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         }
     }
 
+    // Tchap: Activate link access
+    var canToggleAccessViaLink: Bool {
+        state.canToggleAccessViaLink
+    }
+    
+    // Tchap: Activate link access
+    private func toggleAccessViaLink(_ isEnabled: Bool) async {
+        guard canToggleAccessViaLink else {
+            state.bindings.isAccessViaLinkEnabled = !isEnabled
+            return
+        }
+
+        let action = {
+            Task {
+                if case let .failure(error) = await self.roomProxy.updateJoinRule(isEnabled ? .public : .invite) {
+                    MXLog.error("Failed setting Access Via Link to \(isEnabled) with error: \(error)")
+                    self.state.bindings.isAccessViaLinkEnabled = !isEnabled
+                } else {
+                    // Tchap: no analytic defined for this action. Trace action as log.
+                    //            analyticsService.trackInteraction(name: .MobileRoomFavouriteToggle)
+                    MXLog.info("Sucess setting Access Via Link to \(isEnabled)")
+                }
+            }
+        }
+        
+        guard isEnabled == true else {
+            // No need for warning to deactivate access via link.
+            _ = action()
+            return
+        }
+        
+        // Ask for confirmation far activation of access via link,
+        let okButton = AlertInfo<RoomDetailsScreenErrorType>.AlertButton(title: L10n.actionOk) {
+            _ = action()
+        }
+        
+        let cancelButton = AlertInfo<RoomDetailsScreenErrorType>.AlertButton(title: L10n.actionCancel) {
+            // Reset setting to original value
+            self.state.bindings.isAccessViaLinkEnabled = !isEnabled
+        }
+        
+        state.bindings.alertInfo = AlertInfo(id: .alert,
+                                             title: TchapL10n.roomDetailsActivateAccessByLinkTitle,
+                                             message: TchapL10n.roomDetailsActivateAccessByLinkMessage,
+                                             primaryButton: okButton,
+                                             secondaryButton: cancelButton)
+    }
+
+    // Tchap: Activate link access
+    private func accessLinkCopied(success: Bool) {
+        userIndicatorController.submitIndicator(UserIndicator(id: UUID().uuidString,
+                                                              type: .toast,
+                                                              title: success ? L10n.commonLinkCopiedToClipboard : TchapL10n.roomDetailsCopyLinkError,
+                                                              iconName: success ? "checkmark" : "xmark"))
+    }
+    
     private static let leaveRoomLoadingID = "LeaveRoomLoading"
 
     private func leaveRoom() async {

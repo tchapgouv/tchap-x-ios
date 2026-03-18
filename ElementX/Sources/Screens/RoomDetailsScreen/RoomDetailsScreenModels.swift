@@ -126,6 +126,11 @@ struct RoomDetailsScreenViewState: BindableState {
     var notificationShortcutButtonIcon: KeyPath<CompoundIcons, Image> {
         areNotificationsMuted ? \.notificationsOff : \.notifications
     }
+    
+    // Tchap: Activate link access
+    var canToggleAccessViaLink: Bool {
+        details.visibility != .public
+    }
 }
 
 struct RoomDetailsScreenViewStateBindings {
@@ -234,6 +239,9 @@ enum RoomDetailsScreenViewAction {
     case processTapMediaEvents
     case processTapRequestsToJoin
     case processTapReport
+    // Tchap: Activate link access
+    case toggleAccessViaLink(isEnabled: Bool)
+    case copyAccessLink(success: Bool)
 }
 
 enum RoomDetailsScreenViewShortcut {

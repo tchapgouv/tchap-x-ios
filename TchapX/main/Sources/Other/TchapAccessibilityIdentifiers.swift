@@ -35,7 +35,8 @@ import Foundation
 enum TchapA11yIdentifiers {
     static let settingsScreen = SettingsScreen()
     static let scanStates = ScanStates()
-
+    static let roomDetailsScreen = RoomDetailsScreen()
+    
     struct SettingsScreen {
         let faq = "settings-faq"
     }
@@ -46,5 +47,9 @@ enum TchapA11yIdentifiers {
         let error = "scan_state-error"
         let notFound = "scan_state-notfound"
         let trusted = "scan_state-trusted"
+    }
+    
+    struct RoomDetailsScreen {
+        let accessViaLink = "room_details-access_via_link"
     }
 }
