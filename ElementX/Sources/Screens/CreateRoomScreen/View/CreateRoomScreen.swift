@@ -45,9 +45,10 @@ struct CreateRoomScreen: View {
             // Tchap: mask Element new way of choosing room type. And keep Tchap way of choosing room type (by security).
 //            roomAccessSection
             securitySection
-            // Tchap: Activate link access
-            tchapAccessByLinkSection
-                .disabled(!context.viewState.roomAccessType.isVisibilityPrivate)
+            // Tchap: Activate link access (Don't show on Room Creation screen because the room's description says
+            // "invite only" although activating access by link make direct room access with the link without the need to be invited).
+//            tchapAccessByLinkSection
+//                .disabled(!context.viewState.roomAccessType.isVisibilityPrivate)
             // Tchap: allow to disable federated state on Public room.
             if !context.viewState.roomAccessType.isVisibilityPrivate {
                 tchapNonFederatedPublicRoomSection
