@@ -54,9 +54,17 @@ class Signposter {
         case homeserver
     }
     
+    // Tchap: Disable Sentry
+    private let isEnableForTchap = false
+    
     // MARK: - Transactions
     
     func startTransaction(_ transactionName: TransactionName, operation: String = "ux", tags: [TagName: String] = [:]) {
+        // Tchap: Disable Sentry
+        guard isEnableForTchap else {
+            return
+        }
+        
         let span = SentrySDK.startTransaction(name: transactionName.id, operation: operation)
         
         tags
@@ -71,6 +79,11 @@ class Signposter {
     }
     
     func finishTransaction(_ transactionName: TransactionName) {
+        // Tchap: Disable Sentry
+        guard isEnableForTchap else {
+            return
+        }
+
         transactions[transactionName]?.finish()
         transactions[transactionName] = nil
     }
@@ -78,6 +91,11 @@ class Signposter {
     // MARK: - Spans
     
     func addSpan(_ spanName: SpanName, toTransaction transactionName: TransactionName) -> Span? {
+        // Tchap: Disable Sentry
+        guard isEnableForTchap else {
+            return nil
+        }
+
         guard let transaction = transactions[transactionName] else {
             MXLog.error("Transaction not started or already finished")
             return nil
@@ -89,6 +107,11 @@ class Signposter {
     // MARK: - Tags
     
     func addGlobalTag(_ tagName: TagName, value: String) {
+        // Tchap: Disable Sentry
+        guard isEnableForTchap else {
+            return
+        }
+
         let value = switch tagName {
         case .homeserver:
             sha512(value)
@@ -98,6 +121,11 @@ class Signposter {
     }
     
     func removeGlobalTag(_ tagName: TagName) {
+        // Tchap: Disable Sentry
+        guard isEnableForTchap else {
+            return
+        }
+
         globalTags[tagName] = nil
     }
     
