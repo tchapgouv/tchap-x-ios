@@ -246,7 +246,9 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
             
             switch (context.fromState, context.event, context.toState) {
             case (_, _, .identityConfirmation):
-                presentIdentityConfirmationScreen()
+                // Tchap: switch RecoveryKeyScreen and IdentityConfirmationScreen
+                // presentIdentityConfirmationScreen()
+                presentRecoveryKeyScreen()
             case (_, _, .identityConfirmed):
                 presentIdentityConfirmedScreen()
             case (_, _, .appLockSetup):
@@ -342,6 +344,10 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
         coordinator.actions
             .sink { action in
                 switch action {
+                case .logout: // Tchap: add logout in recoveryKeyScreen
+                    self.actionsSubject.send(.logout)
+                case .identityConfirmation: // Tchap: open other verification methods
+                    self.presentIdentityConfirmationScreen()
                 case .complete:
                     break // Moving to next state is Handled by the global session verification listener
                 }

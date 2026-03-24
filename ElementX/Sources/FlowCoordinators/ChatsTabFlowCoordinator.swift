@@ -652,6 +652,10 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
             switch action {
             case .complete:
                 navigationSplitCoordinator.setSheetCoordinator(nil)
+            case .logout: // Tchap: add logout in recoveryKeyScreen
+                actionsSubject.send(.logout)
+            case .identityConfirmation: // Tchap: won't happen in isModallyPresented
+                break
             }
         }
         .store(in: &cancellables)

@@ -908,9 +908,9 @@
 "screen_encryption_reset_title" = "Vous ne pouvez pas confirmer ? Vous devez réinitialiser votre identité.";
 "screen_identity_confirmation_cannot_confirm" = "Confirmation impossible ?";
 "screen_identity_confirmation_create_new_recovery_key" = "Créer un nouveau code de vérification"; // Tchap
-"screen_identity_confirmation_subtitle" = "Vérifier cette session pour configurer votre messagerie sécurisée.";
+"screen_identity_confirmation_subtitle" = "Choisissez une méthode pour vérifier votre appareil et accéder à votre compte Tchap."; //Tchap
 "screen_identity_confirmation_title" = "Confirmez votre identité";
-"screen_identity_confirmation_use_another_device" = "Utiliser une autre session";
+"screen_identity_confirmation_use_another_device" = "Utiliser un autre appareil"; // Tchap
 "screen_identity_confirmation_use_recovery_key" = "Utiliser le code de vérification"; // Tchap
 "screen_identity_confirmed_subtitle" = "Vous pouvez désormais lire ou envoyer des messages en toute sécurité, et toute personne avec qui vous discutez peut également faire confiance à cette session.";
 "screen_identity_confirmed_title" = "Session vérifiée";

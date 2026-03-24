@@ -17,6 +17,8 @@ struct SecureBackupRecoveryKeyScreenCoordinatorParameters {
 
 enum SecureBackupRecoveryKeyScreenCoordinatorAction {
     case complete
+    case logout // Tchap: add logout in recoveryKeyScreen
+    case identityConfirmation // Tchap: open other verification methods
 }
 
 final class SecureBackupRecoveryKeyScreenCoordinator: CoordinatorProtocol {
@@ -57,6 +59,10 @@ final class SecureBackupRecoveryKeyScreenCoordinator: CoordinatorProtocol {
                     fatalError()
                 }
                 self.actionsSubject.send(.complete)
+            case .logout: // Tchap: add logout in recoveryKeyScreen
+                self.actionsSubject.send(.logout)
+            case .identityConfirmation: // Tchap: open other verification methods
+                self.actionsSubject.send(.identityConfirmation)
             }
         }
         .store(in: &cancellables)
