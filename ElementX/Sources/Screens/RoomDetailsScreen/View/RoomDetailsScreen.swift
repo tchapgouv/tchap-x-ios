@@ -252,6 +252,8 @@ struct RoomDetailsScreen: View {
                     }
                     // Hide list row separator if widget is active because we add a "copy link" button just below.
                     .listRowSeparator(context.viewState.canToggleAccessViaLink ? .hidden : .automatic)
+                    // only disable toggle button, not button to copy link (usable for forum).
+                    .disabled(!context.viewState.canToggleAccessViaLink)
                 if context.isAccessViaLinkEnabled {
                     Button {
                         guard let roomAlias = context.viewState.details.canonicalAlias,
@@ -270,7 +272,6 @@ struct RoomDetailsScreen: View {
                     .listRowInsets(EdgeInsets())
                 }
             }
-            .disabled(!context.viewState.canToggleAccessViaLink)
         }
     }
     
