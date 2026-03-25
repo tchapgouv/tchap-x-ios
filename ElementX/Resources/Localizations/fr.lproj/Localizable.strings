@@ -993,7 +993,7 @@
 "screen_notification_settings_system_notifications_turned_off" = "Les notifications du système sont désactivées";
 "screen_notification_settings_title" = "Notifications";
 "screen_onboarding_app_version" = "Version %1$@";
-"screen_onboarding_sign_in_manually" = "Se connecter manuellement";
+"screen_onboarding_sign_in_manually" = "Se connecter";
 "screen_onboarding_sign_in_with_qr_code" = "Se connecter avec un code QR";
 "screen_onboarding_sign_up" = "Créer un compte";
 "screen_onboarding_welcome_message" = "Bienvenue dans l’application %1$@ la plus rapide de tous les temps. Boosté pour plus de rapidité et de simplicité.";

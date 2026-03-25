@@ -97,7 +97,10 @@ struct AuthenticationStartScreen: View {
     /// The main action buttons.
     var buttons: some View {
         VStack(spacing: 16) {
-            if context.viewState.showQRCodeLoginButton {
+            // Tchap: hide QR code login button for the moment
+//            if context.viewState.showQRCodeLoginButton {
+            if false,
+               context.viewState.showQRCodeLoginButton {
                 // Tchap: Add QRCode button header
                 Text(TchapL10n.screenOnboardingWelcomeQrcodeHeader)
                     .font(.compound.bodyLG)
