@@ -246,9 +246,13 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
             
             switch (context.fromState, context.event, context.toState) {
             case (_, _, .identityConfirmation):
-                // Tchap: switch RecoveryKeyScreen and IdentityConfirmationScreen
-                // presentIdentityConfirmationScreen()
-                presentRecoveryKeyScreen()
+                // Tchap: Redirect to RecoveryKeyScreen if recovery is available
+                let recoveryState = userSession.sessionSecurityStatePublisher.value.recoveryState
+                if recoveryState == .enabled || recoveryState == .incomplete {
+                    presentRecoveryKeyScreen()
+                } else {
+                    presentIdentityConfirmationScreen()
+                }
             case (_, _, .identityConfirmed):
                 presentIdentityConfirmedScreen()
             case (_, _, .appLockSetup):
