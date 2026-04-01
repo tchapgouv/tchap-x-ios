@@ -349,9 +349,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%1$d Banni(e)</string>
+			<string>%1$d Bloqué(e)</string>
 			<key>other</key>
-			<string>%1$d Banni(e)s</string>
+			<string>%1$d Bloqué(e)s</string>
 		</dict>
 	</dict>
 	<key>screen_room_member_list_header_title</key>
@@ -365,9 +365,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%1$d Personne</string>
+			<string>%1$d Membre</string>
 			<key>other</key>
-			<string>%1$d Personnes</string>
+			<string>%1$d Membres</string>
 		</dict>
 	</dict>
 	<key>screen_room_member_list_pending_header_title</key>
@@ -397,9 +397,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%1$@ et %2$d autre personne souhaitent rejoindre ce salon</string>
+			<string>%1$@ et %2$d autre membre souhaitent rejoindre ce salon</string>
 			<key>other</key>
-			<string>%1$@ et %2$d autres personnes souhaitent rejoindre ce salon</string>
+			<string>%1$@ et %2$d autres membres souhaitent rejoindre ce salon</string>
 		</dict>
 	</dict>
 	<key>screen_room_timeline_reaction_a11y</key>

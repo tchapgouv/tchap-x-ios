@@ -78,13 +78,15 @@ struct SecureBackupScreen: View {
             switch context.viewState.recoveryState {
             case .enabled:
                 ListRow(label: .default(title: L10n.screenChatBackupRecoveryActionChange,
-                                        description: L10n.screenChatBackupRecoveryActionChangeDescription,
+                                        // Tchap: Hide description
+//                                        description: L10n.screenChatBackupRecoveryActionChangeDescription,
                                         icon: \.key),
                         kind: .navigationLink { context.send(viewAction: .recoveryKey) })
                     .accessibilityIdentifier(A11yIdentifiers.secureBackupScreen.recoveryKey)
             case .disabled:
                 ListRow(label: .default(title: L10n.screenChatBackupRecoveryActionSetup,
-                                        description: L10n.screenChatBackupRecoveryActionChangeDescription,
+                                        // Tchap: Hide description
+//                                        description: L10n.screenChatBackupRecoveryActionChangeDescription,
                                         icon: \.key),
                         details: .icon(BadgeView(size: 10)),
                         kind: .navigationLink { context.send(viewAction: .recoveryKey) })
