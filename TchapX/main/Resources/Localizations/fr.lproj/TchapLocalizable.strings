@@ -74,7 +74,7 @@ screen_invite_external_user_error_modifying_access_rule_title = "Impossible d’
 screen_invite_external_user_error_modifying_access_rule_message = "L’ouverture du salon aux externes a échoué. Aucune invitation n’a été envoyée.";
 
 // Room header
-room_header_badge_encrypted = "SÉCURISÉ";
+room_header_badge_encrypted = "CHIFFRÉ";
 room_header_badge_not_encrypted = "NON CHIFFRÉ";
 room_header_badge_public = "PUBLIC";
 room_header_badge_authorized_to_external = "EXTERNES";

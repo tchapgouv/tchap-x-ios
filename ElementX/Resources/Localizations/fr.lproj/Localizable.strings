@@ -99,7 +99,7 @@
 "action_invite" = "Inviter";
 "action_invite_friends" = "Inviter des amis";
 "action_invite_friends_to_app" = "Inviter des amis à %1$@";
-"action_invite_people_to_app" = "Invitez des personnes à %1$@";
+"action_invite_people_to_app" = "Inviter à rejoindre %1$@"; // Tchap
 "action_invites_list" = "Invitations";
 "action_join" = "Rejoindre";
 "action_learn_more" = "En savoir plus";
@@ -218,7 +218,7 @@
 "common_editing_caption" = "Modification de la légende";
 "common_emote" = "* %1$@ %2$@";
 "common_empty_file" = "Fichier vide";
-"common_encryption" = "Chiffrement";
+"common_encryption" = "Messages chiffrés"; // Tchap
 "common_encryption_enabled" = "Chiffrement activé";
 "common_enter_your_pin" = "Saisissez votre code PIN";
 "common_error" = "Erreur";
@@ -262,7 +262,7 @@
 "common_optic_id_ios" = "Optic ID";
 "common_or" = "ou";
 "common_password" = "Mot de passe";
-"common_people" = "Personnes";
+"common_people" = "Membres"; // Tchap
 "common_permalink" = "Permalien";
 "common_permission" = "Autorisation";
 "common_pinned" = "Épinglé";
@@ -340,7 +340,7 @@
 "common_unable_to_invite_message" = "Les invitations n’ont pas pu être envoyées à un ou plusieurs utilisateurs.";
 "common_unable_to_invite_title" = "Impossible d’envoyer une ou plusieurs invitations";
 "common_unlock" = "Déverrouillage";
-"common_unmute" = "Retirer la sourdine";
+"common_unmute" = "Réactiver"; // Tchap
 "common_unsupported_call" = "Appel non pris en charge";
 "common_unsupported_event" = "Événement non pris en charge";
 "common_username" = "Nom d’utilisateur";
@@ -853,11 +853,11 @@
 "screen_change_server_title" = "Choisissez votre serveur";
 "screen_chat_backup_key_backup_action_disable" = "Désactiver la sauvegarde";
 "screen_chat_backup_key_backup_action_enable" = "Activer la sauvegarde";
-"screen_chat_backup_key_backup_description" = "Stockez votre identité cryptographique et vos clés de message en toute sécurité sur le serveur. Cela vous permettra de consulter l'historique de vos messages sur tous les nouveaux appareils. %1$@.";
-"screen_chat_backup_key_backup_title" = "Stockage des clés";
-"screen_chat_backup_key_storage_disabled_error" = "Le stockage des clés doit être activé pour configurer la restauration.";
+"screen_chat_backup_key_backup_description" = "Sauvegardez automatiquement vos messages et récupérez-les à tout moment à l’aide du code de vérification. Cela vous permettra de consulter l'historique de vos messages sur tous les nouveaux appareils. %1$@."; // Tchap
+"screen_chat_backup_key_backup_title" = "Sauvegarde automatique des messages"; // Tchap
+"screen_chat_backup_key_storage_disabled_error" = "La sauvegarde automatique des messages doit être activée pour configurer la restauration."; // Tchap
 "screen_chat_backup_key_storage_toggle_description" = "Télécharger les clés depuis cet appareil";
-"screen_chat_backup_key_storage_toggle_title" = "Autoriser le stockage des clés";
+"screen_chat_backup_key_storage_toggle_title" = "Activer la Sauvegarde automatique des messages"; // Tchap
 "screen_chat_backup_recovery_action_change" = "Changer le code de vérification"; // Tchap
 "screen_chat_backup_recovery_action_change_description" = "Récupérez votre identité cryptographique et l'historique de vos messages à l'aide d'un code de vérification si vous avez perdu tous vos appareils existants."; // Tchap
 "screen_chat_backup_recovery_action_confirm_description" = "Le stockage de vos clés est actuellement désynchronisé.";
@@ -1217,7 +1217,7 @@
 "screen_roomlist_filter_rooms_empty_state_title" = "Vous n’êtes membre d’aucun salon";
 "screen_roomlist_filter_unreads" = "Non-lus";
 "screen_roomlist_filter_unreads_empty_state_title" = "Félicitations !\nVous n’avez plus de messages non-lus !";
-"screen_roomlist_main_space_title" = "Conversations";
+"screen_roomlist_main_space_title" = "Accueil"; // Tchap
 "screen_roomlist_mark_as_read" = "Marquer comme lu";
 "screen_roomlist_mark_as_unread" = "Marquer comme non lu";
 "screen_server_confirmation_message_login_element_dot_io" = "Un serveur privé pour les employés d’Element.";
@@ -1433,7 +1433,7 @@
 "screen_decline_and_block_block_user_option_title" = "Bloquer l’utilisateur";
 "screen_decline_and_block_report_user_reason_placeholder" = "Décrivez la raison du signalement…";
 "screen_decline_and_block_title" = "Refuser et bloquer";
-"screen_home_tab_chats" = "Conversations";
+"screen_home_tab_chats" = "Accueil"; // Tchap
 "screen_home_tab_spaces" = "Espaces";
 "screen_join_room_decline_and_block_button_title" = "Refuser et bloquer";
 "screen_knock_requests_list_title" = "Demandes en attente";
@@ -1532,7 +1532,7 @@
 "screen_room_roles_and_permissions_permissions_header" = "Autorisations";
 "screen_room_timeline_reactions_show_less" = "Afficher moins";
 "screen_roomlist_filter_invites" = "Invitations";
-"screen_roomlist_filter_people" = "Personnes";
+"screen_roomlist_filter_people" = "Directs"; // Tchap
 "screen_server_confirmation_change_server" = "Changer de fournisseur de compte";
 "screen_session_verification_device_verified" = "Session vérifiée";
 "screen_session_verification_request_failure_subtitle" = "Soit la demande a expiré, soit elle a été refusée, soit les éléments à comparer ne correspondaient pas.";
