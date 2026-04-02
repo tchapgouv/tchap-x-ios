@@ -6,9 +6,8 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-import XCTest
-
 import Combine
+import XCTest
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
@@ -29,8 +28,13 @@ class ChatsFlowCoordinatorTests: XCTestCase {
     
     var cancellables = Set<AnyCancellable>()
     
-    var detailCoordinator: CoordinatorProtocol? { splitCoordinator?.detailCoordinator }
-    var detailNavigationStack: NavigationStackCoordinator? { detailCoordinator as? NavigationStackCoordinator }
+    var detailCoordinator: CoordinatorProtocol? {
+        splitCoordinator?.detailCoordinator
+    }
+
+    var detailNavigationStack: NavigationStackCoordinator? {
+        detailCoordinator as? NavigationStackCoordinator
+    }
     
     override func setUp() async throws {
         cancellables.removeAll()

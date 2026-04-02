@@ -9,9 +9,9 @@ import CoreLocation
 import MapLibre
 import SwiftUI
 
-// From example: https://github.com/maplibre/maplibre-native/blob/249e77c7fafc4dbb8e80699bf7254ebe94969bdb/platform/ios/app-swift/Sources/StaticSnapShotExample.swift#L48
+/// From example: https://github.com/maplibre/maplibre-native/blob/249e77c7fafc4dbb8e80699bf7254ebe94969bdb/platform/ios/app-swift/Sources/StaticSnapShotExample.swift#L48
 @Observable public final class TchapStaticMapLoader {
-    // Static map loading states
+    /// Static map loading states
     public enum StaticMapLoaderPhase {
         case inited
         case loading
@@ -99,7 +99,7 @@ import SwiftUI
     }
 }
 
-// TchapStaticMapLoader running loaders cache.
+/// TchapStaticMapLoader running loaders cache.
 extension TchapStaticMapLoader {
     private static var currentlyLoadingMap = [URL: TchapStaticMapLoader]()
     

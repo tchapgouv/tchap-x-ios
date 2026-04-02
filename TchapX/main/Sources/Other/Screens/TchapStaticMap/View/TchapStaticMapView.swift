@@ -14,13 +14,6 @@ struct TchapStaticMapView<PlaceHolderView: View, PinAnnotationView: View, ErrorV
     let pinAnnotationView: PinAnnotationView
     let errorView: ErrorView
     
-    init(mapLoader: TchapStaticMapLoader, placeholderView: PlaceHolderView, pinAnnotationView: PinAnnotationView, errorView: ErrorView) {
-        self.mapLoader = mapLoader
-        self.placeholderView = placeholderView
-        self.pinAnnotationView = pinAnnotationView
-        self.errorView = errorView
-    }
-    
     var body: some View {
         switch mapLoader.state {
         case .inited, .loading:

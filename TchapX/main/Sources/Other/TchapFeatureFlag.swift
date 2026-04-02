@@ -98,7 +98,9 @@ extension TchapFeatureFlag {
         #endif
         case all // To allow a feature for any instance
 
-        var homeServer: String? { rawValue }
+        var homeServer: String? {
+            rawValue
+        }
         
         static func instance(for homeServerName: String) -> Instance? {
             Instance.allCases.filter { $0.rawValue == homeServerName }.first
@@ -113,21 +115,21 @@ extension TchapFeatureFlag {
         // See `TchapX/target.yml` file to know how to generate certificate pinning.
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
         static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
-        // enableMAS feature flag can only be activated for .all or none because it is used before any activated session.
+        /// enableMAS feature flag can only be activated for .all or none because it is used before any activated session.
         static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
         #elseif IS_TCHAP_STAGING
         // CertificatePinning feature flag can only be activated for .all or none because it is used before any activated session.
         // See `TchapX/target.yml` file to know how to generate certificate pinning.
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
         static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [])
-        // enableMAS feature flag can only be activated for .all or none because it is used before any activated session.
+        /// enableMAS feature flag can only be activated for .all or none because it is used before any activated session.
         static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
         #elseif IS_TCHAP_DEVELOPMENT
         // CertificatePinning feature flag pinning is disabled in Development version (which uses Let's Encrypt certificates).
         // See `TchapX/target.yml` file to know how to generate certificate pinning.
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
         static let unencryptedPrivateRoom = TchapFeatureFlag(allowedInstances: [.all])
-        // enableMAS feature flag can only be activated for .all or none because it is used before any activated session.
+        /// enableMAS feature flag can only be activated for .all or none because it is used before any activated session.
         static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
         #endif
     }

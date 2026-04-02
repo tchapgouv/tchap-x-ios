@@ -189,7 +189,7 @@ struct AttributedStringBuilderTests {
     }
     
     @Test
-    func userIDLink() throws {
+    func userIDLink() {
         let userID = "@user:matrix.org"
         let string = "The user is \(userID)."
         // Tchap: adapt test
@@ -200,7 +200,7 @@ struct AttributedStringBuilderTests {
     }
     
     @Test
-    func roomAliasLink() throws {
+    func roomAliasLink() {
         let roomAlias = "#room:matrix.org"
         let string = "The room is \(roomAlias)."
         // Tchap: adapt test
