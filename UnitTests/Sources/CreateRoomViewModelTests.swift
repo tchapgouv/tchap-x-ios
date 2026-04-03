@@ -44,7 +44,7 @@ final class CreateRoomScreenViewModelTests {
         setup()
         #expect(context.viewState.bindings.selectedAccessType == .private)
         #expect(context.selectedSpace == nil)
-        #expect(context.viewState.availableAccessTypes == [.public, .askToJoin, .private])
+        #expect(context.viewState.availableAccessTypes == [.public(federated: true), .public(federated: false), .askToJoin, .private])
         #expect(context.viewState.canSelectSpace)
     }
     
@@ -152,7 +152,7 @@ final class CreateRoomScreenViewModelTests {
         setup()
         context.send(viewAction: .updateRoomName("A"))
         context.roomTopic = "B"
-        context.selectedAccessType = .public
+        context.selectedAccessType = .public(federated: true)
         // When setting the room as private we always reset the alias
         // so we need to wait a main actor cycle to ensure the view state is updated
         await Task.yield()
@@ -177,7 +177,7 @@ final class CreateRoomScreenViewModelTests {
         clientProxy.isAliasAvailableReturnValue = .success(false)
         context.send(viewAction: .updateRoomName("A"))
         context.roomTopic = "B"
-        context.selectedAccessType = .public
+        context.selectedAccessType = .public(federated: true)
         // When setting the room as private we always reset the alias
         // so we need to wait a main actor cycle to ensure the view state is updated
         await Task.yield()
@@ -241,10 +241,10 @@ final class CreateRoomScreenViewModelTests {
         setup()
         
         context.send(viewAction: .updateRoomName("A"))
-        context.selectedAccessType = .public
+        context.selectedAccessType = .public(federated: true)
         #expect(context.viewState.canCreateRoom)
         #expect(context.selectedSpace == nil)
-        #expect(context.viewState.availableAccessTypes == [.public, .askToJoin, .private])
+        #expect(context.viewState.availableAccessTypes == [.public(federated: true), .public(federated: false), .askToJoin, .private])
         #expect(context.viewState.canSelectSpace)
         
         var deferred = deferFulfillment(context.$viewState) { viewState in
@@ -328,7 +328,7 @@ final class CreateRoomScreenViewModelTests {
         context.selectedAccessType = .spaceMembers
         #expect(context.viewState.canCreateRoom)
         #expect(context.selectedSpace?.id == space.id)
-        #expect(context.viewState.availableAccessTypes == [.public, .askToJoin, .private])
+        #expect(context.viewState.availableAccessTypes == [.public(federated: true), .public(federated: false), .askToJoin, .private])
         #expect(context.viewState.canSelectSpace)
     }
     
