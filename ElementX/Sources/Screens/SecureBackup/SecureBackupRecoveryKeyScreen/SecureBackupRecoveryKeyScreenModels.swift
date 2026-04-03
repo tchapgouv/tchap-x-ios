@@ -11,6 +11,8 @@ import Foundation
 enum SecureBackupRecoveryKeyScreenViewModelAction {
     case done(mode: SecureBackupRecoveryKeyScreenViewMode)
     case cancel
+    case logout // Tchap: add logout in recoveryKeyScreen
+    case identityConfirmation // Tchap: open other verification methods
 }
 
 enum SecureBackupRecoveryKeyScreenViewMode {
@@ -84,4 +86,6 @@ enum SecureBackupRecoveryKeyScreenViewAction {
     case confirmKey
     case done
     case cancel
+    case logout // Tchap: add logout in recoveryKeyScreen
+    case identityConfirmation // Tchap: open other verification methods
 }

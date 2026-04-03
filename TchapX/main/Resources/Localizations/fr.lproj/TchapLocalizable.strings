@@ -89,3 +89,5 @@ content_scanner_scan_status_in_progress = "Analyse anti-virus…";
 content_scanner_scan_status_infected = "Contenu bloqué";
 content_scanner_scan_status_not_found = "Fichier indisponible";
 content_scanner_scan_status_error = "Fichier temporairement indisponible";
+
+screen_recovery_key_confirm_other_method = "Autres méthodes de vérification";

@@ -90,6 +90,15 @@ struct SecureBackupRecoveryKeyScreen: View {
             .buttonStyle(.compound(.primary))
             .disabled(context.confirmationRecoveryKey.isEmpty)
             .accessibilityIdentifier(A11yIdentifiers.secureBackupRecoveryKeyScreen.confirm)
+
+            // Tchap: open other verification methods
+            if context.viewState.isModallyPresented == false {
+                Button {
+                    context.send(viewAction: .identityConfirmation)
+                } label: {
+                    Text(TchapL10n.screenRecoveryKeyConfirmOtherMethod)
+                }
+            }
         }
     }
     
@@ -122,6 +131,13 @@ struct SecureBackupRecoveryKeyScreen: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button(L10n.actionCancel) {
                     context.send(viewAction: .cancel)
+                }
+            }
+            // Tchap: add logout in recoveryKeyScreen
+        } else {
+            ToolbarItem(placement: .destructiveAction) {
+                Button(L10n.actionSignout) {
+                    context.send(viewAction: .logout)
                 }
             }
         }

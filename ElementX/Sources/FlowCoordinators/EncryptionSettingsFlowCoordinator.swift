@@ -164,6 +164,8 @@ class EncryptionSettingsFlowCoordinator: FlowCoordinatorProtocol {
             switch action {
             case .complete:
                 navigationStackCoordinator.setSheetCoordinator(nil)
+            case .logout, .identityConfirmation:
+                break // Tchap: won't happen in isModallyPresented
             }
         }
         .store(in: &cancellables)

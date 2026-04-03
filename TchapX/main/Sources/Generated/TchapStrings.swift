@@ -135,6 +135,8 @@ internal enum TchapL10n {
   internal static func screenOnboardingWelcomeTitle(_ p1: Any) -> String {
     return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_title", String(describing: p1))
   }
+  /// Other verification methods
+  internal static var screenRecoveryKeyConfirmOtherMethod: String { return TchapL10n.tr("TchapLocalizable", "screen_recovery_key_confirm_other_method") }
   /// Join a public room
   internal static var screenRoomDirectorySearchTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_room_directory_search_title") }
   /// Join a public room

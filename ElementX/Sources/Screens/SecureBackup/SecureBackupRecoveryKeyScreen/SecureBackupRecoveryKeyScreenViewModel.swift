@@ -84,6 +84,10 @@ class SecureBackupRecoveryKeyScreenViewModel: SecureBackupRecoveryKeyScreenViewM
                                                  actionsSubject.send(.done(mode: state.mode))
                                              },
                                              secondaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil))
+        case .logout: // Tchap: add logout in recoveryKeyScreen
+            actionsSubject.send(.logout)
+        case .identityConfirmation: // Tchap: open other verification methods
+            actionsSubject.send(.identityConfirmation)
         }
     }
     
