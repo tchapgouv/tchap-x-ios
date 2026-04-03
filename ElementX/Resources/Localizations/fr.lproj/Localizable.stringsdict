@@ -365,9 +365,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%1$d Personne</string>
+			<string>%1$d Membre</string> <!-- Tchap -->
 			<key>other</key>
-			<string>%1$d Personnes</string>
+			<string>%1$d Membres</string> <!-- Tchap -->
 		</dict>
 	</dict>
 	<key>screen_room_member_list_pending_header_title</key>

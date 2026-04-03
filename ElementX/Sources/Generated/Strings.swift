@@ -2224,7 +2224,7 @@ internal enum L10n {
   internal static func screenOnboardingAppVersion(_ p1: Any) -> String {
     return L10n.tr("Localizable", "screen_onboarding_app_version", String(describing: p1))
   }
-  /// Sign in manually
+  /// Sign in
   internal static var screenOnboardingSignInManually: String { return L10n.tr("Localizable", "screen_onboarding_sign_in_manually") }
   /// Sign in to %1$@
   internal static func screenOnboardingSignInTo(_ p1: Any) -> String {
