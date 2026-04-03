@@ -26,5 +26,7 @@ struct RoomDetails {
     // Tchap: helper to write the condition once. Private Unencrypted rooms accessible by link are seen as `isPublic`, like Public Forums.
     // But their `visibility` is `.private` in order to not be listed in room directories.
     // The AccessRule.visibility value makes the difference between (Forums) which are `.public`, and (Private Unencrypted rooms accessible by link) which are `.private`.
-    var canDisplayPublicBadge: Bool { visibility == .public }
+    var canDisplayPublicBadge: Bool {
+        visibility == .public
+    }
 }

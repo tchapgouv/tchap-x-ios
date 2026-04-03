@@ -195,8 +195,8 @@ struct AttributedStringBuilderTests {
         // Tchap: adapt test
 //        let expectedLink = "https://matrix.to/#/\(userID)"
         let expectedLink = "https://\(homeServerName)/#/\(userID)"
-        checkLinkIn(attributedString: attributedStringBuilder.fromHTML(string), expectedLink: expectedLink, expectedRuns: 3)
-        checkLinkIn(attributedString: attributedStringBuilder.fromPlain(string), expectedLink: expectedLink, expectedRuns: 3)
+        try checkLinkIn(attributedString: attributedStringBuilder.fromHTML(string), expectedLink: expectedLink, expectedRuns: 3)
+        try checkLinkIn(attributedString: attributedStringBuilder.fromPlain(string), expectedLink: expectedLink, expectedRuns: 3)
     }
     
     @Test
@@ -204,13 +204,10 @@ struct AttributedStringBuilderTests {
         let roomAlias = "#room:matrix.org"
         let string = "The room is \(roomAlias)."
         // Tchap: adapt test
-//        guard let expectedLink = URL(string: "https://matrix.to/#/\(roomAlias)") else {
-        guard let expectedLink = URL(string: "https://\(homeServerName)/#/\(roomAlias)") else {
-            XCTFail("The expected link should be valid.")
-            return
-        }
-        checkLinkIn(attributedString: attributedStringBuilder.fromHTML(string), expectedLink: expectedLink.absoluteString, expectedRuns: 3)
-        checkLinkIn(attributedString: attributedStringBuilder.fromPlain(string), expectedLink: expectedLink.absoluteString, expectedRuns: 3)
+//        let expectedLink = try #require(URL(string: "https://matrix.to/#/\(roomAlias)"), "The expected link should be valid.")
+        let expectedLink = try #require(URL(string: "https://\(homeServerName)/#/\(roomAlias)"), "The expected link should be valid.")
+        try checkLinkIn(attributedString: attributedStringBuilder.fromHTML(string), expectedLink: expectedLink.absoluteString, expectedRuns: 3)
+        try checkLinkIn(attributedString: attributedStringBuilder.fromPlain(string), expectedLink: expectedLink.absoluteString, expectedRuns: 3)
     }
     
     @Test
@@ -383,24 +380,24 @@ struct AttributedStringBuilderTests {
         #expect(attributedStringFromPlain?.userID == "@test:matrix.org")
         #expect(attributedStringFromPlain?.link?.absoluteString == string)
     }
-    
+
     @Test
     func userIDMentionAtachment() {
         let string = "@test:matrix.org"
         let attributedStringFromHTML = attributedStringBuilder.fromHTML(string)
-        XCTAssertNotNil(attributedStringFromHTML?.attachment)
-        XCTAssertEqual(attributedStringFromHTML?.userID, "@test:matrix.org")
+        #expect(attributedStringFromHTML?.attachment != nil)
+        #expect(attributedStringFromHTML?.userID == "@test:matrix.org")
         // Tchap: adapt test
-//        XCTAssertEqual(attributedStringFromHTML?.link?.absoluteString, "https://matrix.to/#/@test:matrix.org")
-        XCTAssertEqual(attributedStringFromHTML?.link?.absoluteString, "https://\(homeServerName)/#/@test:matrix.org")
+        //          #expect(attributedStringFromHTML?.link?.absoluteString == "https://matrix.to/#/@test:matrix.org")
+        #expect(attributedStringFromHTML?.link?.absoluteString == "https://\(homeServerName)/#/@test:matrix.org")
         let attributedStringFromPlain = attributedStringBuilder.fromPlain(string)
-        XCTAssertNotNil(attributedStringFromPlain?.attachment)
-        XCTAssertEqual(attributedStringFromPlain?.userID, "@test:matrix.org")
+        #expect(attributedStringFromPlain?.attachment != nil)
+        #expect(attributedStringFromPlain?.userID == "@test:matrix.org")
         // Tchap: adapt test
-//        XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://matrix.to/#/@test:matrix.org")
-        XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://\(homeServerName)/#/@test:matrix.org")
+        //          #expect(attributedStringFromPlain?.link?.absoluteString == "https://matrix.to/#/@test:matrix.org")
+        #expect(attributedStringFromPlain?.link?.absoluteString == "https://\(homeServerName)/#/@test:matrix.org")
     }
-    
+
     @Test
     func roomIDPermalinkMentionAttachment() {
         let string = "https://matrix.to/#/!test:matrix.org"
@@ -426,24 +423,24 @@ struct AttributedStringBuilderTests {
         #expect(attributedStringFromHTML?.roomAlias == "#test:matrix.org")
         #expect(attributedStringFromPlain?.link?.absoluteString == "https://matrix.to/#/%23test:matrix.org")
     }
-    
+
     @Test
     func roomAliasMentionAttachment() {
         let string = "#test:matrix.org"
         let attributedStringFromHTML = attributedStringBuilder.fromHTML(string)
-        XCTAssertNotNil(attributedStringFromHTML?.attachment)
-        XCTAssertEqual(attributedStringFromHTML?.roomAlias, "#test:matrix.org")
+        #expect(attributedStringFromHTML?.attachment != nil)
+        #expect(attributedStringFromHTML?.roomAlias == "#test:matrix.org")
         // Tchap: adapt test
-//        XCTAssertEqual(attributedStringFromHTML?.link?.absoluteString, "https://matrix.to/#/%23test:matrix.org")
-        XCTAssertEqual(attributedStringFromHTML?.link?.absoluteString, "https://\(homeServerName)/#/%23test:matrix.org")
+//        #expect(attributedStringFromHTML?.link?.absoluteString == "https://matrix.to/#/%23test:matrix.org")
+        #expect(attributedStringFromHTML?.link?.absoluteString == "https://\(homeServerName)/#/%23test:matrix.org")
         let attributedStringFromPlain = attributedStringBuilder.fromPlain(string)
-        XCTAssertNotNil(attributedStringFromPlain?.attachment)
-        XCTAssertEqual(attributedStringFromHTML?.roomAlias, "#test:matrix.org")
+        #expect(attributedStringFromPlain?.attachment != nil)
+        #expect(attributedStringFromHTML?.roomAlias == "#test:matrix.org")
         // Tchap: adapt test
-//        XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://matrix.to/#/%23test:matrix.org")
-        XCTAssertEqual(attributedStringFromPlain?.link?.absoluteString, "https://\(homeServerName)/#/%23test:matrix.org")
+//        #expect(attributedStringFromPlain?.link?.absoluteString == "https://matrix.to/#/%23test:matrix.org")
+        #expect(attributedStringFromPlain?.link?.absoluteString == "https://\(homeServerName)/#/%23test:matrix.org")
     }
-    
+
     @Test
     func eventRoomIDPermalinkMentionAttachment() {
         let string = "https://matrix.to/#/!test:matrix.org/$test"
