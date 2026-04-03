@@ -45,6 +45,10 @@ struct CreateRoomScreen: View {
             // Tchap: mask Element new way of choosing room type. And keep Tchap way of choosing room type (by security).
 //            roomAccessSection
             securitySection
+            // Tchap: Activate link access (Don't show on Room Creation screen because the room's description says
+            // "invite only" although activating access by link make direct room access with the link without the need to be invited).
+//            tchapAccessByLinkSection
+//                .disabled(!context.viewState.roomAccessType.isVisibilityPrivate)
             // Tchap: allow to disable federated state on Public room.
             if !context.viewState.roomAccessType.isVisibilityPrivate {
                 tchapNonFederatedPublicRoomSection
@@ -213,14 +217,14 @@ struct CreateRoomScreen: View {
                                     icon: \.lockSolid,
                                     role: .coloredIcon(CompoundCoreColorTokens.green800),
                                     iconAlignment: .top),
-                    kind: .selection(isSelected: context.selectedAccessType == .private) { context.selectedAccessType = .private; context.isRoomFederated = true })
+                    kind: .selection(isSelected: context.selectedAccessType == .private) { context.selectedAccessType = .private; context.isRoomFederated = true; context.isAccessViaLinkEnabled = false })
             if let TchapFeatureFlagInstance = TchapFeatureFlag.Instance.instance(for: context.viewState.serverName),
                TchapFeatureFlag.Configuration.unencryptedPrivateRoom.isActivated(for: TchapFeatureFlagInstance) {
                 ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
                                         description: TchapL10n.screenCreateRoomPrivateOptionDescription,
                                         icon: \.lockOff,
                                         iconAlignment: .top),
-                        kind: .selection(isSelected: context.selectedAccessType == .privateUnencrypted) { context.selectedAccessType = .privateUnencrypted; context.isRoomFederated = true })
+                        kind: .selection(isSelected: context.selectedAccessType == .privateUnencrypted) { context.selectedAccessType = .privateUnencrypted; context.isRoomFederated = true; context.isAccessViaLinkEnabled = false })
             }
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPublicOptionTitle,
                                     attributedDescriptionWhenDisabled: warningPublicRoomIsNotOpenToExterns,
@@ -230,6 +234,7 @@ struct CreateRoomScreen: View {
 //                    kind: .selection(isSelected: !context.isRoomPrivate) { context.isRoomPrivate = false })
                     kind: .selection(isSelected: context.selectedAccessType == .public(federated: true) || context.selectedAccessType == .public(federated: false)) {
                         context.selectedAccessType = .public(federated: $context.isRoomFederated.wrappedValue ? true : false)
+                        context.isAccessViaLinkEnabled = true
                     })
         } header: {
             Text(TchapL10n.screenCreateRoomRoomVisibilitySectionTitle)
@@ -260,6 +265,15 @@ struct CreateRoomScreen: View {
         return description + warning
     }
     
+    // Tchap: Activate link access
+    private var tchapAccessByLinkSection: some View {
+        Section {
+            ListRow(label: .plain(title: TchapL10n.screenCreateRoomAccessViaLinkTitle,
+                                  description: TchapL10n.screenCreateRoomAccessViaLinkDescription),
+                    kind: .toggle($context.isAccessViaLinkEnabled))
+        }
+    }
+    
     // Tchap: Allow Public room to be non-federated
     private var tchapNonFederatedPublicRoomSection: some View {
         Section {
@@ -268,7 +282,7 @@ struct CreateRoomScreen: View {
                     kind: .toggle($context.isRoomFederated.not))
         }
     }
-    
+
     private var roomAliasSection: some View {
         Section {
             EditRoomAddressListRow(aliasLocalPart: aliasBinding,

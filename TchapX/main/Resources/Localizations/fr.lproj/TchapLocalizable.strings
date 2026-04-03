@@ -64,6 +64,9 @@ screen_create_room_room_access_section_public_not_federated_description = "Seuls
 screen_create_room_room_access_section_private_unencrypted_title = "Privé";
 screen_create_room_room_access_section_private_unencrypted_description = "Seules les personnes invitées peuvent joindre";
 
+screen_create_room_access_via_link_title = "Accès par lien";
+screen_create_room_access_via_link_description = "Les agents pourront rejoindre ce salon et inviter d'autres agents via ce lien.";
+
 // Invite by email
 invite_by_email_message = "Ce contact sera invité à rejoindre Tchap.";
 
@@ -89,3 +92,8 @@ content_scanner_scan_status_in_progress = "Analyse anti-virus…";
 content_scanner_scan_status_infected = "Contenu bloqué";
 content_scanner_scan_status_not_found = "Fichier indisponible";
 content_scanner_scan_status_error = "Fichier temporairement indisponible";
+
+// Room : activate access by link
+room_details_activate_access_by_link_title = "Activate access by link for this room";
+room_details_activate_access_by_link_message = "If you activate the access by link, everyone having the link will be able to share it and join the room without invitation.\n\nExternal users will still have to be invited manually to the room.";
+room_details_copy_link_error = "Impossible de copier le lien";

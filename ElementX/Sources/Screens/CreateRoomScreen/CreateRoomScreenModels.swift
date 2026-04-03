@@ -140,6 +140,9 @@ struct CreateRoomScreenViewStateBindings {
         }
     }
     
+    // Tchap: add possibility activate access by link.
+    var isAccessViaLinkEnabled = false
+
     var showAttachmentConfirmationDialog = false
     var showSpaceSelectionSheet = false
     

@@ -266,7 +266,9 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
                                                         isSpace: state.isSpace,
                                                         userIDs: [], // The invite users screen is shown next so we don't need to invite anyone right now.
                                                         avatarURL: avatarURL,
-                                                        aliasLocalPart: state.roomAccessType.isVisibilityPrivate ? nil : state.aliasLocalPart) {
+                                                        aliasLocalPart: state.roomAccessType.isVisibilityPrivate ? nil : state.aliasLocalPart,
+                                                        // Tchap: Activate link access
+                                                        isAccessViaLinkEnabled: state.bindings.isAccessViaLinkEnabled) {
         case .success(let roomID):
             guard case let .joined(roomProxy) = await userSession.clientProxy.roomForIdentifier(roomID) else {
                 state.bindings.alertInfo = AlertInfo(id: .failedCreatingRoom,
