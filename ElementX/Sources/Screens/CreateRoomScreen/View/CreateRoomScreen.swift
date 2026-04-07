@@ -40,7 +40,8 @@ struct CreateRoomScreen: View {
             roomSection
             topicSection
             if context.viewState.canSelectSpace {
-                selectSpaceSection
+                // Tchap: Hide space selection
+//                selectSpaceSection
             }
             // Tchap: mask Element new way of choosing room type. And keep Tchap way of choosing room type (by security).
 //            roomAccessSection
