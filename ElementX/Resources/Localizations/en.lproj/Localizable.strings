@@ -908,7 +908,7 @@
 "screen_encryption_reset_title" = "Can't confirm? You’ll need to reset your identity.";
 "screen_identity_confirmation_cannot_confirm" = "Can't confirm?";
 "screen_identity_confirmation_create_new_recovery_key" = "Create a new verification code"; // Tchap
-"screen_identity_confirmation_subtitle" = "Verify this device to set up secure messaging.";
+"screen_identity_confirmation_subtitle" = "Choose a method to verify your device and access your Tchap account."; // Tchap
 "screen_identity_confirmation_title" = "Confirm your identity";
 "screen_identity_confirmation_use_another_device" = "Use another device";
 "screen_identity_confirmation_use_recovery_key" = "Use verification code"; // Tchap
