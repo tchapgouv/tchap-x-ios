@@ -141,7 +141,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
         }
     }
     
-    // Initialize the Authentication service with the returned homeServer.
+    /// Initialize the Authentication service with the returned homeServer.
     private func initAuthenticationService(for homeserverDomain: String, loginHint: String) async {
         // Try to configure the Authentication Service to use the selected Homeserver.
         // Pass the Authentication service the desired flow: .login or .register
@@ -170,7 +170,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
         }
     }
 
-    // Request the OIDC server with the user email to prepare OIDC data.
+    /// Request the OIDC server with the user email to prepare OIDC data.
     private func prepareOIDCFlow() async -> Result<(OIDCAuthorizationDataProxy, UIWindow), DecideHomeServerScreenErrorType> {
         guard let window = state.window else {
             return .failure(.authenticationServiceError)

@@ -31,14 +31,14 @@ struct PermalinkTests {
         let validUserId = "@abcdefghijklmnopqrstuvwxyz1234567890._-=/:matrix.org"
         // Tchap: handle permalinks
 //        #expect(try matrixToUserPermalink(userId: validUserId) == "https://matrix.to/#/@abcdefghijklmnopqrstuvwxyz1234567890._-=%2F:matrix.org")
-        #expect(try? matrixToUserPermalink(userId: validUserId) == "https://\(homeServerName)/#/@abcdefghijklmnopqrstuvwxyz1234567890._-=%2F:matrix.org")
+        #expect(try matrixToUserPermalink(userId: validUserId) == "https://\(homeServerName)/#/@abcdefghijklmnopqrstuvwxyz1234567890._-=%2F:matrix.org")
     }
     
     @Test
-    func permalinkDetection() {
+    func permalinkDetection() throws {
         var url: URL = "https://www.matrix.org"
         // Tchap: handle permalinks
-        let tchapBadUrl = URL(string: "badScheme://badHost.ext")! // swiftlint:disable:this force_unwrapping
+        let tchapBadUrl = try #require(URL(string: "badScheme://badHost.ext")) // swiftlint:disable:this force_unwrapping
         var tchapPermalink = TchapPermalinks.convert(permalinkUri: url) ?? tchapBadUrl
 //        #expect(parseMatrixEntityFrom(uri: url.absoluteString) == nil)
         #expect(parseMatrixEntityFrom(uri: tchapPermalink.absoluteString) == nil)

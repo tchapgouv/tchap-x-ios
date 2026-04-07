@@ -30,23 +30,22 @@
 //  Copyright © 2024 Tchap. All rights reserved.
 //
 
+@testable import TchapX_Development
 import XCTest
 
-@testable import TchapX_Development
-
 final class TchapFeatureFlagTests: XCTestCase {
-    func testFeatureFlags() {
+    func testFeatureFlags() throws {
         // Test for success
-        XCTAssertTrue(TchapFeatureFlag(allowedInstances: [.agent]).isActivated(for: TchapFeatureFlag.Instance.agent.homeServer!))
-        XCTAssertTrue(TchapFeatureFlag(allowedInstances: [.agent, .agriculture, .culture]).isActivated(for: TchapFeatureFlag.Instance.culture.homeServer!))
-        XCTAssertTrue(TchapFeatureFlag(allowedInstances: [.all]).isActivated(for: TchapFeatureFlag.Instance.culture.homeServer!))
-        XCTAssertTrue(TchapFeatureFlag(allowedInstances: [.agent, .all]).isActivated(for: TchapFeatureFlag.Instance.culture.homeServer!))
+        XCTAssertTrue(try TchapFeatureFlag(allowedInstances: [.agent]).isActivated(for: XCTUnwrap(TchapFeatureFlag.Instance.agent.homeServer)))
+        XCTAssertTrue(try TchapFeatureFlag(allowedInstances: [.agent, .agriculture, .culture]).isActivated(for: XCTUnwrap(TchapFeatureFlag.Instance.culture.homeServer)))
+        XCTAssertTrue(try TchapFeatureFlag(allowedInstances: [.all]).isActivated(for: XCTUnwrap(TchapFeatureFlag.Instance.culture.homeServer)))
+        XCTAssertTrue(try TchapFeatureFlag(allowedInstances: [.agent, .all]).isActivated(for: XCTUnwrap(TchapFeatureFlag.Instance.culture.homeServer)))
         XCTAssertTrue(TchapFeatureFlag(allowedInstances: [.agent]).isActivated(for: "matrix.agent.tchap.gouv.fr"))
         XCTAssertTrue(TchapFeatureFlag(allowedInstances: [.agent]).isActivated(for: "https://matrix.agent.tchap.gouv.fr"))
         // Test for failure
-        XCTAssertFalse(TchapFeatureFlag(allowedInstances: [.agent]).isActivated(for: TchapFeatureFlag.Instance.agriculture.homeServer!))
+        XCTAssertFalse(try TchapFeatureFlag(allowedInstances: [.agent]).isActivated(for: XCTUnwrap(TchapFeatureFlag.Instance.agriculture.homeServer)))
         XCTAssertFalse(TchapFeatureFlag(allowedInstances: [.agent]).isActivated(for: ""))
-        XCTAssertFalse(TchapFeatureFlag(allowedInstances: []).isActivated(for: TchapFeatureFlag.Instance.agent.homeServer!))
+        XCTAssertFalse(try TchapFeatureFlag(allowedInstances: []).isActivated(for: XCTUnwrap(TchapFeatureFlag.Instance.agent.homeServer)))
         XCTAssertFalse(TchapFeatureFlag(allowedInstances: [.agent]).isActivated(for: "http://matrix.agent.tchap.gouv.fr"))
     }
 }
