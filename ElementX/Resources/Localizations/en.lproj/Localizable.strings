@@ -754,7 +754,7 @@
 "screen_space_announcement_notice" = "Filtering, creating and managing spaces is coming soon.";
 "screen_space_announcement_subtitle" = "Welcome to the beta version of Spaces! With this first version you can:";
 "screen_space_announcement_title" = "Introducing Spaces";
-"screen_space_list_description" = "Spaces you have created or joined.";
+"screen_space_list_description" = "Select a space to filter your conversations, or click the icon on the right to view its information."; // Tchap
 "screen_space_list_details" = "%1$@ • %2$@";
 "screen_space_list_empty_state_title" = "Create spaces to organize rooms";
 "screen_space_list_parent_space" = "%1$@ space";

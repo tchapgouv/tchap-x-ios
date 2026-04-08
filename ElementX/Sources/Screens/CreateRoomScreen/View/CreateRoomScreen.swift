@@ -37,6 +37,10 @@ struct CreateRoomScreen: View {
     
     var body: some View {
         Form {
+            // Tchap: Add space description
+            if context.viewState.isSpace {
+                spaceDescriptionSection
+            }
             roomSection
             topicSection
             if context.viewState.canSelectSpace {
@@ -45,7 +49,9 @@ struct CreateRoomScreen: View {
             }
             // Tchap: mask Element new way of choosing room type. And keep Tchap way of choosing room type (by security).
 //            roomAccessSection
-            securitySection
+            if !context.viewState.isSpace {
+                securitySection
+            }
             // Tchap: Activate link access (Don't show on Room Creation screen because the room's description says
             // "invite only" although activating access by link make direct room access with the link without the need to be invited).
 //            tchapAccessByLinkSection
@@ -78,6 +84,29 @@ struct CreateRoomScreen: View {
         }
     }
 
+    // Tchap: Add space description
+    private var spaceDescriptionWithLearnMoreLink: AttributedString {
+        let base = AttributedString(TchapL10n.screenCreateRoomSpaceDescription)
+
+        var link = AttributedString(L10n.actionLearnMore)
+        link.underlineStyle = .single
+        link.link = context.viewState.tchapCreateSpaceFaqURL
+        link.foregroundColor = UIColor(.compound.textSecondary)
+
+        return base + link
+    }
+
+    // Tchap: Add space description
+    private var spaceDescriptionSection: some View {
+        Section {
+            EmptyView()
+        } header: {
+            Text(spaceDescriptionWithLearnMoreLink)
+                .textCase(nil)
+                .compoundListSectionHeader()
+        }
+    }
+
     private var roomSection: some View {
         Section {
             EmptyView()
@@ -99,6 +128,7 @@ struct CreateRoomScreen: View {
                               text: roomNameBinding,
                               prompt: Text(L10n.screenCreateRoomNamePlaceholder).foregroundColor(.compound.textSecondary),
                               axis: .horizontal)
+                        .textCase(nil) // Tchap: fix uppercase for iOS 18
                         .font(.compound.bodyLG)
                         .foregroundStyle(.compound.textPrimary)
                         .tint(.compound.iconAccentTertiary)
@@ -184,19 +214,15 @@ struct CreateRoomScreen: View {
         Section {
             ListRow(label: .plain(title: L10n.screenCreateRoomTopicPlaceholder),
                     kind: .textField(text: $context.roomTopic, axis: .vertical))
-                .lineLimit(3, reservesSpace: false)
+                // Tchap:
+//            .lineLimit(3, reservesSpace: false)
+                .lineLimit(5, reservesSpace: true)
                 .focused($focus, equals: .topic)
                 .accessibilityIdentifier(A11yIdentifiers.createRoomScreen.roomTopic)
         } header: {
             Text(L10n.screenCreateRoomTopicLabel)
                 .compoundListSectionHeader()
         }
-        // Tchap: set selected users list in its own section
-        //        footer: {
-        //            if !context.viewState.selectedUsers.isEmpty {
-        //                selectedUsersSection
-        //            }
-        //        }
     }
     
     private var securitySection: some View {

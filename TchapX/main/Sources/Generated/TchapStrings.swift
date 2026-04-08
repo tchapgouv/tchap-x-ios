@@ -97,6 +97,8 @@ internal enum TchapL10n {
   internal static var screenCreateRoomRoomVisibilitySectionTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_room_visibility_section_title") }
   /// Members
   internal static var screenCreateRoomSelectedUsersLabel: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_selected_users_label") }
+  /// A space is a private folder where you can organize your conversations by topic. 
+  internal static var screenCreateRoomSpaceDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_space_description") }
   /// Unable to determine which server your account is attached to.
   internal static var screenDecideHomeserverErrorGetInstanceMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_get_instance_message") }
   /// Erreur

@@ -107,6 +107,8 @@ struct CreateRoomScreenViewState: BindableState {
             return .privateUnencrypted
         }
     }
+    
+    let tchapCreateSpaceFaqURL: URL
 }
 
 struct CreateRoomScreenViewStateBindings {
