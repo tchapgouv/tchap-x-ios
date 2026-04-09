@@ -239,6 +239,39 @@ struct RoomDetailsScreen: View {
                             context.send(viewAction: .processTapRolesAndPermissions)
                         })
             }
+            
+            // Tchap: Activate link access
+            Group {
+                ListRow(label: .default(title: TchapL10n.screenCreateRoomAccessViaLinkTitle,
+                                        description: TchapL10n.screenCreateRoomAccessViaLinkDescription,
+                                        icon: \.link),
+                        kind: .toggle($context.isAccessViaLinkEnabled))
+                    .accessibilityIdentifier(TchapA11yIdentifiers.roomDetailsScreen.accessViaLink)
+                    .onChange(of: context.isAccessViaLinkEnabled) { _, newValue in
+                        context.send(viewAction: .toggleAccessViaLink(isEnabled: newValue))
+                    }
+                    // Hide list row separator if widget is active because we add a "copy link" button just below.
+                    .listRowSeparator(context.viewState.canToggleAccessViaLink ? .hidden : .automatic)
+                    // only disable toggle button, not button to copy link (usable for forum).
+                    .disabled(!context.viewState.canToggleAccessViaLink)
+                if context.isAccessViaLinkEnabled {
+                    Button {
+                        guard let roomAlias = context.viewState.details.canonicalAlias,
+                              let roomPermaLink = try? URL(string: matrixToRoomAliasPermalink(roomAlias: roomAlias)) else {
+                            MXLog.error("Could not build alias permalink")
+                            context.send(viewAction: .copyAccessLink(success: false))
+                            return
+                        }
+                        UIPasteboard.general.url = roomPermaLink
+                        context.send(viewAction: .copyAccessLink(success: true))
+                    } label: {
+                        Text(L10n.actionCopyLink)
+                    }
+                    .buttonStyle(.compound(.secondary, size: .medium))
+                    .padding(.leading, 48.0)
+                    .listRowInsets(EdgeInsets())
+                }
+            }
         }
     }
     

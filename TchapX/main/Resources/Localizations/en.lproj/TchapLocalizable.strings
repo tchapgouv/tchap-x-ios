@@ -64,6 +64,9 @@ screen_create_room_room_access_section_public_not_federated_description = "Any m
 screen_create_room_room_access_section_private_unencrypted_title = "Private";
 screen_create_room_room_access_section_private_unencrypted_description = "Only people invited can join.";
 
+screen_create_room_access_via_link_title = "Access via link";
+screen_create_room_access_via_link_description = "Agents will be able to join this room and invite other agents via this link.";
+
 // Invite by email
 invite_by_email_message = "This contact will be invited to join Tchap.";
 
@@ -90,4 +93,10 @@ content_scanner_scan_status_infected = "Content blocked";
 content_scanner_scan_status_not_found = "File no longer available";
 content_scanner_scan_status_error = "File temporarily unavailable";
 
+// Recovery
 screen_recovery_key_confirm_other_method = "Other verification methods";
+
+// Room : activate access by link
+room_details_activate_access_by_link_title = "Activer l'accès au salon par lien";
+room_details_activate_access_by_link_message = "L'activation de l'accès au salon par lien permettra à n'importe qui en sa possession, de le partager et de rejoindre le salon sans invitation.\n\nLes personnes externes à la fonction publique devront tout de même être invitées manuellement.";
+room_details_copy_link_error = "Unable to copy the link";
