@@ -16,4 +16,7 @@ protocol HomeScreenViewModelProtocol {
     
     // periphery: ignore - used in release mode
     func presentCrashedLastRunAlert()
+
+    // Tchap: Space default action is now conversation filtering
+    func selectFilter(_ filter: SpaceServiceFilter?)
 }

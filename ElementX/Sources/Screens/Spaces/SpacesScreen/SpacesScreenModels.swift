@@ -12,6 +12,7 @@ enum SpacesScreenViewModelAction {
     case selectSpace(SpaceRoomListProxyProtocol)
     case showSettings
     case showCreateSpace
+    case selectFilter(SpaceServiceRoom?) // Tchap: Space default action is now conversation filtering
 }
 
 struct SpacesScreenViewState: BindableState {
@@ -33,6 +34,7 @@ struct SpacesScreenViewStateBindings {
 
 enum SpacesScreenViewAction {
     case spaceAction(SpaceRoomCell.Action)
+    case selectFilter(SpaceServiceRoom?) // Tchap: Space default action is now conversation filtering
     case showSettings
     case screenAppeared
     case featureAnnouncementAppeared

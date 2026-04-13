@@ -174,7 +174,12 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
     }
     
     // MARK: - Public
-    
+
+    // Tchap: Space default action is now conversation filtering
+    func selectFilter(_ filter: SpaceServiceFilter?) {
+        spaceFilterSubject.send(filter)
+    }
+
     override func process(viewAction: HomeScreenViewAction) {
         switch viewAction {
         case .selectRoom(let roomIdentifier):

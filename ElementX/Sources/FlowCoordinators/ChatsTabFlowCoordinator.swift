@@ -45,7 +45,10 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
     
     // periphery:ignore - retaining purpose
     private var globalSearchScreenCoordinator: GlobalSearchScreenCoordinator?
-    
+
+    // Tchap: Space default action is now conversation filtering (select in HomeScreen)
+    private var homeScreenCoordinator: HomeScreenCoordinator?
+
     private var cancellables = Set<AnyCancellable>()
     
     private let sidebarNavigationStackCoordinator: NavigationStackCoordinator
@@ -376,7 +379,10 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
                                                          notificationManager: flowParameters.notificationManager,
                                                          userIndicatorController: flowParameters.userIndicatorController)
         let coordinator = HomeScreenCoordinator(parameters: parameters)
-        
+
+        // Tchap: Space default action is now conversation filtering (select in HomeScreen)
+        homeScreenCoordinator = coordinator
+
         coordinator.actions
             .sink { [weak self] action in
                 guard let self else { return }
@@ -863,5 +869,10 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
                                                                              type: .toast,
                                                                              title: L10n.errorUnknown,
                                                                              iconName: "xmark"))
+    }
+
+    // Tchap: Space default action is now conversation filtering (select in HomeScreen)
+    func selectFilter(_ filter: SpaceServiceFilter?) {
+        homeScreenCoordinator?.selectFilter(filter)
     }
 }

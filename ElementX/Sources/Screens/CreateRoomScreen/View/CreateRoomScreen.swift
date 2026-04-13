@@ -214,7 +214,7 @@ struct CreateRoomScreen: View {
         Section {
             ListRow(label: .plain(title: L10n.screenCreateRoomTopicPlaceholder),
                     kind: .textField(text: $context.roomTopic, axis: .vertical))
-                // Tchap:
+                // Tchap: Make topic field bigger
 //            .lineLimit(3, reservesSpace: false)
                 .lineLimit(5, reservesSpace: true)
                 .focused($focus, equals: .topic)

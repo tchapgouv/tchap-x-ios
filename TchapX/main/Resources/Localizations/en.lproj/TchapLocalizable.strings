@@ -102,3 +102,7 @@ screen_recovery_key_confirm_other_method = "Other verification methods";
 room_details_activate_access_by_link_title = "Activer l'accès au salon par lien";
 room_details_activate_access_by_link_message = "L'activation de l'accès au salon par lien permettra à n'importe qui en sa possession, de le partager et de rejoindre le salon sans invitation.\n\nLes personnes externes à la fonction publique devront tout de même être invitées manuellement.";
 room_details_copy_link_error = "Unable to copy the link";
+
+// Spaces
+screen_spaces_home_title = "Accueil";
+screen_spaces_home_description = "Toutes les conversations";

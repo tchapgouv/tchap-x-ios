@@ -80,6 +80,8 @@ class SpacesScreenViewModel: SpacesScreenViewModelType, SpacesScreenViewModelPro
             appSettings.hasSeenSpacesAnnouncement = true
         case .createSpace:
             actionsSubject.send(.showCreateSpace)
+        case .selectFilter(let room): // Tchap: Space default action is now conversation filtering
+            actionsSubject.send(.selectFilter(room))
         }
     }
     

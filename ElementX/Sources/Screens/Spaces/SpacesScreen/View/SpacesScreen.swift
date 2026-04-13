@@ -33,6 +33,7 @@ struct SpacesScreen: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     header
+                    home // Tchap: Space default action is now conversation filtering (add home row)
                     spaces
                 }
             }
@@ -83,13 +84,56 @@ struct SpacesScreen: View {
                 .frame(height: 1 / UIScreen.main.scale)
         }
     }
-    
+
+    // Tchap: Space default action is now conversation filtering (add home row)
+    private var home: some View {
+        Button {
+            context.send(viewAction: .selectFilter(nil))
+        } label: {
+            HStack(spacing: 16) {
+                CompoundIcon(\.home, size: .custom(52 - 20), relativeTo: .compound.bodyLG)
+                    .foregroundStyle(.compound.iconPrimary)
+                    .padding(10)
+                    .background(.compound.bgSubtleSecondary, in: RoundedRectangle(cornerRadius: 52 / 4))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 52 / 4)
+                            .stroke(.compound.iconQuaternaryAlpha, lineWidth: 1)
+                    }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(TchapL10n.screenSpacesHomeTitle)
+                        .font(.compound.bodyLGSemibold)
+                        .foregroundColor(.compound.textPrimary)
+                        .lineLimit(1)
+
+                    Text(TchapL10n.screenSpacesHomeDescription)
+                        .font(.compound.bodyMD)
+                        .foregroundColor(.compound.textSecondary)
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(Color.compound.borderDisabled)
+                    .frame(height: 1 / UIScreen.main.scale)
+            }
+        }
+        .buttonStyle(SpaceRoomCellButtonStyle(isHighlighted: false))
+    }
+
     private var spaces: some View {
         ForEach(context.viewState.topLevelSpaces, id: \.id) { spaceServiceRoom in
+            // Tchap: Space default action is now conversation filtering (+ add OnInfo: action)
             SpaceRoomCell(spaceServiceRoom: spaceServiceRoom,
                           isSelected: spaceServiceRoom.id == context.viewState.selectedSpaceID,
-                          mediaProvider: context.mediaProvider) { action in
-                context.send(viewAction: .spaceAction(action))
+                          mediaProvider: context.mediaProvider,
+                          onInfo: { room in
+                              context.send(viewAction: .spaceAction(.select(room)))
+                          }) { _ in
+                context.send(viewAction: .selectFilter(spaceServiceRoom))
             }
         }
     }

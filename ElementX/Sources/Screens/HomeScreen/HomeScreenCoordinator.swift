@@ -113,4 +113,9 @@ final class HomeScreenCoordinator: CoordinatorProtocol {
     func toPresentable() -> AnyView {
         AnyView(HomeScreen(context: viewModel.context))
     }
+
+    // Tchap: Space default action is now conversation filtering
+    func selectFilter(_ filter: SpaceServiceFilter?) {
+        viewModel.selectFilter(filter)
+    }
 }

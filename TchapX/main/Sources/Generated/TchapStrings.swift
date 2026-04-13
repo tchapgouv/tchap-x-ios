@@ -56,7 +56,7 @@ internal enum TchapL10n {
   internal static var screenCreateRoomExternalsArePresentsLink: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_externals_are_presents_link") }
   /// This room contains external members.
   internal static var screenCreateRoomExternalsArePresentsWarning: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_externals_are_presents_warning") }
-  /// - End-to-end encrypted
+  /// • End-to-end encrypted
   /// - Only people invited can access this room
   /// - Advised up to 500 members
   internal static var screenCreateRoomPrivateEncryptedOptionDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_private_encrypted_option_description") }
@@ -153,6 +153,10 @@ internal enum TchapL10n {
   internal static var screenRecoveryKeyConfirmOtherMethod: String { return TchapL10n.tr("TchapLocalizable", "screen_recovery_key_confirm_other_method") }
   /// Join a public room
   internal static var screenRoomDirectorySearchTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_room_directory_search_title") }
+  /// Toutes les conversations
+  internal static var screenSpacesHomeDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_spaces_home_description") }
+  /// Accueil
+  internal static var screenSpacesHomeTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_spaces_home_title") }
   /// Join a public room
   internal static var startChatActionJoinForum: String { return TchapL10n.tr("TchapLocalizable", "start_chat_action_join_forum") }
   /// Room access rule updated
