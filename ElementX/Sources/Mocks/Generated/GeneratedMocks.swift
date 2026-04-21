@@ -2893,15 +2893,15 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     }
     //MARK: - createRoom
 
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = 0
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCount: Int {
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount = 0
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount
+                return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount
+                    returnValue = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -2909,29 +2909,29 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = newValue
+                createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = newValue
+                    createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled: Bool {
-        return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCount > 0
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCalled: Bool {
+        return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCount > 0
     }
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments: (name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)?
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedInvocations: [(name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)] = []
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments: (name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)?
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocations: [(name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)] = []
 
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue: Result<String, ClientProxyError>!
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue: Result<String, ClientProxyError>! {
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReturnValue: Result<String, ClientProxyError>!
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue: Result<String, ClientProxyError>! {
         get {
             if Thread.isMainThread {
-                return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue
+                return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReturnValue
             } else {
                 var returnValue: Result<String, ClientProxyError>? = nil
                 DispatchQueue.main.sync {
-                    returnValue = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue
+                    returnValue = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -2939,26 +2939,26 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue = newValue
+                createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue = newValue
+                    createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure: ((String, String?, CreateRoomAccessType, Bool, [String], URL?, String?) async -> Result<String, ClientProxyError>)?
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure: ((String, String?, CreateRoomAccessType, Bool, [String], URL?, String?, Bool) async -> Result<String, ClientProxyError>)?
 
-    func createRoom(name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
-        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCount += 1
-        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments = (name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart)
+    func createRoom(name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool) async -> Result<String, ClientProxyError> {
+        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCount += 1
+        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments = (name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart, isAccessViaLinkEnabled: isAccessViaLinkEnabled)
         DispatchQueue.main.async {
-            self.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedInvocations.append((name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart))
+            self.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocations.append((name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart, isAccessViaLinkEnabled: isAccessViaLinkEnabled))
         }
-        if let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure {
-            return await createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure(name, topic, accessType, isSpace, userIDs, avatarURL, aliasLocalPart)
+        if let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure {
+            return await createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure(name, topic, accessType, isSpace, userIDs, avatarURL, aliasLocalPart, isAccessViaLinkEnabled)
         } else {
-            return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue
+            return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue
         }
     }
     //MARK: - joinRoom

@@ -126,6 +126,11 @@ struct RoomDetailsScreenViewState: BindableState {
     var notificationShortcutButtonIcon: KeyPath<CompoundIcons, Image> {
         areNotificationsMuted ? \.notificationsOff : \.notifications
     }
+    
+    // Tchap: Activate link access
+    var canToggleAccessViaLink: Bool {
+        details.visibility != .public
+    }
 }
 
 struct RoomDetailsScreenViewStateBindings {
@@ -179,6 +184,9 @@ struct RoomDetailsScreenViewStateBindings {
     
     /// The view model used to display the leave space sheet, will only be used if the room is a space.
     var leaveSpaceViewModel: LeaveSpaceViewModel?
+    
+    // Tchap: Activate link access
+    var isAccessViaLinkEnabled = false
 }
 
 struct LeaveRoomAlertItem: AlertProtocol {
@@ -231,6 +239,9 @@ enum RoomDetailsScreenViewAction {
     case processTapMediaEvents
     case processTapRequestsToJoin
     case processTapReport
+    // Tchap: Activate link access
+    case toggleAccessViaLink(isEnabled: Bool)
+    case copyAccessLink(success: Bool)
 }
 
 enum RoomDetailsScreenViewShortcut {

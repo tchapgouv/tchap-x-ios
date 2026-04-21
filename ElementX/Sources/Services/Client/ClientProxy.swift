@@ -582,10 +582,13 @@ class ClientProxy: ClientProxyProtocol {
                     isSpace: Bool,
                     userIDs: [String],
                     avatarURL: URL?,
-                    aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
+                    aliasLocalPart: String?,
+                    // Tchap: Activate link access
+                    isAccessViaLinkEnabled: Bool) async -> Result<String, ClientProxyError> {
         do {
             let powerLevelContentOverride = if isSpace {
-                // Tchap: ignore `federated` assocaited value for space for the moment.
+                // TODO: Tchap: space managment
+                // Tchap: ignore `federated` associated value for space for the moment.
 //                if accessType == .public {
                 if case .public = accessType {
                     Self.publicSpaceCreationPowerLevelOverrides
@@ -625,9 +628,21 @@ class ClientProxy: ClientProxyProtocol {
             let roomID = try await client.createRoom(request: parameters,
                                                      isTchapInvite: false,
                                                      isTchapInviteExternal: false)
-          
+
             await waitForRoomToSync(roomID: roomID)
-            
+
+            // TCHAP : Room access link feature - Update JoinRule to Public after creation
+            do {
+                if isAccessViaLinkEnabled,
+                   let room = try client.getRoom(roomId: roomID),
+                   await room.getVisibility() != .public {
+                    try await room.updateJoinRules(newRule: .public)
+                }
+            } catch {
+                MXLog.error("Failed activation room access via link with error: \(error)")
+                return .failure(.failedActivatingRoomAccessViaLink)
+            }
+
             return .success(roomID)
         } catch {
             MXLog.error("Failed creating room with error: \(error)")

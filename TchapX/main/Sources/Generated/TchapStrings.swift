@@ -32,6 +32,14 @@ internal enum TchapL10n {
   internal static var legalPrivacyPolicy: String { return TchapL10n.tr("TchapLocalizable", "legal_privacy_policy") }
   /// Terms of use
   internal static var legalTermsOfUse: String { return TchapL10n.tr("TchapLocalizable", "legal_terms_of_use") }
+  /// L'activation de l'accès au salon par lien permettra à n'importe qui en sa possession, de le partager et de rejoindre le salon sans invitation.
+  /// 
+  /// Les personnes externes à la fonction publique devront tout de même être invitées manuellement.
+  internal static var roomDetailsActivateAccessByLinkMessage: String { return TchapL10n.tr("TchapLocalizable", "room_details_activate_access_by_link_message") }
+  /// Activer l'accès au salon par lien
+  internal static var roomDetailsActivateAccessByLinkTitle: String { return TchapL10n.tr("TchapLocalizable", "room_details_activate_access_by_link_title") }
+  /// Unable to copy the link
+  internal static var roomDetailsCopyLinkError: String { return TchapL10n.tr("TchapLocalizable", "room_details_copy_link_error") }
   /// EXTERNALS
   internal static var roomHeaderBadgeAuthorizedToExternal: String { return TchapL10n.tr("TchapLocalizable", "room_header_badge_authorized_to_external") }
   /// ENCRYPTED
@@ -40,6 +48,10 @@ internal enum TchapL10n {
   internal static var roomHeaderBadgeNotEncrypted: String { return TchapL10n.tr("TchapLocalizable", "room_header_badge_not_encrypted") }
   /// PUBLIC
   internal static var roomHeaderBadgePublic: String { return TchapL10n.tr("TchapLocalizable", "room_header_badge_public") }
+  /// Agents will be able to join this room and invite other agents via this link.
+  internal static var screenCreateRoomAccessViaLinkDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_access_via_link_description") }
+  /// Access via link
+  internal static var screenCreateRoomAccessViaLinkTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_access_via_link_title") }
   /// More info
   internal static var screenCreateRoomExternalsArePresentsLink: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_externals_are_presents_link") }
   /// This room contains external members.

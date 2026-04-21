@@ -655,9 +655,9 @@ class MockScreen: Identifiable {
             return navigationStackCoordinator
         case .startChatFlow:
             let clientProxy = ClientProxyMock(.init(userID: "@mock:client.com"))
-            // Tchap: handle `isEncrypted` createRoom parameter.
+            // Tchap: handle `isEncrypted` createRoom and `isAccessViaLinkEnabled` parameters.
 //            clientProxy.createRoomNameTopicAccessTypeIsRoomEncryptedIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue =
-            clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue =
+            clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue =
                 .success("!new-room:client.com")
             clientProxy.roomForIdentifierClosure = { roomID in .joined(JoinedRoomProxyMock(.init(id: roomID, members: []))) }
             
