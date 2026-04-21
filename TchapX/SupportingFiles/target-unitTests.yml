@@ -34,6 +34,8 @@ targets:
     - target: TchapX-Production
     - package: MatrixRustSDK
     - package: AsyncAlgorithms
+    - package: Clocks
+    - package: Dynamic
 
     info:
       path: ../UnitTests/SupportingFiles/Info.plist

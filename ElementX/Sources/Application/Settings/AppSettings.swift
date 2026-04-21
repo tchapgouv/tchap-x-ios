@@ -196,10 +196,10 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.hasSeenNewSoundBanner, defaultValue: true, storageType: .userDefaults(store))
     var hasSeenNewSoundBanner
     
-    /// The initial set of account providers shown to the user in the authentication flow.
-    ///
-    /// Account provider is the friendly term for the server name. It should not contain an `https` prefix and should
-    /// match the last part of the user ID. For example `example.com` and not `https://matrix.example.com`.
+    // The initial set of account providers shown to the user in the authentication flow.
+    //
+    // Account provider is the friendly term for the server name. It should not contain an `https` prefix and should
+    // match the last part of the user ID. For example `example.com` and not `https://matrix.example.com`.
     #if IS_TCHAP_DEVELOPMENT
     private(set) var accountProviders = [
         "dev01.tchap.incubateur.net",

@@ -7,7 +7,9 @@ struct OutdatedPackages: ParsableCommand {
 
     // Tchap: CI customization
 //    private var projectSwiftPMDirectoryURL: URL { .projectDirectory.appendingPathComponent("ElementX.xcodeproj/project.xcworkspace/xcshareddata/swiftpm") }
-    private var projectSwiftPMDirectoryURL: URL { .projectDirectory.appendingPathComponent("TchapX.xcodeproj/project.xcworkspace/xcshareddata/swiftpm") }
+    private var projectSwiftPMDirectoryURL: URL {
+        .projectDirectory.appendingPathComponent("TchapX.xcodeproj/project.xcworkspace/xcshareddata/swiftpm")
+    }
 
     func run() throws {
         try checkToolsDependencies()

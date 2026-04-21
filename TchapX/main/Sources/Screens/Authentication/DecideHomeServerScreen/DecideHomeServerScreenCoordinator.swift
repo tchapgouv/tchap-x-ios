@@ -11,16 +11,16 @@ import SwiftUI
 struct DecideHomeServerScreenCoordinatorParameters {
     /// The service used to authenticate the user.
     let authenticationService: AuthenticationServiceProtocol
-    // The Authentication flow wanted:
-    //   - .login
-    //   - .register
+    /// The Authentication flow wanted:
+    ///   - .login
+    ///   - .register
     let authenticationFlow: AuthenticationFlow
     /// An optional hint that can be used to pre-fill the form.
     let loginHint: String?
     let userIndicatorController: UserIndicatorControllerProtocol
     let appSettings: AppSettings
     let analytics: AnalyticsService
-    // The Homeservers that can be queried to obtain the attachment Homeserver for a given email.
+    /// The Homeservers that can be queried to obtain the attachment Homeserver for a given email.
     let accountProviders: [String]
 }
 
@@ -33,12 +33,14 @@ enum DecideHomeServerScreenCoordinatorAction {
     case authenticationServiceConfiguredForLogin(String?)
 }
 
-// Note: This code was brought over from Riot, we should move the authentication service logic into the view model.
+/// Note: This code was brought over from Riot, we should move the authentication service logic into the view model.
 final class DecideHomeServerScreenCoordinator: CoordinatorProtocol {
     private let parameters: DecideHomeServerScreenCoordinatorParameters
     private var viewModel: DecideHomeServerScreenViewModelProtocol
         
-    private var authenticationService: AuthenticationServiceProtocol { parameters.authenticationService }
+    private var authenticationService: AuthenticationServiceProtocol {
+        parameters.authenticationService
+    }
 
     private let actionsSubject: PassthroughSubject<DecideHomeServerScreenCoordinatorAction, Never> = .init()
     private var cancellables = Set<AnyCancellable>()

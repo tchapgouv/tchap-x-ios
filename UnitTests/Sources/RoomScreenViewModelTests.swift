@@ -6,6 +6,8 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Combine
+
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS

@@ -451,7 +451,8 @@ final class SecurityAndPrivacyScreenViewModelTests {
     
     private func setupViewModel(joinedParentSpaces: [SpaceServiceRoom],
                                 topLevelSpaces: [SpaceServiceRoom] = [],
-                                joinRule: ElementX.JoinRule) {
+                                // Tchap: tchap target
+                                joinRule: TchapX_Production.JoinRule) {
         let appSettings = AppSettings()
         appSettings.spaceSettingsEnabled = true
         appSettings.knockingEnabled = true

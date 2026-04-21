@@ -64,7 +64,7 @@ struct RoomEventStringBuilderTests {
         let ownPollString = stringBuilder.buildAttributedString(for: makePollItem(senderID: ownUserID, senderDisplayName: "Alice"))
         // Tchap; adapt test
 //        #expect(ownPollString?.string == "You: Poll: Which is better?", "Your own polls should be prefixed with 'You'")
-        #expect(ownPollString?.string == v"\(L10n.commonYou): \(L10n.commonPollSummary("Which is better?"))", "Your own polls should be prefixed with 'You'")
+        #expect(ownPollString?.string == "\(L10n.commonYou): \(L10n.commonPollSummary("Which is better?"))", "Your own polls should be prefixed with 'You'")
 
         let otherPollString = stringBuilder.buildAttributedString(for: makePollItem(senderID: "@bob:matrix.org", senderDisplayName: "Bob"))
         // Tchap; adapt test

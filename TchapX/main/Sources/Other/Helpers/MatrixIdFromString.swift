@@ -48,20 +48,20 @@ struct MatrixIdFromString {
         self.mxIdString = mxIdString
     }
     
-    /// Get the email part of a matrix identifier.
-    ///
-    /// - Returns: the email of a Tcvhap user, if any,  `nil`  otherwise.
-    ///
-    /// The identifier type may be any matrix identifier type: user id, room id, ...
-    ///
-    /// For example in case of "@jean-philippe.martin-modernisation.fr:matrix.test.org", this will return "matrix.test.org".
-    ///
-    /// In case of "aaa@bbb.com:matrix.test.org", this will return "aaa@bbb.com".
-    ///
-    /// In case of "aaa-bbb.com:matrix.test.org", this will return `nil` (because the prefix part is not an email address).
-    ///
-    /// The "invite by email' Rust suffix marker is handled:
-    /// - in case of "aaa@bbb.com:matrix.test.org.tchap-email-invitation", this will return "aaa@bbb.com" because the suffix part is after the Matrix ID separator.
+    // Get the email part of a matrix identifier.
+    //
+    // - Returns: the email of a Tcvhap user, if any,  `nil`  otherwise.
+    //
+    // The identifier type may be any matrix identifier type: user id, room id, ...
+    //
+    // For example in case of "@jean-philippe.martin-modernisation.fr:matrix.test.org", this will return "matrix.test.org".
+    //
+    // In case of "aaa@bbb.com:matrix.test.org", this will return "aaa@bbb.com".
+    //
+    // In case of "aaa-bbb.com:matrix.test.org", this will return `nil` (because the prefix part is not an email address).
+    //
+    // The "invite by email' Rust suffix marker is handled:
+    // - in case of "aaa@bbb.com:matrix.test.org.tchap-email-invitation", this will return "aaa@bbb.com" because the suffix part is after the Matrix ID separator.
 
     var tchapEmail: Substring? {
         guard let splitIndex = mxIdString.firstIndex(of: Self.MATRIXID_PARTS_SEPARATOR) else {
@@ -73,15 +73,15 @@ struct MatrixIdFromString {
         return String(emailPrefix).isEmailAddress ? emailPrefix : nil
     }
     
-    /// Get the homeserver name of a matrix identifier.
-    ///
-    /// - Returns: the homeserver name, if any, empty string  otherwise.
-    ///
-    /// The identifier type may be any matrix identifier type: user id, room id, ...
-    ///
-    /// For example in case of "@jean-philippe.martin-modernisation.fr:matrix.test.org", this will return "matrix.test.org".
-    ///
-    /// In case of "!AAAAAAA:matrix.test.org", this will return "matrix.test.org".
+    // Get the homeserver name of a matrix identifier.
+    //
+    // - Returns: the homeserver name, if any, empty string  otherwise.
+    //
+    // The identifier type may be any matrix identifier type: user id, room id, ...
+    //
+    // For example in case of "@jean-philippe.martin-modernisation.fr:matrix.test.org", this will return "matrix.test.org".
+    //
+    // In case of "!AAAAAAA:matrix.test.org", this will return "matrix.test.org".
     
     var homeServerName: Substring {
         guard let splitIndex = mxIdString.firstIndex(of: Self.MATRIXID_PARTS_SEPARATOR) else {
@@ -90,36 +90,36 @@ struct MatrixIdFromString {
         return mxIdString[mxIdString.index(after: splitIndex)...]
     }
     
-    /// Get the Tchap display name of the homeserver mentioned in a matrix identifier.
-    ///
-    /// - Returns: the Tchap display name of the homeserver.
-    ///
-    /// The identifier type may be any matrix identifier type: user id, room id, ...
-    ///
-    /// The returned name is capitalized.
-    ///
-    /// The Tchap HS display name is the component mentioned before the suffix "tchap.gouv.fr"
-    ///
-    /// For example in case of "@jean-philippe.martin-modernisation.fr:name1.tchap.gouv.fr", this will return "Name1".
-    /// in case of "@jean-philippe.martin-modernisation.fr:agent.name2.tchap.gouv.fr", this will return "Name2".
+    // Get the Tchap display name of the homeserver mentioned in a matrix identifier.
+    //
+    // - Returns: the Tchap display name of the homeserver.
+    //
+    // The identifier type may be any matrix identifier type: user id, room id, ...
+    //
+    // The returned name is capitalized.
+    //
+    // The Tchap HS display name is the component mentioned before the suffix "tchap.gouv.fr"
+    //
+    // For example in case of "@jean-philippe.martin-modernisation.fr:name1.tchap.gouv.fr", this will return "Name1".
+    // in case of "@jean-philippe.martin-modernisation.fr:agent.name2.tchap.gouv.fr", this will return "Name2".
     
     var homeServerDisplayName: Substring {
         HomeServerName(homeServerName).displayName
     }
     
-    /// Tells whether a homeserver name corresponds to an external server or not.
-    ///
-    /// - Returns: true if external.
+    // Tells whether a homeserver name corresponds to an external server or not.
+    //
+    // - Returns: true if external.
     
     var isExternalTchapServer: Bool {
         HomeServerName(homeServerName).isExternalTchapServer
     }
     
-    /// Tells whether the provided tchap identifier corresponds to an extern user.
-    ///
-    /// Note: invalid tchap identifier will be considered as external.
-    ///
-    /// - Returns: true if external.
+    // Tells whether the provided tchap identifier corresponds to an extern user.
+    //
+    // Note: invalid tchap identifier will be considered as external.
+    //
+    // - Returns: true if external.
     
     var userType: TchapUserType {
         let homeServer = HomeServerName(homeServerName)
@@ -131,15 +131,15 @@ struct MatrixIdFromString {
         }
     }
 
-    /// Build a display name from the tchap user identifier.
-    ///
-    /// - Returns: displayName without domain, or null if the user identifier is not valid.
-    ///
-    /// We don't extract the domain for the moment in order to not display unexpected information.
-    ///
-    /// For example in case of "@jean-philippe.martin-modernisation.fr:matrix.org", this will return "Jean-Philippe Martin".
-    ///
-    /// Note: in case of an external user identifier, we return the local part of the id which corresponds to their email.
+    // Build a display name from the tchap user identifier.
+    //
+    // - Returns: displayName without domain, or null if the user identifier is not valid.
+    //
+    // We don't extract the domain for the moment in order to not display unexpected information.
+    //
+    // For example in case of "@jean-philippe.martin-modernisation.fr:matrix.org", this will return "Jean-Philippe Martin".
+    //
+    // Note: in case of an external user identifier, we return the local part of the id which corresponds to their email.
 
     var userDisplayName: UserDisplayName? {
         // Extract identifier from user ID.
@@ -190,24 +190,24 @@ struct MatrixIdFromString {
         }
     }
     
-    /// Create a room alias name with a prefix.
-    ///
-    /// - Parameters:
-    ///   - prefix: the alias name prefix.
-    ///
-    /// - Returns: the suggested alias name.
+    // Create a room alias name with a prefix.
+    //
+    // - Parameters:
+    //   - prefix: the alias name prefix.
+    //
+    // - Returns: the suggested alias name.
  
     func createRoomAliasName(prefix: String) -> String {
         prefix.trimmingCharacters(in: .whitespaces).replacing(/[^a-zA-Z0-9]/, with: "") + String.randomAlphanumeric(length: 10)
     }
     
-    /// Create a room alias with a prefix.
-    ///
-    /// - Parameters:
-    ///   - sessionId: the user's id session.
-    ///   - prefix: the alias name prefix.
-    ///
-    /// - Returns: the suggested alias.
+    // Create a room alias with a prefix.
+    //
+    // - Parameters:
+    //   - sessionId: the user's id session.
+    //   - prefix: the alias name prefix.
+    //
+    // - Returns: the suggested alias.
     
     func createRoomAlias(sessionId: String, prefix: String) -> String {
         "\(createRoomAliasName(prefix: prefix))\(Self.MATRIXID_PARTS_SEPARATOR)\(MatrixIdFromString(sessionId).homeServerName)"
@@ -232,18 +232,18 @@ struct HomeServerName {
         self.serverName = serverName
     }
 
-    /// Get the Tchap display name of the homeserver mentioned in a matrix identifier.
-    ///
-    /// - Returns: the Tchap display name of the homeserver.
-    ///
-    /// The identifier type may be any matrix identifier type: user id, room id, ...
-    ///
-    /// The returned name is capitalized.
-    ///
-    /// The Tchap HS display name is the component mentioned before the suffix "tchap.gouv.fr"
-    ///
-    /// For example in case of "@jean-philippe.martin-modernisation.fr:name1.tchap.gouv.fr", this will return "Name1".
-    /// in case of "@jean-philippe.martin-modernisation.fr:agent.name2.tchap.gouv.fr", this will return "Name2".
+    // Get the Tchap display name of the homeserver mentioned in a matrix identifier.
+    //
+    // - Returns: the Tchap display name of the homeserver.
+    //
+    // The identifier type may be any matrix identifier type: user id, room id, ...
+    //
+    // The returned name is capitalized.
+    //
+    // The Tchap HS display name is the component mentioned before the suffix "tchap.gouv.fr"
+    //
+    // For example in case of "@jean-philippe.martin-modernisation.fr:name1.tchap.gouv.fr", this will return "Name1".
+    // in case of "@jean-philippe.martin-modernisation.fr:agent.name2.tchap.gouv.fr", this will return "Name2".
     
     var displayName: Substring {
         var homeserverName = Substring(serverName)
@@ -256,9 +256,9 @@ struct HomeServerName {
         return homeserverName.prefix(1).localizedCapitalized + homeserverName.localizedLowercase.dropFirst()
     }
     
-    /// Tells whether a homeserver name corresponds to an external server or not.
-    ///
-    /// - Returns: true if external.
+    // Tells whether a homeserver name corresponds to an external server or not.
+    //
+    // - Returns: true if external.
     
     var isExternalTchapServer: Bool {
         serverName.isEmpty ||
@@ -269,11 +269,11 @@ struct HomeServerName {
         serverName.hasSuffix(Self.HOMESERVER_SPECIAL_SUFFIX_TCHAP_EMAIL_INVITATION)
     }
     
-    /// Tells whether the provided tchap identifier corresponds to an extern user.
-    ///
-    /// Note: invalid tchap identifier will be considered as external.
-    ///
-    /// - Returns: true if external.
+    // Tells whether the provided tchap identifier corresponds to an extern user.
+    //
+    // Note: invalid tchap identifier will be considered as external.
+    //
+    // - Returns: true if external.
     
     var isExternalTchapUser: Bool {
         isExternalTchapServer

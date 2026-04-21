@@ -13,6 +13,7 @@
 #else
 @testable import ElementX
 #endif
+import Foundation
 @testable import MatrixRustSDK
 import Testing
 

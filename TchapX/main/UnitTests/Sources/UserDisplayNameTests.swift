@@ -30,9 +30,8 @@
 //  Copyright © 2024 Tchap. All rights reserved.
 //
 
-import XCTest
-
 @testable import TchapX_Development
+import XCTest
 
 final class UserDisplayNameTests: XCTestCase {
     func testUserName() {
