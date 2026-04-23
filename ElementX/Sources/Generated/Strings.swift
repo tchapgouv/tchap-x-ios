@@ -228,13 +228,13 @@ internal enum L10n {
   internal static var actionIgnore: String { return L10n.tr("Localizable", "action_ignore") }
   /// Invite
   internal static var actionInvite: String { return L10n.tr("Localizable", "action_invite") }
-  /// Invite people
+  /// Invite to join Tchap
   internal static var actionInviteFriends: String { return L10n.tr("Localizable", "action_invite_friends") }
-  /// Invite people to %1$@
+  /// Invite to join %1$@
   internal static func actionInviteFriendsToApp(_ p1: Any) -> String {
     return L10n.tr("Localizable", "action_invite_friends_to_app", String(describing: p1))
   }
-  /// Invite people to %1$@
+  /// Invite to join %1$@
   internal static func actionInvitePeopleToApp(_ p1: Any) -> String {
     return L10n.tr("Localizable", "action_invite_people_to_app", String(describing: p1))
   }
@@ -1426,7 +1426,7 @@ internal enum L10n {
   internal static var screenBottomSheetManageRoomMemberKickMemberFromSpaceConfirmationDescription: String { return L10n.tr("Localizable", "screen_bottom_sheet_manage_room_member_kick_member_from_space_confirmation_description") }
   /// View profile
   internal static var screenBottomSheetManageRoomMemberMemberUserInfo: String { return L10n.tr("Localizable", "screen_bottom_sheet_manage_room_member_member_user_info") }
-  /// Remove user
+  /// Remove from room
   internal static var screenBottomSheetManageRoomMemberRemove: String { return L10n.tr("Localizable", "screen_bottom_sheet_manage_room_member_remove") }
   /// Remove member and ban from joining in the future?
   internal static var screenBottomSheetManageRoomMemberRemoveConfirmationTitle: String { return L10n.tr("Localizable", "screen_bottom_sheet_manage_room_member_remove_confirmation_title") }
@@ -1539,13 +1539,13 @@ internal enum L10n {
   internal static func screenChatBackupKeyBackupDescription(_ p1: Any) -> String {
     return L10n.tr("Localizable", "screen_chat_backup_key_backup_description", String(describing: p1))
   }
-  /// Key storage
+  /// Automatic saving of messages
   internal static var screenChatBackupKeyBackupTitle: String { return L10n.tr("Localizable", "screen_chat_backup_key_backup_title") }
-  /// Key storage must be turned on to set up recovery.
+  /// Automatic saving must be turned on to set up recovery.
   internal static var screenChatBackupKeyStorageDisabledError: String { return L10n.tr("Localizable", "screen_chat_backup_key_storage_disabled_error") }
   /// Upload keys from this device
   internal static var screenChatBackupKeyStorageToggleDescription: String { return L10n.tr("Localizable", "screen_chat_backup_key_storage_toggle_description") }
-  /// Allow key storage
+  /// Allow automatic saving of messages
   internal static var screenChatBackupKeyStorageToggleTitle: String { return L10n.tr("Localizable", "screen_chat_backup_key_storage_toggle_title") }
   /// Change verification code
   internal static var screenChatBackupRecoveryActionChange: String { return L10n.tr("Localizable", "screen_chat_backup_recovery_action_change") }
@@ -1619,7 +1619,7 @@ internal enum L10n {
   internal static var screenCreatePollTitle: String { return L10n.tr("Localizable", "screen_create_poll_title") }
   /// New room
   internal static var screenCreateRoomActionCreateRoom: String { return L10n.tr("Localizable", "screen_create_room_action_create_room") }
-  /// Invite people
+  /// Invite to join Tchap
   internal static var screenCreateRoomAddPeopleTitle: String { return L10n.tr("Localizable", "screen_create_room_add_people_title") }
   /// An error occurred when creating the room
   internal static var screenCreateRoomErrorCreatingRoom: String { return L10n.tr("Localizable", "screen_create_room_error_creating_room") }
@@ -1768,7 +1768,7 @@ internal enum L10n {
   internal static var screenEncryptionResetFooter: String { return L10n.tr("Localizable", "screen_encryption_reset_footer") }
   /// Can't confirm? You’ll need to reset your identity.
   internal static var screenEncryptionResetTitle: String { return L10n.tr("Localizable", "screen_encryption_reset_title") }
-  /// Chats
+  /// Home
   internal static var screenHomeTabChats: String { return L10n.tr("Localizable", "screen_home_tab_chats") }
   /// Spaces
   internal static var screenHomeTabSpaces: String { return L10n.tr("Localizable", "screen_home_tab_spaces") }
@@ -2224,7 +2224,7 @@ internal enum L10n {
   internal static func screenOnboardingAppVersion(_ p1: Any) -> String {
     return L10n.tr("Localizable", "screen_onboarding_app_version", String(describing: p1))
   }
-  /// Sign in manually
+  /// Sign in
   internal static var screenOnboardingSignInManually: String { return L10n.tr("Localizable", "screen_onboarding_sign_in_manually") }
   /// Sign in to %1$@
   internal static func screenOnboardingSignInTo(_ p1: Any) -> String {
@@ -2933,7 +2933,7 @@ internal enum L10n {
   internal static var screenRoomlistFilterMixedEmptyStateSubtitle: String { return L10n.tr("Localizable", "screen_roomlist_filter_mixed_empty_state_subtitle") }
   /// You don’t have chats for this selection
   internal static var screenRoomlistFilterMixedEmptyStateTitle: String { return L10n.tr("Localizable", "screen_roomlist_filter_mixed_empty_state_title") }
-  /// People
+  /// Direct
   internal static var screenRoomlistFilterPeople: String { return L10n.tr("Localizable", "screen_roomlist_filter_people") }
   /// You don’t have any DMs yet
   internal static var screenRoomlistFilterPeopleEmptyStateTitle: String { return L10n.tr("Localizable", "screen_roomlist_filter_people_empty_state_title") }
@@ -2948,7 +2948,7 @@ internal enum L10n {
   internal static var screenRoomlistFilterUnreadsEmptyStateTitle: String { return L10n.tr("Localizable", "screen_roomlist_filter_unreads_empty_state_title") }
   /// Request to join sent
   internal static var screenRoomlistKnockEventSentDescription: String { return L10n.tr("Localizable", "screen_roomlist_knock_event_sent_description") }
-  /// Chats
+  /// Home
   internal static var screenRoomlistMainSpaceTitle: String { return L10n.tr("Localizable", "screen_roomlist_main_space_title") }
   /// Mark as read
   internal static var screenRoomlistMarkAsRead: String { return L10n.tr("Localizable", "screen_roomlist_mark_as_read") }
