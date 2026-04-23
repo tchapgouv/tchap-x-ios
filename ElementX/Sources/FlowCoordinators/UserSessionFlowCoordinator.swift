@@ -223,6 +223,9 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
                     presentSessionVerificationScreen(flow: .userInitiator(userID: userID))
                 case .showSettings:
                     stateMachine.tryEvent(.showSettingsScreen)
+                case .selectFilter(let filter): // Tchap: Space default action is now conversation filtering
+                    navigationTabCoordinator.selectedTab = .chats
+                    chatsTabFlowCoordinator.selectFilter(filter)
                 }
             }
             .store(in: &cancellables)

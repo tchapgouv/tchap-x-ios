@@ -66,7 +66,8 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
                                                                isKnockingFeatureEnabled: appSettings.knockingEnabled,
                                                                canSelectSpace: canSelectSpace,
                                                                aliasLocalPart: roomAliasNameFromRoomDisplayName(roomName: ""),
-                                                               bindings: bindings),
+                                                               bindings: bindings,
+                                                               tchapCreateSpaceFaqURL: appSettings.tchapCreateSpaceFaqURL),
                    mediaProvider: userSession.mediaProvider)
         
         setupBindings()

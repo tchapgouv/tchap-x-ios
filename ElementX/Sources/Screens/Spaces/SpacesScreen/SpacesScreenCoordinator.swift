@@ -20,6 +20,7 @@ enum SpacesScreenCoordinatorAction {
     case selectSpace(SpaceRoomListProxyProtocol)
     case showSettings
     case showCreateSpace
+    case selectFilter(SpaceServiceFilter?) // Tchap: Space default action is now conversation filtering
 }
 
 final class SpacesScreenCoordinator: CoordinatorProtocol {
@@ -54,6 +55,15 @@ final class SpacesScreenCoordinator: CoordinatorProtocol {
                 actionsSubject.send(.showSettings)
             case .showCreateSpace:
                 actionsSubject.send(.showCreateSpace)
+            case .selectFilter(let room): // Tchap: Space default action is now conversation filtering
+                if let room {
+                    let filters = parameters.userSession.clientProxy.spaceService.spaceFilterPublisher.value
+                    if let filter = filters.first(where: { $0.room.id == room.id }) {
+                        actionsSubject.send(.selectFilter(filter))
+                    }
+                } else {
+                    actionsSubject.send(.selectFilter(nil))
+                }
             }
         }
         .store(in: &cancellables)

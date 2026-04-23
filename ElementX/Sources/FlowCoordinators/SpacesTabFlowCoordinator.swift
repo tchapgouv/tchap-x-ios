@@ -14,6 +14,7 @@ enum SpacesTabFlowCoordinatorAction {
     case showSettings
     case presentCallScreen(roomProxy: JoinedRoomProxyProtocol)
     case verifyUser(userID: String)
+    case selectFilter(SpaceServiceFilter?) // Tchap: Space default action is now conversation filtering
 }
 
 class SpacesTabFlowCoordinator: FlowCoordinatorProtocol {
@@ -159,6 +160,8 @@ class SpacesTabFlowCoordinator: FlowCoordinatorProtocol {
                     actionsSubject.send(.showSettings)
                 case .showCreateSpace:
                     stateMachine.tryEvent(.startCreateSpaceFlow)
+                case .selectFilter(let filter): // Tchap: Space default action is now conversation filtering
+                    actionsSubject.send(.selectFilter(filter))
                 }
             }
             .store(in: &cancellables)

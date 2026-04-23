@@ -754,7 +754,7 @@
 "screen_space_announcement_notice" = "Le filtrage, la création et la gestion des espaces seront bientôt disponibles.";
 "screen_space_announcement_subtitle" = "Bienvenue dans la version bêta des espaces! Avec cette première version, vous pourrez :";
 "screen_space_announcement_title" = "Ajout des espaces";
-"screen_space_list_description" = "Espaces que vous avez créés ou rejoints.";
+"screen_space_list_description" = "Sélectionnez un espace pour filtrer vos conversations ou cliquez l'icone à droite pour afficher ses informations."; // Tchap
 "screen_space_list_details" = "%1$@ • %2$@";
 "screen_space_list_empty_state_title" = "Créer des espaces pour organiser les salons";
 "screen_space_list_parent_space" = "Espace %1$@";

@@ -67,6 +67,8 @@ screen_create_room_room_access_section_private_unencrypted_description = "Seules
 screen_create_room_access_via_link_title = "Accès par lien";
 screen_create_room_access_via_link_description = "Les agents pourront rejoindre ce salon et inviter d'autres agents via ce lien.";
 
+screen_create_room_space_description = "Un espace est un dossier privé dans lequel vous pouvez organiser vos conversations par thèmes. ";
+
 // Invite by email
 invite_by_email_message = "Ce contact sera invité à rejoindre Tchap.";
 

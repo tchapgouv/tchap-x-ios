@@ -20,6 +20,7 @@ struct SpaceRoomCell: View {
     let mediaProvider: MediaProviderProtocol!
     
     enum Action { case select(SpaceServiceRoom), join(SpaceServiceRoom) }
+    var onInfo: ((SpaceServiceRoom) -> Void)? // Tchap: Space default action is now conversation filtering
     let action: (Action) -> Void
     
     private let verticalInsets = 12.0
@@ -108,9 +109,11 @@ struct SpaceRoomCell: View {
                     .font(.compound.bodyLGSemibold)
                     .foregroundColor(.compound.textPrimary)
                     .lineLimit(1)
-                
-                visibilityLabel
-                
+                // Tchap: hide visibility for space, there are always private
+                if !spaceServiceRoom.isSpace {
+                    visibilityLabel
+                }
+
                 Text(L10n.commonMemberCount(spaceServiceRoom.joinedMembersCount))
                     .font(.compound.bodyMD)
                     .foregroundColor(.compound.textSecondary)
@@ -151,7 +154,17 @@ struct SpaceRoomCell: View {
                     }
                 }
         case .joined, .knocked, .banned:
-            EmptyView()
+            // Tchap: Space default action is now conversation filtering (add info button)
+//            EmptyView()
+            if spaceServiceRoom.isSpace, spaceServiceRoom.state == .joined {
+                Button { (onInfo ?? { action(.select($0)) })(spaceServiceRoom) } label: {
+                    Image(systemName: "info.circle")
+                        .font(.compound.bodyLG)
+                        .foregroundStyle(.compound.textSecondary)
+                }
+            } else {
+                EmptyView()
+            }
         }
     }
 }
