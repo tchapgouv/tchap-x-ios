@@ -45,23 +45,6 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-<<<<<<< HEAD
-      - name: Archive raw log file
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: raw.log
-          path: ~/Library/Logs/scan/IntegrationTests-IntegrationTests.log
-          retention-days: 2
-          if-no-files-found: ignore
-
-      - name: Collect coverage
-        # Skip if not successful and in forks
-        if: ${{ success() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
-        run: xcresultparser -q -o cobertura -t TchapX -p $(pwd) fastlane/test_output/IntegrationTests.xcresult > fastlane/test_output/integration-cobertura.xml
-
-=======
->>>>>>> release/26.03.3
       - name: Upload coverage to Codecov
         # Skip if not successful and in forks
         if: ${{ success() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}

@@ -38,7 +38,6 @@ setup_github_actions_environment() {
     
     unset HOMEBREW_NO_INSTALL_FROM_API
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
-<<<<<<< HEAD
 
     # Tchap 
     # SwiftFormat est volontairement figé à une version précise pour éviter
@@ -53,19 +52,12 @@ setup_github_actions_environment() {
     # Installe swiftformat à la version exacte depuis les releases GitHub
     curl -sL "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip" -o /tmp/swiftformat.zip
     unzip -o /tmp/swiftformat.zip -d /tmp/swiftformat_bin
-
     # Overwrite le binaire pré-installé du runner au lieu de /usr/local/bin
     sudo cp /tmp/swiftformat_bin/swiftformat "$(which swiftformat)"
     rm -rf /tmp/swiftformat.zip /tmp/swiftformat_bin
 
+
     swiftformat --version
-    
-    bundle config path vendor/bundle
-    bundle install --jobs 4 --retry 3
-=======
-    
-    brew update && brew install xcodegen swiftlint swiftformat git-lfs pkl a7ex/homebrew-formulae/xcresultparser
->>>>>>> release/26.03.3
 }
 
 setup_github_actions_translations_environment() {
