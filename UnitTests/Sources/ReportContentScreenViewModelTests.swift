@@ -15,7 +15,6 @@
 import Testing
 
 @MainActor
-@Suite
 struct ReportContentScreenViewModelTests {
     let eventID = "test-id"
     let senderID = "@meany:server.com"

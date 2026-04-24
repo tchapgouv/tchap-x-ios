@@ -16,7 +16,6 @@
 import Testing
 
 @MainActor
-@Suite
 struct RoomChangePermissionsScreenViewModelTests {
     var roomProxy: JoinedRoomProxyMock!
     var viewModel: RoomChangePermissionsScreenViewModelProtocol!

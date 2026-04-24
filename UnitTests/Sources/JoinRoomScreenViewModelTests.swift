@@ -16,7 +16,6 @@
 import Testing
 
 @MainActor
-@Suite
 final class JoinRoomScreenViewModelTests {
     private enum TestMode {
         case joined

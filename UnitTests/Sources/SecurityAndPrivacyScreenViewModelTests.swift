@@ -18,7 +18,6 @@ import Combine
 import MatrixRustSDK
 import Testing
 
-@Suite
 @MainActor
 final class SecurityAndPrivacyScreenViewModelTests {
     var viewModel: SecurityAndPrivacyScreenViewModelProtocol!
@@ -454,7 +453,6 @@ final class SecurityAndPrivacyScreenViewModelTests {
                                 // Tchap: tchap target
                                 joinRule: TchapX_Production.JoinRule) {
         let appSettings = AppSettings()
-        appSettings.spaceSettingsEnabled = true
         appSettings.knockingEnabled = true
         roomProxy = JoinedRoomProxyMock(.init(isEncrypted: false,
                                               canonicalAlias: "#room:matrix.org",

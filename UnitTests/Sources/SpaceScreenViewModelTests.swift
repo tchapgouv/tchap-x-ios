@@ -20,7 +20,6 @@ import MatrixRustSDK
 import MatrixRustSDKMocks
 import Testing
 
-@Suite
 @MainActor
 struct SpaceScreenViewModelTests {
     var spaceRoomListProxy: SpaceRoomListProxyMock!
@@ -349,7 +348,6 @@ struct SpaceScreenViewModelTests {
                                          spaceServiceProxy: spaceServiceProxy,
                                          selectedSpaceRoomPublisher: .init(nil),
                                          userSession: UserSessionMock(.init(clientProxy: clientProxy)),
-                                         appSettings: AppSettings(),
                                          userIndicatorController: UserIndicatorControllerMock())
     }
 }

@@ -16,7 +16,6 @@
 import Testing
 
 @MainActor
-@Suite
 struct SoftLogoutScreenViewModelTests {
     private let credentials = SoftLogoutScreenCredentials(userID: "mock_user_id",
                                                           homeserverName: "https://example.com",

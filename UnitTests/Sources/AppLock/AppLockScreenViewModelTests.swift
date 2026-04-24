@@ -16,7 +16,6 @@
 import Testing
 
 @MainActor
-@Suite
 final class AppLockScreenViewModelTests {
     var appSettings: AppSettings
     var appLockService: AppLockService

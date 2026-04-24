@@ -20,7 +20,6 @@ import MatrixRustSDK
 import Testing
 import WysiwygComposer
 
-@Suite
 @MainActor
 final class ComposerToolbarViewModelTests {
     private var appSettings: AppSettings!

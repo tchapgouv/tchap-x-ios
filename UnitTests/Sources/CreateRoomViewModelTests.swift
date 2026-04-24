@@ -17,7 +17,6 @@ import Combine
 #endif
 import Testing
 
-@Suite
 @MainActor
 final class CreateRoomScreenViewModelTests {
     var viewModel: CreateRoomScreenViewModelProtocol!

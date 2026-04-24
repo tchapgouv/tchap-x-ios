@@ -1,15 +1,36 @@
 import ArgumentParser
 import Foundation
 import Subprocess
+import Yams
 
 struct CI: ParsableCommand {
     static let configuration = CommandConfiguration(abstract: "CI workflow commands that can be run both locally and in CI environments.",
                                                     subcommands: [
+                                                        AccessibilityTests.self,
                                                         UnitTests.self,
-                                                        RunTests.self
+                                                        UITests.self,
+                                                        IntegrationTests.self,
+                                                        RunTests.self,
+                                                        ConfigureNightly.self,
+                                                        ConfigureProduction.self,
+                                                        TagNightly.self,
+                                                        UploadDSYMs.self
                                                     ])
     
     static let testOutputDirectory = "test_output"
+    
+    /// Reads the `MARKETING_VERSION` from `project.yml`.
+    static func readMarketingVersion() throws -> String {
+        let projectURL = URL.projectDirectory.appending(component: "project.yml")
+        let projectString = try String(contentsOf: projectURL)
+        
+        guard let projectConfig = try Yams.compose(yaml: projectString),
+              let version = projectConfig["settings"]?["MARKETING_VERSION"]?.string else {
+            throw ValidationError("Could not find MARKETING_VERSION in project.yml.")
+        }
+        
+        return version
+    }
     
     // MARK: - Linting
     
@@ -88,6 +109,8 @@ struct CI: ParsableCommand {
                                                                         environment: Environment = .inherit,
                                                                         output: Output = .standardOutput,
                                                                         error: Error = .standardError) async throws -> CollectedResult<Output, Error> {
+        logger.info("Running \(executable), with arguments: \(arguments)")
+        
         let result = try await Subprocess.run(executable,
                                               arguments: arguments,
                                               environment: environment,

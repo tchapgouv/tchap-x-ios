@@ -16,7 +16,6 @@
 import MatrixRustSDK
 import Testing
 
-@Suite
 struct RoomEventStringBuilderTests {
     private let ownUserID: String
     private let stringBuilder: RoomEventStringBuilder

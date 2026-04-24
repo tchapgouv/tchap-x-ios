@@ -66,6 +66,8 @@ final class AppSettings {
         
         case elementCallBaseURLOverride
         
+        case voiceMessagePlaybackSpeed
+        
         // Feature flags
         case publicSearchEnabled
         case fuzzyRoomListSearchEnabled
@@ -78,14 +80,8 @@ final class AppSettings {
         case linkPreviewsEnabled
         case focusEventOnNotificationTap
         case linkNewDeviceEnabled
+        case liveLocationSharingEnabled
         
-        // Spaces
-        case spaceFiltersEnabled
-        case spaceSettingsEnabled
-        case createSpaceEnabled
-        
-        case voiceMessagePlaybackSpeed
-
         // Doug's tweaks 🔧
         case hideUnreadMessagesBadge
         case hideQuietNotificationAlerts
@@ -535,16 +531,6 @@ final class AppSettings {
     
     // MARK: - Feature Flags
     
-    /// Spaces
-    @UserPreference(key: UserDefaultsKeys.spaceSettingsEnabled, defaultValue: true, storageType: .volatile)
-    var spaceSettingsEnabled
-    
-    @UserPreference(key: UserDefaultsKeys.createSpaceEnabled, defaultValue: true, storageType: .volatile)
-    var createSpaceEnabled
-    
-    @UserPreference(key: UserDefaultsKeys.spaceFiltersEnabled, defaultValue: true, storageType: .volatile)
-    var spaceFiltersEnabled
-    
     /// Others
     // Tchap: enable `publicSearchEnabled` feature flag by default. It is Tchap `join a forum` action.
 //    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
@@ -581,6 +567,9 @@ final class AppSettings {
     
     @UserPreference(key: UserDefaultsKeys.linkNewDeviceEnabled, defaultValue: false, storageType: .userDefaults(store))
     var linkNewDeviceEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.liveLocationSharingEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var liveLocationSharingEnabled
     
     @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: appBuildType == .debug, storageType: .userDefaults(store))
     var developerOptionsEnabled

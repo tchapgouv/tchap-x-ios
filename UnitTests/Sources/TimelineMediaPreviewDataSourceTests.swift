@@ -16,7 +16,6 @@
 import QuickLook
 import Testing
 
-@Suite
 @MainActor
 struct TimelineMediaPreviewDataSourceTests {
     var initialMediaItems: [EventBasedMessageTimelineItemProtocol]!

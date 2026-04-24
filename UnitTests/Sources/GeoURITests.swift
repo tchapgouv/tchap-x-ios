@@ -15,7 +15,6 @@
 #endif
 import Testing
 
-@Suite
 struct GeoURITests {
     @Test
     func validPositiveCoordinates() throws {

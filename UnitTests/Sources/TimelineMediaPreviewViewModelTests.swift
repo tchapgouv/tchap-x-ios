@@ -19,7 +19,6 @@ import QuickLook
 import SwiftUI
 import Testing
 
-@Suite
 @MainActor
 struct TimelineMediaPreviewViewModelTests {
     var viewModel: TimelineMediaPreviewViewModel!

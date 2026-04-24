@@ -2,11 +2,6 @@ require 'yaml'
 
 skip_docs
 
-enterprise = '../Enterprise/Pipeline/Scripts/iOS/Fastfile'
-if File.exist?(enterprise)
-  import enterprise
-end
-
 simulator_version = "26.1"
 
 before_all do
@@ -14,6 +9,7 @@ before_all do
 
   ENV["FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT"] = "180"
   ENV["FASTLANE_XCODE_LIST_TIMEOUT"] = "180"
+<<<<<<< HEAD
   ENV["SENTRY_LOG_LEVEL"] = "DEBUG"
 end
 
@@ -221,6 +217,8 @@ lane :upload_dsyms_to_sentry do |options|
 #       raise exception
 #     end
 #   end
+=======
+>>>>>>> release/26.03.3
 end
 
 lane :release_to_github do
@@ -304,6 +302,7 @@ def rebase_main_onto_current_branch
   UI.success("Successfully rebased main onto #{current_branch}")
 end
 
+<<<<<<< HEAD
 lane :tag_nightly do |options|
   build_number = options[:build_number]
   UI.user_error!("Invalid build number.") unless !build_number.to_s.empty?
@@ -320,6 +319,8 @@ lane :tag_nightly do |options|
   git_push(tag_name: tag_name)
 end
 
+=======
+>>>>>>> release/26.03.3
 private_lane :setup_git do
 #   sh("git config --global user.name 'Element CI'")
 #   sh("git config --global user.email 'ci@element.io'")
@@ -349,6 +350,7 @@ private_lane :bump_build_number do
   build_number = Time.now.strftime("%Y%m%d%H%M")
   increment_build_number(build_number: build_number)
 end
+<<<<<<< HEAD
 
 private_lane :create_simulator_if_necessary do |options|
   simulator_name = options[:name]
@@ -382,3 +384,5 @@ lane :config_secrets do
     sh("pkl eval --cache-dir vendor -o Secrets.swift Secrets.pkl")
   end
 end
+=======
+>>>>>>> release/26.03.3

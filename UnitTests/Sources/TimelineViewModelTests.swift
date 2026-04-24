@@ -18,7 +18,6 @@ import Foundation
 import MatrixRustSDK
 import Testing
 
-@Suite
 @MainActor
 final class TimelineViewModelTests {
     var userIndicatorControllerMock: UserIndicatorControllerMock!

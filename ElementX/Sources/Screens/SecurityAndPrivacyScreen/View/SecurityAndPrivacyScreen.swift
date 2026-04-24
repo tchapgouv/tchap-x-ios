@@ -269,7 +269,7 @@ struct SecurityAndPrivacyScreen_Previews: PreviewProvider, TestablePreview {
     static let singleSpaceMembersViewModel = {
         AppSettings.resetAllSettings()
         let appSettings = AppSettings()
-        appSettings.spaceSettingsEnabled = true
+        
         let space = [SpaceServiceRoom].mockSingleRoom[0]
         
         return SecurityAndPrivacyScreenViewModel(roomProxy: JoinedRoomProxyMock(.init(isEncrypted: false,
@@ -286,7 +286,7 @@ struct SecurityAndPrivacyScreen_Previews: PreviewProvider, TestablePreview {
     static let multipleSpacesMembersViewModel = {
         AppSettings.resetAllSettings()
         let appSettings = AppSettings()
-        appSettings.spaceSettingsEnabled = true
+        
         let spaces = [SpaceServiceRoom].mockJoinedSpaces
         
         return SecurityAndPrivacyScreenViewModel(roomProxy: JoinedRoomProxyMock(.init(isEncrypted: false,
@@ -318,8 +318,8 @@ struct SecurityAndPrivacyScreen_Previews: PreviewProvider, TestablePreview {
     static let singleAskToJoinSpaceMembersViewModel = {
         AppSettings.resetAllSettings()
         let appSettings = AppSettings()
-        appSettings.spaceSettingsEnabled = true
         appSettings.knockingEnabled = true
+        
         let space = [SpaceServiceRoom].mockSingleRoom[0]
         
         return SecurityAndPrivacyScreenViewModel(roomProxy: JoinedRoomProxyMock(.init(isEncrypted: false,
@@ -336,8 +336,8 @@ struct SecurityAndPrivacyScreen_Previews: PreviewProvider, TestablePreview {
     static let multipleAskToJoinSpacesMembersViewModel = {
         AppSettings.resetAllSettings()
         let appSettings = AppSettings()
-        appSettings.spaceSettingsEnabled = true
         appSettings.knockingEnabled = true
+        
         let spaces = [SpaceServiceRoom].mockJoinedSpaces
         
         return SecurityAndPrivacyScreenViewModel(roomProxy: JoinedRoomProxyMock(.init(isEncrypted: false,

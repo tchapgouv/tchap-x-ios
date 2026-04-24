@@ -17,7 +17,6 @@ import Observation
 import Testing
 
 @MainActor
-@Suite
 struct DeferredFulfillmentTests {
     private let observable = SomeObservable()
     

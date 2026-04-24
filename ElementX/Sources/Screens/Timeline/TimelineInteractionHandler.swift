@@ -536,7 +536,10 @@ class TimelineInteractionHandler {
         switch timelineItem {
         case let item as LocationRoomTimelineItem:
             guard let geoURI = item.content.geoURI else { return .none }
-            return .displayLocation(body: item.content.body, geoURI: geoURI, description: item.content.description)
+            return .displayLocation(.init(sender: item.sender,
+                                          geoURI: geoURI,
+                                          kind: item.content.kind,
+                                          timestamp: item.timestamp))
         case is ImageRoomTimelineItem,
              is VideoRoomTimelineItem:
             return await mediaPreviewAction(for: timelineItem, messageTypes: [.image, .video])

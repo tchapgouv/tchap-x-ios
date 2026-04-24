@@ -603,9 +603,25 @@ extension PreviewTests {
     }
 
     @Test
+    func locationPickerSheet() async throws {
+        AppSettings.resetAllSettings() // Ensure this test's previews start with fresh settings.
+        for (index, preview) in LocationPickerSheet_Previews._allPreviews.enumerated() {
+            try await assertSnapshots(matching: preview, step: index)
+        }
+    }
+
+    @Test
     func locationRoomTimelineView() async throws {
         AppSettings.resetAllSettings() // Ensure this test's previews start with fresh settings.
         for (index, preview) in LocationRoomTimelineView_Previews._allPreviews.enumerated() {
+            try await assertSnapshots(matching: preview, step: index)
+        }
+    }
+
+    @Test
+    func locationSharingScreen() async throws {
+        AppSettings.resetAllSettings() // Ensure this test's previews start with fresh settings.
+        for (index, preview) in LocationSharingScreen_Previews._allPreviews.enumerated() {
             try await assertSnapshots(matching: preview, step: index)
         }
     }
@@ -1395,9 +1411,9 @@ extension PreviewTests {
     }
 
     @Test
-    func staticLocationScreenViewer() async throws {
+    func staticLocationSheet() async throws {
         AppSettings.resetAllSettings() // Ensure this test's previews start with fresh settings.
-        for (index, preview) in StaticLocationScreenViewer_Previews._allPreviews.enumerated() {
+        for (index, preview) in StaticLocationSheet_Previews._allPreviews.enumerated() {
             try await assertSnapshots(matching: preview, step: index)
         }
     }

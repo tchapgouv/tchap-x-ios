@@ -15,7 +15,6 @@
 #endif
 import Testing
 
-@Suite
 struct AttributedStringTests {
     @Test
     func replacingFontWithPresentationIntent() throws {

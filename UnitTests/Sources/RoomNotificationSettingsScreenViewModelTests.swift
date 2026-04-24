@@ -18,7 +18,6 @@ import Combine
 import MatrixRustSDK
 import Testing
 
-@Suite
 @MainActor
 struct RoomNotificationSettingsScreenViewModelTests {
     var roomProxyMock: JoinedRoomProxyMock!
@@ -227,6 +226,8 @@ struct RoomNotificationSettingsScreenViewModelTests {
         #expect(notificationSettingsProxyMock.setNotificationModeRoomIdModeReceivedArguments?.0 == roomProxyMock.id)
         #expect(notificationSettingsProxyMock.setNotificationModeRoomIdModeReceivedArguments?.1 == .mute)
         #expect(notificationSettingsProxyMock.setNotificationModeRoomIdModeCallsCount == 2)
+        
+        try await Task.sleep(for: .milliseconds(10)) // Workaround for flaky test
         
         deferredMode = deferFulfillment(viewModel.context.observe(\.viewState.pendingCustomMode),
                                         transitionValues: [nil, .mentionsAndKeywordsOnly, nil])

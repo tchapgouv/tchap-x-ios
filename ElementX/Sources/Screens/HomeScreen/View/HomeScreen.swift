@@ -69,11 +69,16 @@ struct HomeScreen: View {
             }
             .backportSharedBackgroundVisibility(.hidden)
         }
+<<<<<<< HEAD
 
         if context.viewState.spaceFiltersEnabled,
            context.viewState.shouldShowSpaceFilters,
            false { // Tchap: Space default action is now conversation filtering (hide space filter button)
 
+=======
+        
+        if context.viewState.shouldShowSpaceFilters {
+>>>>>>> release/26.03.3
             if #available(iOS 26, *) {
                 ToolbarSpacer(.fixed, placement: .primaryAction)
             }
