@@ -25,7 +25,8 @@ private struct HighlightedTimelineItemModifier: ViewModifier {
                 if isHighlighted {
                     VStack(spacing: 0) {
                         Color.compound.gradientSubtleStop1
-                        LinearGradient(gradient: .compound.subtle,
+                        // Tchap: Fix gradient for Tchap in timeline
+                        LinearGradient(gradient: .compound.info,
                                        startPoint: .top,
                                        endPoint: .bottom)
                             .frame(maxHeight: 200)
