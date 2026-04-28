@@ -30,7 +30,7 @@ setup_xcode_cloud_environment () {
 }
 
 install_xcode_cloud_brew_dependencies () {
-    brew update && brew install xcodegen pkl
+    brew update && brew install xcodegen pkl getsentry/tools/sentry-cli
 }
 
 setup_github_actions_environment() {
@@ -52,15 +52,12 @@ setup_github_actions_environment() {
     # Installe swiftformat à la version exacte depuis les releases GitHub
     curl -sL "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip" -o /tmp/swiftformat.zip
     unzip -o /tmp/swiftformat.zip -d /tmp/swiftformat_bin
-
     # Overwrite le binaire pré-installé du runner au lieu de /usr/local/bin
     sudo cp /tmp/swiftformat_bin/swiftformat "$(which swiftformat)"
     rm -rf /tmp/swiftformat.zip /tmp/swiftformat_bin
 
+
     swiftformat --version
-    
-    bundle config path vendor/bundle
-    bundle install --jobs 4 --retry 3
 }
 
 setup_github_actions_translations_environment() {
@@ -75,7 +72,6 @@ setup_github_actions_translations_environment() {
 }
 
 xcode_select_for_github_actions() {
-    # While fastlane has its own way of selecting Xcode, that only works inside of fastlane.
     # We need to select it globally for other processes like xcresultparser and our custom tools to use the same Xcode version.
     sudo xcode-select -s /Applications/Xcode_26.1.1.app
 }

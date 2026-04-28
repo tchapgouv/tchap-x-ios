@@ -306,7 +306,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     func reportContent(_ eventID: String, reason: String?) async -> Result<Void, RoomProxyError> {
         do {
-            try await room.reportContent(eventId: eventID, score: nil, reason: reason)
+            try await room.reportContent(eventId: eventID, reason: reason)
             return .success(())
         } catch {
             MXLog.error("Failed reporting eventID: \(eventID) with error: \(error)")
@@ -762,21 +762,11 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     // Tchap: read access rule from local state store.
     func accessRule() async -> Result<AccessRule?, RoomProxyError> {
         do {
-            return try await .success(room.getAccessRule())
+            return try await .success(room.roomInfo().accessRule)
         } catch {
             MXLog.error("Failed building the current access rule settings: \(error)")
             return .failure(.sdkError(error))
         }
-    }
-
-    // Tchap: read access rules Encrypted value from local state store.
-    func isEncrypted() async -> Bool {
-        await room.getIsEncrypted()
-    }
-    
-    // Tchap: read access rules Visibility value from local state store.
-    func visibility() async -> RoomVisibility {
-        await room.getVisibility()
     }
 
     // Tchap: update access rule on the homeServer.

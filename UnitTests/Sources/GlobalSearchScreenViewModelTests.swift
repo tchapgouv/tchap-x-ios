@@ -18,7 +18,6 @@ import Combine
 import Testing
 
 @MainActor
-@Suite
 struct GlobalSearchScreenViewModelTests {
     var viewModel: GlobalSearchScreenViewModelProtocol!
     var context: GlobalSearchScreenViewModelType.Context!

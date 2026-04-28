@@ -52,7 +52,7 @@ settings:
   ENABLE_BITCODE: false
   APP_NAME: ElementX
   KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).$(BASE_BUNDLE_IDENTIFIER)"
-  MARKETING_VERSION: 26.03.0
+  MARKETING_VERSION: 26.03.3
   CURRENT_PROJECT_VERSION: 1
   SUPPORTS_MACCATALYST: false
 
@@ -73,13 +73,13 @@ packages:
   # Element/Matrix dependencies
   MatrixRustSDK:
 #    url: https://github.com/element-hq/matrix-rust-components-swift
-#    exactVersion: 26.02.24
+#    exactVersion: 26.03.10
 #
 # Tchap
 #
 # Use the Github hosted version of Tchap Matrix-rust-SDK
     url: https://github.com/tchapgouv/matrix-rust-components-swift
-    exactVersion: 26.03.0-temp-fix-visibility
+    exactVersion: 26.03.10-bwi-main
 # Use the local version of Tchap Matrix-rust-SDK
 #    path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
   Compound:
@@ -90,7 +90,7 @@ packages:
     # path: ../matrix-analytics-events
   EmbeddedElementCall:
     url: https://github.com/element-hq/element-call-swift
-    exactVersion: 0.16.3
+    exactVersion: 0.17.0
   Emojibase:
     url: https://github.com/matrix-org/emojibase-bindings
     minorVersion: 1.5.0

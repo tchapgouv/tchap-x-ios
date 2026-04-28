@@ -18,7 +18,6 @@ import Combine
 import Testing
 
 @MainActor
-@Suite
 struct HomeScreenRoomTests {
     var roomSummary: RoomSummary!
     

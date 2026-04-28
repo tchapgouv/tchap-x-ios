@@ -15,7 +15,6 @@
 
 import Testing
 
-@Suite
 @MainActor
 struct TemplateScreenViewModelTests {
     var viewModel: TemplateScreenViewModelProtocol

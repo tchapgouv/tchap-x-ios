@@ -15,7 +15,6 @@
 #endif
 import Testing
 
-@Suite
 struct StringTests {
     @Test
     func emptyIsAscii() {

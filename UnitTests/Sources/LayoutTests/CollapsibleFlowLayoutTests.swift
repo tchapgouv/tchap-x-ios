@@ -16,7 +16,6 @@
 import SwiftUI
 import Testing
 
-@Suite
 struct CollapsibleFlowLayoutTests {
     @Test
     func flowLayoutWithExpandAndCollapse() {

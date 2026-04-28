@@ -17,7 +17,6 @@ import AVKit
 #endif
 import Testing
 
-@Suite
 struct AVMetadataMachineReadableCodeObjectExtensionsTest {
     @Test
     func decodeQRCodeVersion8() throws {

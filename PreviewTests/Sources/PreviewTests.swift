@@ -14,7 +14,6 @@ import SwiftUI
 @testable import TchapX_Production@testable import SnapshotTesting
 import Testing
 
-@Suite
 @MainActor
 struct PreviewTests {
     private struct SnapshotDevice {

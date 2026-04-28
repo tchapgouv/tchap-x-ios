@@ -15,7 +15,6 @@
 #endif
 import Testing
 
-@Suite
 final class RoomListFiltersStateTests {
     var appSettings: AppSettings
     var state: RoomListFiltersState

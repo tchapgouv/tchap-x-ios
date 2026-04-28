@@ -14,7 +14,6 @@
 #endif
 import Testing
 
-@Suite
 @MainActor
 struct EditRoomAddressScreenViewModelTests {
     var viewModel: EditRoomAddressScreenViewModelProtocol!

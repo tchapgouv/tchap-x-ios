@@ -16,7 +16,6 @@
 import Testing
 
 @MainActor
-@Suite
 struct AppLockSetupSettingsScreenViewModelTests {
     var appLockService: AppLockServiceProtocol
     var keychainController: KeychainControllerMock

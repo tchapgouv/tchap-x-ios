@@ -635,7 +635,7 @@ class ClientProxy: ClientProxyProtocol {
             do {
                 if isAccessViaLinkEnabled,
                    let room = try client.getRoom(roomId: roomID),
-                   await room.getVisibility() != .public {
+                   try await room.roomInfo().visiblity != .public {
                     try await room.updateJoinRules(newRule: .public)
                 }
             } catch {

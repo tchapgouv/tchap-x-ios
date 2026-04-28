@@ -1,6 +1,6 @@
 "Notification" = "Notification";
 "a11y_add_reaction" = "Ajouter une réaction: %1$@";
-"a11y_address" = "Address";
+"a11y_address" = "Adresse";
 "a11y_avatar" = "Avatar";
 "a11y_collapse_message_text_field" = "Réduire la taille du composeur";
 "a11y_delete" = "Supprimer";
@@ -19,12 +19,13 @@
 "a11y_pause" = "Pause";
 "a11y_paused_voice_message" = "Message vocal, durée: %1$@, position actuelle: %2$@";
 "a11y_pin_field" = "Code PIN";
+"a11y_pinned_location" = "Position épinglée";
 "a11y_play" = "Lecture";
-"a11y_playback_speed" = "Playback speed";
+"a11y_playback_speed" = "Vitesse de lecture";
 "a11y_poll_end" = "Sondage terminé";
 "a11y_polls_will_remove_selection" = "Supprimera la sélection précédente";
 "a11y_polls_winning_answer" = "C'est la réponse gagnante";
-"a11y_qr_code" = "QR Code";
+"a11y_qr_code" = "Code QR";
 "a11y_react_with" = "Réagir avec %1$@";
 "a11y_react_with_other_emojis" = "Réagir avec d’autres émojis";
 "a11y_read_receipts_multiple" = "Lu par %1$@ et %2$@";
@@ -33,9 +34,11 @@
 "a11y_remove_reaction" = "Supprimer la réaction avec %1$@";
 "a11y_remove_reaction_with" = "Supprimer la réaction avec %1$@";
 "a11y_send_files" = "Envoyer des fichiers";
+"a11y_sender_location" = "Position de l'expéditeur";
 "a11y_session_verification_time_limited_action_required" = "Action limitée dans le temps requise, vous avez une minute pour effectuer la vérification";
 "a11y_show_password" = "Afficher le mot de passe";
 "a11y_start_call" = "Démarrer un appel";
+"a11y_start_voice_call" = "Lancer un appel vocal";
 "a11y_tombstoned_room" = "Salon clôturé";
 "a11y_user_menu" = "Menu membre"; // Tchap
 "a11y_view_avatar" = "Voir l'avatar";
@@ -148,6 +151,7 @@
 "action_send_voice_message" = "Envoyer un message vocal";
 "action_share" = "Partager";
 "action_share_link" = "Partager le lien";
+"action_share_live_location" = "Partager la position en continu";
 "action_show" = "Afficher";
 "action_sign_in_again" = "Se connecter à nouveau";
 "action_signout" = "Se déconnecter";
@@ -261,6 +265,7 @@
 "common_open_source_licenses" = "Licences open source";
 "common_optic_id_ios" = "Optic ID";
 "common_or" = "ou";
+"common_other_options" = "Autres options";
 "common_password" = "Mot de passe";
 "common_people" = "Membres"; // Tchap
 "common_permalink" = "Permalien";
@@ -389,12 +394,13 @@
 "crypto_identity_change_profile_pin_violation" = "L'identité de %1$@ a été réinitialisée.";
 "crypto_identity_change_verification_violation_new" = "L'identité de %1$@ %2$@ a été réinitialisée. %3$@";
 "crypto_identity_change_withdraw_verification_action" = "Révoquer la vérification";
+"dialog_allow_access" = "Autoriser l'accès";
 "dialog_confirm_link_message" = "Le lien \"%1$@\" vous redirige vers un autre site \"%2$@\".\n\nÊtes-vous sûr de vouloir continuer ?";
 "dialog_confirm_link_title" = "Veuillez vérifier ce lien";
 "dialog_file_too_large_to_upload_title" = "Le fichier est trop gros pour être envoyé";
 "dialog_permission_camera" = "Pour permettre à l’application d’utiliser l’appareil photo, veuillez accorder l’autorisation dans les paramètres du système.";
 "dialog_permission_generic" = "Veuillez accorder l’autorisation dans les paramètres du système.";
-"dialog_permission_location_description_ios" = "Autorisez l’accès dans Paramètres / Localisation.";
+"dialog_permission_location_description_ios" = "To share your current location, %1$@ needs location access. Go to Settings > Location.";
 "dialog_permission_location_title_ios" = "%1$@ n’a pas accès à votre position";
 "dialog_permission_microphone" = "Pour permettre à l’application d’utiliser le microphone, veuillez accorder l’autorisation dans les paramètres du système.";
 "dialog_permission_microphone_description_ios" = "Donnez la permission afin de pouvoir enregistrer et envoyer des messages vocaux";
@@ -444,7 +450,7 @@
 "leave_conversation_alert_subtitle" = "Êtes-vous sûr de vouloir quitter cette discussion ? Vous ne pourrez pas la rejoindre à nouveau sans y être invité.";
 "leave_room_alert_empty_subtitle" = "Êtes-vous sûr de vouloir quitter ce salon ? Vous êtes le seul membre ici. Si vous partez, personne ne pourra rejoindre le salon à l’avenir, y compris vous."; // Tchap
 "leave_room_alert_private_subtitle" = "Êtes-vous sûr de vouloir quitter ce salon ? Ce salon n’est pas public et vous ne pourrez pas le rejoindre sans invitation.";
-"leave_room_alert_select_new_owner_action" = "Choisissez les propriétaires";
+"leave_room_alert_select_new_owner_action" = "Choisir les propriétaires";
 "leave_room_alert_select_new_owner_subtitle" = "Vous êtes le seul propriétaire de ce salon. Vous devez en transférer la propriété à quelqu'un d'autre avant de le quitter.";
 "leave_room_alert_select_new_owner_title" = "Transférer la propriété";
 "leave_room_alert_subtitle" = "Êtes-vous sûr de vouloir quitter le salon ?";
@@ -456,6 +462,7 @@
 "notification_channel_ringing_calls" = "Appels entrants";
 "notification_channel_silent" = "Notifications silencieuses";
 "notification_fallback_content" = "Vous avez de nouveau(x) message(s).";
+"notification_incoming_audio_call" = "📞 Appel entrant";
 "notification_incoming_call" = "📹 Appel entrant";
 "notification_inline_reply_failed" = "** Échec de l’envoi - veuillez ouvrir le salon";
 "notification_invite_body" = "Vous a invité(e) à discuter";
@@ -663,6 +670,7 @@
 "screen_media_upload_preview_item_count" = "Élément %1$d sur %2$d";
 "screen_media_upload_preview_optimize_image_quality_title" = "Optimiser la qualité de l'image";
 "screen_media_upload_preview_processing" = "Traitement en cours…";
+"screen_onboarding_welcome_back" = "Bon retour parmi nous";
 "screen_pinned_timeline_empty_state_description" = "Cliquez (clic long) sur un message et choisissez « %1$@ » pour qu‘il apparaisse ici.";
 "screen_pinned_timeline_empty_state_headline" = "Épinglez les messages importants pour leur donner plus de visibilité";
 "screen_push_history_title" = "Historique des Push";
@@ -765,6 +773,8 @@
 "screen_start_chat_join_room_by_address_room_found" = "Ce salon existe";
 "screen_start_chat_join_room_by_address_room_not_found" = "Salon non trouvé";
 "screen_start_chat_join_room_by_address_supporting_text" = "ex: #nom-du-salon:matrix.org";
+"screen_static_location_sheet_timestamp_description" = "Partagé %1$@";
+"screen_static_location_sheet_title" = "Sur la carte";
 "screen_timeline_item_menu_send_failure_changed_identity" = "Le message n'a pas été envoyé car l'identité vérifiée de %1$@ a été réinitialisée.";
 "screen_timeline_item_menu_send_failure_unsigned_device" = "Le message n'a pas été envoyé car %1$@ n'a pas vérifié tous ses appareils.";
 "screen_timeline_item_menu_send_failure_you_unsigned_device" = "Message non envoyé car vous n'avez pas vérifié tous vos appareils.";
@@ -1112,7 +1122,7 @@
 "screen_room_change_role_moderators_admin_section_footer" = "Les administrateurs ont automatiquement les privilèges des modérateurs";
 "screen_room_change_role_moderators_owner_section_footer" = "Les propriétaires disposent automatiquement des privilèges des administrateurs.";
 "screen_room_change_role_moderators_title" = "Modifier les modérateurs";
-"screen_room_change_role_owners_title" = "Choisissez les propriétaires";
+"screen_room_change_role_owners_title" = "Choisir les propriétaires";
 "screen_room_details_add_topic_title" = "Ajouter un sujet";
 "screen_room_details_badge_encrypted" = "Chiffré";
 "screen_room_details_badge_not_encrypted" = "Non chiffré";
@@ -1265,7 +1275,7 @@
 "screen_share_open_apple_maps" = "Ouvrir dans Apple Maps";
 "screen_share_open_google_maps" = "Ouvrir dans Google Maps";
 "screen_share_open_osm_maps" = "Ouvrir dans OpenStreetMap";
-"screen_share_this_location_action" = "Partager cette position";
+"screen_share_this_location_action" = "Partager la position sélectionnée";
 "screen_signed_out_reason_1" = "Le mot de passe de votre compte a été modifié sur un autre appareil";
 "screen_signed_out_reason_2" = "Cet appareil a été supprimé depuis un autre appareil"; // Tchap
 "screen_signed_out_reason_3" = "L’administrateur de votre serveur a révoqué votre accès.";
@@ -1437,7 +1447,7 @@
 "screen_home_tab_spaces" = "Espaces";
 "screen_join_room_decline_and_block_button_title" = "Refuser et bloquer";
 "screen_knock_requests_list_title" = "Demandes en attente";
-"screen_leave_space_choose_owners_action" = "Choisissez les propriétaires";
+"screen_leave_space_choose_owners_action" = "Choisir les propriétaires";
 "screen_link_new_device_desktop_scanning_title" = "Scannez le code QR";
 "screen_link_new_device_desktop_step3" = "Scanner le code QR avec cet appareil";
 "screen_link_new_device_desktop_submit" = "Prêt à scanner";

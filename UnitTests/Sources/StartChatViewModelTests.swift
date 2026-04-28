@@ -16,7 +16,6 @@
 import Testing
 
 @MainActor
-@Suite
 struct StartChatScreenViewModelTests {
     private var viewModel: StartChatScreenViewModelProtocol!
     private var clientProxy: ClientProxyMock!

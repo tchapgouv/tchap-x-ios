@@ -16,7 +16,6 @@
 import MatrixRustSDK
 import Testing
 
-@Suite
 @MainActor
 struct NotificationSettingsEditScreenViewModelTests {
     private var viewModel: NotificationSettingsEditScreenViewModelProtocol!

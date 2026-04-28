@@ -17,7 +17,6 @@ import MatrixRustSDK
 import Testing
 
 @MainActor
-@Suite
 struct TimelineItemFactoryTests {
     @Test
     func callInvite() throws {

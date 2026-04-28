@@ -16,7 +16,6 @@
 import Testing
 
 @MainActor
-@Suite
 final class AppLockSetupPINScreenViewModelTests {
     var appLockService: AppLockService!
     var keychainController: KeychainControllerMock!

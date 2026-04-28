@@ -18,21 +18,23 @@ import Combine
 import Testing
 
 @MainActor
-@Suite
-struct StaticLocationScreenViewModelTests {
+struct LocationSharingScreenViewModelTests {
     private let timelineProxy = TimelineProxyMock(.init())
-    private var viewModel: StaticLocationScreenViewModelProtocol
+    private var viewModel: LocationSharingScreenViewModelProtocol
     
-    private var context: StaticLocationScreenViewModel.Context {
+    private var context: LocationSharingScreenViewModel.Context {
         viewModel.context
     }
     
     init() {
-        let viewModel = StaticLocationScreenViewModel(interactionMode: .picker,
-                                                      mapURLBuilder: ServiceLocator.shared.settings.mapTilerConfiguration,
-                                                      timelineController: MockTimelineController(timelineProxy: timelineProxy),
-                                                      analytics: ServiceLocator.shared.analytics,
-                                                      userIndicatorController: UserIndicatorControllerMock())
+        let viewModel = LocationSharingScreenViewModel(interactionMode: .picker,
+                                                       mapURLBuilder: ServiceLocator.shared.settings.mapTilerConfiguration,
+                                                       liveLocationSharingEnabled: true,
+                                                       roomProxy: JoinedRoomProxyMock(.init()),
+                                                       timelineController: MockTimelineController(timelineProxy: timelineProxy),
+                                                       analytics: ServiceLocator.shared.analytics,
+                                                       userIndicatorController: UserIndicatorControllerMock(),
+                                                       mediaProvider: MediaProviderMock(configuration: .init()))
         viewModel.state.bindings.isLocationAuthorized = true
         self.viewModel = viewModel
     }
@@ -76,11 +78,11 @@ struct StaticLocationScreenViewModelTests {
     @Test
     func errorMapping() {
         let mapError = AlertInfo(locationSharingViewError: .mapError(.failedLoadingMap))
-        #expect(mapError.message == L10n.errorFailedLoadingMap(InfoPlistReader.main.bundleDisplayName))
+        #expect(mapError.title == L10n.errorFailedLoadingMap(InfoPlistReader.main.bundleDisplayName))
         let locationError = AlertInfo(locationSharingViewError: .mapError(.failedLocatingUser))
-        #expect(locationError.message == L10n.errorFailedLocatingUser(InfoPlistReader.main.bundleDisplayName))
+        #expect(locationError.title == L10n.errorFailedLocatingUser(InfoPlistReader.main.bundleDisplayName))
         let authorizationError = AlertInfo(locationSharingViewError: .missingAuthorization)
-        #expect(authorizationError.message == L10n.dialogPermissionLocationDescriptionIos)
+        #expect(authorizationError.message == L10n.dialogPermissionLocationDescriptionIos(InfoPlistReader.main.bundleDisplayName))
     }
 
     @Test

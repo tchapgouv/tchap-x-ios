@@ -16,7 +16,6 @@
 import Testing
 
 @MainActor
-@Suite
 final class AnalyticsSettingsScreenViewModelTests {
     private var appSettings: AppSettings!
     private var viewModel: AnalyticsSettingsScreenViewModelProtocol!

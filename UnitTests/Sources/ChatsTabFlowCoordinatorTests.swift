@@ -18,7 +18,6 @@ import Combine
 import Foundation
 import Testing
 
-@Suite
 @MainActor
 struct ChatsTabFlowCoordinatorTests {
     var clientProxy: ClientProxyMock!

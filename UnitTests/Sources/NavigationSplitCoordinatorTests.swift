@@ -16,7 +16,6 @@
 import Foundation
 import Testing
 
-@Suite
 @MainActor
 struct NavigationSplitCoordinatorTests {
     private var navigationSplitCoordinator: NavigationSplitCoordinator

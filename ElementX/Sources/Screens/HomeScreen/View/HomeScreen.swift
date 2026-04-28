@@ -70,8 +70,7 @@ struct HomeScreen: View {
             .backportSharedBackgroundVisibility(.hidden)
         }
 
-        if context.viewState.spaceFiltersEnabled,
-           context.viewState.shouldShowSpaceFilters,
+        if context.viewState.shouldShowSpaceFilters,
            false { // Tchap: Space default action is now conversation filtering (hide space filter button)
 
             if #available(iOS 26, *) {

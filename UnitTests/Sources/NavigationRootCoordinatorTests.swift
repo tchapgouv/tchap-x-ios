@@ -17,7 +17,6 @@ import Foundation
 import Testing
 
 @MainActor
-@Suite
 struct NavigationRootCoordinatorTests {
     private var navigationRootCoordinator: NavigationRootCoordinator
     

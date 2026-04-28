@@ -18,7 +18,6 @@ import Combine
 import Testing
 
 @MainActor
-@Suite
 struct UserDetailsEditScreenViewModelTests {
     private var viewModel: UserDetailsEditScreenViewModel!
     private var userIndicatorController: UserIndicatorControllerMock!

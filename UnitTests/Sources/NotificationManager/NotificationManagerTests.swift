@@ -18,7 +18,6 @@ import Combine
 import NotificationCenter
 import Testing
 
-@Suite
 @MainActor
 final class NotificationManagerTests {
     var notificationManager: NotificationManager!

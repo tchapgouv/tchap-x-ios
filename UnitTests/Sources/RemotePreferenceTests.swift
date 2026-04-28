@@ -15,7 +15,6 @@
 #endif
 import Testing
 
-@Suite
 struct RemotePreferenceTests {
     @Test
     func overrideAndReset() {

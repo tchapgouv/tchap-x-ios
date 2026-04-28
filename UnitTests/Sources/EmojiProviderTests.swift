@@ -16,7 +16,6 @@
 import Testing
 import UIKit
 
-@Suite
 struct EmojiProviderTests {
     @Test @MainActor
     func emojisLoadedCategoriesAreLoadedFromLoader() async {
