@@ -106,3 +106,8 @@ room_details_copy_link_error = "Unable to copy the link";
 // Spaces
 screen_spaces_home_title = "Accueil";
 screen_spaces_home_description = "Toutes les conversations";
+
+// Offline Banner
+screen_home_offline_banner_title = "Connection failed";
+screen_home_offline_banner_description = "Check the service status to ensure the problem is not related to your device.";
+screen_home_offline_banner_button = "View service status";

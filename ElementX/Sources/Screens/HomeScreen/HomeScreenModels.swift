@@ -96,7 +96,8 @@ struct HomeScreenViewState: BindableState {
     
     var securityBannerMode = HomeScreenSecurityBannerMode.none
     var shouldShowNewSoundBanner = false
-    
+    var shouldShowOfflineBanner = false // Tchap: Display banner when homeserver is unreachable
+
     var requiresExtraAccountSetup = false
         
     var rooms: [HomeScreenRoom] = []
@@ -145,8 +146,13 @@ struct HomeScreenViewState: BindableState {
     }
     
     var shouldShowBanner: Bool {
-        securityBannerMode.isShown || shouldShowNewSoundBanner
+        // Tchap: Display banner when homeserver is unreachable
+//        securityBannerMode.isShown || shouldShowNewSoundBanner
+        securityBannerMode.isShown || shouldShowNewSoundBanner || shouldShowOfflineBanner
     }
+
+    // Tchap: Service Status url
+    let tchapServiceStatusURL: URL
 }
 
 struct HomeScreenViewStateBindings {

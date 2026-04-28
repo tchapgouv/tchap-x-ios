@@ -46,7 +46,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         roomSummaryProvider = userSession.clientProxy.roomSummaryProvider
         
         super.init(initialViewState: .init(userID: userSession.clientProxy.userID,
-                                           bindings: .init(filtersState: .init(appSettings: appSettings))),
+                                           bindings: .init(filtersState: .init(appSettings: appSettings)), tchapServiceStatusURL: appSettings.tchapServiceStatusURL),
                    mediaProvider: userSession.mediaProvider)
         
         userSession.clientProxy.userAvatarURLPublisher
@@ -109,7 +109,15 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                 }
             }
             .store(in: &cancellables)
-        
+
+        // Tchap: Display banner when homeserver is unreachable
+        userSession.clientProxy.homeserverReachabilityPublisher
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .map { $0 == .unreachable }
+            .weakAssign(to: \.state.shouldShowOfflineBanner, on: self)
+            .store(in: &cancellables)
+
         selectedRoomPublisher
             .weakAssign(to: \.state.selectedRoomID, on: self)
             .store(in: &cancellables)

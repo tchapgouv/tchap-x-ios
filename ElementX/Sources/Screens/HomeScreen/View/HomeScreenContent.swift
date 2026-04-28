@@ -15,7 +15,10 @@ struct HomeScreenContent: View {
     
     @ObservedObject var context: HomeScreenViewModel.Context
     let scrollViewAdapter: ScrollViewAdapter
-    
+
+    // Tchap: `openURL` for tchap status page
+    @Environment(\.openURL) private var openURL
+
     var body: some View {
         roomList
             .sentryTrace("\(Self.self)")
@@ -128,8 +131,10 @@ struct HomeScreenContent: View {
                 if context.viewState.shouldShowFilters {
                     RoomListFiltersView(state: $context.filtersState)
                 }
-                
-                if case let .show(state) = context.viewState.securityBannerMode {
+                // Tchap: Display banner when homeserver is unreachable
+                if context.viewState.shouldShowOfflineBanner {
+                    TchapOfflineScreenBanner { openURL(context.viewState.tchapServiceStatusURL) }
+                } else if case let .show(state) = context.viewState.securityBannerMode {
                     HomeScreenRecoveryKeyConfirmationBanner(state: state, context: context)
                 } else if context.viewState.shouldShowNewSoundBanner {
                     HomeScreenNewSoundBanner { context.send(viewAction: .dismissNewSoundBanner) }
