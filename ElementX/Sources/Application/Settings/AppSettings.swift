@@ -271,6 +271,7 @@ final class AppSettings {
     /// A URL that leads to Tchap FAQ page.
     let tchapExternalFaqURL: URL = "https://aide.tchap.numerique.gouv.fr/fr/article/comment-inviter-un-externe-sur-tchap-iphone-110q735" // Tchap
     let tchapCreateSpaceFaqURL: URL = "https://aide.tchap.numerique.gouv.fr/fr/article/comment-creer-un-espace-sur-tchap-web-1wmlenx"
+    let tchapServiceStatusURL: URL = "https://status.tchap.numerique.gouv.fr"
     /// An email address that should be used for support requests.
     private(set) var supportEmailAddress = "support@element.io"
     /// A URL where users can go read more about encryption in general.

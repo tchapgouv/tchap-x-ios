@@ -111,6 +111,12 @@ internal enum TchapL10n {
   internal static var screenDecideHomeserverErrorHomeserverDoesntSupportOidcLoginFlowMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_message") }
   /// Erreur
   internal static var screenDecideHomeserverErrorHomeserverDoesntSupportOidcLoginFlowTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_title") }
+  /// View service status
+  internal static var screenHomeOfflineBannerButton: String { return TchapL10n.tr("TchapLocalizable", "screen_home_offline_banner_button") }
+  /// Check the service status to ensure the problem is not related to your device.
+  internal static var screenHomeOfflineBannerDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_home_offline_banner_description") }
+  /// Connection failed
+  internal static var screenHomeOfflineBannerTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_home_offline_banner_title") }
   /// By inviting an external guest, this room will become accessible to any external guest.
   /// This change is final and irreversible.
   internal static var screenInviteExternalUserDialogMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_invite_external_user_dialog_message") }
