@@ -40,7 +40,10 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
     
     // periphery:ignore - retaining purpose
     private var settingsFlowCoordinator: SettingsFlowCoordinator?
-    
+
+    // Tchap: expired account
+    private var accountExpiredScreenCoordinator: AccountExpiredScreenCoordinator?
+
     enum State: StateType {
         /// The state machine hasn't started.
         case initial
@@ -241,7 +244,22 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
                 setupSessionVerificationRequestsObserver()
             }
             .store(in: &cancellables)
-        
+
+        // Tchap: expired account
+        userSession.clientProxy.accountExpiredSubjectPublisher
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isExpired in
+                guard let self else { return }
+
+                if isExpired {
+                    presentAccountExpiredScreen()
+                } else {
+                    dismissAccountExpiredScreen()
+                }
+            }
+            .store(in: &cancellables)
+
         let reachabilityNotificationID = "io.element.elementx.reachability.notification"
         userSession.clientProxy.homeserverReachabilityPublisher.removeDuplicates()
             .combineLatest(flowParameters.appMediator.networkMonitor.reachabilityPublisher.removeDuplicates())
@@ -546,5 +564,25 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             .store(in: &cancellables)
         
         navigationTabCoordinator.setSheetCoordinator(coordinator, animated: true)
+    }
+
+    // MARK: - Tchap: Account Expired
+
+    private func presentAccountExpiredScreen() {
+        let navigationStackCoordinator = NavigationStackCoordinator()
+        let coordinator = AccountExpiredScreenCoordinator(parameters: .init(appSettings: flowParameters.appSettings, clientProxy: userSession.clientProxy))
+
+        coordinator.start()
+        navigationStackCoordinator.setRootCoordinator(coordinator)
+        navigationTabCoordinator.setFullScreenCoverCoordinator(navigationStackCoordinator)
+
+        accountExpiredScreenCoordinator = coordinator
+    }
+
+    private func dismissAccountExpiredScreen() {
+        guard accountExpiredScreenCoordinator != nil else { return }
+
+        navigationTabCoordinator.setFullScreenCoverCoordinator(nil)
+        accountExpiredScreenCoordinator = nil
     }
 }

@@ -195,7 +195,13 @@ class ClientProxy: ClientProxyProtocol {
     var hideInviteAvatarsPublisher: CurrentValuePublisher<Bool, Never> {
         hideInviteAvatarsSubject.asCurrentValuePublisher()
     }
-    
+
+    // Tchap: expired account
+    private let accountExpiredSubject = CurrentValueSubject<Bool, Never>(false)
+    var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> {
+        accountExpiredSubject.asCurrentValuePublisher()
+    }
+
     var roomsToAwait: Set<String> = []
     
     private let sendQueueStatusSubject = CurrentValueSubject<Bool, Never>(false)
@@ -508,7 +514,12 @@ class ClientProxy: ClientProxyProtocol {
     func accountURL(action: AccountManagementAction) async -> URL? {
         try? await client.accountUrl(action: action).flatMap(URL.init(string:))
     }
-    
+
+    // Tchap: expired account
+    func accountExpiredSendEmail() async {
+        try? await client.accountExpiredSendEmail()
+    }
+
     func directRoomForUserID(_ userID: String) -> Result<String?, ClientProxyError> {
         do {
             let roomID = try client.getDmRoom(userId: userID)?.id()
@@ -1152,20 +1163,40 @@ class ClientProxy: ClientProxyProtocol {
             }
         }
     }
-    
+
+    // Tchap: expired account
+    @CancellableTask private var accountExpiredClearTask: Task<Void, Never>?
+
     private func createSyncServiceStateObserver(_ syncService: SyncService) -> TaskHandle {
         syncService.state(listener: SDKListener { [weak self] state in
             guard let self else { return }
             
             MXLog.info("Received sync service update: \(state)")
-            
+
+            // Tchap: cancel the possible existing task when receiving new event state
+            accountExpiredClearTask = nil
+
             switch state {
             case .running, .terminated, .idle:
                 homeserverReachabilitySubject.send(.reachable)
+
+                // Tchap: if we are in accountExpired state, wait for a grace period before clearing
+                // to give a potential .accountExpired event time to come back
+                if accountExpiredSubject.value {
+                    accountExpiredClearTask = Task { [weak self] in
+                        try? await Task.sleep(for: .milliseconds(2500))
+                        guard !Task.isCancelled, let self else { return }
+
+                        MXLog.info("Account no longer expired after grace period")
+                        accountExpiredSubject.send(false)
+                    }
+                }
             case .offline:
                 homeserverReachabilitySubject.send(.unreachable)
             case .error:
                 restartSync()
+            case .accountExpired: // Tchap: expired account
+                accountExpiredSubject.send(true)
             }
         })
     }
@@ -1214,7 +1245,13 @@ class ClientProxy: ClientProxyProtocol {
     private func createRoomListLoadingStateUpdateObserver(_ roomListService: RoomListService) -> TaskHandle {
         roomListService.syncIndicator(delayBeforeShowingInMs: 1000, delayBeforeHidingInMs: 0, listener: SDKListener { [weak self] state in
             guard let self else { return }
-            
+
+            // Tchap: don't show loading indicator when account is expired
+            guard !accountExpiredSubject.value else {
+                loadingStateSubject.send(.notLoading)
+                return
+            }
+
             switch state {
             case .show:
                 loadingStateSubject.send(.loading)

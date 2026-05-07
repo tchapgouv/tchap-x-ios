@@ -114,7 +114,9 @@ protocol ClientProxyProtocol: AnyObject {
     var verificationStatePublisher: CurrentValuePublisher<SessionVerificationState, Never> { get }
     
     var homeserverReachabilityPublisher: CurrentValuePublisher<NetworkMonitorReachability, Never> { get }
-    
+    // Tchap: expired account
+    var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> { get }
+
     var userID: String { get }
 
     var deviceID: String? { get }
@@ -181,7 +183,9 @@ protocol ClientProxyProtocol: AnyObject {
     func expireSyncSessions() async
         
     func accountURL(action: AccountManagementAction) async -> URL?
-    
+    // Tchap: expired account
+    func accountExpiredSendEmail() async
+
     func directRoomForUserID(_ userID: String) -> Result<String?, ClientProxyError>
     
     func createDirectRoom(with userID: String, expectedRoomName: String?) async -> Result<String, ClientProxyError>

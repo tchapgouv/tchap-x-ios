@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.6 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.3.0 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 // swiftlint:disable all
@@ -2260,6 +2260,11 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         set(value) { underlyingHomeserverReachabilityPublisher = value }
     }
     var underlyingHomeserverReachabilityPublisher: CurrentValuePublisher<NetworkMonitorReachability, Never>!
+    var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> {
+        get { return underlyingAccountExpiredSubjectPublisher }
+        set(value) { underlyingAccountExpiredSubjectPublisher = value }
+    }
+    var underlyingAccountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never>!
     var userID: String {
         get { return underlyingUserID }
         set(value) { underlyingUserID = value }
@@ -2750,6 +2755,41 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         } else {
             return accountURLActionReturnValue
         }
+    }
+    //MARK: - accountExpiredSendEmail
+
+    var accountExpiredSendEmailUnderlyingCallsCount = 0
+    var accountExpiredSendEmailCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return accountExpiredSendEmailUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = accountExpiredSendEmailUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                accountExpiredSendEmailUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    accountExpiredSendEmailUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var accountExpiredSendEmailCalled: Bool {
+        return accountExpiredSendEmailCallsCount > 0
+    }
+    var accountExpiredSendEmailClosure: (() async -> Void)?
+
+    func accountExpiredSendEmail() async {
+        accountExpiredSendEmailCallsCount += 1
+        await accountExpiredSendEmailClosure?()
     }
     //MARK: - directRoomForUserID
 

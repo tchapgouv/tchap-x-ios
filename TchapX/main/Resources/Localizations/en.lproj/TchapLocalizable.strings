@@ -114,3 +114,8 @@ screen_home_offline_banner_button = "View service status";
 
 // Settings
 screen_settings_clear_cache = "Clear cache";
+
+// Account expired
+screen_account_expired_title = "Your account has expired";
+screen_account_expired_description = "An email has been sent to you to renew your account. Once you have followed the link in it, click Continue.";
+screen_account_expired_send_email = "Send a new email";
