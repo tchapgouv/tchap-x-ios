@@ -1164,32 +1164,19 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
 
-    // Tchap: expired account
-    @CancellableTask private var accountExpiredClearTask: Task<Void, Never>?
-
     private func createSyncServiceStateObserver(_ syncService: SyncService) -> TaskHandle {
         syncService.state(listener: SDKListener { [weak self] state in
             guard let self else { return }
             
             MXLog.info("Received sync service update: \(state)")
 
-            // Tchap: cancel the possible existing task when receiving new event state
-            accountExpiredClearTask = nil
-
             switch state {
             case .running, .terminated, .idle:
                 homeserverReachabilitySubject.send(.reachable)
 
-                // Tchap: if we are in accountExpired state, wait for a grace period before clearing
-                // to give a potential .accountExpired event time to come back
+                // Tchap: if we were in accountExpired state before, we need to leave it
                 if accountExpiredSubject.value {
-                    accountExpiredClearTask = Task { [weak self] in
-                        try? await Task.sleep(for: .milliseconds(2500))
-                        guard !Task.isCancelled, let self else { return }
-
-                        MXLog.info("Account no longer expired after grace period")
-                        accountExpiredSubject.send(false)
-                    }
+                    accountExpiredSubject.send(false)
                 }
             case .offline:
                 homeserverReachabilitySubject.send(.unreachable)
