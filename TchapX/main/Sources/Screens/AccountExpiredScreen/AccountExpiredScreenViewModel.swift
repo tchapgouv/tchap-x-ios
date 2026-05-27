@@ -47,11 +47,64 @@ class AccountExpiredScreenViewModel: AccountExpiredScreenViewModelType, AccountE
         
         switch viewAction {
         case .resyncAccount:
-            clientProxy.startSync()
+            Task { await resyncAccount() }
         case .sendEmail:
-            Task {
-                await clientProxy.accountExpiredSendEmail()
+            Task { await sendEmail() }
+        }
+    }
+
+    private func resyncAccount() async {
+        guard !state.isResyncing else { return }
+        state.isResyncing = true
+        defer { state.isResyncing = false }
+
+        clientProxy.startSync()
+
+        // Wait for the account to no longer be expired.
+        // If it succeeds, the flow coordinator will dismiss this screen.
+        let didResync = await waitForAccountNotExpired(timeout: .milliseconds(250))
+
+        if !didResync {
+            state.bindings.alertInfo = .init(id: .resyncFailed,
+                                             title: TchapL10n.screenAccountExpiredResyncErrorTitle,
+                                             message: TchapL10n.screenAccountExpiredResyncErrorMessage,
+                                             primaryButton: .init(title: L10n.actionOk, action: nil))
+        }
+    }
+
+    private func waitForAccountNotExpired(timeout: Duration) async -> Bool {
+        await withTaskGroup(of: Bool.self) { group in
+            group.addTask { [clientProxy] in
+                for await isExpired in clientProxy.accountExpiredSubjectPublisher.values where !isExpired {
+                    return true
+                }
+                return false
             }
+
+            group.addTask {
+                try? await Task.sleep(for: timeout)
+                return false
+            }
+
+            let result = await group.next() ?? false
+            group.cancelAll()
+            return result
+        }
+    }
+
+    private func sendEmail() async {
+        guard !state.isSendingEmail else { return }
+        state.isSendingEmail = true
+        defer { state.isSendingEmail = false }
+
+        do {
+            try await clientProxy.accountExpiredSendEmail()
+        } catch {
+            MXLog.error("Failed to send account expired email: \(error)")
+            state.bindings.alertInfo = .init(id: .sendEmailFailed,
+                                             title: TchapL10n.screenAccountExpiredSendEmailErrorTitle,
+                                             message: TchapL10n.screenAccountExpiredSendEmailErrorMessage,
+                                             primaryButton: .init(title: L10n.actionOk, action: nil))
         }
     }
 }

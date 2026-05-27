@@ -184,7 +184,7 @@ protocol ClientProxyProtocol: AnyObject {
         
     func accountURL(action: AccountManagementAction) async -> URL?
     // Tchap: expired account
-    func accountExpiredSendEmail() async
+    func accountExpiredSendEmail() async throws
 
     func directRoomForUserID(_ userID: String) -> Result<String?, ClientProxyError>
     

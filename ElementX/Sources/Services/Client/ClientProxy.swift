@@ -516,8 +516,8 @@ class ClientProxy: ClientProxyProtocol {
     }
 
     // Tchap: expired account
-    func accountExpiredSendEmail() async {
-        try? await client.accountExpiredSendEmail()
+    func accountExpiredSendEmail() async throws {
+        try await client.accountExpiredSendEmail()
     }
 
     func directRoomForUserID(_ userID: String) -> Result<String?, ClientProxyError> {

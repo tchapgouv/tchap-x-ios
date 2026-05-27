@@ -2758,6 +2758,7 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     }
     //MARK: - accountExpiredSendEmail
 
+    var accountExpiredSendEmailThrowableError: Error?
     var accountExpiredSendEmailUnderlyingCallsCount = 0
     var accountExpiredSendEmailCallsCount: Int {
         get {
@@ -2785,11 +2786,14 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     var accountExpiredSendEmailCalled: Bool {
         return accountExpiredSendEmailCallsCount > 0
     }
-    var accountExpiredSendEmailClosure: (() async -> Void)?
+    var accountExpiredSendEmailClosure: (() async throws -> Void)?
 
-    func accountExpiredSendEmail() async {
+    func accountExpiredSendEmail() async throws {
+        if let error = accountExpiredSendEmailThrowableError {
+            throw error
+        }
         accountExpiredSendEmailCallsCount += 1
-        await accountExpiredSendEmailClosure?()
+        try await accountExpiredSendEmailClosure?()
     }
     //MARK: - directRoomForUserID
 

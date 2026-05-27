@@ -115,3 +115,7 @@ screen_settings_clear_cache = "Vider le cacher";
 screen_account_expired_title = "Votre compte a expiré";
 screen_account_expired_description = "Un email vous a été envoyé pour renouveler votre compte. Une fois que vous aurez suivi le lien qu'il contient, appuyez sur le bouton \"Continuer\".";
 screen_account_expired_send_email = "Envoyer un nouvel email";
+screen_account_expired_send_email_error_title = "Impossible d'envoyer l'email";
+screen_account_expired_send_email_error_message = "Une erreur s'est produite. Réessayez plus tard ou contactez le support si cela persiste.";
+screen_account_expired_resync_error_title = "Compte toujours bloqué";
+screen_account_expired_resync_error_message = "Assurez-vous d'avoir bien cliqué sur le lien envoyé par email, ou demandez l'envoi d'un nouvel email.";

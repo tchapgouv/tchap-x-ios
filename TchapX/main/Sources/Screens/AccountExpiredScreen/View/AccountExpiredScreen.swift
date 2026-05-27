@@ -39,6 +39,7 @@ struct AccountExpiredScreen: View {
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
         .interactiveDismissDisabled()
+        .alert(item: $context.alertInfo)
     }
 
     private var mainContent: some View {
@@ -64,16 +65,34 @@ struct AccountExpiredScreen: View {
 
     private var buttons: some View {
         VStack(spacing: 16) {
-            Button(L10n.actionContinue) { context.send(viewAction: .resyncAccount)
-            }.buttonStyle(.compound(.primary))
+            Button {
+                context.send(viewAction: .resyncAccount)
+            } label: {
+                HStack(spacing: 8) {
+                    if context.viewState.isResyncing {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                    }
+                    Text(L10n.actionContinue)
+                }
+            }
+            .buttonStyle(.compound(.primary))
+            .disabled(context.viewState.isResyncing || context.viewState.isSendingEmail)
 
             Button {
                 context.send(viewAction: .sendEmail)
             } label: {
-                Text(TchapL10n.screenAccountExpiredSendEmail)
-                    .font(.compound.bodyLGSemibold)
-                    .padding(14)
+                HStack(spacing: 8) {
+                    if context.viewState.isSendingEmail {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                    }
+                    Text(TchapL10n.screenAccountExpiredSendEmail)
+                        .font(.compound.bodyLGSemibold)
+                }
+                .padding(14)
             }
+            .disabled(context.viewState.isResyncing || context.viewState.isSendingEmail)
         }
     }
 

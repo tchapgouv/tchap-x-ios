@@ -28,12 +28,21 @@ enum AccountExpiredScreenViewModelAction {
     case done
 }
 
+enum AccountExpiredScreenAlertType: Hashable {
+    case sendEmailFailed
+    case resyncFailed
+}
+
 struct AccountExpiredScreenViewState: BindableState {
     let tchapAccountExpiredFaqURL: URL
+    var isSendingEmail = false
+    var isResyncing = false
     var bindings: AccountExpiredScreenViewStateBindings
 }
 
-struct AccountExpiredScreenViewStateBindings { }
+struct AccountExpiredScreenViewStateBindings {
+    var alertInfo: AlertInfo<AccountExpiredScreenAlertType>?
+}
 
 enum AccountExpiredScreenViewAction {
     case sendEmail
