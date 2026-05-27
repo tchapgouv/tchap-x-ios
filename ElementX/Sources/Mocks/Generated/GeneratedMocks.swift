@@ -2260,11 +2260,6 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         set(value) { underlyingHomeserverReachabilityPublisher = value }
     }
     var underlyingHomeserverReachabilityPublisher: CurrentValuePublisher<NetworkMonitorReachability, Never>!
-    var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> {
-        get { return underlyingAccountExpiredSubjectPublisher }
-        set(value) { underlyingAccountExpiredSubjectPublisher = value }
-    }
-    var underlyingAccountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never>!
     var userID: String {
         get { return underlyingUserID }
         set(value) { underlyingUserID = value }
@@ -2417,6 +2412,11 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     }
     var underlyingMaxMediaUploadSize: Result<UInt, ClientProxyError>!
     var maxMediaUploadSizeClosure: (() async -> Result<UInt, ClientProxyError>)?
+    var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> {
+        get { return underlyingAccountExpiredSubjectPublisher }
+        set(value) { underlyingAccountExpiredSubjectPublisher = value }
+    }
+    var underlyingAccountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never>!
 
     //MARK: - isOnlyDeviceLeft
 
@@ -2651,6 +2651,76 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         stopSyncCompletionCallsCount += 1
         stopSyncCompletionClosure?(completion)
     }
+    //MARK: - resyncAccount
+
+    var resyncAccountUnderlyingCallsCount = 0
+    var resyncAccountCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return resyncAccountUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = resyncAccountUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                resyncAccountUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    resyncAccountUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var resyncAccountCalled: Bool {
+        return resyncAccountCallsCount > 0
+    }
+    var resyncAccountClosure: (() async -> Void)?
+
+    func resyncAccount() async {
+        resyncAccountCallsCount += 1
+        await resyncAccountClosure?()
+    }
+    //MARK: - accountExpiredSendEmail
+
+    var accountExpiredSendEmailUnderlyingCallsCount = 0
+    var accountExpiredSendEmailCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return accountExpiredSendEmailUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = accountExpiredSendEmailUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                accountExpiredSendEmailUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    accountExpiredSendEmailUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var accountExpiredSendEmailCalled: Bool {
+        return accountExpiredSendEmailCallsCount > 0
+    }
+    var accountExpiredSendEmailClosure: (() async -> Void)?
+
+    func accountExpiredSendEmail() async {
+        accountExpiredSendEmailCallsCount += 1
+        await accountExpiredSendEmailClosure?()
+    }
     //MARK: - expireSyncSessions
 
     var expireSyncSessionsUnderlyingCallsCount = 0
@@ -2755,45 +2825,6 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         } else {
             return accountURLActionReturnValue
         }
-    }
-    //MARK: - accountExpiredSendEmail
-
-    var accountExpiredSendEmailThrowableError: Error?
-    var accountExpiredSendEmailUnderlyingCallsCount = 0
-    var accountExpiredSendEmailCallsCount: Int {
-        get {
-            if Thread.isMainThread {
-                return accountExpiredSendEmailUnderlyingCallsCount
-            } else {
-                var returnValue: Int? = nil
-                DispatchQueue.main.sync {
-                    returnValue = accountExpiredSendEmailUnderlyingCallsCount
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                accountExpiredSendEmailUnderlyingCallsCount = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    accountExpiredSendEmailUnderlyingCallsCount = newValue
-                }
-            }
-        }
-    }
-    var accountExpiredSendEmailCalled: Bool {
-        return accountExpiredSendEmailCallsCount > 0
-    }
-    var accountExpiredSendEmailClosure: (() async throws -> Void)?
-
-    func accountExpiredSendEmail() async throws {
-        if let error = accountExpiredSendEmailThrowableError {
-            throw error
-        }
-        accountExpiredSendEmailCallsCount += 1
-        try await accountExpiredSendEmailClosure?()
     }
     //MARK: - directRoomForUserID
 

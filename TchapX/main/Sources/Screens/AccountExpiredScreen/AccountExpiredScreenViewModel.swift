@@ -58,37 +58,14 @@ class AccountExpiredScreenViewModel: AccountExpiredScreenViewModelType, AccountE
         state.isResyncing = true
         defer { state.isResyncing = false }
 
-        clientProxy.startSync()
-
-        // Wait for the account to no longer be expired.
-        // If it succeeds, the flow coordinator will dismiss this screen.
-        let didResync = await waitForAccountNotExpired(timeout: .milliseconds(250))
-
-        if !didResync {
+        do {
+            try await clientProxy.resyncAccount()
+        } catch {
+            MXLog.error("Failed to resync account: \(error)")
             state.bindings.alertInfo = .init(id: .resyncFailed,
                                              title: TchapL10n.screenAccountExpiredResyncErrorTitle,
                                              message: TchapL10n.screenAccountExpiredResyncErrorMessage,
                                              primaryButton: .init(title: L10n.actionOk, action: nil))
-        }
-    }
-
-    private func waitForAccountNotExpired(timeout: Duration) async -> Bool {
-        await withTaskGroup(of: Bool.self) { group in
-            group.addTask { [clientProxy] in
-                for await isExpired in clientProxy.accountExpiredSubjectPublisher.values where !isExpired {
-                    return true
-                }
-                return false
-            }
-
-            group.addTask {
-                try? await Task.sleep(for: timeout)
-                return false
-            }
-
-            let result = await group.next() ?? false
-            group.cancelAll()
-            return result
         }
     }
 
