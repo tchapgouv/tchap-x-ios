@@ -11,4 +11,5 @@ import Combine
 @MainActor
 protocol AdvancedSettingsScreenViewModelProtocol {
     var context: AdvancedSettingsScreenViewModelType.Context { get }
+    var actions: AnyPublisher<AdvancedSettingsScreenViewModelAction, Never> { get } // :tchap: clear cache option
 }

@@ -37,6 +37,15 @@ struct AdvancedSettingsScreen: View {
             
             moderationAndSafetySection
             timelineMediaSection
+            // :tchap: clear cache option
+            Section {
+                Button(role: .destructive) {
+                    context.send(viewAction: .clearCache)
+                } label: {
+                    Text(TchapL10n.screenSettingsClearCache)
+                        .frame(maxWidth: .infinity)
+                }
+            } // :tchap:end
         }
         .compoundList()
         .navigationTitle(L10n.commonAdvancedSettings)

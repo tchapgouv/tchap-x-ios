@@ -9,6 +9,11 @@
 import Combine
 import SwiftUI
 
+// :tchap: clear cache option
+enum AdvancedSettingsScreenCoordinatorAction {
+    case clearCache
+} // :tchap:end
+
 struct AdvancedSettingsScreenCoordinatorParameters {
     let appSettings: AppSettings
     let analytics: AnalyticsService
@@ -18,12 +23,32 @@ struct AdvancedSettingsScreenCoordinatorParameters {
 
 final class AdvancedSettingsScreenCoordinator: CoordinatorProtocol {
     private var viewModel: AdvancedSettingsScreenViewModelProtocol
+
+    // :tchap: clear cache option
+    private let actionsSubject: PassthroughSubject<AdvancedSettingsScreenCoordinatorAction, Never> = .init()
+
+    private var cancellables = Set<AnyCancellable>()
     
+    var actions: AnyPublisher<AdvancedSettingsScreenCoordinatorAction, Never> {
+        actionsSubject.eraseToAnyPublisher()
+    } // :tchap:end
+
     init(parameters: AdvancedSettingsScreenCoordinatorParameters) {
         viewModel = AdvancedSettingsScreenViewModel(advancedSettings: parameters.appSettings,
                                                     analytics: parameters.analytics,
                                                     clientProxy: parameters.clientProxy,
                                                     userIndicatorController: parameters.userIndicatorController)
+        // :tchap: clear cache option
+        viewModel.actions
+            .sink { [weak self] action in
+                guard let self else { return }
+                
+                switch action {
+                case .clearCache:
+                    actionsSubject.send(.clearCache)
+                }
+            }
+            .store(in: &cancellables) // :tchap:end
     }
             
     func toPresentable() -> AnyView {

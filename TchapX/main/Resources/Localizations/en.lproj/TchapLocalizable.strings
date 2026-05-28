@@ -111,3 +111,6 @@ screen_spaces_home_description = "Toutes les conversations";
 screen_home_offline_banner_title = "Connection failed";
 screen_home_offline_banner_description = "Check the service status to ensure the problem is not related to your device.";
 screen_home_offline_banner_button = "View service status";
+
+// Settings
+screen_settings_clear_cache = "Clear cache";

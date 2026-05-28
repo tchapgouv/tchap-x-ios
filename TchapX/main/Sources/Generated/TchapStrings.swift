@@ -159,6 +159,8 @@ internal enum TchapL10n {
   internal static var screenRecoveryKeyConfirmOtherMethod: String { return TchapL10n.tr("TchapLocalizable", "screen_recovery_key_confirm_other_method") }
   /// Join a public room
   internal static var screenRoomDirectorySearchTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_room_directory_search_title") }
+  /// Clear cache
+  internal static var screenSettingsClearCache: String { return TchapL10n.tr("TchapLocalizable", "screen_settings_clear_cache") }
   /// Toutes les conversations
   internal static var screenSpacesHomeDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_spaces_home_description") }
   /// Accueil
