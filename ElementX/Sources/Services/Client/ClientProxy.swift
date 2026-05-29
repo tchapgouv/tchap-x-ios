@@ -547,28 +547,15 @@ class ClientProxy: ClientProxyProtocol {
     }
     
     // Tchap: invite by email
-    private enum TchapInviteByEmailType: Equatable {
-        case notInviteByEmail
-        case inviteByEmail(isExternalUser: Bool)
-    }
-    
-    // Tchap: invite by email
-    private func getTchapInviteByEmailType(userID: String, roomAccessRule: AccessRule) -> TchapInviteByEmailType {
-        guard roomAccessRule == .direct else {
-            return .notInviteByEmail
-        }
+    private func tchapInviteFlags(userID: String) -> (needInviteByEmail: Bool, needInviteByEmailForExternal: Bool) {
         switch MatrixIdFromString(userID).userType {
-        case .external(needInviteByEmail: true):
-            return .inviteByEmail(isExternalUser: true)
-        case .external(needInviteByEmail: false):
-            return .notInviteByEmail
-        case .agent(needInviteByEmail: true):
-            return .inviteByEmail(isExternalUser: false)
-        case .agent(needInviteByEmail: false):
-            return .notInviteByEmail
+        case .external(needInviteByEmail: true): return (true, true)
+        case .external(needInviteByEmail: false): return (false, false)
+        case .agent(needInviteByEmail: true): return (true, false)
+        case .agent(needInviteByEmail: false): return (false, false)
         }
     }
-    
+
     func createDirectRoom(with userID: String, expectedRoomName: String?) async -> Result<String, ClientProxyError> {
         do {
             let parameters = CreateRoomParameters(name: nil,
@@ -576,7 +563,6 @@ class ClientProxy: ClientProxyProtocol {
                                                   isEncrypted: true,
                                                   isDirect: true,
                                                   visibility: .private,
-                                                  accessRuleOverride: .direct, // Tchap: make access rule `direct` for Direct room.
                                                   isRoomFederated: nil, // Tchap: BWI-specific Rust side
                                                   preset: .trustedPrivateChat,
                                                   invite: [userID],
@@ -585,14 +571,14 @@ class ClientProxy: ClientProxyProtocol {
                                                   historyVisibilityOverride: .invited)
 
             // Tchap: invite by email
-            let inviteByEmail = getTchapInviteByEmailType(userID: userID, roomAccessRule: .direct)
-            
+            let tchapInvite = tchapInviteFlags(userID: userID)
+
             // Tchap: change `createRoom` call with:
             //   - `isTchapInvite` and `isTchapInviteExternal` because of Tchap `invite by email` feature
 //            let roomID = try await client.createRoom(request: parameters)
             let roomID = try await client.createRoom(request: parameters,
-                                                     isTchapInvite: { if case .inviteByEmail = inviteByEmail { true } else { false } }(),
-                                                     isTchapInviteExternal: { if case .inviteByEmail(let isExternalUser) = inviteByEmail { isExternalUser } else { false } }())
+                                                     isTchapInvite: tchapInvite.needInviteByEmail,
+                                                     isTchapInviteExternal: tchapInvite.needInviteByEmailForExternal)
 
             await waitForRoomToSync(roomID: roomID)
             
