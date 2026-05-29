@@ -550,7 +550,7 @@ class ClientProxy: ClientProxyProtocol {
                                                   isDirect: true,
                                                   visibility: .private,
                                                   accessRuleOverride: .direct, // Tchap: make access rule `direct` for Direct room.
-                                                  isRoomFederated: false, // Tchap: BWI-specific Rust side
+                                                  isRoomFederated: nil, // Tchap: BWI-specific Rust side
                                                   preset: .trustedPrivateChat,
                                                   invite: [userID],
                                                   avatar: nil,
