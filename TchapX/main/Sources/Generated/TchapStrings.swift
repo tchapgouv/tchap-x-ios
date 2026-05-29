@@ -48,6 +48,20 @@ internal enum TchapL10n {
   internal static var roomHeaderBadgeNotEncrypted: String { return TchapL10n.tr("TchapLocalizable", "room_header_badge_not_encrypted") }
   /// PUBLIC
   internal static var roomHeaderBadgePublic: String { return TchapL10n.tr("TchapLocalizable", "room_header_badge_public") }
+  /// An email has been sent to you to renew your account. Once you have followed the link in it, click Continue.
+  internal static var screenAccountExpiredDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_account_expired_description") }
+  /// Make sure you clicked the link in the email, or request a new email.
+  internal static var screenAccountExpiredResyncErrorMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_account_expired_resync_error_message") }
+  /// Account still locked
+  internal static var screenAccountExpiredResyncErrorTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_account_expired_resync_error_title") }
+  /// Send a new email
+  internal static var screenAccountExpiredSendEmail: String { return TchapL10n.tr("TchapLocalizable", "screen_account_expired_send_email") }
+  /// An error occurred. Please try again later or contact support if the problem persists.
+  internal static var screenAccountExpiredSendEmailErrorMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_account_expired_send_email_error_message") }
+  /// Unable to send email
+  internal static var screenAccountExpiredSendEmailErrorTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_account_expired_send_email_error_title") }
+  /// Your account has expired
+  internal static var screenAccountExpiredTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_account_expired_title") }
   /// Agents will be able to join this room and invite other agents via this link.
   internal static var screenCreateRoomAccessViaLinkDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_access_via_link_description") }
   /// Access via link

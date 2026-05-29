@@ -195,7 +195,13 @@ class ClientProxy: ClientProxyProtocol {
     var hideInviteAvatarsPublisher: CurrentValuePublisher<Bool, Never> {
         hideInviteAvatarsSubject.asCurrentValuePublisher()
     }
-    
+
+    // Tchap: expired account
+    private let accountExpiredSubject = CurrentValueSubject<Bool, Never>(false)
+    var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> {
+        accountExpiredSubject.asCurrentValuePublisher()
+    }
+
     var roomsToAwait: Set<String> = []
     
     private let sendQueueStatusSubject = CurrentValueSubject<Bool, Never>(false)
@@ -446,8 +452,14 @@ class ClientProxy: ClientProxyProtocol {
         MXLog.info("Starting sync")
         
         Task {
-            await syncService.start()
-            
+
+            // :tchap: expired account - syncService.start() throws error for expired account
+
+//            await syncService.start()
+            try await syncService.start()
+
+            // :tchap:end
+
             // If we are using OIDC we want to cache the account management URL in volatile memory on the SDK side.
             // To avoid the cache being invalidated while the app is backgrounded, we cache at every sync start.
             await cacheAccountURL()
@@ -474,7 +486,17 @@ class ClientProxy: ClientProxyProtocol {
             self?.restartTask = nil
         }
     }
-    
+
+    // :tchap: expired account
+
+    func resyncAccount() async throws {
+        MXLog.info("Resyncing account")
+        try await syncService.start()
+        await cacheAccountURL()
+    }
+
+    // :tchap:end
+
     func stopSync() {
         stopSync(completion: nil)
     }
@@ -508,7 +530,12 @@ class ClientProxy: ClientProxyProtocol {
     func accountURL(action: AccountManagementAction) async -> URL? {
         try? await client.accountUrl(action: action).flatMap(URL.init(string:))
     }
-    
+
+    // Tchap: expired account
+    func accountExpiredSendEmail() async throws {
+        try await client.accountExpiredSendEmail()
+    }
+
     func directRoomForUserID(_ userID: String) -> Result<String?, ClientProxyError> {
         do {
             let roomID = try client.getDmRoom(userId: userID)?.id()
@@ -1152,20 +1179,27 @@ class ClientProxy: ClientProxyProtocol {
             }
         }
     }
-    
+
     private func createSyncServiceStateObserver(_ syncService: SyncService) -> TaskHandle {
         syncService.state(listener: SDKListener { [weak self] state in
             guard let self else { return }
             
             MXLog.info("Received sync service update: \(state)")
-            
+
             switch state {
             case .running, .terminated, .idle:
                 homeserverReachabilitySubject.send(.reachable)
+
+                // Tchap: if we were in accountExpired state before, we need to leave it
+                if accountExpiredSubject.value {
+                    accountExpiredSubject.send(false)
+                }
             case .offline:
                 homeserverReachabilitySubject.send(.unreachable)
             case .error:
                 restartSync()
+            case .accountExpired: // Tchap: expired account
+                accountExpiredSubject.send(true)
             }
         })
     }
@@ -1214,7 +1248,13 @@ class ClientProxy: ClientProxyProtocol {
     private func createRoomListLoadingStateUpdateObserver(_ roomListService: RoomListService) -> TaskHandle {
         roomListService.syncIndicator(delayBeforeShowingInMs: 1000, delayBeforeHidingInMs: 0, listener: SDKListener { [weak self] state in
             guard let self else { return }
-            
+
+            // Tchap: don't show loading indicator when account is expired
+            guard !accountExpiredSubject.value else {
+                loadingStateSubject.send(.notLoading)
+                return
+            }
+
             switch state {
             case .show:
                 loadingStateSubject.send(.loading)

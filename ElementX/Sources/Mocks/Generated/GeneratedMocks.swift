@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.6 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.3.0 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 // swiftlint:disable all
@@ -2412,6 +2412,11 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     }
     var underlyingMaxMediaUploadSize: Result<UInt, ClientProxyError>!
     var maxMediaUploadSizeClosure: (() async -> Result<UInt, ClientProxyError>)?
+    var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> {
+        get { return underlyingAccountExpiredSubjectPublisher }
+        set(value) { underlyingAccountExpiredSubjectPublisher = value }
+    }
+    var underlyingAccountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never>!
 
     //MARK: - isOnlyDeviceLeft
 
@@ -2645,6 +2650,76 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     func stopSync(completion: (() -> Void)?) {
         stopSyncCompletionCallsCount += 1
         stopSyncCompletionClosure?(completion)
+    }
+    //MARK: - resyncAccount
+
+    var resyncAccountUnderlyingCallsCount = 0
+    var resyncAccountCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return resyncAccountUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = resyncAccountUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                resyncAccountUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    resyncAccountUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var resyncAccountCalled: Bool {
+        return resyncAccountCallsCount > 0
+    }
+    var resyncAccountClosure: (() async -> Void)?
+
+    func resyncAccount() async {
+        resyncAccountCallsCount += 1
+        await resyncAccountClosure?()
+    }
+    //MARK: - accountExpiredSendEmail
+
+    var accountExpiredSendEmailUnderlyingCallsCount = 0
+    var accountExpiredSendEmailCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return accountExpiredSendEmailUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = accountExpiredSendEmailUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                accountExpiredSendEmailUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    accountExpiredSendEmailUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var accountExpiredSendEmailCalled: Bool {
+        return accountExpiredSendEmailCallsCount > 0
+    }
+    var accountExpiredSendEmailClosure: (() async -> Void)?
+
+    func accountExpiredSendEmail() async {
+        accountExpiredSendEmailCallsCount += 1
+        await accountExpiredSendEmailClosure?()
     }
     //MARK: - expireSyncSessions
 

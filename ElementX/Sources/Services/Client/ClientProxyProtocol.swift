@@ -114,7 +114,7 @@ protocol ClientProxyProtocol: AnyObject {
     var verificationStatePublisher: CurrentValuePublisher<SessionVerificationState, Never> { get }
     
     var homeserverReachabilityPublisher: CurrentValuePublisher<NetworkMonitorReachability, Never> { get }
-    
+
     var userID: String { get }
 
     var deviceID: String? { get }
@@ -177,11 +177,17 @@ protocol ClientProxyProtocol: AnyObject {
     func stopSync()
     
     func stopSync(completion: (() -> Void)?) // Hopefully this will become async once we get SE-0371.
-    
+
+    var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> { get } // :tchap: expired account
+
+    func resyncAccount() async throws // :tchap: expired account
+
+    func accountExpiredSendEmail() async throws // :tchap: expired account
+
     func expireSyncSessions() async
         
     func accountURL(action: AccountManagementAction) async -> URL?
-    
+
     func directRoomForUserID(_ userID: String) -> Result<String?, ClientProxyError>
     
     func createDirectRoom(with userID: String, expectedRoomName: String?) async -> Result<String, ClientProxyError>
