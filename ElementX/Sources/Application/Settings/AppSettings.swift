@@ -76,6 +76,7 @@ final class AppSettings {
         case enableKeyShareOnInvite
         case knockingEnabled
         case threadsEnabled
+        case unencryptedPrivateRoomEnabled // :tchap: unencryptedPrivateRoom
         case developerOptionsEnabled
         case linkPreviewsEnabled
         case focusEventOnNotificationTap
@@ -561,6 +562,10 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: true, storageType: .userDefaults(store))
     var threadsEnabled
     
+    // :tchap: disable `unencryptedPrivateRoomEnabled` feature flag by default in production.
+    @UserPreference(key: UserDefaultsKeys.unencryptedPrivateRoomEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var unencryptedPrivateRoomEnabled // :tchap:end
+
     @UserPreference(key: UserDefaultsKeys.focusEventOnNotificationTap, defaultValue: false, storageType: .userDefaults(store))
     var focusEventOnNotificationTap
         

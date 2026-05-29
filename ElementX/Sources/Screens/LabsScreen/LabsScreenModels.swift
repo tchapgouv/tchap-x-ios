@@ -37,6 +37,7 @@ struct LabsScreenViewStateBindings {
 
 protocol LabsOptionsProtocol: AnyObject {
     var threadsEnabled: Bool { get set }
+    var unencryptedPrivateRoomEnabled: Bool { get set } // :tchap: unencryptedPrivateRoom
 }
 
 extension AppSettings: LabsOptionsProtocol { }
