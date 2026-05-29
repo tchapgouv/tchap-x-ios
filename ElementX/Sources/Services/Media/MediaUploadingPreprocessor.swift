@@ -90,8 +90,11 @@ struct MediaUploadingPreprocessor {
     
     enum Constants {
         static let maximumThumbnailSize = CGSize(width: 800, height: 600)
-        static let optimizedMaxPixelSize = 2048.0
-        static let jpegCompressionQuality = 0.78
+        // :tchap: increase optimized image resolution for tchap (25%)
+//        static let optimizedMaxPixelSize = 2048.0
+//        static let jpegCompressionQuality = 0.78
+        static let optimizedMaxPixelSize = 2560.0
+        static let jpegCompressionQuality = 0.85 // :tchap:end
         static let videoThumbnailTime = 5.0 // seconds
     }
     
