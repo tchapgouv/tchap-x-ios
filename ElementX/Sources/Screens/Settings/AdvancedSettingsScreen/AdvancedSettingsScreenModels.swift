@@ -8,6 +8,11 @@
 
 import Foundation
 
+// :tchap: clear cache option
+enum AdvancedSettingsScreenViewModelAction {
+    case clearCache
+} // :tchap:end
+
 struct AdvancedSettingsScreenViewState: BindableState {
     var timelineMediaVisibility: TimelineMediaVisibility
     var hideInviteAvatars: Bool
@@ -35,6 +40,7 @@ enum AdvancedSettingsScreenViewAction {
     case optimizeMediaUploadsChanged
     case updateTimelineMediaVisibility(TimelineMediaVisibility)
     case updateHideInviteAvatars(Bool)
+    case clearCache // :tchap: clear cache option
 }
 
 protocol AdvancedSettingsProtocol: AnyObject {

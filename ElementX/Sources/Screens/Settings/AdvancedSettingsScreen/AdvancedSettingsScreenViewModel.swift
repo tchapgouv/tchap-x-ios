@@ -12,6 +12,13 @@ import SwiftUI
 typealias AdvancedSettingsScreenViewModelType = StateStoreViewModelV2<AdvancedSettingsScreenViewState, AdvancedSettingsScreenViewAction>
 
 class AdvancedSettingsScreenViewModel: AdvancedSettingsScreenViewModelType, AdvancedSettingsScreenViewModelProtocol {
+    // :tchap: clear cache option
+    private var actionsSubject: PassthroughSubject<AdvancedSettingsScreenViewModelAction, Never> = .init()
+    
+    var actions: AnyPublisher<AdvancedSettingsScreenViewModelAction, Never> {
+        actionsSubject.eraseToAnyPublisher()
+    } // :tchap:end
+
     private let analytics: AnalyticsService
     private let clientProxy: ClientProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
@@ -54,6 +61,9 @@ class AdvancedSettingsScreenViewModel: AdvancedSettingsScreenViewModelType, Adva
             hideInviteAvatarsTask = Task { [weak self] in await self?.updateHideInviteAvatars(value) }
         case let .updateTimelineMediaVisibility(value):
             timelineMediaVisibilityTask = Task { [weak self] in await self?.updateTimelineMediaVisibility(value) }
+        // :tchap: clear cache option
+        case .clearCache:
+            actionsSubject.send(.clearCache) // :tchap:end
         }
     }
     

@@ -107,3 +107,6 @@ room_details_copy_link_error = "Impossible de copier le lien";
 screen_home_offline_banner_title = "Connexion impossible";
 screen_home_offline_banner_description = "Vérifiez l’état du service pour vous assurer que le problème ne dépend pas de votre appareil.";
 screen_home_offline_banner_button = "Voir l’état du service";
+
+// Settings
+screen_settings_clear_cache = "Vider le cacher";

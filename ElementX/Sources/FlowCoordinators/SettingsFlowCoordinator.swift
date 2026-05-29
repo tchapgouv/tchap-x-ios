@@ -248,7 +248,19 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
                                                                               analytics: flowParameters.analytics,
                                                                               clientProxy: flowParameters.userSession.clientProxy,
                                                                               userIndicatorController: flowParameters.userIndicatorController))
-        navigationStackCoordinator.push(coordinator)
+        // :tchap: clear cache option
+        coordinator.actions
+            .sink { [weak self] action in
+                guard let self else { return }
+                
+                switch action {
+                case .clearCache:
+                    actionsSubject.send(.clearCache)
+                }
+            }
+            .store(in: &cancellables)
+        
+        navigationStackCoordinator.push(coordinator) // :tchap:end
     }
     
     private func presentDeveloperOptions() {
