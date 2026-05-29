@@ -12,6 +12,8 @@ import SwiftUI
 struct CreateRoomScreen: View {
     @ObservedObject var context: CreateRoomScreenViewModel.Context
     @FocusState private var focus: Focus?
+    @AppStorage("unencryptedPrivateRoomEnabled", store: UserDefaults(suiteName: InfoPlistReader.main.appGroupIdentifier))
+    private var unencryptedPrivateRoomEnabled = false // :tchap: unencryptedPrivateRoom
 
     private enum Focus {
         case name
@@ -245,8 +247,7 @@ struct CreateRoomScreen: View {
                                     role: .coloredIcon(CompoundCoreColorTokens.green800),
                                     iconAlignment: .top),
                     kind: .selection(isSelected: context.selectedAccessType == .private) { context.selectedAccessType = .private; context.isRoomFederated = true; context.isAccessViaLinkEnabled = false })
-            if let TchapFeatureFlagInstance = TchapFeatureFlag.Instance.instance(for: context.viewState.serverName),
-               TchapFeatureFlag.Configuration.unencryptedPrivateRoom.isActivated(for: TchapFeatureFlagInstance) {
+            if shouldShowUnencryptedPrivateRoomOption { // :tchap: unencryptedPrivateRoom
                 ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
                                         description: TchapL10n.screenCreateRoomPrivateOptionDescription,
                                         icon: \.lockOff,
@@ -268,7 +269,19 @@ struct CreateRoomScreen: View {
                 .compoundListSectionHeader()
         }
     }
-    
+
+    // :tchap: unencryptedPrivateRoom
+    private var shouldShowUnencryptedPrivateRoomOption: Bool {
+        #if IS_TCHAP_PRODUCTION
+        guard let instance = TchapFeatureFlag.Instance.instance(for: context.viewState.serverName) else {
+            return false
+        }
+        return unencryptedPrivateRoomEnabled && TchapFeatureFlag.Instance.allCases.contains(instance)
+        #else
+        return true
+        #endif
+    } // :tchap:end
+
     private var roomAccessSection: some View {
         Section {
             ForEach(context.viewState.availableAccessTypes, id: \.self) { accessType in

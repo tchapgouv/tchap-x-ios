@@ -16,6 +16,9 @@ struct LabsScreen: View {
         Form {
             header
             threadsSection
+            #if IS_TCHAP_PRODUCTION
+            unencryptedPrivateRoomSection
+            #endif
         }
         .compoundList()
         .navigationTitle(L10n.screenLabsTitle)
@@ -59,6 +62,18 @@ struct LabsScreen: View {
             context.send(viewAction: .clearCache)
         }
     }
+
+    // :tchap: unencryptedPrivateRoom
+    private var unencryptedPrivateRoomSection: some View {
+        Section {
+            ListRow(label: .default(title: "Salons privés non chiffrés",
+                                    icon: \.lock),
+                    kind: .toggle($context.unencryptedPrivateRoomEnabled))
+        } footer: {
+            Text("Permet de créer des salons privés sans chiffrement de bout en bout.")
+                .compoundListSectionFooter()
+        }
+    } // :tchap:end
 }
 
 // MARK: - Previews
