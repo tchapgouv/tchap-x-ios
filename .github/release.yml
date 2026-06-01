@@ -1,21 +1,21 @@
 changelog:
   categories:
-    - title: ✨ Features
+    - title: ✨ Nouveautés
       labels:
         - pr-feature
-    - title: 🙌 Improvements
+    - title: 🙌 Améliorations
       labels:
         - pr-change
-    - title: 🐛 Bugfixes
+    - title: 🐛 Corrections de bugs
       labels:
         - pr-bugfix
-    - title: ⚠️ API Changes
+    - title: ⚠️ Modifications de l'API
       labels:
         - pr-api
-    - title: 🗣 Translations
+    - title: 🗣 Textes & Traductions
       labels:
         - pr-i18n
-    - title: 🦻 Accessibility
+    - title: 🦻 Accessibilité
       labels:
         - pr-a11y
     - title: 🧱 Build
@@ -24,11 +24,11 @@ changelog:
     - title: 📄 Documentation
       labels:
         - pr-doc
-    - title: 🚧 In development 🚧
+    - title: 🚧 En cours de développement 🚧
       labels:
         - pr-wip
 
-    - title: Others
+    - title: Autres
       labels:
         - pr-misc
         - "*"
