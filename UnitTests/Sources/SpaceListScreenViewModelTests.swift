@@ -21,7 +21,7 @@ import Testing
 final class SpacesScreenViewModelTests {
     var topLevelSpacesSubject: CurrentValueSubject<[SpaceServiceRoom], Never>
     var spaceServiceProxy: SpaceServiceProxyMock
-    var appSettings: AppSettings
+    
     var viewModel: SpacesScreenViewModelProtocol
     
     var context: SpacesScreenViewModelType.Context {
@@ -30,7 +30,7 @@ final class SpacesScreenViewModelTests {
     
     init() {
         AppSettings.resetAllSettings()
-        appSettings = AppSettings()
+        let appSettings = AppSettings()
         
         let clientProxy = ClientProxyMock(.init())
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
@@ -50,7 +50,7 @@ final class SpacesScreenViewModelTests {
         
         viewModel = SpacesScreenViewModel(userSession: userSession,
                                           selectedSpacePublisher: .init(nil),
-                                          appSettings: ServiceLocator.shared.settings,
+                                          appSettings: appSettings,
                                           userIndicatorController: UserIndicatorControllerMock())
     }
     
@@ -91,26 +91,5 @@ final class SpacesScreenViewModelTests {
         default:
             Issue.record("The action should select the space.")
         }
-    }
-    
-    @Test
-    func featureAnnouncement() async throws {
-        #expect(!appSettings.hasSeenSpacesAnnouncement)
-        #expect(!context.isPresentingFeatureAnnouncement)
-        
-        let deferred = deferFulfillment(context.observe(\.isPresentingFeatureAnnouncement)) { $0 == true }
-        viewModel.context.send(viewAction: .screenAppeared)
-        try await deferred.fulfill()
-        #expect(context.isPresentingFeatureAnnouncement)
-        
-        viewModel.context.send(viewAction: .featureAnnouncementAppeared)
-        #expect(appSettings.hasSeenSpacesAnnouncement)
-        
-        context.isPresentingFeatureAnnouncement = false
-        
-        let deferredFailure = deferFailure(context.observe(\.isPresentingFeatureAnnouncement), timeout: .seconds(1)) { $0 == true }
-        viewModel.context.send(viewAction: .screenAppeared)
-        try await deferredFailure.fulfill()
-        #expect(!context.isPresentingFeatureAnnouncement)
     }
 }

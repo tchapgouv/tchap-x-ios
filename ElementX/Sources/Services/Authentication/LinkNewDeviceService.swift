@@ -65,6 +65,8 @@ class LinkNewDeviceService: LinkNewDeviceServiceProtocol {
             do {
                 // Note: The SDK doesn't provide us with a way to cancel the grant if the user hit the cancel button 🤷‍♂️
                 try await grantLoginHandler.generate(progressListener: listener) // The success state is handled by the listener.
+                // We send the .done progress in case the listener didn't get a chance to pass it on from the SDK before being deallocated
+                progressSubject.send(LinkMobileProgress.done)
             } catch let error as HumanQrGrantLoginError {
                 MXLog.error("QR code reciprocate error: \(error)")
                 progressSubject.send(completion: .failure(.init(rustError: error)))
@@ -105,6 +107,8 @@ class LinkNewDeviceService: LinkNewDeviceServiceProtocol {
             do {
                 // Note: The SDK doesn't provide us with a way to cancel the grant if the user hit the cancel button 🤷‍♂️
                 try await grantLoginHandler.scan(qrCodeData: qrCodeData, progressListener: listener) // The success state is handled by the listener.
+                // We send the .done progress in case the listener didn't get a chance to pass it on from the SDK before being deallocated
+                progressSubject.send(LinkDesktopProgress.done)
             } catch let error as HumanQrGrantLoginError {
                 MXLog.error("QR code reciprocate error: \(error)")
                 progressSubject.send(completion: .failure(.init(rustError: error)))
@@ -191,8 +195,10 @@ extension LinkNewDeviceService.LinkDesktopProgress: CustomStringConvertible {
 private extension QRCodeLoginError {
     init(rustError: HumanQrGrantLoginError) {
         self = switch rustError {
-        case .InvalidCheckCode, .ConnectionInsecure:
+        case .ConnectionInsecure:
             .connectionInsecure
+        case .InvalidCheckCode:
+            .invalidCheckCode
         case .UnsupportedProtocol:
             .linkingNotSupported
         case .Expired, .NotFound, .DeviceNotFound:
@@ -201,6 +207,8 @@ private extension QRCodeLoginError {
             .cancelled
         case .OtherDeviceAlreadySignedIn:
             .deviceAlreadySignedIn
+        case .UnsupportedQrCodeType:
+            .invalidQRCode
         case .Unknown, .MissingSecretsBackup, .DeviceIdAlreadyInUse:
             .unknown
         }
@@ -220,13 +228,6 @@ class CheckCodeSenderProxy: Equatable {
     
     func send(code: UInt8) async throws {
         try await underlyingSender.send(code: code)
-    }
-    
-    /// Bypassed for now whilst we wait for an SDK update (however its worth noting that
-    /// things should still fail if the wrong code is provided, just not necessarily with
-    /// the right error being shown). https://github.com/matrix-org/matrix-rust-sdk/pull/5957
-    func validate(checkCode: UInt8) -> Bool {
-        true
     }
 }
 

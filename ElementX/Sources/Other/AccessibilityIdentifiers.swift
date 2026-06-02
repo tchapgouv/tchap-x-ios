@@ -159,6 +159,9 @@ enum A11yIdentifiers {
         let joinCall = "room-join_call"
         let scrollToBottom = "room-scroll_to_bottom"
         
+        let startVoiceCall = "room-start_voice_call"
+        let startVideoCall = "room-start_video_call"
+        
         let messageComposer = "room-message_composer"
         let sendButton = "room-send_button"
 
@@ -281,6 +284,7 @@ enum A11yIdentifiers {
         let roomName = "create_room-room_name"
         let roomTopic = "create_room-room_topic"
         let mediaPicker = "create_room-media_picker"
+        let filePicker = "create_room-file_picker"
     }
 
     struct PollFormScreen {

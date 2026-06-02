@@ -27,16 +27,16 @@ final class JoinRoomScreenViewModelTests {
     var viewModel: JoinRoomScreenViewModelProtocol!
     
     var clientProxy: ClientProxyMock!
-    var appSettings: AppSettings!
     
     var context: JoinRoomScreenViewModelType.Context {
         viewModel.context
     }
     
+    private let appSettings: AppSettings
+    
     init() {
         AppSettings.resetAllSettings()
         appSettings = AppSettings()
-        ServiceLocator.shared.register(appSettings: appSettings)
     }
     
     deinit {
@@ -175,8 +175,6 @@ final class JoinRoomScreenViewModelTests {
     // MARK: - Helpers
     
     private func setupViewModel(throwing: Bool = false, mode: TestMode = .joined) {
-        ServiceLocator.shared.settings.knockingEnabled = true
-        
         clientProxy = ClientProxyMock(.init())
         
         clientProxy.joinRoomViaReturnValue = throwing ? .failure(.sdkError(ClientProxyMockError.generic)) : .success(())
@@ -213,7 +211,7 @@ final class JoinRoomScreenViewModelTests {
         viewModel = JoinRoomScreenViewModel(source: .generic(roomID: "1", via: []),
                                             appSettings: appSettings,
                                             userSession: UserSessionMock(.init(clientProxy: clientProxy)),
-                                            userIndicatorController: ServiceLocator.shared.userIndicatorController)
+                                            userIndicatorController: UserIndicatorControllerMock.default)
     }
 }
 

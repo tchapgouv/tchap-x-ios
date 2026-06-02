@@ -20,9 +20,13 @@ enum RoomProxyError: Error {
     case missingTransactionID
     case failedCreatingPinnedTimeline
     case timelineError(TimelineProxyError)
+<<<<<<< HEAD
     // Tchap:
     case unableToUpdateAccessRule(Error)
     case unableToInviteByEmail
+=======
+    case liveLocationSessionIsNotActive
+>>>>>>> release/26.05.3
 }
 
 /// An enum that describes the relationship between the current user and the room, and contains a reference to the specific implementation of the `RoomProxy`.
@@ -100,6 +104,8 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func timelineFocusedOnEvent(eventID: String, numberOfEvents: UInt16) async -> Result<TimelineProxyProtocol, RoomProxyError>
     
     func threadTimeline(eventID: String) async -> Result<TimelineProxyProtocol, RoomProxyError>
+    
+    func threadListService() -> RoomThreadListServiceProxyProtocol
     
     func loadOrFetchEventDetails(for eventID: String) async -> Result<TimelineEvent, RoomProxyError>
     
@@ -196,6 +202,7 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func loadDraft(threadRootEventID: String?) async -> Result<ComposerDraft?, RoomProxyError>
     func clearDraft(threadRootEventID: String?) async -> Result<Void, RoomProxyError>
     
+<<<<<<< HEAD
     // Tchap: access rule accessor
     func accessRule() async -> Result<AccessRule?, RoomProxyError>
     
@@ -204,6 +211,15 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
 
     // Tchap: check if room access rule need to be updated to invite user (check for first external user).
     func accessRuleNeedToBeUpdated(for invitedUsers: [String]) async -> Bool
+=======
+    // MARK: - Live Location
+    
+    func makeLiveLocationService() async -> RoomLiveLocationServiceProtocol
+    
+    func startLiveLocationShare(duration: Duration) async -> Result<String, RoomProxyError>
+    func sendLiveLocation(geoURI: GeoURI) async -> Result<Void, RoomProxyError>
+    func stopLiveLocationShare() async -> Result<Void, RoomProxyError>
+>>>>>>> release/26.05.3
 }
 
 extension JoinedRoomProxyProtocol {
@@ -225,10 +241,6 @@ extension JoinedRoomProxyProtocol {
                            // Tchap: add accessRule publied value
                            accessRule: infoPublisher.value.accessRule,
                            visibility: infoPublisher.value.visibility)
-    }
-    
-    var isDirectOneToOneRoom: Bool {
-        infoPublisher.value.isDirect && infoPublisher.value.activeMembersCount <= 2
     }
 
     func members() async -> [RoomMemberProxyProtocol]? {

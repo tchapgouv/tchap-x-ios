@@ -25,7 +25,13 @@ final class RoomFlowCoordinatorTests {
     var roomFlowCoordinator: RoomFlowCoordinator!
     var navigationStackCoordinator: NavigationStackCoordinator!
     var cancellables = Set<AnyCancellable>()
-    
+
+    private let appSettings: AppSettings
+
+    init() {
+        appSettings = AppSettings()
+    }
+
     deinit {
         AppSettings.resetAllSettings()
     }
@@ -243,7 +249,7 @@ final class RoomFlowCoordinatorTests {
     
     @Test
     func threadedEventRoutes() async throws {
-        ServiceLocator.shared.settings.threadsEnabled = true
+        appSettings.threadsEnabled = true
         setupRoomFlowCoordinator()
         
         // Navigate directly to the threaded event
@@ -486,13 +492,13 @@ final class RoomFlowCoordinatorTests {
                                                   bugReportService: BugReportServiceMock(.init()),
                                                   elementCallService: ElementCallServiceMock(.init()),
                                                   timelineControllerFactory: timelineControllerFactory,
-                                                  emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                                  emojiProvider: EmojiProvider(appSettings: appSettings),
                                                   linkMetadataProvider: LinkMetadataProvider(),
                                                   appMediator: AppMediatorMock.default,
-                                                  appSettings: ServiceLocator.shared.settings,
+                                                  appSettings: appSettings,
                                                   appHooks: AppHooks(),
-                                                  analytics: ServiceLocator.shared.analytics,
-                                                  userIndicatorController: ServiceLocator.shared.userIndicatorController,
+                                                  analytics: .mock(settings: appSettings),
+                                                  userIndicatorController: UserIndicatorControllerMock.default,
                                                   notificationManager: NotificationManagerMock(),
                                                   stateMachineFactory: StateMachineFactory())
         

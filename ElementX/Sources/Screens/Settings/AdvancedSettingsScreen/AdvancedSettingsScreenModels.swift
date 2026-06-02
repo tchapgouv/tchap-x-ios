@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 // :tchap: clear cache option
 enum AdvancedSettingsScreenViewModelAction {
@@ -14,10 +15,27 @@ enum AdvancedSettingsScreenViewModelAction {
 } // :tchap:end
 
 struct AdvancedSettingsScreenViewState: BindableState {
+    init(timelineMediaVisibility: TimelineMediaVisibility, hideInviteAvatars: Bool, isWaitingTimelineMediaVisibility: Bool = false, isWaitingHideInviteAvatars: Bool = false, bindings: AdvancedSettingsScreenViewStateBindings) {
+        self.timelineMediaVisibility = timelineMediaVisibility
+        self.hideInviteAvatars = hideInviteAvatars
+        self.isWaitingTimelineMediaVisibility = isWaitingTimelineMediaVisibility
+        self.isWaitingHideInviteAvatars = isWaitingHideInviteAvatars
+        self.bindings = bindings
+        
+        let linkPlaceholder = "{link}"
+        var footerString = AttributedString(L10n.screenAdvancedSettingsLiveLocationSectionFooter(linkPlaceholder))
+        var linkString = AttributedString(L10n.screenAdvancedSettingsLiveLocationSectionFooterLink)
+        linkString.link = URL(string: UIApplication.openSettingsURLString)
+        linkString.bold()
+        footerString.replace(linkPlaceholder, with: linkString)
+        liveLocationUpdateFooterAttributedString = footerString
+    }
+    
+    let liveLocationUpdateFooterAttributedString: AttributedString
     var timelineMediaVisibility: TimelineMediaVisibility
     var hideInviteAvatars: Bool
-    var isWaitingTimelineMediaVisibility = false
-    var isWaitingHideInviteAvatars = false
+    var isWaitingTimelineMediaVisibility: Bool
+    var isWaitingHideInviteAvatars: Bool
     var bindings: AdvancedSettingsScreenViewStateBindings
 }
 
@@ -48,6 +66,7 @@ protocol AdvancedSettingsProtocol: AnyObject {
     var appAppearance: AppAppearance { get set }
     var sharePresence: Bool { get set }
     var optimizeMediaUploads: Bool { get set }
+    var liveLocationMinimumDistanceUpdate: Int { get set }
 }
 
 extension AppSettings: AdvancedSettingsProtocol { }

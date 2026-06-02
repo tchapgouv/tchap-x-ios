@@ -97,6 +97,7 @@ final class LoggingTests {
                                       canonicalAlias: nil,
                                       alternativeAliases: [],
                                       hasOngoingCall: false,
+                                      activeCallIntent: nil,
                                       isMarkedUnread: false,
                                       isFavourite: false,
                                       isTombstoned: false)

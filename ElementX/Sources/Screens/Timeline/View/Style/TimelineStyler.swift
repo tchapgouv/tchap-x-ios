@@ -127,7 +127,7 @@ struct TimelineItemStyler_Previews: PreviewProvider, TestablePreview {
                                                                isEditable: false,
                                                                canBeRepliedTo: true,
                                                                sender: .test,
-                                                               content: .init(body: "house! -- באמת‏! -- house!"))
+                                                               content: .init(body: "house! -- באמת! -- house!"))
 
     static let rtlStringThatContainsLtr = TextRoomTimelineItem(id: .randomEvent,
                                                                timestamp: .mock,
@@ -135,7 +135,7 @@ struct TimelineItemStyler_Previews: PreviewProvider, TestablePreview {
                                                                isEditable: false,
                                                                canBeRepliedTo: true,
                                                                sender: .test,
-                                                               content: .init(body: "באמת‏! -- house! -- באמת!"))
+                                                               content: .init(body: "באמת! -- house! -- באמת!"))
 
     static let ltrStringThatFinishesInRtl = TextRoomTimelineItem(id: .randomEvent,
                                                                  timestamp: .mock,
@@ -151,7 +151,16 @@ struct TimelineItemStyler_Previews: PreviewProvider, TestablePreview {
                                                                  isEditable: false,
                                                                  canBeRepliedTo: true,
                                                                  sender: .test,
-                                                                 content: .init(body: "באמת‏! -- house!"))
+                                                                 content: .init(body: "באמת! -- house!"))
+    
+    static let bigEmoji = TextRoomTimelineItem(id: .randomEvent,
+                                               timestamp: .mock,
+                                               isOutgoing: true,
+                                               isEditable: false,
+                                               canBeRepliedTo: true,
+                                               shouldBoost: true,
+                                               sender: .test,
+                                               content: .init(body: "😮"))
 
     static var testView: some View {
         VStack(spacing: 0) {
@@ -172,6 +181,7 @@ struct TimelineItemStyler_Previews: PreviewProvider, TestablePreview {
             TextRoomTimelineView(timelineItem: rtlStringThatContainsLtr)
             TextRoomTimelineView(timelineItem: ltrStringThatFinishesInRtl)
             TextRoomTimelineView(timelineItem: rtlStringThatFinishesInLtr)
+            TextRoomTimelineView(timelineItem: bigEmoji)
         }
     }
 

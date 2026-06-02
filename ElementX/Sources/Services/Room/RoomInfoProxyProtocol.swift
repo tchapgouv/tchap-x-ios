@@ -36,6 +36,7 @@ protocol RoomInfoProxyProtocol: BaseRoomInfoProxyProtocol {
 
     var isEncrypted: Bool { get }
     var isDirect: Bool { get }
+    var isDM: Bool { get }
     var isSpace: Bool { get }
     var isFavourite: Bool { get }
     
@@ -51,6 +52,7 @@ protocol RoomInfoProxyProtocol: BaseRoomInfoProxyProtocol {
     var notificationCount: Int { get }
     var cachedUserDefinedNotificationMode: RoomNotificationMode? { get }
     var hasRoomCall: Bool { get }
+    var activeRoomCallIntent: CallIntent? { get }
     var activeRoomCallParticipants: [String] { get }
     var isMarkedUnread: Bool { get }
     var unreadMessagesCount: UInt { get }
@@ -139,8 +141,7 @@ extension RoomInfoProxyProtocol {
         return alternativeAliases.first
     }
     
-    /// If present, the state of history sharing in this room. This *does not* consider the `enableKeyShareOnInvite`
-    /// feature flag, so consumers should be careful to check the flag is true before utilising this property.
+    /// If present, the state of history sharing in this room.
     var historySharingState: RoomHistorySharingState? {
         guard isEncrypted else {
             return nil

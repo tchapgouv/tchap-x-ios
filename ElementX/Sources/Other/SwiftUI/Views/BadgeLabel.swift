@@ -85,12 +85,22 @@ struct BadgeLabel: View {
             }
         }
         
+<<<<<<< HEAD
         // Tchap: evaluate font on usage
         var font: Font {
 //        .compound.bodySM
             tchapUsage?.font ?? .compound.bodySM
         }
     
+=======
+        var borderColor: Color {
+            switch style {
+            case .default: .compound.borderInteractiveSecondary
+            default: .clear
+            }
+        }
+        
+>>>>>>> release/26.05.3
         func makeBody(configuration: Configuration) -> some View {
             HStack(spacing: 4) {
                 configuration.icon
@@ -98,6 +108,7 @@ struct BadgeLabel: View {
                 configuration.title
                     .foregroundStyle(titleColor)
             }
+<<<<<<< HEAD
             // Tchap: try to use tchapUsage settings.
 //            .font(.compound.bodySM)
 //            .padding(.leading, 8)
@@ -110,6 +121,17 @@ struct BadgeLabel: View {
             // Tchap: use RoundedRectangle rather than capsule. It is more DSFR friendly.
 //            .background(Capsule().fill(backgroundColor))
             .background(RoundedRectangle(cornerSize: CGSize(width: 4.0, height: 4.0)).fill(backgroundColor))
+=======
+            .font(.compound.bodySM)
+            .padding(.leading, 8)
+            .padding(.trailing, 12)
+            .padding(.vertical, 4)
+            .background {
+                Capsule().fill(backgroundColor).overlay {
+                    Capsule().stroke(borderColor)
+                }
+            }
+>>>>>>> release/26.05.3
         }
     }
 }

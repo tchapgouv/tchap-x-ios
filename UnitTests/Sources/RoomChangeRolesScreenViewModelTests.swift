@@ -203,6 +203,6 @@ struct RoomChangeRolesScreenViewModelTests {
                                                    roomProxy: roomProxy,
                                                    mediaProvider: MediaProviderMock(configuration: .init()),
                                                    userIndicatorController: UserIndicatorControllerMock(),
-                                                   analytics: ServiceLocator.shared.analytics)
+                                                   analytics: .mock())
     }
 }

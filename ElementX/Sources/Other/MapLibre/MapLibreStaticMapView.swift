@@ -34,6 +34,19 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
         self.pinAnnotationView = pinAnnotationView()
     }
     
+    init(geoURI: GeoURI,
+         mapURLBuilder: MapTilerURLBuilderProtocol,
+         attributionPlacement: MapTilerAttributionPlacement = .bottomLeft,
+         mapSize: CGSize,
+         @ViewBuilder pinAnnotationView: () -> PinAnnotation) {
+        self.init(coordinates: .init(latitude: geoURI.latitude, longitude: geoURI.longitude),
+                  zoomLevel: 15,
+                  attributionPlacement: attributionPlacement,
+                  mapURLBuilder: mapURLBuilder,
+                  mapSize: mapSize,
+                  pinAnnotationView: pinAnnotationView)
+    }
+    
     var body: some View {
         GeometryReader { geometry in
             // Tchap: use MapTiler Snapshotter to request bitmap rendering of preview maps.

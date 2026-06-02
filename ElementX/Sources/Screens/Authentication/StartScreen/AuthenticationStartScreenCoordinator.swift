@@ -13,8 +13,22 @@ struct AuthenticationStartScreenParameters {
     let authenticationService: AuthenticationServiceProtocol
     let provisioningParameters: AccountProvisioningParameters?
     let isBugReportServiceEnabled: Bool
+    let appMediator: AppMediatorProtocol
     let appSettings: AppSettings
+    let mediaProvider: MediaProviderProtocol?
     let userIndicatorController: UserIndicatorControllerProtocol
+}
+
+enum AuthenticationStartScreenCoordinatorAction {
+    case loginWithQR
+    case login
+    case register
+    
+    case loginDirectlyWithOAuth(data: OAuthAuthorizationDataProxy, window: UIWindow)
+    case loginDirectlyWithPassword(loginHint: String?)
+    
+    case reportProblem
+    case developerOptions
 }
 
 final class AuthenticationStartScreenCoordinator: CoordinatorProtocol {
@@ -30,7 +44,9 @@ final class AuthenticationStartScreenCoordinator: CoordinatorProtocol {
         viewModel = AuthenticationStartScreenViewModel(authenticationService: parameters.authenticationService,
                                                        provisioningParameters: parameters.provisioningParameters,
                                                        isBugReportServiceEnabled: parameters.isBugReportServiceEnabled,
+                                                       appMediator: parameters.appMediator,
                                                        appSettings: parameters.appSettings,
+                                                       mediaProvider: parameters.mediaProvider,
                                                        userIndicatorController: parameters.userIndicatorController)
     }
     
@@ -48,12 +64,23 @@ final class AuthenticationStartScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.login)
                 case .register:
                     actionsSubject.send(.register)
+<<<<<<< HEAD
                 case .reportProblem:
                     actionsSubject.send(.reportProblem)
                 case .loginDirectlyWithOIDC(let data, let window):
                     actionsSubject.send(.loginDirectlyWithOIDC(data: data, window: window))
+=======
+                
+                case .loginDirectlyWithOAuth(let data, let window):
+                    actionsSubject.send(.loginDirectlyWithOAuth(data: data, window: window))
+>>>>>>> release/26.05.3
                 case .loginDirectlyWithPassword(let loginHint):
                     actionsSubject.send(.loginDirectlyWithPassword(loginHint: loginHint))
+                
+                case .reportProblem:
+                    actionsSubject.send(.reportProblem)
+                case .developerOptions:
+                    actionsSubject.send(.developerOptions)
                 }
             }
             .store(in: &cancellables)

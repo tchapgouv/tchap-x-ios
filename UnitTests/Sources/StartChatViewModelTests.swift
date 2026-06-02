@@ -26,15 +26,17 @@ struct StartChatScreenViewModelTests {
     }
     
     init() {
+        let appSettings = AppSettings()
+        
         clientProxy = .init(.init(userID: ""))
         userDiscoveryService = UserDiscoveryServiceMock()
         userDiscoveryService.searchProfilesWithReturnValue = .success([])
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
         viewModel = StartChatScreenViewModel(userSession: userSession,
-                                             analytics: ServiceLocator.shared.analytics,
+                                             analytics: .mock(settings: appSettings),
                                              userIndicatorController: UserIndicatorControllerMock(),
                                              userDiscoveryService: userDiscoveryService,
-                                             appSettings: ServiceLocator.shared.settings)
+                                             appSettings: appSettings)
     }
     
     @Test
@@ -89,6 +91,38 @@ struct StartChatScreenViewModelTests {
         viewModel.context.roomAddress = "#room:example.com"
         context.send(viewAction: .joinRoomByAddress)
         try await deferred.fulfill()
+    }
+    
+    // MARK: - History Sharing
+    
+    @Test
+    func inviteConfirmationFetchesIdentity() async throws {
+        clientProxy.directRoomForUserIDReturnValue = .success(nil)
+        clientProxy.userIdentityForFallBackToServerReturnValue = .success(UserIdentityProxyMock(configuration: .init(verificationState: .notVerified)))
+        
+        // User identity becomes known, i.e. not unknown
+        let deferred = deferFulfillment(viewModel.context.$viewState.compactMap(\.bindings.selectedUserToInvite)) {
+            !$0.isUnknown
+        }
+        context.send(viewAction: .selectUser(.mockBob))
+        try await deferred.fulfill()
+        
+        #expect(clientProxy.userIdentityForFallBackToServerCalled)
+    }
+    
+    @Test
+    func inviteConfirmationFallsBackToUnknownIdentityOnFailure() async throws {
+        clientProxy.directRoomForUserIDReturnValue = .success(nil)
+        clientProxy.userIdentityForFallBackToServerReturnValue = .failure(.forbiddenAccess)
+        
+        // User identity never becomes known, i.e. is never not unknown
+        let deferred = deferFailure(viewModel.context.$viewState.compactMap(\.bindings.selectedUserToInvite), timeout: .seconds(5)) {
+            !$0.isUnknown
+        }
+        context.send(viewAction: .selectUser(.mockBob))
+        try await deferred.fulfill()
+        
+        #expect(clientProxy.userIdentityForFallBackToServerCalled)
     }
     
     // MARK: - Private

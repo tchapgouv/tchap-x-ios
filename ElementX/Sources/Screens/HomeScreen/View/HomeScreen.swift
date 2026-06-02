@@ -136,11 +136,20 @@ struct HomeScreen: View {
     }
     
     private struct SpaceFiltersButton: View {
+        @Environment(\.isInSidebar) private var isInSidebar
+        
         var selected = false
         var action: () -> Void
         
+        /// Design prefers the custom style over the system's styling of a Toggle within a toolbar,
+        /// however Glass isn't supported for toolbar buttons in the sidebar on iPadOS 26 (likely due
+        /// to glass on glass being discouraged by Apple), so we need to handle our styling accordingly.
+        var shouldUseGlassButtonStyle: Bool {
+            !isInSidebar
+        }
+        
         var body: some View {
-            if #available(iOS 26, *) {
+            if #available(iOS 26, *), shouldUseGlassButtonStyle {
                 if selected {
                     content
                         .backportButtonStyleGlassProminent()
@@ -221,12 +230,15 @@ struct HomeScreen_Previews: PreviewProvider, TestablePreview {
                                                 roomSummaryProvider: RoomSummaryProviderMock(.init(state: roomSummaryProviderState))))
         
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
-        
+
+        let appSettings = AppSettings()
+        let analytics = AnalyticsService.mock(settings: appSettings)
+
         return HomeScreenViewModel(userSession: userSession,
                                    selectedRoomPublisher: CurrentValueSubject<String?, Never>(nil).asCurrentValuePublisher(),
-                                   appSettings: ServiceLocator.shared.settings,
-                                   analyticsService: ServiceLocator.shared.analytics,
+                                   appSettings: appSettings,
+                                   analyticsService: analytics,
                                    notificationManager: NotificationManagerMock(),
-                                   userIndicatorController: ServiceLocator.shared.userIndicatorController)
+                                   userIndicatorController: UserIndicatorControllerMock.default)
     }
 }
