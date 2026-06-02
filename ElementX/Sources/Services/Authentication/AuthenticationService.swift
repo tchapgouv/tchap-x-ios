@@ -109,24 +109,14 @@ class AuthenticationService: AuthenticationServiceProtocol {
         guard let client else { return .failure(.oAuthError(.urlFailure)) }
         do {
             // The create prompt is broken: https://github.com/element-hq/matrix-authentication-service/issues/3429
-<<<<<<< HEAD
             // Tchap: activate flow even if Element considers it is broken.
             let prompt: OidcPrompt = flow == .register ? .create : .consent
-            let oidcData = try await client.urlForOidc(oidcConfiguration: appSettings.oidcConfiguration.rustValue,
-                                                       prompt: prompt,
-                                                       loginHint: loginHint,
-                                                       deviceId: nil,
-                                                       additionalScopes: nil)
-            return .success(OIDCAuthorizationDataProxy(underlyingData: oidcData))
-=======
-            // let prompt: OAuthPrompt = flow == .register ? .create : .consent
             let oAuthData = try await client.urlForOauth(oauthConfiguration: appSettings.oAuthConfiguration.rustValue,
                                                          prompt: .consent,
                                                          loginHint: loginHint,
                                                          deviceId: nil,
                                                          additionalScopes: nil)
             return .success(OAuthAuthorizationDataProxy(underlyingData: oAuthData))
->>>>>>> release/26.05.3
         } catch {
             MXLog.error("Failed to get URL for OAuth login: \(error)")
             return .failure(.oAuthError(.urlFailure))

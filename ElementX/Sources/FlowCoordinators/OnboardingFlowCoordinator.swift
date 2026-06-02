@@ -353,7 +353,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
             .sink { action in
                 switch action {
                 case .logout: // Tchap: add logout in recoveryKeyScreen
-                    self.actionsSubject.send(.logout)
+                    self.actionsSubject.send(.logoutConfirmed)
                 case .identityConfirmation: // Tchap: open other verification methods
                     self.presentIdentityConfirmationScreen()
                 case .complete:

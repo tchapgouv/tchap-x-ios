@@ -2854,19 +2854,16 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     }
     var underlyingMaxMediaUploadSize: Result<UInt, ClientProxyError>!
     var maxMediaUploadSizeClosure: (() async -> Result<UInt, ClientProxyError>)?
-<<<<<<< HEAD
     var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> {
         get { return underlyingAccountExpiredSubjectPublisher }
         set(value) { underlyingAccountExpiredSubjectPublisher = value }
     }
     var underlyingAccountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never>!
-=======
     var liveLocationOwnInfoUpdatesPublisher: AnyPublisher<LiveLocationOwnInfoUpdate, Never> {
         get { return underlyingLiveLocationOwnInfoUpdatesPublisher }
         set(value) { underlyingLiveLocationOwnInfoUpdatesPublisher = value }
     }
     var underlyingLiveLocationOwnInfoUpdatesPublisher: AnyPublisher<LiveLocationOwnInfoUpdate, Never>!
->>>>>>> release/26.05.3
 
     //MARK: - isOnlyDeviceLeft
 
@@ -3445,13 +3442,8 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCalled: Bool {
         return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCount > 0
     }
-<<<<<<< HEAD
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments: (name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)?
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocations: [(name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)] = []
-=======
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments: (name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)?
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedInvocations: [(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)] = []
->>>>>>> release/26.05.3
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments: (name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)?
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocations: [(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)] = []
 
     var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReturnValue: Result<String, ClientProxyError>!
     var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue: Result<String, ClientProxyError>! {
@@ -3477,19 +3469,11 @@ class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
             }
         }
     }
-<<<<<<< HEAD
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure: ((String, String?, CreateRoomAccessType, Bool, [String], URL?, String?, Bool) async -> Result<String, ClientProxyError>)?
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure: ((String?, String?, CreateRoomAccessType, Bool, [String], URL?, String?, Bool) async -> Result<String, ClientProxyError>)?
 
-    func createRoom(name: String, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool) async -> Result<String, ClientProxyError> {
+    func createRoom(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool) async -> Result<String, ClientProxyError> {
         createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCount += 1
         createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments = (name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart, isAccessViaLinkEnabled: isAccessViaLinkEnabled)
-=======
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure: ((String?, String?, CreateRoomAccessType, Bool, [String], URL?, String?) async -> Result<String, ClientProxyError>)?
-
-    func createRoom(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
-        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCount += 1
-        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments = (name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart)
->>>>>>> release/26.05.3
         DispatchQueue.main.async {
             self.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocations.append((name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart, isAccessViaLinkEnabled: isAccessViaLinkEnabled))
         }
@@ -10831,19 +10815,6 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
             return clearDraftThreadRootEventIDReturnValue
         }
     }
-<<<<<<< HEAD
-    //MARK: - accessRule
-
-    var accessRuleUnderlyingCallsCount = 0
-    var accessRuleCallsCount: Int {
-        get {
-            if Thread.isMainThread {
-                return accessRuleUnderlyingCallsCount
-            } else {
-                var returnValue: Int? = nil
-                DispatchQueue.main.sync {
-                    returnValue = accessRuleUnderlyingCallsCount
-=======
     //MARK: - makeLiveLocationService
 
     var makeLiveLocationServiceUnderlyingCallsCount = 0
@@ -10855,7 +10826,6 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
                     returnValue = makeLiveLocationServiceUnderlyingCallsCount
->>>>>>> release/26.05.3
                 }
 
                 return returnValue!
@@ -10863,36 +10833,14 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-<<<<<<< HEAD
-                accessRuleUnderlyingCallsCount = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    accessRuleUnderlyingCallsCount = newValue
-=======
                 makeLiveLocationServiceUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
                     makeLiveLocationServiceUnderlyingCallsCount = newValue
->>>>>>> release/26.05.3
                 }
             }
         }
     }
-<<<<<<< HEAD
-    var accessRuleCalled: Bool {
-        return accessRuleCallsCount > 0
-    }
-
-    var accessRuleUnderlyingReturnValue: Result<AccessRule?, RoomProxyError>!
-    var accessRuleReturnValue: Result<AccessRule?, RoomProxyError>! {
-        get {
-            if Thread.isMainThread {
-                return accessRuleUnderlyingReturnValue
-            } else {
-                var returnValue: Result<AccessRule?, RoomProxyError>? = nil
-                DispatchQueue.main.sync {
-                    returnValue = accessRuleUnderlyingReturnValue
-=======
     var makeLiveLocationServiceCalled: Bool {
         return makeLiveLocationServiceCallsCount > 0
     }
@@ -10906,7 +10854,6 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
                 var returnValue: RoomLiveLocationServiceProtocol? = nil
                 DispatchQueue.main.sync {
                     returnValue = makeLiveLocationServiceUnderlyingReturnValue
->>>>>>> release/26.05.3
                 }
 
                 return returnValue!
@@ -10914,44 +10861,14 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-<<<<<<< HEAD
-                accessRuleUnderlyingReturnValue = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    accessRuleUnderlyingReturnValue = newValue
-=======
                 makeLiveLocationServiceUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
                     makeLiveLocationServiceUnderlyingReturnValue = newValue
->>>>>>> release/26.05.3
                 }
             }
         }
     }
-<<<<<<< HEAD
-    var accessRuleClosure: (() async -> Result<AccessRule?, RoomProxyError>)?
-
-    func accessRule() async -> Result<AccessRule?, RoomProxyError> {
-        accessRuleCallsCount += 1
-        if let accessRuleClosure = accessRuleClosure {
-            return await accessRuleClosure()
-        } else {
-            return accessRuleReturnValue
-        }
-    }
-    //MARK: - applyAccessRulesChanges
-
-    var applyAccessRulesChangesUnderlyingCallsCount = 0
-    var applyAccessRulesChangesCallsCount: Int {
-        get {
-            if Thread.isMainThread {
-                return applyAccessRulesChangesUnderlyingCallsCount
-            } else {
-                var returnValue: Int? = nil
-                DispatchQueue.main.sync {
-                    returnValue = applyAccessRulesChangesUnderlyingCallsCount
-=======
     var makeLiveLocationServiceClosure: (() async -> RoomLiveLocationServiceProtocol)?
 
     func makeLiveLocationService() async -> RoomLiveLocationServiceProtocol {
@@ -10973,7 +10890,6 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
                     returnValue = startLiveLocationShareDurationUnderlyingCallsCount
->>>>>>> release/26.05.3
                 }
 
                 return returnValue!
@@ -10981,38 +10897,14 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-<<<<<<< HEAD
-                applyAccessRulesChangesUnderlyingCallsCount = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    applyAccessRulesChangesUnderlyingCallsCount = newValue
-=======
                 startLiveLocationShareDurationUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
                     startLiveLocationShareDurationUnderlyingCallsCount = newValue
->>>>>>> release/26.05.3
                 }
             }
         }
     }
-<<<<<<< HEAD
-    var applyAccessRulesChangesCalled: Bool {
-        return applyAccessRulesChangesCallsCount > 0
-    }
-    var applyAccessRulesChangesReceivedChanges: AccessRule?
-    var applyAccessRulesChangesReceivedInvocations: [AccessRule] = []
-
-    var applyAccessRulesChangesUnderlyingReturnValue: Result<Void, RoomProxyError>!
-    var applyAccessRulesChangesReturnValue: Result<Void, RoomProxyError>! {
-        get {
-            if Thread.isMainThread {
-                return applyAccessRulesChangesUnderlyingReturnValue
-            } else {
-                var returnValue: Result<Void, RoomProxyError>? = nil
-                DispatchQueue.main.sync {
-                    returnValue = applyAccessRulesChangesUnderlyingReturnValue
-=======
     var startLiveLocationShareDurationCalled: Bool {
         return startLiveLocationShareDurationCallsCount > 0
     }
@@ -11098,7 +10990,6 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
                 var returnValue: Result<Void, RoomProxyError>? = nil
                 DispatchQueue.main.sync {
                     returnValue = sendLiveLocationGeoURIUnderlyingReturnValue
->>>>>>> release/26.05.3
                 }
 
                 return returnValue!
@@ -11106,48 +10997,14 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-<<<<<<< HEAD
-                applyAccessRulesChangesUnderlyingReturnValue = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    applyAccessRulesChangesUnderlyingReturnValue = newValue
-=======
                 sendLiveLocationGeoURIUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
                     sendLiveLocationGeoURIUnderlyingReturnValue = newValue
->>>>>>> release/26.05.3
                 }
             }
         }
     }
-<<<<<<< HEAD
-    var applyAccessRulesChangesClosure: ((AccessRule) async -> Result<Void, RoomProxyError>)?
-
-    func applyAccessRulesChanges(_ changes: AccessRule) async -> Result<Void, RoomProxyError> {
-        applyAccessRulesChangesCallsCount += 1
-        applyAccessRulesChangesReceivedChanges = changes
-        DispatchQueue.main.async {
-            self.applyAccessRulesChangesReceivedInvocations.append(changes)
-        }
-        if let applyAccessRulesChangesClosure = applyAccessRulesChangesClosure {
-            return await applyAccessRulesChangesClosure(changes)
-        } else {
-            return applyAccessRulesChangesReturnValue
-        }
-    }
-    //MARK: - accessRuleNeedToBeUpdated
-
-    var accessRuleNeedToBeUpdatedForUnderlyingCallsCount = 0
-    var accessRuleNeedToBeUpdatedForCallsCount: Int {
-        get {
-            if Thread.isMainThread {
-                return accessRuleNeedToBeUpdatedForUnderlyingCallsCount
-            } else {
-                var returnValue: Int? = nil
-                DispatchQueue.main.sync {
-                    returnValue = accessRuleNeedToBeUpdatedForUnderlyingCallsCount
-=======
     var sendLiveLocationGeoURIClosure: ((GeoURI) async -> Result<Void, RoomProxyError>)?
 
     func sendLiveLocation(geoURI: GeoURI) async -> Result<Void, RoomProxyError> {
@@ -11173,7 +11030,6 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
                     returnValue = stopLiveLocationShareUnderlyingCallsCount
->>>>>>> release/26.05.3
                 }
 
                 return returnValue!
@@ -11181,22 +11037,212 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-<<<<<<< HEAD
-                accessRuleNeedToBeUpdatedForUnderlyingCallsCount = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    accessRuleNeedToBeUpdatedForUnderlyingCallsCount = newValue
-=======
                 stopLiveLocationShareUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
                     stopLiveLocationShareUnderlyingCallsCount = newValue
->>>>>>> release/26.05.3
                 }
             }
         }
     }
-<<<<<<< HEAD
+    var stopLiveLocationShareCalled: Bool {
+        return stopLiveLocationShareCallsCount > 0
+    }
+
+    var stopLiveLocationShareUnderlyingReturnValue: Result<Void, RoomProxyError>!
+    var stopLiveLocationShareReturnValue: Result<Void, RoomProxyError>! {
+        get {
+            if Thread.isMainThread {
+                return stopLiveLocationShareUnderlyingReturnValue
+            } else {
+                var returnValue: Result<Void, RoomProxyError>? = nil
+                DispatchQueue.main.sync {
+                    returnValue = stopLiveLocationShareUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                stopLiveLocationShareUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    stopLiveLocationShareUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    var stopLiveLocationShareClosure: (() async -> Result<Void, RoomProxyError>)?
+
+    func stopLiveLocationShare() async -> Result<Void, RoomProxyError> {
+        stopLiveLocationShareCallsCount += 1
+        if let stopLiveLocationShareClosure = stopLiveLocationShareClosure {
+            return await stopLiveLocationShareClosure()
+        } else {
+            return stopLiveLocationShareReturnValue
+        }
+    }
+    //MARK: - accessRule
+
+    var accessRuleUnderlyingCallsCount = 0
+    var accessRuleCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return accessRuleUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = accessRuleUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                accessRuleUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    accessRuleUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var accessRuleCalled: Bool {
+        return accessRuleCallsCount > 0
+    }
+
+    var accessRuleUnderlyingReturnValue: Result<AccessRule?, RoomProxyError>!
+    var accessRuleReturnValue: Result<AccessRule?, RoomProxyError>! {
+        get {
+            if Thread.isMainThread {
+                return accessRuleUnderlyingReturnValue
+            } else {
+                var returnValue: Result<AccessRule?, RoomProxyError>? = nil
+                DispatchQueue.main.sync {
+                    returnValue = accessRuleUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                accessRuleUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    accessRuleUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    var accessRuleClosure: (() async -> Result<AccessRule?, RoomProxyError>)?
+
+    func accessRule() async -> Result<AccessRule?, RoomProxyError> {
+        accessRuleCallsCount += 1
+        if let accessRuleClosure = accessRuleClosure {
+            return await accessRuleClosure()
+        } else {
+            return accessRuleReturnValue
+        }
+    }
+    //MARK: - applyAccessRulesChanges
+
+    var applyAccessRulesChangesUnderlyingCallsCount = 0
+    var applyAccessRulesChangesCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return applyAccessRulesChangesUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = applyAccessRulesChangesUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                applyAccessRulesChangesUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    applyAccessRulesChangesUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    var applyAccessRulesChangesCalled: Bool {
+        return applyAccessRulesChangesCallsCount > 0
+    }
+    var applyAccessRulesChangesReceivedChanges: AccessRule?
+    var applyAccessRulesChangesReceivedInvocations: [AccessRule] = []
+
+    var applyAccessRulesChangesUnderlyingReturnValue: Result<Void, RoomProxyError>!
+    var applyAccessRulesChangesReturnValue: Result<Void, RoomProxyError>! {
+        get {
+            if Thread.isMainThread {
+                return applyAccessRulesChangesUnderlyingReturnValue
+            } else {
+                var returnValue: Result<Void, RoomProxyError>? = nil
+                DispatchQueue.main.sync {
+                    returnValue = applyAccessRulesChangesUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                applyAccessRulesChangesUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    applyAccessRulesChangesUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    var applyAccessRulesChangesClosure: ((AccessRule) async -> Result<Void, RoomProxyError>)?
+
+    func applyAccessRulesChanges(_ changes: AccessRule) async -> Result<Void, RoomProxyError> {
+        applyAccessRulesChangesCallsCount += 1
+        applyAccessRulesChangesReceivedChanges = changes
+        DispatchQueue.main.async {
+            self.applyAccessRulesChangesReceivedInvocations.append(changes)
+        }
+        if let applyAccessRulesChangesClosure = applyAccessRulesChangesClosure {
+            return await applyAccessRulesChangesClosure(changes)
+        } else {
+            return applyAccessRulesChangesReturnValue
+        }
+    }
+    //MARK: - accessRuleNeedToBeUpdated
+
+    var accessRuleNeedToBeUpdatedForUnderlyingCallsCount = 0
+    var accessRuleNeedToBeUpdatedForCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return accessRuleNeedToBeUpdatedForUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = accessRuleNeedToBeUpdatedForUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                accessRuleNeedToBeUpdatedForUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    accessRuleNeedToBeUpdatedForUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
     var accessRuleNeedToBeUpdatedForCalled: Bool {
         return accessRuleNeedToBeUpdatedForCallsCount > 0
     }
@@ -11212,21 +11258,6 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
                 var returnValue: Bool? = nil
                 DispatchQueue.main.sync {
                     returnValue = accessRuleNeedToBeUpdatedForUnderlyingReturnValue
-=======
-    var stopLiveLocationShareCalled: Bool {
-        return stopLiveLocationShareCallsCount > 0
-    }
-
-    var stopLiveLocationShareUnderlyingReturnValue: Result<Void, RoomProxyError>!
-    var stopLiveLocationShareReturnValue: Result<Void, RoomProxyError>! {
-        get {
-            if Thread.isMainThread {
-                return stopLiveLocationShareUnderlyingReturnValue
-            } else {
-                var returnValue: Result<Void, RoomProxyError>? = nil
-                DispatchQueue.main.sync {
-                    returnValue = stopLiveLocationShareUnderlyingReturnValue
->>>>>>> release/26.05.3
                 }
 
                 return returnValue!
@@ -11234,22 +11265,14 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-<<<<<<< HEAD
                 accessRuleNeedToBeUpdatedForUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
                     accessRuleNeedToBeUpdatedForUnderlyingReturnValue = newValue
-=======
-                stopLiveLocationShareUnderlyingReturnValue = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    stopLiveLocationShareUnderlyingReturnValue = newValue
->>>>>>> release/26.05.3
                 }
             }
         }
     }
-<<<<<<< HEAD
     var accessRuleNeedToBeUpdatedForClosure: (([String]) async -> Bool)?
 
     func accessRuleNeedToBeUpdated(for invitedUsers: [String]) async -> Bool {
@@ -11262,16 +11285,6 @@ class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Sendable {
             return await accessRuleNeedToBeUpdatedForClosure(invitedUsers)
         } else {
             return accessRuleNeedToBeUpdatedForReturnValue
-=======
-    var stopLiveLocationShareClosure: (() async -> Result<Void, RoomProxyError>)?
-
-    func stopLiveLocationShare() async -> Result<Void, RoomProxyError> {
-        stopLiveLocationShareCallsCount += 1
-        if let stopLiveLocationShareClosure = stopLiveLocationShareClosure {
-            return await stopLiveLocationShareClosure()
-        } else {
-            return stopLiveLocationShareReturnValue
->>>>>>> release/26.05.3
         }
     }
 }

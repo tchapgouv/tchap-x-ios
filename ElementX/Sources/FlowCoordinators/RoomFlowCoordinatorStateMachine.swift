@@ -422,16 +422,9 @@ extension RoomFlowCoordinator {
             case (.mediaUploadPicker(_, let previousMediaUploadPickerState), .presentMediaUploadPreview(let mediaURLs)):
                 return .mediaUploadPreview(mediaURLs: mediaURLs, previousState: previousMediaUploadPickerState)
                 
-<<<<<<< HEAD
-            case (_, .presentInviteUsersScreen):
-                return .inviteUsersScreen(previousState: fromState)
-
-            case (.inviteUsersScreen(let previousState), .dismissInviteUsersScreen):
-=======
             case (_, .presentInviteUsersScreen(let flow)):
                 return .inviteUsersScreen(flow: flow, previousState: fromState)
             case (.inviteUsersScreen(_, let previousState), .dismissInviteUsersScreen):
->>>>>>> release/26.05.3
                 return previousState
                 
             case (_, .presentTransferOwnershipScreen):

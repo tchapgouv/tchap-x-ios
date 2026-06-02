@@ -236,38 +236,6 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         }
         stateMachine.addRoutes(event: .dismissedServerSelection, transitions: [.serverSelectionScreen => .serverConfirmationScreen])
         
-<<<<<<< HEAD
-        // Tchap: login by MAS
-        // Add State transition: `.tchapDecideHomeServerScreen => .oidcAuthentication`
-        // If added later, it triggers strange behavior: `Login with OIDC failed: CallbackUrlInvalid(message: "The supplied callback URL used to complete OIDC is invalid.")`
-//        stateMachine.addRoutes(event: .continueWithOIDC, transitions: [.serverConfirmationScreen => .oidcAuthentication,
-//           .startScreen => .oidcAuthentication]) { [weak self] context in
-//               guard let (oidcData, window) = context.userInfo as? (OIDCAuthorizationDataProxy, UIWindow) else {
-//                   fatalError("Missing the OIDC data and presentation anchor.")
-//               }
-//               self?.showOIDCAuthentication(oidcData: oidcData, presentationAnchor: window, fromState: context.fromState)
-//           }
-        let transitions: [SwiftState.Transition<State>] = if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
-            [.serverConfirmationScreen => .oidcAuthentication,
-             .startScreen => .oidcAuthentication,
-             .tchapDecideHomeServerScreen(.login) => .oidcAuthentication,
-             .tchapDecideHomeServerScreen(.register) => .oidcAuthentication]
-        } else {
-            [.serverConfirmationScreen => .oidcAuthentication,
-             .startScreen => .oidcAuthentication]
-        }
-        stateMachine.addRoutes(event: .continueWithOIDC, transitions: transitions) { [weak self] context in
-            guard let (oidcData, window) = context.userInfo as? (OIDCAuthorizationDataProxy, UIWindow) else {
-                fatalError("Missing the OIDC data and presentation anchor.")
-            }
-            self?.showOIDCAuthentication(oidcData: oidcData, presentationAnchor: window, fromState: context.fromState)
-        }
-
-        stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .serverConfirmationScreen), transitions: [.oidcAuthentication => .serverConfirmationScreen])
-        stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .startScreen), transitions: [.oidcAuthentication => .startScreen])
-        
-=======
->>>>>>> release/26.05.3
         stateMachine.addRoutes(event: .continueWithPassword, transitions: [.serverConfirmationScreen => .loginScreen,
                                                                            .startScreen => .loginScreen,
                                                                            .tchapDecideHomeServerScreen(.login) => .loginScreen]) { [weak self] context in
@@ -385,7 +353,6 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                         stateMachine.tryEvent(.continueWithPassword)
                     }
                 case .register:
-<<<<<<< HEAD
                     // Tchap: register customization
 //                    stateMachine.tryEvent(.confirmServer(.register))
                     if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
@@ -396,16 +363,9 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                         // Sskip confirm server screen
                         stateMachine.tryEvent(.confirmServer(.register))
                     }
-                case .reportProblem:
-                    stateMachine.tryEvent(.reportProblem)
-                case .loginDirectlyWithOIDC(let oidcData, let window):
-                    stateMachine.tryEvent(.continueWithOIDC, userInfo: (oidcData, window))
-=======
-                    stateMachine.tryEvent(.confirmServer(.register))
                     
                 case .loginDirectlyWithOAuth(let oAuthData, let window):
                     showOAuthAuthentication(oAuthData: oAuthData, presentationAnchor: window)
->>>>>>> release/26.05.3
                 case .loginDirectlyWithPassword(let loginHint):
                     stateMachine.tryEvent(.continueWithPassword, userInfo: loginHint)
                 
@@ -568,17 +528,12 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
             case .success(let userSession):
                 stateMachine.tryEvent(.signedIn, userInfo: userSession)
             case .failure:
-<<<<<<< HEAD
-                stateMachine.tryEvent(.cancelledOIDCAuthentication(previousState: fromState))
-                // Nothing more to do, the alerts are handled by the presenter.
+                // break // Nothing to do, any alerts will be handled by the presenter.
                 // Tchap: handle reset of `DecideHomeServerScreenCoordinator` if login failed or is canceled by user.
                 //        It enable the user to modify the email instead of being stuck on unmodifiable screen.
                 if let tchapDecideHomeServerCoordinator = navigationStackCoordinator.stackCoordinators.first(where: { $0 is DecideHomeServerScreenCoordinator }) as? DecideHomeServerScreenCoordinator {
                     tchapDecideHomeServerCoordinator.resetLoadingState()
                 }
-=======
-                break // Nothing to do, any alerts will be handled by the presenter.
->>>>>>> release/26.05.3
             }
             oAuthPresenter = nil
         }

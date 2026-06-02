@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import MatrixRustSDK //: tchap:
 import OrderedCollections
 
 enum RoomScreenViewModelAction: Equatable {

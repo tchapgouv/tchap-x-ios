@@ -77,87 +77,15 @@ private struct AuthenticationBrandLogoModifier: ViewModifier {
     }
     
     func body(content: Content) -> some View {
-        if hideBrandChrome {
-<<<<<<< HEAD
-            // Tchap: use Tchap Logo
-//            Image(asset: Asset.Images.appLogo)
-            Image(asset: TchapAsset.TargetAssets.Images.tchapAppLogo)
-=======
-            content
->>>>>>> release/26.05.3
-        } else {
-            styledContent(content)
-        }
+        // :tchap: use Tchap Logo
+        //        if hideBrandChrome {
+        //            content
+        //        } else {
+        //            styledContent(content)
+        //        }
+        Image(asset: TchapAsset.TargetAssets.Images.tchapAppLogo) // :tchap:end
     }
     
-<<<<<<< HEAD
-    private var brandLogo: some View {
-        // Tchap: use Tchap Logo
-//            Image(asset: Asset.Images.appLogo)
-        Image(asset: TchapAsset.TargetAssets.Images.tchapAppLogo)
-            // Tchap: remove background around App logo.
-//            .background {
-//                Circle()
-//                    .inset(by: 1)
-//                    .shadow(color: .black.opacity(!isLight && isOnGradient ? 0.3 : 0.4),
-//                            radius: 12.57143,
-//                            y: 6.28571)
-//
-//                Circle()
-//                    .inset(by: 1)
-//                    .shadow(color: .black.opacity(0.5),
-//                            radius: 12.57143,
-//                            y: 6.28571)
-//                    .blendMode(.overlay)
-//            }
-//            .padding(24)
-//            .background {
-//                Color.white
-//                    .opacity(isLight ? 0.23 : isOnGradient ? 0.05 : 0.13)
-//            }
-//            .clipShape(outerShape)
-//            .overlay {
-//                outerShape
-//                    .inset(by: 0.25)
-//                    .stroke(.white.opacity(isLight ? 1 : isOnGradient ? 0.9 : 0.25), lineWidth: 0.5)
-//                    .blendMode(isLight ? .normal : .overlay)
-//            }
-//            .padding(extra)
-//            .background {
-//                ZStack {
-//                    if !isLight, isOnGradient {
-//                        outerShape
-//                            .inset(by: 1)
-//                            .padding(extra)
-//                            .shadow(color: .black.opacity(0.5),
-//                                    radius: 32.91666,
-//                                    y: 1.05333)
-//                    } else {
-//                        outerShape
-//                            .inset(by: 1)
-//                            .padding(extra)
-//                            .shadow(color: outerShapeShadowColor.opacity(isLight ? 0.23 : 0.08),
-//                                    radius: 16,
-//                                    y: 8)
-//
-//                        outerShape
-//                            .inset(by: 1)
-//                            .padding(extra)
-//                            .shadow(color: outerShapeShadowColor.opacity(0.5),
-//                                    radius: 16,
-//                                    y: 8)
-//                            .blendMode(.overlay)
-//                    }
-//                }
-//                .mask {
-//                    outerShape
-//                        .inset(by: -extra / 2)
-//                        .stroke(lineWidth: extra)
-//                        .padding(extra)
-//                }
-//            }
-//            .padding(-extra)
-=======
     private func styledContent(_ content: Content) -> some View {
         content
             .background {
@@ -221,7 +149,6 @@ private struct AuthenticationBrandLogoModifier: ViewModifier {
                 }
             }
             .padding(-extra)
->>>>>>> release/26.05.3
             .accessibilityHidden(true)
     }
 }

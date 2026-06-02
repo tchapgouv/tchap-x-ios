@@ -78,12 +78,8 @@ final class AppSettings {
         case enableOnlySignedDeviceIsolationMode
         case knockingEnabled
         case threadsEnabled
-<<<<<<< HEAD
         case unencryptedPrivateRoomEnabled // :tchap: unencryptedPrivateRoom
-        case developerOptionsEnabled
-=======
         case roomThreadListEnabled
->>>>>>> release/26.05.3
         case linkPreviewsEnabled
         case focusEventOnNotificationTap
         case linkNewDeviceEnabled
@@ -326,43 +322,27 @@ final class AppSettings {
     
     // MARK: - Authentication
     
-<<<<<<< HEAD
-    /// Any pre-defined static client registrations for OIDC issuers.
-    let oidcStaticRegistrations: [URL: String] = ["https://id.thirdroom.io/realms/thirdroom": "elementx"]
+    /// Any pre-defined static client registrations for OAuth issuers.
+    let oAuthStaticRegistrations: [URL: String] = ["https://id.thirdroom.io/realms/thirdroom": "elementx"]
 
-    // Tchap: Customize OIDC Redirect URL (as stated here https://github.com/element-hq/element-x-ios/issues/4119#issuecomment-2879430647)
+    // Tchap: Customize OAuth Redirect URL (as stated here https://github.com/element-hq/element-x-ios/issues/4119#issuecomment-2879430647)
     // and now in the `docs/FORKING.md` (https://github.com/element-hq/element-x-ios/blob/develop/docs/FORKING.md)
     // Use the same Redirect URL as Tchap Legacy.
     // The fact it is a custom scheme rather than a special web URL avoid the mandatory associated domain declaration: https://developer.apple.com/documentation/xcode/supporting-associated-domains
     //
-    // It seemd the MAS need an oidc redirect url the match the domain name in reverse notation.
-    //    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
-    /// The redirect URL used for OIDC. This no longer uses universal links so we don't need the bundle ID to avoid conflicts between Element X, Nightly and PR builds.
-    
+    // It seemd the MAS need an oauth redirect url the match the domain name in reverse notation.
     #if IS_TCHAP_DEVELOPMENT
-    private(set) var oidcRedirectURL: URL = "net.incubateur.tchap.ios:/"
+    private(set) var oAuthRedirectURL: URL = "net.incubateur.tchap.ios:/"
     #elseif IS_TCHAP_STAGING
-    private(set) var oidcRedirectURL: URL = "fr.gouv.tchap.beta.ios:/"
+    private(set) var oAuthRedirectURL: URL = "fr.gouv.tchap.beta.ios:/"
     #elseif IS_TCHAP_PRODUCTION
-    private(set) var oidcRedirectURL: URL = "fr.gouv.tchap.ios:/"
+    private(set) var oAuthRedirectURL: URL = "fr.gouv.tchap.ios:/"
     #else
-    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
-    #endif
-
-    private(set) lazy var oidcConfiguration = OIDCConfiguration(clientName: InfoPlistReader.main.bundleDisplayName,
-                                                                redirectURI: oidcRedirectURL,
-                                                                clientURI: websiteURL,
-                                                                logoURI: logoURL,
-                                                                tosURI: acceptableUseURL,
-                                                                policyURI: privacyURL,
-                                                                staticRegistrations: oidcStaticRegistrations.mapKeys { $0.absoluteString })
-=======
-    /// Any pre-defined static client registrations for OAuth issuers.
-    let oAuthStaticRegistrations: [URL: String] = ["https://id.thirdroom.io/realms/thirdroom": "elementx"]
     /// The redirect URL used for OAuth. For the normal case we don't actually need the bundle ID as the web authentication session handles the redirect internally.
     /// However in the case where MAS sends the user to an external app, we need to make sure that the system will open the correct variant of the app (e.g. Nightly).
     private(set) var oAuthRedirectURL: URL! = URL(string: "https://element.io/oauth/ios/\(InfoPlistReader.main.bundleIdentifier)")
-    
+    #endif
+
     private(set) lazy var oAuthConfiguration = OAuthConfiguration(clientName: InfoPlistReader.main.bundleDisplayName,
                                                                   redirectURI: oAuthRedirectURL,
                                                                   clientURI: websiteURL,
@@ -370,7 +350,6 @@ final class AppSettings {
                                                                   tosURI: acceptableUseURL,
                                                                   policyURI: privacyURL,
                                                                   staticRegistrations: oAuthStaticRegistrations.mapKeys { $0.absoluteString })
->>>>>>> release/26.05.3
     
     /// Whether or not the Create Account button is shown on the start screen.
     ///
@@ -571,14 +550,6 @@ final class AppSettings {
     // MARK: - Feature Flags
     
     /// Others
-<<<<<<< HEAD
-    // Tchap: enable `publicSearchEnabled` feature flag by default. It is Tchap `join a forum` action.
-//    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
-    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: true, storageType: .userDefaults(store))
-    var publicSearchEnabled
-    
-=======
->>>>>>> release/26.05.3
     @UserPreference(key: UserDefaultsKeys.fuzzyRoomListSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
     var fuzzyRoomListSearchEnabled
     
@@ -597,16 +568,13 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: true, storageType: .userDefaults(store))
     var threadsEnabled
     
-<<<<<<< HEAD
+    @UserPreference(key: UserDefaultsKeys.roomThreadListEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var roomThreadListEnabled
+    
     // :tchap: disable `unencryptedPrivateRoomEnabled` feature flag by default in production.
     @UserPreference(key: UserDefaultsKeys.unencryptedPrivateRoomEnabled, defaultValue: false, storageType: .userDefaults(store))
     var unencryptedPrivateRoomEnabled // :tchap:end
 
-=======
-    @UserPreference(key: UserDefaultsKeys.roomThreadListEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var roomThreadListEnabled
-    
->>>>>>> release/26.05.3
     @UserPreference(key: UserDefaultsKeys.focusEventOnNotificationTap, defaultValue: false, storageType: .userDefaults(store))
     var focusEventOnNotificationTap
         

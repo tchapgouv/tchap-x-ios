@@ -422,17 +422,6 @@ class ClientProxy: ClientProxyProtocol {
         MXLog.info("Starting sync")
         
         Task {
-<<<<<<< HEAD
-
-            // :tchap: expired account - syncService.start() throws error for expired account
-
-//            await syncService.start()
-            try await syncService.start()
-
-            // :tchap:end
-
-            // If we are using OIDC we want to cache the account management URL in volatile memory on the SDK side.
-=======
             if appSettings.clientPausingAndResumingEnabled {
                 do {
                     try await client.resume()
@@ -441,10 +430,10 @@ class ClientProxy: ClientProxyProtocol {
                 }
             }
             
-            await syncService.start()
+            // :tchap: expired account - syncService.start() throws error for expired account
+//            await syncService.start()
+            try await syncService.start() // :tchap:end
             
-            // If we are using OAuth we want to cache the account management URL in volatile memory on the SDK side.
->>>>>>> release/26.05.3
             // To avoid the cache being invalidated while the app is backgrounded, we cache at every sync start.
             await cacheAccountURL()
         }

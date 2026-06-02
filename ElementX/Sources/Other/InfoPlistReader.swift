@@ -120,7 +120,25 @@ struct InfoPlistReader {
         return utType.lowercased()
     }
     
-<<<<<<< HEAD
+    // MARK: - Sign in with Classic app
+    
+    var classicAppGroupIdentifier: String? {
+        infoPlistValue(forKey: Keys.classicAppGroupIdentifier)
+    }
+    
+    var classicAppKeychainServiceIdentifier: String? {
+        infoPlistValue(forKey: Keys.classicAppKeychainServiceIdentifier)
+    }
+    
+    var classicAppKeychainAccessGroupIdentifier: String? {
+        infoPlistValue(forKey: Keys.classicAppKeychainAccessGroupIdentifier)
+    }
+    
+    var classicAppDeepLinkURL: URL? {
+        let urlString: String? = infoPlistValue(forKey: Keys.classicAppDeepLinkURL)
+        return urlString.flatMap { URL(string: $0) }
+    }
+    
     // Tchap: add `pinnedCertificates` property
     
     // MARK: - Tchap Certificate Pinning
@@ -158,25 +176,6 @@ struct InfoPlistReader {
             return []
         }
         return recursiveSearchCertificates(for: "PEM", into: transportSecurityData)
-=======
-    // MARK: - Sign in with Classic app
-    
-    var classicAppGroupIdentifier: String? {
-        infoPlistValue(forKey: Keys.classicAppGroupIdentifier)
-    }
-    
-    var classicAppKeychainServiceIdentifier: String? {
-        infoPlistValue(forKey: Keys.classicAppKeychainServiceIdentifier)
-    }
-    
-    var classicAppKeychainAccessGroupIdentifier: String? {
-        infoPlistValue(forKey: Keys.classicAppKeychainAccessGroupIdentifier)
-    }
-    
-    var classicAppDeepLinkURL: URL? {
-        let urlString: String? = infoPlistValue(forKey: Keys.classicAppDeepLinkURL)
-        return urlString.flatMap { URL(string: $0) }
->>>>>>> release/26.05.3
     }
     
     // MARK: - Private

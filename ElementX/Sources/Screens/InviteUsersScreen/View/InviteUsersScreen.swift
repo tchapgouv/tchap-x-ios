@@ -31,13 +31,10 @@ struct InviteUsersScreen: View {
                               disablesInteractiveDismiss: true,
                               accessibilityFocusOnStart: true)
             .compoundSearchField()
-<<<<<<< HEAD
             .textInputAutocapitalization(.never) // Tchap: don't capitalize search input
-=======
             .sheet(isPresented: $context.presentConfirmationDialog) {
                 InviteUsersConfirmationSheetView(context: context, users: context.viewState.usersToConfirm)
             }
->>>>>>> release/26.05.3
             .alert(item: $context.alertInfo)
             .navigationBarBackButtonHidden(context.viewState.isSkippable)
     }

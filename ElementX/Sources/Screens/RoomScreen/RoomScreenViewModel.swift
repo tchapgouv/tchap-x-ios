@@ -361,26 +361,16 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
             state.canBan = powerLevels.canOwnUserBan()
         }
         
-<<<<<<< HEAD
-        // This causes the UI to become inconsistent with the user's mental model if the user
-        // does not restart the app after disabling the feature flag. We can probably ignore
-        // such cases, since we explicitly ask for an app restart in the caption of the feature
-        // flag switch.
-        if appSettings.enableKeyShareOnInvite {
-            state.roomHistorySharingState = roomInfo.historySharingState
-        }
+        state.roomHistorySharingState = roomInfo.historySharingState
       
-        // Tchap: fill room properties
+        // :tchap: fill room properties
         state.bindings.isEncrypted = roomProxy.details.isEncrypted
         state.bindings.isPublic = roomProxy.details.isPublic
         // Tchap: read the `external access` value in the `accessRules` of the room.
         // Used to display "open to external users" badge.
         state.bindings.accessRule = roomProxy.details.accessRule
         state.bindings.canDisplayPublicBadge = roomProxy.details.canDisplayPublicBadge
-        state.bindings.roomAvatar = roomProxy.details.avatar
-=======
-        state.roomHistorySharingState = roomInfo.historySharingState
->>>>>>> release/26.05.3
+        state.bindings.roomAvatar = roomProxy.details.avatar // :tchap:end
     }
     
     private func setupPinnedEventsTimelineItemProviderIfNeeded() {

@@ -26,14 +26,10 @@ final class ComposerToolbarViewModelTests {
     private var viewModel: ComposerToolbarViewModel!
     private var completionSuggestionServiceMock: CompletionSuggestionServiceMock!
     private var draftServiceMock: ComposerDraftServiceMock!
-<<<<<<< HEAD
     
     // Tchap: adapt test
     private let homeServerName = "tchap.gouv.fr"
     
-=======
-
->>>>>>> release/26.05.3
     init() {
         AppSettings.resetAllSettings()
 

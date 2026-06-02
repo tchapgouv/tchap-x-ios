@@ -7,16 +7,13 @@
 //
 
 import Combine
-<<<<<<< HEAD
+import CoreLocation
 
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
 @testable import TchapX_Production
 #else
-=======
-import CoreLocation
->>>>>>> release/26.05.3
 @testable import ElementX
 #endif
 import Testing

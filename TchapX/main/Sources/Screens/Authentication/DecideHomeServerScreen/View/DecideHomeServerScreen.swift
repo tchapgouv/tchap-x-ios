@@ -129,13 +129,14 @@ struct DecideHomeServerScreen_Previews: PreviewProvider, TestablePreview {
         
         Task { await authenticationService.configure(for: homeserverAddress, flow: .login) }
         
+        let appSettings = AppSettings()
         let viewModel = DecideHomeServerScreenViewModel(authenticationService: authenticationService,
                                                         authenticationFlow: .login,
                                                         loginHint: nil,
-                                                        accountProviders: AppSettings().accountProviders,
+                                                        accountProviders: appSettings.accountProviders,
                                                         userIndicatorController: UserIndicatorControllerMock(),
-                                                        appSettings: ServiceLocator.shared.settings,
-                                                        analytics: ServiceLocator.shared.analytics)
+                                                        appSettings: appSettings,
+                                                        analytics: AnalyticsService.mock())
         
         if withCredentials {
             viewModel.context.username = "alice"

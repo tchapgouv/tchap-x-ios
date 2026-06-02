@@ -336,17 +336,12 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             .receive(on: DispatchQueue.main)
             .sink { [weak self, ownUserID = roomProxy.ownUserID] members in
                 guard let self else { return }
-<<<<<<< HEAD
-               
-                guard roomProxy.isDirectOneToOneRoom else {
-=======
                 
                 if let accountOwner = members.first(where: { $0.userID == ownUserID }) {
                     self.state.accountOwner = .init(withProxy: accountOwner)
                 }
                 
                 guard roomProxy.infoPublisher.value.isDM else {
->>>>>>> release/26.05.3
                     return
                 }
                 

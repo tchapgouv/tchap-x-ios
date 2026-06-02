@@ -20,13 +20,10 @@ enum RoomProxyError: Error {
     case missingTransactionID
     case failedCreatingPinnedTimeline
     case timelineError(TimelineProxyError)
-<<<<<<< HEAD
+    case liveLocationSessionIsNotActive
     // Tchap:
     case unableToUpdateAccessRule(Error)
     case unableToInviteByEmail
-=======
-    case liveLocationSessionIsNotActive
->>>>>>> release/26.05.3
 }
 
 /// An enum that describes the relationship between the current user and the room, and contains a reference to the specific implementation of the `RoomProxy`.
@@ -202,7 +199,14 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func loadDraft(threadRootEventID: String?) async -> Result<ComposerDraft?, RoomProxyError>
     func clearDraft(threadRootEventID: String?) async -> Result<Void, RoomProxyError>
     
-<<<<<<< HEAD
+    // MARK: - Live Location
+    
+    func makeLiveLocationService() async -> RoomLiveLocationServiceProtocol
+    
+    func startLiveLocationShare(duration: Duration) async -> Result<String, RoomProxyError>
+    func sendLiveLocation(geoURI: GeoURI) async -> Result<Void, RoomProxyError>
+    func stopLiveLocationShare() async -> Result<Void, RoomProxyError>
+    
     // Tchap: access rule accessor
     func accessRule() async -> Result<AccessRule?, RoomProxyError>
     
@@ -211,15 +215,6 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
 
     // Tchap: check if room access rule need to be updated to invite user (check for first external user).
     func accessRuleNeedToBeUpdated(for invitedUsers: [String]) async -> Bool
-=======
-    // MARK: - Live Location
-    
-    func makeLiveLocationService() async -> RoomLiveLocationServiceProtocol
-    
-    func startLiveLocationShare(duration: Duration) async -> Result<String, RoomProxyError>
-    func sendLiveLocation(geoURI: GeoURI) async -> Result<Void, RoomProxyError>
-    func stopLiveLocationShare() async -> Result<Void, RoomProxyError>
->>>>>>> release/26.05.3
 }
 
 extension JoinedRoomProxyProtocol {

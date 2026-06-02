@@ -64,18 +64,6 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
         case .cancel:
             actionsSubject.send(.dismiss)
         case .proceed:
-<<<<<<< HEAD
-            // Tchap: check if room access rule need to be updated before inviting users.
-//            inviteUsers(state.selectedUsers.map(\.userID), roomProxy: roomProxy)
-            Task {
-                // Tchap: if room access rule is `restricted` and any invited user is external, update room access_rule to `unrestricted`.
-                let usersToInvite = state.selectedUsers.map(\.userID)
-                guard await !self.roomProxy.accessRuleNeedToBeUpdated(for: usersToInvite) else {
-                    self.displayAlertAboutOpeningRoomToExternalUsers(users: usersToInvite, in: self.roomProxy)
-                    return
-                }
-                self.inviteUsers(usersToInvite, roomProxy: roomProxy)
-=======
             switch roomType {
             case .draft:
                 createDraftRoom(mandatoryUserIDs: state.selectedUsers.map(\.userID))
@@ -83,7 +71,17 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
                 guard roomProxy.details.historySharingState != RoomHistorySharingState.hidden,
                       !state.usersToConfirm.isEmpty,
                       !state.isSkippable else {
-                    inviteUsers(state.selectedUsers.map(\.userID), roomProxy: roomProxy)
+                    // Tchap: check if room access rule need to be updated before inviting users.
+                    //            inviteUsers(state.selectedUsers.map(\.userID), roomProxy: roomProxy)
+                    Task {
+                        // Tchap: if room access rule is `restricted` and any invited user is external, update room access_rule to `unrestricted`.
+                        let usersToInvite = state.selectedUsers.map(\.userID)
+                        guard await !roomProxy.accessRuleNeedToBeUpdated(for: usersToInvite) else {
+                            self.displayAlertAboutOpeningRoomToExternalUsers(users: usersToInvite, in: roomProxy)
+                            return
+                        }
+                        self.inviteUsers(usersToInvite, roomProxy: roomProxy)
+                    }
                     return
                 }
                 state.bindings.presentConfirmationDialog = true
@@ -98,8 +96,17 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
             state.bindings.presentConfirmationDialog = false
             state.usersToConfirm = []
             if case .existingRoom(let roomProxy) = roomType {
-                inviteUsers(state.selectedUsers.map(\.userID), roomProxy: roomProxy)
->>>>>>> release/26.05.3
+                // Tchap: check if room access rule need to be updated before inviting users.
+                //            inviteUsers(state.selectedUsers.map(\.userID), roomProxy: roomProxy)
+                Task {
+                    // Tchap: if room access rule is `restricted` and any invited user is external, update room access_rule to `unrestricted`.
+                    let usersToInvite = state.selectedUsers.map(\.userID)
+                    guard await !roomProxy.accessRuleNeedToBeUpdated(for: usersToInvite) else {
+                        self.displayAlertAboutOpeningRoomToExternalUsers(users: usersToInvite, in: roomProxy)
+                        return
+                    }
+                    self.inviteUsers(usersToInvite, roomProxy: roomProxy)
+                }
             }
         case .toggleUser(let user):
             toggleUser(user)
@@ -142,7 +149,9 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
                                                 isSpace: false,
                                                 userIDs: mandatoryUserIDs,
                                                 avatarURL: nil,
-                                                aliasLocalPart: nil) {
+                                                aliasLocalPart: nil,
+                                                // :tchap: access via link specific param
+                                                isAccessViaLinkEnabled: false) {
             case .success(let roomID):
                 actionsSubject.send(.openRoom(roomID: roomID))
             case .failure:

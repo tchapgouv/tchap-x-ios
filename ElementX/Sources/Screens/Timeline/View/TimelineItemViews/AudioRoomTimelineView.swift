@@ -15,14 +15,13 @@ struct AudioRoomTimelineView: View {
     
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {
-<<<<<<< HEAD
             // Tchap: content-scanner - scanState Views on scanstates other than trusted,
             if timelineItem.scanState == .trusted {
                 MediaFileRoomTimelineContent(filename: timelineItem.content.filename,
                                              fileSize: timelineItem.content.fileSize,
                                              caption: timelineItem.content.caption,
                                              formattedCaption: timelineItem.content.formattedCaption,
-                                             additionalWhitespaces: timelineItem.additionalWhitespaces(),
+                                             trailingReservedSize: timelineItem.trailingReservedSize,
                                              shouldBoost: timelineItem.shouldBoost,
                                              isAudioFile: true) {
                     context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
@@ -32,16 +31,6 @@ struct AudioRoomTimelineView: View {
                 TimelineItemScanStatusFileView(scanState: timelineItem.scanState,
                                                filename: timelineItem.content.filename,
                                                fileSize: timelineItem.content.fileSize)
-=======
-            MediaFileRoomTimelineContent(filename: timelineItem.content.filename,
-                                         fileSize: timelineItem.content.fileSize,
-                                         caption: timelineItem.content.caption,
-                                         formattedCaption: timelineItem.content.formattedCaption,
-                                         trailingReservedSize: timelineItem.trailingReservedSize,
-                                         shouldBoost: timelineItem.shouldBoost,
-                                         isAudioFile: true) {
-                context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
->>>>>>> release/26.05.3
             }
         }
     }

@@ -44,7 +44,7 @@ struct AdvancedSettingsScreen: View {
             
             moderationAndSafetySection
             timelineMediaSection
-<<<<<<< HEAD
+            liveLocationSection
             // :tchap: clear cache option
             Section {
                 Button(role: .destructive) {
@@ -54,9 +54,6 @@ struct AdvancedSettingsScreen: View {
                         .frame(maxWidth: .infinity)
                 }
             } // :tchap:end
-=======
-            liveLocationSection
->>>>>>> release/26.05.3
         }
         .compoundList()
         .navigationTitle(L10n.commonAdvancedSettings)

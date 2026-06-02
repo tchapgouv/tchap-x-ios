@@ -64,16 +64,9 @@ final class AuthenticationStartScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.login)
                 case .register:
                     actionsSubject.send(.register)
-<<<<<<< HEAD
-                case .reportProblem:
-                    actionsSubject.send(.reportProblem)
-                case .loginDirectlyWithOIDC(let data, let window):
-                    actionsSubject.send(.loginDirectlyWithOIDC(data: data, window: window))
-=======
                 
                 case .loginDirectlyWithOAuth(let data, let window):
                     actionsSubject.send(.loginDirectlyWithOAuth(data: data, window: window))
->>>>>>> release/26.05.3
                 case .loginDirectlyWithPassword(let loginHint):
                     actionsSubject.send(.loginDirectlyWithPassword(loginHint: loginHint))
                 

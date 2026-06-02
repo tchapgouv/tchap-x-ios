@@ -30,11 +30,8 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
                                            showDeveloperOptions: appSettings.developerOptionsEnabled,
                                            showAnalyticsSettings: appSettings.canPromptForAnalytics,
                                            isBugReportServiceEnabled: isBugReportServiceEnabled,
-<<<<<<< HEAD
+                                           navigationBarVisibility: isInSecondaryWindow ? .hidden : .automatic,
                                            tchapFaqURL: appSettings.tchapFaqURL),
-=======
-                                           navigationBarVisibility: isInSecondaryWindow ? .hidden : .automatic),
->>>>>>> release/26.05.3
                    mediaProvider: userSession.mediaProvider)
         
         appSettings.$developerOptionsEnabled
