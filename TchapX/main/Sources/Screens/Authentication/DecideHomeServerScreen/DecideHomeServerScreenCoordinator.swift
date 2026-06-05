@@ -25,8 +25,8 @@ struct DecideHomeServerScreenCoordinatorParameters {
 }
 
 enum DecideHomeServerScreenCoordinatorAction {
-    /// The homeserver domain is obtained and the Authentication Service supports OIDC
-    case authenticationServiceConfiguredForOIDC(OIDCAuthorizationDataProxy, UIWindow)
+    /// The homeserver domain is obtained and the Authentication Service supports OAuth
+    case authenticationServiceConfiguredForOAuth(OAuthAuthorizationDataProxy, UIWindow)
     // Tchap: allow passing a loginHint
     /// The homeserver domain is obtained and the Authentication Service is configured for login
 //    case authenticationServiceConfiguredForLogin
@@ -73,8 +73,8 @@ final class DecideHomeServerScreenCoordinator: CoordinatorProtocol {
                 switch action {
                 case .authenticationServiceConfiguredForLogin(let loginHint):
                     actionsSubject.send(.authenticationServiceConfiguredForLogin(loginHint))
-                case .authenticationServiceConfiguredForOIDC(let data, let window):
-                    actionsSubject.send(.authenticationServiceConfiguredForOIDC(data, window))
+                case .authenticationServiceConfiguredForOAuth(let data, let window):
+                    actionsSubject.send(.authenticationServiceConfiguredForOAuth(data, window))
                 }
             }
             .store(in: &cancellables)

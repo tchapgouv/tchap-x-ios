@@ -10,8 +10,8 @@ import MatrixRustSDK
 import SwiftUI
 
 enum DecideHomeServerScreenViewModelAction {
-    /// The homeserver domain is obtained and the Authentication Service supports OIDC
-    case authenticationServiceConfiguredForOIDC(data: OIDCAuthorizationDataProxy, window: UIWindow)
+    /// The homeserver domain is obtained and the Authentication Service supports OAuth
+    case authenticationServiceConfiguredForOAuth(data: OAuthAuthorizationDataProxy, window: UIWindow)
     /// The homeserver domain is obtained and the Authentication Service is configured for login
     case authenticationServiceConfiguredForLogin(loginHint: String)
 }
@@ -21,7 +21,7 @@ struct DecideHomeServerScreenViewState: BindableState {
     var isLoading = false
     /// View state that can be bound to from SwiftUI.
     var bindings = DecideHomeServerScreenBindings()
-    /// The presentation anchor used for OIDC authentication.
+    /// The presentation anchor used for OAuth authentication.
     var window: UIWindow?
     
     /// `true` when valid credentials have been entered and a homeserver has been loaded.
@@ -45,7 +45,7 @@ struct DecideHomeServerScreenBindings {
 }
 
 enum DecideHomeServerScreenViewAction {
-    /// Updates the window used as the OIDC presentation anchor.
+    /// Updates the window used as the OAuth presentation anchor.
     case updateWindow(UIWindow)
     /// Ask any HomeServer the homeServer attached to this email address .
     case requestForHomeserver
@@ -58,8 +58,8 @@ enum DecideHomeServerScreenErrorType: Error, Hashable {
     case tchapGetInstanceError
     /// An error if the Authentication service can't get the configuration of the server.
     case homeserverConfigurationUnreachable
-    /// An error if the Authentication service can't be configured as OIDC.
-    case homeserverDoesntSupportOIDCLoginFlow
+    /// An error if the Authentication service can't be configured as OAuth.
+    case homeserverDoesntSupportOAuthLoginFlow
     /// An error while trying to instantiate the Authentication service after getting the homeserver domain.
     case authenticationServiceError
 }

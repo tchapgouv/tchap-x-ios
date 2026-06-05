@@ -147,22 +147,22 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
         // Pass the Authentication service the desired flow: .login or .register
         switch await authenticationService.configure(for: homeserverDomain, flow: authenticationFlow) {
         case .success:
-            if authenticationService.homeserver.value.loginMode.supportsOIDCFlow {
-                switch await prepareOIDCFlow() {
-                case .success((let oidcData, let window)):
-                    actionsSubject.send(.authenticationServiceConfiguredForOIDC(data: oidcData, window: window))
+            if authenticationService.homeserver.value.loginMode.supportsOAuthFlow {
+                switch await prepareOAuthFlow() {
+                case .success((let oAuthData, let window)):
+                    actionsSubject.send(.authenticationServiceConfiguredForOAuth(data: oAuthData, window: window))
                 case .failure(let error):
                     handleError(error)
-                    MXLog.error("[DecideHomeServerScreen] initAuthenticationService error: can't prepare OIDC flow")
+                    MXLog.error("[DecideHomeServerScreen] initAuthenticationService error: can't prepare OAuth flow")
                 }
             } else if authenticationService.homeserver.value.loginMode == .password {
                 // Redirect to Login flow.
-                // Should not occur: TchapX only supports OIDC / MAS.
+                // Should not occur: TchapX only supports OAuth / MAS.
                 actionsSubject.send(.authenticationServiceConfiguredForLogin(loginHint: loginHint))
             } else {
-                // TchapX only supports authentication via OIDC / MAS
-                MXLog.error("[DecideHomeServerScreen] initAuthenticationService error: homeserverDoesntSupportOIDCLoginFlow")
-                handleError(.homeserverDoesntSupportOIDCLoginFlow)
+                // TchapX only supports authentication via OAuth / MAS
+                MXLog.error("[DecideHomeServerScreen] initAuthenticationService error: homeserverDoesntSupportOAuthLoginFlow")
+                handleError(.homeserverDoesntSupportOAuthLoginFlow)
             }
         case .failure:
             MXLog.error("[DecideHomeServerScreen] initAuthenticationService error: homeserverConfigurationUnreachable")
@@ -170,18 +170,18 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
         }
     }
 
-    /// Request the OIDC server with the user email to prepare OIDC data.
-    private func prepareOIDCFlow() async -> Result<(OIDCAuthorizationDataProxy, UIWindow), DecideHomeServerScreenErrorType> {
+    /// Request the OAuth server with the user email to prepare OAuth data.
+    private func prepareOAuthFlow() async -> Result<(OAuthAuthorizationDataProxy, UIWindow), DecideHomeServerScreenErrorType> {
         guard let window = state.window else {
             return .failure(.authenticationServiceError)
         }
-        switch await authenticationService.urlForOIDCLogin(loginHint: context.username) {
-        case .success(let oidcData):
-            MXLog.info("[DecideHomeServerScreen] prepareOIDC succeed.")
-            return .success((oidcData, window))
+        switch await authenticationService.urlForOAuthLogin(loginHint: context.username) {
+        case .success(let oAuthData):
+            MXLog.info("[DecideHomeServerScreen] prepareOAuth succeed.")
+            return .success((oAuthData, window))
         case .failure:
-            MXLog.error("[DecideHomeServerScreen] prepareOIDC failed.")
-            return .failure(.homeserverDoesntSupportOIDCLoginFlow)
+            MXLog.error("[DecideHomeServerScreen] prepareOAuth failed.")
+            return .failure(.homeserverDoesntSupportOAuthLoginFlow)
         }
     }
     
@@ -210,11 +210,11 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
                                                  title: TchapL10n.screenDecideHomeserverErrorGetInstanceTitle,
                                                  message: TchapL10n.screenDecideHomeserverErrorGetInstanceMessage)
         case .homeserverConfigurationUnreachable:
-            state.bindings.alertInfo = AlertInfo(id: .homeserverDoesntSupportOIDCLoginFlow,
+            state.bindings.alertInfo = AlertInfo(id: .homeserverDoesntSupportOAuthLoginFlow,
                                                  title: TchapL10n.screenDecideHomeserverErrorHomeserverConfigurationUnreachableTitle,
                                                  message: TchapL10n.screenDecideHomeserverErrorHomeserverConfigurationUnreachableMessage)
-        case .homeserverDoesntSupportOIDCLoginFlow:
-            state.bindings.alertInfo = AlertInfo(id: .homeserverDoesntSupportOIDCLoginFlow,
+        case .homeserverDoesntSupportOAuthLoginFlow:
+            state.bindings.alertInfo = AlertInfo(id: .homeserverDoesntSupportOAuthLoginFlow,
                                                  title: TchapL10n.screenDecideHomeserverErrorHomeserverDoesntSupportOidcLoginFlowTitle,
                                                  message: TchapL10n.screenDecideHomeserverErrorHomeserverDoesntSupportOidcLoginFlowMessage)
         case .authenticationServiceError:

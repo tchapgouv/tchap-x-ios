@@ -240,7 +240,7 @@ final class AppSettings {
     /// The task identifier used for background app refresh. Also used in main target's the Info.plist
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
 
-    // Tchap: adapt website URL for OIDC / MAS
+    // Tchap: adapt website URL for OAuth / MAS
     //    private(set) var websiteURL: URL = "https://element.io"
     /// A URL where users can go read more about the app.
     #if IS_TCHAP_PRODUCTION

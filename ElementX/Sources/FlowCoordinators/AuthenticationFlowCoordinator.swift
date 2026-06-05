@@ -263,12 +263,6 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
             }
             stateMachine.addRoutes(event: .tchapCancelledDecideHomeServer, transitions: [.tchapDecideHomeServerScreen(.login) => .startScreen,
                                                                                          .tchapDecideHomeServerScreen(.register) => .startScreen])
-            
-            stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .tchapDecideHomeServerScreen(.login)), transitions: [.oidcAuthentication => .tchapDecideHomeServerScreen(.login)])
-            stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .tchapDecideHomeServerScreen(.register)), transitions: [.oidcAuthentication => .tchapDecideHomeServerScreen(.register)])
-            // Needed to cancel OIDC and stay on `tchapDecideHomeServerScreen` screen, in case of technical error (like "The supplied callback URL used to complete OIDC is invalid.").
-            stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .tchapDecideHomeServerScreen(.login)), transitions: [.tchapDecideHomeServerScreen(.login) => .tchapDecideHomeServerScreen(.login)])
-            stateMachine.addRoutes(event: .cancelledOIDCAuthentication(previousState: .tchapDecideHomeServerScreen(.register)), transitions: [.tchapDecideHomeServerScreen(.register) => .tchapDecideHomeServerScreen(.register)])
         }
         
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .serverConfirmationScreen), transitions: [.loginScreen => .serverConfirmationScreen])
@@ -295,6 +289,8 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         stateMachine.addRoutes(event: .signedIn, transitions: [.qrCodeLoginScreen => .complete,
                                                                .serverConfirmationScreen => .complete, // OAuth authentication
                                                                .startScreen => .complete, // Direct OAuth authentication
+                                                               .tchapDecideHomeServerScreen(.login) => .complete, // :tchap: OAuth authentication from decide homeserver
+                                                               .tchapDecideHomeServerScreen(.register) => .complete, // :tchap: OAuth authentication from decide homeserver
                                                                .loginScreen => .complete]) { [weak self] context in
             guard let userSession = context.userInfo as? UserSessionProtocol else { fatalError("The user session wasn't included in the context") }
             self?.userHasSignedIn(userSession: userSession)
@@ -342,27 +338,21 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 case .loginWithQR:
                     stateMachine.tryEvent(.loginWithQR)
                 case .login:
-                    // Tchap: login customization
+                    // :tchap: login customization
 //                    stateMachine.tryEvent(.confirmServer(.login))
                     if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
-                        // Tchap: login by MAS.
                         stateMachine.tryEvent(.tchapDecideHomeServer(.login))
                     } else {
-                        // Tchap: login with email converted to matrix ID
-                        // Sskip confirm server screen
                         stateMachine.tryEvent(.continueWithPassword)
-                    }
+                    } // :tchap:end
                 case .register:
-                    // Tchap: register customization
+                    // :tchap: register customization
 //                    stateMachine.tryEvent(.confirmServer(.register))
                     if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
-                        // Tchap: register by MAS.
                         stateMachine.tryEvent(.tchapDecideHomeServer(.register))
                     } else {
-                        // Tchap: login with email converted to matrix ID
-                        // Sskip confirm server screen
                         stateMachine.tryEvent(.confirmServer(.register))
-                    }
+                    } // :tchap:end
                     
                 case .loginDirectlyWithOAuth(let oAuthData, let window):
                     showOAuthAuthentication(oAuthData: oAuthData, presentationAnchor: window)
@@ -442,8 +432,8 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 switch action {
                 case .authenticationServiceConfiguredForLogin(let loginHint):
                     stateMachine.tryEvent(.continueWithPassword, userInfo: loginHint)
-                case .authenticationServiceConfiguredForOIDC(let oidcData, let window):
-                    stateMachine.tryEvent(.continueWithOIDC, userInfo: (oidcData, window))
+                case .authenticationServiceConfiguredForOAuth(let oAuthData, let window):
+                    showOAuthAuthentication(oAuthData: oAuthData, presentationAnchor: window)
                 }
             }
             .store(in: &cancellables)

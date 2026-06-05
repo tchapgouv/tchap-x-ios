@@ -110,7 +110,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
         do {
             // The create prompt is broken: https://github.com/element-hq/matrix-authentication-service/issues/3429
             // Tchap: activate flow even if Element considers it is broken.
-            let prompt: OidcPrompt = flow == .register ? .create : .consent
+            let prompt: OAuthPrompt = flow == .register ? .create : .consent
             let oAuthData = try await client.urlForOauth(oauthConfiguration: appSettings.oAuthConfiguration.rustValue,
                                                          prompt: .consent,
                                                          loginHint: loginHint,
