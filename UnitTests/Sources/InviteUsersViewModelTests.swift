@@ -179,7 +179,9 @@ final class InviteUsersScreenViewModelTests {
         
         clientProxy = ClientProxyMock(.init(userID: "@mock:client.com"))
         let newRoomID = "!newroom:example.com"
-        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue = .success(newRoomID)
+        // :tchap: tchap create room
+        //  clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue = .success(newRoomID)
+        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue = .success(newRoomID)
         
         viewModel = InviteUsersScreenViewModel(userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                                roomType: .draft(mandatoryInvitees: [.mockAlice]),
@@ -228,7 +230,9 @@ final class InviteUsersScreenViewModelTests {
         
         try await deferredAction.fulfill()
         
-        let args = try #require(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments)
+        // :tchap: create room with access link
+//        let args = try #require(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments)
+        let args = try #require(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments)
         #expect(args.name == nil)
         #expect(args.topic == nil)
         #expect(args.accessType == .private)
