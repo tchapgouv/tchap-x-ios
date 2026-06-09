@@ -148,6 +148,10 @@ internal enum TchapL10n {
   internal static var screenLoginTitleLogin: String { return TchapL10n.tr("TchapLocalizable", "screen_login_title_login") }
   /// Create an account on Tchap
   internal static var screenLoginTitleRegister: String { return TchapL10n.tr("TchapLocalizable", "screen_login_title_register") }
+  /// Continue with this account
+  internal static var screenOnboardingLegacyContinue: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_legacy_continue") }
+  /// Use another account
+  internal static var screenOnboardingLegacyOtherAccount: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_legacy_other_account") }
   /// The civil servants instant messaging system
   internal static var screenOnboardingWelcomeMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_onboarding_welcome_message") }
   /// Audio and video group calls

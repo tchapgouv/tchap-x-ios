@@ -152,10 +152,14 @@ enum FullscreenDialogBackground {
     /// The bottom gradient from the FTUE flow.
     case gradient
     
-    private var asset: ImageAsset {
+    // :tchap: tchap gradient
+//    private var asset: ImageAsset {
+    private var asset: TchapImage { // :tchap:end
         switch self {
         case .gradient:
-            Asset.Images.backgroundBottom
+            // :tchap: tchap gradient
+//            Asset.Images.backgroundBottom
+            TchapAsset.CommonAssets.Images.tchapBackgroundBottom // :tchap:end
         }
     }
     

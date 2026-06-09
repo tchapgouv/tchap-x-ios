@@ -1003,10 +1003,10 @@
 "screen_onboarding_sign_in_to" = "Connectez-vous à %1$@";
 "screen_onboarding_sign_in_with_qr_code" = "Se connecter avec un code QR";
 "screen_onboarding_sign_up" = "Créer un compte";
-"screen_onboarding_welcome_back" = "Bon retour parmi nous";
+"screen_onboarding_welcome_back" = "Connexion existante détectée"; // Tchap
 "screen_onboarding_welcome_message" = "Bienvenue dans l’application %1$@ la plus rapide de tous les temps. Boosté pour plus de rapidité et de simplicité.";
 "screen_onboarding_welcome_subtitle" = "Bienvenue sur %1$@. Boosté, pour plus de rapidité et de simplicité.";
-"screen_onboarding_welcome_title" = "Soyez dans votre Element";
+"screen_onboarding_welcome_title" = "Bienvenue sur le nouveau Tchap"; // Tchap
 "screen_pinned_timeline_empty_state_description" = "Cliquez (clic long) sur un message et choisissez « %1$@ » pour qu‘il apparaisse ici.";
 "screen_pinned_timeline_empty_state_headline" = "Épinglez les messages importants pour leur donner plus de visibilité";
 "screen_pinned_timeline_screen_title_empty" = "Messages épinglés";

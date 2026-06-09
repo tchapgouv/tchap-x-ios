@@ -24,6 +24,7 @@ internal typealias TchapAssetImageTypeAlias = TchapImage.Image
 internal enum TchapAsset {
   internal enum CommonAssets {
     internal enum Images {
+      internal static let tchapBackgroundBottom = TchapImage(name: "images/tchap-background-bottom")
       internal static let tchapLaunchBackground = TchapImage(name: "images/tchap-launch-background")
     }
   }

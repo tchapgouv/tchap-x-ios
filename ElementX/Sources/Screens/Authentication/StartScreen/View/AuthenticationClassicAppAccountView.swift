@@ -18,7 +18,9 @@ struct AuthenticationClassicAppAccountView: View {
     }
     
     var body: some View {
-        FullscreenDialog(topPadding: 25, background: .gradient) {
+        // :tchap: customize view
+//        FullscreenDialog(topPadding: 25, background: .gradient) {
+        FullscreenDialog(topPadding: 0, background: .gradient) {
             VStack(spacing: 38) {
                 header
                     .padding(.bottom, 20)
@@ -45,6 +47,8 @@ struct AuthenticationClassicAppAccountView: View {
     var header: some View {
         VStack(spacing: 8) {
             AuthenticationStartLogo(size: 54, hideBrandChrome: false, isOnGradient: false)
+                .scaleEffect(0.4) // :tchap: customize view
+                .padding(.bottom, -50) // :tchap: customize view
             
             Text(L10n.screenOnboardingWelcomeTitle)
                 .font(.compound.headingMDBold)
@@ -74,10 +78,11 @@ struct AuthenticationClassicAppAccountView: View {
                     .multilineTextAlignment(.center)
             }
             
-            Text(classicAppAccount.userID)
-                .font(.compound.bodyLGSemibold)
-                .foregroundStyle(.compound.textPrimary)
-                .multilineTextAlignment(.center)
+            // :tchap: hide userID
+//            Text(classicAppAccount.userID)
+//                .font(.compound.bodyLGSemibold)
+//                .foregroundStyle(.compound.textPrimary)
+//                .multilineTextAlignment(.center)
         }
     }
     
@@ -97,12 +102,14 @@ struct AuthenticationClassicAppAccountView: View {
                 .buttonStyle(.compound(.primary))
                 .disabled(true)
             } else {
-                Button(L10n.actionContinue) {
+//                Button(L10n.actionContinue) {
+                Button(TchapL10n.screenOnboardingLegacyContinue) {
                     context.send(viewAction: .continueWithClassic(classicAppAccount))
                 }
                 .buttonStyle(.compound(.primary))
                 
-                Button(L10n.commonOtherOptions) {
+//                Button(L10n.commonOtherOptions) {
+                Button(TchapL10n.screenOnboardingLegacyOtherAccount) {
                     context.send(viewAction: .otherOptions(classicAppAccount))
                 }
                 .buttonStyle(.compound(.secondary))

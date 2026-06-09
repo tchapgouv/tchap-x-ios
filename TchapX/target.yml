@@ -103,6 +103,10 @@ targetTemplates:
         appGroupIdentifier: $(APP_GROUP_IDENTIFIER)
         baseBundleIdentifier: $(BASE_BUNDLE_IDENTIFIER)
         keychainAccessGroupIdentifier: $(KEYCHAIN_ACCESS_GROUP_IDENTIFIER)
+        classicAppGroupIdentifier: $(CLASSIC_APP_GROUP_IDENTIFIER)
+        classicAppKeychainServiceIdentifier: $(CLASSIC_APP_KEYCHAIN_SERVICE_IDENTIFIER)
+        classicAppKeychainAccessGroupIdentifier: $(CLASSIC_APP_KEYCHAIN_ACCESS_GROUP_IDENTIFIER)
+        classicAppDeepLinkURL: $(CLASSIC_APP_DEEP_LINK_URL)
         productionAppName: $(PRODUCTION_APP_NAME)
         ITSAppUsesNonExemptEncryption: false
         NSUserActivityTypes: [
@@ -147,9 +151,12 @@ targetTemplates:
         com.apple.security.app-sandbox: true
         com.apple.security.application-groups:
         - $(APP_GROUP_IDENTIFIER)
+        - $(CLASSIC_APP_GROUP_IDENTIFIER)
         com.apple.security.network.client: true
         keychain-access-groups:
         - $(KEYCHAIN_ACCESS_GROUP_IDENTIFIER)
+        - $(CLASSIC_APP_KEYCHAIN_ACCESS_GROUP_IDENTIFIER)
+
         
     settings:
       BASE_APP_GROUP_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER)
@@ -310,6 +317,12 @@ targets:
       CODE_SIGN_ENTITLEMENTS: TchapX/production/SupportingFiles/tchapx.entitlements
       OTHER_SWIFT_FLAGS: $(inherited) -D IS_MAIN_APP -D IS_TCHAP_PRODUCTION
 
+      # configuration to load accounts from Tchap Classic.
+      CLASSIC_APP_GROUP_IDENTIFIER: group.fr.gouv.tchap
+      CLASSIC_APP_KEYCHAIN_SERVICE_IDENTIFIER: fr.gouv.tchap.encryption-manager-service
+      CLASSIC_APP_KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).fr.gouv.tchap.keychain.shared"
+      CLASSIC_APP_DEEP_LINK_URL: "tchap://open"
+
     preBuildScripts:
     - name: 🛠 SwiftGen
       runOnlyWhenInstalling: false
@@ -395,6 +408,12 @@ targets:
       CODE_SIGN_ENTITLEMENTS: TchapX/staging/SupportingFiles/tchapx.entitlements
       OTHER_SWIFT_FLAGS: $(inherited) -D IS_MAIN_APP -D IS_TCHAP_STAGING
 
+      # configuration to load accounts from Tchap Classic.
+      CLASSIC_APP_GROUP_IDENTIFIER: group.fr.gouv.btchap
+      CLASSIC_APP_KEYCHAIN_SERVICE_IDENTIFIER: fr.gouv.btchap.encryption-manager-service
+      CLASSIC_APP_KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).fr.gouv.btchap.keychain.shared"
+      CLASSIC_APP_DEEP_LINK_URL: "tchap://open"
+
     preBuildScripts:
     - name: 🛠 SwiftGen
       runOnlyWhenInstalling: false
@@ -459,6 +478,12 @@ targets:
       CODE_SIGN_ENTITLEMENTS: TchapX/development/SupportingFiles/tchapx.entitlements
       OTHER_SWIFT_FLAGS: $(inherited) -D IS_MAIN_APP -D IS_TCHAP_DEVELOPMENT
 
+      # configuration to load accounts from Tchap Classic.
+      CLASSIC_APP_GROUP_IDENTIFIER: group.fr.gouv.tchap.dev
+      CLASSIC_APP_KEYCHAIN_SERVICE_IDENTIFIER: fr.gouv.tchap.dev.encryption-manager-service
+      CLASSIC_APP_KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).fr.gouv.tchap.dev.keychain.shared"
+      CLASSIC_APP_DEEP_LINK_URL: "tchap://open"
+  
     preBuildScripts:
     - name: 🛠 SwiftGen
       runOnlyWhenInstalling: false

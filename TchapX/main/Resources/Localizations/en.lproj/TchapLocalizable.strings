@@ -21,6 +21,8 @@ screen_onboarding_welcome_title = "Welcome to\n%1$@";
 screen_onboarding_welcome_message = "The civil servants instant messaging system";
 screen_onboarding_welcome_qrcode_header = "Already logged on a computer?";
 screen_onboarding_welcome_or_between_buttons = "or";
+screen_onboarding_legacy_continue = "Continue with this account";
+screen_onboarding_legacy_other_account = "Use another account";
 
 screen_onboarding_welcome_new_tchap_title = "Welcome to the new Tchap iOS";
 screen_onboarding_welcome_new_tchap_message = "Totaly rebuilt for greater simplicity and new features";

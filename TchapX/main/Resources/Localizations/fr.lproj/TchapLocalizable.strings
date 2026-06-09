@@ -21,6 +21,8 @@ screen_onboarding_welcome_title = "Bienvenue dans\n%1$@";
 screen_onboarding_welcome_message = "La messagerie instantanée du secteur public";
 screen_onboarding_welcome_qrcode_header = "Déjà connecté sur un ordinateur ?";
 screen_onboarding_welcome_or_between_buttons = "ou";
+screen_onboarding_legacy_continue = "Continuer avec ce compte";
+screen_onboarding_legacy_other_account = "Utiliser un autre compte";
 
 screen_onboarding_welcome_new_tchap_title = "Bienvenue dans le nouveau Tchap iOS";
 screen_onboarding_welcome_new_tchap_message = "Entièrement rebâti pour plus de simplicité et de nouvelles fonctionnalités";
