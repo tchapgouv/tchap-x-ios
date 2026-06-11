@@ -26,7 +26,8 @@ struct HomeScreenRoomTests {
                                    unreadMentionsCount: UInt,
                                    unreadNotificationsCount: UInt,
                                    notificationMode: RoomNotificationModeProxy,
-                                   hasOngoingCall: Bool) {
+                                   hasOngoingCall: Bool,
+                                   activeCallIntent: CallIntent? = nil) {
         roomSummary = RoomSummary(room: .init(noHandle: .init()),
                                   id: "Test room",
                                   joinRequestType: nil,
@@ -46,6 +47,7 @@ struct HomeScreenRoomTests {
                                   canonicalAlias: nil,
                                   alternativeAliases: [],
                                   hasOngoingCall: hasOngoingCall,
+                                  activeCallIntent: activeCallIntent,
                                   isMarkedUnread: isMarkedUnread,
                                   isFavourite: false,
                                   isTombstoned: false)
@@ -60,11 +62,11 @@ struct HomeScreenRoomTests {
                          notificationMode: .allMessages,
                          hasOngoingCall: false)
         
-        let room = HomeScreenRoom(summary: roomSummary, hideUnreadMessagesBadge: false)
+        let room = HomeScreenRoom(summary: roomSummary)
         
         #expect(!room.isHighlighted)
         #expect(!room.badges.isDotShown)
-        #expect(!room.badges.isCallShown)
+        #expect(room.badges.callBadgeType == .none)
         #expect(!room.badges.isMuteShown)
         #expect(!room.badges.isMentionShown)
     }
@@ -78,13 +80,28 @@ struct HomeScreenRoomTests {
                          notificationMode: .allMessages,
                          hasOngoingCall: true)
         
-        let room = HomeScreenRoom(summary: roomSummary, hideUnreadMessagesBadge: false)
+        let room = HomeScreenRoom(summary: roomSummary)
         
         #expect(room.isHighlighted)
         #expect(room.badges.isDotShown)
-        #expect(room.badges.isCallShown)
+        #expect(room.badges.callBadgeType == .video)
         #expect(!room.badges.isMuteShown)
         #expect(room.badges.isMentionShown)
+    }
+    
+    @Test
+    mutating func voiceCallBadge() {
+        setupRoomSummary(isMarkedUnread: true,
+                         unreadMessagesCount: 0,
+                         unreadMentionsCount: 0,
+                         unreadNotificationsCount: 0,
+                         notificationMode: .allMessages,
+                         hasOngoingCall: true,
+                         activeCallIntent: .audio)
+        
+        let room = HomeScreenRoom(summary: roomSummary)
+        
+        #expect(room.badges.callBadgeType == .voice)
     }
     
     @Test
@@ -96,11 +113,11 @@ struct HomeScreenRoomTests {
                          notificationMode: .allMessages,
                          hasOngoingCall: false)
         
-        let room = HomeScreenRoom(summary: roomSummary, hideUnreadMessagesBadge: false)
+        let room = HomeScreenRoom(summary: roomSummary)
         
         #expect(!room.isHighlighted)
         #expect(room.badges.isDotShown)
-        #expect(!room.badges.isCallShown)
+        #expect(room.badges.callBadgeType == .none)
         #expect(!room.badges.isMuteShown)
         #expect(!room.badges.isMentionShown)
     }
@@ -114,11 +131,11 @@ struct HomeScreenRoomTests {
                          notificationMode: .allMessages,
                          hasOngoingCall: false)
         
-        let room = HomeScreenRoom(summary: roomSummary, hideUnreadMessagesBadge: false)
+        let room = HomeScreenRoom(summary: roomSummary)
         
         #expect(room.isHighlighted)
         #expect(room.badges.isDotShown)
-        #expect(!room.badges.isCallShown)
+        #expect(room.badges.callBadgeType == .none)
         #expect(!room.badges.isMuteShown)
         #expect(!room.badges.isMentionShown)
     }
@@ -132,11 +149,11 @@ struct HomeScreenRoomTests {
                          notificationMode: .allMessages,
                          hasOngoingCall: false)
         
-        let room = HomeScreenRoom(summary: roomSummary, hideUnreadMessagesBadge: false)
+        let room = HomeScreenRoom(summary: roomSummary)
         
         #expect(room.isHighlighted)
         #expect(room.badges.isDotShown)
-        #expect(!room.badges.isCallShown)
+        #expect(room.badges.callBadgeType == .none)
         #expect(!room.badges.isMuteShown)
         #expect(room.badges.isMentionShown)
     }
@@ -150,11 +167,11 @@ struct HomeScreenRoomTests {
                          notificationMode: .allMessages,
                          hasOngoingCall: true)
         
-        let room = HomeScreenRoom(summary: roomSummary, hideUnreadMessagesBadge: false)
+        let room = HomeScreenRoom(summary: roomSummary)
         
         #expect(!room.isHighlighted)
         #expect(!room.badges.isDotShown)
-        #expect(room.badges.isCallShown)
+        #expect(room.badges.callBadgeType == .video)
         #expect(!room.badges.isMuteShown)
         #expect(!room.badges.isMentionShown)
     }
@@ -168,11 +185,11 @@ struct HomeScreenRoomTests {
                          notificationMode: .mentionsAndKeywordsOnly,
                          hasOngoingCall: false)
         
-        let room = HomeScreenRoom(summary: roomSummary, hideUnreadMessagesBadge: false)
+        let room = HomeScreenRoom(summary: roomSummary)
         
         #expect(!room.isHighlighted)
         #expect(room.badges.isDotShown)
-        #expect(!room.badges.isCallShown)
+        #expect(room.badges.callBadgeType == .none)
         #expect(!room.badges.isMuteShown)
         #expect(!room.badges.isMentionShown)
     }
@@ -186,11 +203,11 @@ struct HomeScreenRoomTests {
                          notificationMode: .mentionsAndKeywordsOnly,
                          hasOngoingCall: false)
         
-        let room = HomeScreenRoom(summary: roomSummary, hideUnreadMessagesBadge: true)
+        let room = HomeScreenRoom(summary: roomSummary, roomListActivityVisibility: .show)
         
         #expect(!room.isHighlighted)
         #expect(!room.badges.isDotShown)
-        #expect(!room.badges.isCallShown)
+        #expect(room.badges.callBadgeType == .none)
         #expect(!room.badges.isMuteShown)
         #expect(!room.badges.isMentionShown)
     }
@@ -206,11 +223,11 @@ struct HomeScreenRoomTests {
                          notificationMode: .allMessages,
                          hasOngoingCall: false)
         
-        let room = HomeScreenRoom(summary: roomSummary, hideUnreadMessagesBadge: false)
+        let room = HomeScreenRoom(summary: roomSummary)
         
         #expect(room.isHighlighted)
         #expect(room.badges.isDotShown)
-        #expect(!room.badges.isCallShown)
+        #expect(room.badges.callBadgeType == .none)
         #expect(!room.badges.isMuteShown)
         #expect(!room.badges.isMentionShown)
     }
@@ -224,11 +241,11 @@ struct HomeScreenRoomTests {
                          notificationMode: .allMessages,
                          hasOngoingCall: false)
         
-        let room = HomeScreenRoom(summary: roomSummary, hideUnreadMessagesBadge: false)
+        let room = HomeScreenRoom(summary: roomSummary)
         
         #expect(room.isHighlighted)
         #expect(room.badges.isDotShown)
-        #expect(!room.badges.isCallShown)
+        #expect(room.badges.callBadgeType == .none)
         #expect(!room.badges.isMuteShown)
         #expect(room.badges.isMentionShown)
     }
@@ -242,11 +259,11 @@ struct HomeScreenRoomTests {
                          notificationMode: .mute,
                          hasOngoingCall: true)
         
-        let room = HomeScreenRoom(summary: roomSummary, hideUnreadMessagesBadge: false)
+        let room = HomeScreenRoom(summary: roomSummary)
         
         #expect(room.isHighlighted)
         #expect(room.badges.isDotShown)
-        #expect(room.badges.isCallShown)
+        #expect(room.badges.callBadgeType == .video)
         #expect(room.badges.isMuteShown)
         #expect(!room.badges.isMentionShown)
     }

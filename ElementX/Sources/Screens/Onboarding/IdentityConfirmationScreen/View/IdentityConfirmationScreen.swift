@@ -10,7 +10,7 @@ import Compound
 import SwiftUI
 
 struct IdentityConfirmationScreen: View {
-    let context: IdentityConfirmationScreenViewModel.Context
+    @Bindable var context: IdentityConfirmationScreenViewModel.Context
     
     var shouldShowSkipButton: Bool {
         #if DEBUG
@@ -31,6 +31,7 @@ struct IdentityConfirmationScreen: View {
         .backgroundStyle(.compound.bgCanvasDefault)
         .navigationBarBackButtonHidden(true)
         .interactiveDismissDisabled()
+        .alert(item: $context.alertInfo)
     }
     
     // MARK: - Private
@@ -139,7 +140,7 @@ struct IdentityConfirmationScreen_Previews: PreviewProvider, TestablePreview {
         userSession.sessionSecurityStatePublisher = CurrentValuePublisher<SessionSecurityState, Never>(.init(verificationState: .unverified, recoveryState: recoveryState))
         
         return IdentityConfirmationScreenViewModel(userSession: userSession,
-                                                   appSettings: ServiceLocator.shared.settings,
-                                                   userIndicatorController: ServiceLocator.shared.userIndicatorController)
+                                                   appSettings: AppSettings(),
+                                                   userIndicatorController: UserIndicatorControllerMock.default)
     }
 }

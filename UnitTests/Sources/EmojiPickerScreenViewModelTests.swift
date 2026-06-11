@@ -23,7 +23,7 @@ struct EmojiPickerScreenViewModelTests {
     var context: EmojiPickerScreenViewModel.Context {
         viewModel.context
     }
-    
+
     @Test
     mutating func toggleReaction() async throws {
         setupViewModel()
@@ -31,7 +31,7 @@ struct EmojiPickerScreenViewModelTests {
         
         let deferred = deferFulfillment(viewModel.actions) { $0 == .dismiss }
         
-        try await waitForConfirmation(timeout: .seconds(5)) { confirmation in
+        await waitForConfirmation(timeout: .seconds(5)) { confirmation in
             timelineProxy.toggleReactionToClosure = { toggledReaction, _ in
                 defer { confirmation() }
                 #expect(toggledReaction == reaction)
@@ -51,7 +51,7 @@ struct EmojiPickerScreenViewModelTests {
         
         viewModel = EmojiPickerScreenViewModel(itemID: .randomEvent,
                                                selectedEmojis: selectedEmojis,
-                                               emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                               emojiProvider: EmojiProvider(appSettings: AppSettings()),
                                                timelineController: MockTimelineController(timelineProxy: timelineProxy))
     }
 }

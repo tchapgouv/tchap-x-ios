@@ -61,13 +61,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         
         let topic = attributedStringBuilder.fromPlain(roomProxy.infoPublisher.value.topic)
         
-        // Clear details.historySharingState manually while we are still behind a feature flag.
-        var details = roomProxy.details
-        if !appSettings.enableKeyShareOnInvite {
-            details.historySharingState = nil
-        }
-        
-        super.init(initialViewState: .init(details: details,
+        super.init(initialViewState: .init(details: roomProxy.details,
                                            isEncrypted: roomProxy.infoPublisher.value.isEncrypted,
                                            isDirect: roomProxy.infoPublisher.value.isDirect,
                                            topic: topic,
@@ -76,10 +70,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                                            notificationSettingsState: .loading,
                                            bindings: .init()),
                    mediaProvider: userSession.mediaProvider)
-        
-        appSettings.$knockingEnabled
-            .weakAssign(to: \.state.knockingEnabled, on: self)
-            .store(in: &cancellables)
         
         Task {
             state.reportRoomEnabled = await userSession.clientProxy.isReportRoomSupported
@@ -120,7 +110,11 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         case .processTapPeople:
             actionsSubject.send(.requestMemberDetailsPresentation)
         case .processTapInvite:
-            actionsSubject.send(.requestInvitePeoplePresentation)
+            if let dmRecipient = state.dmRecipientInfo {
+                actionsSubject.send(.requestInviteToNewRoomPresentation(selectedInvitee: .init(member: dmRecipient.member)))
+            } else {
+                actionsSubject.send(.requestInvitePeoplePresentation)
+            }
         case .processTapLeave:
             processTapToLeave()
         case .confirmLeave:
@@ -151,8 +145,8 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             Task { await toggleFavourite(isFavourite) }
         case .processTapRolesAndPermissions:
             actionsSubject.send(.requestRolesAndPermissionsPresentation)
-        case .processTapCall:
-            actionsSubject.send(.startCall)
+        case .processTapCall(let isVoiceCall):
+            actionsSubject.send(.startCall(isVoiceCall: isVoiceCall))
         case .processTapPinnedEvents:
             analyticsService.trackInteraction(name: .PinnedMessageRoomInfoButton)
             actionsSubject.send(.displayPinnedEventsTimeline)
@@ -187,12 +181,12 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         
         guard state.joinedMembersCount > 1 else {
             state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomProxy.id,
-                                                                   isDM: roomProxy.isDirectOneToOneRoom,
+                                                                   isDM: roomProxy.infoPublisher.value.isDM,
                                                                    state: roomProxy.infoPublisher.value.isPrivate ?? true ? .empty : .public)
             return
         }
         
-        if !roomProxy.isDirectOneToOneRoom, state.accountOwner?.role.isOwner == true {
+        if !roomProxy.infoPublisher.value.isDM, state.accountOwner?.role.isOwner == true {
             var isLastOwner = true
             for member in roomProxy.membersPublisher.value where member.userID != roomProxy.ownUserID && member.membership == .join {
                 if member.role.isOwner {
@@ -214,7 +208,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         }
         
         state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomProxy.id,
-                                                               isDM: roomProxy.isDirectOneToOneRoom,
+                                                               isDM: roomProxy.infoPublisher.value.isDM,
                                                                state: roomProxy.infoPublisher.value.isPrivate ?? true ? .private : .public)
     }
     
@@ -285,14 +279,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         state.joinedMembersCount = roomInfo.joinedMembersCount
         
         state.details = roomProxy.details
-        
-        // Set state.details.historySharingState manually while we are still behind
-        // a feature flag.
-        if appSettings.enableKeyShareOnInvite {
-            state.details.historySharingState = roomInfo.historySharingState
-        } else {
-            state.details.historySharingState = nil
-        }
+        state.details.historySharingState = roomInfo.historySharingState
         
         let topic = attributedStringBuilder.fromPlain(roomInfo.topic)
         state.topic = topic
@@ -349,8 +336,12 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             .receive(on: DispatchQueue.main)
             .sink { [weak self, ownUserID = roomProxy.ownUserID] members in
                 guard let self else { return }
-               
-                guard roomProxy.isDirectOneToOneRoom else {
+                
+                if let accountOwner = members.first(where: { $0.userID == ownUserID }) {
+                    self.state.accountOwner = .init(withProxy: accountOwner)
+                }
+                
+                guard roomProxy.infoPublisher.value.isDM else {
                     return
                 }
                 
@@ -371,7 +362,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             return
         }
         
-        if roomProxy.isDirectOneToOneRoom {
+        if roomProxy.infoPublisher.value.isDM {
             if var dmRecipientInfo = state.dmRecipientInfo {
                 if case let .success(userIdentity) = await userSession.clientProxy.userIdentity(for: dmRecipientInfo.member.id, fallBackToServer: true) {
                     dmRecipientInfo.verificationState = userIdentity?.verificationState

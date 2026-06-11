@@ -4,8 +4,6 @@
 <dict>
 	<key>a11y_digits_entered</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -15,11 +13,11 @@
 			<key>other</key>
 			<string>已输入 %1$d 个数字</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>a11y_polls_percent_of_total</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -29,11 +27,11 @@
 			<key>other</key>
 			<string>%1$d 总投票百分比</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>a11y_read_receipts_multiple_with_others</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -43,11 +41,11 @@
 			<key>other</key>
 			<string>%1$@ 及其他 %2$d 人已读</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>common_many_members</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -57,11 +55,11 @@
 			<key>other</key>
 			<string>其他 %d 人</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>common_member_count</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -69,13 +67,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%1$d个成员</string>
+			<string>%1$d 个成员</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>common_poll_votes_count</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -85,11 +83,11 @@
 			<key>other</key>
 			<string>%d 票</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>common_replies</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -99,11 +97,11 @@
 			<key>other</key>
 			<string>%1$d 个回复</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>common_rooms</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -111,13 +109,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%1$d 房间</string>
+			<string>%1$d 个房间</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>common_selected_count</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -125,13 +123,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%1$d 已选中</string>
+			<string>已选中 %1$d 个</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>common_spaces</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -139,13 +137,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%1$d 空间</string>
+			<string>%1$d 个空间</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>notification_compat_summary_line_for_room</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -153,13 +151,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%1$@：%2$d 条消息</string>
+			<string>%1$@：%2$d 个消息</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>notification_compat_summary_title</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -167,13 +165,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%d 条通知</string>
+			<string>%d 个通知</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>notification_fallback_n_content</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -181,13 +179,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>您有 %d 条新消息。</string>
+			<string>你有 %d 个新消息。</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>notification_invitations</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -197,11 +195,11 @@
 			<key>other</key>
 			<string>%d 个邀请</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>notification_new_messages_for_room</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -209,13 +207,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%d 条新消息</string>
+			<string>%d 个新消息</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>notification_unread_notified_messages</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -223,13 +221,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%d 条未读消息</string>
+			<string>%d 个未读消息</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>notification_unread_notified_messages_in_room_rooms</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -237,13 +235,27 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%d 个聊天室</string>
+			<string>%d 个房间</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>screen_advanced_settings_live_location_update_distance</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>每 %1$d 米</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>screen_app_lock_subtitle</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -253,11 +265,11 @@
 			<key>other</key>
 			<string>还剩 %1$d 次解锁机会</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>screen_app_lock_subtitle_wrong_pin</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -267,11 +279,11 @@
 			<key>other</key>
 			<string>PIN 码错误。还剩 %1$d 次机会</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>screen_leave_space_submit</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -281,39 +293,11 @@
 			<key>other</key>
 			<string>离开 %1$d 个房间和空间</string>
 		</dict>
-	</dict>
-	<key>screen_pinned_timeline_screen_title</key>
-	<dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
-		<key>COUNT</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>other</key>
-			<string>%1$d 置顶消息</string>
-		</dict>
 	</dict>
-	<key>screen_room_member_list_banned_header_title</key>
+	<key>screen_live_location_sheet_subtitle</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
-		<key>COUNT</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>other</key>
-			<string>%1$d 被禁用</string>
-		</dict>
-	</dict>
-	<key>screen_room_member_list_header_title</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -323,11 +307,53 @@
 			<key>other</key>
 			<string>%1$d 个人</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>screen_pinned_timeline_screen_title</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%1$d 个已置顶的消息</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>screen_room_member_list_banned_header_title</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%1$d 人被封禁</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>screen_room_member_list_header_title</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%1$d 个人</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>screen_room_member_list_pending_header_title</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -337,11 +363,11 @@
 			<key>other</key>
 			<string>%1$d 受邀</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>screen_room_multiple_knock_requests_title</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -349,13 +375,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%1$@+ %2$d 其他人想加入这个房间</string>
+			<string>%1$@、%2$d 及其他人想加入此房间</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>screen_room_timeline_reaction_a11y</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -363,13 +389,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%1$d 个成员添加表情符号 %2$@</string>
+			<string>%1$d 个成员使用 %2$@ 反应</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>screen_room_timeline_reaction_including_you_a11y</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -377,13 +403,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>您与 %1$d 个成员添加表情符号 %2$@</string>
+			<string>你与其他 %1$d 个成员使用 %2$@ 反应</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>screen_room_timeline_state_changes</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -391,13 +417,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%1$d 个聊天室变化</string>
+			<string>%1$d 个房间变化</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>screen_room_typing_many_members</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -405,13 +431,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>%1$@，%2$@ 和其他 %3$d 个人</string>
+			<string>%1$@，%2$@ 及其他 %3$d 人</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>screen_room_typing_notification</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -421,11 +447,11 @@
 			<key>other</key>
 			<string>%1$@ 正在输入</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>screen_space_remove_rooms_confirmation_title</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -433,13 +459,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>移除 %1$d 个 %2$@ 中的聊天室</string>
+			<string>移除 %2$@ 个房间，共 %1$d 个</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>troubleshoot_notifications_test_blocked_users_result_some</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -447,13 +473,13 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>您已屏蔽 %1$d 位用户。您将不再收到这些用户的推送通知。</string>
+			<string>你已屏蔽 %1$d 位用户。将不再收到这些用户的通知。</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>troubleshoot_notifications_test_detect_push_provider_success</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -463,11 +489,11 @@
 			<key>other</key>
 			<string>找到了 %1$d 个推送提供者：%2$@</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 	<key>troubleshoot_notifications_test_unified_push_success</key>
 	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@COUNT@</string>
 		<key>COUNT</key>
 		<dict>
 			<key>NSStringFormatSpecTypeKey</key>
@@ -475,8 +501,10 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>找到 %1$d 个 distributors：%2$@</string>
+			<string>找到 %1$d 个分发器：%2$@</string>
 		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
 	</dict>
 </dict>
 </plist>

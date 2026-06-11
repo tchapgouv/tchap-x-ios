@@ -21,7 +21,7 @@ struct FileRoomTimelineView: View {
                                              fileSize: timelineItem.content.fileSize,
                                              caption: timelineItem.content.caption,
                                              formattedCaption: timelineItem.content.formattedCaption,
-                                             additionalWhitespaces: timelineItem.additionalWhitespaces(),
+                                             trailingReservedSize: timelineItem.trailingReservedSize,
                                              shouldBoost: timelineItem.shouldBoost) {
                     context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
                 }
@@ -42,7 +42,7 @@ struct MediaFileRoomTimelineContent: View {
     let fileSize: UInt?
     let caption: String?
     let formattedCaption: AttributedString?
-    let additionalWhitespaces: Int
+    var trailingReservedSize: CGSize = .zero
     var shouldBoost = false
     var isAudioFile = false
     
@@ -73,11 +73,11 @@ struct MediaFileRoomTimelineContent: View {
             
             if let formattedCaption {
                 FormattedBodyText(attributedString: formattedCaption,
-                                  additionalWhitespacesCount: additionalWhitespaces,
+                                  trailingReservedSize: trailingReservedSize,
                                   boostFontSize: shouldBoost)
             } else if let caption {
                 FormattedBodyText(text: caption,
-                                  additionalWhitespacesCount: additionalWhitespaces,
+                                  trailingReservedSize: trailingReservedSize,
                                   boostFontSize: shouldBoost)
             }
         }
@@ -97,10 +97,11 @@ struct MediaFileRoomTimelineContent: View {
             .foregroundStyle(.compound.textPrimary)
             .lineLimit(2)
         } icon: {
-            CompoundIcon(icon, size: .xSmall, relativeTo: .body)
+            CompoundIcon(icon, size: .medium, relativeTo: .body)
                 .foregroundColor(.compound.iconPrimary)
-                .scaledPadding(8)
-                .background(.compound.iconOnSolidPrimary, in: Circle())
+                .scaledPadding(6)
+                .background(.compound.iconOnSolidPrimary,
+                            in: RoundedRectangle(cornerRadius: 4, style: .continuous))
         }
         .labelStyle(.custom(spacing: 8, alignment: .center))
         .padding(.horizontal, 4) // Add to the styler's padding of 8, as we use the default insets for the caption.

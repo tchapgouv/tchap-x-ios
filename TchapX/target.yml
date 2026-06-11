@@ -84,13 +84,6 @@ targetTemplates:
         CFBundleURLTypes: [
           {
             CFBundleTypeRole: Editor,
-            CFBundleURLName: "Element Call",
-            CFBundleURLSchemes: [
-              io.element.call
-            ]
-          },
-          {
-            CFBundleTypeRole: Editor,
             CFBundleURLName: "Application",
             CFBundleURLSchemes: [
               $(BASE_BUNDLE_IDENTIFIER), # The app's own scheme for custom routes
@@ -98,6 +91,9 @@ targetTemplates:
             ]
           }
         ]
+        UIApplicationSceneManifest: {
+          UIApplicationSupportsMultipleScenes: true
+        }
         UISupportedInterfaceOrientations: [
           UIInterfaceOrientationPortrait,
           UIInterfaceOrientationPortraitUpsideDown,
@@ -117,12 +113,14 @@ targetTemplates:
         NSMicrophoneUsageDescription: To record and send messages with audio, $(APP_DISPLAY_NAME) needs to access the microphone.
         NSPhotoLibraryAddUsageDescription: This lets you save images and videos to your photo library.
         NSLocationWhenInUseUsageDescription: Grant location access so that $(APP_DISPLAY_NAME) can share your location.
+        NSLocationAlwaysAndWhenInUseUsageDescription: To share your live location, $(APP_DISPLAY_NAME) needs location access when the app is in the background.
         NSFaceIDUsageDescription: Face ID is used to access your app.
         UIBackgroundModes: [
           audio,
           fetch,
           processing,
-          voip
+          voip,
+          location
         ]
         UTExportedTypeDeclarations:
         - UTTypeConformsTo: [public.text]
@@ -142,7 +140,6 @@ targetTemplates:
         com.apple.developer.associated-domains:
         - applinks:$(BASE_BUNDLE_IDENTIFIER)
         - applinks:www.$(BASE_BUNDLE_IDENTIFIER)
-        - applinks:call.element.io
         - applinks:matrix.to
         # - applinks:localhost?mode=developer # developer mode only works with https (but self-signed is fine).
         - webcredentials:www.$(BASE_BUNDLE_IDENTIFIER)
@@ -218,6 +215,7 @@ targetTemplates:
     - package: KZFileWatchers
     - package: LoremSwiftum
     - package: LRUCache
+    - package: Mantis
     - package: MapLibre
     - package: PostHog
     - package: SwiftState

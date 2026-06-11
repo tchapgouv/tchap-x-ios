@@ -16,7 +16,7 @@ enum ChatsTabFlowCoordinatorAction {
     case showSettings
     case showChatBackupSettings
     case sessionVerification(SessionVerificationScreenFlow)
-    case showCallScreen(roomProxy: JoinedRoomProxyProtocol)
+    case showCallScreen(roomProxy: JoinedRoomProxyProtocol, isVoiceCall: Bool)
     case hideCallScreenOverlay
     case logout
 }
@@ -87,6 +87,8 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
     // MARK: - FlowCoordinatorProtocol
     
     func handleAppRoute(_ appRoute: AppRoute, animated: Bool) {
+        MXLog.info("Handling app route: \(appRoute)")
+        
         Task {
             await asyncHandleAppRoute(appRoute, animated: animated)
         }
@@ -170,7 +172,9 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
             } else {
                 stateMachine.processEvent(.presentTransferOwnershipScreen(roomID: roomID))
             }
-        case .accountProvisioningLink, .settings, .chatBackupSettings, .call, .genericCallLink:
+        case .globalSearch:
+            presentGlobalSearch()
+        case .accountProvisioningLink, .oAuthCallback, .settings, .chatBackupSettings, .call:
             break // These routes cannot be handled.
         }
     }
@@ -315,7 +319,11 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
             if case .space = detailState {
                 dismissRoomFlow(animated: animated)
             }
-            startRoomFlow(roomID: roomID, via: via, entryPoint: entryPoint, animated: animated)
+            startRoomFlow(roomID: roomID,
+                          via: via,
+                          entryPoint: entryPoint,
+                          detached: false,
+                          animated: animated)
         }
         actionsSubject.send(.hideCallScreenOverlay) // Turn any active call into a PiP so that navigation from a notification is visible to the user.
     }
@@ -390,6 +398,8 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
                 switch action {
                 case .presentRoom(let roomID):
                     handleAppRoute(.room(roomID: roomID, via: []), animated: true)
+                case .detachRoom(let roomID):
+                    startRoomFlow(roomID: roomID, via: [], entryPoint: .room, detached: true, animated: true)
                 case .presentRoomDetails(let roomID):
                     handleAppRoute(.roomDetails(roomID: roomID), animated: true)
                 case .presentReportRoom(let roomID):
@@ -413,8 +423,6 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
                     stateMachine.processEvent(.startEncryptionResetFlow)
                 case .presentStartChatScreen:
                     stateMachine.processEvent(.startStartChatFlow)
-                case .presentGlobalSearch:
-                    presentGlobalSearch()
                 case .logout:
                     actionsSubject.send(.logout)
                 case .presentDeclineAndBlock(let userID, let roomID):
@@ -513,8 +521,10 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
     private func startRoomFlow(roomID: String,
                                via: [String],
                                entryPoint: RoomFlowCoordinatorEntryPoint,
+                               detached: Bool,
                                animated: Bool) {
-        let navigationStackCoordinator = NavigationStackCoordinator(navigationSplitCoordinator: navigationSplitCoordinator)
+        let navigationStackCoordinator = NavigationStackCoordinator(navigationSplitCoordinator: detached ? nil : navigationSplitCoordinator)
+        
         let coordinator = RoomFlowCoordinator(roomID: roomID,
                                               isChildFlow: false,
                                               navigationStackCoordinator: navigationStackCoordinator,
@@ -524,8 +534,8 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
             guard let self else { return }
             
             switch action {
-            case .presentCallScreen(let roomProxy):
-                actionsSubject.send(.showCallScreen(roomProxy: roomProxy))
+            case .presentCallScreen(let roomProxy, let isVoiceCall):
+                actionsSubject.send(.showCallScreen(roomProxy: roomProxy, isVoiceCall: isVoiceCall))
             case .verifyUser(let userID):
                 actionsSubject.send(.sessionVerification(.userInitiator(userID: userID)))
             case .continueWithSpaceFlow(let spaceRoomListProxy):
@@ -536,9 +546,14 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
         }
         .store(in: &cancellables)
         
-        roomFlowCoordinator = coordinator
-        
-        navigationSplitCoordinator.setDetailCoordinator(navigationStackCoordinator, animated: animated)
+        if detached {
+            flowParameters.windowManager.registerCoordinator(navigationStackCoordinator,
+                                                             flowCoordinator: coordinator,
+                                                             forWindowType: .room(roomID: roomID))
+        } else {
+            roomFlowCoordinator = coordinator
+            navigationSplitCoordinator.setDetailCoordinator(navigationStackCoordinator, animated: animated)
+        }
         
         switch entryPoint {
         case .room:
@@ -581,8 +596,8 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
             .sink { [weak self] action in
                 guard let self else { return }
                 switch action {
-                case .presentCallScreen(let roomProxy):
-                    actionsSubject.send(.showCallScreen(roomProxy: roomProxy))
+                case .presentCallScreen(let roomProxy, let isVoiceCall):
+                    actionsSubject.send(.showCallScreen(roomProxy: roomProxy, isVoiceCall: isVoiceCall))
                 case .verifyUser(let userID):
                     actionsSubject.send(.sessionVerification(.userInitiator(userID: userID)))
                 case .finished:
@@ -676,7 +691,9 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
     private func startEncryptionResetFlow(animated: Bool) {
         let sheetNavigationStackCoordinator = NavigationStackCoordinator()
         let parameters = EncryptionResetFlowCoordinatorParameters(userSession: userSession,
+                                                                  appMediator: flowParameters.appMediator,
                                                                   appSettings: flowParameters.appSettings,
+                                                                  appHooks: flowParameters.appHooks,
                                                                   userIndicatorController: flowParameters.userIndicatorController,
                                                                   navigationStackCoordinator: sheetNavigationStackCoordinator,
                                                                   windowManger: flowParameters.windowManager)
@@ -779,7 +796,8 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
                                                                 isPresentedModally: true,
                                                                 userSession: userSession,
                                                                 userIndicatorController: flowParameters.userIndicatorController,
-                                                                analytics: flowParameters.analytics)
+                                                                analytics: flowParameters.analytics,
+                                                                appSettings: flowParameters.appSettings)
         let coordinator = UserProfileScreenCoordinator(parameters: parameters)
         coordinator.actionsPublisher.sink { [weak self] action in
             guard let self else { return }
@@ -788,8 +806,8 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
             case .openDirectChat(let roomID):
                 navigationSplitCoordinator.setSheetCoordinator(nil)
                 stateMachine.processEvent(.selectRoom(roomID: roomID, via: [], entryPoint: .room))
-            case .startCall(let roomProxy):
-                actionsSubject.send(.showCallScreen(roomProxy: roomProxy))
+            case .startCall(let roomProxy, let isVoiceCall):
+                actionsSubject.send(.showCallScreen(roomProxy: roomProxy, isVoiceCall: isVoiceCall))
             case .dismiss:
                 navigationSplitCoordinator.setSheetCoordinator(nil)
             }

@@ -8,7 +8,6 @@
 	<array>
 		<string>applinks:$(BASE_BUNDLE_IDENTIFIER)</string>
 		<string>applinks:www.$(BASE_BUNDLE_IDENTIFIER)</string>
-		<string>applinks:call.element.io</string>
 		<string>applinks:matrix.to</string>
 		<string>webcredentials:www.$(BASE_BUNDLE_IDENTIFIER)</string>
 	</array>

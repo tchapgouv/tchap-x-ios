@@ -27,7 +27,7 @@ struct LoginScreen: View {
                 switch context.viewState.loginMode {
                 case .password:
                     loginForm
-                case .oidc:
+                case .oAuth:
                     // This should never be shown.
                     ProgressView()
                 default:
@@ -112,7 +112,7 @@ struct LoginScreen: View {
         }
     }
     
-    /// Text shown if neither password or OIDC login is supported.
+    /// Text shown if neither password or OAuth login is supported.
     var loginUnavailableText: some View {
         Text(L10n.screenLoginErrorUnsupportedAuthentication)
             .font(.body)
@@ -168,11 +168,14 @@ struct LoginScreen_Previews: PreviewProvider, TestablePreview {
         
         Task { await authenticationService.configure(for: homeserverAddress, flow: .login) }
         
+        let appSettings = AppSettings()
+        let analytics = AnalyticsService.mock(settings: appSettings)
+        
         let viewModel = LoginScreenViewModel(authenticationService: authenticationService,
                                              loginHint: nil,
                                              userIndicatorController: UserIndicatorControllerMock(),
-                                             appSettings: ServiceLocator.shared.settings,
-                                             analytics: ServiceLocator.shared.analytics)
+                                             appSettings: appSettings,
+                                             analytics: analytics)
         
         if withCredentials {
             viewModel.context.username = "alice"

@@ -11,8 +11,6 @@
 		<string>applinks:staging.element.io</string>
 		<string>applinks:develop.element.io</string>
 		<string>applinks:mobile.element.io</string>
-		<string>applinks:call.element.io</string>
-		<string>applinks:call.element.dev</string>
 		<string>applinks:matrix.to</string>
 		<string>webcredentials:*.element.io</string>
 	</array>
@@ -23,12 +21,14 @@
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>$(APP_GROUP_IDENTIFIER)</string>
+		<string>$(CLASSIC_APP_GROUP_IDENTIFIER)</string>
 	</array>
 	<key>com.apple.security.network.client</key>
 	<true/>
 	<key>keychain-access-groups</key>
 	<array>
 		<string>$(KEYCHAIN_ACCESS_GROUP_IDENTIFIER)</string>
+		<string>$(CLASSIC_APP_KEYCHAIN_ACCESS_GROUP_IDENTIFIER)</string>
 	</array>
 </dict>
 </plist>

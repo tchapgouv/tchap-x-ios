@@ -68,6 +68,8 @@ extension JoinedRoomProxyMock {
         typingMembersPublisher = CurrentValueSubject([]).asCurrentValuePublisher()
         identityStatusChangesPublisher = CurrentValueSubject([]).asCurrentValuePublisher()
 
+        makeLiveLocationServiceReturnValue = RoomLiveLocationServiceMock(.init())
+        
         updateMembersClosure = { }
         setNameClosure = { _ in .success(()) }
         setTopicClosure = { _ in .success(()) }
@@ -137,7 +139,7 @@ extension JoinedRoomProxyMock {
             fatalError()
         }
         
-        widgetDriver.startBaseURLClientIDColorSchemeRageshakeURLAnalyticsConfigurationReturnValue = .success(url)
+        widgetDriver.startBaseURLClientIDColorSchemeVoiceOnlyRageshakeURLAnalyticsConfigurationUnderlyingReturnValue = .success(url)
         
         elementCallWidgetDriverDeviceIDReturnValue = widgetDriver
         
@@ -180,6 +182,7 @@ extension RoomInfoProxyMock {
         activeMembersCount = configuration.members.filter { $0.membership == .join || $0.membership == .invite }.count
         invitedMembersCount = configuration.members.filter { $0.membership == .invite }.count
         joinedMembersCount = configuration.members.filter { $0.membership == .join }.count
+        isDM = isDirect && activeMembersCount <= 2
         highlightCount = 0
         notificationCount = 0
         cachedUserDefinedNotificationMode = .allMessages

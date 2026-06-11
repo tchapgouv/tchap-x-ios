@@ -51,7 +51,7 @@ struct SoftLogoutScreenViewModelTests {
     }
 
     @Test
-    func initialStateForOIDC() {
+    func initialStateForOAuth() {
         let viewModel = SoftLogoutScreenViewModel(credentials: credentials,
                                                   homeserver: .mockMatrixDotOrg,
                                                   keyBackupNeeded: false)
@@ -60,7 +60,7 @@ struct SoftLogoutScreenViewModelTests {
         // Given a view model where the user hasn't yet sent the verification email.
         #expect(context.password.isEmpty, "The view model should start with an empty password.")
         #expect(!context.viewState.canSubmit, "The view model should start with an invalid password.")
-        #expect(context.viewState.loginMode.supportsOIDCFlow, "The view model should show OIDC button for the given homeserver.")
+        #expect(context.viewState.loginMode.supportsOAuthFlow, "The view model should show OAuth button for the given homeserver.")
         #expect(!context.viewState.showRecoverEncryptionKeysMessage, "The view model should not show recover encryption keys message.")
     }
     

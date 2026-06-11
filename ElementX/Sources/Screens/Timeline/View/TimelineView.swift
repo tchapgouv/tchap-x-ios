@@ -34,7 +34,7 @@ struct TimelineView: View {
                                                              canCurrentUserRedactOthers: timelineContext.viewState.canCurrentUserRedactOthers,
                                                              canCurrentUserPin: timelineContext.viewState.canCurrentUserPin,
                                                              pinnedEventIDs: timelineContext.viewState.pinnedEventIDs,
-                                                             isDM: timelineContext.viewState.isDirectOneToOneRoom,
+                                                             isDM: timelineContext.viewState.isDM,
                                                              isViewSourceEnabled: timelineContext.viewState.isViewSourceEnabled,
                                                              areThreadsEnabled: timelineContext.viewState.areThreadsEnabled,
                                                              timelineKind: timelineContext.viewState.timelineKind,
@@ -83,7 +83,9 @@ struct TimelineViewRepresentable: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> TimelineTableViewController {
         TimelineTableViewController(coordinator: context.coordinator,
                                     isScrolledToBottom: $viewModelContext.isScrolledToBottom,
-                                    scrollToBottomPublisher: viewModelContext.viewState.timelineState.scrollToBottomPublisher)
+                                    floatingDate: $viewModelContext.floatingDate,
+                                    scrollToBottomPublisher: viewModelContext.viewState.timelineState.scrollToBottomPublisher,
+                                    scrollToFirstItemForDatePublisher: viewModelContext.viewState.timelineState.scrollToFirstItemForDatePublisher)
     }
     
     func updateUIViewController(_ uiViewController: TimelineTableViewController, context: Context) {
@@ -143,23 +145,29 @@ struct TimelineView_Previews: PreviewProvider { // Not testable as this preview 
     static let roomProxyMock = JoinedRoomProxyMock(.init(id: "stable_id",
                                                          name: "Preview room"))
     static let roomViewModel = RoomScreenViewModel.mock(roomProxyMock: roomProxyMock)
-    static let timelineViewModel = TimelineViewModel(roomProxy: roomProxyMock,
-                                                     timelineController: MockTimelineController(),
-                                                     userSession: UserSessionMock(.init()),
-                                                     mediaPlayerProvider: MediaPlayerProviderMock(),
-                                                     userIndicatorController: ServiceLocator.shared.userIndicatorController,
-                                                     appMediator: AppMediatorMock.default,
-                                                     appSettings: ServiceLocator.shared.settings,
-                                                     analyticsService: ServiceLocator.shared.analytics,
-                                                     emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
-                                                     linkMetadataProvider: LinkMetadataProvider(),
-                                                     timelineControllerFactory: TimelineControllerFactoryMock(.init()))
+    static let composerViewModel = ComposerToolbarViewModel.mock()
+    static let timelineViewModel = {
+        let appSettings = AppSettings()
+        let analytics = AnalyticsService.mock(settings: appSettings)
+
+        return TimelineViewModel(roomProxy: roomProxyMock,
+                                 timelineController: MockTimelineController(),
+                                 userSession: UserSessionMock(.init()),
+                                 mediaPlayerProvider: MediaPlayerProviderMock(),
+                                 userIndicatorController: UserIndicatorControllerMock.default,
+                                 appMediator: AppMediatorMock.default,
+                                 appSettings: appSettings,
+                                 analyticsService: analytics,
+                                 emojiProvider: EmojiProvider(appSettings: appSettings),
+                                 linkMetadataProvider: LinkMetadataProvider(),
+                                 timelineControllerFactory: TimelineControllerFactoryMock(.init()))
+    }()
 
     static var previews: some View {
         ElementNavigationStack {
             RoomScreen(context: roomViewModel.context,
                        timelineContext: timelineViewModel.context,
-                       composerToolbar: ComposerToolbar.mock())
+                       composerToolbar: ComposerToolbar(context: composerViewModel.context))
         }
     }
 }

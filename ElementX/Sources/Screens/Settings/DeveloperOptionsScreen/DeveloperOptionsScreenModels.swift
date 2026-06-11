@@ -16,6 +16,9 @@ struct DeveloperOptionsScreenViewState: BindableState {
     let elementCallBaseURL: URL
     let appHooks: AppHooks
     var storeSizes: [StoreSize]?
+    let shouldShowClearCache: Bool
+    let isPresentedModally: Bool
+    
     var bindings: DeveloperOptionsScreenViewStateBindings
     
     struct StoreSize: Identifiable {
@@ -45,6 +48,7 @@ struct DeveloperOptionsScreenViewStateBindings {
 
 enum DeveloperOptionsScreenViewAction {
     case clearCache
+    case markAllRoomsAsRead
 }
 
 protocol DeveloperOptionsProtocol: AnyObject {
@@ -52,14 +56,13 @@ protocol DeveloperOptionsProtocol: AnyObject {
     var traceLogPacks: Set<TraceLogPack> { get set }
     
     var enableOnlySignedDeviceIsolationMode: Bool { get set }
-    var enableKeyShareOnInvite: Bool { get set }
     var hideQuietNotificationAlerts: Bool { get set }
     var focusEventOnNotificationTap: Bool { get set }
+    var automaticBackPaginationEnabled: Bool { get set }
     
-    var hideUnreadMessagesBadge: Bool { get set }
+    var roomListActivityVisibility: RoomListActivityVisibility { get set }
     var elementCallBaseURLOverride: URL? { get set }
     
-    var publicSearchEnabled: Bool { get set }
     var fuzzyRoomListSearchEnabled: Bool { get set }
     var lowPriorityFilterEnabled: Bool { get set }
     var knockingEnabled: Bool { get set }
@@ -67,8 +70,8 @@ protocol DeveloperOptionsProtocol: AnyObject {
     var linkPreviewsEnabled: Bool { get set }
     
     var linkNewDeviceEnabled: Bool { get set }
-    
-    var liveLocationSharingEnabled: Bool { get set }
+            
+    var roomThreadListEnabled: Bool { get set }
 }
 
 extension AppSettings: DeveloperOptionsProtocol { }

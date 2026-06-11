@@ -11,14 +11,14 @@ import SwiftUI
 struct LocationPickerSheet: View {
     @Bindable var context: LocationSharingScreenViewModel.Context
     @State private var height: CGFloat = .zero
-    
+
     /// Fixes an iOS 26 sheet issue
     /// if the content doesn't meet a certain size
     /// additional insets are added.
     private var additionalHeight: CGFloat {
-        context.viewState.showLiveLocationSharingButton ? 0 : 28
+        context.viewState.interactionMode.shouldShowLiveLocationOption ? 0 : 28
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
             Text(L10n.screenSharingLocationOptionSheetTitle)
@@ -26,6 +26,7 @@ struct LocationPickerSheet: View {
                 .font(.compound.bodyLGSemibold)
                 .padding(.top, 29)
                 .padding(.bottom, 25)
+            
             Button {
                 context.send(viewAction: .selectLocation)
             } label: {
@@ -39,8 +40,11 @@ struct LocationPickerSheet: View {
                                         iconColor: .compound.iconSecondary)
                 }
             }
-            if context.viewState.showLiveLocationSharingButton {
-                Button { } label: {
+            
+            if context.viewState.interactionMode.shouldShowLiveLocationOption {
+                Button {
+                    context.send(viewAction: .startLiveLocation)
+                } label: {
                     LocationPickerLabel(text: L10n.actionShareLiveLocation,
                                         icon: \.locationPinSolid,
                                         iconColor: .compound.iconAccentPrimary)

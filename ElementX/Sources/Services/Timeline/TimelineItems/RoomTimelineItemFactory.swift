@@ -41,6 +41,8 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                 return buildRedactedTimelineItem(eventItemProxy, messageLikeContent, isOutgoing)
             case .unableToDecrypt(let encryptedMessage):
                 return buildEncryptedTimelineItem(eventItemProxy, messageLikeContent, encryptedMessage, isOutgoing)
+            case .liveLocation(let content):
+                return buildLiveLocationTimelineItem(eventItemProxy, messageLikeContent, content, isOutgoing)
             case .other:
                 return nil // We shouldn't receive these without asking for custom event types.
             }
@@ -67,11 +69,8 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                                        isOutgoing: isOutgoing)
         case .callInvite:
             return buildCallInviteTimelineItem(for: eventItemProxy)
-        case .rtcNotification:
-            return buildCallNotificationTimelineItem(for: eventItemProxy)
-        case .liveLocation:
-            // TODO: Implement
-            return nil
+        case .rtcNotification(let callIntent, let declinedBy):
+            return buildCallNotificationTimelineItem(for: eventItemProxy, isDM: isDM, callIntent: callIntent, declinedBy: declinedBy)
         }
     }
     
@@ -433,6 +432,27 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                                       encryptionForwarder: eventItemProxy.forwarder))
     }
     
+    private func buildLiveLocationTimelineItem(_ eventItemProxy: EventTimelineItemProxy,
+                                               _ messageLikeContent: MsgLikeContent,
+                                               _ liveLocationContent: LiveLocationContent,
+                                               _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
+        LiveLocationRoomTimelineItem(id: eventItemProxy.id,
+                                     timestamp: eventItemProxy.timestamp,
+                                     isOutgoing: isOutgoing,
+                                     isEditable: eventItemProxy.isEditable,
+                                     canBeRepliedTo: eventItemProxy.canBeRepliedTo,
+                                     sender: eventItemProxy.sender,
+                                     content: .init(from: liveLocationContent, timestamp: eventItemProxy.timestamp),
+                                     properties: .init(replyDetails: buildTimelineItemReplyDetails(messageLikeContent.inReplyTo),
+                                                       isThreaded: messageLikeContent.threadRoot != nil,
+                                                       threadSummary: buildTimelineItemThreadSummary(messageLikeContent.threadSummary),
+                                                       reactions: buildAggregatedReactions(messageLikeContent.reactions),
+                                                       deliveryStatus: eventItemProxy.deliveryStatus,
+                                                       orderedReadReceipts: buildOrderedReadReceipts(eventItemProxy.readReceipts),
+                                                       encryptionAuthenticity: buildEncryptionAuthenticity(eventItemProxy.shieldState),
+                                                       encryptionForwarder: eventItemProxy.forwarder))
+    }
+    
     private func buildRedactedTimelineItem(_ eventItemProxy: EventTimelineItemProxy,
                                            _ messageLikeContent: MsgLikeContent,
                                            _ isOutgoing: Bool) -> RoomTimelineItemProtocol {
@@ -750,12 +770,20 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                                    sender: eventItemProxy.sender)
     }
     
-    private func buildCallNotificationTimelineItem(for eventItemProxy: EventTimelineItemProxy) -> RoomTimelineItemProtocol {
-        CallNotificationRoomTimelineItem(id: eventItemProxy.id,
-                                         timestamp: eventItemProxy.timestamp,
-                                         isEditable: eventItemProxy.isEditable,
-                                         canBeRepliedTo: eventItemProxy.canBeRepliedTo,
-                                         sender: eventItemProxy.sender)
+    private func buildCallNotificationTimelineItem(for eventItemProxy: EventTimelineItemProxy,
+                                                   isDM: Bool,
+                                                   callIntent: String?,
+                                                   declinedBy: [String]) -> RoomTimelineItemProtocol {
+        let isVoiceCall = callIntent == CallIntent.audio.rawValue
+        return CallNotificationRoomTimelineItem(id: eventItemProxy.id,
+                                                timestamp: eventItemProxy.timestamp,
+                                                isEditable: eventItemProxy.isEditable,
+                                                canBeRepliedTo: eventItemProxy.canBeRepliedTo,
+                                                isDM: isDM,
+                                                isDeclinedByMe: declinedBy.contains(userID),
+                                                isDeclined: declinedBy.count > 0,
+                                                isVoiceCall: isVoiceCall,
+                                                properties: .init())
     }
     
     // MARK: - State Events
@@ -849,6 +877,8 @@ struct RoomTimelineItemFactory: RoomTimelineItemFactoryProtocol {
                     replyContent = .message(.text(.init(body: body)))
                 case .redacted:
                     replyContent = .redacted
+                case .liveLocation:
+                    replyContent = .liveLocation
                 default:
                     replyContent = .message(.text(.init(body: L10n.commonUnsupportedEvent)))
                 }

@@ -151,7 +151,8 @@ private extension SpaceRoom {
          childrenCount: UInt64 = 0,
          membership: Membership? = .joined,
          heroes: [RoomHero]? = [],
-         via: [String] = []) {
+         via: [String] = [],
+         isDM: Bool? = false) {
         self.init(roomId: id,
                   canonicalAlias: canonicalAlias,
                   displayName: name,
@@ -167,6 +168,7 @@ private extension SpaceRoom {
                   childrenCount: childrenCount,
                   state: membership,
                   heroes: heroes,
-                  via: via)
+                  via: via,
+                  isDm: isDM)
     }
 }

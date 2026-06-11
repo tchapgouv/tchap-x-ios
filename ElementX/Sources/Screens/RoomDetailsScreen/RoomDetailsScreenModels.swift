@@ -21,11 +21,12 @@ enum RoomDetailsScreenViewModelAction: Equatable {
     case requestMemberDetailsPresentation
     case requestRecipientDetailsPresentation(userID: String)
     case requestInvitePeoplePresentation
+    case requestInviteToNewRoomPresentation(selectedInvitee: UserProfileProxy)
     case leftRoom
     case requestEditDetailsPresentation
     case requestPollsHistoryPresentation
     case requestRolesAndPermissionsPresentation
-    case startCall
+    case startCall(isVoiceCall: Bool)
     case displayPinnedEventsTimeline
     case displayMediaEventsTimeline
     case displayKnockingRequests
@@ -67,14 +68,13 @@ struct RoomDetailsScreenViewState: BindableState {
     var canJoinCall = false
     var pinnedEventsActionState = RoomDetailsScreenPinnedEventsActionState.loading
     
-    var knockingEnabled = false
     var isKnockableRoom = false
     var knockRequestsCount = 0
-    
+
     var reportRoomEnabled = false
-    
+
     var canSeeKnockingRequests: Bool {
-        knockingEnabled && dmRecipientInfo == nil && isKnockableRoom && (canInviteUsers || canKickUsers || canBanUsers)
+        dmRecipientInfo == nil && isKnockableRoom && (canInviteUsers || canKickUsers || canBanUsers)
     }
     
     var canSeeSecurityAndPrivacy: Bool {
@@ -97,8 +97,12 @@ struct RoomDetailsScreenViewState: BindableState {
     var shortcuts: [RoomDetailsScreenViewShortcut] {
         var shortcuts: [RoomDetailsScreenViewShortcut] = [.mute]
         if !ProcessInfo.processInfo.isiOSAppOnMac, canJoinCall {
-            shortcuts.append(.call)
+            if isDirect {
+                shortcuts.append(.voiceCall)
+            }
+            shortcuts.append(.videoCall)
         }
+        // The invite flow is different for DMs
         if dmRecipientInfo == nil, canInviteUsers {
             shortcuts.append(.invite)
         }
@@ -234,7 +238,7 @@ enum RoomDetailsScreenViewAction {
     case toggleFavourite(isFavourite: Bool)
     case processTapRolesAndPermissions
     case processTapSecurityAndPrivacy
-    case processTapCall
+    case processTapCall(isVoiceCall: Bool)
     case processTapPinnedEvents
     case processTapMediaEvents
     case processTapRequestsToJoin
@@ -247,7 +251,8 @@ enum RoomDetailsScreenViewAction {
 enum RoomDetailsScreenViewShortcut {
     case share(link: URL)
     case mute
-    case call
+    case videoCall
+    case voiceCall
     case invite
 }
 

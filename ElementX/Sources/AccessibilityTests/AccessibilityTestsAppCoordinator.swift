@@ -13,8 +13,12 @@ import SwiftUI
 class AccessibilityTestsAppCoordinator: AppCoordinatorProtocol {
     var windowManager: any SecureWindowManagerProtocol
     
-    func handleDeepLink(_ url: URL, isExternalURL: Bool) -> Bool {
+    func handleDeepLink(_ url: URL, isExternalURL: Bool, windowType: SecondaryWindowType?) -> Bool {
         fatalError("Not implemented")
+    }
+    
+    func handleAppRoute(_ appRoute: AppRoute, windowType: SecondaryWindowType?) {
+        fatalError("Not implemented.")
     }
     
     func handlePotentialPhishingAttempt(url: URL, openURLAction: @escaping (URL) -> Void) -> Bool {
@@ -36,17 +40,9 @@ class AccessibilityTestsAppCoordinator: AppCoordinatorProtocol {
         
         MXLog.configure(currentTarget: "accessibility-tests")
         
-        ServiceLocator.shared.register(userIndicatorController: UserIndicatorController())
-        
         AppSettings.configureWithSuiteName("io.element.elementx.accessibilitytests")
         AppSettings.resetAllSettings()
-        ServiceLocator.shared.register(appSettings: AppSettings())
-        
-        let analyticsClient = AnalyticsClientMock()
-        analyticsClient.isRunning = false
-        ServiceLocator.shared.register(analytics: AnalyticsService(client: analyticsClient,
-                                                                   appSettings: ServiceLocator.shared.settings))
-        
+
         guard let name = ProcessInfo.accessibilityViewID,
               let previewType = TestablePreviewsDictionary.dictionary[name] else {
             fatalError("Unable to launch with unknown screen.")

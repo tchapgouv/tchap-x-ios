@@ -33,9 +33,10 @@ struct StartChatScreen: View {
         .compoundSearchField()
         .textInputAutocapitalization(.never) // Tchap: don't capitalize search input
         .alert(item: $context.alertInfo)
-        .sheet(item: $context.selectedUserToInvite) { user in
-            SendInviteConfirmationView(userToInvite: user, mediaProvider: context.mediaProvider) {
-                context.send(viewAction: .createDM(user: user))
+        .sheet(item: $context.selectedUserToInvite) { userToInvite in
+            SendInviteConfirmationView(userToInvite: userToInvite,
+                                       mediaProvider: context.mediaProvider) {
+                context.send(viewAction: .createDM(user: userToInvite.user))
             }
         }
         .sheet(isPresented: $context.isJoinRoomByAddressSheetPresented) {
@@ -51,9 +52,7 @@ struct StartChatScreen: View {
     @ViewBuilder
     private var mainContent: some View {
         createRoomSection
-        if context.viewState.isRoomDirectoryEnabled {
-            roomDirectorySearch
-        }
+        roomDirectorySearch
         inviteFriendsSection
         joinRoomByAddressSection
         usersSection
@@ -159,12 +158,11 @@ struct StartChatScreen: View {
 struct StartChatScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModel = {
         let appSettings = AppSettings()
-        appSettings.publicSearchEnabled = true
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@userid:example.com"))))
         let userDiscoveryService = UserDiscoveryServiceMock()
         userDiscoveryService.searchProfilesWithReturnValue = .success([.mockAlice])
         return StartChatScreenViewModel(userSession: userSession,
-                                        analytics: ServiceLocator.shared.analytics,
+                                        analytics: .mock(settings: appSettings),
                                         userIndicatorController: UserIndicatorControllerMock(),
                                         userDiscoveryService: userDiscoveryService,
                                         appSettings: appSettings)

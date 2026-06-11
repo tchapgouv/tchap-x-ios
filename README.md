@@ -13,7 +13,7 @@
 
 Tchap X iOS is a [Matrix](https://matrix.org/) iOS Client based on [Element](https://element.io/).
 
-The application is a total rewrite of [Tchap iOS](https://github.com/tchapgouv/tchap-ios) using the [Matrix Rust SDK](https://github.com/matrix-org/matrix-rust-sdk) underneath and targeting devices running iOS 17+.
+The application is a total rewrite of [Tchap iOS](https://github.com/tchapgouv/tchap-ios) using the [Matrix Rust SDK](https://github.com/matrix-org/matrix-rust-sdk) underneath and targeting devices running iOS 18+.
 
 ## Rust SDK
 

@@ -26,7 +26,6 @@ final class MediaUploadingPreprocessorTests {
         AppSettings.resetAllSettings()
         appSettings = AppSettings()
         appSettings.optimizeMediaUploads = false
-        ServiceLocator.shared.register(appSettings: appSettings)
         mediaUploadingPreprocessor = MediaUploadingPreprocessor(appSettings: appSettings)
     }
     

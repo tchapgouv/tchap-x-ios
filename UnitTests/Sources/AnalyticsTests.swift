@@ -19,18 +19,19 @@ import PostHog
 import Testing
 
 final class AnalyticsTests {
-    private var appSettings: AppSettings
-    private var analyticsClient: AnalyticsClientMock
+    private let appSettings: AppSettings
+    private let analytics: AnalyticsService
+    private let analyticsClient: AnalyticsClientMock
     private var posthogMock: PHGPostHogMock
     
+    @MainActor
     init() {
         AppSettings.resetAllSettings()
         appSettings = AppSettings()
         
         analyticsClient = AnalyticsClientMock()
         analyticsClient.isRunning = false
-        ServiceLocator.shared.register(analytics: AnalyticsService(client: analyticsClient,
-                                                                   appSettings: appSettings))
+        analytics = .mock(analyticsClient, settings: appSettings)
         
         posthogMock = PHGPostHogMock()
         posthogMock.configureMockBehavior()
@@ -44,7 +45,7 @@ final class AnalyticsTests {
     func analyticsPromptNewUser() {
         // Given a fresh install of the app (without PostHog analytics having been set).
         // When the user is prompted for analytics.
-        let showPrompt = ServiceLocator.shared.analytics.shouldShowAnalyticsPrompt
+        let showPrompt = analytics.shouldShowAnalyticsPrompt
         
         // Then the prompt should be shown.
         #expect(showPrompt, "A prompt should be shown for a new user.")
@@ -56,7 +57,7 @@ final class AnalyticsTests {
         appSettings.analyticsConsentState = .optedOut
         
         // When the user is prompted for analytics
-        let showPrompt = ServiceLocator.shared.analytics.shouldShowAnalyticsPrompt
+        let showPrompt = analytics.shouldShowAnalyticsPrompt
         
         // Then no prompt should be shown.
         #expect(!showPrompt, "A prompt should not be shown any more.")
@@ -68,7 +69,7 @@ final class AnalyticsTests {
         appSettings.analyticsConsentState = .optedIn
         
         // When the user is prompted for analytics
-        let showPrompt = ServiceLocator.shared.analytics.shouldShowAnalyticsPrompt
+        let showPrompt = analytics.shouldShowAnalyticsPrompt
         
         // Then no prompt should be shown.
         #expect(!showPrompt, "A prompt should not be shown any more.")
@@ -78,7 +79,7 @@ final class AnalyticsTests {
     func analyticsPromptNotDisplayed() {
         // Given a fresh install of the app Analytics should be disabled
         #expect(appSettings.analyticsConsentState == .unknown)
-        #expect(!ServiceLocator.shared.analytics.isEnabled)
+        #expect(!analytics.isEnabled)
         #expect(!analyticsClient.startAnalyticsConfigurationCalled)
     }
     
@@ -86,10 +87,10 @@ final class AnalyticsTests {
     func analyticsOptOut() {
         // Given a fresh install of the app (without PostHog analytics having been set).
         // When analytics is opt-out
-        ServiceLocator.shared.analytics.optOut()
+        analytics.optOut()
         // Then analytics should be disabled
         #expect(appSettings.analyticsConsentState == .optedOut)
-        #expect(!ServiceLocator.shared.analytics.isEnabled)
+        #expect(!analytics.isEnabled)
         #expect(!analyticsClient.isRunning)
         // Analytics client should have been stopped
         #expect(analyticsClient.stopCalled)
@@ -99,10 +100,10 @@ final class AnalyticsTests {
     func analyticsOptIn() {
         // Given a fresh install of the app (without PostHog analytics having been set).
         // When analytics is opt-in
-        ServiceLocator.shared.analytics.optIn()
+        analytics.optIn()
         // The analytics should be enabled
         #expect(appSettings.analyticsConsentState == .optedIn)
-        #expect(ServiceLocator.shared.analytics.isEnabled)
+        #expect(analytics.isEnabled)
         // Analytics client should have been started
         #expect(analyticsClient.startAnalyticsConfigurationCalled)
     }
@@ -112,8 +113,8 @@ final class AnalyticsTests {
         // Given an existing install of the app where the user previously declined the tracking
         appSettings.analyticsConsentState = .optedOut
         // Analytics should not start
-        #expect(!ServiceLocator.shared.analytics.isEnabled)
-        ServiceLocator.shared.analytics.startIfEnabled()
+        #expect(!analytics.isEnabled)
+        analytics.startIfEnabled()
         #expect(!analyticsClient.startAnalyticsConfigurationCalled)
     }
     
@@ -122,8 +123,8 @@ final class AnalyticsTests {
         // Given an existing install of the app where the user previously accepted the tracking
         appSettings.analyticsConsentState = .optedIn
         // Analytics should start
-        #expect(ServiceLocator.shared.analytics.isEnabled)
-        ServiceLocator.shared.analytics.startIfEnabled()
+        #expect(analytics.isEnabled)
+        analytics.startIfEnabled()
         #expect(analyticsClient.startAnalyticsConfigurationCalled)
     }
     
@@ -134,7 +135,8 @@ final class AnalyticsTests {
         #expect(client.pendingUserProperties == nil, "No user properties should have been set yet.")
         
         // When updating the user properties
-        client.updateUserProperties(AnalyticsEvent.UserProperties(allChatsActiveFilter: nil,
+        client.updateUserProperties(AnalyticsEvent.UserProperties(URLPreviewsEnabled: nil,
+                                                                  allChatsActiveFilter: nil,
                                                                   ftueUseCaseSelection: .PersonalMessaging,
                                                                   numFavouriteRooms: 4,
                                                                   numSpaces: 5, recoveryState: .Disabled, verificationState: .Verified))
@@ -152,7 +154,9 @@ final class AnalyticsTests {
     func mergingUserProperties() {
         // Given a client with a cached use case user properties
         let client = PostHogAnalyticsClient()
-        client.updateUserProperties(AnalyticsEvent.UserProperties(allChatsActiveFilter: nil, ftueUseCaseSelection: .PersonalMessaging,
+        client.updateUserProperties(AnalyticsEvent.UserProperties(URLPreviewsEnabled: nil,
+                                                                  allChatsActiveFilter: nil,
+                                                                  ftueUseCaseSelection: .PersonalMessaging,
                                                                   numFavouriteRooms: nil,
                                                                   numSpaces: nil, recoveryState: nil, verificationState: nil))
         
@@ -162,7 +166,9 @@ final class AnalyticsTests {
         #expect(client.pendingUserProperties?.numSpaces == nil, "The number of spaces should not be set.")
         
         // When updating the number of spaced
-        client.updateUserProperties(AnalyticsEvent.UserProperties(allChatsActiveFilter: nil, ftueUseCaseSelection: nil,
+        client.updateUserProperties(AnalyticsEvent.UserProperties(URLPreviewsEnabled: nil,
+                                                                  allChatsActiveFilter: nil,
+                                                                  ftueUseCaseSelection: nil,
                                                                   numFavouriteRooms: 4,
                                                                   numSpaces: 5, recoveryState: nil, verificationState: nil))
         
@@ -180,7 +186,9 @@ final class AnalyticsTests {
         let client = PostHogAnalyticsClient(posthogFactory: MockPostHogFactory(mock: posthogMock))
         try client.start(analyticsConfiguration: #require(appSettings.analyticsConfiguration))
         
-        client.updateUserProperties(AnalyticsEvent.UserProperties(allChatsActiveFilter: nil, ftueUseCaseSelection: .PersonalMessaging,
+        client.updateUserProperties(AnalyticsEvent.UserProperties(URLPreviewsEnabled: nil,
+                                                                  allChatsActiveFilter: nil,
+                                                                  ftueUseCaseSelection: .PersonalMessaging,
                                                                   numFavouriteRooms: nil,
                                                                   numSpaces: nil, recoveryState: nil, verificationState: nil))
         
@@ -214,14 +222,14 @@ final class AnalyticsTests {
     func resetConsentState() {
         // Given an existing install of the app where the user previously accpeted the tracking
         appSettings.analyticsConsentState = .optedIn
-        #expect(!ServiceLocator.shared.analytics.shouldShowAnalyticsPrompt)
+        #expect(!analytics.shouldShowAnalyticsPrompt)
         
         // When forgetting analytics consents
-        ServiceLocator.shared.analytics.resetConsentState()
+        analytics.resetConsentState()
         
         // Then the analytics prompt should be presented again
         #expect(appSettings.analyticsConsentState == .unknown)
-        #expect(ServiceLocator.shared.analytics.shouldShowAnalyticsPrompt)
+        #expect(analytics.shouldShowAnalyticsPrompt)
     }
     
     @Test

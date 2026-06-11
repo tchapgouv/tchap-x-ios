@@ -95,7 +95,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         }
         super.init(initialViewState: TimelineViewState(timelineKind: timelineController.timelineKind,
                                                        roomID: roomProxy.id,
-                                                       isDirectOneToOneRoom: roomProxy.isDirectOneToOneRoom,
+                                                       isDM: roomProxy.infoPublisher.value.isDM,
                                                        timelineState: TimelineState(focussedEvent: focussedEventID.map { .init(eventID: $0, appearance: .immediate) }),
                                                        ownUserID: roomProxy.ownUserID,
                                                        hideTimelineMedia: hideTimelineMedia,
@@ -107,7 +107,6 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                                                        emojiProvider: emojiProvider,
                                                        linkMetadataProvider: hideTimelineMedia ? nil : linkMetadataProvider,
                                                        mapTilerConfiguration: appSettings.mapTilerConfiguration,
-                                                       enableKeyShareOnInvite: appSettings.enableKeyShareOnInvite,
                                                        bindings: .init(reactionsCollapsed: [:])),
                    mediaProvider: userSession.mediaProvider)
         
@@ -178,6 +177,8 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             paginateForwards()
         case .scrollToBottom:
             scrollToBottom()
+        case .scrollToFirstItemForCurrentDate:
+            state.timelineState.scrollToFirstItemForDatePublisher.send()
         case .displayTimelineItemMenu(let itemID):
             timelineInteractionHandler.displayTimelineItemActionMenu(for: itemID)
         case .handleTimelineItemMenuAction(let itemID, let action):
@@ -198,6 +199,9 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             handlePollAction(pollAction)
         case .handleAudioPlayerAction(let audioPlayerAction):
             handleAudioPlayerAction(audioPlayerAction)
+        case .stopLiveLocationSharing(let id):
+            state.stoppedLiveLocationIDs.insert(id)
+            Task { await stopLiveLocationSharing() }
         case .focusOnEventID(let eventID):
             Task { await focusOnEvent(eventID: eventID) }
         case .focusLive:
@@ -272,6 +276,10 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                 displayErrorToast(L10n.commonFailed)
             }
         }
+    }
+    
+    func stopLiveLocationSharing() async {
+        await userSession.liveLocationManager.stopLiveLocation(roomID: roomProxy.id)
     }
     
     func makeForwardingItem(for itemID: TimelineItemIdentifier) async -> MessageForwardingItem? {
@@ -412,6 +420,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     
     private func updateRoomInfo(_ roomInfo: RoomInfoProxyProtocol) {
         state.pinnedEventIDs = roomInfo.pinnedEventIDs
+        state.isDM = roomInfo.isDM
         
         if let powerLevels = roomInfo.powerLevels {
             state.canCurrentUserSendMessage = powerLevels.canOwnUser(sendMessage: .roomMessage)
@@ -657,6 +666,8 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             actionsSubject.send(.displayMediaPreview(mediaPreviewViewModel))
         case .displayLocation(let location):
             actionsSubject.send(.displayLocation(location))
+        case .displayLiveLocation(let sender, let initialLiveLocationShare):
+            actionsSubject.send(.displayLiveLocation(sender: sender, initialLiveLocationShare: initialLiveLocationShare))
         case .none:
             break
         }
@@ -1046,16 +1057,20 @@ extension TimelineViewModel {
         clientProxyMock.roomSummaryForAliasReturnValue = .mock(id: "!room:matrix.org", name: "Room")
         clientProxyMock.roomSummaryForIdentifierReturnValue = .mock(id: "!room:matrix.org", name: "Room", canonicalAlias: "#room:matrix.org")
         let roomProxy = JoinedRoomProxyMock(.init(name: "Preview room", predecessor: hasPredecessor ? .init(roomId: UUID().uuidString) : nil))
+
+        let appSettings = AppSettings()
+        let analytics = AnalyticsService.mock(settings: appSettings)
+
         return TimelineViewModel(roomProxy: roomProxy,
                                  focussedEventID: nil,
                                  timelineController: timelineController ?? MockTimelineController(timelineKind: timelineKind),
                                  userSession: UserSessionMock(.init(clientProxy: clientProxyMock)),
                                  mediaPlayerProvider: MediaPlayerProviderMock(),
-                                 userIndicatorController: ServiceLocator.shared.userIndicatorController,
+                                 userIndicatorController: UserIndicatorControllerMock.default,
                                  appMediator: AppMediatorMock.default,
-                                 appSettings: ServiceLocator.shared.settings,
-                                 analyticsService: ServiceLocator.shared.analytics,
-                                 emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                 appSettings: appSettings,
+                                 analyticsService: analytics,
+                                 emojiProvider: EmojiProvider(appSettings: appSettings),
                                  linkMetadataProvider: LinkMetadataProvider(),
                                  timelineControllerFactory: TimelineControllerFactoryMock(.init()))
     }

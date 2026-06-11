@@ -10,12 +10,13 @@ let package = Package(
     ],
     dependencies: [
 // Use the Github hosted version of Tchap Compound-design--tokens
-        .package(url: "https://github.com/tchapgouv/compound-design-tokens", revision: "65b1517530e9772bc656ac20b09b7ad733455008"),
+//      .package(url: "https://github.com/element-hq/compound-design-tokens", exact: "10.1.1"),
+        .package(url: "https://github.com/tchapgouv/compound-design-tokens", revision: "6d33a626af3e0d15d3510d64eae5db6452effd66"),
 // Use the local version of Tchap Compound-design--tokens
 //        .package(path: "../../tchap-x-compound/compound-design-tokens"),
-        .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "26.0.0"),
+        .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "26.0.1"),
         .package(url: "https://github.com/SFSafeSymbols/SFSafeSymbols", from: "7.0.0"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.18.7")
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.19.2")
     ],
     targets: [
         .target(

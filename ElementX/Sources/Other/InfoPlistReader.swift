@@ -23,6 +23,11 @@ struct InfoPlistReader {
         static let bundleURLTypes = "CFBundleURLTypes"
         static let bundleURLName = "CFBundleURLName"
         static let bundleURLSchemes = "CFBundleURLSchemes"
+        
+        static let classicAppGroupIdentifier = "classicAppGroupIdentifier"
+        static let classicAppKeychainServiceIdentifier = "classicAppKeychainServiceIdentifier"
+        static let classicAppKeychainAccessGroupIdentifier = "classicAppKeychainAccessGroupIdentifier"
+        static let classicAppDeepLinkURL = "classicAppDeepLinkURL"
     }
     
     private enum Values {
@@ -115,6 +120,25 @@ struct InfoPlistReader {
         return utType.lowercased()
     }
     
+    // MARK: - Sign in with Classic app
+    
+    var classicAppGroupIdentifier: String? {
+        infoPlistValue(forKey: Keys.classicAppGroupIdentifier)
+    }
+    
+    var classicAppKeychainServiceIdentifier: String? {
+        infoPlistValue(forKey: Keys.classicAppKeychainServiceIdentifier)
+    }
+    
+    var classicAppKeychainAccessGroupIdentifier: String? {
+        infoPlistValue(forKey: Keys.classicAppKeychainAccessGroupIdentifier)
+    }
+    
+    var classicAppDeepLinkURL: URL? {
+        let urlString: String? = infoPlistValue(forKey: Keys.classicAppDeepLinkURL)
+        return urlString.flatMap { URL(string: $0) }
+    }
+    
     // Tchap: add `pinnedCertificates` property
     
     // MARK: - Tchap Certificate Pinning
@@ -156,11 +180,16 @@ struct InfoPlistReader {
     
     // MARK: - Private
     
+    @_disfavoredOverload // Make sure optional types default to the optional version below.
     private func infoPlistValue<T>(forKey key: String) -> T {
         guard let result = bundle.object(forInfoDictionaryKey: key) as? T else {
             fatalError("Add \(key) into your target's Info.plst")
         }
         return result
+    }
+    
+    private func infoPlistValue<T>(forKey key: String) -> T? {
+        bundle.object(forInfoDictionaryKey: key) as? T
     }
     
     private func customSchemeForName(_ name: String) -> String {

@@ -23,7 +23,6 @@ protocol CommonSettingsProtocol: AnyObject {
     var bugReportRageshakeURL: RemotePreference<RageshakeConfiguration> { get }
     
     var enableOnlySignedDeviceIsolationMode: Bool { get }
-    var enableKeyShareOnInvite: Bool { get }
     var threadsEnabled: Bool { get }
     var hideQuietNotificationAlerts: Bool { get }
 }
@@ -39,7 +38,6 @@ final class AppSettings {
     private enum UserDefaultsKeys: String {
         case lastVersionLaunched
         case seenInvites
-        case hasSeenSpacesAnnouncement
         case hasSeenNewSoundBanner
         case appLockNumberOfPINAttempts
         case appLockNumberOfBiometricAttempts
@@ -50,6 +48,7 @@ final class AppSettings {
         // Tchap: add welcome screen
         case hasRunTchapWelcomeOnboarding
         case hasRunIdentityConfirmationOnboarding
+        case hasRequestedLocationAlwaysLocationAuthorization
         
         case frequentlyUsedSystemEmojis
         
@@ -68,24 +67,30 @@ final class AppSettings {
         
         case voiceMessagePlaybackSpeed
         
+        // Live Location
+        case liveLocationSharingTimeoutDatesByRoomID
+        case liveLocationMinimumDistanceUpdate
+        case liveLocationDisclaimerDisplayed
+        
         // Feature flags
-        case publicSearchEnabled
         case fuzzyRoomListSearchEnabled
         case lowPriorityFilterEnabled
         case enableOnlySignedDeviceIsolationMode
-        case enableKeyShareOnInvite
         case knockingEnabled
         case threadsEnabled
         case unencryptedPrivateRoomEnabled // :tchap: unencryptedPrivateRoom
-        case developerOptionsEnabled
+        case roomThreadListEnabled
         case linkPreviewsEnabled
         case focusEventOnNotificationTap
         case linkNewDeviceEnabled
-        case liveLocationSharingEnabled
+        case automaticBackPaginationEnabled
+        case clientPausingAndResumingEnabled
         
         // Doug's tweaks 🔧
-        case hideUnreadMessagesBadge
+        case roomListActivityVisibility
         case hideQuietNotificationAlerts
+        
+        case developerOptionsEnabled
     }
     
     private static var suiteName: String = InfoPlistReader.main.appGroupIdentifier
@@ -135,7 +140,7 @@ final class AppSettings {
                   allowOtherAccountProviders: Bool,
                   hideBrandChrome: Bool,
                   pushGatewayBaseURL: URL,
-                  oidcRedirectURL: URL,
+                  oAuthRedirectURL: URL,
                   websiteURL: URL,
                   logoURL: URL,
                   copyrightURL: URL,
@@ -155,7 +160,7 @@ final class AppSettings {
         self.allowOtherAccountProviders = allowOtherAccountProviders
         self.hideBrandChrome = hideBrandChrome
         self.pushGatewayBaseURL = pushGatewayBaseURL
-        self.oidcRedirectURL = oidcRedirectURL
+        self.oAuthRedirectURL = oAuthRedirectURL
         self.websiteURL = websiteURL
         self.logoURL = logoURL
         self.copyrightURL = copyrightURL
@@ -185,9 +190,6 @@ final class AppSettings {
     /// This Set is being used to implement badges for unread invites.
     @UserPreference(key: UserDefaultsKeys.seenInvites, defaultValue: [], storageType: .userDefaults(store))
     var seenInvites: Set<String>
-    
-    @UserPreference(key: UserDefaultsKeys.hasSeenSpacesAnnouncement, defaultValue: false, storageType: .userDefaults(store))
-    var hasSeenSpacesAnnouncement
     
     /// Defaults to `true` for new users, and we use a migration to set it to `false` for existing users.
     @UserPreference(key: UserDefaultsKeys.hasSeenNewSoundBanner, defaultValue: true, storageType: .userDefaults(store))
@@ -238,7 +240,7 @@ final class AppSettings {
     /// The task identifier used for background app refresh. Also used in main target's the Info.plist
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
 
-    // Tchap: adapt website URL for OIDC / MAS
+    // Tchap: adapt website URL for OAuth / MAS
     //    private(set) var websiteURL: URL = "https://element.io"
     /// A URL where users can go read more about the app.
     #if IS_TCHAP_PRODUCTION
@@ -320,35 +322,34 @@ final class AppSettings {
     
     // MARK: - Authentication
     
-    /// Any pre-defined static client registrations for OIDC issuers.
-    let oidcStaticRegistrations: [URL: String] = ["https://id.thirdroom.io/realms/thirdroom": "elementx"]
+    /// Any pre-defined static client registrations for OAuth issuers.
+    let oAuthStaticRegistrations: [URL: String] = ["https://id.thirdroom.io/realms/thirdroom": "elementx"]
 
-    // Tchap: Customize OIDC Redirect URL (as stated here https://github.com/element-hq/element-x-ios/issues/4119#issuecomment-2879430647)
+    // Tchap: Customize OAuth Redirect URL (as stated here https://github.com/element-hq/element-x-ios/issues/4119#issuecomment-2879430647)
     // and now in the `docs/FORKING.md` (https://github.com/element-hq/element-x-ios/blob/develop/docs/FORKING.md)
     // Use the same Redirect URL as Tchap Legacy.
     // The fact it is a custom scheme rather than a special web URL avoid the mandatory associated domain declaration: https://developer.apple.com/documentation/xcode/supporting-associated-domains
     //
-    // It seemd the MAS need an oidc redirect url the match the domain name in reverse notation.
-    //    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
-    /// The redirect URL used for OIDC. This no longer uses universal links so we don't need the bundle ID to avoid conflicts between Element X, Nightly and PR builds.
-    
+    // It seemd the MAS need an oauth redirect url the match the domain name in reverse notation.
     #if IS_TCHAP_DEVELOPMENT
-    private(set) var oidcRedirectURL: URL = "net.incubateur.tchap.ios:/"
+    private(set) var oAuthRedirectURL: URL = "net.incubateur.tchap.ios:/"
     #elseif IS_TCHAP_STAGING
-    private(set) var oidcRedirectURL: URL = "fr.gouv.tchap.beta.ios:/"
+    private(set) var oAuthRedirectURL: URL = "fr.gouv.tchap.beta.ios:/"
     #elseif IS_TCHAP_PRODUCTION
-    private(set) var oidcRedirectURL: URL = "fr.gouv.tchap.ios:/"
+    private(set) var oAuthRedirectURL: URL = "fr.gouv.tchap.ios:/"
     #else
-    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
+    /// The redirect URL used for OAuth. For the normal case we don't actually need the bundle ID as the web authentication session handles the redirect internally.
+    /// However in the case where MAS sends the user to an external app, we need to make sure that the system will open the correct variant of the app (e.g. Nightly).
+    private(set) var oAuthRedirectURL: URL! = URL(string: "https://element.io/oauth/ios/\(InfoPlistReader.main.bundleIdentifier)")
     #endif
 
-    private(set) lazy var oidcConfiguration = OIDCConfiguration(clientName: InfoPlistReader.main.bundleDisplayName,
-                                                                redirectURI: oidcRedirectURL,
-                                                                clientURI: websiteURL,
-                                                                logoURI: logoURL,
-                                                                tosURI: acceptableUseURL,
-                                                                policyURI: privacyURL,
-                                                                staticRegistrations: oidcStaticRegistrations.mapKeys { $0.absoluteString })
+    private(set) lazy var oAuthConfiguration = OAuthConfiguration(clientName: InfoPlistReader.main.bundleDisplayName,
+                                                                  redirectURI: oAuthRedirectURL,
+                                                                  clientURI: websiteURL,
+                                                                  logoURI: logoURL,
+                                                                  tosURI: acceptableUseURL,
+                                                                  policyURI: privacyURL,
+                                                                  staticRegistrations: oAuthStaticRegistrations.mapKeys { $0.absoluteString })
     
     /// Whether or not the Create Account button is shown on the start screen.
     ///
@@ -463,13 +464,27 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.hasRunIdentityConfirmationOnboarding, defaultValue: false, storageType: .userDefaults(store))
     var hasRunIdentityConfirmationOnboarding
     
+    @UserPreference(key: UserDefaultsKeys.hasRequestedLocationAlwaysLocationAuthorization, defaultValue: false, storageType: .userDefaults(store))
+    var hasRequestedLocationAlwaysLocationAuthorization
+    
     @UserPreference(key: UserDefaultsKeys.frequentlyUsedSystemEmojis, defaultValue: [FrequentlyUsedEmoji](), storageType: .userDefaults(store))
     var frequentlyUsedSystemEmojis
     
+    // MARK: - Live Location
+    
+    @UserPreference(key: UserDefaultsKeys.liveLocationSharingTimeoutDatesByRoomID, defaultValue: [String: LiveLocationSession](), storageType: .userDefaults(store))
+    var liveLocationSharingSessionsByRoomID
+    
+    @UserPreference(key: UserDefaultsKeys.liveLocationMinimumDistanceUpdate, defaultValue: 10, storageType: .userDefaults(store))
+    var liveLocationMinimumDistanceUpdate
+    
+    @UserPreference(key: UserDefaultsKeys.liveLocationDisclaimerDisplayed, defaultValue: false, storageType: .userDefaults(store))
+    var liveLocationDisclaimerDisplayed
+    
     // MARK: - Home Screen
     
-    @UserPreference(key: UserDefaultsKeys.hideUnreadMessagesBadge, defaultValue: false, storageType: .userDefaults(store))
-    var hideUnreadMessagesBadge
+    @UserPreference(key: UserDefaultsKeys.roomListActivityVisibility, defaultValue: .current, storageType: .userDefaults(store))
+    var roomListActivityVisibility: RoomListActivityVisibility
     
     // MARK: - Room Screen
     
@@ -535,11 +550,6 @@ final class AppSettings {
     // MARK: - Feature Flags
     
     /// Others
-    // Tchap: enable `publicSearchEnabled` feature flag by default. It is Tchap `join a forum` action.
-//    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
-    @UserPreference(key: UserDefaultsKeys.publicSearchEnabled, defaultValue: true, storageType: .userDefaults(store))
-    var publicSearchEnabled
-    
     @UserPreference(key: UserDefaultsKeys.fuzzyRoomListSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
     var fuzzyRoomListSearchEnabled
     
@@ -550,10 +560,6 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.enableOnlySignedDeviceIsolationMode, defaultValue: false, storageType: .userDefaults(store))
     var enableOnlySignedDeviceIsolationMode
     
-    /// Configuration to enable encrypted history sharing on invite, and accepting keys from inviters.
-    @UserPreference(key: UserDefaultsKeys.enableKeyShareOnInvite, defaultValue: false, storageType: .userDefaults(store))
-    var enableKeyShareOnInvite
-    
     @UserPreference(key: UserDefaultsKeys.knockingEnabled, defaultValue: false, storageType: .userDefaults(store))
     var knockingEnabled
     
@@ -561,6 +567,9 @@ final class AppSettings {
 //    @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: false, storageType: .userDefaults(store))
     @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: true, storageType: .userDefaults(store))
     var threadsEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.roomThreadListEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var roomThreadListEnabled
     
     // :tchap: disable `unencryptedPrivateRoomEnabled` feature flag by default in production.
     @UserPreference(key: UserDefaultsKeys.unencryptedPrivateRoomEnabled, defaultValue: false, storageType: .userDefaults(store))
@@ -575,10 +584,13 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.linkNewDeviceEnabled, defaultValue: false, storageType: .userDefaults(store))
     var linkNewDeviceEnabled
     
-    @UserPreference(key: UserDefaultsKeys.liveLocationSharingEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var liveLocationSharingEnabled
+    @UserPreference(key: UserDefaultsKeys.automaticBackPaginationEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var automaticBackPaginationEnabled
     
-    @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: appBuildType == .debug, storageType: .userDefaults(store))
+    @UserPreference(key: UserDefaultsKeys.clientPausingAndResumingEnabled, defaultValue: appBuildType != .release, storageType: .volatile)
+    var clientPausingAndResumingEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: appBuildType != .release, storageType: .userDefaults(store))
     var developerOptionsEnabled
 }
 

@@ -23,13 +23,21 @@ final class CreateRoomScreenViewModelTests {
     var clientProxy: ClientProxyMock!
     var spaceService: SpaceServiceProxyMock!
     var userSession: UserSessionMock!
-    
+
+    private let appSettings: AppSettings
+    private let analytics: AnalyticsService
+
     private let usersSubject = CurrentValueSubject<[UserProfileProxy], Never>([])
     
     var context: CreateRoomScreenViewModel.Context {
         viewModel.context
     }
-    
+
+    init() {
+        appSettings = AppSettings()
+        analytics = .mock(settings: appSettings)
+    }
+
     deinit {
         AppSettings.resetAllSettings()
         viewModel = nil
@@ -43,7 +51,9 @@ final class CreateRoomScreenViewModelTests {
         setup()
         #expect(context.viewState.bindings.selectedAccessType == .private)
         #expect(context.selectedSpace == nil)
-        #expect(context.viewState.availableAccessTypes == [.public(federated: true), .public(federated: false), .askToJoin, .private])
+        // :tchap: create room
+//        #expect(context.viewState.availableAccessTypes == [.public(federated: true), .public(federated: false), .askToJoin, .private])
+        #expect(context.viewState.availableAccessTypes == [.public(federated: true), .public(federated: false), .askToJoin, .privateUnencrypted, .private]) // :tchap:end
         #expect(context.viewState.canSelectSpace)
     }
     
@@ -65,7 +75,9 @@ final class CreateRoomScreenViewModelTests {
         #expect(context.viewState.canCreateRoom)
         
         // When creating the room.
-        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
+        // :tchap: create room
+//        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
+        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue = .success("1") // :tchap:end
         let deferred = deferFulfillment(viewModel.actions) { action in
             guard case .createdRoom(let roomProxy, nil) = action, roomProxy.id == "1" else { return false }
             return true
@@ -74,11 +86,17 @@ final class CreateRoomScreenViewModelTests {
         try await deferred.fulfill()
         
         // Then the room should be created and a topic should not be set.
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.name == "A")
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.topic == nil,
+        // :tchap: create room
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.name == "A")
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.topic == nil,
+//        "The topic should be sent as nil when it is empty.")
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.accessType == .private)
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCalled)
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments?.name == "A")
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments?.topic == nil,
                 "The topic should be sent as nil when it is empty.")
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.accessType == .private)
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments?.accessType == .private) // :tchap:end:
     }
     
     @Test
@@ -89,14 +107,14 @@ final class CreateRoomScreenViewModelTests {
                                             spaceServiceConfiguration: .init(spaceRoomLists: ["1": .init()])))
         clientProxy.roomForIdentifierClosure = { roomID in .joined(JoinedRoomProxyMock(.init(id: roomID))) }
         userSession = UserSessionMock(.init(clientProxy: clientProxy))
-        ServiceLocator.shared.settings.knockingEnabled = true
+        appSettings.knockingEnabled = true
         let viewModel = CreateRoomScreenViewModel(isSpace: true,
                                                   spaceSelectionMode: .none,
                                                   shouldShowCancelButton: false,
                                                   userSession: userSession,
-                                                  analytics: ServiceLocator.shared.analytics,
+                                                  analytics: analytics,
                                                   userIndicatorController: UserIndicatorControllerMock(),
-                                                  appSettings: ServiceLocator.shared.settings)
+                                                  appSettings: appSettings)
         self.viewModel = viewModel
         
         // Given a form with a blank topic.
@@ -106,7 +124,9 @@ final class CreateRoomScreenViewModelTests {
         #expect(context.viewState.canCreateRoom)
         
         // When creating the room.
-        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
+        // :tchap: create room
+//        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
+        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue = .success("1") // :tchap:end
         let deferred = deferFulfillment(viewModel.actions) { action in
             guard case .createdRoom(let roomProxy, let spaceRoomListProxy) = action,
                   spaceRoomListProxy != nil,
@@ -117,11 +137,17 @@ final class CreateRoomScreenViewModelTests {
         try await deferred.fulfill()
         
         // Then the room should be created and a topic should not be set.
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.name == "A")
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.topic == nil,
+        // :tchap: create room
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.name == "A")
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.topic == nil,
+//                "The topic should be sent as nil when it is empty.")
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.accessType == .private)
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCalled)
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments?.name == "A")
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments?.topic == nil,
                 "The topic should be sent as nil when it is empty.")
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.accessType == .private)
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments?.accessType == .private) // :tchap:end
     }
     
     @Test
@@ -136,7 +162,9 @@ final class CreateRoomScreenViewModelTests {
         #expect(context.viewState.canCreateRoom)
         
         await waitForConfirmation("Wait for the room to be created") { confirmation in
-            clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure = { _, _, accessType, _, _, _, localAliasPart in
+            // :tchap: create room
+//            clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure = { _, _, accessType, _, _, _, localAliasPart in
+            clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure = { _, _, accessType, _, _, _, localAliasPart, _ in // :tchap:end
                 #expect(accessType == .askToJoin)
                 #expect(localAliasPart == "a")
                 defer { confirmation() }
@@ -167,7 +195,9 @@ final class CreateRoomScreenViewModelTests {
         // blocked it
         context.send(viewAction: .createRoom)
         await Task.yield()
-        #expect(!clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
+        // :tchap: create room
+//        #expect(!clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
+        #expect(!clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCalled) // :tchap:end
     }
     
     @Test
@@ -198,7 +228,9 @@ final class CreateRoomScreenViewModelTests {
             context.send(viewAction: .createRoom)
         }
         #expect(clientProxy.isAliasAvailableCallsCount == 2)
-        #expect(!clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
+        // :tchap: create room
+//        #expect(!clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
+        #expect(!clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCalled) // :tchap:end
     }
     
     @Test
@@ -243,7 +275,9 @@ final class CreateRoomScreenViewModelTests {
         context.selectedAccessType = .public(federated: true)
         #expect(context.viewState.canCreateRoom)
         #expect(context.selectedSpace == nil)
-        #expect(context.viewState.availableAccessTypes == [.public(federated: true), .public(federated: false), .askToJoin, .private])
+        // :tchap: create room
+//        #expect(context.viewState.availableAccessTypes == [.public(federated: true), .public(federated: false), .askToJoin, .private])
+        #expect(context.viewState.availableAccessTypes == [.public(federated: true), .public(federated: false), .askToJoin, .privateUnencrypted, .private]) // :tchap:end
         #expect(context.viewState.canSelectSpace)
         
         var deferred = deferFulfillment(context.$viewState) { viewState in
@@ -261,7 +295,9 @@ final class CreateRoomScreenViewModelTests {
         try await deferred.fulfill()
         
         // When creating the room.
-        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
+        // :tchap: create room
+//        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
+        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue = .success("1") // :tchap:end
         try await confirmation("Wait for the addChild function to be called") { confirm in
             let deferredAction = deferFulfillment(viewModel.actions) { action in
                 guard case .createdRoom(let roomProxy, nil) = action, roomProxy.id == "1" else { return false }
@@ -277,9 +313,13 @@ final class CreateRoomScreenViewModelTests {
             try await deferredAction.fulfill()
         }
         
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.name == "A")
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.accessType == .private)
+        // :tchap: create room
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.name == "A")
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.accessType == .private)
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCalled)
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments?.name == "A")
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments?.accessType == .private) // :tchap:end
     }
     
     @Test
@@ -295,7 +335,9 @@ final class CreateRoomScreenViewModelTests {
         #expect(context.viewState.canSelectSpace)
         
         // When creating the room.
-        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
+        // :tchap: create room
+//        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue = .success("1")
+        clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue = .success("1") // :tchap:end
         try await confirmation("Wait for the addChild function to be called") { confirm in
             let deferredAction = deferFulfillment(viewModel.actions) { action in
                 guard case .createdRoom(let roomProxy, nil) = action, roomProxy.id == "1" else { return false }
@@ -310,10 +352,13 @@ final class CreateRoomScreenViewModelTests {
             context.send(viewAction: .createRoom)
             try await deferredAction.fulfill()
         }
-        
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.name == "A")
-        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.accessType == .spaceMembers(spaceID: space.id))
+        // :tchap: create room
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCalled)
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.name == "A")
+//        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments?.accessType == .spaceMembers(spaceID: space.id))
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCalled)
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments?.name == "A")
+        #expect(clientProxy.createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments?.accessType == .spaceMembers(spaceID: space.id)) // :tchap:end
     }
     
     @Test
@@ -327,7 +372,9 @@ final class CreateRoomScreenViewModelTests {
         context.selectedAccessType = .spaceMembers
         #expect(context.viewState.canCreateRoom)
         #expect(context.selectedSpace?.id == space.id)
-        #expect(context.viewState.availableAccessTypes == [.public(federated: true), .public(federated: false), .askToJoin, .private])
+        // :tchap: create room
+//        #expect(context.viewState.availableAccessTypes == [.public(federated: true), .public(federated: false), .askToJoin, .private])
+        #expect(context.viewState.availableAccessTypes == [.public(federated: true), .public(federated: false), .askToJoin, .privateUnencrypted, .private]) // :tchap:end
         #expect(context.viewState.canSelectSpace)
     }
     
@@ -339,14 +386,14 @@ final class CreateRoomScreenViewModelTests {
         clientProxy.spaceService = spaceService
         clientProxy.roomForIdentifierClosure = { roomID in .joined(JoinedRoomProxyMock(.init(id: roomID))) }
         userSession = UserSessionMock(.init(clientProxy: clientProxy))
-        ServiceLocator.shared.settings.knockingEnabled = true
+        appSettings.knockingEnabled = true
         let viewModel = CreateRoomScreenViewModel(isSpace: isSpace,
                                                   spaceSelectionMode: spacesSelectionMode,
                                                   shouldShowCancelButton: false,
                                                   userSession: userSession,
-                                                  analytics: ServiceLocator.shared.analytics,
+                                                  analytics: analytics,
                                                   userIndicatorController: UserIndicatorControllerMock(),
-                                                  appSettings: ServiceLocator.shared.settings)
+                                                  appSettings: appSettings)
         self.viewModel = viewModel
     }
 }

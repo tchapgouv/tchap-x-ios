@@ -42,22 +42,6 @@ extension String {
 }
 
 extension String {
-    static func generateBreakableWhitespaceEnd(whitespaceCount: Int, layoutDirection: LayoutDirection) -> String {
-        guard whitespaceCount > 0 else {
-            return ""
-        }
-
-        var whiteSpaces = layoutDirection.isolateLayoutUnicodeString
-
-        // fixed size whitespace of size 1/3 em per character
-        whiteSpaces += String(repeating: "\u{2004}", count: whitespaceCount)
-
-        // braille whitespace, which is non breakable but makes previous whitespaces breakable
-        return whiteSpaces + "\u{2800}"
-    }
-}
-
-extension String {
     func ellipsize(length: Int) -> String {
         guard count > length else {
             return self
@@ -114,6 +98,25 @@ extension String {
             return "bin"
         }
         return UTType(filenameExtension: fileExtension) != nil ? fileExtension : "bin"
+    }
+}
+
+extension String {
+    /// Whether the first character with a strong BiDi direction is right-to-left.
+    /// Mirrors the Unicode BiDi "first strong" rule used by TextKit to resolve
+    /// paragraph direction when `baseWritingDirection` is `.natural`.
+    var firstStrongCharacterIsRTL: Bool {
+        for scalar in unicodeScalars {
+            let value = scalar.value
+            // Strong RTL: Hebrew, Arabic, Syriac, Thaana, NKo, Samaritan, Mandaic,
+            // Arabic Extended, and their presentation forms.
+            let isStrongRTL = (0x0590...0x08FF).contains(value) ||
+                (0xFB1D...0xFDFF).contains(value) ||
+                (0xFE70...0xFEFF).contains(value)
+            if isStrongRTL { return true }
+            if scalar.properties.isAlphabetic { return false }
+        }
+        return false
     }
 }
 

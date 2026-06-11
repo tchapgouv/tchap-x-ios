@@ -2,16 +2,16 @@ name: Open Translations PR
 on:
   schedule:
     # At 03:00 on every Monday UTC
-    - cron: '0 3 * * 1'
+    - cron: "0 3 * * 1"
   workflow_dispatch:
 
 permissions: {}
 
 jobs:
   open-translations-pr:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 15
-    
+
     # Skip in forks
     if: github.repository == 'element-hq/element-x-ios'
     steps:
@@ -21,23 +21,22 @@ jobs:
           persist-credentials: false
 
       - name: Setup environment
-        run: 
-          source ci_scripts/ci_common.sh && setup_github_actions_translations_environment
+        run: source ci_scripts/ci_common.sh && setup_github_actions_translations_environment
 
       - name: Download All Translations
         run: swift run -q tools download-strings --all-languages
 
       - name: Verify Translations
         run: swift run -q tools locheck
-        
+
       - name: SAS Translations
         run: swift run -q tools generate-sas
 
       - name: Create PR for Translations
-        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.ELEMENT_BOT_TOKEN }}
-          author: ElementRobot <releases@riot.im>
+          author: Element CI <ci@element.io>
           commit-message: Translations update
           title: Translations update
           body: |

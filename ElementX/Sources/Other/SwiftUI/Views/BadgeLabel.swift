@@ -85,6 +85,13 @@ struct BadgeLabel: View {
             }
         }
         
+        var borderColor: Color {
+            switch style {
+            case .default: .compound.borderInteractiveSecondary
+            default: .clear
+            }
+        }
+        
         // Tchap: evaluate font on usage
         var font: Font {
 //        .compound.bodySM
@@ -108,7 +115,11 @@ struct BadgeLabel: View {
             .padding(.trailing, tchapUsage?.trailingPadding ?? 12)
             .padding(.vertical, tchapUsage?.verticalPadding ?? 4)
             // Tchap: use RoundedRectangle rather than capsule. It is more DSFR friendly.
-//            .background(Capsule().fill(backgroundColor))
+            // .background {
+            //    Capsule().fill(backgroundColor).overlay {
+            //        Capsule().stroke(borderColor)
+            //    }
+            // }
             .background(RoundedRectangle(cornerSize: CGSize(width: 4.0, height: 4.0)).fill(backgroundColor))
         }
     }

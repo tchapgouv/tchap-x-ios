@@ -161,21 +161,21 @@ struct LoginScreenViewModelTests {
     }
 
     @Test
-    mutating func oidcServer() async throws {
+    mutating func oAuthServer() async throws {
         // Given the screen configured for matrix.org
         await setupViewModel()
         
-        // When entering a username for a user on a homeserver with OIDC.
+        // When entering a username for a user on a homeserver with OAuth.
         let deferred = deferFulfillment(viewModel.actions) {
-            $0.isConfiguredForOIDC
+            $0.isConfiguredForOAuth
         }
         context.username = "@bob:company.com"
         context.send(viewAction: .parseUsername)
         try await deferred.fulfill()
 
-        // Then the view state should be updated with the homeserver and show the OIDC button.
-        #expect(context.viewState.loginMode.supportsOIDCFlow,
-                "The OIDC button should be shown.")
+        // Then the view state should be updated with the homeserver and show the OAuth button.
+        #expect(context.viewState.loginMode.supportsOAuthFlow,
+                "The OAuth button should be shown.")
     }
     
     @Test
@@ -233,11 +233,14 @@ struct LoginScreenViewModelTests {
     // MARK: - Helpers
     
     private mutating func setupViewModel(homeserverAddress: String = "example.com", loginHint: String? = nil) async {
+        let appSettings = AppSettings()
+        
         clientFactory = AuthenticationClientFactoryMock(configuration: .init())
         service = AuthenticationService(userSessionStore: UserSessionStoreMock(configuration: .init()),
                                         encryptionKeyProvider: EncryptionKeyProvider(),
+                                        classicAppManager: nil,
                                         clientFactory: clientFactory,
-                                        appSettings: ServiceLocator.shared.settings,
+                                        appSettings: appSettings,
                                         appHooks: AppHooks())
         
         guard case .success = await service
@@ -249,7 +252,7 @@ struct LoginScreenViewModelTests {
         viewModel = LoginScreenViewModel(authenticationService: service,
                                          loginHint: loginHint,
                                          userIndicatorController: UserIndicatorControllerMock(),
-                                         appSettings: ServiceLocator.shared.settings,
-                                         analytics: ServiceLocator.shared.analytics)
+                                         appSettings: appSettings,
+                                         analytics: .mock(settings: appSettings))
     }
 }

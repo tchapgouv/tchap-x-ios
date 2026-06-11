@@ -27,40 +27,32 @@ struct AppRouteURLParserTests {
     }
     
     @Test
-    func elementCallRoutes() throws {
-        let url = try #require(URL(string: "https://call.element.io/test"))
+    func oAuthCallbackRoute() {
+        // Given an OAuth callback for this app.
+        let callbackURL = appSettings.oAuthRedirectURL.appending(queryItems: [URLQueryItem(name: "state", value: "12345"),
+                                                                              URLQueryItem(name: "code", value: "67890")])
         
-        #expect(appRouteURLParser.route(from: url) == AppRoute.genericCallLink(url: url))
+        // When parsing that route.
+        let route = appRouteURLParser.route(from: callbackURL)
         
-        let customSchemeURL = try #require(URL(string: "io.element.call:/?url=https%3A%2F%2Fcall.element.io%2Ftest"))
-        
-        #expect(appRouteURLParser.route(from: customSchemeURL) == AppRoute.genericCallLink(url: url))
+        // Then it should be considered a valid OAuth callback.
+        #expect(route == .oAuthCallback(url: callbackURL))
     }
     
     @Test
-    func customDomainUniversalLinkCallRoutes() throws {
-        let url = try #require(URL(string: "https://somecustomdomain.element.io/test"))
+    func oAuthCallbackAppVariantRoute() {
+        // Given an OAuth callback for a different app variant.
+        let callbackURL = appSettings.oAuthRedirectURL
+            .deletingLastPathComponent()
+            .appending(component: "io.element.elementz")
+            .appending(queryItems: [URLQueryItem(name: "state", value: "12345"),
+                                    URLQueryItem(name: "code", value: "67890")])
         
-        #expect(appRouteURLParser.route(from: url) == nil)
-    }
-    
-    @Test
-    func customSchemeLinkCallRoutes() throws {
-        let urlString = "https://somecustomdomain.element.io/test?param=123"
-        let url = try #require(URL(string: urlString))
+        // When parsing that route in this app.
+        let route = appRouteURLParser.route(from: callbackURL)
         
-        let encodedURLString = try #require(urlString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed))
-        
-        let customSchemeURL = try #require(URL(string: "io.element.call:/?url=\(encodedURLString)"))
-        
-        #expect(appRouteURLParser.route(from: customSchemeURL) == AppRoute.genericCallLink(url: url))
-    }
-    
-    @Test
-    func httpCustomSchemeLinkCallRoutes() throws {
-        let customSchemeURL = try #require(URL(string: "io.element.call:/?url=http%3A%2F%2Fcall.element.io%2Ftest"))
-        
-        #expect(appRouteURLParser.route(from: customSchemeURL) == nil)
+        // Then the route shouldn't be considered valid and should be ignored.
+        #expect(route == nil)
     }
     
     @Test
