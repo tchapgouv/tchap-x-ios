@@ -63,15 +63,15 @@ struct RoomHeaderView: View {
                             .font(.compound.bodyXS)
                             .foregroundStyle(.compound.textSecondary)
                     }
-                }
-                
-                if let dmRecipientVerificationState {
-                    VerificationBadge(verificationState: dmRecipientVerificationState, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
-                }
-                
-                if let historySharingIcon {
-                    CompoundIcon(historySharingIcon, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
-                        .foregroundStyle(.compound.iconInfoPrimary)
+                    
+                    if let dmRecipientVerificationState {
+                        VerificationBadge(verificationState: dmRecipientVerificationState, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
+                    }
+                    
+                    if let historySharingIcon {
+                        CompoundIcon(historySharingIcon, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
+                            .foregroundStyle(.compound.iconInfoPrimary)
+                    }
                 }
                 
                 // Tchap: additional room info
