@@ -12,6 +12,7 @@ import SwiftUI
 typealias AdvancedSettingsScreenViewModelType = StateStoreViewModelV2<AdvancedSettingsScreenViewState, AdvancedSettingsScreenViewAction>
 
 class AdvancedSettingsScreenViewModel: AdvancedSettingsScreenViewModelType, AdvancedSettingsScreenViewModelProtocol {
+<<<<<<< HEAD
     // :tchap: clear cache option
     private var actionsSubject: PassthroughSubject<AdvancedSettingsScreenViewModelAction, Never> = .init()
     
@@ -20,6 +21,9 @@ class AdvancedSettingsScreenViewModel: AdvancedSettingsScreenViewModelType, Adva
     } // :tchap:end
 
     private let analytics: AnalyticsService
+=======
+    private let analytics: AnalyticsServiceProtocol
+>>>>>>> release/26.06.0
     private let clientProxy: ClientProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     
@@ -27,7 +31,7 @@ class AdvancedSettingsScreenViewModel: AdvancedSettingsScreenViewModelType, Adva
     private var hideInviteAvatarsTask: Task<Void, Never>?
     
     init(advancedSettings: AdvancedSettingsProtocol,
-         analytics: AnalyticsService,
+         analytics: AnalyticsServiceProtocol,
          clientProxy: ClientProxyProtocol,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.analytics = analytics

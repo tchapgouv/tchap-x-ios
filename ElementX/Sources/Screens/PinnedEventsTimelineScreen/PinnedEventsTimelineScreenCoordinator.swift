@@ -16,7 +16,7 @@ struct PinnedEventsTimelineScreenCoordinatorParameters {
     let mediaPlayerProvider: MediaPlayerProviderProtocol
     let appMediator: AppMediatorProtocol
     let appSettings: AppSettings
-    let analytics: AnalyticsService
+    let analytics: AnalyticsServiceProtocol
     let emojiProvider: EmojiProviderProtocol
     let linkMetadataProvider: LinkMetadataProviderProtocol
     let timelineControllerFactory: TimelineControllerFactoryProtocol
@@ -37,7 +37,7 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
     private let timelineViewModel: TimelineViewModelProtocol
     
     private var cancellables = Set<AnyCancellable>()
- 
+    
     private let actionsSubject: PassthroughSubject<PinnedEventsTimelineScreenCoordinatorAction, Never> = .init()
     var actions: AnyPublisher<PinnedEventsTimelineScreenCoordinatorAction, Never> {
         actionsSubject.eraseToAnyPublisher()
@@ -96,7 +96,7 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
                 actionsSubject.send(.displayRoomScreenWithFocussedPin(eventID: eventID, threadRootEventID: threadRootEventID))
             // These other actions will not be handled in this view
             case .displayEmojiPicker, .displayReportContent, .displayCameraPicker, .displayMediaPicker,
-                 .displayDocumentPicker, .displayLocationPicker, .displayPollForm, .displayMediaUploadPreviewScreen,
+                 .displayDocumentPicker, .displayLocationPicker, .displayNewPollForm, .displayEditPollForm, .displayMediaUploadPreviewScreen,
                  .displayResolveSendFailure, .displayThread, .composer, .hasScrolled, .displayRoom, .displayMediaDetails:
                 // These actions are not handled in this coordinator
                 break
@@ -108,7 +108,7 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
     func stop() {
         viewModel.stop()
     }
-        
+    
     func toPresentable() -> AnyView {
         AnyView(PinnedEventsTimelineScreen(context: viewModel.context, timelineContext: timelineViewModel.context))
     }

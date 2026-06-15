@@ -19,7 +19,7 @@ class ReportRoomScreenViewModel: ReportRoomScreenViewModelType, ReportRoomScreen
     var actionsPublisher: AnyPublisher<ReportRoomScreenViewModelAction, Never> {
         actionsSubject.eraseToAnyPublisher()
     }
-
+    
     init(roomProxy: JoinedRoomProxyProtocol, userIndicatorController: UserIndicatorControllerProtocol) {
         self.roomProxy = roomProxy
         self.userIndicatorController = userIndicatorController
@@ -36,7 +36,7 @@ class ReportRoomScreenViewModel: ReportRoomScreenViewModelType, ReportRoomScreen
             actionsSubject.send(.dismiss(shouldLeaveRoom: false))
         }
     }
-        
+    
     private func report() async {
         showLoadingIndicator()
         let result = await roomProxy.reportRoom(reason: state.bindings.reason)
@@ -47,7 +47,7 @@ class ReportRoomScreenViewModel: ReportRoomScreenViewModelType, ReportRoomScreen
                 await leaveRoom(showLoading: false)
             } else {
                 hideLoadingIndicator()
-                userIndicatorController.submitIndicator(.init(title: L10n.dialogRoomReported, iconName: "checkmark"))
+                userIndicatorController.submitIndicator(.init(title: L10n.dialogRoomReported, icon: \.check))
                 actionsSubject.send(.dismiss(shouldLeaveRoom: false))
             }
         case .failure:
@@ -70,7 +70,7 @@ class ReportRoomScreenViewModel: ReportRoomScreenViewModelType, ReportRoomScreen
         
         switch result {
         case .success:
-            userIndicatorController.submitIndicator(.init(title: L10n.dialogRoomReportedAndLeft, iconName: "checkmark"))
+            userIndicatorController.submitIndicator(.init(title: L10n.dialogRoomReportedAndLeft, icon: \.check))
             actionsSubject.send(.dismiss(shouldLeaveRoom: true))
         case .failure:
             state.bindings.alert = .init(id: .leaveRoomFailed,

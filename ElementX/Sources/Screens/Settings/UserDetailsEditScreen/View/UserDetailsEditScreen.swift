@@ -12,7 +12,7 @@ import SwiftUI
 struct UserDetailsEditScreen: View {
     @Bindable var context: UserDetailsEditScreenViewModel.Context
     @FocusState private var focus: Bool
-        
+    
     var body: some View {
         Form {
             Section {
@@ -58,7 +58,7 @@ struct UserDetailsEditScreen: View {
             .disabled(!context.viewState.canSave)
         }
     }
-
+    
     private var avatar: some View {
         Button {
             context.send(viewAction: .presentMediaSource)
@@ -79,7 +79,7 @@ struct UserDetailsEditScreen: View {
         .frame(maxWidth: .infinity, alignment: .center)
         .listRowBackground(Color.clear)
     }
-
+    
     private var nameSection: some View {
         Section {
             ListRow(label: .plain(title: L10n.screenEditProfileDisplayNamePlaceholder),
@@ -144,7 +144,7 @@ struct UserDetailsEditScreen_Previews: PreviewProvider, TestablePreview {
         UserDetailsEditScreenViewModel(userSession: UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@stefan:matrix.org",
                                                                                                              canChangeAvatar: canChangeProfile,
                                                                                                              canChangeDisplayName: canChangeProfile)))),
-        mediaUploadingPreprocessor: .init(appSettings: AppSettings()),
-        userIndicatorController: UserIndicatorControllerMock.default)
+        mediaUploadingPreprocessor: .init(appSettings: .volatile()),
+        userIndicatorController: UserIndicatorControllerMock())
     }
 }

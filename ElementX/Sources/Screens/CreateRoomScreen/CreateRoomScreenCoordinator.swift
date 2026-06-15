@@ -16,7 +16,7 @@ struct CreateRoomScreenCoordinatorParameters {
     let userSession: UserSessionProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
     let appSettings: AppSettings
-    let analytics: AnalyticsService
+    let analytics: AnalyticsServiceProtocol
 }
 
 enum CreateRoomScreenCoordinatorAction {
@@ -62,7 +62,7 @@ final class CreateRoomScreenCoordinator: CoordinatorProtocol {
         }
         .store(in: &cancellables)
     }
-        
+    
     func toPresentable() -> AnyView {
         AnyView(CreateRoomScreen(context: viewModel.context))
     }

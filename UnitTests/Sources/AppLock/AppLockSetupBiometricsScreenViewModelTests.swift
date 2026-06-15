@@ -25,19 +25,13 @@ final class AppLockSetupBiometricsScreenViewModelTests {
     }
     
     init() {
-        AppSettings.resetAllSettings()
-        
         appLockService = AppLockServiceMock()
-        appLockService.underlyingIsEnabled = true
-        appLockService.underlyingBiometryType = .touchID
+        appLockService.isEnabled = true
+        appLockService.biometryType = .touchID
         appLockService.enableBiometricUnlockReturnValue = .success(())
         viewModel = AppLockSetupBiometricsScreenViewModel(appLockService: appLockService)
     }
     
-    deinit {
-        AppSettings.resetAllSettings()
-    }
-
     @Test
     func allow() async throws {
         // When allowing Touch/Face ID.
@@ -48,7 +42,7 @@ final class AppLockSetupBiometricsScreenViewModelTests {
         // Then the service should now have biometric unlock enabled.
         #expect(appLockService.enableBiometricUnlockCallsCount == 1)
     }
-
+    
     @Test
     func skip() async throws {
         // When skipping biometrics.

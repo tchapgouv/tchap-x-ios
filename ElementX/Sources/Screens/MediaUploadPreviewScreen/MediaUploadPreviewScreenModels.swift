@@ -21,12 +21,12 @@ struct MediaUploadPreviewScreenViewState: BindableState {
     var shouldDisableInteraction = false
     
     var mediaEditVersion = 0
-
-    var bindings = MediaUploadPreviewScreenBindings()
+    
+    var bindings: MediaUploadPreviewScreenBindings
 }
 
 struct MediaUploadPreviewScreenBindings: BindableState {
-    var caption = NSAttributedString()
+    var caption: NSAttributedString
     var presendCallback: (() -> Void)?
     var selectedRange = NSRange(location: 0, length: 0)
     

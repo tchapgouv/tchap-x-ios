@@ -74,7 +74,15 @@ struct MessageText: UIViewRepresentable {
     @Environment(\.openURL) private var openURLAction
     @Environment(\.timelineContext) private var viewModel
     @Environment(\.layoutDirection) private var layoutDirection
-    @State private var computedSizes = [Double: CGSize]()
+    
+    /// Cache key for `sizeThatFits`. Keyed on the reserved trailing size as well as the proposed
+    /// width to account for any changes on the send info label that happen after the first rendering.
+    private struct SizeCacheKey: Hashable {
+        let width: Double
+        let reservedSize: CGSize
+    }
+    
+    @State private var computedSizes = [SizeCacheKey: CGSize]()
     
     @State var attributedString: AttributedString {
         didSet {
@@ -93,7 +101,7 @@ struct MessageText: UIViewRepresentable {
         guard let baseText = try? NSAttributedString(attributedString, including: \.elementX) else {
             return nil
         }
-
+        
         let combined = NSMutableAttributedString(attributedString: baseText)
         if trailingReservedSize.width > 0 {
             let attachment = TransparentTextAttachment()
@@ -101,7 +109,7 @@ struct MessageText: UIViewRepresentable {
             attachment.bounds = CGRect(origin: .zero,
                                        size: CGSize(width: trailingReservedSize.width,
                                                     height: max(trailingReservedSize.height, 1)))
-
+            
             // Inherit the font from the preceding character so the appended runs
             // (newline and attachment) carry the same line metrics as the surrounding
             // text — otherwise a small default font on those characters can shrink the
@@ -109,7 +117,7 @@ struct MessageText: UIViewRepresentable {
             let trailingFont = baseText.length > 0
                 ? baseText.attribute(.font, at: baseText.length - 1, effectiveRange: nil)
                 : nil
-
+            
             // When the last paragraph's natural text direction doesn't match the layout
             // direction, the inline attachment would land on the wrong side and overlap the
             // overlaid timestamp. Force it onto its own line so the bubble just grows taller.
@@ -122,7 +130,7 @@ struct MessageText: UIViewRepresentable {
                 }
                 combined.append(newlineString)
             }
-
+            
             let attachmentString = NSMutableAttributedString(attachment: attachment)
             if let trailingFont {
                 attachmentString.addAttribute(.font,
@@ -131,19 +139,19 @@ struct MessageText: UIViewRepresentable {
             }
             combined.append(attachmentString)
         }
-
+        
         return combined
     }
-
+    
     private func lastParagraphDirectionMatchesLayout(in attributedText: NSAttributedString) -> Bool {
         let string = attributedText.string as NSString
         guard string.length > 0 else { return true }
-
+        
         // Isolate the last paragraph because its direction is what decides
         // which side the trailing attachment ends up on.
         let lastParagraphRange = string.paragraphRange(for: NSRange(location: string.length - 1, length: 0))
         let lastParagraph = string.substring(with: lastParagraphRange)
-
+        
         let textIsRTL = lastParagraph.firstStrongCharacterIsRTL
         let layoutIsRTL = layoutDirection == .rightToLeft
         return textIsRTL == layoutIsRTL
@@ -173,6 +181,11 @@ struct MessageText: UIViewRepresentable {
         
         // Otherwise links can be dragged and dropped when long pressed
         textView.textDragInteraction?.isEnabled = false
+        // Otherwise items dropped onto a bubble land on the text view instead of
+        // bubbling up to the timeline's drop handler.
+        if let textDropInteraction = textView.textDropInteraction {
+            textView.removeInteraction(textDropInteraction)
+        }
         
         textView.contentInset = .zero
         textView.contentInsetAdjustmentBehavior = .never
@@ -199,14 +212,15 @@ struct MessageText: UIViewRepresentable {
     
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: MessageTextView, context: Context) -> CGSize? {
         let proposalWidth = proposal.width ?? UIView.layoutFittingExpandedSize.width
+        let key = SizeCacheKey(width: proposalWidth, reservedSize: trailingReservedSize)
         
-        if let size = computedSizes[proposalWidth] {
+        if let size = computedSizes[key] {
             return size
         }
         
         let size = uiView.sizeThatFits(CGSize(width: proposalWidth, height: UIView.layoutFittingCompressedSize.height))
         DispatchQueue.main.async {
-            computedSizes[proposalWidth] = size
+            computedSizes[key] = size
         }
         return size
     }

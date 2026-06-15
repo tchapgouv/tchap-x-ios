@@ -88,6 +88,11 @@ struct DeveloperOptionsScreen: View {
                         .foregroundStyle(.compound.textCriticalPrimary)
                 }
                 
+                Toggle(isOn: $context.jumpToReadMarkerEnabled) {
+                    Text("Jump to unread")
+                    Text("Adds a button to jump to the read marker, plus a presence dot on the scroll-to-bottom button when new messages arrive while scrolled away.")
+                }
+                
                 Toggle(isOn: $context.knockingEnabled) {
                     Text("Knocking")
                     Text("Ask to join rooms")
@@ -104,7 +109,7 @@ struct DeveloperOptionsScreen: View {
             } footer: {
                 Text("This setting controls how end-to-end encryption (E2EE) keys are exchanged. Enabling it will prevent the inclusion of devices that have not been explicitly verified by their owners.")
             }
-
+            
             Section("Element Call remote URL override") {
                 TextField("Leave empty to use EC locally", text: $elementCallURLOverrideString)
                     .autocorrectionDisabled(true)
@@ -177,7 +182,7 @@ struct DeveloperOptionsScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
     }
-
+    
     @ViewBuilder
     private var effectsView: some View {
         if showConfetti {
@@ -187,7 +192,7 @@ struct DeveloperOptionsScreen: View {
                 .task { await removeConfettiAfterDelay() }
         }
     }
-
+    
     private func removeConfettiAfterDelay() async {
         try? await Task.sleep(for: .seconds(4))
         showConfetti = false
@@ -244,8 +249,8 @@ private extension Set<TraceLogPack> {
 // MARK: - Previews
 
 struct DeveloperOptionsScreen_Previews: PreviewProvider {
-    static let viewModel = DeveloperOptionsScreenViewModel(developerOptions: AppSettings(),
-                                                           elementCallBaseURL: AppSettings().elementCallBaseURL,
+    static let viewModel = DeveloperOptionsScreenViewModel(developerOptions: AppSettings.volatile(),
+                                                           elementCallBaseURL: AppSettings.volatile().elementCallBaseURL,
                                                            appHooks: AppHooks(),
                                                            clientProxy: ClientProxyMock(.init()))
     

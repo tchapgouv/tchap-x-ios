@@ -226,7 +226,7 @@ struct LocationSharingScreenViewModelTests {
     mutating func startLiveLocationWithNotDeterminedAuthorizationTransitionsToWhenInUse() async {
         let authorizationStatusSubject = CurrentValueSubject<CLAuthorizationStatus, Never>(.notDetermined)
         let liveLocationManagerMock = LiveLocationManagerMock()
-        liveLocationManagerMock.underlyingAuthorizationStatus = .init(authorizationStatusSubject)
+        liveLocationManagerMock.authorizationStatus = .init(authorizationStatusSubject)
         liveLocationManagerMock.requestAlwaysAuthorizationIfPossibleReturnValue = true
         setupViewModel(liveLocationManagerMock: liveLocationManagerMock)
         
@@ -401,17 +401,17 @@ struct LocationSharingScreenViewModelTests {
         let roomProxyMock = JoinedRoomProxyMock(.init(members: .allMembers))
         roomProxyMock.makeLiveLocationServiceReturnValue = liveLocationServiceMock
         
-        let appSettings = AppSettings()
+        let appSettings = AppSettings.volatile()
         
         viewModel = LocationSharingScreenViewModel(interactionMode: .viewLive(sender: nil, initialLiveLocationShare: nil),
-                                                   mapURLBuilder: appSettings.mapTilerConfiguration,
+                                                   mapURLBuilder: appSettings.mapTilerSettings.publisher.value,
                                                    roomProxy: roomProxyMock,
-                                                   timelineController: MockTimelineController(timelineProxy: TimelineProxyMock(.init())),
+                                                   timelineController: TimelineControllerMock(.init(timelineProxy: TimelineProxyMock(.init()))),
                                                    liveLocationManager: LiveLocationManagerMock(.init()),
-                                                   analytics: .mock(settings: appSettings),
+                                                   analytics: AnalyticsServiceMock(.init()),
                                                    userIndicatorController: UserIndicatorControllerMock(),
-                                                   mediaProvider: MediaProviderMock(configuration: .init()))
-
+                                                   mediaProvider: MediaProviderMock(.init()))
+        
         // Initially no annotations and no map center since sender and share are both nil.
         #expect(context.viewState.annotations.isEmpty)
         #expect(context.mapCenterLocation == nil)
@@ -436,31 +436,31 @@ struct LocationSharingScreenViewModelTests {
     
     private mutating func setupViewModel(liveLocationManagerConfiguration: LiveLocationManagerMock.Configuration = .init(),
                                          members: [RoomMemberProxyMock] = .allMembersAsAdmin) {
-        let appSettings = AppSettings()
+        let appSettings = AppSettings.volatile()
         timelineProxy = TimelineProxyMock(.init())
         viewModel = LocationSharingScreenViewModel(interactionMode: .picker(shouldShowLiveLocationOption: true),
-                                                   mapURLBuilder: appSettings.mapTilerConfiguration,
+                                                   mapURLBuilder: appSettings.mapTilerSettings.publisher.value,
                                                    roomProxy: JoinedRoomProxyMock(.init(members: members)),
-                                                   timelineController: MockTimelineController(timelineProxy: timelineProxy),
+                                                   timelineController: TimelineControllerMock(.init(timelineProxy: timelineProxy)),
                                                    liveLocationManager: LiveLocationManagerMock(liveLocationManagerConfiguration),
-                                                   analytics: .mock(settings: appSettings),
+                                                   analytics: AnalyticsServiceMock(.init()),
                                                    userIndicatorController: UserIndicatorControllerMock(),
-                                                   mediaProvider: MediaProviderMock(configuration: .init()))
+                                                   mediaProvider: MediaProviderMock(.init()))
         viewModel.state.bindings.isLocationAuthorized = true
     }
-
+    
     private mutating func setupViewModel(liveLocationManagerMock: LiveLocationManagerMock,
                                          members: [RoomMemberProxyMock] = .allMembersAsAdmin) {
-        let appSettings = AppSettings()
+        let appSettings = AppSettings.volatile()
         timelineProxy = TimelineProxyMock(.init())
         viewModel = LocationSharingScreenViewModel(interactionMode: .picker(shouldShowLiveLocationOption: true),
-                                                   mapURLBuilder: appSettings.mapTilerConfiguration,
+                                                   mapURLBuilder: appSettings.mapTilerSettings.publisher.value,
                                                    roomProxy: JoinedRoomProxyMock(.init(members: members)),
-                                                   timelineController: MockTimelineController(timelineProxy: timelineProxy),
+                                                   timelineController: TimelineControllerMock(.init(timelineProxy: timelineProxy)),
                                                    liveLocationManager: liveLocationManagerMock,
-                                                   analytics: .mock(settings: appSettings),
+                                                   analytics: AnalyticsServiceMock(.init()),
                                                    userIndicatorController: UserIndicatorControllerMock(),
-                                                   mediaProvider: MediaProviderMock(configuration: .init()))
+                                                   mediaProvider: MediaProviderMock(.init()))
         viewModel.state.bindings.isLocationAuthorized = true
     }
     
@@ -468,7 +468,7 @@ struct LocationSharingScreenViewModelTests {
                                                     initialShare: LiveLocationShare,
                                                     liveLocationsSubject: CurrentValueSubject<[LiveLocationShare], Never>,
                                                     members: [RoomMemberProxyMock] = .allMembers) {
-        let appSettings = AppSettings()
+        let appSettings = AppSettings.volatile()
         let liveLocationServiceMock = RoomLiveLocationServiceMock()
         liveLocationServiceMock.liveLocationsPublisher = liveLocationsSubject.asCurrentValuePublisher()
         
@@ -476,13 +476,13 @@ struct LocationSharingScreenViewModelTests {
         roomProxyMock.makeLiveLocationServiceReturnValue = liveLocationServiceMock
         
         viewModel = LocationSharingScreenViewModel(interactionMode: .viewLive(sender: sender, initialLiveLocationShare: initialShare),
-                                                   mapURLBuilder: appSettings.mapTilerConfiguration,
+                                                   mapURLBuilder: appSettings.mapTilerSettings.publisher.value,
                                                    roomProxy: roomProxyMock,
-                                                   timelineController: MockTimelineController(timelineProxy: TimelineProxyMock(.init())),
+                                                   timelineController: TimelineControllerMock(.init(timelineProxy: TimelineProxyMock(.init()))),
                                                    liveLocationManager: LiveLocationManagerMock(.init()),
-                                                   analytics: .mock(settings: appSettings),
+                                                   analytics: AnalyticsServiceMock(.init()),
                                                    userIndicatorController: UserIndicatorControllerMock(),
-                                                   mediaProvider: MediaProviderMock(configuration: .init()))
+                                                   mediaProvider: MediaProviderMock(.init()))
     }
     
     private func makeLiveLocationShare(userID: String, latitude: Double = 0.0, longitude: Double = 0.0) -> LiveLocationShare {

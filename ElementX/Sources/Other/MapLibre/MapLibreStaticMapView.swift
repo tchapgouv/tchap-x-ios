@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import CoreLocation
 import SwiftUI
 
@@ -16,7 +17,7 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
     private let mapTilerAttributionPlacement: MapTilerAttributionPlacement
     private let mapSize: CGSize
     private let pinAnnotationView: PinAnnotation
-
+    
     @Environment(\.colorScheme) private var colorScheme
     @State private var fetchAttempt = 0
     
@@ -97,13 +98,13 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
                 .id(fetchAttempt)
         }
     }
-
+    
     private var placeholderImage: some View {
         Image(asset: Asset.Images.mapBlurred)
             .resizable()
             .scaledToFill()
     }
-
+    
     private var errorView: some View {
         Button {
             fetchAttempt += 1
@@ -111,7 +112,7 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
             placeholderImage
                 .overlay {
                     VStack(spacing: 0) {
-                        Image(systemName: "arrow.clockwise")
+                        CompoundIcon(\.restart)
                         Text(L10n.actionStaticMapLoad)
                     }
                 }

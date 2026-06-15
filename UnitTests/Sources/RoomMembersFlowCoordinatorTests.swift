@@ -58,8 +58,7 @@ struct RoomMembersFlowCoordinatorTests {
         let clientProxy = ClientProxyMock(.init())
         clientProxy.directRoomForUserIDReturnValue = .success(nil)
         
-        let appSettings = AppSettings()
-        let analytics = AnalyticsService.mock(settings: appSettings)
+        let appSettings = AppSettings.volatile()
         
         let flowParameters = CommonFlowParameters(userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                                   bugReportService: BugReportServiceMock(.init()),
@@ -67,10 +66,10 @@ struct RoomMembersFlowCoordinatorTests {
                                                   timelineControllerFactory: TimelineControllerFactoryMock(.init()),
                                                   emojiProvider: EmojiProvider(appSettings: appSettings),
                                                   linkMetadataProvider: LinkMetadataProvider(),
-                                                  appMediator: AppMediatorMock.default,
+                                                  appMediator: AppMediatorMock(.init()),
                                                   appSettings: appSettings,
                                                   appHooks: AppHooks(),
-                                                  analytics: analytics,
+                                                  analytics: AnalyticsServiceMock(.init()),
                                                   userIndicatorController: UserIndicatorControllerMock(),
                                                   notificationManager: NotificationManagerMock(),
                                                   stateMachineFactory: stateMachineFactory)

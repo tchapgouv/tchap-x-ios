@@ -25,10 +25,6 @@ final class AppLockSetupPINScreenViewModelTests {
         viewModel.context
     }
     
-    deinit {
-        AppSettings.resetAllSettings()
-    }
-
     @Test
     func createPIN() async throws {
         setup(mode: .create)
@@ -193,9 +189,8 @@ final class AppLockSetupPINScreenViewModelTests {
     // MARK: - Helpers
     
     private func setup(mode: AppLockSetupPINScreenMode) {
-        AppSettings.resetAllSettings()
         keychainController = KeychainControllerMock()
-        appLockService = AppLockService(keychainController: keychainController, appSettings: AppSettings())
+        appLockService = AppLockService(keychainController: keychainController, appSettings: .volatile())
         viewModel = AppLockSetupPINScreenViewModel(initialMode: mode, isMandatory: false, appLockService: appLockService)
     }
 }

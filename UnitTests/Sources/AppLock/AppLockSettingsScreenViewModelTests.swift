@@ -27,10 +27,10 @@ struct AppLockSetupSettingsScreenViewModelTests {
     
     init() {
         keychainController = KeychainControllerMock()
-        appLockService = AppLockService(keychainController: keychainController, appSettings: AppSettings())
+        appLockService = AppLockService(keychainController: keychainController, appSettings: .volatile())
         viewModel = AppLockSetupSettingsScreenViewModel(appLockService: AppLockServiceMock.mock())
     }
-
+    
     @Test
     func disablingShowsAlert() {
         // Given a fresh screen with the PIN code enabled.

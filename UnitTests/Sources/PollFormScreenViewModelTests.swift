@@ -23,7 +23,7 @@ struct PollFormScreenViewModelTests {
     private var context: PollFormScreenViewModelType.Context {
         viewModel.context
     }
-
+    
     @Test
     mutating func newPollInitialState() async throws {
         setupViewModel()
@@ -95,7 +95,7 @@ struct PollFormScreenViewModelTests {
         context.send(viewAction: .cancel)
         #expect(context.alertInfo != nil)
     }
-
+    
     @Test
     mutating func newPollSubmit() async throws {
         setupViewModel()
@@ -103,7 +103,7 @@ struct PollFormScreenViewModelTests {
         context.options[0].text = "bla1"
         context.options[1].text = "bla2"
         #expect(!context.viewState.isSubmitButtonDisabled)
-
+        
         let deferred = deferFulfillment(viewModel.actions) { $0 == .close }
         
         try await confirmation { confirmation in
@@ -121,7 +121,7 @@ struct PollFormScreenViewModelTests {
             try await deferred.fulfill()
         }
     }
-
+    
     @Test
     mutating func editPollSubmit() async throws {
         setupViewModel(mode: .edit(eventID: "foo", poll: .emptyDisclosed))
@@ -129,7 +129,7 @@ struct PollFormScreenViewModelTests {
         context.question = "What is your favorite country?"
         context.options.append(.init(text: "France 🇫🇷"))
         #expect(!context.viewState.isSubmitButtonDisabled)
-
+        
         let deferred = deferFulfillment(viewModel.actions) { $0 == .close }
         
         try await confirmation { confirmation in
@@ -158,7 +158,7 @@ struct PollFormScreenViewModelTests {
         context.question = "What is your favorite country?"
         context.options.append(.init(text: "France 🇫🇷"))
         #expect(!context.viewState.isSubmitButtonDisabled)
-
+        
         let deferredFailure = deferFailure(viewModel.actions, timeout: .seconds(1)) { $0 == .close }
         context.send(viewAction: .delete)
         
@@ -182,10 +182,10 @@ struct PollFormScreenViewModelTests {
     
     // MARK: - Helpers
     
-    private mutating func setupViewModel(mode: PollFormMode = .new) {
+    private mutating func setupViewModel(mode: PollFormMode = .new(topic: nil)) {
         viewModel = PollFormScreenViewModel(mode: mode,
-                                            timelineController: MockTimelineController(timelineProxy: timelineProxy),
-                                            analytics: .mock(),
+                                            timelineController: TimelineControllerMock(.init(timelineProxy: timelineProxy)),
+                                            analytics: AnalyticsServiceMock(.init()),
                                             userIndicatorController: UserIndicatorControllerMock())
     }
 }

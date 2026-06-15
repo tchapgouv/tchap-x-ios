@@ -38,8 +38,8 @@ struct ManageRoomMemberSheetViewModelTests {
                                                    permissions: .init(canKick: true, canBan: true, ownPowerLevel: RoomMemberProxyMock.mockAdmin.powerLevel),
                                                    roomProxy: roomProxy,
                                                    userIndicatorController: UserIndicatorControllerMock(),
-                                                   analyticsService: .mock(),
-                                                   mediaProvider: MediaProviderMock(configuration: .init()))
+                                                   analyticsService: AnalyticsServiceMock(.init()),
+                                                   mediaProvider: MediaProviderMock(.init()))
         
         let deferred = deferFulfillment(context.observe(\.viewState.bindings.alertInfo)) { $0 != nil }
         let deferredAction = deferFulfillment(viewModel.actions) { action in
@@ -70,8 +70,8 @@ struct ManageRoomMemberSheetViewModelTests {
                                                    permissions: .init(canKick: true, canBan: true, ownPowerLevel: RoomMemberProxyMock.mockAdmin.powerLevel),
                                                    roomProxy: roomProxy,
                                                    userIndicatorController: UserIndicatorControllerMock(),
-                                                   analyticsService: .mock(),
-                                                   mediaProvider: MediaProviderMock(configuration: .init()))
+                                                   analyticsService: AnalyticsServiceMock(.init()),
+                                                   mediaProvider: MediaProviderMock(.init()))
         
         let deferred = deferFulfillment(context.observe(\.viewState.bindings.alertInfo)) { $0 != nil }
         context.send(viewAction: .ban)
@@ -93,8 +93,8 @@ struct ManageRoomMemberSheetViewModelTests {
                                                    permissions: .init(canKick: true, canBan: true, ownPowerLevel: RoomMemberProxyMock.mockAdmin.powerLevel),
                                                    roomProxy: roomProxy,
                                                    userIndicatorController: UserIndicatorControllerMock(),
-                                                   analyticsService: .mock(),
-                                                   mediaProvider: MediaProviderMock(configuration: .init()))
+                                                   analyticsService: AnalyticsServiceMock(.init()),
+                                                   mediaProvider: MediaProviderMock(.init()))
         
         let deferredAction = deferFulfillment(viewModel.actions) { action in
             action == .dismiss(shouldShowDetails: true)

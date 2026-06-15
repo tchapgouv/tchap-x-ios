@@ -23,7 +23,7 @@ struct RoomNotificationSettingsScreenViewModelTests {
     var roomProxyMock: JoinedRoomProxyMock!
     var notificationSettingsProxyMock: NotificationSettingsProxyMock!
     var cancellables = Set<AnyCancellable>()
-
+    
     init() {
         roomProxyMock = JoinedRoomProxyMock(.init(name: "Test"))
         notificationSettingsProxyMock = NotificationSettingsProxyMock(with: NotificationSettingsProxyMockConfiguration())
@@ -39,14 +39,14 @@ struct RoomNotificationSettingsScreenViewModelTests {
         let viewModel = RoomNotificationSettingsScreenViewModel(notificationSettingsProxy: notificationSettingsProxyMock,
                                                                 roomProxy: roomProxyMock,
                                                                 displayAsUserDefinedRoomSettings: false)
-
+        
         let deferred = deferFulfillment(viewModel.context.observe(\.viewState)) { state in
             state.notificationSettingsState.isLoaded
         }
         
         notificationSettingsProxyMock.callbacks.send(.settingsDidChange)
         try await deferred.fulfill()
-
+        
         #expect(!viewModel.context.allowCustomSetting)
         #expect(viewModel.context.viewState.shouldDisplayMentionsOnlyDisclaimer)
         #expect(viewModel.context.viewState.description(mode: .mentionsAndKeywordsOnly) != nil)
@@ -62,14 +62,14 @@ struct RoomNotificationSettingsScreenViewModelTests {
         let viewModel = RoomNotificationSettingsScreenViewModel(notificationSettingsProxy: notificationSettingsProxyMock,
                                                                 roomProxy: roomProxyMock,
                                                                 displayAsUserDefinedRoomSettings: false)
-
+        
         let deferred = deferFulfillment(viewModel.context.observe(\.viewState)) { state in
             state.notificationSettingsState.isLoaded
         }
         
         notificationSettingsProxyMock.callbacks.send(.settingsDidChange)
         try await deferred.fulfill()
-
+        
         #expect(!viewModel.context.allowCustomSetting)
         #expect(!viewModel.context.viewState.shouldDisplayMentionsOnlyDisclaimer)
         #expect(viewModel.context.viewState.description(mode: .mentionsAndKeywordsOnly) == nil)
@@ -85,14 +85,14 @@ struct RoomNotificationSettingsScreenViewModelTests {
         let viewModel = RoomNotificationSettingsScreenViewModel(notificationSettingsProxy: notificationSettingsProxyMock,
                                                                 roomProxy: roomProxyMock,
                                                                 displayAsUserDefinedRoomSettings: false)
-
+        
         let deferred = deferFulfillment(viewModel.context.observe(\.viewState)) { state in
             state.notificationSettingsState.isLoaded
         }
         
         notificationSettingsProxyMock.callbacks.send(.settingsDidChange)
         try await deferred.fulfill()
-
+        
         #expect(!viewModel.context.allowCustomSetting)
         #expect(!viewModel.context.viewState.shouldDisplayMentionsOnlyDisclaimer)
         #expect(viewModel.context.viewState.description(mode: .mentionsAndKeywordsOnly) == nil)
@@ -110,7 +110,7 @@ struct RoomNotificationSettingsScreenViewModelTests {
         
         notificationSettingsProxyMock.callbacks.send(.settingsDidChange)
         try await deferred.fulfill()
-
+        
         #expect(viewModel.context.allowCustomSetting)
     }
     
@@ -126,7 +126,7 @@ struct RoomNotificationSettingsScreenViewModelTests {
         
         notificationSettingsProxyMock.callbacks.send(.settingsDidChange)
         try await deferred.fulfill()
-
+        
         let expectedAlertInfo = AlertInfo(id: RoomNotificationSettingsScreenErrorType.loadingSettingsFailed,
                                           title: L10n.commonError,
                                           message: L10n.screenRoomNotificationSettingsErrorLoadingSettings)
@@ -147,7 +147,7 @@ struct RoomNotificationSettingsScreenViewModelTests {
         
         notificationSettingsProxyMock.callbacks.send(.settingsDidChange)
         try await deferred.fulfill()
-                
+        
         let deferredIsRestoringDefaultSettings = deferFulfillment(viewModel.context.observe(\.viewState.isRestoringDefaultSetting),
                                                                   transitionValues: [false, true, false])
         
@@ -303,7 +303,7 @@ struct RoomNotificationSettingsScreenViewModelTests {
         viewModel.context.send(viewAction: .deleteCustomSettingTapped)
         
         try await deferredViewState.fulfill()
-                
+        
         // an alert is expected
         #expect(viewModel.context.alertInfo?.id == .restoreDefaultFailed)
         // the `dismiss` action must not have been sent

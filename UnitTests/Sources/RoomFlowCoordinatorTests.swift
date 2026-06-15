@@ -25,15 +25,11 @@ final class RoomFlowCoordinatorTests {
     var roomFlowCoordinator: RoomFlowCoordinator!
     var navigationStackCoordinator: NavigationStackCoordinator!
     var cancellables = Set<AnyCancellable>()
-
+    
     private let appSettings: AppSettings
-
+    
     init() {
-        appSettings = AppSettings()
-    }
-
-    deinit {
-        AppSettings.resetAllSettings()
+        appSettings = AppSettings.volatile()
     }
     
     @Test
@@ -494,11 +490,11 @@ final class RoomFlowCoordinatorTests {
                                                   timelineControllerFactory: timelineControllerFactory,
                                                   emojiProvider: EmojiProvider(appSettings: appSettings),
                                                   linkMetadataProvider: LinkMetadataProvider(),
-                                                  appMediator: AppMediatorMock.default,
+                                                  appMediator: AppMediatorMock(.init()),
                                                   appSettings: appSettings,
                                                   appHooks: AppHooks(),
-                                                  analytics: .mock(settings: appSettings),
-                                                  userIndicatorController: UserIndicatorControllerMock.default,
+                                                  analytics: AnalyticsServiceMock(.init()),
+                                                  userIndicatorController: UserIndicatorControllerMock(),
                                                   notificationManager: NotificationManagerMock(),
                                                   stateMachineFactory: StateMachineFactory())
         

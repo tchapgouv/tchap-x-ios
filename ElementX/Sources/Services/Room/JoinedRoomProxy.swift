@@ -15,7 +15,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     private let roomListService: RoomListServiceProtocol
     private let room: RoomProtocol
     private let appSettings: AppSettings
-    private let analyticsService: AnalyticsService
+    private let analyticsService: AnalyticsServiceProtocol
     private let eventStringBuilder: RoomEventStringBuilder
     
     // periphery:ignore - required for instance retention in the rust codebase
@@ -55,7 +55,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     var infoPublisher: CurrentValuePublisher<RoomInfoProxyProtocol, Never> {
         infoSubject.asCurrentValuePublisher()
     }
-
+    
     private let membersSubject = CurrentValueSubject<[RoomMemberProxyProtocol], Never>([])
     var membersPublisher: CurrentValuePublisher<[RoomMemberProxyProtocol], Never> {
         membersSubject.asCurrentValuePublisher()
@@ -79,7 +79,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     init(roomListService: RoomListServiceProtocol,
          room: RoomProtocol,
          appSettings: AppSettings,
-         analyticsService: AnalyticsService,
+         analyticsService: AnalyticsServiceProtocol,
          eventStringBuilder: RoomEventStringBuilder) async throws {
         self.roomListService = roomListService
         self.room = room
@@ -119,7 +119,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         }
         
         subscribedForUpdates = true
-
+        
         do {
             try await roomListService.subscribeToRooms(roomIds: [id])
         } catch {
@@ -353,7 +353,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             MXLog.error("Failed updating members using sync API: \(error)")
         }
     }
-
+    
     func getMember(userID: String) async -> Result<RoomMemberProxyProtocol, RoomProxyError> {
         if let member = membersPublisher.value.filter({ $0.userID == userID }).first {
             return .success(member)
@@ -410,7 +410,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             return .failure(.sdkError(error))
         }
     }
-
+    
     func setTopic(_ topic: String) async -> Result<Void, RoomProxyError> {
         do {
             return try await .success(room.setTopic(topic: topic))
@@ -434,7 +434,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             MXLog.error("Failed uploading avatar, invalid media: \(media)")
             return .failure(.invalidMedia)
         }
-
+        
         do {
             let data = try Data(contentsOf: imageURL)
             return try await .success(room.uploadAvatar(mimeType: mimeType, data: data, mediaInfo: nil))
@@ -804,6 +804,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             return .failure(.sdkError(error))
         }
     }
+<<<<<<< HEAD
 
     // Tchap: read access rule from local state store.
     func accessRule() async -> Result<AccessRule?, RoomProxyError> {
@@ -836,6 +837,9 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         return true
     }
 
+=======
+    
+>>>>>>> release/26.06.0
     // MARK: - Private
     
     private func subscribeToTypingNotifications() {

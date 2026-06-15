@@ -28,11 +28,11 @@ struct SessionVerificationViewModelTests {
         sessionVerificationController = SessionVerificationControllerProxyMock.configureMock()
         viewModel = SessionVerificationScreenViewModel(sessionVerificationControllerProxy: sessionVerificationController,
                                                        flow: .deviceInitiator,
-                                                       appSettings: AppSettings(),
-                                                       mediaProvider: MediaProviderMock(configuration: .init()))
+                                                       appSettings: .volatile(),
+                                                       mediaProvider: MediaProviderMock(.init()))
         context = viewModel.context
     }
-
+    
     @Test
     func requestVerification() async throws {
         #expect(context.viewState.verificationState == .initial)
@@ -65,7 +65,7 @@ struct SessionVerificationViewModelTests {
         context.send(viewAction: .restart)
         
         #expect(context.viewState.verificationState == .initial)
-
+        
         #expect(sessionVerificationController.requestDeviceVerificationCallsCount == 1)
         #expect(sessionVerificationController.cancelVerificationCallsCount == 1)
     }

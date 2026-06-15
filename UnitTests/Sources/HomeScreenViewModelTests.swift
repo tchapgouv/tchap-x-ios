@@ -28,20 +28,11 @@ final class HomeScreenViewModelTests {
     var roomSummaryProvider: RoomSummaryProviderMock!
     var notificationManager: NotificationManagerMock!
     private let appSettings: AppSettings
-    private let analytics: AnalyticsService
-    private let userIndicatorController: UserIndicatorControllerProtocol
     
     var cancellables = Set<AnyCancellable>()
     
     init() {
-        AppSettings.resetAllSettings()
-        appSettings = AppSettings()
-        analytics = .mock(settings: appSettings)
-        userIndicatorController = UserIndicatorControllerMock.default
-    }
-    
-    deinit {
-        AppSettings.resetAllSettings()
+        appSettings = AppSettings.volatile()
     }
     
     @Test
@@ -436,7 +427,7 @@ final class HomeScreenViewModelTests {
             spaceServiceProxy.spaceRoomListSpaceIDClosure = { spaceID in
                 .success(SpaceRoomListProxyMock(.init(spaceServiceRoom: SpaceServiceRoom.mock(id: spaceID, isSpace: true))))
             }
-            clientProxy.underlyingSpaceService = spaceServiceProxy
+            clientProxy.spaceService = spaceServiceProxy
         case nil:
             break
         }
@@ -451,9 +442,9 @@ final class HomeScreenViewModelTests {
         viewModel = HomeScreenViewModel(userSession: userSession,
                                         selectedRoomPublisher: CurrentValueSubject<String?, Never>(nil).asCurrentValuePublisher(),
                                         appSettings: appSettings,
-                                        analyticsService: analytics,
+                                        analyticsService: AnalyticsServiceMock(.init()),
                                         notificationManager: notificationManager,
-                                        userIndicatorController: userIndicatorController)
+                                        userIndicatorController: UserIndicatorControllerMock())
     }
 }
 

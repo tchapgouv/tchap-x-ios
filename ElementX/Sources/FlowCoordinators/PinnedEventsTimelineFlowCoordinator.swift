@@ -12,7 +12,7 @@ import Foundation
 enum PinnedEventsTimelineFlowCoordinatorAction {
     case finished
     case displayUser(userID: String)
-    case forwardedMessageToRoom(roomID: String)
+    case forwardedMessageToRooms(roomIDs: [String])
     case displayRoomScreenWithFocussedPin(eventID: String, threadRootEventID: String?)
 }
 
@@ -107,7 +107,7 @@ class PinnedEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
         let stackCoordinator = NavigationStackCoordinator()
         
         let params = LocationSharingScreenCoordinatorParameters(interactionMode: interactionMode,
-                                                                mapURLBuilder: flowParameters.appSettings.mapTilerConfiguration,
+                                                                mapURLBuilder: flowParameters.appSettings.mapTilerSettings.publisher.value,
                                                                 roomProxy: roomProxy,
                                                                 timelineController: timelineController,
                                                                 liveLocationManager: flowParameters.userSession.liveLocationManager,
@@ -148,15 +148,15 @@ class PinnedEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
             switch action {
             case .dismiss:
                 navigationStackCoordinator.setSheetCoordinator(nil)
-            case .sent(let roomID):
+            case .sent(let roomIDs):
                 navigationStackCoordinator.setSheetCoordinator(nil)
-                actionsSubject.send(.forwardedMessageToRoom(roomID: roomID))
+                actionsSubject.send(.forwardedMessageToRooms(roomIDs: roomIDs))
             }
         }
         .store(in: &cancellables)
         
         stackCoordinator.setRootCoordinator(coordinator)
-
+        
         navigationStackCoordinator.setSheetCoordinator(stackCoordinator)
     }
 }

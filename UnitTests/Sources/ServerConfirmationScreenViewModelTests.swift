@@ -22,21 +22,16 @@ final class ServerConfirmationScreenViewModelTests {
     var clientFactory: AuthenticationClientFactoryMock!
     var client: ClientSDKMock!
     var service: AuthenticationServiceProtocol!
-
+    
     var viewModel: ServerConfirmationScreenViewModel!
     var context: ServerConfirmationScreenViewModel.Context {
         viewModel.context
     }
-
-    private let appSettings: AppSettings
-
-    init() {
-        AppSettings.resetAllSettings()
-        appSettings = AppSettings()
-    }
     
-    deinit {
-        AppSettings.resetAllSettings()
+    private let appSettings: AppSettings
+    
+    init() {
+        appSettings = AppSettings.volatile()
     }
     
     // MARK: - Confirmation mode
@@ -350,19 +345,19 @@ final class ServerConfirmationScreenViewModelTests {
                                  accountProvisioningHost: appSettings.accountProvisioningHost,
                                  bugReportApplicationID: appSettings.bugReportApplicationID,
                                  analyticsTermsURL: appSettings.analyticsTermsURL,
-                                 mapTilerConfiguration: appSettings.mapTilerConfiguration)
+                                 mapTilerConfiguration: AppSettings.bundledMapTilerConfiguration)
             mode = .picker(appSettings.accountProviders)
         }
         
         // Manually create a configuration as the default homeserver address setting is immutable.
-        client = ClientSDKMock(configuration: .init(oAuthLoginURL: supportsOAuth ? "https://account.matrix.org/authorize" : nil,
-                                                    supportsOAuthCreatePrompt: supportsOAuthCreatePrompt,
-                                                    supportsPasswordLogin: supportsPasswordLogin,
-                                                    elementWellKnown: requiresElementPro ? "{\"version\":1,\"enforce_element_pro\":true}" : nil))
+        client = ClientSDKMock(.init(oAuthLoginURL: supportsOAuth ? "https://account.matrix.org/authorize" : nil,
+                                     supportsOAuthCreatePrompt: supportsOAuthCreatePrompt,
+                                     supportsPasswordLogin: supportsPasswordLogin,
+                                     elementWellKnown: requiresElementPro ? "{\"version\":1,\"enforce_element_pro\":true}" : nil))
         let configuration = AuthenticationClientFactoryMock.Configuration(homeserverClients: ["matrix.org": client])
         
-        clientFactory = AuthenticationClientFactoryMock(configuration: configuration)
-        service = AuthenticationService(userSessionStore: UserSessionStoreMock(configuration: .init()),
+        clientFactory = AuthenticationClientFactoryMock(configuration)
+        service = AuthenticationService(userSessionStore: UserSessionStoreMock(.init()),
                                         encryptionKeyProvider: EncryptionKeyProvider(),
                                         classicAppManager: nil,
                                         clientFactory: clientFactory,

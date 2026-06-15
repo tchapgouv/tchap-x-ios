@@ -17,7 +17,7 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
     private let roomProxy: JoinedRoomProxyProtocol
     private let timelineController: TimelineControllerProtocol
     private let liveLocationManager: LiveLocationManagerProtocol
-    private let analytics: AnalyticsService
+    private let analytics: AnalyticsServiceProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let notificationCenter: NotificationCenter
     
@@ -36,7 +36,7 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
          roomProxy: JoinedRoomProxyProtocol,
          timelineController: TimelineControllerProtocol,
          liveLocationManager: LiveLocationManagerProtocol,
-         analytics: AnalyticsService,
+         analytics: AnalyticsServiceProtocol,
          userIndicatorController: UserIndicatorControllerProtocol,
          mediaProvider: MediaProviderProtocol,
          notificationCenter: NotificationCenter = .default) {
@@ -46,7 +46,7 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
         self.analytics = analytics
         self.userIndicatorController = userIndicatorController
         self.notificationCenter = notificationCenter
-
+        
         super.init(initialViewState: .init(interactionMode: interactionMode,
                                            mapURLBuilder: mapURLBuilder,
                                            ownUserID: roomProxy.ownUserID),
@@ -308,7 +308,7 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
         userIndicatorController.submitIndicator(UserIndicator(id: Self.statusIndicatorID,
                                                               type: .toast,
                                                               title: L10n.errorUnknown,
-                                                              iconName: "xmark"))
+                                                              icon: \.close))
     }
     
     private func showLoader() {
@@ -338,7 +338,7 @@ extension LocationSharingScreenViewModel {
         case viewLive
         case viewLiveEmpty
     }
-
+    
     static func mock(type: MockType,
                      senderID: String = "@dan:matrix.org") -> LocationSharingScreenViewModel {
         let interactionMode: LocationSharingInteractionMode = switch type {
@@ -388,17 +388,14 @@ extension LocationSharingScreenViewModel {
         let liveLocationServiceMock = RoomLiveLocationServiceMock(.init(shares: liveLocationShares))
         let roomProxy = JoinedRoomProxyMock(.init(members: .allMembers, ownUserID: RoomMemberProxyMock.mockMe.userID))
         roomProxy.makeLiveLocationServiceReturnValue = liveLocationServiceMock
-
-        let appSettings = AppSettings()
-        let analytics = AnalyticsService.mock(settings: appSettings)
-
+        
         return LocationSharingScreenViewModel(interactionMode: interactionMode,
-                                              mapURLBuilder: appSettings.mapTilerConfiguration,
+                                              mapURLBuilder: AppSettings.volatile().mapTilerSettings.publisher.value,
                                               roomProxy: roomProxy,
-                                              timelineController: MockTimelineController(),
+                                              timelineController: TimelineControllerMock(.init()),
                                               liveLocationManager: LiveLocationManagerMock(),
-                                              analytics: analytics,
+                                              analytics: AnalyticsServiceMock(.init()),
                                               userIndicatorController: UserIndicatorControllerMock(),
-                                              mediaProvider: MediaProviderMock(configuration: .init()))
+                                              mediaProvider: MediaProviderMock(.init()))
     }
 }

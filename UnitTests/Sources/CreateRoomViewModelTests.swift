@@ -23,23 +23,20 @@ final class CreateRoomScreenViewModelTests {
     var clientProxy: ClientProxyMock!
     var spaceService: SpaceServiceProxyMock!
     var userSession: UserSessionMock!
-
+    
     private let appSettings: AppSettings
-    private let analytics: AnalyticsService
-
+    
     private let usersSubject = CurrentValueSubject<[UserProfileProxy], Never>([])
     
     var context: CreateRoomScreenViewModel.Context {
         viewModel.context
     }
-
+    
     init() {
-        appSettings = AppSettings()
-        analytics = .mock(settings: appSettings)
+        appSettings = AppSettings.volatile()
     }
-
+    
     deinit {
-        AppSettings.resetAllSettings()
         viewModel = nil
         clientProxy = nil
         spaceService = nil
@@ -112,7 +109,7 @@ final class CreateRoomScreenViewModelTests {
                                                   spaceSelectionMode: .none,
                                                   shouldShowCancelButton: false,
                                                   userSession: userSession,
-                                                  analytics: analytics,
+                                                  analytics: AnalyticsServiceMock(.init()),
                                                   userIndicatorController: UserIndicatorControllerMock(),
                                                   appSettings: appSettings)
         self.viewModel = viewModel
@@ -391,7 +388,7 @@ final class CreateRoomScreenViewModelTests {
                                                   spaceSelectionMode: spacesSelectionMode,
                                                   shouldShowCancelButton: false,
                                                   userSession: userSession,
-                                                  analytics: analytics,
+                                                  analytics: AnalyticsServiceMock(.init()),
                                                   userIndicatorController: UserIndicatorControllerMock(),
                                                   appSettings: appSettings)
         self.viewModel = viewModel

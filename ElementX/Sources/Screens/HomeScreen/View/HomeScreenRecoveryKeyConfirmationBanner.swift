@@ -21,21 +21,21 @@ struct HomeScreenRecoveryKeyConfirmationBanner: View {
         case .recoveryOutOfSync: L10n.confirmRecoveryKeyBannerTitle
         }
     }
-
+    
     var message: String {
         switch state {
         case .setUpRecovery: L10n.bannerSetUpRecoveryContent
         case .recoveryOutOfSync: L10n.confirmRecoveryKeyBannerMessage
         }
     }
-
+    
     var actionTitle: String {
         switch state {
         case .setUpRecovery: L10n.bannerSetUpRecoverySubmit
         case .recoveryOutOfSync: L10n.confirmRecoveryKeyBannerPrimaryButtonTitle
         }
     }
-
+    
     var primaryAction: HomeScreenViewAction {
         switch state {
         case .setUpRecovery: .setupRecovery
@@ -56,7 +56,7 @@ struct HomeScreenRecoveryKeyConfirmationBanner: View {
     
     var content: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 16) {
+            HStack(alignment: .center, spacing: 16) {
                 Text(title)
                     .font(.compound.bodyLGSemibold)
                     .foregroundColor(.compound.textPrimary)
@@ -66,9 +66,8 @@ struct HomeScreenRecoveryKeyConfirmationBanner: View {
                     Button {
                         context.send(viewAction: .skipRecoveryKeyConfirmation)
                     } label: {
-                        Image(systemName: "xmark")
+                        CompoundIcon(\.close, size: .medium, relativeTo: .compound.bodyLGSemibold)
                             .foregroundColor(.compound.iconSecondary)
-                            .frame(width: 12, height: 12)
                     }
                 }
             }
@@ -120,15 +119,12 @@ struct HomeScreenRecoveryKeyConfirmationBanner_Previews: PreviewProvider, Testab
                                                 roomSummaryProvider: RoomSummaryProviderMock(.init(state: .loading))))
         
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
-
-        let appSettings = AppSettings()
-        let analytics = AnalyticsService.mock(settings: appSettings)
-
+        
         return HomeScreenViewModel(userSession: userSession,
                                    selectedRoomPublisher: CurrentValueSubject<String?, Never>(nil).asCurrentValuePublisher(),
-                                   appSettings: appSettings,
-                                   analyticsService: analytics,
+                                   appSettings: .volatile(),
+                                   analyticsService: AnalyticsServiceMock(.init()),
                                    notificationManager: NotificationManagerMock(),
-                                   userIndicatorController: UserIndicatorControllerMock.default)
+                                   userIndicatorController: UserIndicatorControllerMock())
     }
 }

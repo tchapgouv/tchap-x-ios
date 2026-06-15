@@ -99,12 +99,12 @@ struct HomeScreenViewState: BindableState {
     var shouldShowOfflineBanner = false // Tchap: Display banner when homeserver is unreachable
 
     var requiresExtraAccountSetup = false
-        
+    
     var rooms: [HomeScreenRoom] = []
     var roomListMode: HomeScreenRoomListMode = .skeletons
     
     var hasPendingInvitations = false
-        
+    
     var selectedRoomID: String?
     
     var hideInviteAvatars = false
@@ -112,7 +112,7 @@ struct HomeScreenViewState: BindableState {
     var roomListActivityVisibility: RoomListActivityVisibility = .current
     
     var reportRoomEnabled = false
-        
+    
     var shouldShowSpaceFilters = false
     var selectedSpaceFilter: SpaceServiceFilter?
     
@@ -123,7 +123,7 @@ struct HomeScreenViewState: BindableState {
         
         return rooms
     }
-        
+    
     var bindings: HomeScreenViewStateBindings
     
     var placeholderRooms: [HomeScreenRoom] {
@@ -181,7 +181,7 @@ struct HomeScreenRoom: Identifiable, Equatable {
     }
     
     static let placeholderLastMessage = AttributedString("Hidden last message")
-        
+    
     /// The list item identifier is it's room identifier.
     let id: String
     
@@ -223,7 +223,7 @@ struct HomeScreenRoom: Identifiable, Equatable {
     let lastMessageState: LastMessageState?
     
     let avatar: RoomAvatar
-        
+    
     let canonicalAlias: String?
     
     let isTombstoned: Bool

@@ -29,7 +29,7 @@ struct SpaceRoomCell: View {
     private var isEditModeActive: Bool {
         editMode?.wrappedValue ?? .inactive != .inactive
     }
-
+    
     private var isHighlighted: Bool {
         isSelected && !isEditModeActive
     }
@@ -82,6 +82,8 @@ struct SpaceRoomCell: View {
                 }
             }
             .padding(.horizontal, horizontalInsets)
+            // Ensure the EditMode transition stays inside this cell if there are other insertions/removals in the list.
+            .geometryGroup()
             .accessibilityElement(children: .combine)
         }
         .buttonStyle(SpaceRoomCellButtonStyle(isHighlighted: isHighlighted))
@@ -178,7 +180,7 @@ struct SpaceRoomCellButtonStyle: ButtonStyle {
 }
 
 struct SpaceRoomCell_Previews: PreviewProvider, TestablePreview {
-    static let mediaProvider = MediaProviderMock(configuration: .init())
+    static let mediaProvider = MediaProviderMock(.init())
     
     static let spaces = [SpaceServiceRoom].mockSpaceList
     

@@ -91,23 +91,22 @@ struct HighlightedTimelineItemTimeline_Previews: PreviewProvider {
     static let focussedEventID = "RoomTimelineItemFixtures.default.5"
     static let composerViewModel = ComposerToolbarViewModel.mock()
     static let timelineViewModel = {
-        let appSettings = AppSettings()
-        let analytics = AnalyticsService.mock(settings: appSettings)
-
+        let appSettings = AppSettings.volatile()
+        
         return TimelineViewModel(roomProxy: roomProxyMock,
                                  focussedEventID: focussedEventID,
-                                 timelineController: MockTimelineController(),
+                                 timelineController: TimelineControllerMock(.init()),
                                  userSession: UserSessionMock(.init()),
                                  mediaPlayerProvider: MediaPlayerProviderMock(),
-                                 userIndicatorController: UserIndicatorControllerMock.default,
-                                 appMediator: AppMediatorMock.default,
+                                 userIndicatorController: UserIndicatorControllerMock(),
+                                 appMediator: AppMediatorMock(.init()),
                                  appSettings: appSettings,
-                                 analyticsService: analytics,
+                                 analyticsService: AnalyticsServiceMock(.init()),
                                  emojiProvider: EmojiProvider(appSettings: appSettings),
                                  linkMetadataProvider: LinkMetadataProvider(),
                                  timelineControllerFactory: TimelineControllerFactoryMock(.init()))
     }()
-
+    
     static var previews: some View {
         ElementNavigationStack {
             RoomScreen(context: roomViewModel.context,

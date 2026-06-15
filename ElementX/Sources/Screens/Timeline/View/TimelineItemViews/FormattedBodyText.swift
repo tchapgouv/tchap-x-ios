@@ -63,10 +63,20 @@ struct FormattedBodyText: View {
         // component so that the bubble's natural size accommodates the overlaid
         // timestamp, and TextKit decides whether to keep the timestamp on the last
         // line or push it to a new one.
-        let components = attributedComponents
+        var components = attributedComponents
+        // When the body ends in a block component (blockquote/codeBlock) the overlaid
+        // timestamp would land on top of it, so append an empty trailing plain-text
+        // component that exists solely to reserve space for the timestamp underneath.
+        if trailingReservedSize != .zero, let last = components.last, last.type != .plainText {
+            components.append(AttributedStringBuilderComponent(id: "",
+                                                               attributedString: AttributedString(),
+                                                               type: .plainText))
+        }
         let lastPlainTextIndex = components.lastIndex { $0.type == .plainText }
         
         return TimelineBubbleLayout(spacing: 8) {
+            // The `ForEach` needs to iterate over the id of the element to allow
+            // SwiftUI animations to work properly ater any edit.
             ForEach(Array(components.enumerated()), id: \.element.id) { index, component in
                 switch component.type {
                 case .blockquote:

@@ -23,7 +23,7 @@ struct SettingsScreenViewModelTests {
     private var context: SettingsScreenViewModelType.Context
     
     init() {
-        let appSettings = AppSettings()
+        let appSettings = AppSettings.volatile()
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: ""))))
         viewModel = SettingsScreenViewModel(userSession: userSession,
                                             appSettings: appSettings,
@@ -31,14 +31,14 @@ struct SettingsScreenViewModelTests {
                                             isInSecondaryWindow: false)
         context = viewModel.context
     }
-
+    
     @Test
     func logout() async throws {
         let deferred = deferFulfillment(viewModel.actions) { $0 == .logout }
         context.send(viewAction: .logout)
         try await deferred.fulfill()
     }
-
+    
     @Test
     func reportBug() async throws {
         let deferred = deferFulfillment(viewModel.actions) { $0 == .reportBug }

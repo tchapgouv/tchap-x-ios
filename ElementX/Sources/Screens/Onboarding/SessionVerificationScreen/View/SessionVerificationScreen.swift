@@ -70,7 +70,7 @@ struct SessionVerificationScreen: View {
                     accessibilityFocus = .title
                 }
                 .accessibilityFocused($accessibilityFocus, equals: .title)
-
+            
             Text(context.viewState.message)
                 .font(.compound.bodyMD)
                 .multilineTextAlignment(.center)
@@ -155,7 +155,7 @@ struct SessionVerificationScreen: View {
                 }
                 .buttonStyle(.compound(.primary))
             }
-        
+            
         case .showingChallenge:
             VStack(spacing: 16) {
                 Button(L10n.screenSessionVerificationTheyMatch) {
@@ -291,8 +291,8 @@ struct SessionVerification_Previews: PreviewProvider, TestablePreview {
                                           flow: SessionVerificationScreenFlow = .deviceInitiator) -> some View {
         let viewModel = SessionVerificationScreenViewModel(sessionVerificationControllerProxy: SessionVerificationControllerProxyMock.configureMock(),
                                                            flow: flow,
-                                                           appSettings: AppSettings(),
-                                                           mediaProvider: MediaProviderMock(configuration: .init()),
+                                                           appSettings: .volatile(),
+                                                           mediaProvider: MediaProviderMock(.init()),
                                                            verificationState: state)
         
         return SessionVerificationScreen(context: viewModel.context)

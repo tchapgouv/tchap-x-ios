@@ -15,7 +15,7 @@ struct TimelineMediaPreviewRedactConfirmationView: View {
     let item: TimelineMediaPreviewItem.Media
     @ObservedObject var context: TimelineMediaPreviewViewModel.Context
     var preferredColorScheme: ColorScheme? = .dark
-
+    
     @State private var sheetHeight: CGFloat = .zero
     private let topPadding: CGFloat = 19
     
@@ -74,12 +74,12 @@ struct TimelineMediaPreviewRedactConfirmationView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     .accessibilityHidden(true)
             }
-                
+            
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.filename ?? "")
                     .font(.compound.bodyMD)
                     .foregroundStyle(.compound.textPrimary)
-                    
+                
                 if let contentType = item.contentType {
                     Group {
                         if let fileSize = item.fileSize {
@@ -142,12 +142,11 @@ struct TimelineMediaPreviewRedactConfirmationView_Previews: PreviewProvider, Tes
                                                         thumbnailInfo: .mockThumbnail,
                                                         contentType: contentType))
         
-        let timelineController = MockTimelineController(timelineKind: .media(.mediaFilesScreen))
-        timelineController.timelineItems = [item]
+        let timelineController = TimelineControllerMock(.init(timelineKind: .media(.mediaFilesScreen), timelineItems: [item]))
         return TimelineMediaPreviewViewModel(initialItem: item,
                                              timelineViewModel: TimelineViewModel.mock(timelineKind: timelineController.timelineKind,
                                                                                        timelineController: timelineController),
-                                             mediaProvider: MediaProviderMock(configuration: .init()),
+                                             mediaProvider: MediaProviderMock(.init()),
                                              photoLibraryManager: PhotoLibraryManagerMock(.init()),
                                              userIndicatorController: UserIndicatorControllerMock(),
                                              appMediator: AppMediatorMock())

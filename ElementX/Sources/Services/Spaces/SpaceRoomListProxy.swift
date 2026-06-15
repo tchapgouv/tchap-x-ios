@@ -31,7 +31,7 @@ class SpaceRoomListProxy: SpaceRoomListProxyProtocol {
     private let paginationStateHandle: TaskHandle
     let paginationStatePublisher: CurrentValuePublisher<SpaceRoomListPaginationState, Never>
     
-    init(_ spaceRoomList: SpaceRoomListProtocol) throws {
+    init(_ spaceRoomList: SpaceRoomListProtocol) async throws {
         guard let spaceRoom = spaceRoomList.space() else { throw SpaceRoomListProxyError.missingSpace }
         
         self.spaceRoomList = spaceRoomList
@@ -44,16 +44,14 @@ class SpaceRoomListProxy: SpaceRoomListProxyProtocol {
             paginationStateSubject.send(paginationState)
         })
         
+        spaceRoomsHandle = await spaceRoomList.subscribeToRoomUpdate(listener: SDKListener { [weak self] updates in
+            self?.handleUpdates(updates)
+        })
+        
         spaceServiceRoomHandle = spaceRoomList.subscribeToSpaceUpdates(listener: SDKListener { [weak self] spaceRoom in
             guard let spaceRoom else { return }
             self?.spaceServiceRoomSubject.send(SpaceServiceRoom(spaceRoom: spaceRoom))
         })
-        
-        Task {
-            spaceRoomsHandle = await spaceRoomList.subscribeToRoomUpdate(listener: SDKListener { [weak self] updates in
-                self?.handleUpdates(updates)
-            })
-        }
     }
     
     func paginate() async {

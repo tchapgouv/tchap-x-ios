@@ -40,9 +40,8 @@ class AccessibilityTestsAppCoordinator: AppCoordinatorProtocol {
         
         MXLog.configure(currentTarget: "accessibility-tests")
         
-        AppSettings.configureWithSuiteName("io.element.elementx.accessibilitytests")
-        AppSettings.resetAllSettings()
-
+        let appSettings = AppSettings.volatile()
+        
         guard let name = ProcessInfo.accessibilityViewID,
               let previewType = TestablePreviewsDictionary.dictionary[name] else {
             fatalError("Unable to launch with unknown screen.")

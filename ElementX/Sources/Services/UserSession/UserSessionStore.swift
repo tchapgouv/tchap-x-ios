@@ -12,7 +12,7 @@ import MatrixRustSDK
 class UserSessionStore: UserSessionStoreProtocol {
     private let keychainController: KeychainControllerProtocol
     private let appSettings: AppSettings
-    private let analyticsService: AnalyticsService
+    private let analyticsService: AnalyticsServiceProtocol
     private let networkMonitor: NetworkMonitorProtocol
     private let appHooks: AppHooks
     
@@ -20,7 +20,7 @@ class UserSessionStore: UserSessionStoreProtocol {
     var hasSessions: Bool {
         !keychainController.restorationTokens().isEmpty
     }
-
+    
     /// All the user IDs managed by the store.
     var userIDs: [String] {
         keychainController.restorationTokens().map(\.userID)
@@ -32,7 +32,7 @@ class UserSessionStore: UserSessionStoreProtocol {
     
     init(keychainController: KeychainControllerProtocol,
          appSettings: AppSettings,
-         analyticsService: AnalyticsService,
+         analyticsService: AnalyticsServiceProtocol,
          appHooks: AppHooks,
          networkMonitor: NetworkMonitorProtocol) {
         self.keychainController = keychainController
@@ -100,7 +100,7 @@ class UserSessionStore: UserSessionStoreProtocol {
             credentials.restorationToken.sessionDirectories.delete()
         }
     }
-        
+    
     // MARK: - Private
     
     private func buildUserSessionWithClient(_ clientProxy: ClientProxyProtocol) async -> UserSessionProtocol {
@@ -150,6 +150,7 @@ class UserSessionStore: UserSessionStoreProtocol {
             MXLog.info("Set up session for user \(credentials.userID) at: \(credentials.restorationToken.sessionDirectories)")
             
             Task(priority: .low) { await appHooks.remoteSettingsHook.updateCache(using: client) }
+            Task(priority: .low) { await client.updateMapTilerSettings(in: appSettings) }
             
             return try await .success(setupProxyForClient(client))
         } catch UserSessionStoreError.failedSettingUpClientProxy(let error) {

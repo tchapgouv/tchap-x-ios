@@ -25,7 +25,7 @@ struct StringTests {
     func spaceIsAscii() {
         #expect("".isASCII)
     }
-
+    
     @Test
     func johnnyIsAscii() {
         #expect("johnny".isASCII)
@@ -60,7 +60,7 @@ struct StringTests {
         #expect("Heartbreak Hotel 🏩".asciified() == "Heartbreak Hotel", "The emoji should be stripped.")
         #expect("1️⃣2️⃣3️⃣".asciified() == "123", "The emoji should be converted to ASCII.")
     }
-
+    
     @Test
     func ellipsizeWorks() {
         #expect("ellipsize".ellipsize(length: 5) == "ellip…")

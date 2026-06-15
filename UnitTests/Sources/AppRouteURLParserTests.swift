@@ -21,8 +21,7 @@ struct AppRouteURLParserTests {
     var appRouteURLParser: AppRouteURLParser
     
     init() {
-        AppSettings.resetAllSettings()
-        appSettings = AppSettings()
+        appSettings = AppSettings.volatile()
         appRouteURLParser = AppRouteURLParser(appSettings: appSettings)
     }
     

@@ -20,25 +20,25 @@ import Testing
 struct RoomPollsHistoryScreenViewModelTests {
     var viewModel: RoomPollsHistoryScreenViewModelProtocol!
     var interactionHandler: PollInteractionHandlerMock!
-    var timelineController: MockTimelineController!
+    var timelineController: TimelineControllerMock!
     
     init() throws {
         interactionHandler = PollInteractionHandlerMock()
-        timelineController = MockTimelineController()
+        timelineController = TimelineControllerMock(.init())
         viewModel = RoomPollsHistoryScreenViewModel(pollInteractionHandler: interactionHandler,
                                                     timelineController: timelineController,
                                                     userIndicatorController: UserIndicatorControllerMock())
     }
-
+    
     @Test
     func backPaginate() async throws {
-        timelineController.backPaginationResponses = [
+        timelineController.setupBackPagination(responses: [
             [PollRoomTimelineItem.mock(poll: .emptyDisclosed, isEditable: true),
              PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: true)),
              PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: false)),
              PollRoomTimelineItem.mock(poll: .endedDisclosed)]
-        ]
-                
+        ])
+        
         let deferredViewState = deferFulfillment(viewModel.context.$viewState, keyPath: \.isBackPaginating, transitionValues: [false, true, false])
         
         viewModel.context.send(viewAction: .loadMore)
@@ -51,14 +51,14 @@ struct RoomPollsHistoryScreenViewModelTests {
     
     @Test
     func backPaginateCanBackPaginate() async throws {
-        timelineController.backPaginationResponses = [
+        timelineController.setupBackPagination(responses: [
             [PollRoomTimelineItem.mock(poll: .emptyDisclosed, isEditable: true),
              PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: true)),
              PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: false)),
              PollRoomTimelineItem.mock(poll: .endedDisclosed)],
             []
-        ]
-                
+        ])
+        
         let deferredViewState = deferFulfillment(viewModel.context.$viewState, keyPath: \.isBackPaginating, transitionValues: [false, true, false])
         
         viewModel.context.send(viewAction: .loadMore)
@@ -71,12 +71,12 @@ struct RoomPollsHistoryScreenViewModelTests {
     
     @Test
     func backPaginateTwice() async throws {
-        timelineController.backPaginationResponses = [
+        timelineController.setupBackPagination(responses: [
             [PollRoomTimelineItem.mock(poll: .emptyDisclosed, isEditable: true),
              PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: true)),
              PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: false))],
             [PollRoomTimelineItem.mock(poll: .endedDisclosed)]
-        ]
+        ])
         let deferredViewState = deferFulfillment(viewModel.context.$viewState, keyPath: \.isBackPaginating, transitionValues: [false, true, false])
         
         viewModel.context.send(viewAction: .loadMore)
@@ -90,14 +90,14 @@ struct RoomPollsHistoryScreenViewModelTests {
     
     @Test
     func filters() async throws {
-        timelineController.backPaginationResponses = [
+        timelineController.setupBackPagination(responses: [
             [PollRoomTimelineItem.mock(poll: .emptyDisclosed, isEditable: true),
              PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: true)),
              PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: false)),
              PollRoomTimelineItem.mock(poll: .endedDisclosed)],
             []
-        ]
-                
+        ])
+        
         let deferredViewState = deferFulfillment(viewModel.context.$viewState) { value in
             !value.pollTimelineItems.isEmpty
         }
@@ -116,25 +116,25 @@ struct RoomPollsHistoryScreenViewModelTests {
     @Test
     func endPoll() async throws {
         let deferred = deferFulfillment(interactionHandler.publisher.delay(for: 0.1, scheduler: DispatchQueue.main)) { _ in true }
-            
+        
         interactionHandler.endPollPollStartIDReturnValue = .success(())
         viewModel.context.send(viewAction: .end(pollStartID: "somePollID"))
-
+        
         try await deferred.fulfill()
         
         #expect(interactionHandler.endPollPollStartIDCalled)
         #expect(interactionHandler.endPollPollStartIDReceivedPollStartID == "somePollID")
     }
-
+    
     @Test
     func endPollFailure() async throws {
         let deferred = deferFulfillment(viewModel.context.$viewState) { value in
             value.bindings.alertInfo != nil
         }
-            
+        
         interactionHandler.endPollPollStartIDReturnValue = .failure(SDKError.generic)
         viewModel.context.send(viewAction: .end(pollStartID: "somePollID"))
-
+        
         try await deferred.fulfill()
         
         #expect(interactionHandler.endPollPollStartIDCalled)
@@ -144,26 +144,26 @@ struct RoomPollsHistoryScreenViewModelTests {
     @Test
     func sendPollResponse() async throws {
         let deferred = deferFulfillment(interactionHandler.publisher.delay(for: 0.1, scheduler: DispatchQueue.main)) { _ in true }
-            
+        
         interactionHandler.sendPollResponsePollStartIDOptionIDReturnValue = .success(())
         viewModel.context.send(viewAction: .sendPollResponse(pollStartID: "somePollID", optionID: "someOptionID"))
-
+        
         try await deferred.fulfill()
         
         #expect(interactionHandler.sendPollResponsePollStartIDOptionIDCalled)
         #expect(interactionHandler.sendPollResponsePollStartIDOptionIDReceivedInvocations[0].pollStartID == "somePollID")
         #expect(interactionHandler.sendPollResponsePollStartIDOptionIDReceivedInvocations[0].optionID == "someOptionID")
     }
-
+    
     @Test
     func sendPollResponseFailure() async throws {
         let deferred = deferFulfillment(viewModel.context.$viewState) { value in
             value.bindings.alertInfo != nil
         }
-            
+        
         interactionHandler.sendPollResponsePollStartIDOptionIDReturnValue = .failure(SDKError.generic)
         viewModel.context.send(viewAction: .sendPollResponse(pollStartID: "somePollID", optionID: "someOptionID"))
-
+        
         try await deferred.fulfill()
         
         #expect(interactionHandler.sendPollResponsePollStartIDOptionIDCalled)

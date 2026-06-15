@@ -25,6 +25,7 @@ setup_github_actions_environment() {
     # brew update && brew install xcodegen swiftlint swiftformat git-lfs pkl a7ex/homebrew-formulae/xcresultparser
     brew update && brew install xcodegen swiftlint git-lfs pkl a7ex/homebrew-formulae/xcresultparser
     
+<<<<<<< HEAD
     # Installe swiftformat à la version exacte depuis les releases GitHub
     curl -sL "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip" -o /tmp/swiftformat.zip
     unzip -o /tmp/swiftformat.zip -d /tmp/swiftformat_bin
@@ -34,6 +35,17 @@ setup_github_actions_environment() {
 
 
     swiftformat --version
+=======
+    brew update && brew install xcodegen swiftlint git-lfs pkl a7ex/homebrew-formulae/xcresultparser
+    install_swiftformat_head
+}
+
+install_swiftformat_head() {
+    if brew list --versions swiftformat &>/dev/null && ! brew list --versions swiftformat | grep -q HEAD; then
+        brew uninstall swiftformat
+    fi
+    brew install swiftformat --HEAD
+>>>>>>> release/26.06.0
 }
 
 setup_github_actions_translations_environment() {

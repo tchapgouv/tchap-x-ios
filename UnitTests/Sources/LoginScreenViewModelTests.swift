@@ -159,7 +159,7 @@ struct LoginScreenViewModelTests {
         #expect(context.viewState.canSubmit,
                 "The form should be ready to submit.")
     }
-
+    
     @Test
     mutating func oAuthServer() async throws {
         // Given the screen configured for matrix.org
@@ -172,7 +172,7 @@ struct LoginScreenViewModelTests {
         context.username = "@bob:company.com"
         context.send(viewAction: .parseUsername)
         try await deferred.fulfill()
-
+        
         // Then the view state should be updated with the homeserver and show the OAuth button.
         #expect(context.viewState.loginMode.supportsOAuthFlow,
                 "The OAuth button should be shown.")
@@ -192,7 +192,7 @@ struct LoginScreenViewModelTests {
         context.username = "@bob:server.net"
         context.send(viewAction: .parseUsername)
         try await deferred.fulfill()
-
+        
         // Then the view state should be updated to show an alert.
         #expect(context.alertInfo?.id == .unknown,
                 "An alert should be shown to the user.")
@@ -212,7 +212,7 @@ struct LoginScreenViewModelTests {
         context.username = "@bob:secure.gov"
         context.send(viewAction: .parseUsername)
         try await deferred.fulfill()
-
+        
         // Then the view state should be updated to show an alert.
         #expect(context.alertInfo?.id == .elementProAlert,
                 "An alert should be shown to the user.")
@@ -233,10 +233,10 @@ struct LoginScreenViewModelTests {
     // MARK: - Helpers
     
     private mutating func setupViewModel(homeserverAddress: String = "example.com", loginHint: String? = nil) async {
-        let appSettings = AppSettings()
+        let appSettings = AppSettings.volatile()
         
-        clientFactory = AuthenticationClientFactoryMock(configuration: .init())
-        service = AuthenticationService(userSessionStore: UserSessionStoreMock(configuration: .init()),
+        clientFactory = AuthenticationClientFactoryMock(.init())
+        service = AuthenticationService(userSessionStore: UserSessionStoreMock(.init()),
                                         encryptionKeyProvider: EncryptionKeyProvider(),
                                         classicAppManager: nil,
                                         clientFactory: clientFactory,
@@ -253,6 +253,6 @@ struct LoginScreenViewModelTests {
                                          loginHint: loginHint,
                                          userIndicatorController: UserIndicatorControllerMock(),
                                          appSettings: appSettings,
-                                         analytics: .mock(settings: appSettings))
+                                         analytics: AnalyticsServiceMock(.init()))
     }
 }
