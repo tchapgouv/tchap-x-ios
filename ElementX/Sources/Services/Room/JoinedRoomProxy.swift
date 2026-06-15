@@ -804,7 +804,6 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             return .failure(.sdkError(error))
         }
     }
-<<<<<<< HEAD
 
     // Tchap: read access rule from local state store.
     func accessRule() async -> Result<AccessRule?, RoomProxyError> {
@@ -837,9 +836,6 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         return true
     }
 
-=======
-    
->>>>>>> release/26.06.0
     // MARK: - Private
     
     private func subscribeToTypingNotifications() {

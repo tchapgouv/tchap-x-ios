@@ -451,7 +451,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             analyticsService.trackInteraction(name: .MobileRoomFavouriteToggle)
         }
     }
-<<<<<<< HEAD
 
     // Tchap: Activate link access
     var canToggleAccessViaLink: Bool {
@@ -508,8 +507,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                                                               title: success ? L10n.commonLinkCopiedToClipboard : TchapL10n.roomDetailsCopyLinkError,
                                                               iconName: success ? "checkmark" : "xmark"))
     }
-=======
->>>>>>> release/26.06.0
     
     private static let leaveRoomLoadingID = "LeaveRoomLoading"
     

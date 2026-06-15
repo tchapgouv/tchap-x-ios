@@ -445,14 +445,9 @@ final class SecurityAndPrivacyScreenViewModelTests {
     
     private func setupViewModel(joinedParentSpaces: [SpaceServiceRoom],
                                 topLevelSpaces: [SpaceServiceRoom] = [],
-<<<<<<< HEAD
                                 // Tchap: tchap target
                                 joinRule: TchapX_Production.JoinRule) {
-        let appSettings = AppSettings()
-=======
-                                joinRule: ElementX.JoinRule) {
         let appSettings = AppSettings.volatile()
->>>>>>> release/26.06.0
         appSettings.knockingEnabled = true
         roomProxy = JoinedRoomProxyMock(.init(isEncrypted: false,
                                               canonicalAlias: "#room:matrix.org",

@@ -12,11 +12,8 @@
 @testable import TchapX_Production
 #else
 @testable import ElementX
-<<<<<<< HEAD
 #endif
-=======
 import Foundation
->>>>>>> release/26.06.0
 import MatrixRustSDK
 import Testing
 

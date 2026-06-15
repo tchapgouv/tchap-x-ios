@@ -12,7 +12,6 @@ import SwiftUI
 typealias AdvancedSettingsScreenViewModelType = StateStoreViewModelV2<AdvancedSettingsScreenViewState, AdvancedSettingsScreenViewAction>
 
 class AdvancedSettingsScreenViewModel: AdvancedSettingsScreenViewModelType, AdvancedSettingsScreenViewModelProtocol {
-<<<<<<< HEAD
     // :tchap: clear cache option
     private var actionsSubject: PassthroughSubject<AdvancedSettingsScreenViewModelAction, Never> = .init()
     
@@ -20,10 +19,7 @@ class AdvancedSettingsScreenViewModel: AdvancedSettingsScreenViewModelType, Adva
         actionsSubject.eraseToAnyPublisher()
     } // :tchap:end
 
-    private let analytics: AnalyticsService
-=======
     private let analytics: AnalyticsServiceProtocol
->>>>>>> release/26.06.0
     private let clientProxy: ClientProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     

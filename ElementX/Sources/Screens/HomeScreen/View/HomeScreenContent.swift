@@ -15,16 +15,13 @@ struct HomeScreenContent: View {
     
     @ObservedObject var context: HomeScreenViewModel.Context
     let scrollViewAdapter: ScrollViewAdapter
-<<<<<<< HEAD
+    
+    @State private var topSectionHeight: CGFloat = 0
+    
 
     // Tchap: `openURL` for tchap status page
     @Environment(\.openURL) private var openURL
 
-=======
-    
-    @State private var topSectionHeight: CGFloat = 0
-    
->>>>>>> release/26.06.0
     var body: some View {
         roomList
             .sentryTrace("\(Self.self)")

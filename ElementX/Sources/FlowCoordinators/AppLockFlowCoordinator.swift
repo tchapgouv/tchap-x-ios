@@ -145,10 +145,7 @@ class AppLockFlowCoordinator: CoordinatorProtocol {
             switch (fromState, event) {
             case (.initial, .start):
                 return .backgrounded
-<<<<<<< HEAD
-=======
                 
->>>>>>> release/26.06.0
             case (.unlocked, .willResignActive):
                 return .appObscured
             case (.appObscured, .didBecomeActive):
@@ -172,20 +169,14 @@ class AppLockFlowCoordinator: CoordinatorProtocol {
                 return .unlocked
             case (.attemptingPINUnlock, .forceLogout):
                 return .loggingOut
-<<<<<<< HEAD
-=======
                 
->>>>>>> release/26.06.0
             // Transition to a valid state when enabling the service for the first time.
             case (.initial, .serviceEnabled):
                 return .unlocked
             // Transition to a valid state once the service is disabled following a forced logout.
             case (.loggingOut, .serviceDisabled):
                 return .unlocked
-<<<<<<< HEAD
-=======
                 
->>>>>>> release/26.06.0
             default:
                 return fromState
             }

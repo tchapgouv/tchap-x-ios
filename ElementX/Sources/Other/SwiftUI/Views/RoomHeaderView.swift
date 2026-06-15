@@ -154,13 +154,8 @@ struct RoomHeaderView_Previews: PreviewProvider, TestablePreview {
                                          avatarURL: avatarURL),
                        dmRecipientVerificationState: verificationState,
                        roomHistorySharingState: historySharingState,
-<<<<<<< HEAD
                        roomPropertiesBadgesView: .sample, // Tchap addition
-                       mediaProvider: MediaProviderMock(configuration: .init())) { }
-=======
-                       
                        mediaProvider: MediaProviderMock(.init())) { }
->>>>>>> release/26.06.0
             .padding()
     }
 }

@@ -240,10 +240,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
                 return .finished
             case (.notificationPermissions, _, _, _, _, _): // Tchap: add welcome screen state
                 return .finished
-<<<<<<< HEAD
-=======
                 
->>>>>>> release/26.06.0
             default:
                 return nil
             }

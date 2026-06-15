@@ -56,14 +56,10 @@
 "a11y.move_the_map_to_my_location" = "Déplacer la carte vers ma position";
 "a11y.other_user_avatar" = "Avatar de l'autre membre"; // Tchap
 "a11y.room_avatar" = "Avatar du salon";
-<<<<<<< HEAD
-"a11y.user_avatar" = "Avatar du membre"; // Tchap
-=======
 "a11y.sent_by_sender_at_date" = "Envoyé par %1$@ à %2$@";
 "a11y.thread_in_room" = "Discussion dans %1$@";
 "a11y.threads_in_room" = "Discussions dans %1$@";
-"a11y.user_avatar" = "Avatar de l'utilisateur";
->>>>>>> release/26.06.0
+"a11y.user_avatar" = "Avatar du membre"; // Tchap
 "a11y.your_avatar" = "Votre avatar";
 "action_accept" = "Accepter";
 "action_add_caption" = "Ajouter une légende";
@@ -810,13 +806,9 @@
 "screen_identity_confirmed_subtitle" = "Vous pouvez désormais lire ou envoyer des messages en toute sécurité, et tout membre avec qui vous discutez peut également faire confiance à cet appareil."; // Tchap
 "screen_identity_confirmed_title" = "Appareil vérifié"; // Tchap
 "screen_identity_use_another_device" = "Utiliser une autre session";
-<<<<<<< HEAD
 "screen_identity_waiting_on_other_device" = "En attente d’un autre appareil…"; // Tchap
-=======
-"screen_identity_waiting_on_other_device" = "En attente d’une autre session…";
 "screen_image_edition_a11y_rotate_to_the_left" = "Rotate the image to the left";
 "screen_image_edition_title" = "Edit photo";
->>>>>>> release/26.06.0
 "screen_invite_users_already_a_member" = "Déjà membre";
 "screen_invite_users_already_invited" = "Déjà invité(e)";
 "screen_invite_users_confirm_dialog_subtitle_multiple_users" = "Vous n'avez actuellement aucune conversation avec ces contacts. Veuillez confirmer leur invitation à rejoindre ce salon avant de continuer.";

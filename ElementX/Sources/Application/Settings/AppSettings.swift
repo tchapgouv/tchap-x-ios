@@ -233,13 +233,9 @@ final class AppSettings: @unchecked Sendable {
     
     /// The task identifier used for background app refresh. Also used in main target's the Info.plist
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
-<<<<<<< HEAD
 
     // Tchap: adapt website URL for OAuth / MAS
     //    private(set) var websiteURL: URL = "https://element.io"
-=======
-    
->>>>>>> release/26.06.0
     /// A URL where users can go read more about the app.
     #if IS_TCHAP_PRODUCTION
     private(set) var websiteURL: URL = "https://tchap.gouv.fr"
@@ -286,11 +282,7 @@ final class AppSettings: @unchecked Sendable {
     private(set) var identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
     /// A URL describing how history sharing works
     private(set) var historySharingDetailsURL: URL = "https://element.io/en/help#e2ee-history-sharing"
-<<<<<<< HEAD
     // Tchap: handle Tchap permalinks
-=======
-    
->>>>>>> release/26.06.0
     /// Any domains that Element web may be hosted on - used for handling links.
     #if IS_TCHAP_DEVELOPMENT
     private(set) var elementWebHosts = ["tchap.incubateur.net", "www.tchap.incubateur.net"]
@@ -460,17 +452,12 @@ final class AppSettings: @unchecked Sendable {
     @UserPreference
     var hasRunNotificationPermissionsOnboarding: Bool
     
-<<<<<<< HEAD
     // Tchap: add welcome screen
     @UserPreference(key: UserDefaultsKeys.hasRunTchapWelcomeOnboarding, defaultValue: false, storageType: .userDefaults(store))
     var hasRunTchapWelcomeOnboarding
     
-    @UserPreference(key: UserDefaultsKeys.hasRunIdentityConfirmationOnboarding, defaultValue: false, storageType: .userDefaults(store))
-    var hasRunIdentityConfirmationOnboarding
-=======
     @UserPreference
     var hasRunIdentityConfirmationOnboarding: Bool
->>>>>>> release/26.06.0
     
     @UserPreference
     var hasRequestedLocationAlwaysLocationAuthorization: Bool
@@ -531,8 +518,7 @@ final class AppSettings: @unchecked Sendable {
     
     // MARK: - Maps
     
-<<<<<<< HEAD
-    /// maptiler base url
+    /// The locally-bundled MapTiler configuration.
     // Tchap: customize map tiler url for Tchap.
     #if IS_TCHAP_DEVELOPMENT || IS_TCHAP_STAGING || IS_TCHAP_PRODUCTION
     private enum TchapMapProvider: String {
@@ -540,28 +526,22 @@ final class AppSettings: @unchecked Sendable {
         case ign = "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"
     }
 
-    private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
+    private(set) var bundledMapTilerConfiguration = MapTilerSettings.Configuration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
                                                                    apiKey: Secrets.mapLibreAPIKey,
                                                                    lightStyleID: "osm-bright",
                                                                    darkStyleID: "fiord-color")
     #else
-    private(set) var mapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
+    private(set) var bundledMapTilerConfiguration = MapTilerSettings.Configuration(baseURL: "https://api.maptiler.com/maps",
                                                                    apiKey: Secrets.mapLibreAPIKey,
                                                                    lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
                                                                    darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
     #endif
-=======
-    /// The locally-bundled MapTiler configuration.
-    static let bundledMapTilerConfiguration = MapTilerSettings.Configuration(baseURL: "https://api.maptiler.com/maps",
-                                                                             apiKey: Secrets.mapLibreAPIKey,
-                                                                             lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
-                                                                             darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
+    
     
     /// The resolved map tile settings. Defaults to ``MapTilerSettings.configuration(_:)`` with the
     /// bundled configuration and is remotely overridden with ``MapTilerSettings.url(_:)`` when
     /// the homeserver advertises a `style.json` URL via the matrix client well-known.
     private(set) var mapTilerSettings = RemotePreference<MapTilerSettings>(.configuration(AppSettings.bundledMapTilerConfiguration))
->>>>>>> release/26.06.0
     
     // MARK: - Presence
     
@@ -584,27 +564,16 @@ final class AppSettings: @unchecked Sendable {
     @UserPreference
     var knockingEnabled: Bool
     
-<<<<<<< HEAD
-    // Tchap: enable `threadsEnabled` feature flag by default.
-//    @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: false, storageType: .userDefaults(store))
-    @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: true, storageType: .userDefaults(store))
-    var threadsEnabled
-=======
     @UserPreference
     var threadsEnabled: Bool
->>>>>>> release/26.06.0
     
     @UserPreference
     var roomThreadListEnabled: Bool
     
-<<<<<<< HEAD
     // :tchap: disable `unencryptedPrivateRoomEnabled` feature flag by default in production.
     @UserPreference(key: UserDefaultsKeys.unencryptedPrivateRoomEnabled, defaultValue: false, storageType: .userDefaults(store))
     var unencryptedPrivateRoomEnabled // :tchap:end
 
-    @UserPreference(key: UserDefaultsKeys.focusEventOnNotificationTap, defaultValue: false, storageType: .userDefaults(store))
-    var focusEventOnNotificationTap
-=======
     @UserPreference
     var focusEventOnNotificationTap: Bool
     
@@ -629,7 +598,6 @@ final class AppSettings: @unchecked Sendable {
     init(store: UserDefaultsProtocol) {
         // UserDefaults to be used on reads and writes.
         self.store = store
->>>>>>> release/26.06.0
         
         _lastVersionLaunched = UserPreference(key: .lastVersionLaunched, storage: store)
         _seenInvites = UserPreference(key: .seenInvites, defaultValue: [], storage: store)

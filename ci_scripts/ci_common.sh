@@ -22,22 +22,19 @@ setup_github_actions_environment() {
     # corriger les erreurs de formatage, puis committer le tout.
     SWIFTFORMAT_VERSION="0.59.1"
 
-    # brew update && brew install xcodegen swiftlint swiftformat git-lfs pkl a7ex/homebrew-formulae/xcresultparser
     brew update && brew install xcodegen swiftlint git-lfs pkl a7ex/homebrew-formulae/xcresultparser
-    
-<<<<<<< HEAD
-    # Installe swiftformat à la version exacte depuis les releases GitHub
+    # :tchap: Installe swiftformat à la version exacte depuis les releases GitHub
+    # install_swiftformat_head
+
     curl -sL "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip" -o /tmp/swiftformat.zip
     unzip -o /tmp/swiftformat.zip -d /tmp/swiftformat_bin
     # Overwrite le binaire pré-installé du runner au lieu de /usr/local/bin
     sudo cp /tmp/swiftformat_bin/swiftformat "$(which swiftformat)"
     rm -rf /tmp/swiftformat.zip /tmp/swiftformat_bin
 
-
     swiftformat --version
-=======
-    brew update && brew install xcodegen swiftlint git-lfs pkl a7ex/homebrew-formulae/xcresultparser
-    install_swiftformat_head
+    # :tchap:end
+
 }
 
 install_swiftformat_head() {
@@ -45,7 +42,6 @@ install_swiftformat_head() {
         brew uninstall swiftformat
     fi
     brew install swiftformat --HEAD
->>>>>>> release/26.06.0
 }
 
 setup_github_actions_translations_environment() {

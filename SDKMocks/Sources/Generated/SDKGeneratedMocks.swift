@@ -422,7 +422,6 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
 
     //MARK: - createRoom
 
-<<<<<<< HEAD
     open var createRoomRequestIsTchapInviteIsTchapInviteExternalThrowableError: Error?
     open var createRoomRequestIsTchapInviteIsTchapInviteExternalUnderlyingCallsCount = 0
     open var createRoomRequestIsTchapInviteIsTchapInviteExternalCallsCount: Int {
@@ -447,19 +446,10 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
                 }
             }
         }
-=======
-    open var createRoomRequestThrowableError: Error?
-    private let createRoomRequestCallsCountLock = NSLock()
-    private var createRoomRequestUnderlyingCallsCount = 0
-    open var createRoomRequestCallsCount: Int {
-        get { createRoomRequestCallsCountLock.withLock { createRoomRequestUnderlyingCallsCount } }
-        set { createRoomRequestCallsCountLock.withLock { createRoomRequestUnderlyingCallsCount = newValue } }
->>>>>>> release/26.06.0
     }
     open var createRoomRequestIsTchapInviteIsTchapInviteExternalCalled: Bool {
         return createRoomRequestIsTchapInviteIsTchapInviteExternalCallsCount > 0
     }
-<<<<<<< HEAD
     open var createRoomRequestIsTchapInviteIsTchapInviteExternalReceivedArguments: (request: CreateRoomParameters, isTchapInvite: Bool, isTchapInviteExternal: Bool)?
     open var createRoomRequestIsTchapInviteIsTchapInviteExternalReceivedInvocations: [(request: CreateRoomParameters, isTchapInvite: Bool, isTchapInviteExternal: Bool)] = []
 
@@ -486,26 +476,6 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
                 }
             }
         }
-=======
-    private let createRoomRequestReceivedRequestLock = NSLock()
-    private var createRoomRequestUnderlyingReceivedRequest: CreateRoomParameters?
-    open var createRoomRequestReceivedRequest: CreateRoomParameters? {
-        get { createRoomRequestReceivedRequestLock.withLock { createRoomRequestUnderlyingReceivedRequest } }
-        set { createRoomRequestReceivedRequestLock.withLock { createRoomRequestUnderlyingReceivedRequest = newValue } }
-    }
-    private let createRoomRequestReceivedInvocationsLock = NSLock()
-    private var createRoomRequestUnderlyingReceivedInvocations: [CreateRoomParameters] = []
-    open var createRoomRequestReceivedInvocations: [CreateRoomParameters] {
-        get { createRoomRequestReceivedInvocationsLock.withLock { createRoomRequestUnderlyingReceivedInvocations } }
-        set { createRoomRequestReceivedInvocationsLock.withLock { createRoomRequestUnderlyingReceivedInvocations = newValue } }
-    }
-
-    private let createRoomRequestReturnValueLock = NSLock()
-    open var createRoomRequestUnderlyingReturnValue: String!
-    open var createRoomRequestReturnValue: String! {
-        get { createRoomRequestReturnValueLock.withLock { createRoomRequestUnderlyingReturnValue } }
-        set { createRoomRequestReturnValueLock.withLock { createRoomRequestUnderlyingReturnValue = newValue } }
->>>>>>> release/26.06.0
     }
     open var createRoomRequestIsTchapInviteIsTchapInviteExternalClosure: ((CreateRoomParameters, Bool, Bool) async throws -> String)?
 
@@ -513,7 +483,6 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         if let error = createRoomRequestIsTchapInviteIsTchapInviteExternalThrowableError {
             throw error
         }
-<<<<<<< HEAD
         createRoomRequestIsTchapInviteIsTchapInviteExternalCallsCount += 1
         createRoomRequestIsTchapInviteIsTchapInviteExternalReceivedArguments = (request: request, isTchapInvite: isTchapInvite, isTchapInviteExternal: isTchapInviteExternal)
         DispatchQueue.main.async {
@@ -521,13 +490,6 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         }
         if let createRoomRequestIsTchapInviteIsTchapInviteExternalClosure = createRoomRequestIsTchapInviteIsTchapInviteExternalClosure {
             return try await createRoomRequestIsTchapInviteIsTchapInviteExternalClosure(request, isTchapInvite, isTchapInviteExternal)
-=======
-        createRoomRequestCallsCountLock.withLock { createRoomRequestUnderlyingCallsCount += 1 }
-        createRoomRequestReceivedRequest = request
-        createRoomRequestReceivedInvocationsLock.withLock { createRoomRequestUnderlyingReceivedInvocations.append(request) }
-        if let createRoomRequestClosure = createRoomRequestClosure {
-            return try await createRoomRequestClosure(request)
->>>>>>> release/26.06.0
         } else {
             return createRoomRequestIsTchapInviteIsTchapInviteExternalReturnValue
         }

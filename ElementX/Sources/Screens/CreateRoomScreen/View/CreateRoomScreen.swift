@@ -12,13 +12,9 @@ import SwiftUI
 struct CreateRoomScreen: View {
     @ObservedObject var context: CreateRoomScreenViewModel.Context
     @FocusState private var focus: Focus?
-<<<<<<< HEAD
     @AppStorage("unencryptedPrivateRoomEnabled", store: UserDefaults(suiteName: InfoPlistReader.main.appGroupIdentifier))
     private var unencryptedPrivateRoomEnabled = false // :tchap: unencryptedPrivateRoom
 
-=======
-    
->>>>>>> release/26.06.0
     private enum Focus {
         case name
         case topic

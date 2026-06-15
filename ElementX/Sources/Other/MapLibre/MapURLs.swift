@@ -57,7 +57,6 @@ extension MapTilerSettings: MapTilerURLBuilderProtocol {
             return components.url
         }
     }
-<<<<<<< HEAD
     
     // Tchap: addition for static map
     func staticMapStyleURL(for style: MapTilerStyle, attribution: MapTilerAttributionPlacement) -> URL {
@@ -71,15 +70,8 @@ extension MapTilerSettings: MapTilerURLBuilderProtocol {
     
     // MARK: Private
     
-    private func styleURL(for style: MapTilerStyle) -> URL? {
-=======
-}
-
-// MARK: - Private
-
 private extension MapTilerSettings.Configuration {
     func styleURL(for style: MapTilerStyle) -> URL? {
->>>>>>> release/26.06.0
         guard let apiKey else { return nil }
         
         var url: URL = baseURL

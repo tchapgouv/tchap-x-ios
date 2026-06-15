@@ -61,15 +61,11 @@ struct RoomRolesAndPermissionsScreenViewModelTests {
         context.send(viewAction: .editOwnUserRole)
         #expect(context.alertInfo != nil)
         
-<<<<<<< HEAD
         context.alertInfo?.verticalButtons?.first {
             // Tchap: adapt test
 //            $0.title.localizedStandardContains("moderator")
             $0.title.localizedStandardContains("moderator") || $0.title.localizedStandardContains("modérateur")
         }?.action?()
-=======
-        context.alertInfo?.verticalButtons?.first { $0.title.localizedStandardContains("moderator") }?.action?()
->>>>>>> release/26.06.0
         
         try await Task.sleep(for: .milliseconds(100))
         
@@ -83,17 +79,12 @@ struct RoomRolesAndPermissionsScreenViewModelTests {
         
         context.send(viewAction: .editOwnUserRole)
         #expect(context.alertInfo != nil)
-<<<<<<< HEAD
 
         context.alertInfo?.verticalButtons?.first {
             // Tchap: adapt test
 //            $0.title.localizedStandardContains("member")
             $0.title.localizedStandardContains("member") || $0.title.localizedStandardContains("membre")
         }?.action?()
-=======
-        
-        context.alertInfo?.verticalButtons?.first { $0.title.localizedStandardContains("member") }?.action?()
->>>>>>> release/26.06.0
         
         try await Task.sleep(for: .milliseconds(100))
         
