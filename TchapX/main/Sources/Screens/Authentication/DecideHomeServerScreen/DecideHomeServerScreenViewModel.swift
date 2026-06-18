@@ -16,7 +16,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
     private let authenticationFlow: AuthenticationFlow
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let appSettings: AppSettings
-    private let analytics: AnalyticsService
+    private let analytics: AnalyticsServiceProtocol
     private let accountProviders: [String]
     private var requestServerDomainsTask: Task<Void, Never>? // Will be canceled if View is leaved.
     
@@ -31,7 +31,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
          accountProviders: [String],
          userIndicatorController: UserIndicatorControllerProtocol,
          appSettings: AppSettings,
-         analytics: AnalyticsService) {
+         analytics: AnalyticsServiceProtocol) {
         self.authenticationService = authenticationService
         self.authenticationFlow = authenticationFlow
         self.userIndicatorController = userIndicatorController

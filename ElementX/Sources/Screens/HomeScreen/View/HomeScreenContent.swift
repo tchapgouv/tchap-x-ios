@@ -18,7 +18,6 @@ struct HomeScreenContent: View {
     
     @State private var topSectionHeight: CGFloat = 0
     
-
     // Tchap: `openURL` for tchap status page
     @Environment(\.openURL) private var openURL
 

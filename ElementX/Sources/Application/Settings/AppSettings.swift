@@ -452,9 +452,8 @@ final class AppSettings: @unchecked Sendable {
     @UserPreference
     var hasRunNotificationPermissionsOnboarding: Bool
     
-    // Tchap: add welcome screen
-    @UserPreference(key: UserDefaultsKeys.hasRunTchapWelcomeOnboarding, defaultValue: false, storageType: .userDefaults(store))
-    var hasRunTchapWelcomeOnboarding
+    @UserPreference
+    var hasRunTchapWelcomeOnboarding: Bool // :tchap:
     
     @UserPreference
     var hasRunIdentityConfirmationOnboarding: Bool
@@ -526,17 +525,16 @@ final class AppSettings: @unchecked Sendable {
         case ign = "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"
     }
 
-    private(set) var bundledMapTilerConfiguration = MapTilerSettings.Configuration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
-                                                                   apiKey: Secrets.mapLibreAPIKey,
-                                                                   lightStyleID: "osm-bright",
-                                                                   darkStyleID: "fiord-color")
+    static let bundledMapTilerConfiguration = MapTilerSettings.Configuration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
+                                                                             apiKey: Secrets.mapLibreAPIKey,
+                                                                             lightStyleID: "osm-bright",
+                                                                             darkStyleID: "fiord-color")
     #else
-    private(set) var bundledMapTilerConfiguration = MapTilerSettings.Configuration(baseURL: "https://api.maptiler.com/maps",
-                                                                   apiKey: Secrets.mapLibreAPIKey,
-                                                                   lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
-                                                                   darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
+    static let bundledMapTilerConfiguration = MapTilerSettings.Configuration(baseURL: "https://api.maptiler.com/maps",
+                                                                             apiKey: Secrets.mapLibreAPIKey,
+                                                                             lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
+                                                                             darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
     #endif
-    
     
     /// The resolved map tile settings. Defaults to ``MapTilerSettings.configuration(_:)`` with the
     /// bundled configuration and is remotely overridden with ``MapTilerSettings.url(_:)`` when
@@ -570,9 +568,8 @@ final class AppSettings: @unchecked Sendable {
     @UserPreference
     var roomThreadListEnabled: Bool
     
-    // :tchap: disable `unencryptedPrivateRoomEnabled` feature flag by default in production.
-    @UserPreference(key: UserDefaultsKeys.unencryptedPrivateRoomEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var unencryptedPrivateRoomEnabled // :tchap:end
+    @UserPreference
+    var unencryptedPrivateRoomEnabled: Bool // :tchap:
 
     @UserPreference
     var focusEventOnNotificationTap: Bool
@@ -639,7 +636,10 @@ final class AppSettings: @unchecked Sendable {
         _automaticBackPaginationEnabled = UserPreference(key: .automaticBackPaginationEnabled, defaultValue: false, storage: store)
         _clientPausingAndResumingEnabled = UserPreference(key: .clientPausingAndResumingEnabled, defaultValue: false, storage: VolatileUserDefaults())
         _developerOptionsEnabled = UserPreference(key: .developerOptionsEnabled, defaultValue: Self.appBuildType != .release, storage: store)
-    }
+        // :tchap: UserDefault for tchap settings
+        _hasRunTchapWelcomeOnboarding = UserPreference(key: .hasRunTchapWelcomeOnboarding, defaultValue: false, storage: store)
+        _unencryptedPrivateRoomEnabled = UserPreference(key: .unencryptedPrivateRoomEnabled, defaultValue: false, storage: store) // :tchap:end
+     }
     
     static func volatile() -> AppSettings {
         AppSettings(store: VolatileUserDefaults())

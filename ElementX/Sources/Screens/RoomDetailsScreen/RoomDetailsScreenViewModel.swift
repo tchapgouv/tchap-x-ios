@@ -505,7 +505,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         userIndicatorController.submitIndicator(UserIndicator(id: UUID().uuidString,
                                                               type: .toast,
                                                               title: success ? L10n.commonLinkCopiedToClipboard : TchapL10n.roomDetailsCopyLinkError,
-                                                              iconName: success ? "checkmark" : "xmark"))
+                                                              icon: success ? \.check : \.close))
     }
     
     private static let leaveRoomLoadingID = "LeaveRoomLoading"

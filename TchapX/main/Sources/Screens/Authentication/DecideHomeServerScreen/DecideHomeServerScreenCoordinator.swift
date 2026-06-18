@@ -19,7 +19,7 @@ struct DecideHomeServerScreenCoordinatorParameters {
     let loginHint: String?
     let userIndicatorController: UserIndicatorControllerProtocol
     let appSettings: AppSettings
-    let analytics: AnalyticsService
+    let analytics: AnalyticsServiceProtocol
     /// The Homeservers that can be queried to obtain the attachment Homeserver for a given email.
     let accountProviders: [String]
 }
