@@ -24,7 +24,10 @@ extension ClientBuilder {
             .crossProcessLockConfig(crossProcessLockConfig: .multiProcess(holderName: InfoPlistReader.main.bundleIdentifier))
             .setSessionDelegate(sessionDelegate: sessionDelegate)
             .userAgent(userAgent: UserAgentBuilder.makeASCIIUserAgent())
-            .threadsEnabled(enabled: threadsEnabled, threadSubscriptions: threadsEnabled)
+            // :tchap: Disable thread subscriptions (MSC4308)
+            // The server response is missing the 'unsubscribed' field which causes infinite retry loops
+//            .threadsEnabled(enabled: threadsEnabled, threadSubscriptions: threadsEnabled)
+            .threadsEnabled(enabled: threadsEnabled, threadSubscriptions: false) // :tchap:end
             .requestConfig(config: .init(retryLimit: 3, // Must be non-zero for the SDK to retry API calls when rate-limited.
                                          timeout: requestTimeout,
                                          maxConcurrentRequests: nil,
