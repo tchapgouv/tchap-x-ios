@@ -81,7 +81,6 @@ final class AppSettings: @unchecked Sendable {
         case enableOnlySignedDeviceIsolationMode
         case knockingEnabled
         case threadsEnabled
-        case unencryptedPrivateRoomEnabled // :tchap: unencryptedPrivateRoom
         case roomThreadListEnabled
         case linkPreviewsEnabled
         case jumpToReadMarkerEnabled
@@ -569,9 +568,6 @@ final class AppSettings: @unchecked Sendable {
     var roomThreadListEnabled: Bool
     
     @UserPreference
-    var unencryptedPrivateRoomEnabled: Bool // :tchap:
-
-    @UserPreference
     var focusEventOnNotificationTap: Bool
     
     @UserPreference
@@ -638,7 +634,6 @@ final class AppSettings: @unchecked Sendable {
         _developerOptionsEnabled = UserPreference(key: .developerOptionsEnabled, defaultValue: Self.appBuildType != .release, storage: store)
         // :tchap: UserDefault for tchap settings
         _hasRunTchapWelcomeOnboarding = UserPreference(key: .hasRunTchapWelcomeOnboarding, defaultValue: false, storage: store)
-        _unencryptedPrivateRoomEnabled = UserPreference(key: .unencryptedPrivateRoomEnabled, defaultValue: false, storage: store) // :tchap:end
      }
     
     static func volatile() -> AppSettings {
