@@ -156,7 +156,7 @@ struct RoomMemberDetailsScreen: View {
             }
         }
     }
-
+    
     @ViewBuilder
     private func blockUserAlertActions(_ item: RoomMemberDetailsScreenViewStateBindings.IgnoreUserAlertItem) -> some View {
         Button(item.cancelTitle, role: .cancel) { }
@@ -165,7 +165,7 @@ struct RoomMemberDetailsScreen: View {
             context.send(viewAction: item.viewAction)
         }
     }
-
+    
     private func blockUserAlertMessage(_ item: RoomMemberDetailsScreenViewStateBindings.IgnoreUserAlertItem) -> some View {
         Text(item.description)
     }
@@ -192,19 +192,19 @@ struct RoomMemberDetailsScreen_Previews: PreviewProvider, TestablePreview {
                 state.verificationState == .verificationViolation
             })
             .previewDisplayName("Verification Violation User")
-            
+        
         RoomMemberDetailsScreen(context: otherUserViewModel.context)
             .snapshotPreferences(expect: otherUserViewModel.context.$viewState.map { state in
                 state.memberDetails?.role == .user && state.dmRoomID != nil
             })
             .previewDisplayName("Other User")
-            
+        
         RoomMemberDetailsScreen(context: accountOwnerViewModel.context)
             .snapshotPreferences(expect: accountOwnerViewModel.context.$viewState.map { state in
                 state.isOwnMemberDetails == true
             })
             .previewDisplayName("Account Owner")
-            
+        
         RoomMemberDetailsScreen(context: ignoredUserViewModel.context)
             .snapshotPreferences(expect: ignoredUserViewModel.context.$viewState.map { state in
                 state.memberDetails?.isIgnored ?? false && state.dmRoomID != nil
@@ -221,11 +221,11 @@ struct RoomMemberDetailsScreen_Previews: PreviewProvider, TestablePreview {
         clientProxyMock.userIdentityForFallBackToServerClosure = { userID, _ in
             let identity = switch userID {
             case RoomMemberProxyMock.mockDan.userID:
-                UserIdentityProxyMock(configuration: .init(verificationState: .verified))
+                UserIdentityProxyMock(.init(verificationState: .verified))
             case RoomMemberProxyMock.mockBob.userID:
-                UserIdentityProxyMock(configuration: .init(verificationState: .verificationViolation))
+                UserIdentityProxyMock(.init(verificationState: .verificationViolation))
             default:
-                UserIdentityProxyMock(configuration: .init())
+                UserIdentityProxyMock(.init())
             }
             
             return .success(identity)
@@ -235,15 +235,12 @@ struct RoomMemberDetailsScreen_Previews: PreviewProvider, TestablePreview {
         if member.userID != RoomMemberProxyMock.mockMe.userID {
             clientProxyMock.directRoomForUserIDReturnValue = .success("roomID")
         }
-
-        let appSettings = AppSettings()
-        let analytics = AnalyticsService.mock(settings: appSettings)
-
+        
         return RoomMemberDetailsScreenViewModel(userID: member.userID,
                                                 roomProxy: roomProxyMock,
                                                 userSession: UserSessionMock(.init(clientProxy: clientProxyMock)),
-                                                userIndicatorController: UserIndicatorControllerMock.default,
-                                                analytics: analytics,
-                                                appSettings: appSettings)
+                                                userIndicatorController: UserIndicatorControllerMock(),
+                                                analytics: AnalyticsServiceMock(.init()),
+                                                appSettings: .volatile())
     }
 }

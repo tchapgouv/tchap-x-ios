@@ -28,7 +28,7 @@ struct SecureBackupLogoutConfirmationScreen: View {
         .backgroundStyle(.compound.bgCanvasDefault)
         .alert(item: $context.alertInfo)
     }
-        
+    
     @ViewBuilder
     private var content: some View {
         Text(title)
@@ -150,7 +150,7 @@ struct SecureBackupLogoutConfirmationScreen_Previews: PreviewProvider, TestableP
     
     static func makeViewModel(mode: SecureBackupLogoutConfirmationScreenViewMode) -> SecureBackupLogoutConfirmationScreenViewModel {
         let secureBackupController = SecureBackupControllerMock()
-        secureBackupController.underlyingKeyBackupState = CurrentValueSubject<SecureBackupKeyBackupState, Never>(.enabled).asCurrentValuePublisher()
+        secureBackupController.keyBackupState = CurrentValueSubject<SecureBackupKeyBackupState, Never>(.enabled).asCurrentValuePublisher()
         
         secureBackupController.waitForKeyBackupUploadUploadStateSubjectClosure = { uploadStateSubject in
             if case .backupOngoing = mode {

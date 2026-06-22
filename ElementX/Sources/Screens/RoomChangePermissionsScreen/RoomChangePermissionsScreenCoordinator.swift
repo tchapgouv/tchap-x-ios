@@ -14,7 +14,7 @@ struct RoomChangePermissionsScreenCoordinatorParameters {
     let permissions: RoomPermissions
     let roomProxy: JoinedRoomProxyProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
-    let analytics: AnalyticsService
+    let analytics: AnalyticsServiceProtocol
 }
 
 enum RoomChangePermissionsScreenCoordinatorAction {
@@ -50,7 +50,7 @@ final class RoomChangePermissionsScreenCoordinator: CoordinatorProtocol {
         }
         .store(in: &cancellables)
     }
-        
+    
     func toPresentable() -> AnyView {
         AnyView(RoomChangePermissionsScreen(context: viewModel.context))
     }

@@ -30,7 +30,7 @@ class RoomPollsHistoryScreenViewModel: RoomPollsHistoryScreenViewModelType, Room
     var actions: AnyPublisher<RoomPollsHistoryScreenViewModelAction, Never> {
         actionsSubject.eraseToAnyPublisher()
     }
-
+    
     init(pollInteractionHandler: PollInteractionHandlerProtocol,
          timelineController: TimelineControllerProtocol,
          userIndicatorController: UserIndicatorControllerProtocol) {
@@ -79,7 +79,7 @@ class RoomPollsHistoryScreenViewModel: RoomPollsHistoryScreenViewModelType, Room
                     if self.state.canBackPaginate != canBackPaginate {
                         self.state.canBackPaginate = canBackPaginate
                     }
-                case .isLive:
+                case .isLive, .messageSentOrEdited:
                     break
                 }
             }
@@ -103,7 +103,7 @@ class RoomPollsHistoryScreenViewModel: RoomPollsHistoryScreenViewModelType, Room
     private func displayError(message: String) {
         state.bindings.alertInfo = .init(id: .alert, title: message)
     }
-
+    
     // MARK: - Poll Interaction Handler
     
     private func endPoll(pollStartID: String) {
@@ -162,7 +162,7 @@ class RoomPollsHistoryScreenViewModel: RoomPollsHistoryScreenViewModelType, Room
         guard paginateBackwardsTask == nil else {
             return
         }
-
+        
         paginateBackwardsTask = Task { [weak self] in
             guard let self else {
                 return

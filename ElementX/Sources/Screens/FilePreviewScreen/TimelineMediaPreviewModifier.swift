@@ -41,13 +41,13 @@ private struct MediaPreviewViewController: UIViewControllerRepresentable {
     let viewModel: TimelineMediaPreviewViewModel
     let dismissalPublisher: PassthroughSubject<Void, Never>
     let onDismiss: () -> Void
-
+    
     func makeUIViewController(context: Context) -> PreviewHostingController {
         PreviewHostingController(viewModel: viewModel,
                                  dismissalPublisher: dismissalPublisher,
                                  onDismiss: onDismiss)
     }
-
+    
     func updateUIViewController(_ uiViewController: PreviewHostingController, context: Context) { }
     
     /// A view controller that hosts the QuickLook preview.
@@ -69,7 +69,7 @@ private struct MediaPreviewViewController: UIViewControllerRepresentable {
              onDismiss: @escaping () -> Void) {
             self.onDismiss = onDismiss
             previewController = TimelineMediaPreviewController(context: viewModel.context)
-
+            
             super.init(nibName: nil, bundle: nil)
             
             // The QLPreviewController will not automatically dismiss itself when the underlying view is removed
@@ -163,10 +163,9 @@ struct TimelineMediaPreviewModifier_Previews: PreviewProvider {
                                                        thumbnailSource: nil,
                                                        contentType: .pdf))
         
-        let timelineController = MockTimelineController(timelineKind: .media(.mediaFilesScreen))
-        timelineController.timelineItems = [item]
+        let timelineController = TimelineControllerMock(.init(timelineKind: .media(.mediaFilesScreen), timelineItems: [item]))
         
-        let mediaProvider = MediaProviderMock(configuration: .init())
+        let mediaProvider = MediaProviderMock(.init())
         
         if isDownloading {
             mediaProvider.loadFileFromSourceFilenameClosure = { _, _ in

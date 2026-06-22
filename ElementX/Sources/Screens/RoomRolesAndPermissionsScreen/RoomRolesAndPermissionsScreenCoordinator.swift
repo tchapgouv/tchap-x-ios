@@ -12,7 +12,7 @@ import SwiftUI
 struct RoomRolesAndPermissionsScreenCoordinatorParameters {
     let roomProxy: JoinedRoomProxyProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
-    let analytics: AnalyticsService
+    let analytics: AnalyticsServiceProtocol
 }
 
 enum RoomRolesAndPermissionsScreenCoordinatorAction {
@@ -52,7 +52,7 @@ final class RoomRolesAndPermissionsScreenCoordinator: CoordinatorProtocol {
         }
         .store(in: &cancellables)
     }
-        
+    
     func toPresentable() -> AnyView {
         AnyView(RoomRolesAndPermissionsScreen(context: viewModel.context))
     }

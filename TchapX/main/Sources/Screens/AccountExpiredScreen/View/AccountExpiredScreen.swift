@@ -116,7 +116,7 @@ struct AccountExpiredScreen_Previews: PreviewProvider, TestablePreview {
 
     static func makeViewModel() -> AccountExpiredScreenViewModel {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@userid:example.com", deviceID: "AAAAAAAAAAA"))))
-        let appSettings = AppSettings()
+        let appSettings = AppSettings.volatile()
         return AccountExpiredScreenViewModel(appSettings: appSettings, clientProxy: userSession.clientProxy)
     }
 }

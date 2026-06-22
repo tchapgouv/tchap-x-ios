@@ -11,9 +11,9 @@ extension UserIdentityProxyMock {
         var verificationState: UserIdentityVerificationState = .notVerified
     }
     
-    convenience init(configuration: Configuration) {
+    convenience init(_ configuration: Configuration) {
         self.init()
         
-        underlyingVerificationState = configuration.verificationState
+        verificationState = configuration.verificationState
     }
 }

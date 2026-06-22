@@ -25,10 +25,10 @@ struct TimelineMediaPreviewViewModelTests {
     var context: TimelineMediaPreviewViewModel.Context {
         viewModel.context
     }
-
+    
     var mediaProvider: MediaProviderMock!
     var photoLibraryManager: PhotoLibraryManagerMock!
-    var timelineController: MockTimelineController!
+    var timelineController: TimelineControllerMock!
     
     @Test
     mutating func loadingItem() async throws {
@@ -100,11 +100,10 @@ struct TimelineMediaPreviewViewModelTests {
     mutating func loadingMoreItems() async throws {
         // Given a view model with a loaded item.
         try await loadingItem()
-        #expect(timelineController.paginateBackwardsCallCount == 0)
+        #expect(timelineController.paginateBackwardsRequestSizeCallsCount == 0)
         
         // When swiping to a "loading more" item and there are more media items to load.
-        timelineController.paginationState = .init(backward: .idle, forward: .endReached)
-        timelineController.backPaginationResponses.append(RoomTimelineItemFixtures.mediaChunk)
+        timelineController.update(paginationState: .init(backward: .idle, forward: .endReached))
         let failure = deferFailure(viewModel.state.previewControllerDriver, timeout: .seconds(1)) { $0.isItemLoaded }
         context.send(viewAction: .updateCurrentItem(.loading(.paginatingBackwards)))
         try await failure.fulfill()
@@ -112,7 +111,7 @@ struct TimelineMediaPreviewViewModelTests {
         // Then there should no longer be a media preview and instead of loading any media, a pagination request should be made.
         #expect(mediaProvider.loadFileFromSourceFilenameCallsCount == 1)
         #expect(context.viewState.currentItem == .loading(.paginatingBackwards)) // Note: This item only changes when the preview controller handles the new items.
-        #expect(timelineController.paginateBackwardsCallCount == 1)
+        #expect(timelineController.paginateBackwardsRequestSizeCallsCount == 1)
     }
     
     @Test
@@ -123,7 +122,7 @@ struct TimelineMediaPreviewViewModelTests {
         
         // When more items are added via a back pagination.
         let deferred = deferFulfillment(context.viewState.dataSource.previewItemsPaginationPublisher) { _ in true }
-        timelineController.backPaginationResponses.append(makeItems())
+        timelineController.setupBackPagination(responses: [makeItems()])
         _ = await timelineController.paginateBackwards(requestSize: 20)
         try await deferred.fulfill()
         
@@ -180,7 +179,7 @@ struct TimelineMediaPreviewViewModelTests {
         #expect(.media(mediaDetailsItem) == context.viewState.currentItem)
         
         // When choosing to redact the item.
-        context.send(viewAction: .menuAction(.redact, item: mediaItem))
+        context.send(viewAction: .menuAction(.redact(isMedia: true), item: mediaItem))
         
         // Then the confirmation sheet should be presented.
         #expect(context.redactConfirmationItem == mediaItem)
@@ -206,7 +205,7 @@ struct TimelineMediaPreviewViewModelTests {
         #expect(mediaItem.contentType == "JPEG image")
         
         // When choosing to save the image.
-        context.send(viewAction: .menuAction(.save, item: mediaItem))
+        context.send(viewAction: .menuAction(.downloadMedia, item: mediaItem))
         try await Task.sleep(for: .seconds(0.5))
         
         // Then the image should be saved as a photo to the user's photo library.
@@ -228,7 +227,7 @@ struct TimelineMediaPreviewViewModelTests {
         
         // When choosing to save the image.
         let deferred = deferFulfillment(context.viewState.previewControllerDriver) { $0.isAuthorizationRequired }
-        context.send(viewAction: .menuAction(.save, item: mediaItem))
+        context.send(viewAction: .menuAction(.downloadMedia, item: mediaItem))
         
         // Then the user should be prompted to allow access.
         try await deferred.fulfill()
@@ -247,7 +246,7 @@ struct TimelineMediaPreviewViewModelTests {
         #expect(mediaItem.contentType == "MPEG-4 movie")
         
         // When choosing to save the video.
-        context.send(viewAction: .menuAction(.save, item: mediaItem))
+        context.send(viewAction: .menuAction(.downloadMedia, item: mediaItem))
         try await Task.sleep(for: .seconds(0.5))
         
         // Then the video should be saved as a video in the user's photo library.
@@ -269,7 +268,7 @@ struct TimelineMediaPreviewViewModelTests {
         
         // When choosing to save the file.
         let deferred = deferFulfillment(context.viewState.previewControllerDriver) { $0.isExportFile }
-        context.send(viewAction: .menuAction(.save, item: mediaItem))
+        context.send(viewAction: .menuAction(.downloadMedia, item: mediaItem))
         let exportAction = try await deferred.fulfill()
         
         guard case let .exportFile(file) = exportAction else {
@@ -298,10 +297,9 @@ struct TimelineMediaPreviewViewModelTests {
     
     private mutating func setupViewModel(initialItemIndex: Int = 0, photoLibraryAuthorizationDenied: Bool = false) {
         let initialItems = makeItems()
-        timelineController = MockTimelineController(timelineKind: .media(.mediaFilesScreen))
-        timelineController.timelineItems = initialItems
+        timelineController = TimelineControllerMock(.init(timelineKind: .media(.mediaFilesScreen), timelineItems: initialItems))
         
-        mediaProvider = MediaProviderMock(configuration: .init())
+        mediaProvider = MediaProviderMock(.init())
         photoLibraryManager = PhotoLibraryManagerMock(.init(authorizationDenied: photoLibraryAuthorizationDenied))
         
         viewModel = TimelineMediaPreviewViewModel(initialItem: initialItems[initialItemIndex],

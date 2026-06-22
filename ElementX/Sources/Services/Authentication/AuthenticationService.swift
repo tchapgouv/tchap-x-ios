@@ -25,7 +25,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
     var homeserver: CurrentValuePublisher<LoginHomeserver, Never> {
         homeserverSubject.asCurrentValuePublisher()
     }
-
+    
     private(set) var flow: AuthenticationFlow
     
     let classicAppAccount: ClassicAppAccount?
@@ -196,7 +196,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
             progressSubject.send(completion: .failure(.qrCodeError(.deviceNotSignedIn)))
             return progressSubject.asCurrentValuePublisher()
         }
-
+        
         // n.b. We deliberatley don't check whether the received server is in our appSettings.accountProviders
         
         let listener = SDKListener { progress in
@@ -253,6 +253,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
                                                         appSettings: appSettings,
                                                         appHooks: appHooks)
         try await appHooks.remoteSettingsHook.initializeCache(using: client, applyingTo: appSettings).get()
+        await client.updateMapTilerSettings(in: appSettings)
         
         return client
     }
@@ -383,13 +384,13 @@ extension AuthenticationService {
     static var mock: AuthenticationService {
         mock(classicAppManager: nil)
     }
-
+    
     static func mock(classicAppManager: ClassicAppManagerProtocol?) -> AuthenticationService {
-        AuthenticationService(userSessionStore: UserSessionStoreMock(configuration: .init()),
+        AuthenticationService(userSessionStore: UserSessionStoreMock(.init()),
                               encryptionKeyProvider: EncryptionKeyProvider(),
                               classicAppManager: classicAppManager,
-                              clientFactory: AuthenticationClientFactoryMock(configuration: .init()),
-                              appSettings: AppSettings(),
+                              clientFactory: AuthenticationClientFactoryMock(.init()),
+                              appSettings: .volatile(),
                               appHooks: AppHooks())
     }
 }

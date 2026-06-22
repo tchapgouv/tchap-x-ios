@@ -8,26 +8,26 @@
 
 import MatrixRustSDK
 
-struct RoomPowerLevelsProxyMockConfiguration {
-    var canUserSendMessage = true
-    var canUserSendState = false
-    var canUserInvite = true
-    var canUserRedactOther = false
-    var canUserRedactOwn = true
-    var canUserKick = false
-    var canUserBan = false
-    var canUserTriggerRoomNotification = false
-    var canUserPin = true
-    var canUserJoinCall = true
-    var canUserEditRoomsAndPermissions = true
-}
-
 extension RoomPowerLevelsProxyMock {
-    convenience init(configuration: RoomPowerLevelsProxyMockConfiguration) {
+    struct Configuration {
+        var canUserSendMessage = true
+        var canUserSendState = false
+        var canUserInvite = true
+        var canUserRedactOther = false
+        var canUserRedactOwn = true
+        var canUserKick = false
+        var canUserBan = false
+        var canUserTriggerRoomNotification = false
+        var canUserPin = true
+        var canUserJoinCall = true
+        var canUserEditRoomsAndPermissions = true
+    }
+    
+    convenience init(_ configuration: Configuration) {
         self.init()
         
-        underlyingValues = RoomPowerLevelsValues.mock
-                
+        values = RoomPowerLevelsValues.mock
+        
         canOwnUserSendMessageReturnValue = configuration.canUserSendMessage
         canOwnUserSendStateEventReturnValue = configuration.canUserSendState
         canOwnUserInviteReturnValue = configuration.canUserInvite

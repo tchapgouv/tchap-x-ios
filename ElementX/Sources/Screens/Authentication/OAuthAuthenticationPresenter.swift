@@ -139,7 +139,7 @@ class OAuthAuthenticationPresenter: NSObject {
     private var loadingIndicatorID: String {
         "\(Self.self)-Loading"
     }
-
+    
     private var failureIndicatorID: String {
         "\(Self.self)-Failure"
     }
@@ -160,7 +160,7 @@ class OAuthAuthenticationPresenter: NSObject {
         userIndicatorController.submitIndicator(UserIndicator(id: failureIndicatorID,
                                                               type: .toast,
                                                               title: L10n.errorUnknown,
-                                                              iconName: "xmark"))
+                                                              icon: \.close))
     }
 }
 

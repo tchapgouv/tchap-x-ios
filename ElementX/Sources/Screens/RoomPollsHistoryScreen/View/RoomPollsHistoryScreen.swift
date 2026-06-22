@@ -115,41 +115,40 @@ private extension DateFormatter {
 
 struct RoomPollsHistoryScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModelEmpty: RoomPollsHistoryScreenViewModel = {
-        let timelineController = MockTimelineController()
-        timelineController.timelineItems = []
+        let timelineController = TimelineControllerMock(.init(timelineItems: []))
         let roomProxyMockConfiguration = JoinedRoomProxyMockConfiguration(name: "Polls")
         return RoomPollsHistoryScreenViewModel(pollInteractionHandler: PollInteractionHandlerMock(),
                                                timelineController: timelineController,
                                                userIndicatorController: UserIndicatorControllerMock())
     }()
-
+    
     static let viewModel: RoomPollsHistoryScreenViewModel = {
-        let timelineController = MockTimelineController()
-        
         let polls = [PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: false)),
                      PollRoomTimelineItem.mock(poll: .disclosed(createdByAccountOwner: true)),
                      PollRoomTimelineItem.mock(poll: .emptyDisclosed, isEditable: true)]
         
-        timelineController.timelineItems = polls
-
+        var timelineItemsTimestamps = [TimelineItemIdentifier: Date]()
         for i in 0..<polls.count {
             let item = polls[i]
             let date: Date! = DateComponents(calendar: .current, timeZone: .gmt, year: 2023, month: 12, day: 1 + i, hour: 12).date
-            timelineController.timelineItemsTimestamp[item.id] = date
+            timelineItemsTimestamps[item.id] = date
         }
-
+        
+        let timelineController = TimelineControllerMock(.init(timelineItems: polls,
+                                                              timelineItemsTimestamps: timelineItemsTimestamps))
+        
         let roomProxyMockConfiguration = JoinedRoomProxyMockConfiguration(name: "Polls", timelineStartReached: true)
         return RoomPollsHistoryScreenViewModel(pollInteractionHandler: PollInteractionHandlerMock(),
                                                timelineController: timelineController,
                                                userIndicatorController: UserIndicatorControllerMock())
     }()
-
+    
     static var previews: some View {
         ElementNavigationStack {
             RoomPollsHistoryScreen(context: viewModelEmpty.context)
         }
         .previewDisplayName("No polls")
-
+        
         ElementNavigationStack {
             RoomPollsHistoryScreen(context: viewModel.context)
         }

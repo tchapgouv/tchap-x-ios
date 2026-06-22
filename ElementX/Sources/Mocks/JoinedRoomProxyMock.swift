@@ -46,28 +46,28 @@ struct JoinedRoomProxyMockConfiguration {
     var predecessor: PredecessorRoom?
     var successor: SuccessorRoom?
     
-    var powerLevelsConfiguration = RoomPowerLevelsProxyMockConfiguration()
+    var powerLevelsConfiguration = RoomPowerLevelsProxyMock.Configuration()
 }
 
 extension JoinedRoomProxyMock {
     @MainActor
     convenience init(_ configuration: JoinedRoomProxyMockConfiguration) {
         self.init()
-
+        
         id = configuration.id
-
+        
         timeline = TimelineProxyMock(.init(isAutoUpdating: configuration.shouldUseAutoUpdatingTimeline,
                                            timelineStartReached: configuration.timelineStartReached))
         
         pinnedEventsTimelineReturnValue = .failure(.failedCreatingPinnedTimeline)
-
+        
         ownUserID = configuration.ownUserID
         
         membersPublisher = CurrentValueSubject(configuration.members).asCurrentValuePublisher()
         knockRequestsStatePublisher = CurrentValueSubject(configuration.knockRequestsState).asCurrentValuePublisher()
         typingMembersPublisher = CurrentValueSubject([]).asCurrentValuePublisher()
         identityStatusChangesPublisher = CurrentValueSubject([]).asCurrentValuePublisher()
-
+        
         makeLiveLocationServiceReturnValue = RoomLiveLocationServiceMock(.init())
         
         updateMembersClosure = { }
@@ -82,7 +82,7 @@ extension JoinedRoomProxyMock {
         
         ignoreDeviceTrustAndResendDevicesSendHandleReturnValue = .success(())
         withdrawVerificationAndResendUserIDsSendHandleReturnValue = .success(())
-
+        
         flagAsUnreadReturnValue = .success(())
         markAsReadReceiptTypeReturnValue = .success(())
         flagAsFavouriteReturnValue = .success(())
@@ -97,7 +97,7 @@ extension JoinedRoomProxyMock {
         }
         updatePowerLevelsForUsersReturnValue = .success(())
         
-        let powerLevelsProxyMock = RoomPowerLevelsProxyMock(configuration: configuration.powerLevelsConfiguration)
+        let powerLevelsProxyMock = RoomPowerLevelsProxyMock(configuration.powerLevelsConfiguration)
         
         powerLevelsProxyMock.canUserUserIDSendStateEventClosure = { [weak self] userID, _ in
             .success(self?.membersPublisher.value.first { $0.userID == userID }?.role ?? .user != .user)
@@ -132,14 +132,14 @@ extension JoinedRoomProxyMock {
         unbanUserReturnValue = .success(())
         
         let widgetDriver = ElementCallWidgetDriverMock()
-        widgetDriver.underlyingMessagePublisher = .init()
-        widgetDriver.underlyingActions = PassthroughSubject().eraseToAnyPublisher()
+        widgetDriver.messagePublisher = .init()
+        widgetDriver.actions = PassthroughSubject().eraseToAnyPublisher()
         
         guard let url = URL(string: "https://call.element.io/\(UUID().uuidString)#?appPrompt=false") else {
             fatalError()
         }
         
-        widgetDriver.startBaseURLClientIDColorSchemeVoiceOnlyRageshakeURLAnalyticsConfigurationUnderlyingReturnValue = .success(url)
+        widgetDriver.startBaseURLClientIDColorSchemeVoiceOnlyRageshakeURLAnalyticsConfigurationReturnValue = .success(url)
         
         elementCallWidgetDriverDeviceIDReturnValue = widgetDriver
         
@@ -196,7 +196,7 @@ extension RoomInfoProxyMock {
         joinRule = configuration.joinRule
         historyVisibility = configuration.historyVisibility
         
-        powerLevels = RoomPowerLevelsProxyMock(configuration: configuration.powerLevelsConfiguration)
+        powerLevels = RoomPowerLevelsProxyMock(configuration.powerLevelsConfiguration)
     }
 }
 

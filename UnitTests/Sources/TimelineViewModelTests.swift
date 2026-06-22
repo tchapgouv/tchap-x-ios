@@ -21,14 +21,13 @@ import Testing
 @MainActor
 final class TimelineViewModelTests {
     var cancellables = Set<AnyCancellable>()
-
+    
     init() async throws {
-        AppSettings.resetAllSettings()
         cancellables.removeAll()
     }
-
+    
     // MARK: - Message Grouping
-
+    
     @Test
     func messageGrouping() {
         // Given 3 messages from Bob.
@@ -42,8 +41,7 @@ final class TimelineViewModelTests {
         ]
         
         // When showing them in a timeline.
-        let timelineController = MockTimelineController()
-        timelineController.timelineItems = items
+        let timelineController = TimelineControllerMock(.init(timelineItems: items))
         let viewModel = makeViewModel(timelineController: timelineController)
         
         // Then the messages should be grouped together.
@@ -71,8 +69,7 @@ final class TimelineViewModelTests {
         ]
         
         // When showing them in a timeline.
-        let timelineController = MockTimelineController()
-        timelineController.timelineItems = items
+        let timelineController = TimelineControllerMock(.init(timelineItems: items))
         let viewModel = makeViewModel(timelineController: timelineController)
         
         // Then the messages should be grouped by sender.
@@ -98,8 +95,7 @@ final class TimelineViewModelTests {
         ]
         
         // When showing them in a timeline.
-        let timelineController = MockTimelineController()
-        timelineController.timelineItems = items
+        let timelineController = TimelineControllerMock(.init(timelineItems: items))
         let viewModel = makeViewModel(timelineController: timelineController)
         
         // Then the first message should not be grouped but the other two should.
@@ -122,8 +118,7 @@ final class TimelineViewModelTests {
         ]
         
         // When showing them in a timeline.
-        let timelineController = MockTimelineController()
-        timelineController.timelineItems = items
+        let timelineController = TimelineControllerMock(.init(timelineItems: items))
         let viewModel = makeViewModel(timelineController: timelineController)
         
         // Then the first and second messages should be grouped and the last one should not.
@@ -146,8 +141,7 @@ final class TimelineViewModelTests {
         ]
         
         // When showing them in a timeline.
-        let timelineController = MockTimelineController()
-        timelineController.timelineItems = items
+        let timelineController = TimelineControllerMock(.init(timelineItems: items))
         let viewModel = makeViewModel(timelineController: timelineController)
         
         // Then the messages should be grouped together.
@@ -164,11 +158,10 @@ final class TimelineViewModelTests {
         let items = [TextRoomTimelineItem(eventID: "t1"),
                      TextRoomTimelineItem(eventID: "t2"),
                      TextRoomTimelineItem(eventID: "t3")]
-        let timelineController = MockTimelineController()
-        timelineController.timelineItems = items
+        let timelineController = TimelineControllerMock(.init(timelineItems: items))
         
         let viewModel = makeViewModel(timelineController: timelineController)
-        #expect(timelineController.focusOnEventCallCount == 0)
+        #expect(timelineController.focusOnEventTimelineSizeCallsCount == 0)
         #expect(viewModel.context.viewState.timelineState.isLive)
         #expect(viewModel.context.viewState.timelineState.focussedEvent == nil)
         
@@ -178,7 +171,7 @@ final class TimelineViewModelTests {
         try await deferred.fulfill()
         
         // Then a new timeline should be loaded and the room focussed on that event.
-        #expect(timelineController.focusOnEventCallCount == 1)
+        #expect(timelineController.focusOnEventTimelineSizeCallsCount == 1)
         #expect(!viewModel.context.viewState.timelineState.isLive)
         #expect(viewModel.context.viewState.timelineState.focussedEvent == .init(eventID: "t4", appearance: .immediate))
     }
@@ -189,11 +182,10 @@ final class TimelineViewModelTests {
         let items = [TextRoomTimelineItem(eventID: "t1"),
                      TextRoomTimelineItem(eventID: "t2"),
                      TextRoomTimelineItem(eventID: "t3")]
-        let timelineController = MockTimelineController()
-        timelineController.timelineItems = items
+        let timelineController = TimelineControllerMock(.init(timelineItems: items))
         
         let viewModel = makeViewModel(timelineController: timelineController)
-        #expect(timelineController.focusOnEventCallCount == 0)
+        #expect(timelineController.focusOnEventTimelineSizeCallsCount == 0)
         #expect(viewModel.context.viewState.timelineState.isLive)
         #expect(viewModel.context.viewState.timelineState.focussedEvent == nil)
         
@@ -203,7 +195,7 @@ final class TimelineViewModelTests {
         try await deferred.fulfill()
         
         // Then the timeline should remain live and the item should be focussed.
-        #expect(timelineController.focusOnEventCallCount == 0)
+        #expect(timelineController.focusOnEventTimelineSizeCallsCount == 0)
         #expect(viewModel.context.viewState.timelineState.isLive)
         #expect(viewModel.context.viewState.timelineState.focussedEvent == .init(eventID: "t1", appearance: .animated))
     }
@@ -214,8 +206,7 @@ final class TimelineViewModelTests {
         let items = [TextRoomTimelineItem(eventID: "t1"),
                      TextRoomTimelineItem(eventID: "t2"),
                      TextRoomTimelineItem(eventID: "t3")]
-        let timelineController = MockTimelineController()
-        timelineController.timelineItems = items
+        let timelineController = TimelineControllerMock(.init(timelineItems: items))
         
         let viewModel = makeViewModel(timelineController: timelineController)
         
@@ -223,7 +214,7 @@ final class TimelineViewModelTests {
         await viewModel.focusOnEvent(eventID: "t4")
         try await deferred.fulfill()
         
-        #expect(timelineController.focusLiveCallCount == 0)
+        #expect(timelineController.focusLiveCallsCount == 0)
         #expect(!viewModel.context.viewState.timelineState.isLive)
         #expect(viewModel.context.viewState.timelineState.focussedEvent == .init(eventID: "t4", appearance: .immediate))
         
@@ -233,14 +224,14 @@ final class TimelineViewModelTests {
         try await deferred.fulfill()
         
         // Then the timeline should switch back to being live and the event focus should be removed.
-        #expect(timelineController.focusLiveCallCount == 1)
+        #expect(timelineController.focusLiveCallsCount == 1)
         #expect(viewModel.context.viewState.timelineState.isLive)
         #expect(viewModel.context.viewState.timelineState.focussedEvent == nil)
     }
     
     @Test
     func initialFocusViewState() {
-        let timelineController = MockTimelineController()
+        let timelineController = TimelineControllerMock(.init())
         
         let viewModel = makeViewModel(focussedEventID: "t10", timelineController: timelineController)
         #expect(viewModel.context.viewState.timelineState.focussedEvent == .init(eventID: "t10", appearance: .immediate))
@@ -300,29 +291,25 @@ final class TimelineViewModelTests {
     private func readReceiptsConfiguration(with items: [RoomTimelineItemProtocol]) -> (TimelineViewModel,
                                                                                        JoinedRoomProxyMock,
                                                                                        TimelineProxyMock,
-                                                                                       MockTimelineController) {
-        let roomProxy = JoinedRoomProxyMock(.init(name: ""))
-        
+                                                                                       TimelineControllerMock) {
         let timelineProxy = TimelineProxyMock()
-        
-        roomProxy.timeline = timelineProxy
-        let timelineController = MockTimelineController()
-        
         timelineProxy.sendReadReceiptForTypeReturnValue = .success(())
         
-        timelineController.timelineItems = items
-        timelineController.roomProxy = roomProxy
-
-        let appSettings = AppSettings()
-
+        let roomProxy = JoinedRoomProxyMock(.init(name: ""))
+        roomProxy.timeline = timelineProxy
+        
+        let timelineController = TimelineControllerMock(.init(roomProxy: roomProxy, timelineItems: items))
+        
+        let appSettings = AppSettings.volatile()
+        
         let viewModel = TimelineViewModel(roomProxy: roomProxy,
                                           timelineController: timelineController,
                                           userSession: UserSessionMock(.init()),
                                           mediaPlayerProvider: MediaPlayerProviderMock(),
-                                          userIndicatorController: UserIndicatorControllerMock.default,
-                                          appMediator: AppMediatorMock.default,
+                                          userIndicatorController: UserIndicatorControllerMock(),
+                                          appMediator: AppMediatorMock(.init()),
                                           appSettings: appSettings,
-                                          analyticsService: .mock(settings: appSettings),
+                                          analyticsService: AnalyticsServiceMock(.init()),
                                           emojiProvider: EmojiProvider(appSettings: appSettings),
                                           linkMetadataProvider: LinkMetadataProvider(),
                                           timelineControllerFactory: TimelineControllerFactoryMock(.init()))
@@ -339,19 +326,18 @@ final class TimelineViewModelTests {
                                            addReadReceipts: receipts)
         let id = message.id
         
-        let appSettings = AppSettings()
-
+        let appSettings = AppSettings.volatile()
+        
         // When showing them in a timeline.
-        let timelineController = MockTimelineController()
-        timelineController.timelineItems = [message]
+        let timelineController = TimelineControllerMock(.init(timelineItems: [message]))
         let viewModel = TimelineViewModel(roomProxy: JoinedRoomProxyMock(.init(name: "", members: [RoomMemberProxyMock.mockAlice, RoomMemberProxyMock.mockCharlie])),
                                           timelineController: timelineController,
                                           userSession: UserSessionMock(.init()),
                                           mediaPlayerProvider: MediaPlayerProviderMock(),
-                                          userIndicatorController: UserIndicatorControllerMock.default,
-                                          appMediator: AppMediatorMock.default,
+                                          userIndicatorController: UserIndicatorControllerMock(),
+                                          appMediator: AppMediatorMock(.init()),
                                           appSettings: appSettings,
-                                          analyticsService: .mock(settings: appSettings),
+                                          analyticsService: AnalyticsServiceMock(.init()),
                                           emojiProvider: EmojiProvider(appSettings: appSettings),
                                           linkMetadataProvider: LinkMetadataProvider(),
                                           timelineControllerFactory: TimelineControllerFactoryMock(.init()))
@@ -366,19 +352,19 @@ final class TimelineViewModelTests {
     
     @Test
     func showManageUserAsAdmin() async throws {
-        let appSettings = AppSettings()
-
+        let appSettings = AppSettings.volatile()
+        
         let viewModel = TimelineViewModel(roomProxy: JoinedRoomProxyMock(.init(name: "",
                                                                                members: [RoomMemberProxyMock.mockAdmin,
                                                                                          RoomMemberProxyMock.mockAlice],
                                                                                ownUserID: RoomMemberProxyMock.mockAdmin.userID)),
-                                          timelineController: MockTimelineController(),
+                                          timelineController: TimelineControllerMock(.init()),
                                           userSession: UserSessionMock(.init()),
                                           mediaPlayerProvider: MediaPlayerProviderMock(),
-                                          userIndicatorController: UserIndicatorControllerMock.default,
-                                          appMediator: AppMediatorMock.default,
+                                          userIndicatorController: UserIndicatorControllerMock(),
+                                          appMediator: AppMediatorMock(.init()),
                                           appSettings: appSettings,
-                                          analyticsService: .mock(settings: appSettings),
+                                          analyticsService: AnalyticsServiceMock(.init()),
                                           emojiProvider: EmojiProvider(appSettings: appSettings),
                                           linkMetadataProvider: LinkMetadataProvider(),
                                           timelineControllerFactory: TimelineControllerFactoryMock(.init()))
@@ -405,19 +391,19 @@ final class TimelineViewModelTests {
     
     @Test
     func showDetailsForAnAdmin() async throws {
-        let appSettings = AppSettings()
-
+        let appSettings = AppSettings.volatile()
+        
         let viewModel = TimelineViewModel(roomProxy: JoinedRoomProxyMock(.init(name: "",
                                                                                members: [RoomMemberProxyMock.mockAdmin,
                                                                                          RoomMemberProxyMock.mockAlice],
                                                                                ownUserID: RoomMemberProxyMock.mockAlice.userID)),
-                                          timelineController: MockTimelineController(),
+                                          timelineController: TimelineControllerMock(.init()),
                                           userSession: UserSessionMock(.init()),
                                           mediaPlayerProvider: MediaPlayerProviderMock(),
-                                          userIndicatorController: UserIndicatorControllerMock.default,
-                                          appMediator: AppMediatorMock.default,
+                                          userIndicatorController: UserIndicatorControllerMock(),
+                                          appMediator: AppMediatorMock(.init()),
                                           appSettings: appSettings,
-                                          analyticsService: .mock(settings: appSettings),
+                                          analyticsService: AnalyticsServiceMock(.init()),
                                           emojiProvider: EmojiProvider(appSettings: appSettings),
                                           linkMetadataProvider: LinkMetadataProvider(),
                                           timelineControllerFactory: TimelineControllerFactoryMock(.init()))
@@ -444,19 +430,19 @@ final class TimelineViewModelTests {
     
     @Test
     func showDetailsForABannedUser() async throws {
-        let appSettings = AppSettings()
-
+        let appSettings = AppSettings.volatile()
+        
         let viewModel = TimelineViewModel(roomProxy: JoinedRoomProxyMock(.init(name: "",
                                                                                members: [RoomMemberProxyMock.mockAdmin,
                                                                                          RoomMemberProxyMock.mockBanned[0]],
                                                                                ownUserID: RoomMemberProxyMock.mockAdmin.userID)),
-                                          timelineController: MockTimelineController(),
+                                          timelineController: TimelineControllerMock(.init()),
                                           userSession: UserSessionMock(.init()),
                                           mediaPlayerProvider: MediaPlayerProviderMock(),
-                                          userIndicatorController: UserIndicatorControllerMock.default,
-                                          appMediator: AppMediatorMock.default,
+                                          userIndicatorController: UserIndicatorControllerMock(),
+                                          appMediator: AppMediatorMock(.init()),
                                           appSettings: appSettings,
-                                          analyticsService: .mock(settings: appSettings),
+                                          analyticsService: AnalyticsServiceMock(.init()),
                                           emojiProvider: EmojiProvider(appSettings: appSettings),
                                           linkMetadataProvider: LinkMetadataProvider(),
                                           timelineControllerFactory: TimelineControllerFactoryMock(.init()))
@@ -486,22 +472,22 @@ final class TimelineViewModelTests {
     
     @Test
     func pinnedEvents() async throws {
-        let appSettings = AppSettings()
-
+        let appSettings = AppSettings.volatile()
+        
         var configuration = JoinedRoomProxyMockConfiguration(name: "",
                                                              pinnedEventIDs: .init(["test1"]))
         let roomProxyMock = JoinedRoomProxyMock(configuration)
         let infoSubject = CurrentValueSubject<RoomInfoProxyProtocol, Never>(RoomInfoProxyMock(configuration))
-        roomProxyMock.underlyingInfoPublisher = infoSubject.asCurrentValuePublisher()
+        roomProxyMock.infoPublisher = infoSubject.asCurrentValuePublisher()
         
         let viewModel = TimelineViewModel(roomProxy: roomProxyMock,
-                                          timelineController: MockTimelineController(),
+                                          timelineController: TimelineControllerMock(.init()),
                                           userSession: UserSessionMock(.init()),
                                           mediaPlayerProvider: MediaPlayerProviderMock(),
-                                          userIndicatorController: UserIndicatorControllerMock.default,
-                                          appMediator: AppMediatorMock.default,
+                                          userIndicatorController: UserIndicatorControllerMock(),
+                                          appMediator: AppMediatorMock(.init()),
                                           appSettings: appSettings,
-                                          analyticsService: .mock(settings: appSettings),
+                                          analyticsService: AnalyticsServiceMock(.init()),
                                           emojiProvider: EmojiProvider(appSettings: appSettings),
                                           linkMetadataProvider: LinkMetadataProvider(),
                                           timelineControllerFactory: TimelineControllerFactoryMock(.init()))
@@ -517,22 +503,22 @@ final class TimelineViewModelTests {
     
     @Test
     func canUserPinEvents() async throws {
-        let appSettings = AppSettings()
-
+        let appSettings = AppSettings.volatile()
+        
         let configuration = JoinedRoomProxyMockConfiguration(name: "",
                                                              powerLevelsConfiguration: .init(canUserPin: true))
         let roomProxyMock = JoinedRoomProxyMock(configuration)
         let infoSubject = CurrentValueSubject<RoomInfoProxyProtocol, Never>(RoomInfoProxyMock(configuration))
-        roomProxyMock.underlyingInfoPublisher = infoSubject.asCurrentValuePublisher()
+        roomProxyMock.infoPublisher = infoSubject.asCurrentValuePublisher()
         
         let viewModel = TimelineViewModel(roomProxy: roomProxyMock,
-                                          timelineController: MockTimelineController(),
+                                          timelineController: TimelineControllerMock(.init()),
                                           userSession: UserSessionMock(.init()),
                                           mediaPlayerProvider: MediaPlayerProviderMock(),
-                                          userIndicatorController: UserIndicatorControllerMock.default,
-                                          appMediator: AppMediatorMock.default,
+                                          userIndicatorController: UserIndicatorControllerMock(),
+                                          appMediator: AppMediatorMock(.init()),
                                           appSettings: appSettings,
-                                          analyticsService: .mock(settings: appSettings),
+                                          analyticsService: AnalyticsServiceMock(.init()),
                                           emojiProvider: EmojiProvider(appSettings: appSettings),
                                           linkMetadataProvider: LinkMetadataProvider(),
                                           timelineControllerFactory: TimelineControllerFactoryMock(.init()))
@@ -542,7 +528,7 @@ final class TimelineViewModelTests {
         }
         try await deferred.fulfill()
         
-        let powerLevelsProxyMock = RoomPowerLevelsProxyMock(configuration: .init())
+        let powerLevelsProxyMock = RoomPowerLevelsProxyMock(.init())
         powerLevelsProxyMock.canUserPinOrUnpinUserIDReturnValue = .success(false)
         powerLevelsProxyMock.canOwnUserPinOrUnpinReturnValue = false
         roomProxyMock.powerLevelsReturnValue = .success(powerLevelsProxyMock)
@@ -563,8 +549,7 @@ final class TimelineViewModelTests {
     func tapSendInfoEncryptionAuthentictyDisplaysAlert() {
         // Given a room with an event whose authenticity could not be verified
         let items = [TextRoomTimelineItem(eventID: "t1", encryptionAuthenticity: .verificationViolation(color: .red))]
-        let timelineController = MockTimelineController()
-        timelineController.timelineItems = items
+        let timelineController = TimelineControllerMock(.init(timelineItems: items))
         let viewModel = makeViewModel(timelineController: timelineController)
         
         #expect(viewModel.state.bindings.alertInfo == nil)
@@ -578,8 +563,7 @@ final class TimelineViewModelTests {
     func tapSendInfoEncryptionForwarderDisplaysAlert() {
         // Given a room with an event whose key was forwarded
         let items = [TextRoomTimelineItem(eventID: "t1", keyForwarder: .test)]
-        let timelineController = MockTimelineController()
-        timelineController.timelineItems = items
+        let timelineController = TimelineControllerMock(.init(timelineItems: items))
         let viewModel = makeViewModel(timelineController: timelineController)
         
         #expect(viewModel.state.bindings.alertInfo == nil)
@@ -594,17 +578,17 @@ final class TimelineViewModelTests {
     private func makeViewModel(roomProxy: JoinedRoomProxyProtocol? = nil,
                                focussedEventID: String? = nil,
                                timelineController: TimelineControllerProtocol) -> TimelineViewModel {
-        let appSettings = AppSettings()
-
+        let appSettings = AppSettings.volatile()
+        
         return TimelineViewModel(roomProxy: roomProxy ?? JoinedRoomProxyMock(.init(name: "")),
                                  focussedEventID: focussedEventID,
                                  timelineController: timelineController,
                                  userSession: UserSessionMock(.init()),
                                  mediaPlayerProvider: MediaPlayerProviderMock(),
-                                 userIndicatorController: UserIndicatorControllerMock.default,
-                                 appMediator: AppMediatorMock.default,
+                                 userIndicatorController: UserIndicatorControllerMock(),
+                                 appMediator: AppMediatorMock(.init()),
                                  appSettings: appSettings,
-                                 analyticsService: .mock(settings: appSettings),
+                                 analyticsService: AnalyticsServiceMock(.init()),
                                  emojiProvider: EmojiProvider(appSettings: appSettings),
                                  linkMetadataProvider: LinkMetadataProvider(),
                                  timelineControllerFactory: TimelineControllerFactoryMock(.init()))

@@ -10,17 +10,17 @@ struct OutdatedPackages: ParsableCommand {
     private var projectSwiftPMDirectoryURL: URL {
         .projectDirectory.appendingPathComponent("TchapX.xcodeproj/project.xcworkspace/xcshareddata/swiftpm")
     }
-
+    
     func run() throws {
         try checkToolsDependencies()
         try checkProjectDependencies()
     }
-
+    
     func checkToolsDependencies() throws {
         guard let output = try Zsh.run(command: "swift outdated"), !output.isEmpty else { return }
         print("outdated tools Swift packages:\n\(output)")
     }
-
+    
     func checkProjectDependencies() throws {
         guard let output = try Zsh.run(command: "swift outdated", directory: projectSwiftPMDirectoryURL), !output.isEmpty else { return }
         print("outdated project Swift packages:\n\(output)")

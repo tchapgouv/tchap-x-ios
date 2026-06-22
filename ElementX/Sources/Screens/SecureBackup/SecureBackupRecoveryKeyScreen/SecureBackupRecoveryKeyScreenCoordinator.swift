@@ -78,7 +78,7 @@ final class SecureBackupRecoveryKeyScreenCoordinator: CoordinatorProtocol {
         parameters.userIndicatorController.submitIndicator(.init(id: .init(),
                                                                  type: .toast(progress: nil),
                                                                  title: title,
-                                                                 iconName: "checkmark",
+                                                                 icon: \.check,
                                                                  persistent: false))
     }
 }

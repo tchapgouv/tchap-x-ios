@@ -19,23 +19,23 @@ import Testing
 struct RoomRolesAndPermissionsScreenViewModelTests {
     var viewModel: RoomRolesAndPermissionsScreenViewModelProtocol!
     var roomProxy: JoinedRoomProxyMock!
-
+    
     var context: RoomRolesAndPermissionsScreenViewModelType.Context {
         viewModel.context
     }
-
+    
     @Test
     mutating func emptyCounters() {
         setup(members: .allMembers)
-
+        
         #expect(context.viewState.administratorCount == 0)
         #expect(context.viewState.moderatorCount == 0)
     }
-
+    
     @Test
     mutating func filledCounters() {
         setup(members: .allMembersAsAdmin)
-
+        
         #expect(context.viewState.administratorCount == 2)
         #expect(context.viewState.moderatorCount == 1)
     }
@@ -43,10 +43,10 @@ struct RoomRolesAndPermissionsScreenViewModelTests {
     @Test
     mutating func resetPermissions() async throws {
         setup(members: .allMembersAsAdmin)
-
+        
         context.send(viewAction: .reset)
         #expect(context.alertInfo != nil)
-
+        
         context.alertInfo?.primaryButton.action?()
         
         try await Task.sleep(for: .milliseconds(100))
@@ -57,7 +57,7 @@ struct RoomRolesAndPermissionsScreenViewModelTests {
     @Test
     mutating func demoteToModerator() async throws {
         setup(members: .allMembersAsAdmin)
-
+        
         context.send(viewAction: .editOwnUserRole)
         #expect(context.alertInfo != nil)
         
@@ -68,7 +68,7 @@ struct RoomRolesAndPermissionsScreenViewModelTests {
         }?.action?()
         
         try await Task.sleep(for: .milliseconds(100))
-
+        
         #expect(roomProxy.updatePowerLevelsForUsersCalled)
         #expect(roomProxy.updatePowerLevelsForUsersReceivedUpdates?.first?.powerLevel == RoomRole.moderator.powerLevelValue)
     }
@@ -76,7 +76,7 @@ struct RoomRolesAndPermissionsScreenViewModelTests {
     @Test
     mutating func demoteToMember() async throws {
         setup(members: .allMembersAsAdmin)
-
+        
         context.send(viewAction: .editOwnUserRole)
         #expect(context.alertInfo != nil)
 
@@ -87,17 +87,17 @@ struct RoomRolesAndPermissionsScreenViewModelTests {
         }?.action?()
         
         try await Task.sleep(for: .milliseconds(100))
-
+        
         #expect(roomProxy.updatePowerLevelsForUsersCalled)
         #expect(roomProxy.updatePowerLevelsForUsersReceivedUpdates?.first?.powerLevel == RoomRole.user.powerLevelValue)
     }
-
+    
     // MARK: - Helpers
-
+    
     private mutating func setup(members: [RoomMemberProxyMock]) {
         roomProxy = JoinedRoomProxyMock(.init(members: members))
         viewModel = RoomRolesAndPermissionsScreenViewModel(roomProxy: roomProxy,
                                                            userIndicatorController: UserIndicatorControllerMock(),
-                                                           analytics: .mock())
+                                                           analytics: AnalyticsServiceMock(.init()))
     }
 }

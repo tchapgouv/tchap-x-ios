@@ -7,7 +7,8 @@
 //
 
 import Combine
-import Foundation
+import Compound
+import SwiftUI
 
 enum UserIndicatorType: Equatable {
     case toast(progress: UserIndicator.Progress?)
@@ -16,7 +17,7 @@ enum UserIndicatorType: Equatable {
     static var toast: Self {
         .toast(progress: .none)
     }
-
+    
     static var modal: Self {
         .modal(progress: .indeterminate, interactiveDismissDisabled: false, allowsInteraction: false)
     }
@@ -40,7 +41,7 @@ struct UserIndicator: Equatable, Identifiable {
     var type: UserIndicatorType = .toast
     var title: String
     var message: String?
-    var iconName: String?
+    var icon: KeyPath<CompoundIcons, Image>?
     var persistent = false
     
     // MARK: - Associated values from the type

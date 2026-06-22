@@ -12,6 +12,7 @@
 --commas inline
 --ifdef no-indent
 --indent 4
+# --indent-blank-lines enabled # :tchap: disable this now for Tchap because we are not using swiftformat from develop as Element
 --nospaceoperators ...,..<
 --stripunusedargs closure-only
 --trimwhitespace nonblank-lines

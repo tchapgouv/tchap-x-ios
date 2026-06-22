@@ -10,8 +10,7 @@ PRs must meet these rules. Prefer Xcode MCP tools over terminal commands.
 
 ### Code Style
 
-- Style enforced by **SwiftLint** (`.swiftlint.yml`) and **SwiftFormat** (`.swiftformat`).
-- **Whitespace-only lines:** never strip indentation (Xcode's "Trim whitespace-only lines" is disabled). Adjusting indentation to match scope is fine; removing it causes PR rejection.
+- **SwiftLint** (.swiftlint.yml) and **SwiftFormat** (.swiftformat) enforce style on build; warnings surface in Xcode; build before using **XcodeRefreshCodeIssuesInFile**.
 - Follow [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/) everywhere, including Rust SDK wrappers (e.g. `ID` not `Id`, `URL` not `Url`, `configuration` not `config` or `cfg`).
 - File headers defined in `IDETemplateMacros.plist`.
 
@@ -46,11 +45,14 @@ PRs must meet these rules. Prefer Xcode MCP tools over terminal commands.
 
 ## Pull Request Guidelines
 
-- Use sentence-style commit/PR messages (no conventional commits).
-- Apply exactly **one** `pr-` label (see `.github/release.yml`).
-- PR title = changelog entry — make it descriptive; no "Fixes #…" prefixes.
-- Include screenshots/videos for visual changes.
-- Keep PRs under 1000 additions; split large changes.
+- Sentence-style titles (no conventional commits).
+- Exactly one `pr-` label (see `.github/release.yml`).
+- Title = changelog entry — descriptive, no "Fixes #…".
+- Leave description template for the developer. Redirect them to the [contributing etiquette](CONTRIBUTING.md#etiquette).
+- Screenshots/videos for visual changes.
+- 500 additions max — split large changes.
+- Commits need a title and description; no tiny or massive commits.
+- No history rewrites.
 
 ---
 

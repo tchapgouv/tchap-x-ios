@@ -30,7 +30,7 @@ struct NavigationStackCoordinatorTests {
         
         let rootCoordinator = SomeTestCoordinator()
         navigationStackCoordinator.setRootCoordinator(rootCoordinator)
-
+        
         assertCoordinatorsEqual(rootCoordinator, navigationStackCoordinator.rootCoordinator)
     }
     

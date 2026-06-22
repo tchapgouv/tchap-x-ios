@@ -238,11 +238,12 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
                                                                           userIndicatorController: flowParameters.userIndicatorController))
         navigationStackCoordinator.push(coordinator)
     }
-        
+    
     private func presentNotificationSettings() {
         let notificationParameters = NotificationSettingsScreenCoordinatorParameters(navigationStackCoordinator: navigationStackCoordinator,
                                                                                      userSession: flowParameters.userSession,
                                                                                      userNotificationCenter: UNUserNotificationCenter.current(),
+                                                                                     userIndicatorController: flowParameters.userIndicatorController,
                                                                                      isModallyPresented: false,
                                                                                      appSettings: flowParameters.appSettings)
         let coordinator = NotificationSettingsScreenCoordinator(parameters: notificationParameters)

@@ -19,7 +19,7 @@ enum OnboardingFlowCoordinatorAction {
 class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
     private let userSession: UserSessionProtocol
     private let appLockService: AppLockServiceProtocol
-    private let analyticsService: AnalyticsService
+    private let analyticsService: AnalyticsServiceProtocol
     private let appMediator: AppMediatorProtocol
     private let appSettings: AppSettings
     private let appHooks: AppHooks
@@ -117,7 +117,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
         }
         
         actionsSubject.send(.requestPresentation(animated: !isNewLogin))
-
+        
         stateMachine.tryEvent(.next)
     }
     
@@ -240,6 +240,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
                 return .finished
             case (.notificationPermissions, _, _, _, _, _): // Tchap: add welcome screen state
                 return .finished
+                
             default:
                 return nil
             }
@@ -430,7 +431,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
         appLockFlowCoordinator = coordinator
         coordinator.start()
     }
-
+    
     private func presentAnalyticsPromptScreen() {
         let coordinator = AnalyticsPromptScreenCoordinator(analytics: analyticsService, termsURL: appSettings.analyticsTermsURL)
         

@@ -36,14 +36,14 @@ struct TimelineItemMenu: View {
                     if !actions.reactions.isEmpty {
                         reactionsSection
                             .padding(.bottom, 8.0)
-
+                        
                         Divider()
                             .background(Color.compound.bgSubtlePrimary)
                     }
-
+                    
                     if !actions.actions.isEmpty {
                         viewsForActions(actions.actions)
-
+                        
                         Divider()
                             .background(Color.compound.bgSubtlePrimary)
                     }
@@ -278,7 +278,7 @@ struct TimelineItemMenu_Previews: PreviewProvider, TestablePreview {
     
     static let (mediaItem, mediaItemActions) = makeActions(itemType: .outgoingMedia)
     static let (mediaItemWithCaption, mediaItemWithCaptionActions) = makeActions(itemType: .outgoingMediaWithCaption)
-
+    
     static var previews: some View {
         TimelineItemMenu(item: item, actions: actions)
             .environmentObject(viewModel.context)
@@ -342,7 +342,7 @@ struct TimelineItemMenu_Previews: PreviewProvider, TestablePreview {
                                                       isViewSourceEnabled: true,
                                                       areThreadsEnabled: true,
                                                       timelineKind: .live,
-                                                      emojiProvider: EmojiProvider(appSettings: AppSettings()))
+                                                      emojiProvider: EmojiProvider(appSettings: .volatile()))
         guard let actions = provider.makeActions() else { return nil }
         
         if var textItem = item as? TextRoomTimelineItem {

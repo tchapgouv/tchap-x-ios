@@ -49,7 +49,7 @@ struct HomeScreen: View {
             L10n.screenRoomlistMainSpaceTitle
         }
     }
-        
+    
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
@@ -76,7 +76,7 @@ struct HomeScreen: View {
             if #available(iOS 26, *) {
                 ToolbarSpacer(.fixed, placement: .primaryAction)
             }
-               
+            
             ToolbarItem(placement: .primaryAction) {
                 SpaceFiltersButton(selected: context.viewState.selectedSpaceFilter != nil) {
                     context.send(viewAction: .spaceFilters)
@@ -230,15 +230,12 @@ struct HomeScreen_Previews: PreviewProvider, TestablePreview {
                                                 roomSummaryProvider: RoomSummaryProviderMock(.init(state: roomSummaryProviderState))))
         
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
-
-        let appSettings = AppSettings()
-        let analytics = AnalyticsService.mock(settings: appSettings)
-
+        
         return HomeScreenViewModel(userSession: userSession,
                                    selectedRoomPublisher: CurrentValueSubject<String?, Never>(nil).asCurrentValuePublisher(),
-                                   appSettings: appSettings,
-                                   analyticsService: analytics,
+                                   appSettings: .volatile(),
+                                   analyticsService: AnalyticsServiceMock(.init()),
                                    notificationManager: NotificationManagerMock(),
-                                   userIndicatorController: UserIndicatorControllerMock.default)
+                                   userIndicatorController: UserIndicatorControllerMock())
     }
 }

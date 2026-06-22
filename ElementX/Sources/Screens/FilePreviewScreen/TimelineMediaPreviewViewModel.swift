@@ -85,7 +85,7 @@ class TimelineMediaPreviewViewModel: TimelineMediaPreviewViewModelType {
             case .viewInRoomTimeline:
                 state.previewControllerDriver.send(.dismissDetailsSheet)
                 actionsSubject.send(.viewInRoomTimeline(item.timelineItem.id))
-            case .save:
+            case .downloadMedia:
                 Task { await saveCurrentItem() }
             case .redact:
                 state.bindings.redactConfirmationItem = item
@@ -200,7 +200,7 @@ class TimelineMediaPreviewViewModel: TimelineMediaPreviewViewModelType {
     }
     
     private func redactItem(_ item: TimelineMediaPreviewItem.Media) {
-        timelineViewModel.context.send(viewAction: .handleTimelineItemMenuAction(itemID: item.timelineItem.id, action: .redact))
+        timelineViewModel.context.send(viewAction: .handleTimelineItemMenuAction(itemID: item.timelineItem.id, action: .redact(isMedia: true)))
         state.bindings.redactConfirmationItem = nil
         state.previewControllerDriver.send(.dismissDetailsSheet)
         actionsSubject.send(.dismiss)
@@ -213,21 +213,21 @@ class TimelineMediaPreviewViewModel: TimelineMediaPreviewViewModelType {
         userIndicatorController.submitIndicator(UserIndicator(id: statusIndicatorID,
                                                               type: .toast,
                                                               title: L10n.commonFileDeleted,
-                                                              iconName: "checkmark"))
+                                                              icon: \.check))
     }
     
     private func showSavedIndicator() {
         userIndicatorController.submitIndicator(UserIndicator(id: statusIndicatorID,
                                                               type: .toast,
                                                               title: L10n.commonFileSaved,
-                                                              iconName: "checkmark"))
+                                                              icon: \.check))
     }
     
     private func showErrorIndicator() {
         userIndicatorController.submitIndicator(UserIndicator(id: statusIndicatorID,
                                                               type: .toast,
                                                               title: L10n.errorUnknown,
-                                                              iconName: "xmark"))
+                                                              icon: \.close))
     }
     
     private func showTimelineEndIndicator() {

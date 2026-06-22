@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import SwiftUI
 
 struct RoomChangeRolesScreenSelectedItem: View {
@@ -14,21 +15,12 @@ struct RoomChangeRolesScreenSelectedItem: View {
     let dismissAction: (() -> Void)?
     
     var body: some View {
-        mainContent
-            .accessibilityActions {
-                if let dismissAction {
-                    Button(L10n.actionDismiss) {
-                        dismissAction()
-                    }
-                }
-            }
-    }
-    
-    // MARK: - Private
-    
-    private var mainContent: some View {
         VStack(spacing: 4) {
-            avatar
+            if let dismissAction {
+                avatar.overlayRemoveItemButton(action: dismissAction)
+            } else {
+                avatar
+            }
             
             Text(member.name ?? member.id)
                 .font(.compound.bodyMD)
@@ -36,6 +28,13 @@ struct RoomChangeRolesScreenSelectedItem: View {
                 .lineLimit(1)
         }
         .accessibilityElement(children: .combine)
+        .accessibilityActions {
+            if let dismissAction {
+                Button(L10n.actionDismiss) {
+                    dismissAction()
+                }
+            }
+        }
     }
     
     var avatar: some View {
@@ -45,20 +44,6 @@ struct RoomChangeRolesScreenSelectedItem: View {
                             avatarSize: .user(on: .roomChangeRoles),
                             mediaProvider: mediaProvider)
             .accessibilityHidden(true)
-            .overlay(alignment: .topTrailing) {
-                if let dismissAction {
-                    Button(action: dismissAction) {
-                        Image(systemName: "xmark.circle.fill")
-                            .resizable()
-                            .scaledFrame(size: 20)
-                            .symbolRenderingMode(.palette)
-                            .foregroundStyle(Color.compound.iconOnSolidPrimary, Color.compound.iconPrimary)
-                    }
-                    // We will use the accessibility action
-                    .accessibilityHidden(true)
-                    .offset(x: 4)
-                }
-            }
     }
 }
 
@@ -76,7 +61,7 @@ struct RoomChangeRolesScreenSelectedItem_Previews: PreviewProvider, TestablePrev
         HStack(spacing: 12) {
             ForEach(members, id: \.id) { member in
                 RoomChangeRolesScreenSelectedItem(member: member,
-                                                  mediaProvider: MediaProviderMock(configuration: .init())) { }
+                                                  mediaProvider: MediaProviderMock(.init())) { }
                     .frame(width: 72)
             }
         }

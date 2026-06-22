@@ -23,7 +23,7 @@ struct ReadReceiptCell: View {
         }
         return readReceipt.userID
     }
-        
+    
     var body: some View {
         HStack(spacing: 12) {
             LoadableAvatarImage(url: memberState?.avatarURL,
@@ -67,18 +67,18 @@ struct ReadReceiptCell_Previews: PreviewProvider, TestablePreview {
                                            formattedTimestamp: "10:00"),
                         memberState: .init(displayName: "Test",
                                            avatarURL: nil),
-                        mediaProvider: MediaProviderMock(configuration: .init()))
+                        mediaProvider: MediaProviderMock(.init()))
             .previewDisplayName("No Image")
         ReadReceiptCell(readReceipt: .init(userID: "@test:matrix.org",
                                            formattedTimestamp: "10:00"),
                         memberState: .init(displayName: "Test",
                                            avatarURL: .mockMXCUserAvatar),
-                        mediaProvider: MediaProviderMock(configuration: .init()))
+                        mediaProvider: MediaProviderMock(.init()))
             .previewDisplayName("With Image")
         ReadReceiptCell(readReceipt: .init(userID: "@test:matrix.org",
                                            formattedTimestamp: "10:00"),
                         memberState: nil,
-                        mediaProvider: MediaProviderMock(configuration: .init()))
+                        mediaProvider: MediaProviderMock(.init()))
             .previewDisplayName("Loading Member")
     }
 }

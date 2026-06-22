@@ -46,7 +46,7 @@ struct NotificationSettingsEditScreenViewModelTests {
             }
         }
         viewModel = NotificationSettingsEditScreenViewModel(chatType: .groupChat, userSession: userSession)
-
+        
         let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
@@ -84,7 +84,7 @@ struct NotificationSettingsEditScreenViewModelTests {
             true
         }
         viewModel = NotificationSettingsEditScreenViewModel(chatType: .groupChat, userSession: userSession)
-
+        
         let deferred = deferFulfillment(viewModel.context.observe(\.viewState.defaultMode)) { $0 != nil }
         
         viewModel.fetchInitialContent()
@@ -120,7 +120,7 @@ struct NotificationSettingsEditScreenViewModelTests {
         
         var deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.pendingMode),
                                                  transitionValues: [nil, .allMessages, nil])
-
+        
         context.send(viewAction: .setMode(.allMessages))
         
         try await deferredViewState.fulfill()
@@ -141,11 +141,11 @@ struct NotificationSettingsEditScreenViewModelTests {
                                              transitionValues: [.allMessages])
         
         try await deferredViewState.fulfill()
-
+        
         #expect(context.viewState.defaultMode == .allMessages)
         #expect(context.viewState.bindings.alertInfo == nil)
     }
-
+    
     @Test
     mutating func setModeMentions() async throws {
         viewModel = NotificationSettingsEditScreenViewModel(chatType: .groupChat, userSession: userSession)
@@ -158,7 +158,7 @@ struct NotificationSettingsEditScreenViewModelTests {
         
         var deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.pendingMode),
                                                  transitionValues: [nil, .mentionsAndKeywordsOnly, nil])
-                
+        
         context.send(viewAction: .setMode(.mentionsAndKeywordsOnly))
         
         try await deferredViewState.fulfill()
@@ -179,11 +179,11 @@ struct NotificationSettingsEditScreenViewModelTests {
                                              transitionValues: [.mentionsAndKeywordsOnly])
         
         try await deferredViewState.fulfill()
-
+        
         #expect(context.viewState.defaultMode == .mentionsAndKeywordsOnly)
         #expect(context.viewState.bindings.alertInfo == nil)
     }
-
+    
     @Test
     mutating func setModeDirectChats() async throws {
         notificationSettingsProxy.getDefaultRoomNotificationModeIsEncryptedIsOneToOneReturnValue = .mentionsAndKeywordsOnly
@@ -202,7 +202,7 @@ struct NotificationSettingsEditScreenViewModelTests {
         context.send(viewAction: .setMode(.allMessages))
         
         try await deferredViewState.fulfill()
-
+        
         // `setDefaultRoomNotificationModeIsEncryptedIsOneToOneMode` must have been called twice (for encrypted and unencrypted direct chats)
         let invocations = notificationSettingsProxy.setDefaultRoomNotificationModeIsEncryptedIsOneToOneModeReceivedInvocations
         #expect(notificationSettingsProxy.setDefaultRoomNotificationModeIsEncryptedIsOneToOneModeCallsCount == 2)
@@ -215,7 +215,7 @@ struct NotificationSettingsEditScreenViewModelTests {
         #expect(invocations[1].isOneToOne == true)
         #expect(invocations[1].mode == .allMessages)
     }
-
+    
     @Test
     mutating func setModeFailure() async throws {
         notificationSettingsProxy.getDefaultRoomNotificationModeIsEncryptedIsOneToOneReturnValue = .mentionsAndKeywordsOnly
@@ -230,14 +230,14 @@ struct NotificationSettingsEditScreenViewModelTests {
         
         let deferredViewState = deferFulfillment(viewModel.context.observe(\.viewState.pendingMode),
                                                  transitionValues: [nil, .allMessages, nil])
-
+        
         context.send(viewAction: .setMode(.allMessages))
         
         try await deferredViewState.fulfill()
         
         #expect(context.viewState.bindings.alertInfo != nil)
     }
-
+    
     @Test
     mutating func selectRoom() async throws {
         let roomID = "!roomidentifier:matrix.org"

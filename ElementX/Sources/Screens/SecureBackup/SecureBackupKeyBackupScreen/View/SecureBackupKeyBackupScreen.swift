@@ -39,7 +39,7 @@ struct SecureBackupKeyBackupScreen: View {
             disableBackupSection
         }
     }
-        
+    
     private var disableBackupSection: some View {
         VStack(spacing: 24) {
             VStack(spacing: 16) {
@@ -98,7 +98,7 @@ struct SecureBackupKeyBackupScreen_Previews: PreviewProvider, TestablePreview {
     
     static func viewModel(keyBackupState: SecureBackupKeyBackupState) -> SecureBackupKeyBackupScreenViewModelType {
         let backupController = SecureBackupControllerMock()
-        backupController.underlyingKeyBackupState = CurrentValueSubject<SecureBackupKeyBackupState, Never>(keyBackupState).asCurrentValuePublisher()
+        backupController.keyBackupState = CurrentValueSubject<SecureBackupKeyBackupState, Never>(keyBackupState).asCurrentValuePublisher()
         
         return SecureBackupKeyBackupScreenViewModel(secureBackupController: backupController,
                                                     userIndicatorController: nil)

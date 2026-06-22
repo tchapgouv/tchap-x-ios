@@ -520,7 +520,7 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
         viewModel.context.selectedAccessType = .askToJoinWithSpaceMembers
         return viewModel
     }()
-
+    
     static var previews: some View {
         ElementNavigationStack {
             CreateRoomScreen(context: viewModel.context)
@@ -586,8 +586,7 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
                                       isSpace: Bool = false,
                                       selectionMode: CreateRoomScreenSpaceSelectionMode = .editableSpacesList(preSelectedSpace: nil),
                                       isAliasAvailable: Bool = true) -> CreateRoomScreenViewModel {
-        AppSettings.resetAllSettings()
-        let appSettings = AppSettings()
+        let appSettings = AppSettings.volatile()
         appSettings.knockingEnabled = isKnockingEnabled
         
         let clientProxy = ClientProxyMock(.init(userIDServerName: "example.org",
@@ -596,13 +595,13 @@ struct CreateRoom_Previews: PreviewProvider, TestablePreview {
         let spaces = [SpaceServiceRoom].mockJoinedSpaces2
         clientProxy.spaceService = SpaceServiceProxyMock(.init(editableSpaces: spaces))
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
-
+        
         return CreateRoomScreenViewModel(isSpace: isSpace,
                                          spaceSelectionMode: selectionMode,
                                          shouldShowCancelButton: isSpace,
                                          userSession: userSession,
-                                         analytics: .mock(settings: appSettings),
-                                         userIndicatorController: UserIndicatorControllerMock.default,
+                                         analytics: AnalyticsServiceMock(.init()),
+                                         userIndicatorController: UserIndicatorControllerMock(),
                                          appSettings: appSettings)
     }
 }

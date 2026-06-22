@@ -14,15 +14,15 @@ typealias RoomRolesAndPermissionsScreenViewModelType = StateStoreViewModelV2<Roo
 class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewModelType, RoomRolesAndPermissionsScreenViewModelProtocol {
     private let roomProxy: JoinedRoomProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
-    private let analytics: AnalyticsService
+    private let analytics: AnalyticsServiceProtocol
     private var ownUser: RoomMemberDetails?
     
     private var actionsSubject: PassthroughSubject<RoomRolesAndPermissionsScreenViewModelAction, Never> = .init()
     var actionsPublisher: AnyPublisher<RoomRolesAndPermissionsScreenViewModelAction, Never> {
         actionsSubject.eraseToAnyPublisher()
     }
-
-    init(initialPermissions: RoomPermissions? = nil, roomProxy: JoinedRoomProxyProtocol, userIndicatorController: UserIndicatorControllerProtocol, analytics: AnalyticsService) {
+    
+    init(initialPermissions: RoomPermissions? = nil, roomProxy: JoinedRoomProxyProtocol, userIndicatorController: UserIndicatorControllerProtocol, analytics: AnalyticsServiceProtocol) {
         self.roomProxy = roomProxy
         self.userIndicatorController = userIndicatorController
         self.analytics = analytics
@@ -83,7 +83,7 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
                                                  secondaryButton: .init(title: L10n.actionCancel, role: .cancel) { })
         }
     }
-
+    
     // MARK: - Members
     
     private func updateMembers(_ members: [RoomMemberProxyProtocol]) {
@@ -148,7 +148,7 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
         
         hideSavingIndicator()
     }
-        
+    
     // MARK: Loading indicator
     
     private static let savingIndicatorID = "RolesAndPermissionsSaving"
@@ -169,6 +169,6 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
         userIndicatorController.submitIndicator(UserIndicator(id: Self.successIndicatorID,
                                                               type: .toast,
                                                               title: L10n.commonSuccess,
-                                                              iconName: "checkmark"))
+                                                              icon: \.check))
     }
 }

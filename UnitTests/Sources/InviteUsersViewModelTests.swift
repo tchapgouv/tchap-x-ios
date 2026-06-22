@@ -22,14 +22,6 @@ final class InviteUsersScreenViewModelTests {
     var viewModel: InviteUsersScreenViewModelProtocol!
     var userDiscoveryService: UserDiscoveryServiceMock!
     var clientProxy: ClientProxyMock!
-
-    init() {
-        AppSettings.resetAllSettings()
-    }
-    
-    deinit {
-        AppSettings.resetAllSettings()
-    }
     
     var context: InviteUsersScreenViewModel.Context {
         viewModel.context
@@ -123,7 +115,7 @@ final class InviteUsersScreenViewModelTests {
         
         context.send(viewAction: .toggleUser(.mockAlice))
         try await deferredState.fulfill()
-
+        
         context.send(viewAction: .proceed)
         #expect(context.presentConfirmationDialog)
         
@@ -188,7 +180,7 @@ final class InviteUsersScreenViewModelTests {
                                                isSkippable: false,
                                                userDiscoveryService: userDiscoveryService,
                                                userIndicatorController: UserIndicatorControllerMock(),
-                                               appSettings: AppSettings())
+                                               appSettings: .volatile())
         
         // The locked invitee starts pre-selected and locked.
         #expect(context.viewState.selectedUsers.map(\.userID) == [UserProfileProxy.mockAlice.userID])
@@ -255,7 +247,7 @@ final class InviteUsersScreenViewModelTests {
                                                    isSkippable: isSkippable,
                                                    userDiscoveryService: userDiscoveryService,
                                                    userIndicatorController: UserIndicatorControllerMock(),
-                                                   appSettings: AppSettings())
+                                                   appSettings: .volatile())
         viewModel.state.usersSection = .init(type: .suggestions, users: [.mockAlice, .mockBob, .mockCharlie])
         self.viewModel = viewModel
     }

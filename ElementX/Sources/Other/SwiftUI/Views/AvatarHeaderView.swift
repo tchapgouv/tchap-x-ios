@@ -315,7 +315,7 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
                                          accessRule: .unrestricted,
                                          visibility: .private),
                              avatarSize: .room(on: .details),
-                             mediaProvider: MediaProviderMock(configuration: .init())) {
+                             mediaProvider: MediaProviderMock(.init())) {
                 HStack(spacing: 32) {
                     ShareLink(item: "test") {
                         CompoundIcon(\.shareIos)
@@ -329,7 +329,7 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
         
         Form {
             AvatarHeaderView(accountOwner: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockMe), dmRecipient: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice),
-                             mediaProvider: MediaProviderMock(configuration: .init())) {
+                             mediaProvider: MediaProviderMock(.init())) {
                 HStack(spacing: 32) {
                     ShareLink(item: "test") {
                         CompoundIcon(\.shareIos)
@@ -344,16 +344,16 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
         VStack(spacing: 16) {
             AvatarHeaderView(member: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockAlice),
                              avatarSize: .room(on: .details),
-                             mediaProvider: MediaProviderMock(configuration: .init())) { Text("") }
+                             mediaProvider: MediaProviderMock(.init())) { Text("") }
             
             AvatarHeaderView(member: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockBob),
                              isVerified: true,
                              avatarSize: .room(on: .details),
-                             mediaProvider: MediaProviderMock(configuration: .init())) { Text("") }
+                             mediaProvider: MediaProviderMock(.init())) { Text("") }
             
             AvatarHeaderView(member: RoomMemberDetails(withProxy: RoomMemberProxyMock.mockBanned[3]),
                              avatarSize: .room(on: .details),
-                             mediaProvider: MediaProviderMock(configuration: .init())) { Text("") }
+                             mediaProvider: MediaProviderMock(.init())) { Text("") }
         }
         .padding()
         .background(Color.compound.bgSubtleSecondaryLevel0)
@@ -381,7 +381,7 @@ struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {
                                          accessRule: .unrestricted,
                                          visibility: .private),
                              avatarSize: .room(on: .details),
-                             mediaProvider: MediaProviderMock(configuration: .init())) {
+                             mediaProvider: MediaProviderMock(.init())) {
                 HStack(spacing: 32) {
                     ShareLink(item: "test") {
                         CompoundIcon(\.shareIos)

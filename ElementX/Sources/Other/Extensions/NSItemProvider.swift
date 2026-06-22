@@ -133,7 +133,7 @@ extension NSItemProvider {
             guard registeredContentTypes.contains(where: { $0.conforms(to: .fileURL) }) else {
                 return nil
             }
-                        
+            
             for type in registeredContentTypes {
                 if let fileExtension = type.preferredFilenameExtension {
                     return .init(type: type, fileExtension: fileExtension)
@@ -196,8 +196,15 @@ extension NSItemProvider {
     }
 }
 
-private extension NSString {
+extension NSString {
+    /// `NSString.pathExtension` returns the trailing dot-segment regardless of whether
+    /// it's a real extension, and `UTType(filenameExtension:)` synthesises a `dyn.*`
+    /// placeholder for unknown ones instead of returning nil — so check both.
     var hasPathExtension: Bool {
-        !pathExtension.isEmpty
+        guard !pathExtension.isEmpty,
+              let type = UTType(filenameExtension: pathExtension) else {
+            return false
+        }
+        return !type.isDynamic
     }
 }

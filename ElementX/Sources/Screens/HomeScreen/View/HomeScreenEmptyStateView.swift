@@ -79,7 +79,7 @@ struct HomeScreenEmptyStateLayout: Layout {
         
         // Place the main view in the center if there is space, otherwise add it to the stack.
         guard let mainView else { return }
-
+        
         let mainViewSize = mainView.sizeThatFits(proposal)
         if (y + mainViewSize.height / 2) < bounds.height / 2 {
             let center = CGPoint(x: bounds.midX, y: bounds.midY)
@@ -143,14 +143,11 @@ struct HomeScreenEmptyStateView_Previews: PreviewProvider, TestablePreview {
     static let viewModel = {
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@user:example.com",
                                                                                    roomSummaryProvider: RoomSummaryProviderMock(.init(state: .loaded([])))))))
-        let appSettings = AppSettings()
-        let analytics = AnalyticsService.mock(settings: appSettings)
-
         return HomeScreenViewModel(userSession: userSession,
                                    selectedRoomPublisher: CurrentValueSubject<String?, Never>(nil).asCurrentValuePublisher(),
-                                   appSettings: appSettings,
-                                   analyticsService: analytics,
+                                   appSettings: .volatile(),
+                                   analyticsService: AnalyticsServiceMock(.init()),
                                    notificationManager: NotificationManagerMock(),
-                                   userIndicatorController: UserIndicatorControllerMock.default)
+                                   userIndicatorController: UserIndicatorControllerMock())
     }()
 }

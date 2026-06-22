@@ -10,8 +10,8 @@ let package = Package(
     ],
     dependencies: [
 // Use the Github hosted version of Tchap Compound-design--tokens
-//      .package(url: "https://github.com/element-hq/compound-design-tokens", exact: "10.1.1"),
-        .package(url: "https://github.com/tchapgouv/compound-design-tokens", revision: "6d33a626af3e0d15d3510d64eae5db6452effd66"),
+//      .package(url: "https://github.com/element-hq/compound-design-tokens", exact: "10.2.1"),
+        .package(url: "https://github.com/tchapgouv/compound-design-tokens", revision: "470efcde6d0541f81d22c7c2328dc7996ba3ab5a"),
 // Use the local version of Tchap Compound-design--tokens
 //        .package(path: "../../tchap-x-compound/compound-design-tokens"),
         .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "26.0.1"),

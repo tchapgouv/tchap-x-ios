@@ -14,6 +14,7 @@ enum TimelineControllerCallback {
     case updatedTimelineItems(timelineItems: [RoomTimelineItemProtocol], isSwitchingTimelines: Bool)
     case paginationState(TimelinePaginationState)
     case isLive(Bool)
+    case messageSentOrEdited
 }
 
 enum TimelineControllerAction {
@@ -42,7 +43,7 @@ enum TimelineControllerError: Error {
 /// It, for example, permits switching from a live timeline to an event focused one, building view specific
 /// timeline items, grouping together state events, donating intents to the larger system etc.
 @MainActor
-protocol TimelineControllerProtocol {
+protocol TimelineControllerProtocol: Sendable {
     var roomID: String { get }
     var timelineKind: TimelineKind { get }
     
@@ -79,7 +80,7 @@ protocol TimelineControllerProtocol {
     func removeCaption(_ eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID) async
     
     func toggleReaction(_ reaction: String, to eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID) async
-
+    
     func redact(_ eventOrTransactionID: TimelineItemIdentifier.EventOrTransactionID) async
     
     func pin(eventID: String) async
@@ -147,3 +148,6 @@ protocol TimelineControllerProtocol {
     
     func endPoll(pollStartID: String, text: String) async -> Result<Void, TimelineControllerError>
 }
+
+// sourcery: AutoMockable
+extension TimelineControllerProtocol { }

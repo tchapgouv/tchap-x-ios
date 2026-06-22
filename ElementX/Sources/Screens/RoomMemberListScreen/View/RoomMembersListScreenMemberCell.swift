@@ -13,7 +13,7 @@ struct RoomMembersListScreenMemberCell: View {
     let listEntry: RoomMemberListScreenEntry
     let isLast: Bool
     let context: RoomMembersListScreenViewModel.Context
-
+    
     var body: some View {
         Button {
             context.send(viewAction: .selectMember(listEntry.member))
@@ -136,8 +136,8 @@ struct RoomMembersListMemberCell_Previews: PreviewProvider, TestablePreview {
     
     static let viewModel = RoomMembersListScreenViewModel(userSession: UserSessionMock(.init()),
                                                           roomProxy: JoinedRoomProxyMock(.init(name: "Some room", members: [])),
-                                                          userIndicatorController: UserIndicatorControllerMock.default,
-                                                          analytics: .mock())
+                                                          userIndicatorController: UserIndicatorControllerMock(),
+                                                          analytics: AnalyticsServiceMock(.init()))
     static var previews: some View {
         VStack(spacing: 0) {
             Section("Invited/Joined") {

@@ -16,7 +16,7 @@ enum AdvancedSettingsScreenCoordinatorAction {
 
 struct AdvancedSettingsScreenCoordinatorParameters {
     let appSettings: AppSettings
-    let analytics: AnalyticsService
+    let analytics: AnalyticsServiceProtocol
     let clientProxy: ClientProxyProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
 }
@@ -50,7 +50,7 @@ final class AdvancedSettingsScreenCoordinator: CoordinatorProtocol {
             }
             .store(in: &cancellables) // :tchap:end
     }
-            
+    
     func toPresentable() -> AnyView {
         AnyView(AdvancedSettingsScreen(context: viewModel.context))
     }

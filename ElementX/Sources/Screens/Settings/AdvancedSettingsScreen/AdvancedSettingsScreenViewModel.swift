@@ -19,7 +19,7 @@ class AdvancedSettingsScreenViewModel: AdvancedSettingsScreenViewModelType, Adva
         actionsSubject.eraseToAnyPublisher()
     } // :tchap:end
 
-    private let analytics: AnalyticsService
+    private let analytics: AnalyticsServiceProtocol
     private let clientProxy: ClientProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     
@@ -27,7 +27,7 @@ class AdvancedSettingsScreenViewModel: AdvancedSettingsScreenViewModelType, Adva
     private var hideInviteAvatarsTask: Task<Void, Never>?
     
     init(advancedSettings: AdvancedSettingsProtocol,
-         analytics: AnalyticsService,
+         analytics: AnalyticsServiceProtocol,
          clientProxy: ClientProxyProtocol,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.analytics = analytics

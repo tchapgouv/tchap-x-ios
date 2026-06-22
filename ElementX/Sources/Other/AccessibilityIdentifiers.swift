@@ -75,13 +75,13 @@ enum A11yIdentifiers {
         let changePIN = "app_lock_setup_settings-change_pin"
         let removePIN = "app_lock_setup_settings-remove_pin"
     }
-
+    
     struct AnalyticsPromptScreen {
         let title = "analytics_prompt-title"
         let enable = "analytics_prompt-enable"
         let notNow = "analytics_prompt-not_now"
     }
-
+    
     struct BugReportScreen {
         let report = "bug_report-report"
         let sendLogs = "bug_report-send_logs"
@@ -164,9 +164,9 @@ enum A11yIdentifiers {
         
         let messageComposer = "room-message_composer"
         let sendButton = "room-send_button"
-
+        
         let composerToolbar = ComposerToolbar()
-
+        
         struct ComposerToolbar {
             let bold = "composer_toolbar-bold"
             let italic = "composer_toolbar-italic"
@@ -182,6 +182,12 @@ enum A11yIdentifiers {
             let link = "composer_toolbar-link"
             let openComposeOptions = "composer_toolbar-open_compose_options"
             let closeFormattingOptions = "composer_toolbar-close-formatting-options"
+        }
+        
+        let timelineItemActionMenuAction = TimelineItemActionMenuAction()
+        
+        struct TimelineItemActionMenuAction {
+            let edit = "timeline_item_action_menu-edit"
         }
     }
     
@@ -286,13 +292,13 @@ enum A11yIdentifiers {
         let mediaPicker = "create_room-media_picker"
         let filePicker = "create_room-file_picker"
     }
-
+    
     struct PollFormScreen {
         let addOption = "poll_form-add_option"
         let pollKind = "poll_form-kind"
         let question = "poll_form-question"
         let submit = "poll_form-submit"
-
+        
         private let optionPrefix = "poll_form-option"
         func optionID(_ index: Int) -> String {
             "\(optionPrefix)-\(index)"

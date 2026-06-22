@@ -22,8 +22,8 @@ struct PollFormScreenViewState: BindableState {
         self.maxNumberOfOptions = maxNumberOfOptions
         
         switch mode {
-        case .new:
-            bindings = .init()
+        case .new(let topic):
+            bindings = .init(question: topic ?? "")
         case .edit(_, let poll):
             bindings = .init(poll: poll)
         }
@@ -65,13 +65,13 @@ struct PollFormScreenViewState: BindableState {
         case .edit(_, let poll):
             initialBindings = .init(poll: poll)
         }
-
+        
         return bindings != initialBindings
     }
 }
 
 enum PollFormMode: Hashable {
-    case new
+    case new(topic: String?)
     case edit(eventID: String, poll: Poll)
 }
 
@@ -79,16 +79,16 @@ struct PollFormScreenViewStateBindings: Equatable {
     var question = ""
     var options: [Option] = [.init(), .init()]
     var isUndisclosed = false
-
+    
     struct Option: Identifiable, Equatable {
         let id = UUID()
         var text = ""
     }
-
+    
     var hasValidContent: Bool {
         !question.isEmpty && options.count >= 2 && options.allSatisfy { !$0.text.isEmpty }
     }
-
+    
     var alertInfo: AlertInfo<UUID>?
     
     static func == (lhs: PollFormScreenViewStateBindings, rhs: PollFormScreenViewStateBindings) -> Bool {

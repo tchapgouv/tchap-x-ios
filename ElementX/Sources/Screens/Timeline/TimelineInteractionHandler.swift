@@ -16,7 +16,7 @@ enum TimelineInteractionHandlerAction {
     case displayReportContent(itemID: TimelineItemIdentifier, senderID: String)
     case displayMessageForwarding(itemID: TimelineItemIdentifier)
     case displayMediaUploadPreviewScreen(mediaURLs: [URL])
-    case displayPollForm(mode: PollFormMode)
+    case displayEditPollForm(eventID: String, poll: Poll)
     
     case showActionMenu(TimelineItemActionMenuInfo)
     case showDebugInfo(TimelineItemDebugInfo)
@@ -41,7 +41,7 @@ class TimelineInteractionHandler {
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let appMediator: AppMediatorProtocol
     private let appSettings: AppSettings
-    private let analyticsService: AnalyticsService
+    private let analyticsService: AnalyticsServiceProtocol
     private let emojiProvider: EmojiProviderProtocol
     private let linkMetadataProvider: LinkMetadataProviderProtocol
     private let timelineControllerFactory: TimelineControllerFactoryProtocol
@@ -68,7 +68,7 @@ class TimelineInteractionHandler {
          userIndicatorController: UserIndicatorControllerProtocol,
          appMediator: AppMediatorProtocol,
          appSettings: AppSettings,
-         analyticsService: AnalyticsService,
+         analyticsService: AnalyticsServiceProtocol,
          emojiProvider: EmojiProviderProtocol,
          linkMetadataProvider: LinkMetadataProviderProtocol,
          timelineControllerFactory: TimelineControllerFactoryProtocol) {
@@ -98,12 +98,12 @@ class TimelineInteractionHandler {
                 // Don't show a menu for non-event based items.
                 return
             }
-
+            
             actionsSubject.send(.composer(action: .removeFocus))
             actionsSubject.send(.showActionMenu(.init(item: eventTimelineItem)))
         }
     }
-
+    
     // swiftlint:disable:next cyclomatic_complexity
     func handleTimelineItemMenuAction(_ action: TimelineItemMenuAction, itemID: TimelineItemIdentifier) {
         guard let timelineItem = timelineController.timelineItems.firstUsingStableID(itemID),
@@ -130,7 +130,7 @@ class TimelineInteractionHandler {
                     MXLog.error("Cannot edit poll with id: \(timelineItem.id)")
                     return
                 }
-                actionsSubject.send(.displayPollForm(mode: .edit(eventID: eventID, poll: pollTimelineItem.poll)))
+                actionsSubject.send(.displayEditPollForm(eventID: eventID, poll: pollTimelineItem.poll))
             default:
                 MXLog.error("Cannot edit item with id: \(timelineItem.id)")
             }
@@ -195,9 +195,7 @@ class TimelineInteractionHandler {
             analyticsService.trackInteraction(name: .PinnedMessageListViewTimeline)
             guard let eventID = itemID.eventID else { return }
             actionsSubject.send(.viewInRoomTimeline(eventID: eventID))
-        case .share:
-            break // Handled inline in the media preview screen with a ShareLink.
-        case .save:
+        case .downloadMedia:
             break // Handled inline in the media preview screen.
         case .translate:
             guard let messageTimelineItem = timelineItem as? EventBasedMessageTimelineItemProtocol else { return }
@@ -250,7 +248,7 @@ class TimelineInteractionHandler {
     }
     
     // MARK: Polls
-
+    
     func sendPollResponse(pollStartID: String, optionID: String) {
         Task {
             let sendPollResponseResult = await pollInteractionHandler.sendPollResponse(pollStartID: pollStartID, optionID: optionID)
@@ -369,7 +367,7 @@ class TimelineInteractionHandler {
                                        isReply: false,
                                        messageType: .VoiceMessage,
                                        startsThread: nil)
-
+        
         actionsSubject.send(.composer(action: .setMode(mode: .previewVoiceMessage(state: audioPlayerState, waveform: .url(recordingURL), isUploading: true))))
         await voiceMessageRecorder.stopPlayback()
         
@@ -417,13 +415,13 @@ class TimelineInteractionHandler {
     }
     
     // MARK: Audio Playback
-
+    
     func changePlaybackSpeed(for itemID: TimelineItemIdentifier) {
         let nextSpeed = appSettings.voiceMessagePlaybackSpeed.next
         appSettings.voiceMessagePlaybackSpeed = nextSpeed
         audioPlayerState(for: itemID)?.setPlaybackSpeed(nextSpeed)
     }
-
+    
     func playPauseAudio(for itemID: TimelineItemIdentifier) async {
         MXLog.info("Toggle play/pause audio for itemID \(itemID)")
         guard let timelineItem = timelineController.timelineItems.firstUsingStableID(itemID) else {
@@ -440,12 +438,12 @@ class TimelineInteractionHandler {
         }
         
         let audioPlayer = mediaPlayerProvider.player
-
+        
         // Stop any recording in progress
         if voiceMessageRecorder.isRecording {
             await voiceMessageRecorder.stopRecording()
         }
-
+        
         guard let audioPlayerState = audioPlayerState(for: itemID) else {
             fatalError("Audio player state not found for \(itemID)")
         }
@@ -454,16 +452,16 @@ class TimelineInteractionHandler {
         if !audioPlayerState.isAttached {
             audioPlayerState.attachAudioPlayer(audioPlayer)
         }
-
+        
         // Detach all other states
         await mediaPlayerProvider.detachAllStates(except: audioPlayerState)
-
+        
         guard audioPlayer.sourceURL == source.url, audioPlayer.state != .error else {
             // Load content
             do {
                 MXLog.info("Loading voice message audio content from source for itemID \(itemID)")
                 let url = try await userSession.voiceMessageMediaManager.loadVoiceMessageFromSource(source, body: nil)
-
+                
                 // Make sure that the player is still attached, as it may have been detached while waiting for the voice message to be loaded.
                 if audioPlayerState.isAttached {
                     audioPlayer.load(sourceURL: source.url, playbackURL: url, autoplay: true)
@@ -482,7 +480,7 @@ class TimelineInteractionHandler {
             audioPlayer.play()
         }
     }
-        
+    
     func seekAudio(for itemID: TimelineItemIdentifier, progress: Double) async {
         guard let playerState = mediaPlayerProvider.playerState(for: .timelineItemIdentifier(itemID)) else {
             return

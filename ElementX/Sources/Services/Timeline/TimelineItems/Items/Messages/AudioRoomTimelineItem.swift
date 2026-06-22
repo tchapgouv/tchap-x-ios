@@ -20,7 +20,7 @@ struct AudioRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     let sender: TimelineItemSender
     
     let content: AudioRoomTimelineItemContent
-
+    
     var properties = RoomTimelineItemProperties()
     
     var body: String {

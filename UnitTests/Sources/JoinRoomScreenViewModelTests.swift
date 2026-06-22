@@ -35,14 +35,12 @@ final class JoinRoomScreenViewModelTests {
     private let appSettings: AppSettings
     
     init() {
-        AppSettings.resetAllSettings()
-        appSettings = AppSettings()
+        appSettings = AppSettings.volatile()
     }
     
     deinit {
         viewModel = nil
         clientProxy = nil
-        AppSettings.resetAllSettings()
     }
     
     @Test
@@ -187,7 +185,7 @@ final class JoinRoomScreenViewModelTests {
             clientProxy.roomForIdentifierClosure = { _ in
                 let roomProxy = KnockedRoomProxyMock(.init())
                 // to test the cancel knock function
-                roomProxy.cancelKnockUnderlyingReturnValue = .success(())
+                roomProxy.cancelKnockReturnValue = .success(())
                 return .knocked(roomProxy)
             }
         case .joined:
@@ -211,7 +209,7 @@ final class JoinRoomScreenViewModelTests {
         viewModel = JoinRoomScreenViewModel(source: .generic(roomID: "1", via: []),
                                             appSettings: appSettings,
                                             userSession: UserSessionMock(.init(clientProxy: clientProxy)),
-                                            userIndicatorController: UserIndicatorControllerMock.default)
+                                            userIndicatorController: UserIndicatorControllerMock())
     }
 }
 

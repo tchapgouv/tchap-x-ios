@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Compound
 import SwiftUI
 
 struct RoomListFiltersView: View {
@@ -57,16 +58,17 @@ struct RoomListFiltersView: View {
     }
     
     private func clearButton(scrollViewProxy: ScrollViewProxy) -> some View {
-        Button(action: {
+        Button {
             withAnimation(.easeInOut(duration: 0.2).disabledDuringTests()) {
                 state.clearFilters()
                 scrollViewProxy.scrollTo(leadingID, anchor: .leading)
             }
-        }, label: {
-            Image(systemName: "xmark.circle.fill")
-                .font(.system(size: 24))
-                .foregroundColor(.compound.bgActionPrimaryRest)
-        })
+        } label: {
+            CompoundIcon(\.close, size: .xSmall, relativeTo: .compound.bodyLG)
+                .foregroundStyle(.compound.iconOnSolidPrimary)
+                .padding(4)
+                .background(.compound.bgActionPrimaryRest, in: .circle)
+        }
         .accessibilityLabel(L10n.screenRoomlistClearFilters)
     }
     
@@ -90,10 +92,10 @@ struct RoomListFiltersView: View {
 
 struct RoomListFiltersView_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
-        RoomListFiltersView(state: .constant(.init(appSettings: AppSettings())))
+        RoomListFiltersView(state: .constant(.init(appSettings: .volatile())))
         RoomListFiltersView(state: .constant(.init(activeFilters: [.rooms, .favourites],
-                                                   appSettings: AppSettings())))
+                                                   appSettings: .volatile())))
         RoomListFiltersView(state: .constant(.init(activeFilters: [.lowPriority],
-                                                   appSettings: AppSettings())))
+                                                   appSettings: .volatile())))
     }
 }

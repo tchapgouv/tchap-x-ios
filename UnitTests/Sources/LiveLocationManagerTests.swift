@@ -26,14 +26,6 @@ final class LiveLocationManagerTests {
     private var appSettings: AppSettings!
     private var beaconInfoSubject: PassthroughSubject<LiveLocationOwnInfoUpdate, Never>!
     
-    init() {
-        AppSettings.resetAllSettings()
-    }
-    
-    deinit {
-        AppSettings.resetAllSettings()
-    }
-    
     // MARK: - startLiveLocation
     
     @Test
@@ -194,24 +186,24 @@ final class LiveLocationManagerTests {
     }
     
     // MARK: - Beacon info updates
-
+    
     @Test
     func beaconInfoUpdateFromAnotherDeviceRemovesActiveSession() async throws {
         setUp()
         let roomProxy = makeRoomProxy(roomID: "!room:matrix.org")
         clientProxy.roomForIdentifierClosure = { _ in .joined(roomProxy) }
-
+        
         try await manager.startLiveLocation(roomID: "!room:matrix.org", duration: .seconds(300)).get()
         try await simulateBeaconEcho(roomID: "!room:matrix.org", eventID: "$event:matrix.org")
         #expect(appSettings.liveLocationSharingSessionsByRoomID["!room:matrix.org"] != nil)
-
+        
         let deferred = deferFulfillment(appSettings.$liveLocationSharingSessionsByRoomID) { $0["!room:matrix.org"] == nil }
         beaconInfoSubject.send(LiveLocationOwnInfoUpdate(roomID: "!room:matrix.org", eventID: "$external_event:matrix.org", isLive: true))
         try await deferred.fulfill()
-
+        
         #expect(appSettings.liveLocationSharingSessionsByRoomID["!room:matrix.org"] == nil)
     }
-
+    
     // MARK: - Reduced accuracy
     
     @Test
@@ -243,7 +235,7 @@ final class LiveLocationManagerTests {
     }
     
     private func setUp(accuracyAuthorization: CLAccuracyAuthorization = .fullAccuracy) {
-        appSettings = AppSettings()
+        appSettings = AppSettings.volatile()
         clientProxy = ClientProxyMock(.init())
         beaconInfoSubject = PassthroughSubject<LiveLocationOwnInfoUpdate, Never>()
         clientProxy.liveLocationOwnInfoUpdatesPublisher = beaconInfoSubject.eraseToAnyPublisher()

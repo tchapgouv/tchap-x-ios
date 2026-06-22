@@ -155,7 +155,7 @@ struct RoomHeaderView_Previews: PreviewProvider, TestablePreview {
                        dmRecipientVerificationState: verificationState,
                        roomHistorySharingState: historySharingState,
                        roomPropertiesBadgesView: .sample, // Tchap addition
-                       mediaProvider: MediaProviderMock(configuration: .init())) { }
+                       mediaProvider: MediaProviderMock(.init())) { }
             .padding()
     }
 }

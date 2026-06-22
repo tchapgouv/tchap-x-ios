@@ -27,15 +27,10 @@ final class AppLockScreenViewModelTests {
     }
     
     init() {
-        AppSettings.resetAllSettings()
-        appSettings = AppSettings()
+        appSettings = AppSettings.volatile()
         keychainController = KeychainControllerMock()
         appLockService = AppLockService(keychainController: keychainController, appSettings: appSettings)
         viewModel = AppLockScreenViewModel(appLockService: appLockService)
-    }
-    
-    deinit {
-        AppSettings.resetAllSettings()
     }
     
     @Test

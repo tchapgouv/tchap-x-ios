@@ -65,7 +65,7 @@ public class CompoundColors {
     }
     
     // MARK: - Decorative Colors
-
+    
     // Used to determine the background and text colors of avatars, usernames etc.
     
     let decorativeColors: [DecorativeColor]

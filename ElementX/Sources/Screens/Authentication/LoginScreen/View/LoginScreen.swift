@@ -102,7 +102,7 @@ struct LoginScreen: View {
             .onSubmit(submit)
             
             Spacer().frame(height: 32)
-
+            
             Button(action: submit) {
                 Text(L10n.actionContinue)
             }
@@ -168,14 +168,11 @@ struct LoginScreen_Previews: PreviewProvider, TestablePreview {
         
         Task { await authenticationService.configure(for: homeserverAddress, flow: .login) }
         
-        let appSettings = AppSettings()
-        let analytics = AnalyticsService.mock(settings: appSettings)
-        
         let viewModel = LoginScreenViewModel(authenticationService: authenticationService,
                                              loginHint: nil,
                                              userIndicatorController: UserIndicatorControllerMock(),
-                                             appSettings: appSettings,
-                                             analytics: analytics)
+                                             appSettings: .volatile(),
+                                             analytics: AnalyticsServiceMock(.init()))
         
         if withCredentials {
             viewModel.context.username = "alice"

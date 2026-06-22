@@ -15,7 +15,9 @@ struct HomeScreenContent: View {
     
     @ObservedObject var context: HomeScreenViewModel.Context
     let scrollViewAdapter: ScrollViewAdapter
-
+    
+    @State private var topSectionHeight: CGFloat = 0
+    
     // Tchap: `openURL` for tchap status page
     @Environment(\.openURL) private var openURL
 
@@ -50,7 +52,10 @@ struct HomeScreenContent: View {
                 case .rooms:
                     LazyVStack(spacing: 0) {
                         Section {
-                            if !context.viewState.shouldShowEmptyFilterState {
+                            if context.viewState.shouldShowEmptyFilterState {
+                                RoomListFiltersEmptyStateView(state: context.filtersState)
+                                    .frame(maxWidth: .infinity, minHeight: max(0, geometry.size.height - topSectionHeight))
+                            } else {
                                 HomeScreenRoomList(context: context)
                             }
                         } header: {
@@ -102,13 +107,6 @@ struct HomeScreenContent: View {
                     scrollView.setContentOffset(oldOffset, animated: false)
                 }
             }
-            .overlay {
-                if context.viewState.shouldShowEmptyFilterState {
-                    RoomListFiltersEmptyStateView(state: context.filtersState)
-                        .background(.compound.bgCanvasDefault)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-            }
             .scrollDismissesKeyboard(.immediately)
             .scrollDisabled(context.viewState.roomListMode == .skeletons)
             .scrollBounceBehavior(context.viewState.roomListMode == .empty ? .basedOnSize : .automatic)
@@ -135,6 +133,7 @@ struct HomeScreenContent: View {
                 }
             }
             .background(Color.compound.bgCanvasDefault)
+            .readHeight($topSectionHeight)
         }
     }
     

@@ -33,7 +33,7 @@ protocol RoomInfoProxyProtocol: BaseRoomInfoProxyProtocol {
     var topic: String? { get }
     /// The room's avatar URL. Use this for editing and favour ``avatar`` for display.
     var avatarURL: URL? { get }
-
+    
     var isEncrypted: Bool { get }
     var isDirect: Bool { get }
     var isDM: Bool { get }
@@ -58,6 +58,7 @@ protocol RoomInfoProxyProtocol: BaseRoomInfoProxyProtocol {
     var unreadMessagesCount: UInt { get }
     var unreadNotificationsCount: UInt { get }
     var unreadMentionsCount: UInt { get }
+    var fullyReadEventID: String? { get }
     var pinnedEventIDs: Set<String> { get }
     var joinRule: JoinRule? { get }
     var historyVisibility: RoomHistoryVisibility { get }

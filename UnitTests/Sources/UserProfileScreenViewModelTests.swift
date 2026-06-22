@@ -19,10 +19,8 @@ import Testing
 struct UserProfileScreenViewModelTests {
     @Test
     func initialState() async throws {
-        let appSettings = AppSettings()
-        let analytics = AnalyticsService.mock(settings: appSettings)
-        let userIndicatorController = UserIndicatorControllerMock.default
-
+        let userIndicatorController = UserIndicatorControllerMock()
+        
         let profile = UserProfileProxy(userID: "@alice:matrix.org", displayName: "Alice", avatarURL: .mockMXCAvatar)
         let clientProxy = ClientProxyMock(.init())
         clientProxy.profileForReturnValue = .success(profile)
@@ -31,8 +29,8 @@ struct UserProfileScreenViewModelTests {
                                                    isPresentedModally: false,
                                                    userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                                    userIndicatorController: userIndicatorController,
-                                                   analytics: analytics,
-                                                   appSettings: appSettings)
+                                                   analytics: AnalyticsServiceMock(.init()),
+                                                   appSettings: .volatile())
         let context = viewModel.context
         
         let waitForMemberToLoad = deferFulfillment(context.observe(\.viewState.userProfile)) { $0 != nil }
@@ -45,10 +43,8 @@ struct UserProfileScreenViewModelTests {
     
     @Test
     func initialStateAccountOwner() async throws {
-        let appSettings = AppSettings()
-        let analytics = AnalyticsService.mock(settings: appSettings)
-        let userIndicatorController = UserIndicatorControllerMock.default
-
+        let userIndicatorController = UserIndicatorControllerMock()
+        
         let profile = UserProfileProxy(userID: RoomMemberProxyMock.mockMe.userID, displayName: "Me", avatarURL: .mockMXCAvatar)
         let clientProxy = ClientProxyMock(.init())
         clientProxy.profileForReturnValue = .success(profile)
@@ -57,8 +53,8 @@ struct UserProfileScreenViewModelTests {
                                                    isPresentedModally: false,
                                                    userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                                    userIndicatorController: userIndicatorController,
-                                                   analytics: analytics,
-                                                   appSettings: appSettings)
+                                                   analytics: AnalyticsServiceMock(.init()),
+                                                   appSettings: .volatile())
         let context = viewModel.context
         
         let waitForMemberToLoad = deferFulfillment(context.observe(\.viewState.userProfile)) { $0 != nil }
@@ -71,10 +67,8 @@ struct UserProfileScreenViewModelTests {
     
     @Test
     func startingDmWithUnknownUserFetchesIdentity() async throws {
-        let appSettings = AppSettings()
-        let analytics = AnalyticsService.mock(settings: appSettings)
-        let userIndicatorController = UserIndicatorControllerMock.default
-
+        let userIndicatorController = UserIndicatorControllerMock()
+        
         let profile = UserProfileProxy.mockAlice
         
         let clientProxy = ClientProxyMock(.init())
@@ -85,8 +79,8 @@ struct UserProfileScreenViewModelTests {
                                                    isPresentedModally: false,
                                                    userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                                    userIndicatorController: userIndicatorController,
-                                                   analytics: analytics,
-                                                   appSettings: appSettings)
+                                                   analytics: AnalyticsServiceMock(.init()),
+                                                   appSettings: .volatile())
         
         let context = viewModel.context
         
@@ -94,7 +88,7 @@ struct UserProfileScreenViewModelTests {
         try await waitForMemberToLoad.fulfill()
         
         let deferred = deferFulfillment(context.observe(\.viewState.bindings).compactMap(\.inviteConfirmationUser), timeout: .seconds(5)) { $0.isUnknown }
-
+        
         context.send(viewAction: .openDirectChat)
         try await deferred.fulfill()
     }

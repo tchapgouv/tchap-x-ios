@@ -72,7 +72,7 @@ struct ImageRoomTimelineView: View {
             .timelineMediaFrame(imageInfo: timelineItem.content.thumbnailInfo ?? timelineItem.content.imageInfo)
         }
     }
-        
+    
     private var placeholder: some View {
         Rectangle()
             .foregroundColor(timelineItem.isOutgoing ? .compound._bgBubbleOutgoing : .compound._bgBubbleIncoming)
