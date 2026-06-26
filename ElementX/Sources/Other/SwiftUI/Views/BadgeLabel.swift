@@ -17,7 +17,9 @@ struct BadgeLabel: View {
     }
     
     let title: String
-    let icon: KeyPath<CompoundIcons, Image>
+    // :tchap: Make icon optional
+//    let icon: KeyPath<CompoundIcons, Image>
+    let icon: KeyPath<CompoundIcons, Image>? // :tchap:end
     let style: Style
     let tchapUsage: TchapBadgeLabelUsage? // Tchap: Tchap usage, nil if use ElementX default design.
 
@@ -26,25 +28,42 @@ struct BadgeLabel: View {
         tchapUsage?.iconSize ?? .xSmall
     }
 
-    // Tchap: convenience init for tchapUsage default value.
-    init(title: String, icon: KeyPath<CompoundIcons, Image>, style: Style, tchapUsage: TchapBadgeLabelUsage? = nil) {
+    // :tchap: convenience init for tchapUsage default value, icon is now optional
+    init(title: String, icon: KeyPath<CompoundIcons, Image>? = nil, style: Style, tchapUsage: TchapBadgeLabelUsage? = nil) {
         self.title = title
         self.icon = icon
         self.style = style
         self.tchapUsage = tchapUsage
-    }
+    } // :tchap:end
     
     var body: some View {
-        Label(title,
-              icon: icon,
-              iconSize: iconSize, // Tchap: use our own icon size
-              relativeTo: .compound.bodySM)
-            .labelStyle(LabelStyle(style: style, tchapUsage: tchapUsage)) // Tchap: add tchapUsage property
+        // :tchap: Custom body
+//        Label(title,
+//              icon: icon,
+//              iconSize: .xSmall,
+//              relativeTo: .compound.bodySM)
+//            .labelStyle(LabelStyle(style: style))
+        Group {
+            if let icon {
+                Label(title,
+                      icon: icon,
+                      iconSize: iconSize,
+                      relativeTo: .compound.bodySM)
+            } else {
+                Label {
+                    Text(title)
+                } icon: {
+                    EmptyView()
+                }
+            }
+        }
+        .labelStyle(LabelStyle(style: style, tchapUsage: tchapUsage, hasIcon: icon != nil)) // :tchap:end
     }
     
     private struct LabelStyle: SwiftUI.LabelStyle {
         let style: Style
         let tchapUsage: TchapBadgeLabelUsage? // Tchap: add Tchap usage, nil if use ElementX default design.
+        let hasIcon: Bool // :tchap: track if we have an icon
         
         var titleColor: Color {
             // Tchap: evaluate our own color
@@ -100,8 +119,13 @@ struct BadgeLabel: View {
     
         func makeBody(configuration: Configuration) -> some View {
             HStack(spacing: 4) {
-                configuration.icon
-                    .foregroundStyle(iconColor)
+                // :tchap: only show icon if present
+//                configuration.icon
+//                    .foregroundStyle(iconColor)
+                if hasIcon {
+                    configuration.icon
+                        .foregroundStyle(iconColor)
+                } // :tchap:end
                 configuration.title
                     .foregroundStyle(titleColor)
             }

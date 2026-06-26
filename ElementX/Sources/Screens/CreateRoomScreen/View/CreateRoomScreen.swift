@@ -231,8 +231,13 @@ struct CreateRoomScreen: View {
                                     description: TchapL10n.screenCreateRoomPrivateEncryptedOptionDescription,
                                     icon: \.lockSolid,
                                     role: .coloredIcon(CompoundCoreColorTokens.green800),
-                                    iconAlignment: .top),
-                    kind: .selection(isSelected: context.selectedAccessType == .private) { context.selectedAccessType = .private; context.isRoomFederated = true; context.isAccessViaLinkEnabled = false })
+                                    iconAlignment: .top,
+                                    badge: AnyView(BadgeLabel(title: L10n.commonSuggested.uppercased(), style: .info, tchapUsage: .recommendedOption))),
+                    kind: .selection(isSelected: context.selectedAccessType == .private) {
+                        context.selectedAccessType = .private
+                        context.isRoomFederated = true
+                        context.isAccessViaLinkEnabled = false
+                    })
             ListRow(label: .default(title: TchapL10n.screenCreateRoomPrivateOptionTitle,
                                     description: TchapL10n.screenCreateRoomPrivateOptionDescription,
                                     icon: \.lockOff,

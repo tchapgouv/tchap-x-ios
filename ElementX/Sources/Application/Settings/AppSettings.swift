@@ -634,7 +634,7 @@ final class AppSettings: @unchecked Sendable {
         _developerOptionsEnabled = UserPreference(key: .developerOptionsEnabled, defaultValue: Self.appBuildType != .release, storage: store)
         // :tchap: UserDefault for tchap settings
         _hasRunTchapWelcomeOnboarding = UserPreference(key: .hasRunTchapWelcomeOnboarding, defaultValue: false, storage: store)
-     }
+    }
     
     static func volatile() -> AppSettings {
         AppSettings(store: VolatileUserDefaults())

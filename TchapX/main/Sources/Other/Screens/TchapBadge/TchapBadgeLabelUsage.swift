@@ -17,6 +17,7 @@ public enum TchapBadgeLabelUsage {
     case roomIsNotEncrypted(useSmallSize: Bool = false)
     case roomIsPublic(useSmallSize: Bool = false)
     case roomIsAccessibleToExternals(useSmallSize: Bool = false)
+    case recommendedOption // Tchap: badge for recommended room creation option
 
     // Tchap: evaluate our own icon size
     var iconSize: CompoundIcon.Size {
@@ -27,6 +28,7 @@ public enum TchapBadgeLabelUsage {
         case .roomIsNotEncrypted(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
         case .roomIsPublic(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
         case .roomIsAccessibleToExternals(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
+        case .recommendedOption: .custom(9.0)
         }
     }
 
@@ -38,6 +40,7 @@ public enum TchapBadgeLabelUsage {
         case .roomIsNotEncrypted: .compound.textBadgeDefault
         case .roomIsPublic: .compound.textBadgeDefault
         case .roomIsAccessibleToExternals: .compound.textBadgeExternal
+        case .recommendedOption: .compound.textPrimary
         }
     }
 
@@ -49,6 +52,7 @@ public enum TchapBadgeLabelUsage {
         case .roomIsNotEncrypted: .compound.iconBadgeDefault
         case .roomIsPublic: .compound.iconBadgeDefault
         case .roomIsAccessibleToExternals: .compound.iconBadgeExternal
+        case .recommendedOption: .compound.iconPrimary
         }
     }
 
@@ -60,6 +64,7 @@ public enum TchapBadgeLabelUsage {
         case .roomIsNotEncrypted: .compound.bgBadgeDefault
         case .roomIsPublic: .compound.bgBadgeDefault
         case .roomIsAccessibleToExternals: .compound.bgBadgeExternal
+        case .recommendedOption: .compound.bgBadgeDefault
         }
     }
 
@@ -77,6 +82,8 @@ public enum TchapBadgeLabelUsage {
             if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
         case .roomIsAccessibleToExternals(let useSmallSize):
             if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
+        case .recommendedOption:
+            .system(size: 9.0).bold()
         }
     }
     
@@ -88,6 +95,7 @@ public enum TchapBadgeLabelUsage {
              .roomIsAccessibleToExternals(let useSmallSize):
             if useSmallSize == true { 4.0 } else { 8.0 }
         case .inviteByEmail: 0.0
+        case .recommendedOption: 4.0
         }
     }
     
@@ -100,6 +108,7 @@ public enum TchapBadgeLabelUsage {
              .roomIsAccessibleToExternals(let useSmallSize):
             if useSmallSize == true { 5.0 } else { 12.0 }
         case .inviteByEmail: 0.0
+        case .recommendedOption: 5.0
         }
     }
     
@@ -112,6 +121,7 @@ public enum TchapBadgeLabelUsage {
              .roomIsPublic(let useSmallSize),
              .roomIsAccessibleToExternals(let useSmallSize):
             if useSmallSize == true { 2.0 } else { 4.0 }
+        case .recommendedOption: 2.0
         }
     }
 }

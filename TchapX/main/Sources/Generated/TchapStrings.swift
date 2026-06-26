@@ -71,13 +71,13 @@ internal enum TchapL10n {
   /// This room contains external members.
   internal static var screenCreateRoomExternalsArePresentsWarning: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_externals_are_presents_warning") }
   /// • End-to-end encrypted
-  /// - Only people invited can access this room
-  /// - Advised up to 500 members
+  /// • Only people invited can access this room
+  /// • Advised up to 500 members
   internal static var screenCreateRoomPrivateEncryptedOptionDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_private_encrypted_option_description") }
   /// Private secured room
   internal static var screenCreateRoomPrivateEncryptedOptionTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_private_encrypted_option_title") }
-  /// - Not end-to-end encrypted
-  /// - Only people invited can access this room
+  /// • Not end-to-end encrypted
+  /// • Only people invited can access this room
   internal static var screenCreateRoomPrivateOptionDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_private_option_description") }
   /// Private room
   internal static var screenCreateRoomPrivateOptionTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_private_option_title") }
@@ -85,7 +85,7 @@ internal enum TchapL10n {
   /// • Visible in the list of rooms
   /// 
   internal static var screenCreateRoomPublicOptionDescription1: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_public_option_description_1") }
-  /// • Not allwed to external guests
+  /// • Not allowed to external guests
   internal static var screenCreateRoomPublicOptionDescription2: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_public_option_description_2") }
   /// Public room
   internal static var screenCreateRoomPublicOptionTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_create_room_public_option_title") }

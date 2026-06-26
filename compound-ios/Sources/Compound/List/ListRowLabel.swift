@@ -59,6 +59,7 @@ public struct ListRowLabel<Icon: View>: View {
     // Tchap: add attributed description to replace description if needed.
     var attributedDescriptionWhenDisabled: AttributedString?
     var icon: Icon?
+    var badge: AnyView? // :tchap: add badge support
     
     var role: Role?
     // Tchap: make `Role` takes an additional value `coloredIcon`.
@@ -194,6 +195,11 @@ public struct ListRowLabel<Icon: View>: View {
                         .foregroundColor(titleColor)
                         .lineLimit(titleLineLimit)
                     
+                    // :tchap: show badge if provided
+                    if let badge {
+                        badge
+                    } // :tchap:end:
+                    
                     // Status is only available in the avatar init which requires a title,
                     // so no need to worry about the outer `if let` being nil in this instance.
                     if let status {
@@ -248,11 +254,13 @@ public struct ListRowLabel<Icon: View>: View {
                                  attributedDescriptionWhenDisabled: AttributedString? = nil, // Tchap: add `attributedDescriptionWhenDisabled` parameter
                                  icon: Icon,
                                  role: ListRowLabel.Role? = nil,
-                                 iconAlignment: VerticalAlignment = .top) -> ListRowLabel {
+                                 iconAlignment: VerticalAlignment = .top,
+                                 badge: AnyView? = nil) -> ListRowLabel { // :tchap: add badge parameter
         ListRowLabel(title: title,
                      description: description,
                      attributedDescriptionWhenDisabled: attributedDescriptionWhenDisabled, // Tchap: add `attributedDescriptionWhenDisabled` parameter
                      icon: icon,
+                     badge: badge, // :tchap: add badge
                      role: role,
                      iconAlignment: iconAlignment)
     }
@@ -262,13 +270,15 @@ public struct ListRowLabel<Icon: View>: View {
                                  attributedDescriptionWhenDisabled: AttributedString? = nil, // Tchap: add `attributedDescription` parameter
                                  icon: KeyPath<CompoundIcons, Image>,
                                  role: ListRowLabel.Role? = nil,
-                                 iconAlignment: VerticalAlignment = .top) -> ListRowLabel where Icon == CompoundIcon {
+                                 iconAlignment: VerticalAlignment = .top,
+                                 badge: AnyView? = nil) -> ListRowLabel where Icon == CompoundIcon { // :tchap: add badge parameter
         .default(title: title,
                  description: description,
                  attributedDescriptionWhenDisabled: attributedDescriptionWhenDisabled, // Tchap: add `attributedDescriptionWhenDisabled` parameter
                  icon: CompoundIcon(icon),
                  role: role,
-                 iconAlignment: iconAlignment)
+                 iconAlignment: iconAlignment,
+                 badge: badge) // :tchap: add badge
     }
     
     public static func `default`(title: String,
