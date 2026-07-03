@@ -313,7 +313,7 @@ targets:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx
       PRODUCTION_APP_NAME: TchapX PRODUCTION
       APP_NAME: TchapX-Production
-      APP_DISPLAY_NAME: Tchap X # The name used in the application.
+      APP_DISPLAY_NAME: Tchap # The name used in the application.
       CODE_SIGN_ENTITLEMENTS: TchapX/production/SupportingFiles/tchapx.entitlements
       OTHER_SWIFT_FLAGS: $(inherited) -D IS_MAIN_APP -D IS_TCHAP_PRODUCTION
 
@@ -474,7 +474,7 @@ targets:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.dev
       PRODUCTION_APP_NAME: TchapX DEVELOPMENT
       APP_NAME: TchapX-Development
-      APP_DISPLAY_NAME: Tchap X Dev # The name used in the application.
+      APP_DISPLAY_NAME: Tchap Dev # The name used in the application.
       CODE_SIGN_ENTITLEMENTS: TchapX/development/SupportingFiles/tchapx.entitlements
       OTHER_SWIFT_FLAGS: $(inherited) -D IS_MAIN_APP -D IS_TCHAP_DEVELOPMENT
 
