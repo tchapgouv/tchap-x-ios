@@ -105,7 +105,7 @@ final class AppSettings: @unchecked Sendable {
         #if DEBUG
         return .debug
         #else
-        // Tchap: we only build debug and release versions (production, staging and development are flavors, not build types).
+        // Tchap: we only build debug and release versions (production, preprod and development are flavors, not build types).
 //        switch InfoPlistReader.main.baseBundleIdentifier {
 //        case "io.element.elementx.nightly":
 //            return .nightly
@@ -198,7 +198,7 @@ final class AppSettings: @unchecked Sendable {
         "dev02.tchap.incubateur.net",
         "ext01.tchap.incubateur.net"
     ]
-    #elseif IS_TCHAP_STAGING
+    #elseif IS_TCHAP_PREPROD
     private(set) var accountProviders = ["i.tchap.gouv.fr",
                                          "a.tchap.gouv.fr",
                                          "e.tchap.gouv.fr"]
@@ -238,7 +238,7 @@ final class AppSettings: @unchecked Sendable {
     /// A URL where users can go read more about the app.
     #if IS_TCHAP_PRODUCTION
     private(set) var websiteURL: URL = "https://tchap.gouv.fr"
-    #elseif IS_TCHAP_STAGING
+    #elseif IS_TCHAP_PREPROD
     private(set) var websiteURL: URL = "https://beta.tchap.gouv.fr"
     #elseif IS_TCHAP_DEVELOPMENT
     private(set) var websiteURL: URL = "https://tchap.incubateur.net"
@@ -285,7 +285,7 @@ final class AppSettings: @unchecked Sendable {
     /// Any domains that Element web may be hosted on - used for handling links.
     #if IS_TCHAP_DEVELOPMENT
     private(set) var elementWebHosts = ["tchap.incubateur.net", "www.tchap.incubateur.net"]
-    #elseif IS_TCHAP_STAGING
+    #elseif IS_TCHAP_PREPROD
     private(set) var elementWebHosts = ["beta.tchap.gouv.fr", "app.preprod.tchap.gouv.fr", "www.beta.tchap.gouv.fr", "www.app.preprod.tchap.gouv.fr"]
     #elseif IS_TCHAP_PRODUCTION
     private(set) var elementWebHosts = ["tchap.gouv.fr", "www.tchap.gouv.fr"]
@@ -326,7 +326,7 @@ final class AppSettings: @unchecked Sendable {
     // It seemd the MAS need an oauth redirect url the match the domain name in reverse notation.
     #if IS_TCHAP_DEVELOPMENT
     private(set) var oAuthRedirectURL: URL = "net.incubateur.tchap.ios:/"
-    #elseif IS_TCHAP_STAGING
+    #elseif IS_TCHAP_PREPROD
     private(set) var oAuthRedirectURL: URL = "fr.gouv.tchap.beta.ios:/"
     #elseif IS_TCHAP_PRODUCTION
     private(set) var oAuthRedirectURL: URL = "fr.gouv.tchap.ios:/"
@@ -365,7 +365,7 @@ final class AppSettings: @unchecked Sendable {
 //    private(set) var pushGatewayBaseURL: URL = "https://matrix.org"
     #if IS_TCHAP_DEVELOPMENT
     var pushGatewayBaseURL: URL = "https://sygnal.tchap.incubateur.net"
-    #elseif IS_TCHAP_STAGING
+    #elseif IS_TCHAP_PREPROD
     var pushGatewayBaseURL: URL = "https://sygnal.preprod.tchap.gouv.fr"
     #elseif IS_TCHAP_PRODUCTION
     var pushGatewayBaseURL: URL = "https://sygnal.tchap.gouv.fr"
@@ -416,8 +416,8 @@ final class AppSettings: @unchecked Sendable {
     /// The name allocated by the bug report server
     #if IS_TCHAP_DEVELOPMENT
     private(set) var bugReportApplicationID = "tchap-x-development-ios"
-    #elseif IS_TCHAP_STAGING
-    private(set) var bugReportApplicationID = "tchap-x-staging-ios"
+    #elseif IS_TCHAP_PREPROD
+    private(set) var bugReportApplicationID = "tchap-x-preprod-ios"
     #elseif IS_TCHAP_PRODUCTION
     private(set) var bugReportApplicationID = "tchap-x-production-ios"
     #else
@@ -518,7 +518,7 @@ final class AppSettings: @unchecked Sendable {
     
     /// The locally-bundled MapTiler configuration.
     // Tchap: customize map tiler url for Tchap.
-    #if IS_TCHAP_DEVELOPMENT || IS_TCHAP_STAGING || IS_TCHAP_PRODUCTION
+    #if IS_TCHAP_DEVELOPMENT || IS_TCHAP_PREPROD || IS_TCHAP_PRODUCTION
     private enum TchapMapProvider: String {
         case geoDataGouv = "https://openmaptiles.geo.data.gouv.fr/styles"
         case ign = "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"

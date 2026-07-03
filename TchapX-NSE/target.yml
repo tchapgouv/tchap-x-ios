@@ -29,7 +29,7 @@ schemes:
   TchapX-Production-NSE:
     templates:
       - BaseScheme-NSE
-  TchapX-Staging-NSE:
+  TchapX-Preprod-NSE:
     templates:
       - BaseScheme-NSE
   TchapX-Development-NSE:
@@ -163,27 +163,27 @@ targets:
     sources:
     - path: production/SupportingFiles
 #--------------------------------------------------------------------------------
-  TchapX-Staging-NSE:
+  TchapX-Preprod-NSE:
     templates: 
       - BaseTarget-NSE
 
     info:
-      path: staging/SupportingFiles/Info.plist
+      path: preprod/SupportingFiles/Info.plist
 
     entitlements:
-      path: staging/SupportingFiles/NSE.entitlements
+      path: preprod/SupportingFiles/NSE.entitlements
 
     settings:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.staging
-      PRODUCTION_APP_NAME: TchapX-Staging NSE
-      APP_NAME: TchapX-Staging-NSE
-      APP_DISPLAY_NAME: TchapX-Staging NSE
-      PRODUCT_NAME: TchapX-Staging-NSE
-      CODE_SIGN_ENTITLEMENTS: TchapX-NSE/staging/SupportingFiles/NSE.entitlements
-      OTHER_SWIFT_FLAGS: $(inherited) -D IS_NSE -D IS_TCHAP_STAGING
+      PRODUCTION_APP_NAME: TchapX-Preprod NSE
+      APP_NAME: TchapX-Preprod-NSE
+      APP_DISPLAY_NAME: TchapX-Preprod NSE
+      PRODUCT_NAME: TchapX-Preprod-NSE
+      CODE_SIGN_ENTITLEMENTS: TchapX-NSE/preprod/SupportingFiles/NSE.entitlements
+      OTHER_SWIFT_FLAGS: $(inherited) -D IS_NSE -D IS_TCHAP_PREPROD
         
     sources:
-    - path: staging/SupportingFiles
+    - path: preprod/SupportingFiles
 #--------------------------------------------------------------------------------
   TchapX-Development-NSE:
     templates: 

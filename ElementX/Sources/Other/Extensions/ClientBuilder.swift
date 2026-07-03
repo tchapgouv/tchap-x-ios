@@ -65,7 +65,7 @@ extension ClientBuilder {
             builder = builder.proxy(url: httpProxy)
         }
         
-        #if IS_TCHAP_PRODUCTION || IS_TCHAP_STAGING || IS_TCHAP_DEVELOPEMENT
+        #if IS_TCHAP_PRODUCTION || IS_TCHAP_PREPROD || IS_TCHAP_DEVELOPEMENT
         // Tchap: check certificate pinning if activated.
         if TchapFeatureFlag.Configuration.certificatePinning.isActivated(for: .all) {
             let pemCertificates = InfoPlistReader.app.embeddedPemCertificates

@@ -88,7 +88,7 @@ extension TchapFeatureFlag {
         case culture = "agent.culture.tchap.gouv.fr"
         case devDurable = "agent.dev-durable.tchap.gouv.fr"
         case education = "agent.education.tchap.gouv.fr"
-        #elseif IS_TCHAP_STAGING
+        #elseif IS_TCHAP_PREPROD
         case interne = "i.tchap.gouv.fr"
         case interne2 = "a.tchap.gouv.fr"
         case externe = "e.tchap.gouv.fr"
@@ -117,7 +117,7 @@ extension TchapFeatureFlag {
 
         /// enableMAS feature flag can only be activated for .all or none because it is used before any activated session.
         static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
-        #elseif IS_TCHAP_STAGING
+        #elseif IS_TCHAP_PREPROD
         // CertificatePinning feature flag can only be activated for .all or none because it is used before any activated session.
         // See `TchapX/target.yml` file to know how to generate certificate pinning.
         static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])

@@ -46,7 +46,7 @@ schemes:
           defaultPlan: false
         - path: PreviewTests/SupportingFiles/PreviewTests.xctestplan
           defaultPlan: false
-  TchapX-Staging:
+  TchapX-Preprod:
     templates:
       - BaseScheme
     test:
@@ -356,16 +356,16 @@ targets:
         - target.yml
         - NSE
 #--------------------------------------------------------------------------------
-  TchapX-Staging:
+  TchapX-Preprod:
     templates: 
       - BaseTarget
 
     configFiles:
-      Debug: staging/SupportingFiles/secrets.xcconfig
-      Release: staging/SupportingFiles/secrets.xcconfig
+      Debug: preprod/SupportingFiles/secrets.xcconfig
+      Release: preprod/SupportingFiles/secrets.xcconfig
 
     info:
-      path: staging/SupportingFiles/Info.plist
+      path: preprod/SupportingFiles/Info.plist
       properties:
         BGTaskSchedulerPermittedIdentifiers: [
           $(BASE_BUNDLE_IDENTIFIER).background.refresh
@@ -398,15 +398,15 @@ targets:
         }
 
     entitlements:
-      path: staging/SupportingFiles/tchapx.entitlements
+      path: preprod/SupportingFiles/tchapx.entitlements
 
     settings:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.staging
-      PRODUCTION_APP_NAME: TchapX STAGING
-      APP_NAME: TchapX-Staging
-      APP_DISPLAY_NAME: Tchap X Staging # The name used in the application.
-      CODE_SIGN_ENTITLEMENTS: TchapX/staging/SupportingFiles/tchapx.entitlements
-      OTHER_SWIFT_FLAGS: $(inherited) -D IS_MAIN_APP -D IS_TCHAP_STAGING
+      PRODUCTION_APP_NAME: TchapX PREPROD
+      APP_NAME: TchapX-Preprod
+      APP_DISPLAY_NAME: Tchap Preprod # The name used in the application.
+      CODE_SIGN_ENTITLEMENTS: TchapX/preprod/SupportingFiles/tchapx.entitlements
+      OTHER_SWIFT_FLAGS: $(inherited) -D IS_MAIN_APP -D IS_TCHAP_PREPROD
 
       # configuration to load accounts from Tchap Classic.
       CLASSIC_APP_GROUP_IDENTIFIER: group.fr.gouv.btchap
@@ -427,7 +427,7 @@ targets:
             # inject Xcode target into switgen-config-tchap yaml file.
             source_file="Tools/SwiftGen/swiftgen-config-tchap-target.yml"
             target_file="Tools/SwiftGen/swiftgen-config-tchap-target.tmp"
-            scheme="staging"
+            scheme="preprod"
             rm -f $target_file
             sed "s/%TARGET%/${scheme}/" $source_file > $target_file
             swiftgen config run --config $target_file
@@ -437,12 +437,12 @@ targets:
         fi
 
     dependencies:
-    - target: TchapX-Staging-NSE
-    - target: TchapX-Staging-ShareExtension
+    - target: TchapX-Preprod-NSE
+    - target: TchapX-Preprod-ShareExtension
 
     sources:
-    - path: staging/Resources
-    - path: staging/SupportingFiles
+    - path: preprod/Resources
+    - path: preprod/SupportingFiles
       excludes:
         - target.yml
         - NSE

@@ -30,7 +30,7 @@ schemes:
   TchapX-Production-ShareExtension:
     templates:
       - BaseScheme-ShareExtension
-  TchapX-Staging-ShareExtension:
+  TchapX-Preprod-ShareExtension:
     templates:
       - BaseScheme-ShareExtension
   TchapX-Development-ShareExtension:
@@ -135,24 +135,24 @@ targets:
     sources:
     - path: production/SupportingFiles
 #--------------------------------------------------------------------------------
-  TchapX-Staging-ShareExtension:
+  TchapX-Preprod-ShareExtension:
     templates: 
       - BaseTarget-ShareExtension
 
     info:
-      path: staging/SupportingFiles/Info.plist
+      path: preprod/SupportingFiles/Info.plist
 
     entitlements:
-      path: staging/SupportingFiles/ShareExtension.entitlements
+      path: preprod/SupportingFiles/ShareExtension.entitlements
 
     settings:
       BASE_BUNDLE_IDENTIFIER: fr.gouv.tchapx.staging
-      APP_DISPLAY_NAME: TchapX-Staging ShareExtension
-      PRODUCT_NAME: TchapX-Staging-ShareExtension
-      CODE_SIGN_ENTITLEMENTS: TchapX-ShareExtension/staging/SupportingFiles/ShareExtension.entitlements
+      APP_DISPLAY_NAME: TchapX-Preprod ShareExtension
+      PRODUCT_NAME: TchapX-Preprod-ShareExtension
+      CODE_SIGN_ENTITLEMENTS: TchapX-ShareExtension/preprod/SupportingFiles/ShareExtension.entitlements
 
     sources:
-    - path: staging/SupportingFiles
+    - path: preprod/SupportingFiles
 #--------------------------------------------------------------------------------
   TchapX-Development-ShareExtension:
     templates: 
