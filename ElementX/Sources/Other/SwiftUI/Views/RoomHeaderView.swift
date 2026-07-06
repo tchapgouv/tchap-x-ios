@@ -32,7 +32,8 @@ struct RoomHeaderView: View {
                 // the Button styling results in a view that is slightly taller than a bar item should be.
                 .padding(6)
                 .padding(.trailing, 6)
-                .glassEffect(.regular.interactive())
+                // :tchap: remove glass effect on iOS 26 header
+//                .glassEffect(.regular.interactive()) :tchap:end
                 .roomHeaderAction(action)
         } else {
             // On iOS 18 and lower, the editor role causes an animation glitch with the back button whenever
