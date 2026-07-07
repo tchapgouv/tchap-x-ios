@@ -194,12 +194,9 @@ final class AppSettings: @unchecked Sendable {
     // match the last part of the user ID. For example `example.com` and not `https://matrix.example.com`.
     #if IS_TCHAP_DEVELOPMENT
     private(set) var accountProviders = [
-        "dev01.tchap.incubateur.net",
-        "dev02.tchap.incubateur.net",
-        "ext01.tchap.incubateur.net",
-        "matrix.internal01.dev.tchap.incubateur.net",
-        "matrix.internal02.dev.tchap.incubateur.net",
-        "matrix.external01.dev.tchap.incubateur.net"
+        "internal01.dev.tchap.incubateur.net",
+        "internal02.dev.tchap.incubateur.net",
+        "external01.dev.tchap.incubateur.net"
     ]
     #elseif IS_TCHAP_PREPROD
     private(set) var accountProviders = ["i.tchap.gouv.fr",

@@ -93,11 +93,9 @@ extension TchapFeatureFlag {
         case interne2 = "a.tchap.gouv.fr"
         case externe = "e.tchap.gouv.fr"
         #elseif IS_TCHAP_DEVELOPMENT
-        case dev01 = "dev01.tchap.incubateur.net"
-        case dev02 = "dev02.tchap.incubateur.net"
-        case internal01 = "matrix.internal01.dev.tchap.incubateur.net"
-        case internal02 = "matrix.internal02.dev.tchap.incubateur.net"
-        case external01 = "matrix.external01.dev.tchap.incubateur.net"
+        case internal01 = "internal01.dev.tchap.incubateur.net"
+        case internal02 = "internal02.dev.tchap.incubateur.net"
+        case external01 = "external01.dev.tchap.incubateur.net"
         #endif
         case all // To allow a feature for any instance
 
