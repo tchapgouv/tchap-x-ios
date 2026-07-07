@@ -182,6 +182,8 @@ internal enum TchapL10n {
   /// On mobile, view your spaces and accept invitations.
   /// Creation and management are done on a computer.
   internal static var screenSpacesEmptyViewDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_spaces_empty_view_description") }
+  /// Creation and management are done on a computer.
+  internal static var screenSpacesEmptyViewDescriptionShort: String { return TchapL10n.tr("TchapLocalizable", "screen_spaces_empty_view_description_short") }
   /// Toutes les conversations
   internal static var screenSpacesHomeDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_spaces_home_description") }
   /// Accueil

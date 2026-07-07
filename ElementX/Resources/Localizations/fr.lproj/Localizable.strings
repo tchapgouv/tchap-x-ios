@@ -1490,7 +1490,7 @@
 "screen_signout_save_recovery_key_title" = "Assurez-vous d'avoir accès à votre code de récupération avant de supprimer cet appareil."; // Tchap 
 "screen_space_add_room_action" = "Salon";
 "screen_space_add_rooms_room_access_description" = "Ajouter un salon ne changera pas l'accès au salon. Pour modifier l'accès, aller dans les paramètres du salon puis dans Sécurité & confidentialité.";
-"screen_space_empty_state_title" = "Ajoutez votre premier salon";
+"screen_space_empty_state_title" = "Aucun salon dans cet espace"; // Tchap
 "screen_space_list_description" = "Espaces que vous avez créés ou rejoints.";
 "screen_space_list_details" = "%1$@ • %2$@";
 "screen_space_list_empty_state_title" = "Espaces"; // Tchap

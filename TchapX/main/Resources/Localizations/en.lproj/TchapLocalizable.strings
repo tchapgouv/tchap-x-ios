@@ -110,6 +110,7 @@ screen_spaces_home_title = "Accueil";
 screen_spaces_home_description = "Toutes les conversations";
 screen_spaces_empty_view_description = "On mobile, view your spaces and accept invitations.
 Creation and management are done on a computer.";
+screen_spaces_empty_view_description_short = "Creation and management are done on a computer.";
 
 // Offline Banner
 screen_home_offline_banner_title = "Connection failed";

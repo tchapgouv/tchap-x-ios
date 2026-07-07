@@ -1491,7 +1491,7 @@
 "screen_signout_save_recovery_key_title" = "Make sure you have access to your recovery key before removing this device";
 "screen_space_add_room_action" = "Room";
 "screen_space_add_rooms_room_access_description" = "Adding a room will not affect the room access. To change the access go to Room settings > Security & privacy.";
-"screen_space_empty_state_title" = "Add your first room";
+"screen_space_empty_state_title" = "No room in this space"; // Tchap
 "screen_space_list_description" = "Spaces you have created or joined.";
 "screen_space_list_details" = "%1$@ • %2$@";
 "screen_space_list_empty_state_title" = "Spaces"; // Tchap

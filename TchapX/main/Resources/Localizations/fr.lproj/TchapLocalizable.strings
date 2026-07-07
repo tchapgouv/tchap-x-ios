@@ -108,6 +108,7 @@ room_details_copy_link_error = "Impossible de copier le lien";
 // Spaces
 screen_spaces_empty_view_description = "Sur mobile, consultez vos espaces et acceptez des invitations.
 La création et la gestion se font sur ordinateur.";
+screen_spaces_empty_view_description_short = "La création et la gestion se font sur ordinateur.";
 
 // Offline Banner
 screen_home_offline_banner_title = "Connexion impossible";
