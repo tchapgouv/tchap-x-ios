@@ -1493,7 +1493,7 @@
 "screen_space_empty_state_title" = "Ajoutez votre premier salon";
 "screen_space_list_description" = "Espaces que vous avez créés ou rejoints.";
 "screen_space_list_details" = "%1$@ • %2$@";
-"screen_space_list_empty_state_title" = "Créer des espaces pour organiser les salons";
+"screen_space_list_empty_state_title" = "Espaces"; // Tchap
 "screen_space_list_parent_space" = "Espace %1$@";
 "screen_space_list_title" = "Espaces";
 "screen_space_menu_action_members" = "Voir les membres";

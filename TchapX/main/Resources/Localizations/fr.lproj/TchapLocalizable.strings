@@ -105,6 +105,10 @@ room_details_activate_access_by_link_title = "Activate access by link for this r
 room_details_activate_access_by_link_message = "If you activate the access by link, everyone having the link will be able to share it and join the room without invitation.\n\nExternal users will still have to be invited manually to the room.";
 room_details_copy_link_error = "Impossible de copier le lien";
 
+// Spaces
+screen_spaces_empty_view_description = "Sur mobile, consultez vos espaces et acceptez des invitations.
+La création et la gestion se font sur ordinateur.";
+
 // Offline Banner
 screen_home_offline_banner_title = "Connexion impossible";
 screen_home_offline_banner_description = "Vérifiez l’état du service pour vous assurer que le problème ne dépend pas de votre appareil.";

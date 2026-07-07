@@ -38,14 +38,25 @@ struct SpacesScreen: View {
     
     private var emptyState: some View {
         FullscreenDialog(horizontalPadding: 24) {
-            TitleAndIcon(title: L10n.screenSpaceListEmptyStateTitle,
-                         icon: \.spaceSolid,
-                         iconStyle: .defaultSolid)
-        } bottomContent: {
-            Button(L10n.actionCreateSpace) {
-                context.send(viewAction: .createSpace)
+            // :tchap: Add empty space description
+//            TitleAndIcon(title: L10n.screenSpaceListEmptyStateTitle,
+//                        icon: \.spaceSolid,
+//                        iconStyle: .defaultSolid)
+            VStack(spacing: 24) {
+                TitleAndIcon(title: L10n.screenSpaceListEmptyStateTitle,
+                             icon: \.spaceSolid,
+                             iconStyle: .defaultSolid)
+                
+                Text(TchapL10n.screenSpacesEmptyViewDescription)
+                    .font(.compound.bodyMD)
+                    .foregroundStyle(.compound.textPrimary)
+                    .multilineTextAlignment(.center) // :tchap:end
             }
-            .buttonStyle(.compound(.primary))
+        } bottomContent: {
+//            Button(L10n.actionCreateSpace) {
+//                context.send(viewAction: .createSpace)
+//            }
+//            .buttonStyle(.compound(.primary))
         }
     }
     
@@ -159,13 +170,14 @@ struct SpacesScreen: View {
         .backportSharedBackgroundVisibility(.hidden)
         
         ToolbarItem(placement: .navigationBarTrailing) {
-            Button {
-                context.send(viewAction: .createSpace)
-            } label: {
-                CompoundIcon(\.plus)
-                    .accessibilityHidden(true)
-            }
-            .accessibilityLabel(L10n.actionCreateSpace)
+            // :tchap: Remove create space action
+//            Button {
+//                context.send(viewAction: .createSpace)
+//            } label: {
+//                CompoundIcon(\.plus)
+//                    .accessibilityHidden(true)
+//            }
+//            .accessibilityLabel(L10n.actionCreateSpace) :tchap:end
         }
     }
 }

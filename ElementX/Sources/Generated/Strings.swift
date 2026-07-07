@@ -3445,7 +3445,7 @@ internal enum L10n {
   internal static func screenSpaceListDetails(_ p1: Any, _ p2: Any) -> String {
     return L10n.tr("Localizable", "screen_space_list_details", String(describing: p1), String(describing: p2))
   }
-  /// Create spaces to organize rooms
+  /// Spaces
   internal static var screenSpaceListEmptyStateTitle: String { return L10n.tr("Localizable", "screen_space_list_empty_state_title") }
   /// %1$@ space
   internal static func screenSpaceListParentSpace(_ p1: Any) -> String {

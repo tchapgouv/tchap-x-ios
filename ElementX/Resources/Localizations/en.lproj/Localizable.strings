@@ -1494,7 +1494,7 @@
 "screen_space_empty_state_title" = "Add your first room";
 "screen_space_list_description" = "Spaces you have created or joined.";
 "screen_space_list_details" = "%1$@ • %2$@";
-"screen_space_list_empty_state_title" = "Create spaces to organize rooms";
+"screen_space_list_empty_state_title" = "Spaces"; // Tchap
 "screen_space_list_parent_space" = "%1$@ space";
 "screen_space_list_title" = "Spaces";
 "screen_space_menu_action_members" = "View members";
