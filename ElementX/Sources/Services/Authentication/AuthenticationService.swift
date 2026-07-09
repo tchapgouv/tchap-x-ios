@@ -112,7 +112,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
             // Tchap: activate flow even if Element considers it is broken.
             let prompt: OAuthPrompt = flow == .register ? .create : .consent
             let oAuthData = try await client.urlForOauth(oauthConfiguration: appSettings.oAuthConfiguration.rustValue,
-                                                         prompt: .consent,
+                                                         prompt: prompt,
                                                          loginHint: loginHint,
                                                          deviceId: nil,
                                                          additionalScopes: nil)
