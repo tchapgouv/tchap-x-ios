@@ -117,7 +117,7 @@ class AuthenticationStartScreenViewModel: AuthenticationStartScreenViewModelType
                 state.bindings.showClassicAppBackupInstructions = true
             } else {
                 await configureAccountProvider(classicAppAccount.serverName,
-                                               loginHint: "mxid:\(classicAppAccount.userID)",
+                                               loginHint: convertMatrixIDToTchapEmail(classicAppAccount.userID), // :tchap: custom loginHint
                                                fallbackHomeserverURL: classicAppAccount.homeserverURL)
             }
         } else if let serverName = state.serverName {
@@ -126,6 +126,40 @@ class AuthenticationStartScreenViewModel: AuthenticationStartScreenViewModelType
             actionsSubject.send(.login) // No need to configure anything here, continue the flow.
         }
     }
+    
+    // :tchap: Convert Matrix ID format to Tchap email format
+    // passing it directly as mxid:@username-domain:homeserver does not seems to convert correctly in tchap email format
+    // we only convert when the local part contains exactly ONE hyphen,
+    // i.e. when the conversion is unambiguous. Otherwise we return nil
+    func convertMatrixIDToTchapEmail(_ matrixID: String) -> String? {
+        guard matrixID.hasPrefix("@") else {
+            return nil
+        }
+
+        guard let localPart = matrixID.dropFirst()
+            .split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
+            .first,
+            !localPart.isEmpty
+        else {
+            return nil
+        }
+
+        let localPartString = String(localPart)
+
+        guard localPartString.filter({ $0 == "-" }).count == 1 else {
+            return nil
+        }
+
+        let email = localPartString.replacingOccurrences(of: "-", with: "@")
+
+        guard let domainPart = email.split(separator: "@").last,
+              domainPart.contains(".")
+        else {
+            return nil
+        }
+
+        return email
+    } // :tchap:end
     
     private func configureAccountProvider(_ accountProvider: String, loginHint: String? = nil, fallbackHomeserverURL: URL? = nil) async {
         startLoading()

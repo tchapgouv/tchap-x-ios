@@ -358,6 +358,58 @@ final class AuthenticationStartScreenViewModelTests {
                              analyticsTermsURL: appSettings.analyticsTermsURL,
                              mapTilerConfiguration: AppSettings.bundledMapTilerConfiguration)
     }
+
+    // MARK: - Tchap Email Conversion Tests
+    
+    @Test("Convert valid Matrix ID with single dash to Tchap email")
+    func convertMatrixIDToTchapEmailValid() async {
+        await setupViewModel()
+        
+        let matrixID = "@anatest2-yop2.tchap.incubateur.net:dev02.tchap.incubateur.net"
+        let result = viewModel.convertMatrixIDToTchapEmail(matrixID)
+        
+        #expect(result == "anatest2@yop2.tchap.incubateur.net")
+    }
+    
+    @Test("Convert Matrix ID with multiple dashes returns nil")
+    func convertMatrixIDToTchapEmailMultipleDashes() async {
+        await setupViewModel()
+        
+        // Case 1: Username contains dash
+        let matrixID1 = "@anat-test2-yop2.tchap.incubateur.net:dev02.tchap.incubateur.net"
+        let result1 = viewModel.convertMatrixIDToTchapEmail(matrixID1)
+        #expect(result1 == nil, "Should return nil when there are multiple dashes (ambiguous)")
+        
+        // Case 2: Domain contains dash
+        let matrixID2 = "@anatest2-yop-2.tchap.incubateur.net:dev02.tchap.incubateur.net"
+        let result2 = viewModel.convertMatrixIDToTchapEmail(matrixID2)
+        #expect(result2 == nil, "Should return nil when domain contains dash")
+        
+        // Case 3: Username and Domain contains dash
+        let matrixID3 = "@ana-test2-yop-2.tchap.incubateur.net:dev02.tchap.incubateur.net"
+        let result3 = viewModel.convertMatrixIDToTchapEmail(matrixID3)
+        #expect(result3 == nil, "Should return nil when username and domain contains dash")
+    }
+    
+    @Test("Convert Matrix ID with no dash returns nil")
+    func convertMatrixIDToTchapEmailNoDash() async {
+        await setupViewModel()
+        
+        let matrixID = "@anatest2yop2.tchap.incubateur.net:dev02.tchap.incubateur.net"
+        let result = viewModel.convertMatrixIDToTchapEmail(matrixID)
+        
+        #expect(result == nil, "Should return nil when there's no dash")
+    }
+    
+    @Test("Convert Matrix ID with no domain returns nil")
+    func convertMatrixIDToTchapEmailNoDomain() async {
+        await setupViewModel()
+        
+        let matrixID = "@anatest2yop2-tchap:dev02.tchap.incubateur.net"
+        let result = viewModel.convertMatrixIDToTchapEmail(matrixID)
+        
+        #expect(result == nil, "Should return nil when there's no dash")
+    }
 }
 
 extension AuthenticationStartScreenViewModelAction {
