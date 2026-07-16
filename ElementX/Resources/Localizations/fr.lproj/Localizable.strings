@@ -976,8 +976,8 @@
 "screen_media_upload_preview_title" = "Add media";
 "screen_migration_message" = "Il s’agit d’une opération ponctuelle, merci d’attendre quelques instants.";
 "screen_migration_title" = "Configuration de votre compte.";
-"screen_missing_key_backup_open_element_classic" = "Ouvrir Element Classic";
-"screen_missing_key_backup_step_1" = "Ouvrez Element Classic sur votre appareil";
+"screen_missing_key_backup_open_element_classic" = "Ouvrir Tchap Classique"; // Tchap
+"screen_missing_key_backup_step_1" = "Ouvrez Tchap Classique sur votre appareil"; // Tchap
 "screen_missing_key_backup_step_2_ios" = "Aller à Paramètres utilisateur > Sécurité";
 "screen_missing_key_backup_step_3_ios" = "Faites défiler vers le bas jusqu'à Sauvegarde sécurisée et cliquez sur Configurer";
 "screen_missing_key_backup_step_4" = "Suivez les instructions pour activer votre stockage de clés";
