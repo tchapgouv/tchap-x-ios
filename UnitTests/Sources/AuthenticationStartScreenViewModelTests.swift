@@ -410,6 +410,16 @@ final class AuthenticationStartScreenViewModelTests {
         
         #expect(result == nil, "Should return nil when there's no dash")
     }
+    
+    @Test("Convert Matrix ID with invalid domain suffix returns nil")
+    func convertMatrixIDToTchapEmailInvalidDomainSuffix() async {
+        await setupViewModel()
+
+        let matrixID = "@anatest2-yop2.tchap.incubateur.fr1:dev02.tchap.incubateur.net"
+        let result = viewModel.convertMatrixIDToTchapEmail(matrixID)
+
+        #expect(result == nil, "Should return nil when the email domain has an unsupported TLD")
+    }
 }
 
 extension AuthenticationStartScreenViewModelAction {

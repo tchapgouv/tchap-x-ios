@@ -153,7 +153,7 @@ class AuthenticationStartScreenViewModel: AuthenticationStartScreenViewModelType
         let email = localPartString.replacingOccurrences(of: "-", with: "@")
 
         guard let domainPart = email.split(separator: "@").last,
-              domainPart.contains(".")
+              [".fr", ".com", ".net"].contains(where: { domainPart.hasSuffix($0) })
         else {
             return nil
         }
