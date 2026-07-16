@@ -2274,13 +2274,13 @@ internal enum L10n {
   internal static var screenMigrationMessage: String { return L10n.tr("Localizable", "screen_migration_message") }
   /// Setting up your account.
   internal static var screenMigrationTitle: String { return L10n.tr("Localizable", "screen_migration_title") }
-  /// Open Element Classic
+  /// Open Tchap Classique
   internal static var screenMissingKeyBackupOpenElementClassic: String { return L10n.tr("Localizable", "screen_missing_key_backup_open_element_classic") }
-  /// Open Element Classic on your device
+  /// Open Tchap Classique on your device
   internal static var screenMissingKeyBackupStep1: String { return L10n.tr("Localizable", "screen_missing_key_backup_step_1") }
-  /// Go to User settings > Security
+  /// Go to User settings > Security > Encrypted messages and devices
   internal static var screenMissingKeyBackupStep2Ios: String { return L10n.tr("Localizable", "screen_missing_key_backup_step_2_ios") }
-  /// Scroll down to Secure Backup and tap on Set up
+  /// Activate Secure Backup (or Restore from backup)
   internal static var screenMissingKeyBackupStep3Ios: String { return L10n.tr("Localizable", "screen_missing_key_backup_step_3_ios") }
   /// Follow the instructions to enable your key storage
   internal static var screenMissingKeyBackupStep4: String { return L10n.tr("Localizable", "screen_missing_key_backup_step_4") }

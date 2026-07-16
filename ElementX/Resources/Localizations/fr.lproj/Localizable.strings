@@ -978,11 +978,11 @@
 "screen_migration_title" = "Configuration de votre compte.";
 "screen_missing_key_backup_open_element_classic" = "Ouvrir Tchap Classique"; // Tchap
 "screen_missing_key_backup_step_1" = "Ouvrez Tchap Classique sur votre appareil"; // Tchap
-"screen_missing_key_backup_step_2_ios" = "Aller à Paramètres utilisateur > Sécurité";
-"screen_missing_key_backup_step_3_ios" = "Faites défiler vers le bas jusqu'à Sauvegarde sécurisée et cliquez sur Configurer";
-"screen_missing_key_backup_step_4" = "Suivez les instructions pour activer votre stockage de clés";
+"screen_missing_key_backup_step_2_ios" = "Aller à Paramètres utilisateur > Sécurité > Messages chiffrés et appareils"; // Tchap
+"screen_missing_key_backup_step_3_ios" = "Dans Sauvegarde Automatique des messages, sélectionnez Activer (ou Récupérer les messages)"; // Tchap
+"screen_missing_key_backup_step_4" = "Suivez les instructions pour activer votre sauvegarde automatique des messages (ou récupérer vos messages)"; // Tchap
 "screen_missing_key_backup_step_5" = "Revenez à %1$@";
-"screen_missing_key_backup_title" = "Activez le stockage de vos clés avant de continuer avec %1$@";
+"screen_missing_key_backup_title" = "Activez la sauvegarde automatique avant de continuer avec %1$@"; // Tchap
 "screen_notification_optin_subtitle" = "Vous pourrez modifier vos paramètres ultérieurement.";
 "screen_notification_optin_title" = "Autorisez les notifications et ne manquez aucun message";
 "screen_notification_settings_additional_settings_section_title" = "Réglages supplémentaires";
