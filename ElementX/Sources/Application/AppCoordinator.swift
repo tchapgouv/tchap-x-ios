@@ -1192,6 +1192,8 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     @objc
     private func applicationDidBecomeActive() {
         MXLog.info("Application did become active")
+        // :tchap: Clear the badge when app becomes active (badge temporarily disabled due to incorrect server count)
+        UNUserNotificationCenter.current().setBadgeCount(0) // :tchap:end
     }
     
     private func endActiveBackgroundTask() {
