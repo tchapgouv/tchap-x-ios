@@ -65,43 +65,56 @@ extension ClientBuilder {
             builder = builder.proxy(url: httpProxy)
         }
         
-        #if IS_TCHAP_PRODUCTION || IS_TCHAP_PREPROD || IS_TCHAP_DEVELOPEMENT
-        // Tchap: check certificate pinning if activated.
-        if TchapFeatureFlag.Configuration.certificatePinning.isActivated(for: .all) {
-            let pemCertificates = InfoPlistReader.app.embeddedPemCertificates
-            if pemCertificates.count > 0 {
-                // `addRootCertificates(certificates: [Data])` awaits a list of Data type values containing Certificates in DER or PEM format.
-                // Actually, Certificates in PEM format don't work in ElementX implementation (it works in Rust direct test).
-                // But it works with Certificates in DER format.
-                // As DER format is not practical to store in info.plist, we store the certificates in PEM format in info.plist,
-                // and convert it in DER format in Swift to take the functional path of DER into Rust.
-                
-                // Try to convert String based PEM to DER Data and check if no Certificate conversion failed.
-                // This step require the removal of header and footer and any newline.
-                
-                let derCertificates = pemCertificates.compactMap {
-                    Data(base64Encoded:
-                        $0.replacingOccurrences(of: "-----BEGIN CERTIFICATE-----", with: "")
-                            .replacingOccurrences(of: "-----END CERTIFICATE-----", with: "")
-                            .replacingOccurrences(of: "\n", with: ""))
-                }
-                
-                // If necessary, to get the real certificate format:
-                //    let certificateData = SecCertificateCreateWithData(nil, derCertificates as CFData)
-                // Then, if necessary to get the public key:
-                //    let publicKey = SecCertificateCopyKey(certificateData)
-                
-                // If any failure occured, ignore ALL certificates.
-                if derCertificates.count == pemCertificates.count {
-                    builder = builder.disableBuiltInRootCertificates()
-                        .addRootCertificates(certificates: derCertificates)
-                }
-            }
-        }
-        #endif
+        // :tchap: certificate pinning
+        if let derCertificates = certificatePinningDERCertificates() {
+            builder = builder
+                .disableBuiltInRootCertificates()
+                .addRootCertificates(certificates: derCertificates)
+        } // :tchap:end:
         
         return appHooks.clientBuilderHook.configure(builder)
     }
+    
+    // :tchap: certificate pinning
+    static func certificatePinningDERCertificates() -> [Data]? {
+        guard TchapFeatureFlag.Configuration.certificatePinning.isActivated(for: .all) else {
+            return nil
+        }
+
+        let pemCertificates = InfoPlistReader.app.embeddedPemCertificates
+
+        guard !pemCertificates.isEmpty else {
+            return nil
+        }
+        
+        // `addRootCertificates(certificates: [Data])` awaits a list of Data type values containing Certificates in DER or PEM format.
+        // Actually, Certificates in PEM format don't work in ElementX implementation (it works in Rust direct test).
+        // But it works with Certificates in DER format.
+        // As DER format is not practical to store in info.plist, we store the certificates in PEM format in info.plist,
+        // and convert it in DER format in Swift to take the functional path of DER into Rust.
+        
+        // Try to convert String based PEM to DER Data and check if no Certificate conversion failed.
+        // This step require the removal of header and footer and any newline.
+
+        let derCertificates = pemCertificates.compactMap {
+            Data(base64Encoded:
+                $0.replacingOccurrences(of: "-----BEGIN CERTIFICATE-----", with: "")
+                    .replacingOccurrences(of: "-----END CERTIFICATE-----", with: "")
+                    .replacingOccurrences(of: "\n", with: ""))
+        }
+
+        guard derCertificates.count == pemCertificates.count else {
+            return nil
+        }
+        
+        // If necessary, to get the real certificate format:
+        //    let certificateData = SecCertificateCreateWithData(nil, derCertificates as CFData)
+        // Then, if necessary to get the public key:
+        //    let publicKey = SecCertificateCopyKey(certificateData)
+        
+        // If any failure occured, ignore ALL certificates.
+        return derCertificates
+    } // :tchap:end:
 }
 
 enum ClientBuilderSlidingSync {

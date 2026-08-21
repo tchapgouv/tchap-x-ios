@@ -128,7 +128,13 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
     }
     
     private func requestHomeserverForInfo(homeserver: String, forEmail: String) async -> Result<String, DecideHomeServerScreenErrorType> {
-        let config = TchapGetInstanceConfig(homeServer: homeserver, userAgent: UserAgentBuilder.makeASCIIUserAgent())
+        let derCertificates = ClientBuilder.certificatePinningDERCertificates()
+        let config = TchapGetInstanceConfig(homeServer: homeserver,
+                                            userAgent: UserAgentBuilder.makeASCIIUserAgent(),
+                                            disableBuiltInRootCertificates: derCertificates != nil,
+                                            additionalRawRootCertificates: derCertificates ?? [],
+                                            proxy: nil)
+        
         do {
             let tchapInstance = try tchapGetInstance(config: config, forEmail: forEmail)
             // Reject login attempt if returned instance in not in a listed account provider.
