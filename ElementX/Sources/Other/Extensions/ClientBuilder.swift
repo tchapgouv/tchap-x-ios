@@ -84,7 +84,7 @@ extension ClientBuilder {
         let pemCertificates = InfoPlistReader.app.embeddedPemCertificates
 
         guard !pemCertificates.isEmpty else {
-            return nil
+            preconditionFailure("Certificate pinning is enabled but no certificates are configured.")
         }
         
         // `addRootCertificates(certificates: [Data])` awaits a list of Data type values containing Certificates in DER or PEM format.
@@ -96,24 +96,24 @@ extension ClientBuilder {
         // Try to convert String based PEM to DER Data and check if no Certificate conversion failed.
         // This step require the removal of header and footer and any newline.
 
-        let derCertificates = pemCertificates.compactMap {
-            Data(base64Encoded:
-                $0.replacingOccurrences(of: "-----BEGIN CERTIFICATE-----", with: "")
-                    .replacingOccurrences(of: "-----END CERTIFICATE-----", with: "")
-                    .replacingOccurrences(of: "\n", with: ""))
-        }
-
-        guard derCertificates.count == pemCertificates.count else {
-            return nil
+        return pemCertificates.enumerated().map { index, pem in
+            let base64 = pem
+                .replacingOccurrences(of: "-----BEGIN CERTIFICATE-----", with: "")
+                .replacingOccurrences(of: "-----END CERTIFICATE-----", with: "")
+                .components(separatedBy: .whitespacesAndNewlines)
+                .joined()
+            
+            guard let data = Data(base64Encoded: base64) else {
+                preconditionFailure("Invalid certificate pinning configuration: PEM certificate \(index) cannot be decoded.")
+            }
+            
+            return data
         }
         
         // If necessary, to get the real certificate format:
         //    let certificateData = SecCertificateCreateWithData(nil, derCertificates as CFData)
         // Then, if necessary to get the public key:
         //    let publicKey = SecCertificateCopyKey(certificateData)
-        
-        // If any failure occured, ignore ALL certificates.
-        return derCertificates
     } // :tchap:end:
 }
 
