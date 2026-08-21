@@ -80,7 +80,7 @@ packages:
 #
 # Use the Github hosted version of Tchap Matrix-rust-SDK
     url: https://github.com/tchapgouv/matrix-rust-components-swift
-    exactVersion: 26.06.0-bwi-main
+    exactVersion: 26.06.0-bwi-main-proxy
 # Use the local version of Tchap Matrix-rust-SDK
 #    path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
   Compound:
