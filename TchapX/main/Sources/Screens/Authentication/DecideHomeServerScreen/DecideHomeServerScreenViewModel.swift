@@ -133,7 +133,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
                                             userAgent: UserAgentBuilder.makeASCIIUserAgent(),
                                             disableBuiltInRootCertificates: derCertificates != nil,
                                             additionalRawRootCertificates: derCertificates ?? [],
-                                            proxy: nil)
+                                            proxy: globalProxy(for: homeserver))
         
         do {
             let tchapInstance = try tchapGetInstance(config: config, forEmail: forEmail)
@@ -145,6 +145,15 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
         } catch {
             return .failure(.tchapGetInstanceError)
         }
+    }
+    
+    private func globalProxy(for homeserver: String) -> String? {
+        let homeserverURLString = if homeserver.hasPrefix("http://") || homeserver.hasPrefix("https://") {
+            homeserver
+        } else {
+            "https://\(homeserver)"
+        }
+        return URL(string: homeserverURLString)?.globalProxy
     }
     
     /// Initialize the Authentication service with the returned homeServer.
