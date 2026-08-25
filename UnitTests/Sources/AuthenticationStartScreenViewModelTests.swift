@@ -166,6 +166,20 @@ final class AuthenticationStartScreenViewModelTests {
     }
     
     @Test
+    func classicAppAccountWithEmailAddress() async throws {
+        // Given a view model with a Classic app account whose email address is available.
+        let classicAppAccount = makeClassicAppAccount(emailAddress: "classic.user@gouv.fr")
+        await setupViewModel(classicAppAccount: classicAppAccount)
+        
+        // When continuing with the Classic app account, the email address should be used as the login hint.
+        let deferred = deferFulfillment(viewModel.actions) { $0.isLoginDirectlyWithOAuth }
+        context.send(viewAction: .continueWithClassic(classicAppAccount))
+        try await deferred.fulfill()
+        
+        #expect(client.urlForOauthOauthConfigurationPromptLoginHintDeviceIdAdditionalScopesReceivedArguments?.loginHint == "classic.user@gouv.fr")
+    }
+    
+    @Test
     func classicAppAccountWithoutWellKnown() async throws {
         // Given a view model where the Classic app account's server name has no well-known file.
         let classicAppAccount = makeClassicAppAccount(serverName: "unknown-server.org",
@@ -325,10 +339,12 @@ final class AuthenticationStartScreenViewModelTests {
     }
     
     private func makeClassicAppAccount(serverName: String = "company.com",
-                                       homeserverURL: URL = "https://matrix.company.com") -> ClassicAppAccount {
+                                       homeserverURL: URL = "https://matrix.company.com",
+                                       emailAddress: String? = nil) -> ClassicAppAccount {
         ClassicAppAccount(userID: "@user:\(serverName)",
                           displayName: "Classic User",
                           avatarURL: nil,
+                          emailAddress: emailAddress,
                           serverName: serverName,
                           homeserverURL: homeserverURL,
                           cryptoStoreURL: "file:///tmp/crypto-store",

@@ -12,6 +12,7 @@ struct ClassicAppAccount: Equatable, CustomStringConvertible {
     let userID: String
     let displayName: String?
     let avatarURL: URL?
+    let emailAddress: String? // :tchap: get email from classic app account
     
     let serverName: String
     let homeserverURL: URL
@@ -20,6 +21,27 @@ struct ClassicAppAccount: Equatable, CustomStringConvertible {
     let cryptoStorePassphrase: String
     
     let accessToken: String // For avatar loading and key backup detection.
+    
+    // :tchap: get email from classic app account
+    init(userID: String,
+         displayName: String?,
+         avatarURL: URL?,
+         emailAddress: String? = nil,
+         serverName: String,
+         homeserverURL: URL,
+         cryptoStoreURL: URL,
+         cryptoStorePassphrase: String,
+         accessToken: String) {
+        self.userID = userID
+        self.displayName = displayName
+        self.avatarURL = avatarURL
+        self.emailAddress = emailAddress
+        self.serverName = serverName
+        self.homeserverURL = homeserverURL
+        self.cryptoStoreURL = cryptoStoreURL
+        self.cryptoStorePassphrase = cryptoStorePassphrase
+        self.accessToken = accessToken
+    } // :tchap:end:
     
     /// Custom `CustomStringConvertible` without the access token.
     var description: String {
@@ -57,6 +79,8 @@ final class ClassicAppMXAccount: NSObject, NSCoding {
     var accessToken: String
     /// The homeserver url (ex: "https://matrix.org").
     var homeserverURL: URL
+    /// The third-party IDs known by the account.
+    let threePIDs: [ClassicAppMXThirdPartyIdentifier] // :tchap: get email from classic app account
     
     /// Disable the account without logging out (NO by default).
     ///
@@ -112,6 +136,7 @@ final class ClassicAppMXAccount: NSObject, NSCoding {
         self.userID = userID
         self.accessToken = accessToken
         self.homeserverURL = homeserverURL
+        threePIDs = coder.decodeObject(forKey: Keys.threePIDs) as? [ClassicAppMXThirdPartyIdentifier] ?? [] // :tchap: get email from classic app account
         
         isDisabled = coder.decodeBool(forKey: Keys.isDisabled)
         isSoftLogout = coder.decodeBool(forKey: Keys.isSoftLogout)
@@ -123,6 +148,40 @@ final class ClassicAppMXAccount: NSObject, NSCoding {
         fatalError("Not available")
     }
 }
+
+// :tchap: get email from classic app account
+/// `MXThirdPartyIdentifier` represents a third-party identifier linked to an account.
+final class ClassicAppMXThirdPartyIdentifier: NSObject, NSCoding {
+    let medium: String
+    let address: String
+    
+    var isEmail: Bool {
+        medium == "email"
+    }
+    
+    // MARK: NSCoding
+    
+    enum Keys {
+        static let medium = "medium" // String
+        static let address = "address" // String
+    }
+    
+    required init?(coder: NSCoder) {
+        guard let medium = coder.decodeObject(forKey: Keys.medium) as? String,
+              let address = coder.decodeObject(forKey: Keys.address) as? String else {
+            return nil
+        }
+        
+        self.medium = medium
+        self.address = address
+        
+        super.init()
+    }
+    
+    func encode(with coder: NSCoder) {
+        fatalError("Not available")
+    }
+} // :tchap:end:
 
 /// `MXUser` represents a user in Matrix.
 final class ClassicAppMXUser: NSObject, NSCoding {

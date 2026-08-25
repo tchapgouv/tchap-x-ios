@@ -36,6 +36,7 @@ class ClassicAppAccountManager {
                 let decoder = try NSKeyedUnarchiver(forReadingFrom: unciphered)
                 decoder.requiresSecureCoding = false
                 decoder.setClass(ClassicAppMXAccount.self, forClassName: "MXKAccount")
+                decoder.setClass(ClassicAppMXThirdPartyIdentifier.self, forClassName: "MXThirdPartyIdentifier") // :tchap: get email from classic app account
                 
                 guard let mxAccounts = decoder.decodeObject(forKey: "mxAccounts") as? [ClassicAppMXAccount] else {
                     MXLog.error("Failed to decode accounts.")
@@ -69,6 +70,7 @@ class ClassicAppAccountManager {
         return ClassicAppAccount(userID: userID,
                                  displayName: user?.displayName,
                                  avatarURL: user?.avatarURL,
+                                 emailAddress: mxAccount.threePIDs.first(where: \.isEmail)?.address, // :tchap: get email from classic app account
                                  serverName: serverName,
                                  homeserverURL: mxAccount.homeserverURL,
                                  cryptoStoreURL: cryptoStoreURL(for: userID),
