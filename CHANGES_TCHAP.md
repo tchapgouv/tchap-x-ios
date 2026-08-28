@@ -1,3 +1,22 @@
+Tchap iOS v26.08.0
+=============================
+
+## Qu'est-ce qui a changé ?
+
+### 🙌 Améliorations
+* Mettre à jour les applinks pour TchapX by @NicolasBuquet in https://github.com/tchapgouv/tchap-x-ios/pull/285
+* Connexion à partir de l'email partagé par Tchap Classique by @Sianay in https://github.com/tchapgouv/tchap-x-ios/pull/396
+### 🐛 Corrections de bugs
+* Désactivation du badge de notifications by @Sianay in https://github.com/tchapgouv/tchap-x-ios/pull/390
+### 🧱 Build
+* Ajout certificat TLS Harica en preprod by @Sianay in https://github.com/tchapgouv/tchap-x-ios/pull/389
+### Autres
+* Ajout de CHANGES_TCHAP.md by @Sianay in https://github.com/tchapgouv/tchap-x-ios/pull/391
+* Mise à jour du SDK Rust 26.06.0-bwi-main-proxy by @Sianay in https://github.com/tchapgouv/tchap-x-ios/pull/394
+* Utilisation des certificats intermédiaires Harica en preprod et prod by @Sianay in https://github.com/tchapgouv/tchap-x-ios/pull/395
+
+**Full Changelog**: https://github.com/tchapgouv/tchap-x-ios/compare/tchap_v26.07.1...tchap_v26.08.0
+
 Tchap iOS v26.07.1
 =============================
 
