@@ -312,8 +312,6 @@ targets:
         com.apple.developer.associated-domains:
         - applinks:tchap.gouv.fr
         - applinks:www.tchap.gouv.fr
-        - applinks:call.element.io
-        - applinks:matrix.to
         # - applinks:localhost?mode=developer # developer mode only works with https (but self-signed is fine).
         - webcredentials:www.tchap.gouv.fr
 
@@ -413,7 +411,6 @@ targets:
         com.apple.developer.associated-domains:
         - applinks:beta.tchap.gouv.fr
         - applinks:www.beta.tchap.gouv.fr
-        - applinks:matrix.to
         # - applinks:localhost?mode=developer # developer mode only works with https (but self-signed is fine).
         - webcredentials:www.beta.tchap.gouv.fr
 
@@ -490,8 +487,6 @@ targets:
         com.apple.developer.associated-domains:
         - applinks:tchap.incubateur.net
         - applinks:www.tchap.incubateur.net
-        - applinks:call.element.io
-        - applinks:matrix.to
         # - applinks:localhost?mode=developer # developer mode only works with https (but self-signed is fine).
         - webcredentials:www.tchap.incubateur.net
 
