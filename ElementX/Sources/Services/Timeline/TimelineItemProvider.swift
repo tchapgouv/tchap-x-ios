@@ -195,9 +195,6 @@ private extension VirtualTimelineItem {
             return "ReadMarker"
         case .timelineStart:
             return "TimelineStart"
-        // Tchap: BWI content-scanner for app build purposes
-        case .scanStateChanged(eventId: let eventId, newScanState: let newScanState):
-            return "Scan state changed for event \(eventId) to \(newScanState)"
         }
     }
 }

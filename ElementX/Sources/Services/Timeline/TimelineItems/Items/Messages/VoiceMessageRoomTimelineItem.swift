@@ -29,7 +29,4 @@ struct VoiceMessageRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equa
     var contentType: EventBasedMessageTimelineItemContentType {
         .voice(content)
     }
-    
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .inProgress
 }

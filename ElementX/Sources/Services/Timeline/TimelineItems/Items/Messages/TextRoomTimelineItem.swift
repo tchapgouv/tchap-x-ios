@@ -55,7 +55,4 @@ struct TextRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
         
         return Array(links.uniqued())
     }
-
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .trusted
 }

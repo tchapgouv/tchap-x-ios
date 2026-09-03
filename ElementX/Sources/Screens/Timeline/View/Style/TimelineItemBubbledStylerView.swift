@@ -239,9 +239,7 @@ private extension EventBasedTimelineItemProtocol {
         switch self {
         case is ImageRoomTimelineItem, is VideoRoomTimelineItem:
             // In case a reply detail or a thread decorator is present we render the color and the padding
-            // TCHAP: BWI content-scanner - video and images have a bubble as long as the scan state is not trusted
-//                return self.replyDetails != nil || self.isThreaded || self.hasMediaCaption ? defaultColor : nil
-            return properties.replyDetails != nil || properties.isThreaded || hasMediaCaption || (self as? EventBasedMessageTimelineItemProtocol)?.scanState != .trusted ? defaultColor : nil
+            return properties.replyDetails != nil || properties.isThreaded || hasMediaCaption ? defaultColor : nil
         case is StickerRoomTimelineItem:
             return nil
         default:

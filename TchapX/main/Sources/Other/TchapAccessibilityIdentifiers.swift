@@ -34,19 +34,10 @@ import Foundation
 
 enum TchapA11yIdentifiers {
     static let settingsScreen = SettingsScreen()
-    static let scanStates = ScanStates()
     static let roomDetailsScreen = RoomDetailsScreen()
     
     struct SettingsScreen {
         let faq = "settings-faq"
-    }
-    
-    struct ScanStates {
-        let infected = "scan_state-infected"
-        let inProgress = "scan_state-inprogress"
-        let error = "scan_state-error"
-        let notFound = "scan_state-notfound"
-        let trusted = "scan_state-trusted"
     }
     
     struct RoomDetailsScreen {

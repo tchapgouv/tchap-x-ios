@@ -23,8 +23,6 @@ enum EventBasedMessageTimelineItemContentType: Hashable {
 
 protocol EventBasedMessageTimelineItemProtocol: EventBasedTimelineItemProtocol {
     var contentType: EventBasedMessageTimelineItemContentType { get }
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState { get set }
 }
 
 extension EventBasedMessageTimelineItemProtocol {

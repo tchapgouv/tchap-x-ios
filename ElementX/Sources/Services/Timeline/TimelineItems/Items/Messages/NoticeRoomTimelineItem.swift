@@ -29,7 +29,4 @@ struct NoticeRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .notice(content)
     }
-
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .trusted
 }

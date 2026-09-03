@@ -212,7 +212,7 @@ struct RoomStateEventStringBuilder {
         // Tchap: treat access_rule event
 //        case .custom: // Won't provide actionable information to the user.
 //            break
-        case .custom(let eventType, let eventValue): // Won't provide actionable information to the user.
+        case .custom(let eventType): // Won't provide actionable information to the user.
             if eventType == "im.vector.room.access_rules" {
                 return TchapL10n.stateEventRoomAccessRule
             }

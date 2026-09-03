@@ -29,7 +29,4 @@ struct EmoteRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .emote(content)
     }
-    
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .trusted
 }

@@ -15,22 +15,15 @@ struct FileRoomTimelineView: View {
     
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {
-            // Tchap: content-scanner - scanState Views on scanstates other than trusted,
-            if timelineItem.scanState == .trusted {
-                MediaFileRoomTimelineContent(filename: timelineItem.content.filename,
-                                             fileSize: timelineItem.content.fileSize,
-                                             caption: timelineItem.content.caption,
-                                             formattedCaption: timelineItem.content.formattedCaption,
-                                             trailingReservedSize: timelineItem.trailingReservedSize,
-                                             shouldBoost: timelineItem.shouldBoost) {
-                    context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
-                }
-                .accessibilityLabel(L10n.commonFile)
-            } else {
-                TimelineItemScanStatusFileView(scanState: timelineItem.scanState,
-                                               filename: timelineItem.content.filename,
-                                               fileSize: timelineItem.content.fileSize)
+            MediaFileRoomTimelineContent(filename: timelineItem.content.filename,
+                                         fileSize: timelineItem.content.fileSize,
+                                         caption: timelineItem.content.caption,
+                                         formattedCaption: timelineItem.content.formattedCaption,
+                                         trailingReservedSize: timelineItem.trailingReservedSize,
+                                         shouldBoost: timelineItem.shouldBoost) {
+                context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
             }
+            .accessibilityLabel(L10n.commonFile)
         }
     }
 }

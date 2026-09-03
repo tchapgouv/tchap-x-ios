@@ -30,7 +30,4 @@ struct AudioRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .audio(content)
     }
-    
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .inProgress
 }

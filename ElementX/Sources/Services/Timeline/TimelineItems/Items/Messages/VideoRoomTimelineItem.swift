@@ -31,7 +31,4 @@ struct VideoRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .video(content)
     }
-    
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .inProgress
 }

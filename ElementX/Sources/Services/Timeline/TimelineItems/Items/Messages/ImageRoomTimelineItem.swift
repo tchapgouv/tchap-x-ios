@@ -31,7 +31,4 @@ struct ImageRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .image(content)
     }
-    
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .inProgress
 }

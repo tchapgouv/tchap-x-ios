@@ -31,7 +31,4 @@ struct FileRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .file(content)
     }
-    
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .inProgress
 }
