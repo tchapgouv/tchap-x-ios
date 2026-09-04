@@ -10,7 +10,7 @@ import Compound
 import SwiftUI
 
 struct InviteUsersScreenSelectedItem: View {
-    let user: UserProfileProxy
+    let user: UserProfile
     let mediaProvider: MediaProviderProtocol?
     var isLocked = false
     let dismissAction: () -> Void
@@ -20,6 +20,7 @@ struct InviteUsersScreenSelectedItem: View {
             avatar
                 .accessibilityHidden(true)
             
+<<<<<<< HEAD
             // Tchap: calculate displayname from userId if necessary and displays it in badge if user is external.
             //            Text(user.displayName ?? user.userID)
             switch MatrixIdFromString(user.userID).userType {
@@ -43,6 +44,12 @@ struct InviteUsersScreenSelectedItem: View {
                     .lineLimit(1)
                     .tchapInivteByEmailLabelView()
             }
+=======
+            Text(user.displayName ?? user.id)
+                .font(.compound.bodySM)
+                .foregroundColor(.compound.textSecondary)
+                .lineLimit(1)
+>>>>>>> release/26.08.2
         }
         .frame(maxWidth: 100.0)
         .accessibilityElement(children: .combine)
@@ -59,7 +66,7 @@ struct InviteUsersScreenSelectedItem: View {
     var avatar: some View {
         let avatarImage = LoadableAvatarImage(url: user.avatarURL,
                                               name: user.displayName,
-                                              contentID: user.userID,
+                                              contentID: user.id,
                                               avatarSize: .user(on: .inviteUsers),
                                               mediaProvider: mediaProvider)
         if isLocked {
@@ -68,22 +75,15 @@ struct InviteUsersScreenSelectedItem: View {
             avatarImage.overlayRemoveItemButton(action: dismissAction)
         }
     }
-    
-    var closeButtonLabel: some View {
-        CompoundIcon(\.close, size: .custom(12), relativeTo: .compound.bodySM)
-            .foregroundStyle(.compound.iconOnSolidPrimary)
-            .padding(2)
-            .background(.compound.iconPrimary, in: Circle())
-    }
 }
 
 struct InviteUsersScreenSelectedItem_Previews: PreviewProvider, TestablePreview {
-    static let people: [UserProfileProxy] = [.mockAlice, .mockVerbose]
+    static let people: [UserProfile] = [.mockAlice, .mockVerbose]
     
     static var previews: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
-                ForEach(people, id: \.userID) { user in
+                ForEach(people, id: \.id) { user in
                     InviteUsersScreenSelectedItem(user: user, mediaProvider: MediaProviderMock(.init())) { }
                         .frame(width: 80)
                 }

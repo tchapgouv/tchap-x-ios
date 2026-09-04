@@ -14,6 +14,7 @@ struct Application: App {
     @Environment(\.openURL) private var openURL
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
+    @Environment(\.displayScale) private var displayScale
     
     private var appCoordinator: AppCoordinatorProtocol!
     
@@ -45,12 +46,17 @@ struct Application: App {
                 .onOpenURL { url in
                     openURL(url, isExternalURL: true)
                 }
-                .onContinueUserActivity("INStartVideoCallIntent") { userActivity in
-                    // `INStartVideoCallIntent` is to be replaced with `INStartCallIntent`
-                    // but calls from Recents still send it ¯\_(ツ)_/¯
+                .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in
+                    // Universal Links opened from the Camera app's QR scanner (and NFC tags) are
+                    // delivered as a browsing-web user activity rather than through `onOpenURL` 🤷‍♂️
+                    guard let url = userActivity.webpageURL else { return }
+                    openURL(url, isExternalURL: true)
+                }
+                .onContinueUserActivity("INStartCallIntent") { userActivity in
                     appCoordinator.handleUserActivity(userActivity)
                 }
                 .task {
+                    UserAgentBuilder.displayScale = displayScale
                     appCoordinator.start()
                     appCoordinator.windowManager.configure(withOpenWindowAction: openWindow,
                                                            dismissWindowAction: dismissWindow)
@@ -72,7 +78,7 @@ struct Application: App {
             
             CommandGroup(after: .windowArrangement) {
                 Button("Global Search") {
-                    appCoordinator.handleAppRoute(.globalSearch, windowType: nil)
+                    appCoordinator.handleAppRoute(.search, windowType: nil)
                 }
                 .keyboardShortcut("k", modifiers: [.command])
             }

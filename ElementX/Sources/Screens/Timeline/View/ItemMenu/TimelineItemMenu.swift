@@ -243,7 +243,6 @@ private struct VerifiedUserSendFailureView: View {
     }
 }
 
-@MainActor
 private extension EncryptionAuthenticity {
     var foregroundStyle: SwiftUI.Color {
         switch color {
@@ -338,7 +337,6 @@ struct TimelineItemMenu_Previews: PreviewProvider, TestablePreview {
                                                       canCurrentUserRedactOthers: false,
                                                       canCurrentUserPin: true,
                                                       pinnedEventIDs: [],
-                                                      isDM: true,
                                                       isViewSourceEnabled: true,
                                                       areThreadsEnabled: true,
                                                       timelineKind: .live,
@@ -362,11 +360,11 @@ struct TimelineItemMenu_Previews: PreviewProvider, TestablePreview {
     static func makeItem(itemType: ItemType) -> EventBasedTimelineItemProtocol? {
         switch itemType {
         case .incomingText:
-            RoomTimelineItemFixtures.singleMessageChunk.first as? EventBasedTimelineItemProtocol
+            TimelineFixtures.singleMessageChunk.first as? EventBasedTimelineItemProtocol
         case .outgoingMedia:
-            RoomTimelineItemFixtures.mediaChunk[1] as? EventBasedTimelineItemProtocol
+            TimelineFixtures.mediaChunk[1] as? EventBasedTimelineItemProtocol
         case .outgoingMediaWithCaption:
-            RoomTimelineItemFixtures.mediaChunk[5] as? EventBasedTimelineItemProtocol
+            TimelineFixtures.mediaChunk[5] as? EventBasedTimelineItemProtocol
         }
     }
 }

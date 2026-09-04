@@ -16,7 +16,7 @@ enum AudioPlayerError: Error {
 /// There used to be a MediaPlayerProtocol that AudioPlayerProtocol inherited from.
 /// This should be called something else but we already have an AudioPlayerState,
 /// AudioPlayerPlaybackState and InternalAudioPlayerState so who knows what to call this.
-enum MediaPlayerState {
+nonisolated enum MediaPlayerState {
     case loading
     case playing
     case paused
@@ -40,7 +40,6 @@ protocol AudioPlayerProtocol: AnyObject {
     var currentTime: TimeInterval { get }
     var playbackURL: URL? { get }
     var state: MediaPlayerState { get }
-    var playbackSpeed: Float { get }
     
     var actions: AnyPublisher<AudioPlayerAction, Never> { get }
     

@@ -10,9 +10,8 @@ import Foundation
 import MatrixRustSDK
 import UserNotifications
 
-struct NotificationItemProxy: NotificationItemProxyProtocol {
+nonisolated struct NotificationItemProxy: NotificationItemProxyProtocol {
     let notificationItem: NotificationItem
-    let eventID: String
     let receiverID: String
     let roomID: String
     
@@ -41,10 +40,6 @@ struct NotificationItemProxy: NotificationItemProxyProtocol {
         notificationItem.roomInfo.isSpace
     }
     
-    var isRoomDirect: Bool {
-        notificationItem.roomInfo.isDirect
-    }
-    
     var isDM: Bool {
         notificationItem.roomInfo.isDm
     }
@@ -56,10 +51,6 @@ struct NotificationItemProxy: NotificationItemProxyProtocol {
         default:
             false
         }
-    }
-    
-    var roomJoinedMembers: Int {
-        Int(notificationItem.roomInfo.joinedMembersCount)
     }
     
     var isNoisy: Bool {
@@ -91,9 +82,7 @@ struct NotificationItemProxy: NotificationItemProxyProtocol {
     }
 }
 
-struct EmptyNotificationItemProxy: NotificationItemProxyProtocol {
-    let eventID: String
-    
+nonisolated struct EmptyNotificationItemProxy: NotificationItemProxyProtocol {
     var event: NotificationEvent? {
         nil
     }
@@ -122,10 +111,6 @@ struct EmptyNotificationItemProxy: NotificationItemProxyProtocol {
         false
     }
     
-    var isRoomDirect: Bool {
-        false
-    }
-    
     var isDM: Bool {
         false
     }
@@ -140,10 +125,6 @@ struct EmptyNotificationItemProxy: NotificationItemProxyProtocol {
     
     var roomAvatarMediaSource: MediaSourceProxy? {
         nil
-    }
-    
-    var roomJoinedMembers: Int {
-        0
     }
     
     var hasMention: Bool {

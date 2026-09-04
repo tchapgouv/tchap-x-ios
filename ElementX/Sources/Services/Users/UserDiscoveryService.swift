@@ -15,12 +15,12 @@ final class UserDiscoveryService: UserDiscoveryServiceProtocol {
         self.clientProxy = clientProxy
     }
     
-    func searchProfiles(with searchQuery: String) async -> Result<[UserProfileProxy], UserDiscoveryErrorType> {
+    func searchProfiles(with searchQuery: String) async -> Result<[UserProfile], UserDiscoveryErrorType> {
         async let queriedProfile = profileIfPossible(with: searchQuery)
         
         do {
-            async let searchedUsers = clientProxy.searchUsers(searchTerm: searchQuery, limit: 10).get()
-            let users = try await merge(queriedProfile: queriedProfile, searchResults: searchedUsers)
+            let searchedUsers = try await clientProxy.searchUsers(searchTerm: searchQuery, limit: 10).get()
+            let users = await merge(queriedProfile: queriedProfile, searchResults: searchedUsers)
             return .success(filterAccountOwner(users))
         } catch {
             // we want to show the profile (if any) even if the search fails
@@ -32,7 +32,7 @@ final class UserDiscoveryService: UserDiscoveryServiceProtocol {
         }
     }
     
-    private func merge(queriedProfile: UserProfileProxy?, searchResults: SearchUsersResultsProxy) -> [UserProfileProxy] {
+    private func merge(queriedProfile: UserProfile?, searchResults: SearchUsersResults) -> [UserProfile] {
         let searchResults = searchResults.results
         
         guard let queriedProfile else {
@@ -40,13 +40,13 @@ final class UserDiscoveryService: UserDiscoveryServiceProtocol {
         }
         
         let filteredSearchResult = searchResults.filter {
-            $0.userID != queriedProfile.userID
+            $0.id != queriedProfile.id
         }
         
         return [queriedProfile] + filteredSearchResult
     }
     
-    private func profileIfPossible(with searchQuery: String) async -> UserProfileProxy? {
+    private func profileIfPossible(with searchQuery: String) async -> UserProfile? {
         guard searchQuery.isMatrixIdentifier, searchQuery != clientProxy.userID else {
             return nil
         }
@@ -57,9 +57,9 @@ final class UserDiscoveryService: UserDiscoveryServiceProtocol {
         return getProfileResult ?? .init(userID: searchQuery)
     }
     
-    private func filterAccountOwner(_ profiles: [UserProfileProxy]) -> [UserProfileProxy] {
+    private func filterAccountOwner(_ profiles: [UserProfile]) -> [UserProfile] {
         let accountOwnerID = clientProxy.userID
-        return profiles.filter { $0.userID != accountOwnerID }
+        return profiles.filter { $0.id != accountOwnerID }
     }
 }
 

@@ -20,7 +20,6 @@ class UserSessionScreenTests: XCTestCase {
     enum Step {
         static let homeScreen = 1
         static let roomScreen = 2
-        static let composerAttachments = 3
         static let homeScreenWithTabBar = 4
         static let spacesScreen = 5
         static let spaceScreen = 6
@@ -74,7 +73,6 @@ class UserSessionScreenTests: XCTestCase {
         XCTAssert(latestEditedMessage.waitForExistence(timeout: 5.0))
         
         app.buttons[A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions].tap(.center)
-        try await app.assertScreenshot(step: Step.composerAttachments)
     }
     
     func testUserSessionReply() async throws {
@@ -86,7 +84,7 @@ class UserSessionScreenTests: XCTestCase {
         let cell = app.cells.element(boundBy: 1) // Skip the typing indicator cell
         cell.swipeRight(velocity: .slow) // The iOS 26 simulator doesn't like a fast swipe.
         
-        try await app.assertScreenshot()
+        try await app.assertScreenshot(delay: .seconds(1))
     }
     
     func testElementCall() {
@@ -128,10 +126,10 @@ class UserSessionScreenTests: XCTestCase {
         // Open the room members list.
         app.buttons[A11yIdentifiers.roomDetailsScreen.people].tap()
         
-        // Open the first member's details. Loading members for big rooms can take a while.
-        let firstRoomMember = app.scrollViews.buttons.firstMatch
-        XCTAssertTrue(firstRoomMember.waitForExistence(timeout: 1000.0))
-        firstRoomMember.tap(.center)
+        // Open a member's details.
+        let roomMember = app.buttons[A11yIdentifiers.roomMembersListScreen.member("@alice:matrix.org")]
+        XCTAssertTrue(roomMember.waitForExistence(timeout: 10.0))
+        roomMember.tap(.center)
         
         // Open the profile from the bottom sheet
         let viewProfileButton = app.buttons[A11yIdentifiers.manageRoomMemberSheet.viewProfile]

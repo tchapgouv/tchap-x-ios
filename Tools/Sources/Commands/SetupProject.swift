@@ -17,10 +17,11 @@ struct SetupProject: ParsableCommand {
     }
     
     func brewInstall() throws {
-        try Zsh.run(command: "brew install xcodegen swiftgen git-lfs sourcery mint pkl kiliankoe/formulae/swift-outdated localazy/tools/localazy peripheryapp/periphery/periphery")
-        
-        // Install swiftformat from develop (for now), making sure to avoid conflicts with an existing versioned installation.
-        try Zsh.run(command: "source ci_scripts/ci_common.sh && install_swiftformat_head")
+        // Uninstall SwiftFormat from HEAD first if it is installed.
+        try Zsh.run(command: "if brew list --versions swiftformat | grep -q HEAD; then brew uninstall swiftformat; fi")
+        // Uninstall Periphery from the deprecated tap first if it is installed (superseded by the homebrew-core formula).
+        try Zsh.run(command: "if brew list --cask --versions periphery &> /dev/null; then brew uninstall --cask periphery; fi")
+        try Zsh.run(command: "brew install xcodegen swiftgen swiftformat git-lfs sourcery mint pkl kiliankoe/formulae/swift-outdated localazy/tools/localazy periphery")
     }
     
     func mintPackagesInstall() throws {

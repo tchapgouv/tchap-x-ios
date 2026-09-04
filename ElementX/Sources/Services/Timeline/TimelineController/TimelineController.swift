@@ -44,12 +44,16 @@ class TimelineController: TimelineControllerProtocol {
         activeTimelineItemProvider.kind
     }
     
+    let allowedGalleryItemTypes: [TimelineAllowedGalleryItemType]?
+    
     init(roomProxy: JoinedRoomProxyProtocol,
          timelineProxy: TimelineProxyProtocol,
          initialFocussedEventID: String?,
          timelineItemFactory: RoomTimelineItemFactoryProtocol,
          mediaProvider: MediaProviderProtocol,
-         appSettings: AppSettings) {
+         appSettings: AppSettings,
+         allowedGalleryItemTypes: [TimelineAllowedGalleryItemType]? = nil) {
+        self.allowedGalleryItemTypes = allowedGalleryItemTypes
         self.roomProxy = roomProxy
         liveTimelineItemProvider = timelineProxy.timelineItemProvider
         self.timelineItemFactory = timelineItemFactory
@@ -402,10 +406,18 @@ class TimelineController: TimelineControllerProtocol {
         }
     }
     
+    func sendGallery(itemInfos: [GalleryItemInfo],
+                     caption: String?,
+                     inReplyToEventID: String?) async -> Result<Void, TimelineControllerError> {
+        await activeTimeline.sendGallery(itemInfos: itemInfos,
+                                         caption: caption,
+                                         inReplyToEventID: inReplyToEventID).mapError(TimelineControllerError.timelineProxyError)
+    }
+    
     // MARK: - Polls
     
-    func createPoll(question: String, answers: [String], pollKind: Poll.Kind) async -> Result<Void, TimelineControllerError> {
-        switch await activeTimeline.createPoll(question: question, answers: answers, pollKind: pollKind).mapError(TimelineControllerError.timelineProxyError) {
+    func createPoll(question: String, answers: [String], maxSelections: Int, pollKind: Poll.Kind) async -> Result<Void, TimelineControllerError> {
+        switch await activeTimeline.createPoll(question: question, answers: answers, maxSelections: maxSelections, pollKind: pollKind).mapError(TimelineControllerError.timelineProxyError) {
         case .success:
             callbacks.send(.messageSentOrEdited)
             return .success(())
@@ -414,8 +426,8 @@ class TimelineController: TimelineControllerProtocol {
         }
     }
     
-    func editPoll(original eventID: String, question: String, answers: [String], pollKind: Poll.Kind) async -> Result<Void, TimelineControllerError> {
-        await activeTimeline.editPoll(original: eventID, question: question, answers: answers, pollKind: pollKind).mapError(TimelineControllerError.timelineProxyError)
+    func editPoll(original eventID: String, question: String, answers: [String], maxSelections: Int, pollKind: Poll.Kind) async -> Result<Void, TimelineControllerError> {
+        await activeTimeline.editPoll(original: eventID, question: question, answers: answers, maxSelections: maxSelections, pollKind: pollKind).mapError(TimelineControllerError.timelineProxyError)
     }
     
     func sendPollResponse(pollStartID: String, answers: [String]) async -> Result<Void, TimelineControllerError> {
@@ -574,10 +586,14 @@ class TimelineController: TimelineControllerProtocol {
         
         switch timelineItem.properties.replyDetails {
         case .notLoaded:
-            activeTimeline.fetchDetails(for: eventID)
+            Task { @MainActor in
+                activeTimeline.fetchDetails(for: eventID)
+            }
         case .error:
             if refetchOnError {
-                activeTimeline.fetchDetails(for: eventID)
+                Task { @MainActor in
+                    activeTimeline.fetchDetails(for: eventID)
+                }
             }
         default:
             break
@@ -634,8 +650,14 @@ class TimelineController: TimelineControllerProtocol {
         }
         
         if let avatarURL, let mediaSource = try? MediaSourceProxy(url: avatarURL, mimeType: nil) {
-            if case let .success(avatarData) = await mediaProvider.loadThumbnailForSource(source: mediaSource, size: .init(width: 100, height: 100)) {
-                sendMessageIntent.setImage(INImage(imageData: avatarData), forParameterNamed: \.speakableGroupName)
+            // Request a generous size so the square crop of a non-square avatar keeps enough resolution.
+            if case let .success(avatarData) = await mediaProvider.loadThumbnailForSource(source: mediaSource, size: .init(width: 256, height: 256)) {
+                if let squareAvatarData = Self.squareAvatarImageData(from: avatarData) {
+                    sendMessageIntent.setImage(INImage(imageData: squareAvatarData), forParameterNamed: \.speakableGroupName)
+                } else {
+                    MXLog.error("Failed processing the room avatar for the send message intent, using a placeholder.")
+                    addPlacehoder()
+                }
             } else {
                 addPlacehoder()
             }
@@ -653,7 +675,36 @@ class TimelineController: TimelineControllerProtocol {
     }
 }
 
-private extension TimelineItemProxy {
+private extension TimelineController {
+    /// Media repo thumbnails are scaled, not cropped, so they keep the source's aspect
+    /// ratio. The share sheet's conversation suggestions stretch the donated image to fill
+    /// their circle, so centre-crop it to a square first.
+    static func squareAvatarImageData(from data: Data) -> Data? {
+        guard let image = UIImage(data: data) else { return nil }
+        
+        let side = min(image.size.width, image.size.height)
+        guard side > 0 else { return nil }
+        
+        if image.size.width == image.size.height {
+            return data
+        }
+        
+        let format = UIGraphicsImageRendererFormat()
+        // UIImage(data:) decodes at scale 1; pin the renderer to that so the
+        // output isn't silently multiplied by the device's screen scale.
+        format.scale = image.scale
+        
+        return UIGraphicsImageRenderer(size: CGSize(width: side, height: side), format: format)
+            .pngData { _ in
+                // Round the offsets to pixel boundaries so the crop is a straight
+                // copy rather than resampling (and softening) the whole image.
+                image.draw(at: CGPoint(x: ((side - image.size.width) / 2).rounded(),
+                                       y: ((side - image.size.height) / 2).rounded()))
+            }
+    }
+}
+
+private nonisolated extension TimelineItemProxy {
     var isItemCollapsible: Bool {
         if case let .event(eventItem) = self {
             switch eventItem.content {

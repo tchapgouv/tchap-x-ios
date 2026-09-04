@@ -34,7 +34,6 @@ struct TimelineView: View {
                                                              canCurrentUserRedactOthers: timelineContext.viewState.canCurrentUserRedactOthers,
                                                              canCurrentUserPin: timelineContext.viewState.canCurrentUserPin,
                                                              pinnedEventIDs: timelineContext.viewState.pinnedEventIDs,
-                                                             isDM: timelineContext.viewState.isDM,
                                                              isViewSourceEnabled: timelineContext.viewState.isViewSourceEnabled,
                                                              areThreadsEnabled: timelineContext.viewState.areThreadsEnabled,
                                                              timelineKind: timelineContext.viewState.timelineKind,
@@ -101,7 +100,6 @@ struct TimelineViewRepresentable: UIViewControllerRepresentable {
     
     // MARK: - Coordinator
     
-    @MainActor
     class Coordinator {
         let context: TimelineViewModel.Context
         

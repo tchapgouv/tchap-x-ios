@@ -16,9 +16,7 @@ enum SpacesScreenViewModelAction {
 }
 
 struct SpacesScreenViewState: BindableState {
-    let userID: String
-    var userDisplayName: String?
-    var userAvatarURL: URL?
+    var userProfile: UserProfile
     
     var topLevelSpaces: [SpaceServiceRoom]
     var selectedSpaceID: String?

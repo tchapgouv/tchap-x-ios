@@ -6,14 +6,19 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+<<<<<<< HEAD
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
 @testable import TchapX_Production
 #else
+=======
+import Combine
+>>>>>>> release/26.08.2
 @testable import ElementX
 #endif
 import Foundation
+import Macros
 import Testing
 
 struct UserPreferenceTests {
@@ -137,72 +142,42 @@ struct UserPreferenceTests {
         #expect(value.codable == nil)
         #expect(testDefaults.data(forKey: TestsKey.key3.rawValue) == nil)
     }
-    
-    @Test
-    func localOverRemoteValue() {
-        let storage = VolatileUserDefaults()
-        @UserPreference(key: TestsKey.testKey, defaultValue: "", storage: storage) var preference
-        #expect(preference == "")
-        
-        _preference.remoteValue = "remote"
-        #expect(preference == "remote")
-        
-        preference = "local"
-        #expect(preference == "local")
-    }
-    
-    @Test
-    func remoteOverLocalValue() {
-        let storage = VolatileUserDefaults()
-        @UserPreference(key: TestsKey.testKey, defaultValue: "", storage: storage, mode: .remoteOverLocal) var preference
-        #expect(preference == "")
-        
-        _preference.remoteValue = "remote"
-        #expect(preference == "remote")
-        
-        preference = "local"
-        #expect(preference == "remote")
-        #expect(_preference.isLockedToRemote)
-    }
 }
 
-private struct TestPreferences {
-    @UserPreference
+private final class TestPreferences {
+    let store: UserDefaultsProtocol
+    
+    init(_ store: UserDefaultsProtocol) {
+        self.store = store
+    }
+    
+    @UserPreference(key: TestsKey.key1.rawValue, volatile: true)
     var volatileVar: String?
     
-    @UserPreference
+    @UserPreference(key: TestsKey.key2.rawValue)
     var plist: String?
     
-    @UserPreference
+    @UserPreference(key: TestsKey.key3.rawValue)
     var codable: CodableTestType?
     
-    @UserPreference
+    @UserPreference(key: TestsKey.key4.rawValue, volatile: true)
     var volatileCodable: CodableTestType?
     
-    @UserPreference
+    @UserPreference(key: TestsKey.key5.rawValue)
     var plistArray: [Int]?
-    
-    init(_ storage: UserDefaultsProtocol) {
-        _volatileVar = UserPreference(key: TestsKey.key1, storage: VolatileUserDefaults())
-        _plist = UserPreference(key: TestsKey.key2, storage: storage)
-        _codable = UserPreference(key: TestsKey.key3, storage: storage)
-        _volatileCodable = UserPreference(key: TestsKey.key4, storage: VolatileUserDefaults())
-        _plistArray = UserPreference(key: TestsKey.key5, storage: storage)
-    }
 }
 
 private struct CodableTestType: Equatable, Codable {
+    // periphery:ignore - used via the synthesized Codable conformance
     let a: String
+    // periphery:ignore - used via the synthesized Codable conformance
     let b: [Int]
 }
 
-private struct TestsKey: PreferenceKeyable, RawRepresentable {
-    static let testKey = Self(rawValue: "testKey")
-    static let key1 = Self(rawValue: "foo.volatile")
-    static let key2 = Self(rawValue: "foo.plist")
-    static let key3 = Self(rawValue: "foo.codable")
-    static let key4 = Self(rawValue: "foo.volatile.codable")
-    static let key5 = Self(rawValue: "foo.plist.array")
-    
-    let rawValue: String
+private enum TestsKey: String {
+    case key1 = "foo.volatile"
+    case key2 = "foo.plist"
+    case key3 = "foo.codable"
+    case key4 = "foo.volatile.codable"
+    case key5 = "foo.plist.array"
 }

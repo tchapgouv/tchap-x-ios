@@ -12,7 +12,7 @@ import MatrixRustSDK
 
 /// Logging utility that provies multiple logging levels as well as file output and rolling.
 /// Its purpose is to provide a common entry for customizing logging and should be used throughout the code.
-enum MXLog {
+nonisolated enum MXLog {
     private nonisolated(unsafe) static var rootSpan: Span!
     private nonisolated(unsafe) static var currentTarget: String!
     
@@ -21,14 +21,6 @@ enum MXLog {
         
         rootSpan = Span(file: #file, line: #line, level: .info, target: self.currentTarget, name: "root", bridgeTraceId: nil)
         rootSpan.enter()
-    }
-    
-    static func createSpan(_ name: String,
-                           file: String = #file,
-                           function: String = #function,
-                           line: Int = #line,
-                           column: Int = #column) -> Span {
-        createSpan(name, level: .info, file: file, function: function, line: line, column: column)
     }
     
     static func verbose(_ message: Any,
@@ -96,6 +88,7 @@ enum MXLog {
     
     #if DEBUG
     private static let devPrefix = URL.documentsDirectory.pathComponents[2].uppercased()
+    // periphery:ignore - used for debugging
     /// A helper method for print debugging, only available on debug builds.
     ///
     /// When running on the simulator this will log `[USERNAME] message` so that
@@ -110,20 +103,6 @@ enum MXLog {
     #endif
     
     // MARK: - Private
-    
-    // periphery:ignore:parameters function,column
-    private static func createSpan(_ name: String,
-                                   level: LogLevel,
-                                   file: String = #file,
-                                   function: String = #function,
-                                   line: Int = #line,
-                                   column: Int = #column) -> Span {
-        if Span.current().isNone() {
-            rootSpan.enter()
-        }
-        
-        return Span(file: file, line: UInt32(line), level: level.rustLogLevel, target: currentTarget, name: name, bridgeTraceId: nil)
-    }
     
     // periphery:ignore:parameters function,column
     private static func log(_ message: Any,

@@ -29,8 +29,6 @@ final class SpacesScreenViewModelTests {
     }
     
     init() {
-        let appSettings = AppSettings.volatile()
-        
         let clientProxy = ClientProxyMock(.init())
         let userSession = UserSessionMock(.init(clientProxy: clientProxy))
         
@@ -49,7 +47,6 @@ final class SpacesScreenViewModelTests {
         
         viewModel = SpacesScreenViewModel(userSession: userSession,
                                           selectedSpacePublisher: .init(nil),
-                                          appSettings: appSettings,
                                           userIndicatorController: UserIndicatorControllerMock())
     }
     
@@ -60,10 +57,10 @@ final class SpacesScreenViewModelTests {
     
     @Test
     func topLevelSpacesSubscription() async throws {
-        var deferred = deferFulfillment(context.observe(\.viewState.topLevelSpaces)) { $0.count == 0 }
+        var deferred = deferFulfillment(context.observe(\.viewState.topLevelSpaces)) { $0.isEmpty }
         topLevelSpacesSubject.send([])
         try await deferred.fulfill()
-        #expect(context.viewState.topLevelSpaces.count == 0)
+        #expect(context.viewState.topLevelSpaces.isEmpty)
         
         deferred = deferFulfillment(context.observe(\.viewState.topLevelSpaces)) { $0.count == 1 }
         topLevelSpacesSubject.send([

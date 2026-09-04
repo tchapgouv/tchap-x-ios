@@ -74,13 +74,17 @@ struct ClassicAppAccount: Equatable, CustomStringConvertible {
 
 final class ClassicAppMXAccount: NSObject, NSCoding {
     /// The obtained user ID.
-    var userID: String
+    let userID: String
     /// The access token to create a MXRestClient.
-    var accessToken: String
+    let accessToken: String
     /// The homeserver url (ex: "https://matrix.org").
+<<<<<<< HEAD
     var homeserverURL: URL
     /// The third-party IDs known by the account.
     let threePIDs: [ClassicAppMXThirdPartyIdentifier] // :tchap: get email from classic app account
+=======
+    let homeserverURL: URL
+>>>>>>> release/26.08.2
     
     /// Disable the account without logging out (NO by default).
     ///
@@ -96,7 +100,7 @@ final class ClassicAppMXAccount: NSObject, NSCoding {
     }
     
     /// Override the existing `CustomStringConvertible` conformance.
-    override var description: String {
+    override nonisolated var description: String {
         "ClassicAppMXAccount(userID: \(userID), homeserverURL: \(homeserverURL), isDisabled: \(isDisabled), isSoftLogout: \(isSoftLogout))"
     }
     
@@ -106,23 +110,8 @@ final class ClassicAppMXAccount: NSObject, NSCoding {
         static let homeserverURL = "homeserverurl" // String?
         static let userID = "userid" // String?
         static let accessToken = "accesstoken" // String?
-        static let accessTokenExpiresAt = "accessTokenExpiresAt" // UInt64
-        static let refreshToken = "refreshToken" // String?
-        static let identityServerURL = "identityserverurl" // String?
-        static let identityServerAccessToken = "identityserveraccesstoken" // String?
-        static let deviceID = "deviceId" // String?
-        static let allowedCertificate = "allowedCertificate" // Data?
-        static let threePIDs = "threePIDs" // [MXThirdPartyIdentifier]?
-        static let device = "device" // MXDevice?
-        static let antivirusServerURL = "antivirusserverurl" // String?
-        static let pushGatewayURL = "pushgatewayurl" // String?
-        static let hasPusherForPushNotifications = "_enablePushNotifications" // Bool
-        static let hasPusherForPushKitNotifications = "enablePushKitNotifications" // Bool
-        static let enableInAppNotifications = "enableInAppNotifications" // Bool
         static let isDisabled = "disabled" // Bool
         static let isSoftLogout = "isSoftLogout" // Bool
-        static let isWarnedAboutEncryption = "warnedAboutEncryption" // Bool
-        static let others = "others" // NSMutableDictionary
     }
     
     required init?(coder: NSCoder) {
@@ -185,6 +174,7 @@ final class ClassicAppMXThirdPartyIdentifier: NSObject, NSCoding {
 
 /// `MXUser` represents a user in Matrix.
 final class ClassicAppMXUser: NSObject, NSCoding {
+    // periphery:ignore - documents the schema, parsed but not consumed yet
     /// The user id.
     let userID: String
     /// The user display name.
@@ -198,10 +188,6 @@ final class ClassicAppMXUser: NSObject, NSCoding {
         static let userID = "userId" // String
         static let displayName = "displayname" // String?
         static let avatarURL = "avatarUrl" // String?
-        static let statusMessage = "statusMsg" // String?
-        static let currentlyActive = "currentlyActive" // Bool
-        static let lastActiveLocalTimestamp = "lastActiveLocalTS" // UInt64
-        static let latestUpdateTimestamp = "latestUpdateTS" // UInt64
     }
     
     required init?(coder aDecoder: NSCoder) {

@@ -20,6 +20,24 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
 	</dict>
+	<key>a11y_gallery_more_media</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>Галерея, ще %1$d медіа</string>
+			<key>many</key>
+			<string>Галерея, ще %1$d медіа</string>
+			<key>one</key>
+			<string>Галерея, ще %1$d медіа</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
 	<key>a11y_polls_percent_of_total</key>
 	<dict>
 		<key>COUNT</key>
@@ -47,11 +65,47 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>few</key>
-			<string>Прочитано %1$@ та %2$d іншими</string>
+			<string>Попереднє повідомлення прочитали %1$@ та ще %2$d користувачі</string>
 			<key>many</key>
-			<string>Прочитано %1$@ та %2$d іншими</string>
+			<string>Попереднє повідомлення прочитали %1$@ та ще %2$d користувачів</string>
 			<key>one</key>
-			<string>Прочитано %1$@ та %2$d іншим</string>
+			<string>Попереднє повідомлення прочитали %1$@ та ще %2$d користувач</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>common_gallery_reply_attachments</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>%1$d вкладення…</string>
+			<key>many</key>
+			<string>%1$d вкладень…</string>
+			<key>one</key>
+			<string>%1$d вкладення…</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>common_gallery_reply_media_items</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>%1$d медіаелементи…</string>
+			<key>many</key>
+			<string>%1$d медіаелементів…</string>
+			<key>one</key>
+			<string>%1$d медіаелемент…</string>
 		</dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
@@ -236,6 +290,24 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
 	</dict>
+	<key>notification_gallery_body</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>Поширено %1$d вкладення</string>
+			<key>many</key>
+			<string>Поширено %1$d вкладень</string>
+			<key>one</key>
+			<string>Поширено %1$d вкладення</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
 	<key>notification_invitations</key>
 	<dict>
 		<key>COUNT</key>
@@ -308,6 +380,24 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
 	</dict>
+	<key>screen.room.timeline_redacted_messages</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>%1$d вилучені повідомлення</string>
+			<key>many</key>
+			<string>%1$d вилучених повідомлень</string>
+			<key>one</key>
+			<string>%1$d вилучене повідомлення</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
 	<key>screen_advanced_settings_live_location_update_distance</key>
 	<dict>
 		<key>COUNT</key>
@@ -362,6 +452,24 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
 	</dict>
+	<key>screen_custom_recovery_key_input_notice</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>Щонайменше %1$d символи. Не використовуйте пароль облікового запису.</string>
+			<key>many</key>
+			<string>Щонайменше %1$d символів. Не використовуйте пароль облікового запису.</string>
+			<key>one</key>
+			<string>Щонайменше %1$d символ. Не використовуйте пароль облікового запису.</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
 	<key>screen_image_edition_a11y_rotation_state</key>
 	<dict>
 		<key>COUNT</key>
@@ -370,10 +478,12 @@
 			<string>NSStringPluralRuleType</string>
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
+			<key>few</key>
+			<string>%1$d градуси</string>
+			<key>many</key>
+			<string>%1$d градусів</string>
 			<key>one</key>
-			<string>%1$d degree</string>
-			<key>other</key>
-			<string>%1$d degrees</string>
+			<string>%1$d градус</string>
 		</dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
@@ -608,6 +718,24 @@
 			<string>Видалити %1$d кімнат з %2$@</string>
 			<key>one</key>
 			<string>Видалити %1$d кімнату з %2$@</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>screen_timeline_active_call_joined_count</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>%1$d приєдналися</string>
+			<key>many</key>
+			<string>%1$d приєдналися</string>
+			<key>one</key>
+			<string>%1$d приєднується</string>
 		</dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>

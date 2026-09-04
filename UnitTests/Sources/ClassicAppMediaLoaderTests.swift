@@ -13,6 +13,7 @@
 @testable import ElementX
 #endif
 import Foundation
+import Synchronization
 import Testing
 
 final class ClassicAppMediaLoaderTests {
@@ -20,6 +21,7 @@ final class ClassicAppMediaLoaderTests {
     let mediaLoader: ClassicAppMediaLoader
     let urlSession: URLSession
     
+    @MainActor
     init() throws {
         account = ClassicAppAccount(userID: "@alice:matrix.org",
                                     displayName: nil,
@@ -46,6 +48,7 @@ final class ClassicAppMediaLoaderTests {
         #expect(data == MockURLProtocol.downloadData)
     }
     
+    @MainActor
     @Test
     func loadMediaContentWithInvalidToken() async throws {
         let accountWithoutToken = ClassicAppAccount(userID: "@bob:matrix.org",
@@ -130,7 +133,7 @@ final class ClassicAppMediaLoaderTests {
 
 // MARK: - MockURLProtocol
 
-private class MockURLProtocol: URLProtocol {
+private nonisolated class MockURLProtocol: URLProtocol {
     /// The MXC URL whose media requests will be served successfully.
     static let mxcURL: URL = "mxc://matrix.org/testmediaid"
     /// The MXC URL whose media requests will return a 404.
@@ -145,7 +148,10 @@ private class MockURLProtocol: URLProtocol {
     static let thumbnailData = Data("thumbnail data".utf8)
     
     /// The last request handled, for URL/header inspection in tests.
-    static var lastRequest: URLRequest?
+    private static let _lastRequest: Mutex<URLRequest?> = .init(nil)
+    static var lastRequest: URLRequest? {
+        _lastRequest.withLock { $0 }
+    }
     
     /// Maps a URL path to a fixed `(statusCode, Data)` response.
     private static let responses: [String: (Int, Data)] = [
@@ -154,7 +160,7 @@ private class MockURLProtocol: URLProtocol {
     ]
     
     override func startLoading() {
-        MockURLProtocol.lastRequest = request
+        MockURLProtocol._lastRequest.withLock { $0 = request }
         
         guard let url = request.url else {
             client?.urlProtocol(self, didFailWithError: URLError(.badURL))

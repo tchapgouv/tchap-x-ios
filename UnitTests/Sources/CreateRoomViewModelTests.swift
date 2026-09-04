@@ -26,8 +26,6 @@ final class CreateRoomScreenViewModelTests {
     
     private let appSettings: AppSettings
     
-    private let usersSubject = CurrentValueSubject<[UserProfileProxy], Never>([])
-    
     var context: CreateRoomScreenViewModel.Context {
         viewModel.context
     }
@@ -36,7 +34,7 @@ final class CreateRoomScreenViewModelTests {
         appSettings = AppSettings.volatile()
     }
     
-    deinit {
+    isolated deinit {
         viewModel = nil
         clientProxy = nil
         spaceService = nil

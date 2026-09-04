@@ -17,7 +17,6 @@ import SwiftUI
 class TimelineItemCell: UITableViewCell {
     static let reuseIdentifier = "TimelineItemCell"
     
-    // periphery:ignore - retaining purpose
     var item: RoomTimelineItemViewState?
     
     override func prepareForReuse() {
@@ -103,7 +102,9 @@ class TimelineTableViewController: UIViewController {
     var isLive = true {
         didSet {
             // Update isScrolledToBottom when switching back to a live timeline.
-            if isLive { scrollViewDidScroll(tableView) }
+            if isLive {
+                scrollViewDidScroll(tableView)
+            }
         }
     }
     
@@ -178,11 +179,6 @@ class TimelineTableViewController: UIViewController {
     /// Whether or not the view has been shown on screen yet.
     private var hasAppearedOnce = false
     
-    /// Value that determines if the table view is flipped or not according to the VoiceOver status.
-    private var scaleY: CGFloat {
-        UIAccessibility.isVoiceOverRunning ? 1 : -1
-    }
-    
     init(coordinator: TimelineViewRepresentable.Coordinator,
          isScrolledToBottom: Binding<Bool>,
          isReadMarkerVisible: Binding<Bool>,
@@ -206,9 +202,8 @@ class TimelineTableViewController: UIViewController {
         tableView.keyboardDismissMode = .onDrag
         tableView.backgroundColor = .compound.bgCanvasDefault
         
-        // The tableview should be flipped to display the newest items at the top
-        // the only exception is VoiceOver, where we want to keep the latest item at the top as Android.
-        tableView.transform = CGAffineTransform(scaleX: 1, y: scaleY)
+        // The tableview is flipped to display the newest items at the bottom.
+        tableView.transform = CGAffineTransform(scaleX: 1, y: -1)
         view.addSubview(tableView)
         
         // Prevents XCUITest from invoking the diffable dataSource's cellProvider
@@ -251,15 +246,6 @@ class TimelineTableViewController: UIViewController {
         NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
             .sink { [weak self] _ in
                 self?.sendLastVisibleItemReadReceipt()
-            }
-            .store(in: &cancellables)
-        
-        // Observe voice over status changes to flip the table view accordingly
-        NotificationCenter.default.publisher(for: UIAccessibility.voiceOverStatusDidChangeNotification)
-            .sink { [weak self] _ in
-                guard let self else { return }
-                tableView.transform = CGAffineTransform(scaleX: 1, y: scaleY)
-                tableView.reloadData()
             }
             .store(in: &cancellables)
         
@@ -310,7 +296,7 @@ class TimelineTableViewController: UIViewController {
                 .background(Color.clear)
                 
                 // Flipping the cell can create some issues with cell resizing, so flip the content View
-                cell.contentView.transform = CGAffineTransform(scaleX: 1, y: scaleY)
+                cell.contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
                 cell.accessibilityElements = [cell.contentView] // Ensure VoiceOver reads the content view only
                 
                 return cell
@@ -337,7 +323,7 @@ class TimelineTableViewController: UIViewController {
                 .background(Color.clear)
                 
                 // Flipping the cell can create some issues with cell resizing, so flip the content View
-                cell.contentView.transform = CGAffineTransform(scaleX: 1, y: scaleY)
+                cell.contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
                 return cell
             }
         }
@@ -418,10 +404,13 @@ class TimelineTableViewController: UIViewController {
     
     /// Scrolls to the oldest item in the timeline.
     private func scrollToOldestItem(animated: Bool) {
-        guard !timelineItemsIDs.isEmpty else {
+        // The data source can lag behind timelineItemsIDs, so scroll against the table's actual
+        // contents to avoid targeting a section or row that doesn't exist yet.
+        guard tableView.numberOfSections > 1,
+              tableView.numberOfRows(inSection: 1) > 0 else {
             return
         }
-        tableView.scrollToRow(at: IndexPath(item: timelineItemsIDs.count - 1, section: 1), at: .bottom, animated: animated)
+        tableView.scrollToRow(at: IndexPath(item: tableView.numberOfRows(inSection: 1) - 1, section: 1), at: .bottom, animated: animated)
         scrollDirectionPublisher.send(.top)
     }
     
@@ -628,19 +617,16 @@ extension TimelineTableViewController {
     
     /// Returns the timestamp of the newest visible timeline item.
     ///
-    /// The table view is flipped (unless VoiceOver is running), so the "newest"
-    /// visible cell on screen is actually the *last* index path in `indexPathsForVisibleRows`
-    /// when the table is flipped, or the *first* when it is not.
+    /// The table view is flipped, so the "newest" visible cell on screen is
+    /// actually the *last* index path in `indexPathsForVisibleRows`.
     private func newestVisibleDate() -> Date? {
         guard let visibleIndexPaths = tableView.indexPathsForVisibleRows,
               !visibleIndexPaths.isEmpty else {
             return nil
         }
         
-        // In a flipped table view the last index path is the topmost item on screen;
-        // when VoiceOver is active the table is not flipped so the first is topmost.
-        let isFlipped = scaleY == -1
-        let orderedPaths = isFlipped ? visibleIndexPaths.reversed() : visibleIndexPaths
+        // In a flipped table view the last index path is the topmost item on screen.
+        let orderedPaths = visibleIndexPaths.reversed()
         
         // Walk from topmost downward and return the timestamp of the first item that has one.
         for indexPath in orderedPaths {
@@ -658,7 +644,7 @@ extension TimelineTableViewController {
 
 extension TimelineTableViewController {
     /// The sections of the table view used in the diffable data source.
-    enum TimelineSection {
+    nonisolated enum TimelineSection {
         case main
         case typingIndicator
     }

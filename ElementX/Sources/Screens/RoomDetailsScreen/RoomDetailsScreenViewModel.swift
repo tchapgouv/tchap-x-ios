@@ -18,7 +18,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let notificationSettingsProxy: NotificationSettingsProxyProtocol
     private let attributedStringBuilder: AttributedStringBuilderProtocol
-    private let appSettings: AppSettings
     
     private var pinnedEventsTimelineItemProvider: TimelineItemProviderProtocol? {
         didSet {
@@ -46,29 +45,29 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
     
     init(roomProxy: JoinedRoomProxyProtocol,
          userSession: UserSessionProtocol,
+         appHooks: AppHooks,
          analyticsService: AnalyticsServiceProtocol,
          userIndicatorController: UserIndicatorControllerProtocol,
          notificationSettingsProxy: NotificationSettingsProxyProtocol,
-         attributedStringBuilder: AttributedStringBuilderProtocol,
-         appSettings: AppSettings) {
+         attributedStringBuilder: AttributedStringBuilderProtocol) {
         self.roomProxy = roomProxy
         self.userSession = userSession
         self.analyticsService = analyticsService
         self.userIndicatorController = userIndicatorController
         self.notificationSettingsProxy = notificationSettingsProxy
         self.attributedStringBuilder = attributedStringBuilder
-        self.appSettings = appSettings
         
         let topic = attributedStringBuilder.fromPlain(roomProxy.infoPublisher.value.topic)
         
-        super.init(initialViewState: .init(details: roomProxy.details,
-                                           isEncrypted: roomProxy.infoPublisher.value.isEncrypted,
-                                           isDirect: roomProxy.infoPublisher.value.isDirect,
-                                           topic: topic,
-                                           topicSummary: topic?.unattributedStringByReplacingNewlinesWithSpaces(),
-                                           joinedMembersCount: roomProxy.infoPublisher.value.joinedMembersCount,
-                                           notificationSettingsState: .loading,
-                                           bindings: .init()),
+        let viewState = RoomDetailsScreenViewState(details: roomProxy.details,
+                                                   isEncrypted: roomProxy.infoPublisher.value.isEncrypted,
+                                                   isDirect: roomProxy.infoPublisher.value.isDirect,
+                                                   topic: topic,
+                                                   topicSummary: topic?.unattributedStringByReplacingNewlinesWithSpaces(),
+                                                   joinedMembersCount: roomProxy.infoPublisher.value.joinedMembersCount,
+                                                   notificationSettingsState: .loading,
+                                                   bindings: .init())
+        super.init(initialViewState: appHooks.roomDetailsScreenHook.update(viewState),
                    mediaProvider: userSession.mediaProvider)
         
         Task {
@@ -573,11 +572,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                 userIndicatorController.retractIndicatorWithId(loadingIndicatorIdentifier)
             }
             
-            // We don't actually know the mime type here, assume it's an image.
-            if let mediaSource = try? MediaSourceProxy(url: url, mimeType: "image/jpeg"),
-               case let .success(file) = await userSession.mediaProvider.loadFileFromSource(mediaSource) {
-                state.bindings.mediaPreviewItem = MediaPreviewItem(file: file, title: roomProxy.infoPublisher.value.displayName)
-            }
+            state.bindings.mediaPreviewItem = await MediaPreviewItem.load(from: url, title: roomProxy.infoPublisher.value.displayName, using: userSession.mediaProvider)
         }
     }
     

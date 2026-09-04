@@ -20,7 +20,7 @@ jobs:
       cancel-in-progress: false
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -40,14 +40,16 @@ jobs:
         if: failure()
         with:
           name: Results
-          path: test_output/IntegrationTests.xcresult.zip
+          path: |
+            test_output/IntegrationTests.xcresult.zip
+            test_output/console*
           retention-days: 7
           if-no-files-found: ignore
 
       - name: Upload coverage to Codecov
         # Skip if not successful and in forks
         if: ${{ success() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
-        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           report_type: coverage
           files: test_output/integration-cobertura.xml
@@ -59,7 +61,7 @@ jobs:
       - name: Upload test results to Codecov
         # Skip if cancelled and in forks
         if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
-        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         continue-on-error: true
         with:
           report_type: test_results

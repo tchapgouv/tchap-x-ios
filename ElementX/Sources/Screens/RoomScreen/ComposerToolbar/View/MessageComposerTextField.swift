@@ -42,13 +42,11 @@ struct MessageComposerTextField: View {
     }
     
     private var keyboardShortcuts: some View {
-        Group {
-            Button("") {
-                keyHandler(.keyboardEscape)
-            }
-            // Need this to enable escape on the textView and forward the presses
-            .keyboardShortcut(.escape, modifiers: [])
+        Button("") {
+            keyHandler(.keyboardEscape)
         }
+        // Need this to enable escape on the textView and forward the presses
+        .keyboardShortcut(.escape, modifiers: [])
     }
 }
 
@@ -153,7 +151,6 @@ private struct UITextViewWrapper: UIViewRepresentable {
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text,
                     selectedRange: $selectedRange,
-                    maxHeight: maxHeight,
                     keyHandler: keyHandler,
                     pasteHandler: pasteHandler)
     }
@@ -162,19 +159,15 @@ private struct UITextViewWrapper: UIViewRepresentable {
         private var text: Binding<NSAttributedString>
         private var selectedRange: Binding<NSRange>
         
-        private let maxHeight: CGFloat
-        
         private let keyHandler: GenericKeyHandler
         private let pasteHandler: PasteHandler
         
         init(text: Binding<NSAttributedString>,
              selectedRange: Binding<NSRange>,
-             maxHeight: CGFloat,
              keyHandler: @escaping GenericKeyHandler,
              pasteHandler: @escaping PasteHandler) {
             self.text = text
             self.selectedRange = selectedRange
-            self.maxHeight = maxHeight
             self.keyHandler = keyHandler
             self.pasteHandler = pasteHandler
         }
@@ -213,7 +206,6 @@ private protocol ElementTextViewDelegate: AnyObject {
 
 private class ElementTextView: UITextView, PillAttachmentViewProviderDelegate {
     private(set) var timelineContext: TimelineViewModel.Context?
-    private var presendCallback: Binding<(() -> Void)?>
     private var pillViews = NSHashTable<UIView>.weakObjects()
     
     weak var elementDelegate: ElementTextViewDelegate?
@@ -221,7 +213,6 @@ private class ElementTextView: UITextView, PillAttachmentViewProviderDelegate {
     init(timelineContext: TimelineViewModel.Context?,
          presendCallback: Binding<(() -> Void)?>) {
         self.timelineContext = timelineContext
-        self.presendCallback = presendCallback
         
         super.init(frame: .zero, textContainer: nil)
         
@@ -243,10 +234,12 @@ private class ElementTextView: UITextView, PillAttachmentViewProviderDelegate {
          UIKeyCommand(input: "\r", modifierFlags: [], action: #selector(enterKeyPressed))]
     }
     
+    // periphery:ignore:parameters sender - required for objc selector
     @objc func shiftEnterKeyPressed(sender: UIKeyCommand) {
         elementDelegate?.textViewDidReceiveShiftEnterKeyPress(self)
     }
     
+    // periphery:ignore:parameters sender - required for objc selector
     @objc func enterKeyPressed(sender: UIKeyCommand) {
         elementDelegate?.textViewDidReceiveKeyPress(self, key: .keyboardReturnOrEnter)
     }
@@ -281,14 +274,21 @@ private class ElementTextView: UITextView, PillAttachmentViewProviderDelegate {
             return false
         }
         
-        return UIPasteboard.general.itemProviders.filter { !$0.isSupportedForPasteOrDrop }.isEmpty
+        return !UIPasteboard.general.itemProviders.contains { !$0.isSupportedForPasteOrDrop }
     }
     
     override func paste(_ sender: Any?) {
+        // When pasting a link over a selection, wrap the selection in a markdown link.
+        if selectedRange.length > 0, let link = UIPasteboard.general.pastedLink {
+            let selectedText = (attributedText.string as NSString).substring(with: selectedRange)
+            insertText("[\(selectedText)](\(link))")
+            return
+        }
+        
         let providers = UIPasteboard.general.itemProviders
         
         // Use the default behavior if there are any unsupported providers
-        guard providers.filter({ !$0.isSupportedForPasteOrDrop }).isEmpty else {
+        guard !providers.contains(where: { !$0.isSupportedForPasteOrDrop }) else {
             super.paste(sender)
             return
         }
@@ -313,14 +313,6 @@ private class ElementTextView: UITextView, PillAttachmentViewProviderDelegate {
         pillViews.add(pillView)
     }
     
-    func flushPills() {
-        for view in pillViews.allObjects {
-            view.alpha = 0.0
-            view.removeFromSuperview()
-        }
-        pillViews.removeAllObjects()
-    }
-    
     // MARK: - Private
     
     private func acceptCurrentSuggestion() {
@@ -330,6 +322,25 @@ private class ElementTextView: UITextView, PillAttachmentViewProviderDelegate {
         
         inputDelegate?.selectionWillChange(self)
         inputDelegate?.selectionDidChange(self)
+    }
+}
+
+private extension UIPasteboard {
+    /// The pasteboard's string contents when they consist of a single link and nothing else.
+    var pastedLink: String? {
+        guard let string = string?.trimmingCharacters(in: .whitespacesAndNewlines), !string.isEmpty,
+              let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
+            return nil
+        }
+        
+        let range = NSRange(string.startIndex..., in: string)
+        let matches = detector.matches(in: string, range: range)
+        
+        guard matches.count == 1, matches[0].range == range else {
+            return nil
+        }
+        
+        return string
     }
 }
 
@@ -346,8 +357,8 @@ struct MessageComposerTextField_Previews: PreviewProvider, TestablePreview {
         @State var text: NSAttributedString
         
         init(text: String) {
-            _text = .init(initialValue: .init(string: text, attributes: [.font: UIFont.preferredFont(forTextStyle: .body),
-                                                                         .foregroundColor: UIColor.compound.textPrimary]))
+            self.text = .init(string: text, attributes: [.font: UIFont.preferredFont(forTextStyle: .body),
+                                                         .foregroundColor: UIColor.compound.textPrimary])
         }
         
         var body: some View {

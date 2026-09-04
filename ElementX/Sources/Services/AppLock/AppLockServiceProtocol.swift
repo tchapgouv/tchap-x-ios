@@ -34,7 +34,22 @@ enum AppLockServiceBiometricResult {
     case interrupted
 }
 
-@MainActor
+/// The result of an attempt to verify that the user is the device owner.
+enum AppLockDeviceOwnerResult {
+    /// The device owner was successfully verified.
+    case verified
+    /// The verification completed without verifying the user.
+    case unverified
+    /// Verification isn't available because a device passcode isn't set.
+    case unavailable
+    /// Verification isn't available, but an App Lock PIN is set and can be used instead.
+    case appLockPINRequired
+    /// The verification attempt was cancelled.
+    case cancelled
+    /// The verification couldn't be completed due to an error.
+    case error
+}
+
 protocol AppLockServiceProtocol: AnyObject {
     /// The use of a PIN code is mandatory for this device.
     var isMandatory: Bool { get }
@@ -77,7 +92,18 @@ protocol AppLockServiceProtocol: AnyObject {
     ///
     /// Note: We don't track the biometric attempts as LAContext does that automatically.
     var numberOfPINAttempts: AnyPublisher<Int, Never> { get }
+    
+    // MARK: Device Owner Verification
+    
+    /// Verifies the device owner via the device passcode/biometrics, e.g. to gate a sensitive action.
+    ///
+    /// This is a standalone identity check: it does **not** unlock the app or touch any App Lock
+    /// state (the grace-period timer or PIN attempt count).
+    /// - Parameter reason: The localised reason shown in the system prompt.
+    func verifyDeviceOwner(reason: String) async -> AppLockDeviceOwnerResult
 }
+
+// MARK: - Mocks
 
 // sourcery: AutoMockable
 extension AppLockServiceProtocol { }

@@ -8,7 +8,7 @@
 import MatrixRustSDK
 import SwiftUI
 
-struct TimelineItemKeyForwarder: Identifiable, Hashable {
+nonisolated struct TimelineItemKeyForwarder: Identifiable, Hashable {
     let id: String
     let displayName: String?
     
@@ -19,7 +19,7 @@ struct TimelineItemKeyForwarder: Identifiable, Hashable {
     
     init(forwarderID: String, forwarderProfile: ProfileDetails) {
         switch forwarderProfile {
-        case let .ready(displayName, _, _):
+        case let .ready(displayName, _, _, _, _):
             self.init(id: forwarderID,
                       displayName: displayName)
         default:

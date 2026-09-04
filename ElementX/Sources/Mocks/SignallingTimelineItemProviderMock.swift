@@ -5,8 +5,6 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-// periphery:ignore:all
-
 import Combine
 import Foundation
 import MatrixRustSDK
@@ -14,7 +12,7 @@ import MatrixRustSDK
 /// A ``TimelineItemProviderMock`` subclass that optionally listens for ``UITestsSignalling`` signals
 /// to drive pagination and incoming message simulation.
 @MainActor
-class SignallingTimelineItemProviderMock: TimelineItemProviderMock {
+class SignallingTimelineItemProviderMock: TimelineItemProviderMock, @unchecked Sendable {
     private let stateSubject: CurrentValueSubject<([TimelineItemProxy], TimelinePaginationState), Never>
     
     /// An array of item arrays that will be prepended in order on each paginate signal.
@@ -24,6 +22,10 @@ class SignallingTimelineItemProviderMock: TimelineItemProviderMock {
     
     private var client: UITestsSignalling.Client?
     private var signalCancellable: AnyCancellable?
+    
+    override nonisolated init() {
+        fatalError("Use init(itemProxies:paginationState:listenForSignals:) instead.")
+    }
     
     init(itemProxies: [TimelineItemProxy] = [],
          paginationState: TimelinePaginationState = .init(backward: .idle, forward: .endReached),

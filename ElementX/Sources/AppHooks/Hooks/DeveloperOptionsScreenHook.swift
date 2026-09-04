@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-protocol DeveloperOptionsScreenHookProtocol {
-    func generalSectionRows() -> AnyView?
+nonisolated protocol DeveloperOptionsScreenHookProtocol: Sendable {
+    func generalSectionRows(isSignedIn: Bool) -> AnyView?
 }
 
 struct DefaultDeveloperOptionsScreenHook: DeveloperOptionsScreenHookProtocol {
-    func generalSectionRows() -> AnyView? {
+    func generalSectionRows(isSignedIn: Bool) -> AnyView? {
         nil
     }
 }

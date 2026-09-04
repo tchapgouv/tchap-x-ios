@@ -10,7 +10,7 @@ import MatrixRustSDK // Tchap
 import UIKit
 import UniformTypeIdentifiers
 
-struct VideoRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
+nonisolated struct VideoRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     let id: TimelineItemIdentifier
     let timestamp: Date
     let isOutgoing: Bool

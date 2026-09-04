@@ -131,6 +131,7 @@ struct SpaceScreen: View {
             // controller attempts to anchor itself to the button that is no longer visible.
             ToolbarItem(placement: .primaryAction) {
                 Menu {
+<<<<<<< HEAD
                     // :tchap: space-admin-limitations
 //                    if context.viewState.canEditChildren {
 //                        Section {
@@ -151,6 +152,27 @@ struct SpaceScreen: View {
 //                            }
 //                        }
 //                    } :tchap:end:
+=======
+                    if context.viewState.canEditChildren {
+                        Section {
+                            Button { context.send(viewAction: .createChildRoom) } label: {
+                                Label(L10n.actionCreateRoom, icon: \.plus)
+                                    .accessibilityIdentifier(A11yIdentifiers.spaceScreen.createRoom)
+                            }
+                            
+                            Button { context.send(viewAction: .addExistingRooms) } label: {
+                                Label(L10n.actionAddExistingRooms, icon: \.room)
+                            }
+                            .accessibilityIdentifier(A11yIdentifiers.spaceScreen.addExistingRooms)
+                            
+                            if !context.viewState.rooms.isEmpty {
+                                Button { context.send(viewAction: .manageChildren) } label: {
+                                    Label(L10n.actionManageRooms, icon: \.edit)
+                                }
+                            }
+                        }
+                    }
+>>>>>>> release/26.08.2
                     
                     Section {
                         if let roomProxy = context.viewState.roomProxy {
@@ -192,6 +214,7 @@ struct SpaceScreen: View {
 
 // MARK: - Previews
 
+@available(iOS 26.0, *)
 struct SpaceScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModel = makeViewModel()
     static let managingViewModel = makeViewModel(isManagingRooms: true)
@@ -211,7 +234,7 @@ struct SpaceScreen_Previews: PreviewProvider, TestablePreview {
             SpaceScreen(context: newSpaceViewModel.context)
         }
         .previewDisplayName("New Space")
-        .snapshotPreferences(expect: newSpaceViewModel.context.observe(\.viewState).map(\.canEditChildren))
+        .snapshotPreferences(expect: newSpaceViewModel.context.observe(\.viewState.canEditChildren))
     }
     
     static func makeViewModel(isManagingRooms: Bool = false, isNewSpace: Bool = false) -> SpaceScreenViewModel {

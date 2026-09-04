@@ -43,7 +43,7 @@ final class NotificationManagerTests {
         notificationManager.setUserSession(mockUserSession)
     }
     
-    deinit {
+    isolated deinit {
         notificationCenter = nil
         notificationManager = nil
     }

@@ -16,7 +16,7 @@ enum TimelineKind: Equatable {
     case pinned
     case thread(rootEventID: String)
     
-    enum MediaPresentation { case roomScreenLive, roomScreenDetached, pinnedEventsScreen, mediaFilesScreen }
+    enum MediaPresentation { case roomScreenLive, roomScreenDetached, roomScreenThread, pinnedEventsScreen, mediaFilesScreen }
     case media(MediaPresentation)
     
     var isThread: Bool {
@@ -41,19 +41,45 @@ enum TimelineFocus {
 }
 
 enum TimelineAllowedMessageType {
+    case audio, file, image, video, gallery
+    
+    /// The gallery attachments this type allows, so that a gallery event's attachments can be
+    /// filtered client side to match. A gallery can't contain another gallery, hence the `nil`.
+    var allowedGalleryItemType: TimelineAllowedGalleryItemType? {
+        switch self {
+        case .audio: .audio
+        case .file: .file
+        case .image: .image
+        case .video: .video
+        case .gallery: nil
+        }
+    }
+}
+
+/// The gallery attachments a timeline allows, mirroring the message types it is filtered to. The SDK can
+/// only filter whole events, so a gallery's attachments are filtered by these client side. Unlike a
+/// message type there's no gallery case, as a gallery can't contain another one.
+enum TimelineAllowedGalleryItemType {
     case audio, file, image, video
+}
+
+extension [TimelineAllowedMessageType] {
+    /// The gallery attachments these types allow, or `nil` when they place no restriction on them,
+    /// which is the case for a timeline made up of galleries alone.
+    var allowedGalleryItemTypes: [TimelineAllowedGalleryItemType]? {
+        let types = compactMap(\.allowedGalleryItemType)
+        return types.isEmpty ? nil : types
+    }
 }
 
 enum TimelineProxyError: Error {
     case sdkError(Error)
-    
-    case failedRedacting
 }
 
 /// Element X proxies generally wrap the counterpart RustSDK objects while providing platform specific
 /// interfaces. In this case it composes methods for interacting with a room's timeline and should be used alongside
 /// the ``TimelineItemProviderProtocol`` which offers a reactive interface to timeline changes.
-protocol TimelineProxyProtocol {
+protocol TimelineProxyProtocol: Sendable {
     var timelineItemProvider: TimelineItemProviderProtocol { get }
     
     func subscribeForUpdates() async
@@ -112,6 +138,10 @@ protocol TimelineProxyProtocol {
                           waveform: [Float],
                           requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError>
     
+    func sendGallery(itemInfos: [GalleryItemInfo],
+                     caption: String?,
+                     inReplyToEventID: String?) async -> Result<Void, TimelineProxyError>
+    
     func sendReadReceipt(for eventID: String, type: ReceiptType) async -> Result<Void, TimelineProxyError>
     func markAsRead(receiptType: ReceiptType) async -> Result<Void, TimelineProxyError>
     
@@ -124,11 +154,12 @@ protocol TimelineProxyProtocol {
     
     func toggleReaction(_ reaction: String, to eventID: TimelineItemIdentifier.EventOrTransactionID) async -> Result<Void, TimelineProxyError>
     
-    func createPoll(question: String, answers: [String], pollKind: Poll.Kind) async -> Result<Void, TimelineProxyError>
+    func createPoll(question: String, answers: [String], maxSelections: Int, pollKind: Poll.Kind) async -> Result<Void, TimelineProxyError>
     
     func editPoll(original eventID: String,
                   question: String,
                   answers: [String],
+                  maxSelections: Int,
                   pollKind: Poll.Kind) async -> Result<Void, TimelineProxyError>
     
     func sendPollResponse(pollStartID: String, answers: [String]) async -> Result<Void, TimelineProxyError>

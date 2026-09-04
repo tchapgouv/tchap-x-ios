@@ -6,25 +6,25 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-// periphery:ignore:all
-
 import Combine
 import Foundation
 import MatrixRustSDK
+import MatrixRustSDKMocks
 
 struct TimelineControllerMockConfiguration {
     var roomProxy: JoinedRoomProxyProtocol?
     var timelineKind: TimelineKind = .live
-    var timelineItems: [RoomTimelineItemProtocol] = RoomTimelineItemFixtures.default
+    var timelineItems: [RoomTimelineItemProtocol] = TimelineFixtures.default
     var timelineProxy: TimelineProxyProtocol?
     var timelineItemsTimestamps: [TimelineItemIdentifier: Date] = [:]
     var paginationState: TimelinePaginationState = .initial
+    var allowedGalleryItemTypes: [TimelineAllowedGalleryItemType]?
 }
 
-extension TimelineControllerMock {
+@MainActor extension TimelineControllerMock {
     static var mediaGallery: TimelineControllerMock {
         TimelineControllerMock(.init(timelineKind: .media(.mediaFilesScreen), timelineItems: (0..<5).reduce([]) { partialResult, _ in
-            partialResult + [RoomTimelineItemFixtures.separator] + RoomTimelineItemFixtures.mediaChunk
+            partialResult + [TimelineFixtures.separator] + TimelineFixtures.mediaChunk
         }))
     }
     
@@ -44,8 +44,8 @@ extension TimelineControllerMock {
         let timelineItemsTimestamps = configuration.timelineItemsTimestamps
         
         callbacks = PassthroughSubject()
-        roomID = roomProxy?.id ?? "MockRoomIdentifier"
         timelineKind = configuration.timelineKind
+        allowedGalleryItemTypes = configuration.allowedGalleryItemTypes
         paginationState = configuration.paginationState
         timelineItems = configuration.timelineItems
         
@@ -164,6 +164,16 @@ extension TimelineControllerMock {
             return .success(())
         }
         
+        sendGalleryItemInfosCaptionInReplyToEventIDClosure = { [weak self, timelineProxy] itemInfos, caption, inReplyToEventID in
+            self?.callbacks.send(.messageSentOrEdited)
+            if let timelineProxy {
+                return await timelineProxy.sendGallery(itemInfos: itemInfos,
+                                                       caption: caption,
+                                                       inReplyToEventID: inReplyToEventID).mapError(TimelineControllerError.timelineProxyError)
+            }
+            return .success(())
+        }
+        
         sendVoiceMessageUrlAudioInfoWaveformRequestHandleClosure = { [weak self, timelineProxy] url, audioInfo, waveform, requestHandle in
             self?.callbacks.send(.messageSentOrEdited)
             if let timelineProxy {
@@ -175,17 +185,17 @@ extension TimelineControllerMock {
             return .success(())
         }
         
-        createPollQuestionAnswersPollKindClosure = { [weak self, timelineProxy] question, answers, pollKind in
+        createPollQuestionAnswersMaxSelectionsPollKindClosure = { [weak self, timelineProxy] question, answers, maxSelections, pollKind in
             self?.callbacks.send(.messageSentOrEdited)
             if let timelineProxy {
-                _ = await timelineProxy.createPoll(question: question, answers: answers, pollKind: pollKind)
+                _ = await timelineProxy.createPoll(question: question, answers: answers, maxSelections: maxSelections, pollKind: pollKind)
             }
             return .success(())
         }
         
-        editPollOriginalQuestionAnswersPollKindClosure = { [timelineProxy] eventID, question, answers, pollKind in
+        editPollOriginalQuestionAnswersMaxSelectionsPollKindClosure = { [timelineProxy] eventID, question, answers, maxSelections, pollKind in
             if let timelineProxy {
-                _ = await timelineProxy.editPoll(original: eventID, question: question, answers: answers, pollKind: pollKind)
+                _ = await timelineProxy.editPoll(original: eventID, question: question, answers: answers, maxSelections: maxSelections, pollKind: pollKind)
             }
             return .success(())
         }
@@ -204,7 +214,7 @@ extension TimelineControllerMock {
             return .success(())
         }
         
-        messageEventContentForReturnValue = .init(noHandle: .init())
+        messageEventContentForReturnValue = RoomMessageEventContentWithoutRelationSDKMock()
         debugInfoForReturnValue = .init(model: "Mock debug description", originalJSON: nil, latestEditJSON: nil)
         
         eventTimestampForClosure = { [timelineItemsTimestamps] itemID in

@@ -41,7 +41,6 @@ class LiveLocationManager: NSObject, LiveLocationManagerProtocol, CLLocationMana
     
     private var lastLocation: CLLocationCoordinate2D?
     
-    @MainActor
     init(clientProxy: ClientProxyProtocol,
          appSettings: AppSettings,
          locationManager: @autoclosure @MainActor () -> CLLocationManagerProtocol = CLLocationManager()) {
@@ -70,15 +69,6 @@ class LiveLocationManager: NSObject, LiveLocationManagerProtocol, CLLocationMana
     }
     
     // MARK: - LiveLocationManagerProtocol
-    
-    var hasDisplayedLiveLocationDisclaimer: Bool {
-        get {
-            appSettings.liveLocationDisclaimerDisplayed
-        }
-        set {
-            appSettings.liveLocationDisclaimerDisplayed = newValue
-        }
-    }
     
     @discardableResult
     func requestAlwaysAuthorizationIfPossible() -> Bool {
@@ -193,7 +183,7 @@ class LiveLocationManager: NSObject, LiveLocationManagerProtocol, CLLocationMana
             }
             .store(in: &cancellables)
         
-        appSettings.$liveLocationSharingSessionsByRoomID
+        appSettings.liveLocationSharingSessionsByRoomIDPublisher
             .removeDuplicates()
             .sink { [weak self] sessions in
                 guard let self else { return }
@@ -207,7 +197,7 @@ class LiveLocationManager: NSObject, LiveLocationManagerProtocol, CLLocationMana
             }
             .store(in: &cancellables)
         
-        appSettings.$liveLocationMinimumDistanceUpdate
+        appSettings.liveLocationMinimumDistanceUpdatePublisher
             .removeDuplicates()
             .debounce(for: .seconds(1), scheduler: DispatchQueue.main)
             .sink { [weak self] newValue in

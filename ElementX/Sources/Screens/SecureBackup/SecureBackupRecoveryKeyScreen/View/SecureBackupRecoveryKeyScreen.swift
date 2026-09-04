@@ -253,6 +253,7 @@ private struct RecoveryKeyView: View {
 
 // MARK: - Previews
 
+@available(iOS 26.0, *)
 struct SecureBackupRecoveryKeyScreen_Previews: PreviewProvider, TestablePreview {
     static let key = "EsTM njec uHYA yHmh dQdW Nj4o bNRU 9jMN XGMc KUNM UFr5 R8GY"
     static let notSetUpViewModel = viewModel(recoveryState: .disabled)
@@ -294,9 +295,9 @@ struct SecureBackupRecoveryKeyScreen_Previews: PreviewProvider, TestablePreview 
         backupController.recoveryState = CurrentValueSubject<SecureBackupRecoveryState, Never>(recoveryState).asCurrentValuePublisher()
         
         if let key {
-            backupController.generateRecoveryKeyReturnValue = .success(key)
+            backupController.generateRecoveryKeyWithPassphraseReturnValue = .success(key)
         } else {
-            backupController.generateRecoveryKeyClosure = {
+            backupController.generateRecoveryKeyWithPassphraseClosure = { _ in
                 try? await Task.sleep(for: .seconds(1000))
                 return .success("youshouldntseeme")
             }

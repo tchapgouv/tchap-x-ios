@@ -8,12 +8,11 @@
 import Foundation
 import MatrixRustSDK
 
-enum CallIntent: String, Codable, CaseIterable {
+nonisolated enum CallIntent: String, Codable, CaseIterable {
     case video, audio
 }
 
-extension CallIntent {
-    // periphery:ignore - Unused, but added to detect new cases when updating the SDK.
+nonisolated extension CallIntent {
     init(rustCallIntent: MatrixRustSDK.RtcCallIntent) {
         switch rustCallIntent {
         case .audio: self = .audio
@@ -21,6 +20,7 @@ extension CallIntent {
         }
     }
     
+    // periphery:ignore - might be useful to have
     var rustCallIntent: MatrixRustSDK.RtcCallIntent {
         switch self {
         case .audio: .audio

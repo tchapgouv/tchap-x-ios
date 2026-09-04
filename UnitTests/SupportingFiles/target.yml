@@ -35,6 +35,8 @@ targets:
     - package: AsyncAlgorithms
     - package: Clocks
     - package: Dynamic
+    - package: BuildExtensions
+      product: Macros
 
     info:
       path: ../SupportingFiles/Info.plist
@@ -43,6 +45,11 @@ targets:
       base:
         PRODUCT_NAME: UnitTests
         PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.unit.tests
+        # Requires iOS 26 so tests exercise the Observations-based observe(_:) overload.
+        IPHONEOS_DEPLOYMENT_TARGET: '26.0'
+        SWIFT_VERSION: 6.2
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
       debug:
       release:
 
@@ -53,7 +60,6 @@ targets:
     - path: ../../DevelopmentAssets/ClassicAppFixtures
       buildPhase: resources # Necessary to add binary files to the target.
     - path: ../../ElementX/Sources/Other/Extensions/Publisher.swift
-    - path: ../../ElementX/Sources/Other/Extensions/XCTestCase.swift
     - path: ../../ElementX/Sources/Other/InfoPlistReader.swift
     - path: ../../Tools/Scripts/Templates/SimpleScreenExample/Tests/Unit
     

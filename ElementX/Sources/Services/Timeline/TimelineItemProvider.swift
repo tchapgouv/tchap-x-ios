@@ -68,7 +68,7 @@ class TimelineItemProvider: TimelineItemProviderProtocol {
         // The stream also allows to handle the sendable items in the listener.
         Task { [weak self] in
             for await diffs in diffStream {
-                self?.updateItemsWithDiffs(diffs)
+                await self?.applyDiffs(diffs)
             }
         }
         
@@ -81,17 +81,28 @@ class TimelineItemProvider: TimelineItemProviderProtocol {
     
     // MARK: - Private
     
-    private func updateItemsWithDiffs(_ diffs: [TimelineDiff]) {
-        let span = MXLog.createSpan("process_timeline_list_diffs:\(kind)")
-        span.enter()
-        defer {
-            span.exit()
-        }
-        
+    private func applyDiffs(_ diffs: [TimelineDiff]) async {
         MXLog.verbose("Received diffs: \(diffs)")
         
-        itemProxies = diffs.reduce(itemProxies) { currentItems, diff in
-            guard let collectionDiff = buildDiff(from: diff, on: currentItems) else {
+        // Building the item proxies and computing/applying the CollectionDifference can be
+        // expensive, so run it off the main actor and only hop back to publish the result.
+        let result = await Self.processDiffs(diffs, on: itemProxies, spanName: "process_timeline_list_diffs:\(kind)")
+        
+        itemProxies = result.itemProxies
+        
+        if result.hasMembershipChange {
+            membershipChangeSubject.send(())
+        }
+    }
+    
+    @concurrent
+    private static func processDiffs(_ diffs: [TimelineDiff],
+                                     on currentItems: [TimelineItemProxy],
+                                     spanName: String) async -> (itemProxies: [TimelineItemProxy], hasMembershipChange: Bool) {
+        var hasMembershipChange = false
+        
+        let itemProxies = diffs.reduce(currentItems) { currentItems, diff in
+            guard let collectionDiff = buildDiff(from: diff, on: currentItems, hasMembershipChange: &hasMembershipChange) else {
                 MXLog.error("Failed building CollectionDifference from \(diff)")
                 return currentItems
             }
@@ -103,9 +114,11 @@ class TimelineItemProvider: TimelineItemProviderProtocol {
             
             return updatedItems
         }
+        
+        return (itemProxies, hasMembershipChange)
     }
     
-    private func buildDiff(from diff: TimelineDiff, on itemProxies: [TimelineItemProxy]) -> CollectionDifference<TimelineItemProxy>? {
+    private nonisolated static func buildDiff(from diff: TimelineDiff, on itemProxies: [TimelineItemProxy], hasMembershipChange: inout Bool) -> CollectionDifference<TimelineItemProxy>? {
         var changes = [CollectionDifference<TimelineItemProxy>.Change]()
         
         switch diff {
@@ -114,7 +127,7 @@ class TimelineItemProvider: TimelineItemProviderProtocol {
                 let itemProxy = TimelineItemProxy(item: item)
                 
                 if itemProxy.isMembershipChange {
-                    membershipChangeSubject.send(())
+                    hasMembershipChange = true
                 }
                 
                 changes.append(.insert(offset: Int(itemProxies.count) + index, element: itemProxy, associatedWith: nil))
@@ -138,7 +151,7 @@ class TimelineItemProvider: TimelineItemProviderProtocol {
             let itemProxy = TimelineItemProxy(item: item)
             
             if itemProxy.isMembershipChange {
-                membershipChangeSubject.send(())
+                hasMembershipChange = true
             }
             
             changes.append(.insert(offset: Int(itemProxies.count), element: itemProxy, associatedWith: nil))
@@ -170,7 +183,7 @@ class TimelineItemProvider: TimelineItemProviderProtocol {
     }
 }
 
-private extension TimelineItemProxy {
+private nonisolated extension TimelineItemProxy {
     var isMembershipChange: Bool {
         switch self {
         case .event(let eventTimelineItemProxy):
@@ -183,25 +196,6 @@ private extension TimelineItemProxy {
         case .virtual, .unknown:
             false
         }
-    }
-}
-
-private extension VirtualTimelineItem {
-    var description: String {
-        switch self {
-        case .dateDivider(let timestamp):
-            return "DayDiviver(\(timestamp))"
-        case .readMarker:
-            return "ReadMarker"
-        case .timelineStart:
-            return "TimelineStart"
-        }
-    }
-}
-
-private extension Array where Element == TimelineDiff {
-    var debugDescription: String {
-        "[" + map(\.debugDescription).joined(separator: ",") + "]"
     }
 }
 

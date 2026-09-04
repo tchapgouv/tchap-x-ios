@@ -7,4 +7,3 @@ insert_final_newline = true
 [*.swift]
 indent_style = space
 indent_size = 4
-trim_trailing_whitespace = false

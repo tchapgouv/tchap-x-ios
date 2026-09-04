@@ -9,7 +9,6 @@
 import Compound
 import SwiftUI
 
-@MainActor
 struct TimelineReactionsView: View {
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .heavy)
     @Environment(\.layoutDirection) private var layoutDirection: LayoutDirection
@@ -139,8 +138,6 @@ struct TimelineCollapseButtonLabel: View {
 }
 
 struct TimelineReactionButton: View {
-    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
-    
     let reaction: AggregatedReaction
     let toggleReaction: (String) -> Void
     let showReactionSummary: (String) -> Void

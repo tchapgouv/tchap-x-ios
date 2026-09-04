@@ -30,7 +30,7 @@ Only once all of the above is met should you open a PR with your proposed change
 	* Don't submit large PRs, especially if not previously talked about. Anything above 200 lines is large (excluding generated code e.g. tests, translations, mocks)
 	* Please don't open unfinished PRs and expect us to fill in the details
 	* If you would like our opinion/direction on unfinished code please link your branch or idea in the ticket
-	* Please limit the number of commits in a single PR. We are perfectly happy with splitting work across multiple sessions as long as they're logically independant and show promise of progress (ideally expressed through a ticket)
+	* Please limit the number of commits in a single PR. We are perfectly happy with splitting work across multiple sessions as long as they're logically independent and show promise of progress (ideally expressed through a ticket)
 	* Each and every commit should stand on its own, clearly explaining what it does and why
 * Once a PR goes into review please don't rewrite the history unless agreed so with the reviewer.
 	* Tweaks and fixes following review can be directly committed (to be interactively rebased later) or as fixups
@@ -55,7 +55,7 @@ This will:
 
 ### Xcode
 
-We suggest using an Xcode version later than 15.0.1.
+We suggest always using the Xcode version specified by `xcode_select_for_github_actions` in [ci_common.sh](https://github.com/element-hq/element-x-ios/blob/develop/ci_scripts/ci_common.sh).
 
 The Xcode project can be directly compiled through the shared Element X scheme which includes the main application as well as the unit and UI tests.
 
@@ -98,6 +98,14 @@ git lfs install
 ### Snapshot Tests
 
 If you make changes to the UI you may cause existing UI and Preview test snapshots to fail. The UITests run user flows and record snapshots while doing so using the settings defined under [checkEnvironments](https://github.com/element-hq/element-x-ios/blob/c29175d1f924e58b9646a200dbab0301fce3c258/UITests/Sources/Application.swift#L35-L37) while the PreviewTests use the settings defined in [PreviewTests.swift](https://github.com/element-hq/element-x-ios/blob/c29175d1f924e58b9646a200dbab0301fce3c258/PreviewTests/Sources/PreviewTests.swift#L18-L20). The snapshots are stored under `Sources/__Snapshots__` in their respective target's folder. 
+
+To run the preview tests:
+
+1. Use an iPhone SE (3rd generation) simulator running iOS 26.5.
+2. On that simulator, go to Settings -> General -> Language & Region and select United States as the region, with English (US) as the only preferred language. This is a one time setup, as long as you keep using the same simulator.
+3. Select the `PreviewTests` scheme and run the tests.
+
+Newly created screens will automatically have their screenshots added based off their `TestablePreview` Swift previews. If you are modifying an existing screen, you will first need to delete the old snapshots for that screen before running the tests. Alternatively, if you enable `RECORD_FAILURES` in the preview test plans's environment variables (`PreviewTests/SupportingFiles/Previewtests.xctestplan`), it will overwrite snapshot failures with the updated screenshot.
 
 ### Githooks
 

@@ -20,7 +20,7 @@ struct UITests: AsyncParsableCommand {
     var deviceType: DeviceType
     
     @Option(help: "iOS version for the simulator.")
-    var osVersion = "26.4.1"
+    var osVersion = CI.defaultOSVersion
     
     @Option(help: "Run only a specific test (format: 'ClassName/testName').")
     var testName: String?
@@ -61,6 +61,7 @@ struct UITests: AsyncParsableCommand {
         } catch {
             testsFailed = true
             print("\n❌ UI tests (\(deviceType.rawValue)) failed.\n")
+            CI.annotateError(title: "UI tests (\(deviceType.rawValue)) failed", "Download the artifacts for the xcresult bundle.")
         }
         
         await CI.zipResults(bundles: ["UITests.xcresult"],

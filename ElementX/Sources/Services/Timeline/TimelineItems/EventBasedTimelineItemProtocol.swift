@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-protocol EventBasedTimelineItemProtocol: RoomTimelineItemProtocol, CustomStringConvertible {
+nonisolated protocol EventBasedTimelineItemProtocol: RoomTimelineItemProtocol, CustomStringConvertible {
     var timestamp: Date { get }
     var isOutgoing: Bool { get }
     var isEditable: Bool { get }
@@ -22,7 +22,7 @@ protocol EventBasedTimelineItemProtocol: RoomTimelineItemProtocol, CustomStringC
     var properties: RoomTimelineItemProperties { get }
 }
 
-extension EventBasedTimelineItemProtocol {
+nonisolated extension EventBasedTimelineItemProtocol {
     var description: String {
         "\(String(describing: Self.self)): id: \(id), timestamp: \(timestamp), isOutgoing: \(isOutgoing), properties: \(properties)"
     }
@@ -103,7 +103,7 @@ extension EventBasedTimelineItemProtocol {
         }
         
         switch messageBasedItem.contentType {
-        case .audio, .file, .image, .video, .location, .voice:
+        case .audio, .file, .image, .video, .location, .voice, .gallery:
             return false
         case .text, .emote, .notice:
             return true

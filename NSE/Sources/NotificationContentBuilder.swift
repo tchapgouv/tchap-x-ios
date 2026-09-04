@@ -13,7 +13,7 @@ import SwiftUI
 import UserNotifications
 import Version
 
-struct NotificationContentBuilder {
+nonisolated struct NotificationContentBuilder {
     let messageEventStringBuilder: RoomMessageEventStringBuilder
     let notificationSoundName: UNNotificationSoundName
     let userSession: NSEUserSessionProtocol
@@ -59,28 +59,38 @@ struct NotificationContentBuilder {
                                  notificationItem: notificationItem,
                                  mediaProvider: mediaProvider)
         case .timeline(let event):
-            guard case let .messageLike(messageContent) = try? event.content() else {
-                processEmpty(&notificationContent)
-                return
-            }
-            
-            await processMessageLike(notificationContent: &notificationContent,
-                                     notificationItem: notificationItem,
-                                     mediaProvider: mediaProvider)
-            
-            switch messageContent {
-            case .roomMessage(let messageType, _):
-                await processRoomMessage(notificationContent: &notificationContent,
-                                         notificationItem: notificationItem,
-                                         messageType: messageType,
-                                         mediaProvider: mediaProvider)
-            case .poll(let question):
-                notificationContent.body = L10n.commonPollSummary(question)
-            case .callInvite:
-                notificationContent.body = L10n.commonUnsupportedCall
-            case .rtcNotification:
-                notificationContent.body = L10n.notificationIncomingCall
-            default:
+            switch try? event.content() {
+            case .messageLike(let messageContent):
+                await processAsMessage(notificationContent: &notificationContent,
+                                       notificationItem: notificationItem,
+                                       mediaProvider: mediaProvider)
+                
+                switch messageContent {
+                case .roomMessage(let messageType, _):
+                    await processRoomMessage(notificationContent: &notificationContent,
+                                             notificationItem: notificationItem,
+                                             messageType: messageType,
+                                             mediaProvider: mediaProvider)
+                case .poll(let question):
+                    notificationContent.body = L10n.commonPollSummary(question)
+                case .callInvite:
+                    notificationContent.body = L10n.commonUnsupportedCall
+                case .rtcNotification:
+                    notificationContent.body = L10n.notificationIncomingCall
+                default:
+                    processEmpty(&notificationContent)
+                }
+            case .state(let stateContent):
+                switch stateContent {
+                case .beaconInfo:
+                    await processAsMessage(notificationContent: &notificationContent,
+                                           notificationItem: notificationItem,
+                                           mediaProvider: mediaProvider)
+                    notificationContent.body = L10n.notificationLiveLocationStartedBody
+                default:
+                    processEmpty(&notificationContent)
+                }
+            case .none:
                 processEmpty(&notificationContent)
             }
         }
@@ -117,9 +127,9 @@ struct NotificationContentBuilder {
                                       mediaProvider: mediaProvider)
     }
     
-    private func processMessageLike(notificationContent: inout UNMutableNotificationContent,
-                                    notificationItem: NotificationItemProxyProtocol,
-                                    mediaProvider: MediaProviderProtocol) async {
+    private func processAsMessage(notificationContent: inout UNMutableNotificationContent,
+                                  notificationItem: NotificationItemProxyProtocol,
+                                  mediaProvider: MediaProviderProtocol) async {
         notificationContent.title = notificationItem.senderDisplayName ?? notificationItem.roomDisplayName
         if notificationContent.title != notificationItem.roomDisplayName {
             notificationContent.subtitle = notificationItem.roomDisplayName
@@ -197,6 +207,13 @@ struct NotificationContentBuilder {
                                      using: mediaProvider,
                                      mediaSource: .init(source: content.source,
                                                         mimeType: content.info?.mimetype))
+        case .gallery(content: let content):
+            // A notification can only show one attachment, so the gallery is represented by its first.
+            if let mediaSource = content.itemtypes.firstPreviewableMediaSource {
+                await addMediaAttachment(notificationContent: &notificationContent,
+                                         using: mediaProvider,
+                                         mediaSource: mediaSource)
+            }
         default:
             break
         }
@@ -337,7 +354,7 @@ struct NotificationContentBuilder {
     }
 }
 
-private struct NotificationIcon {
+private nonisolated struct NotificationIcon {
     struct GroupInfo {
         let avatarDisplayName: String
         let displayName: String
@@ -350,5 +367,26 @@ private struct NotificationIcon {
     
     var shouldDisplayAsGroup: Bool {
         groupInfo != nil
+    }
+}
+
+private nonisolated extension [GalleryItemType] {
+    /// The media source of the first attachment that a notification is able to show, skipping the
+    /// types that it can't such as documents.
+    var firstPreviewableMediaSource: MediaSourceProxy? {
+        for itemType in self {
+            switch itemType {
+            case .image(let content):
+                return .init(source: content.source, mimeType: content.info?.mimetype)
+            case .video(let content):
+                return .init(source: content.source, mimeType: content.info?.mimetype)
+            case .audio(let content):
+                return .init(source: content.source, mimeType: content.info?.mimetype)
+            case .file, .other:
+                continue
+            }
+        }
+        
+        return nil
     }
 }

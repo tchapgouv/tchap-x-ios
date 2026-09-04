@@ -10,17 +10,13 @@ import Foundation
 import MatrixRustSDK
 
 // sourcery: AutoMockable
-protocol NSEUserSessionProtocol {
+nonisolated protocol NSEUserSessionProtocol {
     var inviteAvatarsVisibility: InviteAvatars { get async }
     var mediaPreviewVisibility: MediaPreviews { get async }
     var threadsEnabled: Bool { get }
-    
-    func notificationItemProxy(roomID: String, eventID: String) async -> NotificationItemProxyProtocol?
-    func roomForIdentifier(_ roomID: String) -> Room?
 }
 
-final class NSEUserSession: NSEUserSessionProtocol {
-    private let sessionDirectories: SessionDirectories
+final nonisolated class NSEUserSession: NSEUserSessionProtocol {
     private let appSettings: CommonSettingsProtocol
     private let baseClient: Client
     private let notificationClient: NotificationClient
@@ -61,7 +57,6 @@ final class NSEUserSession: NSEUserSessionProtocol {
          clientSessionDelegate: ClientSessionDelegate,
          appHooks: AppHooks,
          appSettings: CommonSettingsProtocol) async throws {
-        sessionDirectories = credentials.restorationToken.sessionDirectories
         userID = credentials.userID
         self.appSettings = appSettings
         
@@ -84,10 +79,22 @@ final class NSEUserSession: NSEUserSessionProtocol {
             .homeserverUrl(url: homeserverURL)
         
         baseClient = try await clientBuilder.build()
+        
+        do {
+            try await baseClient.setPresence(presence: .offline, immediate: false)
+        } catch {
+            MXLog.error("Failed configuring offline presence before notification processing with error: \(error)")
+        }
         delegateHandle = try baseClient.setDelegate(delegate: ClientDelegateWrapper())
         
         try await baseClient.restoreSessionWith(session: credentials.restorationToken.session,
                                                 roomLoadSettings: .one(roomId: roomID))
+        
+        // Inject the content scanner so the SDK gates the media it downloads whilst building the notification.
+        if let contentScannerURL = appSettings.contentScannerURL.publisher.value {
+            let contentScanner = ContentScanner(scannerUrl: contentScannerURL.absoluteString)
+            await baseClient.setContentScanner(contentScanner: contentScanner)
+        }
         
         notificationClient = try await baseClient.notificationClient(processSetup: .multipleProcesses)
     }
@@ -99,7 +106,6 @@ final class NSEUserSession: NSEUserSessionProtocol {
             switch notificationStatus {
             case .event(let notification):
                 return NotificationItemProxy(notificationItem: notification,
-                                             eventID: eventID,
                                              receiverID: userID,
                                              roomID: roomID)
             case .eventNotFound:
@@ -114,7 +120,7 @@ final class NSEUserSession: NSEUserSessionProtocol {
             }
         } catch {
             MXLog.error("Could not get notification's content creating an empty notification instead, error: \(error)")
-            return EmptyNotificationItemProxy(eventID: eventID, roomID: roomID, receiverID: userID)
+            return EmptyNotificationItemProxy(roomID: roomID, receiverID: userID)
         }
     }
     
@@ -132,13 +138,14 @@ final class NSEUserSession: NSEUserSessionProtocol {
     }
 }
 
-private final class ClientDelegateWrapper: ClientDelegate {
+private final nonisolated class ClientDelegateWrapper: ClientDelegate {
     // MARK: - ClientDelegate
     
     func didReceiveAuthError(isSoftLogout: Bool) {
         MXLog.error("Received authentication error, the NSE can't handle this.")
     }
     
+    // periphery:ignore - required by the SDK's delegate protocol
     func didRefreshTokens() {
         MXLog.info("Delegating session updates to the ClientSessionDelegate.")
     }

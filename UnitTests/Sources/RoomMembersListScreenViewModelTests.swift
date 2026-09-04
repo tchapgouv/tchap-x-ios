@@ -62,6 +62,30 @@ struct RoomMembersListScreenViewModelTests {
     }
     
     @Test
+    mutating func sortingCallParticipants() async throws {
+        setup(members: [.mockAdmin, .mockFrank, .mockAlice],
+              activeRoomCallParticipants: [RoomMemberProxyMock.mockFrank.userID])
+        
+        let deferred = deferFulfillment(context.$viewState) { state in
+            state.visibleJoinedMembers.count == 3
+        }
+        try await deferred.fulfill()
+        
+        // Frank is in the call, so he should be sorted to the top despite having the lowest power level.
+        let sortedMembers: [RoomMemberListScreenEntry] = [
+            .init(member: .init(withProxy: RoomMemberProxyMock.mockFrank),
+                  verificationState: .notVerified,
+                  isActiveRoomCallParticipant: true),
+            .init(member: .init(withProxy: RoomMemberProxyMock.mockAdmin),
+                  verificationState: .notVerified),
+            .init(member: .init(withProxy: RoomMemberProxyMock.mockAlice),
+                  verificationState: .notVerified)
+        ]
+        
+        #expect(viewModel.state.visibleJoinedMembers == sortedMembers)
+    }
+    
+    @Test
     mutating func search() async throws {
         setup(members: [.mockAlice, .mockBob])
         
@@ -86,7 +110,7 @@ struct RoomMembersListScreenViewModelTests {
         try await deferred.fulfill()
         
         #expect(viewModel.state.joinedMembersCount == 2)
-        #expect(viewModel.state.visibleJoinedMembers.count == 0)
+        #expect(viewModel.state.visibleJoinedMembers.isEmpty)
     }
     
     @Test
@@ -114,7 +138,7 @@ struct RoomMembersListScreenViewModelTests {
         
         #expect(viewModel.state.joinedMembersCount == 0)
         #expect(viewModel.state.visibleInvitedMembers.count == 1)
-        #expect(viewModel.state.visibleJoinedMembers.count == 0)
+        #expect(viewModel.state.visibleJoinedMembers.isEmpty)
     }
     
     @Test
@@ -129,7 +153,7 @@ struct RoomMembersListScreenViewModelTests {
         
         #expect(viewModel.state.joinedMembersCount == 0)
         #expect(viewModel.state.visibleInvitedMembers.count == 1)
-        #expect(viewModel.state.visibleJoinedMembers.count == 0)
+        #expect(viewModel.state.visibleJoinedMembers.isEmpty)
     }
     
     @Test
@@ -293,15 +317,15 @@ struct RoomMembersListScreenViewModelTests {
         context.mode = .banned
         try await deferred.fulfill()
         
-        deferred = deferFulfillment(context.$viewState) { $0.visibleBannedMembers.count == 0 && $0.bindings.mode == .members }
+        deferred = deferFulfillment(context.$viewState) { $0.visibleBannedMembers.isEmpty && $0.bindings.mode == .members }
         subject.value = [RoomMemberProxyMock].allMembersAsAdmin
         try await deferred.fulfill()
     }
     
     // MARK: - Helpers
     
-    private mutating func setup(members: [RoomMemberProxyMock]) {
-        roomProxy = JoinedRoomProxyMock(.init(name: "test", members: members))
+    private mutating func setup(members: [RoomMemberProxyMock], activeRoomCallParticipants: [String] = []) {
+        roomProxy = JoinedRoomProxyMock(.init(name: "test", activeRoomCallParticipants: activeRoomCallParticipants, members: members))
         viewModel = RoomMembersListScreenViewModel(userSession: UserSessionMock(.init()),
                                                    roomProxy: roomProxy,
                                                    userIndicatorController: UserIndicatorControllerMock(),

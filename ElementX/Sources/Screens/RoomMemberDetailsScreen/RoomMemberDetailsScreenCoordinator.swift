@@ -13,9 +13,9 @@ struct RoomMemberDetailsScreenCoordinatorParameters {
     let userID: String
     let roomProxy: JoinedRoomProxyProtocol
     let userSession: UserSessionProtocol
-    let userIndicatorController: UserIndicatorControllerProtocol
+    let appHooks: AppHooks
     let analytics: AnalyticsServiceProtocol
-    let appSettings: AppSettings
+    let userIndicatorController: UserIndicatorControllerProtocol
 }
 
 enum RoomMemberDetailsScreenCoordinatorAction {
@@ -39,9 +39,9 @@ final class RoomMemberDetailsScreenCoordinator: CoordinatorProtocol {
         viewModel = RoomMemberDetailsScreenViewModel(userID: parameters.userID,
                                                      roomProxy: parameters.roomProxy,
                                                      userSession: parameters.userSession,
-                                                     userIndicatorController: parameters.userIndicatorController,
+                                                     appHooks: parameters.appHooks,
                                                      analytics: parameters.analytics,
-                                                     appSettings: parameters.appSettings)
+                                                     userIndicatorController: parameters.userIndicatorController)
     }
     
     func start() {

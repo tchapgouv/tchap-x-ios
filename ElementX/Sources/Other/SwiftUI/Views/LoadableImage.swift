@@ -230,17 +230,26 @@ private struct LoadableImageContent<TransformerView: View, PlaceholderView: View
     
     // MARK: - ImageDataProvider
     
-    var cacheKey: String {
+    nonisolated var cacheKey: String {
         mediaSource.url.absoluteString
     }
     
-    func data(handler: @escaping (Result<Data, Error>) -> Void) {
-        guard case let .gifData(data) = contentLoader.content else {
-            fatalError("Shouldn't reach this point without any gif data")
+    nonisolated func data(handler: @escaping @Sendable (Result<Data, Error>) -> Void) {
+        // Kingfisher isn't annotated and doesn't guarantee the provider is invoked on the main
+        // thread so hop onto the main actor.
+        Task { @MainActor in
+            guard case let .gifData(data) = contentLoader.content else {
+                handler(.failure(LoadableImageError.missingGIFData))
+                return
+            }
+            
+            handler(.success(data))
         }
-        
-        handler(.success(data))
     }
+}
+
+private enum LoadableImageError: Error {
+    case missingGIFData
 }
 
 private class ContentLoader: ObservableObject {
@@ -279,7 +288,6 @@ private class ContentLoader: ObservableObject {
         self.mediaProvider = mediaProvider
     }
     
-    @MainActor
     func load() async {
         if isGIF {
             if case let .success(data) = await mediaProvider?.loadImageDataFromSource(mediaSource) {
@@ -404,7 +412,6 @@ struct LoadableImage_Previews: PreviewProvider, TestablePreview {
             mediaProvider.imageFromSourceSizeClosure = { _, _ in nil }
             mediaProvider.loadFileFromSourceFilenameClosure = { _, _ in .failure(.failedRetrievingFile) }
             mediaProvider.loadImageDataFromSourceClosure = { _ in .failure(.failedRetrievingImage) }
-            mediaProvider.loadImageFromSourceSizeClosure = { _, _ in .failure(.failedRetrievingImage) }
             mediaProvider.loadThumbnailForSourceSourceSizeClosure = { _, _ in .failure(.failedRetrievingThumbnail) }
             mediaProvider.loadImageRetryingOnReconnectionSizeClosure = { _, _ in
                 Task { throw MediaProviderError.failedRetrievingImage }

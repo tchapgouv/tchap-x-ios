@@ -47,7 +47,7 @@ struct RoomChangeRolesScreenViewModelTests {
         #expect(context.viewState.moderators == context.viewState.visibleModerators)
         #expect(context.viewState.users == context.viewState.visibleUsers)
         #expect(context.viewState.membersWithRole.count == 3)
-        #expect(context.viewState.membersWithRole.first { $0.id == RoomMemberProxyMock.mockModerator.userID } != nil)
+        #expect(context.viewState.membersWithRole.contains { $0.id == RoomMemberProxyMock.mockModerator.userID })
         #expect(!context.viewState.hasChanges)
         #expect(!context.viewState.isSearching)
     }

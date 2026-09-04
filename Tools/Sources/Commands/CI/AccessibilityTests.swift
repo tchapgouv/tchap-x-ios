@@ -9,7 +9,7 @@ struct AccessibilityTests: AsyncParsableCommand {
     var device = "iPhone 17"
     
     @Option(help: "iOS version for the simulator.")
-    var osVersion = "26.4.1"
+    var osVersion = CI.defaultOSVersion
     
     func run() async throws {
         var testsFailed = false
@@ -24,6 +24,7 @@ struct AccessibilityTests: AsyncParsableCommand {
         } catch {
             testsFailed = true
             logger.error("\n❌ Accessibility tests failed.\n")
+            CI.annotateError(title: "Accessibility tests failed", "Download the artifacts for the xcresult bundle.")
         }
         
         // Zip results (best-effort, useful for CI artifact uploads)

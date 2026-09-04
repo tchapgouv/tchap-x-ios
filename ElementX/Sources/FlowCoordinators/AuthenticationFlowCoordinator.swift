@@ -10,7 +10,6 @@ import Combine
 import SwiftState
 import SwiftUI
 
-@MainActor
 protocol AuthenticationFlowCoordinatorDelegate: AnyObject {
     func authenticationFlowCoordinator(didLoginWithSession userSession: UserSessionProtocol)
 }
@@ -22,8 +21,8 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     private let navigationStackCoordinator: NavigationStackCoordinator
     private let appMediator: AppMediatorProtocol
     private let appSettings: AppSettings
+    private let homeserverHistoryManager: HomeserverHistoryManager
     private let appHooks: AppHooks
-    private let analytics: AnalyticsServiceProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     
     enum State: StateType {
@@ -40,10 +39,9 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         /// The screen used for the whole QR Code flow.
         case qrCodeLoginScreen
         
-        /// The screen to continue authentication with the current server.
-        case serverConfirmationScreen
-        /// The screen to choose a different server.
+        /// The screen used to choose a server
         case serverSelectionScreen
+        
         /// The screen to login with a password.
         case loginScreen
         
@@ -73,17 +71,12 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         case tchapCancelledDecideHomeServer
         
         /// Show the server confirmation screen.
-        case confirmServer(AuthenticationFlow)
+        case selectServer(AuthenticationFlow)
         
         /// The QR login flow was aborted.
         case cancelledLoginWithQR
         /// The user aborted manual login.
-        case cancelledServerConfirmation
-        
-        /// The user would like to enter a different server.
-        case changeServer(AuthenticationFlow)
-        /// The user is no longer selecting a server.
-        case dismissedServerSelection
+        case cancelledServerSelection
         
         /// Show the screen to login with password (with the optional login hint in the `userInfo`).
         case continueWithPassword
@@ -120,15 +113,14 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
          appMediator: AppMediatorProtocol,
          appSettings: AppSettings,
          appHooks: AppHooks,
-         analytics: AnalyticsServiceProtocol,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.authenticationService = authenticationService
         self.bugReportService = bugReportService
         self.navigationRootCoordinator = navigationRootCoordinator
         self.appMediator = appMediator
         self.appSettings = appSettings
+        homeserverHistoryManager = HomeserverHistoryManager(appSettings: appSettings)
         self.appHooks = appHooks
-        self.analytics = analytics
         self.userIndicatorController = userIndicatorController
         
         navigationStackCoordinator = NavigationStackCoordinator()
@@ -173,10 +165,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         case .qrCodeLoginScreen:
             navigationStackCoordinator.setSheetCoordinator(nil)
             stateMachine.tryEvent(.cancelledLoginWithQR) // Needs to be handled manually.
-        case .serverConfirmationScreen:
-            navigationStackCoordinator.popToRoot(animated: animated)
         case .serverSelectionScreen:
-            navigationStackCoordinator.setSheetCoordinator(nil)
             navigationStackCoordinator.popToRoot(animated: animated)
         case .loginScreen:
             navigationStackCoordinator.popToRoot(animated: animated)
@@ -220,25 +209,22 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         
         // Manual Authentication
         
-        stateMachine.addRoutes(event: .confirmServer(.login), transitions: [.startScreen => .serverConfirmationScreen]) { [weak self] _ in
-            self?.showServerConfirmationScreen(authenticationFlow: .login)
-        }
-        stateMachine.addRoutes(event: .confirmServer(.register), transitions: [.startScreen => .serverConfirmationScreen]) { [weak self] _ in
-            self?.showServerConfirmationScreen(authenticationFlow: .register)
-        }
-        stateMachine.addRoutes(event: .cancelledServerConfirmation, transitions: [.serverConfirmationScreen => .startScreen])
-        
-        stateMachine.addRoutes(event: .changeServer(.login), transitions: [.serverConfirmationScreen => .serverSelectionScreen]) { [weak self] _ in
+        stateMachine.addRoutes(event: .selectServer(.login), transitions: [.startScreen => .serverSelectionScreen]) { [weak self] _ in
             self?.showServerSelectionScreen(authenticationFlow: .login)
         }
-        stateMachine.addRoutes(event: .changeServer(.register), transitions: [.serverConfirmationScreen => .serverSelectionScreen]) { [weak self] _ in
+        stateMachine.addRoutes(event: .selectServer(.register), transitions: [.startScreen => .serverSelectionScreen]) { [weak self] _ in
             self?.showServerSelectionScreen(authenticationFlow: .register)
         }
-        stateMachine.addRoutes(event: .dismissedServerSelection, transitions: [.serverSelectionScreen => .serverConfirmationScreen])
+        stateMachine.addRoutes(event: .cancelledServerSelection, transitions: [.serverSelectionScreen => .startScreen])
         
+<<<<<<< HEAD
         stateMachine.addRoutes(event: .continueWithPassword, transitions: [.serverConfirmationScreen => .loginScreen,
                                                                            .startScreen => .loginScreen,
                                                                            .tchapDecideHomeServerScreen(.login) => .loginScreen]) { [weak self] context in
+=======
+        stateMachine.addRoutes(event: .continueWithPassword, transitions: [.serverSelectionScreen => .loginScreen,
+                                                                           .startScreen => .loginScreen]) { [weak self] context in
+>>>>>>> release/26.08.2
             let loginHint = context.userInfo as? String
             // Tchap: login with email converted to matrix ID.
             // Tchap: as we skip the homeServer confirmation screen, we have to configure it now before showing login screen.
@@ -250,6 +236,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 }
             }
         }
+<<<<<<< HEAD
         
         // Tchap: login by MAS
         if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
@@ -266,6 +253,9 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         }
         
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .serverConfirmationScreen), transitions: [.loginScreen => .serverConfirmationScreen])
+=======
+        stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .serverSelectionScreen), transitions: [.loginScreen => .serverSelectionScreen])
+>>>>>>> release/26.08.2
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .startScreen), transitions: [.loginScreen => .startScreen])
         // Tchap: cancel login from tchapDecideHomeServerScreen flow.
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .tchapDecideHomeServerScreen(.login)), transitions: [.loginScreen => .tchapDecideHomeServerScreen(.login)])
@@ -287,7 +277,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         // Completion
         
         stateMachine.addRoutes(event: .signedIn, transitions: [.qrCodeLoginScreen => .complete,
-                                                               .serverConfirmationScreen => .complete, // OAuth authentication
+                                                               .serverSelectionScreen => .complete, // OAuth authentication
                                                                .startScreen => .complete, // Direct OAuth authentication
                                                                .tchapDecideHomeServerScreen(.login) => .complete, // :tchap: OAuth authentication from decide homeserver
                                                                .tchapDecideHomeServerScreen(.register) => .complete, // :tchap: OAuth authentication from decide homeserver
@@ -318,7 +308,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         let mediaProvider = authenticationService.classicAppAccount.map { account in
             MediaProvider(mediaLoader: ClassicAppMediaLoader(classicAppAccount: account),
                           imageCache: .onlyInMemory,
-                          homeserverReachabilityPublisher: appMediator.networkMonitor.reachabilityPublisher) // Close enough approximation
+                          homeserverReachabilityPublisher: appMediator.networkMonitor.reachabilityPublisher.map(HomeserverReachability.init)) // Close enough approximation
         }
         
         let parameters = AuthenticationStartScreenParameters(authenticationService: authenticationService,
@@ -338,6 +328,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 case .loginWithQR:
                     stateMachine.tryEvent(.loginWithQR)
                 case .login:
+<<<<<<< HEAD
                     // :tchap: login customization
 //                    stateMachine.tryEvent(.confirmServer(.login))
                     if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
@@ -353,6 +344,11 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                     } else {
                         stateMachine.tryEvent(.confirmServer(.register))
                     } // :tchap:end
+=======
+                    stateMachine.tryEvent(.selectServer(.login))
+                case .register:
+                    stateMachine.tryEvent(.selectServer(.register))
+>>>>>>> release/26.08.2
                     
                 case .loginDirectlyWithOAuth(let oAuthData, let window):
                     showOAuthAuthentication(oAuthData: oAuthData, presentationAnchor: window)
@@ -394,7 +390,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
             case .signInManually:
                 navigationStackCoordinator.setSheetCoordinator(nil)
                 stateMachine.tryEvent(.cancelledLoginWithQR)
-                stateMachine.tryEvent(.confirmServer(.login))
+                stateMachine.tryEvent(.selectServer(.login))
             case .signedIn(let userSession):
                 navigationStackCoordinator.setSheetCoordinator(nil)
                 DispatchQueue.main.async {
@@ -413,6 +409,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     
     // MARK: - Manual Authentication
     
+<<<<<<< HEAD
     // Tchap: login by MAS.
     // Ask the user its email to decide its homeserver.
     private func showDecideHomeServerScreen(flow: AuthenticationFlow, loginHint: String?, fromState: State) {
@@ -444,41 +441,17 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     }
 
     private func showServerConfirmationScreen(authenticationFlow: AuthenticationFlow) {
+=======
+    private func showServerSelectionScreen(authenticationFlow: AuthenticationFlow) {
+>>>>>>> release/26.08.2
         // Reset the service back to the default homeserver before continuing. This ensures
         // we check that registration is supported if it was previously configured for login.
         authenticationService.reset()
         
-        let parameters = ServerConfirmationScreenCoordinatorParameters(authenticationService: authenticationService,
-                                                                       authenticationFlow: authenticationFlow,
-                                                                       appSettings: appSettings,
-                                                                       userIndicatorController: userIndicatorController)
-        let coordinator = ServerConfirmationScreenCoordinator(parameters: parameters)
-        
-        coordinator.actions.sink { [weak self] action in
-            guard let self else { return }
-            
-            switch action {
-            case .continueWithOAuth(let oAuthData, let window):
-                showOAuthAuthentication(oAuthData: oAuthData, presentationAnchor: window)
-            case .continueWithPassword:
-                stateMachine.tryEvent(.continueWithPassword)
-            case .changeServer:
-                stateMachine.tryEvent(.changeServer(authenticationFlow))
-            }
-        }
-        .store(in: &cancellables)
-        
-        navigationStackCoordinator.push(coordinator) { [weak self] in
-            self?.stateMachine.tryEvent(.cancelledServerConfirmation)
-        }
-    }
-    
-    private func showServerSelectionScreen(authenticationFlow: AuthenticationFlow) {
-        let navigationCoordinator = NavigationStackCoordinator()
-        
         let parameters = ServerSelectionScreenCoordinatorParameters(authenticationService: authenticationService,
                                                                     authenticationFlow: authenticationFlow,
                                                                     appSettings: appSettings,
+                                                                    homeserverHistoryManager: homeserverHistoryManager,
                                                                     userIndicatorController: userIndicatorController)
         let coordinator = ServerSelectionScreenCoordinator(parameters: parameters)
         
@@ -487,17 +460,16 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 guard let self else { return }
                 
                 switch action {
-                case .updated:
-                    navigationStackCoordinator.setSheetCoordinator(nil)
-                case .dismiss:
-                    navigationStackCoordinator.setSheetCoordinator(nil)
+                case .continueWithOAuth(let oAuthData, let window):
+                    showOAuthAuthentication(oAuthData: oAuthData, presentationAnchor: window)
+                case .continueWithPassword:
+                    stateMachine.tryEvent(.continueWithPassword)
                 }
             }
             .store(in: &cancellables)
         
-        navigationCoordinator.setRootCoordinator(coordinator)
-        navigationStackCoordinator.setSheetCoordinator(navigationCoordinator) { [weak self] in
-            self?.stateMachine.tryEvent(.dismissedServerSelection)
+        navigationStackCoordinator.push(coordinator) { [weak self] in
+            self?.stateMachine.tryEvent(.cancelledServerSelection)
         }
     }
     
@@ -533,8 +505,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         let parameters = LoginScreenCoordinatorParameters(authenticationService: authenticationService,
                                                           loginHint: loginHint,
                                                           userIndicatorController: userIndicatorController,
-                                                          appSettings: appSettings,
-                                                          analytics: analytics)
+                                                          appSettings: appSettings)
         let coordinator = LoginScreenCoordinator(parameters: parameters)
         
         coordinator.actions
@@ -601,5 +572,8 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     
     private func userHasSignedIn(userSession: UserSessionProtocol) {
         delegate?.authenticationFlowCoordinator(didLoginWithSession: userSession)
+        
+        let newServer = authenticationService.homeserver.value.address
+        homeserverHistoryManager.addServerToList(newServer)
     }
 }

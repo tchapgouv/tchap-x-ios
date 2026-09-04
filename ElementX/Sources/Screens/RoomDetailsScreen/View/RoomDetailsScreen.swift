@@ -76,6 +76,7 @@ struct RoomDetailsScreen: View {
         } footer: {
             if !context.viewState.shortcuts.isEmpty {
                 headerSectionShortcuts
+                    .padding(.top, 8)
             }
         }
         .accessibilityIdentifier(A11yIdentifiers.roomDetailsScreen.avatar)
@@ -118,7 +119,6 @@ struct RoomDetailsScreen: View {
                 }
             }
         }
-        .padding(.top, 32)
     }
     
     @ViewBuilder
@@ -392,6 +392,7 @@ struct RoomDetailsScreen: View {
 
 import MatrixRustSDK
 
+@available(iOS 26.0, *)
 struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
     static let genericWorldReadableRoomViewModel = makeGenericRoomViewModel(historyVisibility: .worldReadable)
     static let genericJoinedRoomViewModel = makeGenericRoomViewModel(historyVisibility: .joined)
@@ -473,11 +474,11 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
         
         return .init(roomProxy: roomProxy,
                      userSession: UserSessionMock(.init()),
+                     appHooks: AppHooks(),
                      analyticsService: AnalyticsServiceMock(.init()),
                      userIndicatorController: UserIndicatorControllerMock(),
                      notificationSettingsProxy: notificationSettingsProxy,
-                     attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()),
-                     appSettings: .volatile())
+                     attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()))
     }
     
     private static func makeSimpleRoomViewModel() -> RoomDetailsScreenViewModel {
@@ -501,11 +502,11 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
         
         return .init(roomProxy: roomProxy,
                      userSession: UserSessionMock(.init()),
+                     appHooks: AppHooks(),
                      analyticsService: AnalyticsServiceMock(.init()),
                      userIndicatorController: UserIndicatorControllerMock(),
                      notificationSettingsProxy: notificationSettingsProxy,
-                     attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()),
-                     appSettings: .volatile())
+                     attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()))
     }
     
     private static func makeDMViewModel(verificationState: UserIdentityVerificationState) -> RoomDetailsScreenViewModel {
@@ -539,10 +540,10 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
         
         return .init(roomProxy: roomProxy,
                      userSession: UserSessionMock(.init(clientProxy: clientProxyMock)),
+                     appHooks: AppHooks(),
                      analyticsService: AnalyticsServiceMock(.init()),
                      userIndicatorController: UserIndicatorControllerMock(),
                      notificationSettingsProxy: notificationSettingsProxy,
-                     attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()),
-                     appSettings: .volatile())
+                     attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()))
     }
 }

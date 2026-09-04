@@ -7,6 +7,7 @@
 //
 
 import Compound
+import MatrixRustSDKMocks
 import SwiftUI
 
 struct MessageForwardingScreen: View {
@@ -18,6 +19,7 @@ struct MessageForwardingScreen: View {
                 ForEach(context.viewState.rooms) { room in
                     MessageForwardingListRow(room: room,
                                              isSelected: context.viewState.selectedRoomIDs.contains(room.id),
+                                             isDisabled: context.viewState.isAtRoomSelectionLimit && !context.viewState.selectedRoomIDs.contains(room.id),
                                              context: context)
                 }
                 // Replace these with ScrollView's `scrollPosition` when dropping iOS 16.
@@ -67,6 +69,7 @@ private struct MessageForwardingListRow: View {
     
     let room: MessageForwardingRoom
     let isSelected: Bool
+    let isDisabled: Bool
     let context: MessageForwardingScreenViewModel.Context
     
     var body: some View {
@@ -76,9 +79,10 @@ private struct MessageForwardingListRow: View {
                 kind: .selection(isSelected: isSelected) {
                     context.send(viewAction: .selectRoom(roomID: room.id))
                 })
+                .disabled(isDisabled)
     }
     
-    @ViewBuilder @MainActor
+    @ViewBuilder
     var avatar: some View {
         if dynamicTypeSize < .accessibility3 {
             RoomAvatarImage(avatar: room.avatar,
@@ -97,7 +101,7 @@ struct MessageForwardingScreen_Previews: PreviewProvider, TestablePreview {
         let summaryProvider = RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))
         let viewModel = MessageForwardingScreenViewModel(forwardingItem: .init(id: .randomEvent,
                                                                                roomID: "",
-                                                                               content: .init(noHandle: .init())),
+                                                                               content: RoomMessageEventContentWithoutRelationSDKMock()),
                                                          userSession: UserSessionMock(.init()),
                                                          roomSummaryProvider: summaryProvider,
                                                          userIndicatorController: UserIndicatorControllerMock())

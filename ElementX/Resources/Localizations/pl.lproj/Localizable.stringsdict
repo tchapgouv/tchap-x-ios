@@ -20,6 +20,24 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
 	</dict>
+	<key>a11y_gallery_more_media</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>Galeria, %1$d dodatkowe media</string>
+			<key>many</key>
+			<string>Galeria, %1$d dodatkowych mediów</string>
+			<key>one</key>
+			<string>Galeria, %1$d dodatkowe media</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
 	<key>a11y_polls_percent_of_total</key>
 	<dict>
 		<key>COUNT</key>
@@ -47,11 +65,47 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>few</key>
-			<string>Odczytano przez %1$@ i %2$d innych</string>
+			<string>Poprzednia wiadomość przeczytana przez %1$@ i %2$d inne osoby</string>
 			<key>many</key>
-			<string>Odczytano przez %1$@ i %2$d innych</string>
+			<string>Poprzednia wiadomość przeczytana przez %1$@ i %2$d innych osób</string>
 			<key>one</key>
-			<string>Odczytano przez %1$@ i %2$d inną</string>
+			<string>Poprzednia wiadomość przeczytana przez %1$@ i %2$d inną osobę</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>common_gallery_reply_attachments</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>%1$d załączniki…</string>
+			<key>many</key>
+			<string>%1$d załączników…</string>
+			<key>one</key>
+			<string>%1$d załącznik…</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>common_gallery_reply_media_items</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>%1$d przedmioty medialne…</string>
+			<key>many</key>
+			<string>%1$d przedmiotów medialnych…</string>
+			<key>one</key>
+			<string>%1$d przedmiot medialny…</string>
 		</dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
@@ -236,6 +290,24 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
 	</dict>
+	<key>notification_gallery_body</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>Udostępnił %1$d załączniki</string>
+			<key>many</key>
+			<string>Udostępnił %1$d załączników</string>
+			<key>one</key>
+			<string>Udostępnił %1$d załącznik</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
 	<key>notification_invitations</key>
 	<dict>
 		<key>COUNT</key>
@@ -308,6 +380,24 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
 	</dict>
+	<key>screen.room.timeline_redacted_messages</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>%1$d usunięte wiadomości</string>
+			<key>many</key>
+			<string>%1$d usuniętych wiadomości</string>
+			<key>one</key>
+			<string>%1$d usunięta wiadomość</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
 	<key>screen_advanced_settings_live_location_update_distance</key>
 	<dict>
 		<key>COUNT</key>
@@ -358,6 +448,24 @@
 			<string>Błędny PIN. Pozostało %1$d prób</string>
 			<key>one</key>
 			<string>Błędny PIN. Pozostała %1$d próba</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>screen_custom_recovery_key_input_notice</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>Co najmniej %1$d znaki. Nie wykorzystuj swojego hasła.</string>
+			<key>many</key>
+			<string>Co najmniej %1$d znaków. Nie wykorzystuj swojego hasła.</string>
+			<key>one</key>
+			<string>Co najmniej %1$d znak. Nie wykorzystuj swojego hasła.</string>
 		</dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
@@ -610,6 +718,24 @@
 			<string>Usuń %1$d pokoi z %2$@</string>
 			<key>one</key>
 			<string>Usuń %1$d pokój z %2$@</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>screen_timeline_active_call_joined_count</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>%1$d dołączyły</string>
+			<key>many</key>
+			<string>%1$d dołączyło</string>
+			<key>one</key>
+			<string>%1$d dołączyła</string>
 		</dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>

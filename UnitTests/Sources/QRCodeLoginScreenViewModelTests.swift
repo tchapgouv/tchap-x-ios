@@ -16,7 +16,6 @@ import Combine
 @testable import ElementX
 #endif
 import MatrixRustSDKMocks
-import SwiftUI
 import Testing
 
 @MainActor
@@ -26,7 +25,6 @@ struct QRCodeLoginScreenViewModelTests {
     var qrLoginProgressSubject: CurrentValueSubject<QRLoginProgress, AuthenticationServiceError>!
     var qrCodeLoginService: QRCodeLoginServiceMock!
     
-    var regeneratedQRCodeImage: UIImage!
     var linkMobileProgressSubject: CurrentValueSubject<LinkNewDeviceService.LinkMobileProgress, QRCodeLoginError>!
     var linkDesktopProgressSubject: CurrentValueSubject<LinkNewDeviceService.LinkDesktopProgress, QRCodeLoginError>!
     var linkNewDeviceService: LinkNewDeviceServiceMock!
@@ -159,7 +157,8 @@ struct QRCodeLoginScreenViewModelTests {
             guard case .requestOAuthAuthorisation = action else { return false }
             return true
         }
-        linkDesktopProgressSubject.send(.waitingForAuthorisation(verificationURL: .homeDirectory))
+        linkDesktopProgressSubject.send(.waitingForAuthorisation(verificationURL: .homeDirectory,
+                                                                 continuationSender: .init(underlyingSender: ContinuationMessageSenderSDKMock())))
         try await deferredAction.fulfill()
         
         let currentState = context.viewState.state
@@ -173,6 +172,25 @@ struct QRCodeLoginScreenViewModelTests {
         }
         linkDesktopProgressSubject.send(.done)
         try await deferredAction.fulfill()
+    }
+    
+    @Test
+    mutating func linkDesktopExpiresWithoutSecureChannel() async throws {
+        setup(mode: .linkDesktop, linkDesktopTimeout: .zero)
+        #expect(context.viewState.state == .linkDesktopInstructions)
+        
+        // The timeout begins as soon as the screen appears, so the flow expires before a channel is established.
+        let deferred = deferFulfillment(context.$viewState) { $0.state == .error(.expired) }
+        try await deferred.fulfill()
+    }
+    
+    @Test
+    mutating func loginDoesNotExpire() async throws {
+        setup(mode: .login, linkDesktopTimeout: .zero)
+        
+        // The timeout only applies when linking a desktop, so signing in must never expire.
+        let deferredFailure = deferFailure(context.$viewState, timeout: .seconds(1)) { $0.state == .error(.expired) }
+        try await deferredFailure.fulfill()
     }
     
     @Test
@@ -195,7 +213,8 @@ struct QRCodeLoginScreenViewModelTests {
             guard case .requestOAuthAuthorisation = action else { return false }
             return true
         }
-        linkMobileProgressSubject.send(.waitingForAuthorisation(verificationURL: .homeDirectory))
+        linkMobileProgressSubject.send(.waitingForAuthorisation(verificationURL: .homeDirectory,
+                                                                continuationSender: .init(underlyingSender: ContinuationMessageSenderSDKMock())))
         try await deferredAction.fulfill()
         
         let currentState = context.viewState.state
@@ -211,20 +230,9 @@ struct QRCodeLoginScreenViewModelTests {
         try await deferredAction.fulfill()
     }
     
-    @Test
-    mutating func linkMobileDeviceQRCodeExpiry() async throws {
-        setup(mode: .linkMobile)
-        #expect(context.viewState.state.isDisplayQR)
-        
-        let deferred = deferFulfillment(context.$viewState, keyPath: \.state, transitionValues: [.displayQR(.expired),
-                                                                                                 .displayQR(.active(regeneratedQRCodeImage))])
-        linkMobileProgressSubject.send(completion: .failure(.expired))
-        try await deferred.fulfill()
-    }
-    
     // MARK: - Helpers
     
-    private mutating func setup(mode: Mode) {
+    private mutating func setup(mode: Mode, linkDesktopTimeout: Duration = .seconds(120)) {
         qrLoginProgressSubject = .init(.starting)
         qrCodeLoginService = QRCodeLoginServiceMock()
         qrCodeLoginService.loginWithQRCodeDataReturnValue = qrLoginProgressSubject.asCurrentValuePublisher()
@@ -234,11 +242,6 @@ struct QRCodeLoginScreenViewModelTests {
         linkNewDeviceService = LinkNewDeviceServiceMock(.init(linkMobileProgressPublisher: linkMobileProgressSubject.asCurrentValuePublisher(),
                                                               linkDesktopProgressPublisher: linkDesktopProgressSubject.asCurrentValuePublisher()))
         
-        regeneratedQRCodeImage = LinkNewDeviceServiceMock.mockQRCodeImage
-        let clientProxy = ClientProxyMock(.init())
-        clientProxy.linkNewDeviceServiceReturnValue = LinkNewDeviceServiceMock(.init(linkMobileProgressPublisher: .init(.qrReady(regeneratedQRCodeImage)),
-                                                                                     linkDesktopProgressPublisher: .init(.starting)))
-        
         let screenMode: QRCodeLoginScreenMode
         switch mode {
         case .login:
@@ -246,12 +249,13 @@ struct QRCodeLoginScreenViewModelTests {
         case .linkDesktop:
             screenMode = .linkDesktop(linkNewDeviceService)
         case .linkMobile:
-            screenMode = .linkMobile(linkNewDeviceService.linkMobileDevice(), clientProxy)
+            screenMode = .linkMobile(linkNewDeviceService.linkMobileDevice())
         }
         
         appMediator = AppMediatorMock(.init())
         viewModel = QRCodeLoginScreenViewModel(mode: screenMode,
                                                canSignInManually: true,
-                                               appMediator: appMediator)
+                                               appMediator: appMediator,
+                                               linkDesktopTimeout: linkDesktopTimeout)
     }
 }

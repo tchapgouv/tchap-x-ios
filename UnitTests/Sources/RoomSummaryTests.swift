@@ -14,12 +14,14 @@
 @testable import ElementX
 #endif
 import Foundation
+import MatrixRustSDKMocks
 import Testing
 
+@MainActor
 struct RoomSummaryTests {
     // swiftlint:disable:next large_tuple
     let roomDetails: (id: String, name: String, avatarURL: URL) = ("room_id", "Room Name", "mxc://hs.tld/room/avatar")
-    let heroes = [UserProfileProxy(userID: "hero_1", displayName: "Hero 1", avatarURL: "mxc://hs.tld/user/avatar")]
+    let heroes = [UserProfile(userID: "hero_1", displayName: "Hero 1", avatarURL: "mxc://hs.tld/user/avatar")]
     
     @Test
     func roomAvatar() {
@@ -101,7 +103,7 @@ struct RoomSummaryTests {
     // MARK: - Helpers
     
     func makeSummary(isDirect: Bool, isSpace: Bool, hasRoomAvatar: Bool, isTombstoned: Bool) -> RoomSummary {
-        RoomSummary(room: .init(noHandle: .init()),
+        RoomSummary(room: RoomSDKMock(),
                     id: roomDetails.id,
                     joinRequestType: nil,
                     name: roomDetails.name,

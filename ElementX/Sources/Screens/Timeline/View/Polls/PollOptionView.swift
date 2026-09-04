@@ -42,6 +42,7 @@ struct PollOptionView: View {
                                     .font(.compound.bodySMSemibold)
                                     .foregroundColor(.compound.textPrimary)
                             }
+                            .accessibilityElement(children: .combine)
                         } else {
                             Text(L10n.commonPollVotesCount(pollOption.votes))
                                 .font(.compound.bodySM)
@@ -51,8 +52,10 @@ struct PollOptionView: View {
                 }
                 
                 PollProgressView(progress: progress)
+                    .accessibilityHidden(true)
             }
         }
+        .accessibilityElement(children: .combine)
     }
     
     // MARK: - Private

@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct InfoPlistReader {
+nonisolated struct InfoPlistReader {
     private enum Keys {
         static let appGroupIdentifier = "appGroupIdentifier"
         static let baseBundleIdentifier = "baseBundleIdentifier"
@@ -16,6 +16,7 @@ struct InfoPlistReader {
         static let bundleShortVersion = "CFBundleShortVersionString"
         static let bundleDisplayName = "CFBundleDisplayName"
         static let productionAppName = "productionAppName"
+        static let isNightlyBuild = "isNightlyBuild"
         static let utExportedTypeDeclarationsKey = "UTExportedTypeDeclarations"
         static let utTypeIdentifierKey = "UTTypeIdentifier"
         static let utDescriptionKey = "UTTypeDescription"
@@ -93,14 +94,16 @@ struct InfoPlistReader {
         infoPlistValue(forKey: Keys.productionAppName)
     }
     
+    // periphery:ignore - only used in release builds
+    /// Whether or not the build is from the Nightly stream.
+    var isNightlyBuild: Bool {
+        infoPlistValue(forKey: Keys.isNightlyBuild)
+    }
+    
     // MARK: - Custom App Scheme
     
     var appScheme: String {
         customSchemeForName("Application")
-    }
-    
-    var elementCallScheme: String {
-        customSchemeForName("Element Call")
     }
     
     // MARK: - Mention Pills
@@ -183,13 +186,18 @@ struct InfoPlistReader {
     @_disfavoredOverload // Make sure optional types default to the optional version below.
     private func infoPlistValue<T>(forKey key: String) -> T {
         guard let result = bundle.object(forInfoDictionaryKey: key) as? T else {
-            fatalError("Add \(key) into your target's Info.plst")
+            fatalError("Add \(key) into your target's Info.plist")
         }
         return result
     }
     
     private func infoPlistValue<T>(forKey key: String) -> T? {
         bundle.object(forInfoDictionaryKey: key) as? T
+    }
+    
+    private func infoPlistValue(forKey key: String) -> Bool {
+        // Build setting values are stored as strings ("YES"/"NO")…
+        (infoPlistValue(forKey: key) as NSString).boolValue
     }
     
     private func customSchemeForName(_ name: String) -> String {

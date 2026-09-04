@@ -24,6 +24,7 @@ struct JoinedRoomProxyMockConfiguration {
     var isSpace = false
     var isEncrypted = true
     var hasOngoingCall = true
+    var activeRoomCallParticipants: [String] = []
     var canonicalAlias: String?
     var alternativeAliases: [String] = []
     var pinnedEventIDs: Set<String> = []
@@ -89,33 +90,18 @@ extension JoinedRoomProxyMock {
         
         applyPowerLevelChangesReturnValue = .success(())
         resetPowerLevelsReturnValue = .success(())
-        suggestedRoleForClosure = { [weak self] userID in
-            guard case .success(let member) = await self?.getMember(userID: userID) else {
-                return .failure(.sdkError(RoomProxyMockError.generic))
-            }
-            return .success(member.role.rustRole)
-        }
         updatePowerLevelsForUsersReturnValue = .success(())
         
         let powerLevelsProxyMock = RoomPowerLevelsProxyMock(configuration.powerLevelsConfiguration)
         
-        powerLevelsProxyMock.canUserUserIDSendStateEventClosure = { [weak self] userID, _ in
-            .success(self?.membersPublisher.value.first { $0.userID == userID }?.role ?? .user != .user)
-        }
         powerLevelsProxyMock.canOwnUserSendStateEventClosure = { [weak self] _ in
             self?.membersPublisher.value.first { $0.userID == configuration.ownUserID }?.role ?? .user != .user
         }
         
-        powerLevelsProxyMock.canUserKickUserIDClosure = { [weak self] userID in
-            .success(self?.membersPublisher.value.first { $0.userID == userID }?.role ?? .user != .user)
-        }
         powerLevelsProxyMock.canOwnUserKickClosure = { [weak self] in
             self?.membersPublisher.value.first { $0.userID == configuration.ownUserID }?.role ?? .user != .user
         }
         
-        powerLevelsProxyMock.canUserBanUserIDClosure = { [weak self] userID in
-            .success(self?.membersPublisher.value.first { $0.userID == userID }?.role ?? .user != .user)
-        }
         powerLevelsProxyMock.canOwnUserBanClosure = { [weak self] in
             self?.membersPublisher.value.first { $0.userID == configuration.ownUserID }?.role ?? .user != .user
         }
@@ -123,8 +109,6 @@ extension JoinedRoomProxyMock {
         powerLevelsProxyMock.canOwnUserEditRolesAndPermissionsClosure = { [weak self] in
             self?.membersPublisher.value.first { $0.userID == configuration.ownUserID }?.role.isAdminOrHigher ?? false
         }
-        
-        powerLevelsReturnValue = .success(powerLevelsProxyMock)
         
         inviteUserIDReturnValue = .success(())
         kickUserReasonReturnValue = .success(())
@@ -165,9 +149,7 @@ extension RoomInfoProxyMock {
         
         id = configuration.id
         isEncrypted = configuration.isEncrypted
-        creators = []
         displayName = configuration.name
-        rawName = configuration.name
         topic = configuration.topic
         avatarURL = configuration.avatarURL
         isDirect = configuration.isDirect
@@ -177,21 +159,12 @@ extension RoomInfoProxyMock {
         canonicalAlias = configuration.canonicalAlias
         alternativeAliases = configuration.alternativeAliases
         membership = configuration.membership
-        inviter = configuration.inviter
         heroes = configuration.heroes.map(RoomHero.init)
         activeMembersCount = configuration.members.filter { $0.membership == .join || $0.membership == .invite }.count
-        invitedMembersCount = configuration.members.filter { $0.membership == .invite }.count
         joinedMembersCount = configuration.members.filter { $0.membership == .join }.count
         isDM = isDirect && activeMembersCount <= 2
-        highlightCount = 0
-        notificationCount = 0
-        cachedUserDefinedNotificationMode = .allMessages
         hasRoomCall = configuration.hasOngoingCall
-        activeRoomCallParticipants = []
-        isMarkedUnread = false
-        unreadMessagesCount = 0
-        unreadNotificationsCount = 0
-        unreadMentionsCount = 0
+        activeRoomCallParticipants = configuration.activeRoomCallParticipants
         pinnedEventIDs = configuration.pinnedEventIDs
         joinRule = configuration.joinRule
         historyVisibility = configuration.historyVisibility
@@ -204,7 +177,9 @@ private extension RoomHero {
     init(from memberProxy: RoomMemberProxyMock) {
         self.init(userId: memberProxy.userID,
                   displayName: memberProxy.displayName,
-                  avatarUrl: memberProxy.avatarURL?.absoluteString)
+                  avatarUrl: memberProxy.avatarURL?.absoluteString,
+                  status: memberProxy.status.raw?.rustValue,
+                  call: memberProxy.status.call?.rustValue)
     }
 }
 

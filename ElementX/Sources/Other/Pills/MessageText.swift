@@ -59,7 +59,7 @@ final class MessageTextView: UITextView, PillAttachmentViewProviderDelegate, UIG
 /// as an invisible spacer so a message bubble's text reserves room for the overlaid
 /// timestamp. Without this subclass, an attachment with no image would render TextKit's
 /// default "missing image" glyph.
-private final class TransparentTextAttachment: NSTextAttachment {
+private final nonisolated class TransparentTextAttachment: NSTextAttachment {
     override func image(forBounds imageBounds: CGRect,
                         textContainer: NSTextContainer?,
                         characterIndex charIndex: Int) -> UIImage? {
@@ -78,7 +78,9 @@ struct MessageText: UIViewRepresentable {
     /// Cache key for `sizeThatFits`. Keyed on the reserved trailing size as well as the proposed
     /// width to account for any changes on the send info label that happen after the first rendering.
     private struct SizeCacheKey: Hashable {
+        // periphery:ignore - used via the synthesized Hashable conformance
         let width: Double
+        // periphery:ignore - used via the synthesized Hashable conformance
         let reservedSize: CGSize
     }
     

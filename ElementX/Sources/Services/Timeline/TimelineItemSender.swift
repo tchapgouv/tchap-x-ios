@@ -9,30 +9,37 @@
 import MatrixRustSDK
 import SwiftUI
 
-struct TimelineItemSender: Identifiable, Hashable {
+nonisolated struct TimelineItemSender: Identifiable, Hashable {
     static let test = TimelineItemSender(id: "@test.matrix.org")
     
     let id: String
     let displayName: String?
     let isDisplayNameAmbiguous: Bool
     let avatarURL: URL?
+    let status: UserStatus
     
-    init(id: String, displayName: String? = nil, isDisplayNameAmbiguous: Bool = false, avatarURL: URL? = nil) {
+    init(id: String,
+         displayName: String? = nil,
+         isDisplayNameAmbiguous: Bool = false,
+         avatarURL: URL? = nil,
+         status: UserStatus = .init()) {
         self.id = id
         // Tchap : if `displayName` is nil, calculate it from userId.
 //        self.displayName = displayName
         self.displayName = displayName ?? MatrixIdFromString(id).userDisplayName?.displayName
         self.isDisplayNameAmbiguous = isDisplayNameAmbiguous
         self.avatarURL = avatarURL
+        self.status = status
     }
     
     init(senderID: String, senderProfile: ProfileDetails) {
         switch senderProfile {
-        case let .ready(displayName, isDisplayNameAmbiguous, avatarUrl):
+        case let .ready(displayName, isDisplayNameAmbiguous, avatarURL, status, call):
             self.init(id: senderID,
                       displayName: displayName,
                       isDisplayNameAmbiguous: isDisplayNameAmbiguous,
-                      avatarURL: avatarUrl.flatMap(URL.init(string:)))
+                      avatarURL: avatarURL.flatMap(URL.init(string:)),
+                      status: .init(rustStatus: status, rustCall: call))
         default:
             self.init(id: senderID,
                       displayName: nil,

@@ -9,7 +9,7 @@
 import MatrixRustSDK // Tchap
 import UIKit
 
-struct NoticeRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
+nonisolated struct NoticeRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
     let id: TimelineItemIdentifier
     let timestamp: Date
     let isOutgoing: Bool

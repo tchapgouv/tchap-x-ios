@@ -17,7 +17,6 @@ enum RoomProxyError: Error {
     case invalidURL
     case invalidMedia
     case eventNotFound
-    case missingTransactionID
     case failedCreatingPinnedTimeline
     case timelineError(TimelineProxyError)
     case liveLocationSessionIsNotActive
@@ -36,7 +35,7 @@ enum RoomProxyType {
 }
 
 // sourcery: AutoMockable
-protocol RoomProxyProtocol {
+protocol RoomProxyProtocol: Sendable {
     var id: String { get }
     var ownUserID: String { get }
 }
@@ -60,20 +59,9 @@ protocol BannedRoomProxyProtocol: RoomProxyProtocol {
     func forgetRoom() async -> Result<Void, RoomProxyError>
 }
 
-enum JoinedRoomProxyAction: Equatable {
-    case roomInfoUpdate
-}
-
 enum KnockRequestsState {
     case loading
     case loaded([KnockRequestProxyProtocol])
-}
-
-struct RTCDeclinedEvent {
-    /// The sender of the decline event
-    let sender: String
-    /// The rtc.notification event that is beeing declined
-    let notificationEventID: String
 }
 
 // sourcery: AutoMockable
@@ -91,8 +79,6 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     var timeline: TimelineProxyProtocol { get }
     
     var predecessorRoom: PredecessorRoom? { get }
-    
-    var successorRoom: SuccessorRoom? { get }
     
     func subscribeForUpdates() async
     
@@ -113,8 +99,6 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func pinnedEventsTimeline() async -> Result<TimelineProxyProtocol, RoomProxyError>
     
     func enableEncryption() async -> Result<Void, RoomProxyError>
-    
-    func redact(_ eventID: String) async -> Result<Void, RoomProxyError>
     
     func reportContent(_ eventID: String, reason: String?) async -> Result<Void, RoomProxyError>
     
@@ -137,8 +121,6 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     func uploadAvatar(media: MediaInfo) async -> Result<Void, RoomProxyError>
     
     func markAsRead(receiptType: ReceiptType) async -> Result<Void, RoomProxyError>
-    
-    func edit(eventID: String, newContent: RoomMessageEventContentWithoutRelation) async -> Result<Void, RoomProxyError>
     
     /// https://spec.matrix.org/v1.9/client-server-api/#typing-notifications
     @discardableResult func sendTypingNotification(isTyping: Bool) async -> Result<Void, RoomProxyError>
@@ -170,10 +152,8 @@ protocol JoinedRoomProxyProtocol: RoomProxyProtocol {
     
     // MARK: - Power Levels
     
-    func powerLevels() async -> Result<RoomPowerLevelsProxyProtocol?, RoomProxyError>
     func applyPowerLevelChanges(_ changes: RoomPowerLevelChanges) async -> Result<Void, RoomProxyError>
     func resetPowerLevels() async -> Result<Void, RoomProxyError>
-    func suggestedRole(for userID: String) async -> Result<RoomMemberRole, RoomProxyError>
     func updatePowerLevelsForUsers(_ updates: [(userID: String, powerLevel: Int64)]) async -> Result<Void, RoomProxyError>
     
     // MARK: - Moderation

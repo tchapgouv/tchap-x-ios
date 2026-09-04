@@ -9,10 +9,12 @@
 import Foundation
 import MatrixRustSDK
 
-struct RoomMemberDetails: Identifiable, Hashable {
+nonisolated struct RoomMemberDetails: Identifiable, Hashable {
     let id: String
     let name: String?
     let avatarURL: URL?
+    let status: UserStatus
+    
     let permalink: URL?
     
     var isInvited: Bool
@@ -29,11 +31,12 @@ struct RoomMemberDetails: Identifiable, Hashable {
     }
 }
 
-extension RoomMemberDetails {
+nonisolated extension RoomMemberDetails {
     init(withProxy proxy: RoomMemberProxyProtocol) {
         id = proxy.userID
         name = proxy.displayName
         avatarURL = proxy.avatarURL
+        status = proxy.status
         permalink = proxy.permalink
         isActive = proxy.isActive
         isInvited = proxy.membership == .invite

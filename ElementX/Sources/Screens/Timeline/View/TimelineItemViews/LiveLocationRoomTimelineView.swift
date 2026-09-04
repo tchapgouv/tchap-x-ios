@@ -13,10 +13,8 @@ struct LiveLocationRoomTimelineView: View {
     @Environment(\.timelineContext) private var context: TimelineViewModel.Context!
     @State private var hasExpired: Bool
     let timelineItem: LiveLocationRoomTimelineItem
-    private let currentDate: Date
     
     init(currentDate: Date = .now, timelineItem: LiveLocationRoomTimelineItem, isStopped: Bool = false) {
-        self.currentDate = currentDate
         self.timelineItem = timelineItem
         _hasExpired = State(initialValue: isStopped || currentDate >= timelineItem.content.timeoutDate)
     }
@@ -66,7 +64,7 @@ struct LiveLocationRoomTimelineView: View {
             }
         }
         .onTapGesture {
-            guard context.viewState.mapTilerSettings.isEnabled,
+            guard context.viewState.mapTilerConfiguration.isEnabled,
                   timelineItem.content.lastGeoURI != nil,
                   isLive else {
                 return
@@ -95,7 +93,7 @@ struct LiveLocationRoomTimelineView: View {
     private var liveContent: some View {
         if let geoURI = timelineItem.content.lastGeoURI {
             MapLibreStaticMapView(geoURI: geoURI,
-                                  mapURLBuilder: context.viewState.mapTilerSettings,
+                                  mapURLBuilder: context.viewState.mapTilerConfiguration,
                                   attributionPlacement: .topLeft,
                                   mapSize: .init(width: mapAspectRatio * mapMaxHeight, height: mapMaxHeight)) {
                 LocationMarkerView(kind: .liveUser(.init(sender: timelineItem.sender)),

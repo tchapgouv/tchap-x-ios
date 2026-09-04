@@ -10,32 +10,50 @@
 import EmbeddedElementCall
 #endif
 
+import Combine
 import Foundation
+import Macros
 import SwiftUI
 
 /// Common settings between app and NSE
-protocol CommonSettingsProtocol: AnyObject, Sendable {
+nonisolated protocol CommonSettingsProtocol: AnyObject, Sendable {
     var lastNotificationBootTime: TimeInterval? { get set }
     var selectedNotificationTone: NotificationTone? { get set }
     
     var logLevel: LogLevel { get }
     var traceLogPacks: Set<TraceLogPack> { get }
     var bugReportRageshakeURL: RemotePreference<RageshakeConfiguration> { get }
+    var contentScannerURL: RemotePreference<URL?> { get }
+    var forceDisableE2EE: RemotePreference<Bool> { get }
+    var mapTilerConfiguration: RemotePreference<MapTilerConfiguration> { get }
     
     var enableOnlySignedDeviceIsolationMode: Bool { get }
     var threadsEnabled: Bool { get }
     var hideQuietNotificationAlerts: Bool { get }
 }
 
-enum AppBuildType {
+nonisolated enum AppBuildType {
     case debug
     case nightly
     case release
+    
+    static var current: AppBuildType {
+        #if DEBUG
+        return .debug
+        #else
+        if InfoPlistReader.main.isNightlyBuild {
+            .nightly
+        } else {
+            .release
+        }
+        #endif
+    }
 }
 
 /// Store Element specific app settings.
 ///
 /// State is persisted in `UserDefaults`, which is thread-safe per Apple's documentation, hence `@unchecked`.
+<<<<<<< HEAD
 final class AppSettings: @unchecked Sendable {
     fileprivate enum UserDefaultsKeys: String, PreferenceKeyable {
         case lastVersionLaunched
@@ -96,12 +114,16 @@ final class AppSettings: @unchecked Sendable {
         case developerOptionsEnabled
     }
     
+=======
+final nonisolated class AppSettings: @unchecked Sendable {
+>>>>>>> release/26.08.2
     static let suiteName: String = InfoPlistReader.main.appGroupIdentifier
     
     /// UserDefaults to be used on reads and writes.
     private let store: UserDefaultsProtocol
     
     static var appBuildType: AppBuildType {
+<<<<<<< HEAD
         #if DEBUG
         return .debug
         #else
@@ -114,6 +136,9 @@ final class AppSettings: @unchecked Sendable {
 //        }
         return .release
         #endif
+=======
+        AppBuildType.current
+>>>>>>> release/26.08.2
     }
     
     func resetAllSettings() {
@@ -123,7 +148,7 @@ final class AppSettings: @unchecked Sendable {
     
     func resetSessionSpecificSettings() {
         MXLog.warning("Resetting the user session specific AppSettings.")
-        store.removeObject(forKey: UserDefaultsKeys.hasRunIdentityConfirmationOnboarding.rawValue)
+        resetHasRunIdentityConfirmationOnboarding()
     }
     
     // MARK: - Hooks
@@ -134,6 +159,7 @@ final class AppSettings: @unchecked Sendable {
                   hideBrandChrome: Bool,
                   pushGatewayBaseURL: URL,
                   oAuthRedirectURL: URL,
+                  oAuthClientURIPath: String?,
                   websiteURL: URL,
                   logoURL: URL,
                   copyrightURL: URL,
@@ -148,12 +174,13 @@ final class AppSettings: @unchecked Sendable {
                   accountProvisioningHost: String,
                   bugReportApplicationID: String,
                   analyticsTermsURL: URL?,
-                  mapTilerConfiguration: MapTilerSettings.Configuration) {
+                  mapTilerConfiguration: MapTilerConfiguration) {
         self.accountProviders = accountProviders
         self.allowOtherAccountProviders = allowOtherAccountProviders
         self.hideBrandChrome = hideBrandChrome
         self.pushGatewayBaseURL = pushGatewayBaseURL
         self.oAuthRedirectURL = oAuthRedirectURL
+        self.oAuthClientURIPath = oAuthClientURIPath
         self.websiteURL = websiteURL
         self.logoURL = logoURL
         self.copyrightURL = copyrightURL
@@ -168,7 +195,7 @@ final class AppSettings: @unchecked Sendable {
         self.accountProvisioningHost = accountProvisioningHost
         self.bugReportApplicationID = bugReportApplicationID
         self.analyticsTermsURL = analyticsTermsURL
-        mapTilerSettings = RemotePreference(.configuration(mapTilerConfiguration))
+        self.mapTilerConfiguration = RemotePreference(mapTilerConfiguration)
     }
     
     // MARK: - Application
@@ -181,11 +208,11 @@ final class AppSettings: @unchecked Sendable {
     
     /// The Set of room identifiers of invites that the user already saw in the invites list.
     /// This Set is being used to implement badges for unread invites.
-    @UserPreference
+    @UserPreference(defaultValue: Set<String>())
     var seenInvites: Set<String>
     
     /// Defaults to `true` for new users, and we use a migration to set it to `false` for existing users.
-    @UserPreference
+    @UserPreference(defaultValue: true)
     var hasSeenNewSoundBanner: Bool
     
     // The initial set of account providers shown to the user in the authentication flow.
@@ -298,8 +325,16 @@ final class AppSettings: @unchecked Sendable {
     /// **Note:** This property isn't overridable as it in unexpected for forks to come across the error (or to even have a "Pro" app).
     let elementProAppStoreURL: URL = "https://apps.apple.com/app/element-pro-for-work/id6502951615"
     
-    @UserPreference
+    @UserPreference(defaultValue: AppAppearance.system)
     var appAppearance: AppAppearance
+    
+    /// Tracks previous servers the user connected to for autocompletion purposes. Entries are made lowercase on write.
+    @UserPreference(key: "previousServers", defaultValue: [])
+    var previousServers: [String]
+    
+    var defaultServer: String {
+        previousServers.first ?? accountProviders[0]
+    }
     
     // MARK: - Security
     
@@ -310,7 +345,7 @@ final class AppSettings: @unchecked Sendable {
     /// Any codes that the user isn't allowed to use for their PIN.
     let appLockPINCodeBlockList = ["0000", "1234"]
     /// The number of attempts the user has made to unlock the app with a PIN code (resets when unlocked).
-    @UserPreference
+    @UserPreference(defaultValue: 0)
     var appLockNumberOfPINAttempts: Int
     
     // MARK: - Authentication
@@ -333,6 +368,7 @@ final class AppSettings: @unchecked Sendable {
     #else
     /// The redirect URL used for OAuth. For the normal case we don't actually need the bundle ID as the web authentication session handles the redirect internally.
     /// However in the case where MAS sends the user to an external app, we need to make sure that the system will open the correct variant of the app (e.g. Nightly).
+<<<<<<< HEAD
     private(set) var oAuthRedirectURL: URL! = URL(string: "https://element.io/oauth/ios/\(InfoPlistReader.main.bundleIdentifier)")
     #endif
 
@@ -343,6 +379,23 @@ final class AppSettings: @unchecked Sendable {
                                                                   tosURI: acceptableUseURL,
                                                                   policyURI: privacyURL,
                                                                   staticRegistrations: oAuthStaticRegistrations.mapKeys { $0.absoluteString })
+=======
+    private(set) nonisolated(unsafe) var oAuthRedirectURL: URL! = URL(string: "https://element.io/oauth/ios/\(InfoPlistReader.main.bundleIdentifier)")
+    /// A path that is appended to `websiteURL` to form the OAuth `clientURI`. MAS uses `clientURI` as the identifier for a specific app, allowing us to
+    /// distinguish the various clients we have for Android, iOS and Web from each other.
+    /// Intentionally a distinct property so it can be easily overridden without having to manipulate the website URL.
+    private(set) var oAuthClientURIPath: String? = "apps/ios"
+    
+    var oAuthConfiguration: OAuthConfiguration {
+        OAuthConfiguration(clientName: InfoPlistReader.main.bundleDisplayName,
+                           redirectURI: oAuthRedirectURL,
+                           clientURI: oAuthClientURIPath.map { websiteURL.appending(path: $0) } ?? websiteURL,
+                           logoURI: logoURL,
+                           tosURI: acceptableUseURL,
+                           policyURI: privacyURL,
+                           staticRegistrations: oAuthStaticRegistrations.mapKeys { $0.absoluteString })
+    }
+>>>>>>> release/26.08.2
     
     /// Whether or not the Create Account button is shown on the start screen.
     ///
@@ -376,13 +429,13 @@ final class AppSettings: @unchecked Sendable {
         pushGatewayBaseURL.appending(path: "_matrix/push/v1/notify")
     }
     
-    @UserPreference
+    @UserPreference(defaultValue: true)
     var enableNotifications: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: true)
     var enableInAppNotifications: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var hideQuietNotificationAlerts: Bool
     
     /// Tag describing which set of device specific rules a pusher executes.
@@ -399,10 +452,10 @@ final class AppSettings: @unchecked Sendable {
     
     // MARK: - Logging
     
-    @UserPreference
+    @UserPreference(defaultValue: LogLevel.info)
     var logLevel: LogLevel
     
-    @UserPreference
+    @UserPreference(defaultValue: Set<TraceLogPack>())
     var traceLogPacks: Set<TraceLogPack>
     
     // MARK: - Bug report
@@ -422,10 +475,26 @@ final class AppSettings: @unchecked Sendable {
     private(set) var bugReportApplicationID = "tchap-x-production-ios"
     #else
     private(set) var bugReportApplicationID = "element-x-ios"
+<<<<<<< HEAD
     #endif
     /// The maximum size of the upload request. Default value is just below CloudFlare's max request size.
     let bugReportMaxUploadSize = 10 * 1024 * 1024
 
+=======
+    
+    // MARK: - Content scanner
+    
+    /// The base URL of the content scanner server used to scan media before it is downloaded.
+    /// `nil` when content scanning is disabled.
+    let contentScannerURL: RemotePreference<URL?> = .init(nil)
+    
+    // MARK: - Encryption
+    
+    /// Whether the server forbids the use of E2EE: new rooms are created unencrypted and
+    /// enabling encryption on existing rooms is not offered.
+    let forceDisableE2EE: RemotePreference<Bool> = .init(false)
+    
+>>>>>>> release/26.08.2
     // MARK: - Analytics
     
     /// The configuration to use for analytics. Set to `nil` to disable analytics.
@@ -445,49 +514,59 @@ final class AppSettings: @unchecked Sendable {
     }
     
     /// Whether the user has opted in to send analytics.
-    @UserPreference
+    @UserPreference(defaultValue: AnalyticsConsentState.unknown)
     var analyticsConsentState: AnalyticsConsentState
     
-    @UserPreference
+    /// Whether a user session has ever been set up on this device. Deliberately not cleared on
+    /// logout: it stops the Classic app migration prompt from reappearing when an Element X
+    /// user is signed out unexpectedly (invalidated token, corrupted storage, etc).
+    @UserPreference(defaultValue: false)
+    var hasSignedInBefore: Bool
+    
+    @UserPreference(defaultValue: false)
     var hasRunNotificationPermissionsOnboarding: Bool
     
+<<<<<<< HEAD
     @UserPreference
     var hasRunTchapWelcomeOnboarding: Bool // :tchap:
     
     @UserPreference
+=======
+    @UserPreference(defaultValue: false)
+>>>>>>> release/26.08.2
     var hasRunIdentityConfirmationOnboarding: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var hasRequestedLocationAlwaysLocationAuthorization: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: [FrequentlyUsedEmoji]())
     var frequentlyUsedSystemEmojis: [FrequentlyUsedEmoji]
     
     // MARK: - Live Location
     
-    @UserPreference
+    @UserPreference(key: "liveLocationSharingTimeoutDatesByRoomID", defaultValue: [String: LiveLocationSession]())
     var liveLocationSharingSessionsByRoomID: [String: LiveLocationSession]
     
-    @UserPreference
+    @UserPreference(defaultValue: 10)
     var liveLocationMinimumDistanceUpdate: Int
     
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var liveLocationDisclaimerDisplayed: Bool
     
     // MARK: - Home Screen
     
-    @UserPreference
+    @UserPreference(defaultValue: RoomListActivityVisibility.current)
     var roomListActivityVisibility: RoomListActivityVisibility
     
     // MARK: - Room Screen
     
-    @UserPreference
+    @UserPreference(defaultValue: AppBuildType.current == .debug)
     var viewSourceEnabled: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: true)
     var optimizeMediaUploads: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: AudioPlaybackSpeed.default)
     var voiceMessagePlaybackSpeed: AudioPlaybackSpeed
     
     /// Whether or not to show a warning on the media caption composer so the user knows
@@ -517,6 +596,7 @@ final class AppSettings: @unchecked Sendable {
     // MARK: - Maps
     
     /// The locally-bundled MapTiler configuration.
+<<<<<<< HEAD
     // Tchap: customize map tiler url for Tchap.
     #if IS_TCHAP_DEVELOPMENT || IS_TCHAP_PREPROD || IS_TCHAP_PRODUCTION
     private enum TchapMapProvider: String {
@@ -534,63 +614,78 @@ final class AppSettings: @unchecked Sendable {
                                                                              lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
                                                                              darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
     #endif
+=======
+    static let bundledMapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
+                                                                    apiKey: Secrets.mapLibreAPIKey,
+                                                                    lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
+                                                                    darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
+>>>>>>> release/26.08.2
     
-    /// The resolved map tile settings. Defaults to ``MapTilerSettings.configuration(_:)`` with the
-    /// bundled configuration and is remotely overridden with ``MapTilerSettings.url(_:)`` when
-    /// the homeserver advertises a `style.json` URL via the matrix client well-known.
-    private(set) var mapTilerSettings = RemotePreference<MapTilerSettings>(.configuration(AppSettings.bundledMapTilerConfiguration))
+    /// The MapTiler configuration used to build map URLs, which defaults to the bundled one.
+    private(set) var mapTilerConfiguration = RemotePreference(AppSettings.bundledMapTilerConfiguration)
     
     // MARK: - Presence
     
-    @UserPreference
+    @UserPreference(defaultValue: true)
     var sharePresence: Bool
     
     // MARK: - Feature Flags
     
     /// Others
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var fuzzyRoomListSearchEnabled: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var lowPriorityFilterEnabled: Bool
     
     /// Configuration to enable only signed device isolation mode for  crypto. In this mode only devices signed by their owner will be considered in e2ee rooms.
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var enableOnlySignedDeviceIsolationMode: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var knockingEnabled: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var threadsEnabled: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var roomThreadListEnabled: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: ProcessInfo().isiOSAppOnMac)
+    var globalSearchEnabled: Bool
+    
+    @UserPreference(defaultValue: false)
     var focusEventOnNotificationTap: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var linkPreviewsEnabled: Bool
     
-    @UserPreference
+    /// Enables *sending* gallery messages (multiple media in a single message).
+    /// Received galleries are always rendered regardless of this flag.
+    @UserPreference(defaultValue: false)
+    var galleryEnabled: Bool
+    
+    @UserPreference(defaultValue: false)
     var jumpToReadMarkerEnabled: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var linkNewDeviceEnabled: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var automaticBackPaginationEnabled: Bool
     
-    @UserPreference
+    @UserPreference(key: "clientPausingAndResumingEnabledV2", defaultValue: false, volatile: true)
     var clientPausingAndResumingEnabled: Bool
     
-    @UserPreference
+    @UserPreference(defaultValue: false)
+    var userStatusEnabled: Bool
+    
+    @UserPreference(defaultValue: AppBuildType.current != .release)
     var developerOptionsEnabled: Bool
     
     init(store: UserDefaultsProtocol) {
-        // UserDefaults to be used on reads and writes.
         self.store = store
+<<<<<<< HEAD
         
         _lastVersionLaunched = UserPreference(key: .lastVersionLaunched, storage: store)
         _seenInvites = UserPreference(key: .seenInvites, defaultValue: [], storage: store)
@@ -634,6 +729,8 @@ final class AppSettings: @unchecked Sendable {
         _developerOptionsEnabled = UserPreference(key: .developerOptionsEnabled, defaultValue: Self.appBuildType != .release, storage: store)
         // :tchap: UserDefault for tchap settings
         _hasRunTchapWelcomeOnboarding = UserPreference(key: .hasRunTchapWelcomeOnboarding, defaultValue: false, storage: store)
+=======
+>>>>>>> release/26.08.2
     }
     
     static func volatile() -> AppSettings {
@@ -641,14 +738,4 @@ final class AppSettings: @unchecked Sendable {
     }
 }
 
-extension AppSettings: CommonSettingsProtocol { }
-
-private extension UserPreference {
-    convenience init(key: AppSettings.UserDefaultsKeys, defaultValue: T, storage backingStorage: UserDefaultsProtocol, mode: Mode = .localOverRemote) {
-        self.init(key: key as any PreferenceKeyable, defaultValue: defaultValue, storage: backingStorage, mode: mode)
-    }
-    
-    convenience init(key: AppSettings.UserDefaultsKeys, storage: UserDefaultsProtocol, mode: Mode = .localOverRemote) where T: ExpressibleByNilLiteral {
-        self.init(key: key as any PreferenceKeyable, defaultValue: nil, storage: storage, mode: mode)
-    }
-}
+nonisolated extension AppSettings: CommonSettingsProtocol { }

@@ -124,6 +124,7 @@ class Signposter {
         globalTags[tagName] = value
     }
     
+<<<<<<< HEAD
     func removeGlobalTag(_ tagName: TagName) {
         // Tchap: Disable Sentry
         guard isEnableForTchap else {
@@ -133,6 +134,8 @@ class Signposter {
         globalTags[tagName] = nil
     }
     
+=======
+>>>>>>> release/26.08.2
     // MARK: - Private
     
     func sha512(_ string: String) -> String {

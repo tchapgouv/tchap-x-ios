@@ -143,7 +143,7 @@ private struct SpaceAddRoomsListRow: View {
                 })
     }
     
-    @ViewBuilder @MainActor
+    @ViewBuilder
     var avatar: some View {
         if dynamicTypeSize < .accessibility3 {
             RoomAvatarImage(avatar: room.avatar,
@@ -157,6 +157,7 @@ private struct SpaceAddRoomsListRow: View {
 
 // MARK: - Previews
 
+@available(iOS 26.0, *)
 struct SpaceAddRoomsScreen_Previews: PreviewProvider, TestablePreview {
     static let summaryProvider = RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))
     static let viewModel = makeViewModel()

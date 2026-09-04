@@ -13,9 +13,13 @@ extension View {
     /// Adds the send info (timestamp along indicators for edits and delivery/encryption issues) for the given timeline item to this view.
     func timelineItemSendInfo(timelineItem: EventBasedTimelineItemProtocol,
                               adjustedDeliveryStatus: TimelineItemDeliveryStatus?,
+                              hasContentScanningFailure: Bool = false,
                               context: TimelineViewModel.Context) -> some View {
         modifier(TimelineItemSendInfoModifier(sendInfo: .init(timelineItem: timelineItem,
-                                                              adjustedDeliveryStatus: adjustedDeliveryStatus),
+                                                              adjustedDeliveryStatus: adjustedDeliveryStatus,
+                                                              hasContentScanningFailure: hasContentScanningFailure),
+                                              // A gallery announces this when entering it instead.
+                                              isAccessibilityHidden: timelineItem is GalleryRoomTimelineItem,
                                               context: context))
     }
 }
@@ -23,6 +27,7 @@ extension View {
 /// Adds the send info to a view with the correct layout.
 private struct TimelineItemSendInfoModifier: ViewModifier {
     let sendInfo: TimelineItemSendInfo
+    let isAccessibilityHidden: Bool
     let context: TimelineViewModel.Context
     
     var layout: AnyLayout {
@@ -41,6 +46,7 @@ private struct TimelineItemSendInfoModifier: ViewModifier {
             content
             
             TimelineItemSendInfoLabel(sendInfo: sendInfo)
+                .accessibilityHidden(isAccessibilityHidden)
                 .contentShape(.rect)
                 // Tap gesture to avoid the message being detected as a button by VoiceOver
                 // (and the action shows a description that is already read to the user).
@@ -113,7 +119,6 @@ private struct TimelineItemSendInfoLabel: View {
 }
 
 /// All the data needed to render a timeline item's send info label.
-@MainActor
 private struct TimelineItemSendInfo {
     enum Status {
         case sendingFailed
@@ -149,7 +154,9 @@ private struct TimelineItemSendInfo {
 }
 
 private extension TimelineItemSendInfo {
-    init(timelineItem: EventBasedTimelineItemProtocol, adjustedDeliveryStatus: TimelineItemDeliveryStatus?) {
+    init(timelineItem: EventBasedTimelineItemProtocol,
+         adjustedDeliveryStatus: TimelineItemDeliveryStatus?,
+         hasContentScanningFailure: Bool = false) {
         itemID = timelineItem.id
         localizedString = timelineItem.localizedSendInfo
         
@@ -163,29 +170,39 @@ private extension TimelineItemSendInfo {
             nil
         }
         
-        layoutType = switch timelineItem {
-        case is TextBasedRoomTimelineItem:
-            .overlay(capsuleStyle: false)
-        case let liveLocationTimelineItem as LiveLocationRoomTimelineItem:
-            liveLocationTimelineItem.layout
-        case let message as EventBasedMessageTimelineItemProtocol:
-            switch message {
-            case is ImageRoomTimelineItem, is VideoRoomTimelineItem:
-                .overlay(capsuleStyle: !message.hasMediaCaption)
-            case is AudioRoomTimelineItem, is FileRoomTimelineItem:
-                // swiftlint:disable:next void_function_in_ternary
-                message.hasMediaCaption ? .overlay(capsuleStyle: false) : .horizontal(spacing: 0) // No spacing as the content already contains it.
-            case let locationTimelineItem as LocationRoomTimelineItem:
-                .overlay(capsuleStyle: locationTimelineItem.content.geoURI != nil)
+        layoutType = if hasContentScanningFailure {
+            // The content scanner failure placeholder replaces the media,
+            // so the send info is laid out like it is for a text message.
+            timelineItem.hasMediaCaption ? .overlay(capsuleStyle: false) : .horizontal()
+        } else {
+            switch timelineItem {
+            case is TextBasedRoomTimelineItem:
+                .overlay(capsuleStyle: false)
+            case let liveLocationTimelineItem as LiveLocationRoomTimelineItem:
+                liveLocationTimelineItem.layout
+            case let message as EventBasedMessageTimelineItemProtocol:
+                switch message {
+                case is ImageRoomTimelineItem, is VideoRoomTimelineItem:
+                    .overlay(capsuleStyle: !message.hasMediaCaption)
+                case is GalleryRoomTimelineItem:
+                    // Without a caption, append the send info below the grid rather than overlaying
+                    // a capsule on top of the media.
+                    message.hasMediaCaption ? .overlay(capsuleStyle: false) : .vertical()
+                case is AudioRoomTimelineItem, is FileRoomTimelineItem:
+                    // swiftlint:disable:next void_function_in_ternary
+                    message.hasMediaCaption ? .overlay(capsuleStyle: false) : .horizontal(spacing: 0) // No spacing as the content already contains it.
+                case let locationTimelineItem as LocationRoomTimelineItem:
+                    .overlay(capsuleStyle: locationTimelineItem.content.geoURI != nil)
+                default:
+                    .horizontal()
+                }
+            case is StickerRoomTimelineItem:
+                .overlay(capsuleStyle: true)
+            case is PollRoomTimelineItem:
+                .vertical(spacing: 16)
             default:
                 .horizontal()
             }
-        case is StickerRoomTimelineItem:
-            .overlay(capsuleStyle: true)
-        case is PollRoomTimelineItem:
-            .vertical(spacing: 16)
-        default:
-            .horizontal()
         }
     }
 }
@@ -200,7 +217,6 @@ private extension LiveLocationRoomTimelineItem {
     }
 }
 
-@MainActor
 private extension EncryptionAuthenticity {
     var foregroundStyle: SwiftUI.Color {
         switch color {

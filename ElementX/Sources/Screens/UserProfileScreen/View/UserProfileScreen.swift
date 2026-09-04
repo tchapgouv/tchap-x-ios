@@ -43,9 +43,10 @@ struct UserProfileScreen: View {
                 context.send(viewAction: .displayAvatar(url))
             } footer: {
                 otherUserFooter
+                    .padding(.top, 8)
             }
         } else {
-            AvatarHeaderView(user: UserProfileProxy(userID: context.viewState.userID),
+            AvatarHeaderView(user: UserProfile(userID: context.viewState.userID),
                              isVerified: context.viewState.showVerifiedBadge,
                              avatarSize: .user(on: .memberDetails),
                              mediaProvider: context.mediaProvider) { }
@@ -64,7 +65,7 @@ struct UserProfileScreen: View {
                 .accessibilityIdentifier(A11yIdentifiers.roomMemberDetailsScreen.directChat)
             }
             
-            if let roomID = context.viewState.dmRoomID {
+            if let roomID = context.viewState.dmRoomID, context.viewState.isCallingEnabled {
                 Button {
                     context.send(viewAction: .startCall(roomID: roomID, isVoiceCall: true))
                 } label: {
@@ -89,7 +90,6 @@ struct UserProfileScreen: View {
                 .buttonStyle(FormActionButtonStyle(title: L10n.actionShare))
             }
         }
-        .padding(.top, 32)
     }
     
     @ToolbarContentBuilder
@@ -106,6 +106,7 @@ struct UserProfileScreen: View {
 
 // MARK: - Previews
 
+@available(iOS 26.0, *)
 struct UserProfileScreen_Previews: PreviewProvider, TestablePreview {
     static let verifiedUserViewModel = makeViewModel(userID: RoomMemberProxyMock.mockDan.userID)
     static let otherUserViewModel = makeViewModel(userID: RoomMemberProxyMock.mockAlice.userID)
@@ -146,8 +147,8 @@ struct UserProfileScreen_Previews: PreviewProvider, TestablePreview {
         return UserProfileScreenViewModel(userID: userID,
                                           isPresentedModally: false,
                                           userSession: UserSessionMock(.init(clientProxy: clientProxyMock)),
-                                          userIndicatorController: UserIndicatorControllerMock(),
+                                          appHooks: AppHooks(),
                                           analytics: AnalyticsServiceMock(.init()),
-                                          appSettings: .volatile())
+                                          userIndicatorController: UserIndicatorControllerMock())
     }
 }

@@ -133,6 +133,7 @@ struct CreateRoomScreen: View {
                         .foregroundStyle(.compound.textPrimary)
                         .tint(.compound.iconAccentTertiary)
                         .focused($focus, equals: .name)
+                        .accessibilityLabel(L10n.commonName)
                         .accessibilityIdentifier(A11yIdentifiers.createRoomScreen.roomName)
                         .padding(.horizontal, ListRowPadding.horizontal)
                         .padding(.vertical, ListRowPadding.vertical)
@@ -172,7 +173,8 @@ struct CreateRoomScreen: View {
                     .accessibilityHidden(true)
             }
         }
-        .accessibilityLabel(L10n.a11yEditAvatar)
+        .accessibilityLabel(context.viewState.avatarImage == nil ? L10n.a11yAddAvatar : L10n.a11yEditAvatar)
+        .accessibilityRemoveTraits(.isHeader)
         .buttonStyle(.plain)
         .accessibilityIdentifier(A11yIdentifiers.createRoomScreen.roomAvatar)
         .confirmationDialog("", isPresented: $context.showAttachmentConfirmationDialog) {
@@ -210,6 +212,7 @@ struct CreateRoomScreen: View {
         } header: {
             Text(L10n.screenCreateRoomTopicLabel)
                 .compoundListSectionHeader()
+                .accessibilityRemoveTraits(.isHeader)
         }
     }
     
@@ -304,12 +307,14 @@ struct CreateRoomScreen: View {
         Section {
             EditRoomAddressListRow(aliasLocalPart: aliasBinding,
                                    serverName: context.viewState.serverName,
-                                   shouldDisplayError: context.viewState.aliasErrors.errorDescription != nil)
+                                   errorDescription: context.viewState.aliasErrors.errorDescription,
+                                   footerText: L10n.screenCreateRoomRoomAddressSectionFooter)
                 .focused($focus, equals: .alias)
                 .id(Focus.alias)
         } header: {
             Text(L10n.screenCreateRoomRoomAddressSectionTitle)
                 .compoundListSectionHeader()
+                .accessibilityRemoveTraits(.isHeader)
         } footer: {
             VStack(alignment: .leading, spacing: 12) {
                 if let errorDescription = context.viewState.aliasErrors.errorDescription {

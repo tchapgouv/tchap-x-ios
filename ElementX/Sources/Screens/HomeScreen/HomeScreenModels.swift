@@ -90,15 +90,16 @@ enum HomeScreenSecurityBannerMode: Equatable {
 }
 
 struct HomeScreenViewState: BindableState {
-    let userID: String
-    var userDisplayName: String?
-    var userAvatarURL: URL?
+    var userProfile: UserProfile
     
     var securityBannerMode = HomeScreenSecurityBannerMode.none
     var shouldShowNewSoundBanner = false
+<<<<<<< HEAD
     var shouldShowOfflineBanner = false // Tchap: Display banner when homeserver is unreachable
 
     var requiresExtraAccountSetup = false
+=======
+>>>>>>> release/26.08.2
     
     var rooms: [HomeScreenRoom] = []
     var roomListMode: HomeScreenRoomListMode = .skeletons
@@ -115,6 +116,9 @@ struct HomeScreenViewState: BindableState {
     
     var shouldShowSpaceFilters = false
     var selectedSpaceFilter: SpaceServiceFilter?
+    
+    /// Inline room list search is disabled when the dedicated global search tab is shown instead (see `UserSessionFlowCoordinator`).
+    var isRoomListSearchEnabled = true
     
     var visibleRooms: [HomeScreenRoom] {
         if roomListMode == .skeletons {
@@ -224,6 +228,8 @@ struct HomeScreenRoom: Identifiable, Equatable {
     
     let avatar: RoomAvatar
     
+    let statusEmoji: Character?
+    
     let canonicalAlias: String?
     
     let isTombstoned: Bool
@@ -251,6 +257,7 @@ struct HomeScreenRoom: Identifiable, Equatable {
                        lastMessage: placeholderLastMessage,
                        lastMessageState: nil,
                        avatar: .room(id: "", name: "", avatarURL: nil),
+                       statusEmoji: nil,
                        canonicalAlias: nil,
                        isTombstoned: false)
     }
@@ -277,7 +284,9 @@ extension HomeScreenRoom {
         
         let callBadge = if summary.hasOngoingCall {
             summary.activeCallIntent == .audio ? CallBadgeType.voice : CallBadgeType.video
-        } else { CallBadgeType.none }
+        } else {
+            CallBadgeType.none
+        }
         
         let type: HomeScreenRoom.RoomType = switch summary.joinRequestType {
         case .invite(let inviter): .invite(inviterDetails: inviter.map(RoomInviterDetails.init))
@@ -301,6 +310,7 @@ extension HomeScreenRoom {
                   lastMessage: summary.lastMessage,
                   lastMessageState: summary.homeScreenLastMessageState,
                   avatar: summary.avatar,
+                  statusEmoji: summary.statusEmoji,
                   canonicalAlias: summary.canonicalAlias,
                   isTombstoned: summary.isTombstoned)
     }

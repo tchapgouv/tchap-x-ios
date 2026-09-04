@@ -32,10 +32,7 @@ enum EmojiProviderState {
     case loaded([EmojiCategory])
 }
 
-@MainActor
 protocol EmojiProviderProtocol {
-    var state: EmojiProviderState { get }
-    
     func categories(searchString: String?) async -> [EmojiCategory]
     
     func frequentlyUsedSystemEmojis() -> [String]

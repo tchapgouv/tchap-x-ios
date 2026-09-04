@@ -9,12 +9,14 @@
 import Foundation
 import MatrixRustSDK
 
-struct RoomInfoProxy: RoomInfoProxyProtocol {
+nonisolated struct RoomInfoProxy: RoomInfoProxyProtocol {
     let roomInfo: RoomInfo
     
     var id: String {
         roomInfo.id
     }
+    
+    // periphery:ignore - might be useful to have
     
     var creators: [String] {
         roomInfo.creators ?? []
@@ -23,6 +25,8 @@ struct RoomInfoProxy: RoomInfoProxyProtocol {
     var displayName: String? {
         roomInfo.displayName
     }
+    
+    // periphery:ignore - might be useful to have
     
     var rawName: String? {
         roomInfo.rawName
@@ -78,6 +82,8 @@ struct RoomInfoProxy: RoomInfoProxyProtocol {
         roomInfo.membership
     }
     
+    // periphery:ignore - might be useful to have
+    
     var inviter: RoomMemberProxyProtocol? {
         roomInfo.inviter.map(RoomMemberProxy.init)
     }
@@ -90,6 +96,8 @@ struct RoomInfoProxy: RoomInfoProxyProtocol {
         Int(roomInfo.activeMembersCount)
     }
     
+    // periphery:ignore - might be useful to have
+    
     var invitedMembersCount: Int {
         Int(roomInfo.invitedMembersCount)
     }
@@ -98,13 +106,19 @@ struct RoomInfoProxy: RoomInfoProxyProtocol {
         Int(roomInfo.joinedMembersCount)
     }
     
+    // periphery:ignore - might be useful to have
+    
     var highlightCount: Int {
         Int(roomInfo.highlightCount)
     }
     
+    // periphery:ignore - might be useful to have
+    
     var notificationCount: Int {
         Int(roomInfo.notificationCount)
     }
+    
+    // periphery:ignore - might be useful to have
     
     var cachedUserDefinedNotificationMode: RoomNotificationMode? {
         roomInfo.cachedUserDefinedNotificationMode
@@ -129,17 +143,25 @@ struct RoomInfoProxy: RoomInfoProxyProtocol {
         roomInfo.activeRoomCallParticipants
     }
     
+    // periphery:ignore - might be useful to have
+    
     var isMarkedUnread: Bool {
         roomInfo.isMarkedUnread
     }
+    
+    // periphery:ignore - might be useful to have
     
     var unreadMessagesCount: UInt {
         UInt(roomInfo.numUnreadMessages)
     }
     
+    // periphery:ignore - might be useful to have
+    
     var unreadNotificationsCount: UInt {
         UInt(roomInfo.numUnreadNotifications)
     }
+    
+    // periphery:ignore - might be useful to have
     
     var unreadMentionsCount: UInt {
         UInt(roomInfo.numUnreadMentions)
@@ -179,7 +201,7 @@ struct RoomInfoProxy: RoomInfoProxyProtocol {
     }
 }
 
-struct RoomPreviewInfoProxy: BaseRoomInfoProxyProtocol {
+nonisolated struct RoomPreviewInfoProxy: BaseRoomInfoProxyProtocol {
     let roomPreviewInfo: RoomPreviewInfo
     
     let successor: SuccessorRoom? = nil

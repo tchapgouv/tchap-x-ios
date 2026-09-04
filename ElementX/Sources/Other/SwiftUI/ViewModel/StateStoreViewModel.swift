@@ -16,7 +16,6 @@ import Foundation
 /// a specific portion of state that can be safely bound to.
 /// If we decide to add more features to our state management (like doing state processing off the main thread)
 /// we can do it in this centralised place.
-@MainActor
 class StateStoreViewModel<State: BindableState, ViewAction> {
     /// For storing subscription references.
     ///
@@ -31,8 +30,8 @@ class StateStoreViewModel<State: BindableState, ViewAction> {
         set { context.viewState = newValue }
     }
     
-    init(initialViewState: State, mediaProvider: MediaProviderProtocol? = nil) {
-        context = Context(initialViewState: initialViewState, mediaProvider: mediaProvider)
+    init(initialViewState: State, mediaProvider: MediaProviderProtocol? = nil, contentScannerService: ContentScannerServiceProtocol? = nil) {
+        context = Context(initialViewState: initialViewState, mediaProvider: mediaProvider, contentScannerService: contentScannerService)
         context.viewModel = self
     }
     
@@ -57,7 +56,6 @@ class StateStoreViewModel<State: BindableState, ViewAction> {
     /// It provides a nice layer of consistency and also safety. As we are not passing the `ViewModel` to the view directly, shortcuts/hacks
     /// can't be made into the `ViewModel`.
     @dynamicMemberLookup
-    @MainActor
     final class Context: ObservableObject {
         fileprivate weak var viewModel: StateStoreViewModel?
         
@@ -67,6 +65,11 @@ class StateStoreViewModel<State: BindableState, ViewAction> {
         /// An optional image loading service so that views can manage themselves
         /// Intentionally non-generic so that it doesn't grow uncontrollably
         let mediaProvider: MediaProviderProtocol?
+        
+        /// An optional content scanning service so that views can validate media themselves.
+        /// `nil` when no content scanner is configured for the server, or when the screen
+        /// intentionally doesn't provide one because it has no media to scan.
+        let contentScannerService: ContentScannerServiceProtocol?
         
         /// Set-able/Bindable access to the bindable state.
         subscript<T>(dynamicMember keyPath: WritableKeyPath<State.BindStateType, T>) -> T {
@@ -80,9 +83,10 @@ class StateStoreViewModel<State: BindableState, ViewAction> {
             viewModel?.process(viewAction: viewAction)
         }
         
-        fileprivate init(initialViewState: State, mediaProvider: MediaProviderProtocol?) {
+        fileprivate init(initialViewState: State, mediaProvider: MediaProviderProtocol?, contentScannerService: ContentScannerServiceProtocol?) {
             self.viewState = initialViewState
             self.mediaProvider = mediaProvider
+            self.contentScannerService = contentScannerService
         }
     }
 }

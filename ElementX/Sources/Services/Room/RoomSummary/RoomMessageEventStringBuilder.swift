@@ -9,7 +9,7 @@
 import Foundation
 import MatrixRustSDK
 
-struct RoomMessageEventStringBuilder {
+nonisolated struct RoomMessageEventStringBuilder {
     enum Style {
         /// Plain: no prefix, no special text treatment
         /// Shown in push notifications and thread lists
@@ -66,7 +66,7 @@ struct RoomMessageEventStringBuilder {
                 message = AttributedString(content.body)
             }
         case .gallery(let content):
-            message = AttributedString(content.body)
+            message = buildGalleryMessage(for: style, content: content)
         case .other(_, let body):
             message = AttributedString(body)
         }
@@ -91,8 +91,23 @@ struct RoomMessageEventStringBuilder {
         }
     }
     
+    /// A gallery's body is its caption. Notifications fall back to counting the attachments when
+    /// there isn't one, whilst elsewhere it is treated as any other media's caption.
+    private func buildGalleryMessage(for style: Style, content: GalleryMessageContent) -> AttributedString {
+        switch style {
+        case .plain:
+            if content.body.isBlank {
+                AttributedString(L10n.notificationGalleryBody(content.itemtypes.count))
+            } else {
+                AttributedString(content.body)
+            }
+        case .senderPrefixed, .typeBolded:
+            buildMessage(for: style, caption: content.body, type: L10n.commonGallery)
+        }
+    }
+    
     private func buildMessage(for style: Style, caption: String?, type: String) -> AttributedString {
-        guard let caption else {
+        guard let caption, !caption.isBlank else {
             return AttributedString(type)
         }
         
