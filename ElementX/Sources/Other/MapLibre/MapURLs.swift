@@ -49,17 +49,10 @@ extension MapTilerConfiguration: MapTilerURLBuilderProtocol {
         }
     }
 }
-<<<<<<< HEAD
-    
-// MARK: Private
-    
-private extension MapTilerSettings.Configuration {
-=======
 
 // MARK: - Private
 
 private extension MapTilerConfiguration {
->>>>>>> release/26.08.2
     func styleURL(for style: MapTilerStyle) -> URL? {
         guard let apiKey else { return nil }
         

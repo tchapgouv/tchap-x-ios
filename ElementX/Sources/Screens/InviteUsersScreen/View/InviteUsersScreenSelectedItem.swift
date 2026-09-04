@@ -20,36 +20,29 @@ struct InviteUsersScreenSelectedItem: View {
             avatar
                 .accessibilityHidden(true)
             
-<<<<<<< HEAD
             // Tchap: calculate displayname from userId if necessary and displays it in badge if user is external.
-            //            Text(user.displayName ?? user.userID)
-            switch MatrixIdFromString(user.userID).userType {
+            //            Text(user.displayName ?? user.id)
+            switch MatrixIdFromString(user.id).userType {
             case .external(needInviteByEmail: false):
-                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.id)
                     .lineLimit(1)
                     .tchapExternalLabelView()
             case .external(needInviteByEmail: true):
-                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.id)
                     .lineLimit(1)
                     .tchapInivteByEmailLabelView()
             case .agent(needInviteByEmail: false):
-                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.id)
                     .font(.compound.bodyMD)
                     .foregroundColor(.compound.textPrimary)
                     .lineLimit(1)
             case .agent(needInviteByEmail: true):
-                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.id)
                     .font(.compound.bodyMD)
                     .foregroundColor(.compound.textPrimary)
                     .lineLimit(1)
                     .tchapInivteByEmailLabelView()
             }
-=======
-            Text(user.displayName ?? user.id)
-                .font(.compound.bodySM)
-                .foregroundColor(.compound.textSecondary)
-                .lineLimit(1)
->>>>>>> release/26.08.2
         }
         .frame(maxWidth: 100.0)
         .accessibilityElement(children: .combine)

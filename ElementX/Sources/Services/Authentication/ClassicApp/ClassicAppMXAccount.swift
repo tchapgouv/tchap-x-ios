@@ -78,13 +78,9 @@ final class ClassicAppMXAccount: NSObject, NSCoding {
     /// The access token to create a MXRestClient.
     let accessToken: String
     /// The homeserver url (ex: "https://matrix.org").
-<<<<<<< HEAD
-    var homeserverURL: URL
+    let homeserverURL: URL
     /// The third-party IDs known by the account.
     let threePIDs: [ClassicAppMXThirdPartyIdentifier] // :tchap: get email from classic app account
-=======
-    let homeserverURL: URL
->>>>>>> release/26.08.2
     
     /// Disable the account without logging out (NO by default).
     ///

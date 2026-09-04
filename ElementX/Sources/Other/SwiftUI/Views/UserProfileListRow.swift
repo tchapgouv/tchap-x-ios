@@ -27,16 +27,12 @@ struct UserProfileListRow: View {
         if let membershipText = membership?.localizedDescription {
             return membershipText
         } else if user.displayName != nil {
-<<<<<<< HEAD
             // Tchap: only display matrixID in debug mode.
             #if DEBUG
-            return user.userID
+            return user.id
             #else
             return nil
             #endif
-=======
-            return user.id
->>>>>>> release/26.08.2
         } else {
             return nil
         }
@@ -51,15 +47,14 @@ struct UserProfileListRow: View {
     }
         
     var body: some View {
-<<<<<<< HEAD
         // Tchap: add external badge if necessary
-//        ListRow(label: .avatar(title: user.displayName ?? user.userID,
+//        ListRow(label: .avatar(title: user.displayName ?? user.id,
 //                               description: subtitle,
 //                               icon: avatar,
 //                               role: isUnknownProfile ? .error : nil),
 //                kind: kind)
         VStack(alignment: .leading, spacing: 0.0) {
-            ListRow(label: .avatar(title: user.displayName ?? user.userID,
+            ListRow(label: .avatar(title: user.displayName ?? user.id,
                                    description: subtitle,
                                    icon: avatar,
                                    role: isUnknownProfile ? .error : nil),
@@ -82,13 +77,6 @@ struct UserProfileListRow: View {
         .listRowInsets(EdgeInsets())
         // Use same filled background as ListRow to have full solid background.
         .listRowBackground(Color.compound.bgCanvasDefaultLevel1)
-=======
-        ListRow(label: .avatar(title: user.displayName ?? user.id,
-                               description: subtitle,
-                               icon: avatar,
-                               role: isUnknownProfile ? .error : nil),
-                kind: kind)
->>>>>>> release/26.08.2
     }
     
     var avatar: LoadableAvatarImage {

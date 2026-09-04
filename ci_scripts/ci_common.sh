@@ -14,7 +14,6 @@ setup_github_actions_environment() {
     
     unset HOMEBREW_NO_INSTALL_FROM_API
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
-<<<<<<< HEAD
 
     # Tchap 
     # SwiftFormat est volontairement figé à une version précise pour éviter
@@ -36,17 +35,6 @@ setup_github_actions_environment() {
     swiftformat --version
     # :tchap:end
 
-}
-
-install_swiftformat_head() {
-    if brew list --versions swiftformat &>/dev/null && ! brew list --versions swiftformat | grep -q HEAD; then
-        brew uninstall swiftformat
-    fi
-    brew install swiftformat --HEAD
-=======
-    
-    brew update && brew install xcodegen swiftlint swiftformat git-lfs pkl a7ex/homebrew-formulae/xcresultparser
->>>>>>> release/26.08.2
 }
 
 setup_github_actions_translations_environment() {

@@ -11,13 +11,9 @@ import SFSafeSymbols
 import SwiftUI
 
 struct SettingsScreen: View {
-<<<<<<< HEAD
-    let context: SettingsScreenViewModel.Context
+    @Bindable var context: SettingsScreenViewModel.Context
     // Tchap: `openURL` needed to open FAQ page.
     @Environment(\.openURL) private var openURL
-=======
-    @Bindable var context: SettingsScreenViewModel.Context
->>>>>>> release/26.08.2
     
     private var shouldHideManageAccountSection: Bool {
         context.viewState.accountProfileURL == nil &&
@@ -69,14 +65,6 @@ struct SettingsScreen: View {
                             .accessibilityHidden(true)
                         
                         VStack(alignment: .leading, spacing: 2) {
-<<<<<<< HEAD
-                            Text(context.viewState.userDisplayName ?? "")
-                                .font(.compound.headingMD)
-                                .foregroundColor(.compound.textPrimary)
-                            // Tchap: only display User ID of Settings when in debug mode
-                            #if DEBUG
-                            Text(context.viewState.userID)
-=======
                             HStack(spacing: 6) {
                                 Text(context.viewState.userProfile.displayName ?? "")
                                 
@@ -87,8 +75,9 @@ struct SettingsScreen: View {
                             .font(.compound.headingMD)
                             .foregroundColor(.compound.textPrimary)
                             
-                            Text(context.viewState.userProfile.id)
->>>>>>> release/26.08.2
+                            // Tchap: only display User ID of Settings when in debug mode
+                            #if DEBUG
+                            Text(context.viewState.userID)
                                 .font(.compound.bodySM)
                                 .foregroundColor(.compound.textSecondary)
                             #endif

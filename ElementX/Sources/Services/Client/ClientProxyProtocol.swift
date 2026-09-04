@@ -129,13 +129,8 @@ protocol ClientProxyProtocol: AnyObject {
     
     var verificationStatePublisher: CurrentValuePublisher<SessionVerificationState, Never> { get }
     
-<<<<<<< HEAD
-    var homeserverReachabilityPublisher: CurrentValuePublisher<NetworkMonitorReachability, Never> { get }
-
-=======
     var homeserverReachabilityPublisher: CurrentValuePublisher<HomeserverReachability, Never> { get }
     
->>>>>>> release/26.08.2
     var userID: String { get }
     
     var deviceID: String? { get }
@@ -198,21 +193,14 @@ protocol ClientProxyProtocol: AnyObject {
     
     func resumeServices() async
     
-<<<<<<< HEAD
-    func stopSync()
+    func pauseServices() async
     
-    func stopSync(completion: (() -> Void)?) // Hopefully this will become async once we get SE-0371.
-
     var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> { get } // :tchap: expired account
 
     func resyncAccount() async throws // :tchap: expired account
 
     func accountExpiredSendEmail() async throws // :tchap: expired account
 
-=======
-    func pauseServices() async
-    
->>>>>>> release/26.08.2
     func expireSyncSessions() async
     
     func accountURL(action: AccountManagementAction) async -> URL?

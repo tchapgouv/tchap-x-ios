@@ -82,14 +82,10 @@ struct AuthenticationStartScreen: View {
                         .font(.compound.headingLGBold)
                         .foregroundColor(.compound.textPrimary)
                         .multilineTextAlignment(.center)
-<<<<<<< HEAD
+                        .accessibilityAddTraits(.isHeader)
                     // Tchap: Change message on Start screen
                     //                Text(L10n.screenOnboardingWelcomeMessage(InfoPlistReader.main.productionAppName))
                     Text(TchapL10n.screenOnboardingWelcomeMessage)
-=======
-                        .accessibilityAddTraits(.isHeader)
-                    Text(L10n.screenOnboardingWelcomeMessage(InfoPlistReader.main.productionAppName))
->>>>>>> release/26.08.2
                         .font(.compound.bodyLG)
                         .foregroundColor(.compound.textPrimary)
                         .multilineTextAlignment(.center)

@@ -44,14 +44,11 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         spaceFilterSubject = CurrentValueSubject<SpaceServiceFilter?, Never>(nil)
         
         roomSummaryProvider = userSession.clientProxy.roomSummaryProvider
-        
-<<<<<<< HEAD
-        super.init(initialViewState: .init(userID: userSession.clientProxy.userID,
-                                           bindings: .init(filtersState: .init(appSettings: appSettings)), tchapServiceStatusURL: appSettings.tchapServiceStatusURL),
-=======
+    // :tchap:    
+   //       super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
+   //                                         bindings: .init(filtersState: .init(appSettings: appSettings))),
         super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
-                                           bindings: .init(filtersState: .init(appSettings: appSettings))),
->>>>>>> release/26.08.2
+                                           bindings: .init(filtersState: .init(appSettings: appSettings)), tchapServiceStatusURL: appSettings.tchapServiceStatusURL),
                    mediaProvider: userSession.mediaProvider)
         
         if appSettings.globalSearchEnabled, #available(iOS 26.0, *) {

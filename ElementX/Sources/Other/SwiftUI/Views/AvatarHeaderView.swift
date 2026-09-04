@@ -198,13 +198,16 @@ struct AvatarHeaderView<Footer: View>: View {
                     .multilineTextAlignment(.center)
                 }
                 
+                // Tchap: only display User ID or Room canonical alias in room info when in debug mode.
+                #if DEBUG
                 if let subtitle {
                     Text(subtitle)
-                        .foregroundStyle(.compound.textSecondary)
+                        .foregroundColor(.compound.textSecondary)
                         .font(.compound.bodyLG)
                         .multilineTextAlignment(.center)
                         .textSelection(.enabled)
                 }
+                #endif
                 
                 if !badges.isEmpty {
                     badgesStack
@@ -309,80 +312,6 @@ struct AvatarHeaderView<Footer: View>: View {
             }
         }
     }
-<<<<<<< HEAD
-    
-    private var avatarAccessibilityLabel: String {
-        guard onAvatarTap != nil else {
-            return L10n.a11yAvatar
-        }
-        switch avatarInfo {
-        case .room(let roomAvatar):
-            return roomAvatar.hasURL ? L10n.a11yViewAvatar : L10n.a11yAvatar
-        case .user(let userProfileProxy):
-            return userProfileProxy.avatarURL != nil ? L10n.a11yViewAvatar : L10n.a11yAvatar
-        }
-    }
-    
-    @ViewBuilder
-    private var avatar: some View {
-        switch avatarInfo {
-        case .room(let roomAvatar):
-            RoomAvatarImage(avatar: roomAvatar,
-                            avatarSize: avatarSize,
-                            mediaProvider: mediaProvider,
-                            onAvatarTap: onAvatarTap)
-                .accessibilityLabel(avatarAccessibilityLabel)
-            
-        case .user(let userProfile):
-            LoadableAvatarImage(url: userProfile.avatarURL,
-                                name: userProfile.displayName,
-                                contentID: userProfile.userID,
-                                avatarSize: avatarSize,
-                                mediaProvider: mediaProvider,
-                                onTap: onAvatarTap)
-                .accessibilityLabel(avatarAccessibilityLabel)
-        }
-    }
-    
-    var body: some View {
-        VStack(spacing: 8.0) {
-            avatar
-            
-            Spacer()
-                .frame(height: 9)
-            
-            Text(title)
-                .foregroundColor(.compound.textPrimary)
-                .font(.compound.headingMDBold)
-                .multilineTextAlignment(.center)
-                .textSelection(.enabled)
-            
-            // Tchap: only display User ID or Room canonical alias in room info when in debug mode.
-            #if DEBUG
-            if let subtitle {
-                Text(subtitle)
-                    .foregroundColor(.compound.textSecondary)
-                    .font(.compound.bodyLG)
-                    .multilineTextAlignment(.center)
-                    .textSelection(.enabled)
-            }
-            #endif
-            
-            if !badges.isEmpty {
-                badgesStack
-            }
-            
-            footer()
-        }
-        .frame(maxWidth: .infinity, alignment: .center)
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets(top: 11,
-                                  leading: 0,
-                                  bottom: 11,
-                                  trailing: 0))
-    }
-=======
->>>>>>> release/26.08.2
 }
 
 struct AvatarHeaderView_Previews: PreviewProvider, TestablePreview {

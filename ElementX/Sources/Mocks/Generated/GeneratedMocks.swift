@@ -2349,18 +2349,13 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
             }
         }
     }
-<<<<<<< HEAD
-    var underlyingMaxMediaUploadSize: Result<UInt, ClientProxyError>!
-    var maxMediaUploadSizeClosure: (() async -> Result<UInt, ClientProxyError>)?
+    nonisolated(unsafe) var underlyingMaxMediaUploadSize: Result<UInt, ClientProxyError>!
+    nonisolated(unsafe) var maxMediaUploadSizeClosure: (() async -> Result<UInt, ClientProxyError>)?
     var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> {
         get { return underlyingAccountExpiredSubjectPublisher }
         set(value) { underlyingAccountExpiredSubjectPublisher = value }
     }
     var underlyingAccountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never>!
-=======
-    nonisolated(unsafe) var underlyingMaxMediaUploadSize: Result<UInt, ClientProxyError>!
-    nonisolated(unsafe) var maxMediaUploadSizeClosure: (() async -> Result<UInt, ClientProxyError>)?
->>>>>>> release/26.08.2
     var liveLocationOwnInfoUpdatesPublisher: AnyPublisher<LiveLocationOwnInfoUpdate, Never> {
         get { return underlyingLiveLocationOwnInfoUpdatesPublisher }
         set(value) { underlyingLiveLocationOwnInfoUpdatesPublisher = value }
@@ -2458,9 +2453,9 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         await pauseServicesClosure?()
     }
     //MARK: - resyncAccount
+    private var resyncAccountUnderlyingCallsCount = 0
 
     private let resyncAccountCallsCountLock = NSLock()
-    private var resyncAccountUnderlyingCallsCount = 0
     var resyncAccountCallsCount: Int {
         get { resyncAccountCallsCountLock.withLock { resyncAccountUnderlyingCallsCount } }
         set { resyncAccountCallsCountLock.withLock { resyncAccountUnderlyingCallsCount = newValue } }
@@ -2636,52 +2631,15 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     }
     //MARK: - createRoom
 
-<<<<<<< HEAD
-    private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCountLock = NSLock()
-    private var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount = 0
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCount: Int {
-        get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCountLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount } }
-        set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCountLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount = newValue } }
-=======
     private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCountLock = NSLock()
     private nonisolated(unsafe) var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = 0
     var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCount: Int {
         get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCountLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount } }
         set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCountLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = newValue } }
->>>>>>> release/26.08.2
     }
     var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCalled: Bool {
         return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCount > 0
     }
-<<<<<<< HEAD
-    private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArgumentsLock = NSLock()
-    private var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedArguments: (name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)?
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments: (name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)? {
-        get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArgumentsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedArguments } }
-        set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArgumentsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedArguments = newValue } }
-    }
-    private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocationsLock = NSLock()
-    private var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedInvocations: [(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)] = []
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocations: [(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)] {
-        get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocationsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedInvocations } }
-        set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocationsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedInvocations = newValue } }
-    }
-
-    private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValueLock = NSLock()
-    private var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReturnValue: Result<String, ClientProxyError>!
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue: Result<String, ClientProxyError>! {
-        get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValueLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReturnValue } }
-        set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValueLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReturnValue = newValue } }
-    }
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure: ((String?, String?, CreateRoomAccessType, Bool, [String], URL?, String?, Bool) async -> Result<String, ClientProxyError>)?
-
-    func createRoom(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool) async -> Result<String, ClientProxyError> {
-        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCountLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount += 1 }
-        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments = (name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart, isAccessViaLinkEnabled: isAccessViaLinkEnabled)
-        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocationsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedInvocations.append((name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart, isAccessViaLinkEnabled: isAccessViaLinkEnabled)) }
-        if let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure {
-            return await createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure(name, topic, accessType, isSpace, userIDs, avatarURL, aliasLocalPart, isAccessViaLinkEnabled)
-=======
     private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArgumentsLock = NSLock()
     private nonisolated(unsafe) var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReceivedArguments: (name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)?
     var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments: (name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)? {
@@ -2709,7 +2667,6 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedInvocationsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReceivedInvocations.append((name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart)) }
         if let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure {
             return await createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure(name, topic, accessType, isSpace, userIDs, avatarURL, aliasLocalPart)
->>>>>>> release/26.08.2
         } else {
             return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue
         }
@@ -9984,19 +9941,12 @@ nonisolated class RoomInfoProxyMock: RoomInfoProxyProtocol, @unchecked Sendable 
         get { return underlyingHistoryVisibility }
         set(value) { underlyingHistoryVisibility = value }
     }
-<<<<<<< HEAD
-    var underlyingHistoryVisibility: RoomHistoryVisibility!
-    var powerLevels: RoomPowerLevelsProxyProtocol?
-    var accessRule: AccessRule?
-    var visibility: RoomVisibility!
-    var successor: SuccessorRoom?
-    var heroes: [RoomHero] = []
-=======
     nonisolated(unsafe) var underlyingHistoryVisibility: RoomHistoryVisibility!
     nonisolated(unsafe) var powerLevels: RoomPowerLevelsProxyProtocol?
+    var accessRule: AccessRule?
+    var visibility: RoomVisibility!
     nonisolated(unsafe) var successor: SuccessorRoom?
     nonisolated(unsafe) var heroes: [RoomHero] = []
->>>>>>> release/26.08.2
 
 }
 nonisolated class RoomLiveLocationServiceMock: RoomLiveLocationServiceProtocol, @unchecked Sendable {

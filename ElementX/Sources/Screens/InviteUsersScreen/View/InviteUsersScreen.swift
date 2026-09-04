@@ -109,13 +109,8 @@ struct InviteUsersScreen: View {
     
     private var selectedUsersSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-<<<<<<< HEAD
             HStack(alignment: .top, spacing: 16) { // Tchap: align items at top
-                ForEach(context.viewState.selectedUsers, id: \.userID) { user in
-=======
-            HStack(spacing: 8) {
                 ForEach(context.viewState.selectedUsers, id: \.id) { user in
->>>>>>> release/26.08.2
                     InviteUsersScreenSelectedItem(user: user,
                                                   mediaProvider: context.mediaProvider,
                                                   isLocked: context.viewState.isInviteeMandatory(user)) {

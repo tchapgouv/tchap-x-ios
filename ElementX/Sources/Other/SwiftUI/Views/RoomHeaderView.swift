@@ -54,32 +54,8 @@ struct RoomHeaderView: View {
         HStack(spacing: 8) {
             avatarImage
                 .accessibilityHidden(true)
-<<<<<<< HEAD
-            // Tchap: embedd in a VStack to add badges.
-            VStack(alignment: .leading, spacing: 4.0) {
-                HStack(spacing: 4) {
-                    Text(roomName)
-                        .lineLimit(1)
-                        // Tchap: use Tchap custom font (Marianne font) in Room header view.
-//                        .font(.compound.bodyMDSemibold)
-                        .tchapNavigationBarTitleFont()
-                        .accessibilityIdentifier(A11yIdentifiers.roomScreen.name)
-                    if let roomSubtitle {
-                        Text(roomSubtitle)
-                            .lineLimit(1)
-                            .font(.compound.bodyXS)
-                            .foregroundStyle(.compound.textSecondary)
-                    }
-                    
-                    if let dmRecipientVerificationState {
-                        VerificationBadge(verificationState: dmRecipientVerificationState, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
-                    }
-                    
-                    if let historySharingIcon {
-                        CompoundIcon(historySharingIcon, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
-                            .foregroundStyle(.compound.iconInfoPrimary)
-                    }
-=======
+
+                //TODO: tchap badges 
             
             VStack(alignment: .leading, spacing: 0) {
                 roomDetails
@@ -87,9 +63,9 @@ struct RoomHeaderView: View {
                 if let roomSubtitle {
                     Text(roomSubtitle)
                         .lineLimit(1)
+                        .foregroundStyle(.compound.textSecondary)  
                         .font(.compound.bodyXS)
                         .foregroundStyle(.compound.textSecondary)
->>>>>>> release/26.08.2
                 }
             }
         }
@@ -104,19 +80,6 @@ struct RoomHeaderView: View {
                     .foregroundStyle(.compound.textPrimary)
                     .accessibilityIdentifier(A11yIdentifiers.roomScreen.name)
                 
-<<<<<<< HEAD
-                // Tchap: additional room info
-                if let roomPropertiesBadgesView {
-                    roomPropertiesBadgesView
-                        .zIndex(-1)
-                    Spacer(minLength: 2.0)
-                }
-            }
-            // Take up as much space as possible, with a leading alignment for use in the principal toolbar position.
-            // Tchap: allowing `idealWidth` to grow to `infinity` crash the rendering in some conditions (redraw triggered by bindings in roomPropertiesBadgesView).
-            //            .frame(idealWidth: .greatestFiniteMagnitude, maxWidth: .infinity, alignment: .leading)
-            .frame(idealWidth: 65535.0, maxWidth: .infinity, alignment: .leading)
-=======
                 if let statusEmoji = dmRecipientDetails.statusEmoji {
                     Text(String(statusEmoji))
                         .font(.compound.bodyLG)
@@ -131,7 +94,6 @@ struct RoomHeaderView: View {
                 CompoundIcon(historySharingIcon, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
                     .foregroundStyle(.compound.iconInfoPrimary)
             }
->>>>>>> release/26.08.2
         }
     }
     

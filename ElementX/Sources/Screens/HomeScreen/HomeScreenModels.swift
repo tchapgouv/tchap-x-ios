@@ -94,13 +94,7 @@ struct HomeScreenViewState: BindableState {
     
     var securityBannerMode = HomeScreenSecurityBannerMode.none
     var shouldShowNewSoundBanner = false
-<<<<<<< HEAD
     var shouldShowOfflineBanner = false // Tchap: Display banner when homeserver is unreachable
-
-    var requiresExtraAccountSetup = false
-=======
->>>>>>> release/26.08.2
-    
     var rooms: [HomeScreenRoom] = []
     var roomListMode: HomeScreenRoomListMode = .skeletons
     

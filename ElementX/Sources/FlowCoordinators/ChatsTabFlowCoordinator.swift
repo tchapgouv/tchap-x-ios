@@ -41,15 +41,9 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
     // periphery:ignore - retaining purpose
     private var startChatFlowCoordinator: StartChatFlowCoordinator?
     
-<<<<<<< HEAD
-    // periphery:ignore - retaining purpose
-    private var globalSearchScreenCoordinator: GlobalSearchScreenCoordinator?
-
     // Tchap: Space default action is now conversation filtering (select in HomeScreen)
     private var homeScreenCoordinator: HomeScreenCoordinator?
 
-=======
->>>>>>> release/26.08.2
     private var cancellables = Set<AnyCancellable>()
     
     private let sidebarNavigationStackCoordinator: NavigationStackCoordinator

@@ -72,21 +72,17 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
                 guard roomProxy.details.historySharingState != RoomHistorySharingState.hidden,
                       !state.usersToConfirm.isEmpty,
                       !state.isSkippable else {
-<<<<<<< HEAD
                     // Tchap: check if room access rule need to be updated before inviting users.
-                    //            inviteUsers(state.selectedUsers.map(\.userID), roomProxy: roomProxy)
+                    //            inviteUsers(state.selectedUsers.map(\.id), roomProxy: roomProxy)
                     Task {
                         // Tchap: if room access rule is `restricted` and any invited user is external, update room access_rule to `unrestricted`.
-                        let usersToInvite = state.selectedUsers.map(\.userID)
+                        let usersToInvite = state.selectedUsers.map(\.id)
                         guard await !roomProxy.accessRuleNeedToBeUpdated(for: usersToInvite) else {
                             self.displayAlertAboutOpeningRoomToExternalUsers(users: usersToInvite, in: roomProxy)
                             return
                         }
                         self.inviteUsers(usersToInvite, roomProxy: roomProxy)
                     }
-=======
-                    inviteUsers(state.selectedUsers.map(\.id), roomProxy: roomProxy)
->>>>>>> release/26.08.2
                     return
                 }
                 state.bindings.presentConfirmationDialog = true
@@ -101,21 +97,17 @@ class InviteUsersScreenViewModel: InviteUsersScreenViewModelType, InviteUsersScr
             state.bindings.presentConfirmationDialog = false
             state.usersToConfirm = []
             if case .existingRoom(let roomProxy) = roomType {
-<<<<<<< HEAD
                 // Tchap: check if room access rule need to be updated before inviting users.
-                //            inviteUsers(state.selectedUsers.map(\.userID), roomProxy: roomProxy)
+                //            inviteUsers(state.selectedUsers.map(\.id), roomProxy: roomProxy)
                 Task {
                     // Tchap: if room access rule is `restricted` and any invited user is external, update room access_rule to `unrestricted`.
-                    let usersToInvite = state.selectedUsers.map(\.userID)
+                    let usersToInvite = state.selectedUsers.map(\.id)
                     guard await !roomProxy.accessRuleNeedToBeUpdated(for: usersToInvite) else {
                         self.displayAlertAboutOpeningRoomToExternalUsers(users: usersToInvite, in: roomProxy)
                         return
                     }
                     self.inviteUsers(usersToInvite, roomProxy: roomProxy)
                 }
-=======
-                inviteUsers(state.selectedUsers.map(\.id), roomProxy: roomProxy)
->>>>>>> release/26.08.2
             }
         case .toggleUser(let user):
             toggleUser(user)

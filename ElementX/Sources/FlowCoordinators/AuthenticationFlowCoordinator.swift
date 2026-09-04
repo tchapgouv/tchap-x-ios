@@ -217,14 +217,9 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         }
         stateMachine.addRoutes(event: .cancelledServerSelection, transitions: [.serverSelectionScreen => .startScreen])
         
-<<<<<<< HEAD
-        stateMachine.addRoutes(event: .continueWithPassword, transitions: [.serverConfirmationScreen => .loginScreen,
+        stateMachine.addRoutes(event: .continueWithPassword, transitions: [.serverSelectionScreen => .loginScreen,
                                                                            .startScreen => .loginScreen,
                                                                            .tchapDecideHomeServerScreen(.login) => .loginScreen]) { [weak self] context in
-=======
-        stateMachine.addRoutes(event: .continueWithPassword, transitions: [.serverSelectionScreen => .loginScreen,
-                                                                           .startScreen => .loginScreen]) { [weak self] context in
->>>>>>> release/26.08.2
             let loginHint = context.userInfo as? String
             // Tchap: login with email converted to matrix ID.
             // Tchap: as we skip the homeServer confirmation screen, we have to configure it now before showing login screen.
@@ -236,7 +231,6 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 }
             }
         }
-<<<<<<< HEAD
         
         // Tchap: login by MAS
         if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
@@ -252,10 +246,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                                                                                          .tchapDecideHomeServerScreen(.register) => .startScreen])
         }
         
-        stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .serverConfirmationScreen), transitions: [.loginScreen => .serverConfirmationScreen])
-=======
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .serverSelectionScreen), transitions: [.loginScreen => .serverSelectionScreen])
->>>>>>> release/26.08.2
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .startScreen), transitions: [.loginScreen => .startScreen])
         // Tchap: cancel login from tchapDecideHomeServerScreen flow.
         stateMachine.addRoutes(event: .cancelledPasswordLogin(previousState: .tchapDecideHomeServerScreen(.login)), transitions: [.loginScreen => .tchapDecideHomeServerScreen(.login)])
@@ -328,9 +319,8 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                 case .loginWithQR:
                     stateMachine.tryEvent(.loginWithQR)
                 case .login:
-<<<<<<< HEAD
                     // :tchap: login customization
-//                    stateMachine.tryEvent(.confirmServer(.login))
+//                    stateMachine.tryEvent(.selectServer(.login))
                     if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
                         stateMachine.tryEvent(.tchapDecideHomeServer(.login))
                     } else {
@@ -338,17 +328,12 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                     } // :tchap:end
                 case .register:
                     // :tchap: register customization
-//                    stateMachine.tryEvent(.confirmServer(.register))
+//                    stateMachine.tryEvent(.selectServer(.register))
                     if TchapFeatureFlag.Configuration.enableMAS.isActivated(for: .all) {
                         stateMachine.tryEvent(.tchapDecideHomeServer(.register))
                     } else {
-                        stateMachine.tryEvent(.confirmServer(.register))
+                        stateMachine.tryEvent(.selectServer(.register))
                     } // :tchap:end
-=======
-                    stateMachine.tryEvent(.selectServer(.login))
-                case .register:
-                    stateMachine.tryEvent(.selectServer(.register))
->>>>>>> release/26.08.2
                     
                 case .loginDirectlyWithOAuth(let oAuthData, let window):
                     showOAuthAuthentication(oAuthData: oAuthData, presentationAnchor: window)
@@ -409,7 +394,6 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     
     // MARK: - Manual Authentication
     
-<<<<<<< HEAD
     // Tchap: login by MAS.
     // Ask the user its email to decide its homeserver.
     private func showDecideHomeServerScreen(flow: AuthenticationFlow, loginHint: String?, fromState: State) {
@@ -440,10 +424,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
         }
     }
 
-    private func showServerConfirmationScreen(authenticationFlow: AuthenticationFlow) {
-=======
     private func showServerSelectionScreen(authenticationFlow: AuthenticationFlow) {
->>>>>>> release/26.08.2
         // Reset the service back to the default homeserver before continuing. This ensures
         // we check that registration is supported if it was previously configured for login.
         authenticationService.reset()

@@ -28,14 +28,6 @@ struct RoomMembersListScreenMemberCell: View {
                 
                 HStack(alignment: .center, spacing: 4) {
                     VStack(alignment: .leading, spacing: 2) {
-<<<<<<< HEAD
-                        Text(title)
-                            .font(.compound.bodyLG)
-                            .foregroundColor(.compound.textPrimary)
-                            .lineLimit(1)
-                        // Tchap: only display matrixID in debug mode
-                        #if DEBUG
-=======
                         HStack(spacing: 8) {
                             Text(title)
                                 .lineLimit(1)
@@ -47,7 +39,8 @@ struct RoomMembersListScreenMemberCell: View {
                         .font(.compound.bodyLG)
                         .foregroundColor(.compound.textPrimary)
                         
->>>>>>> release/26.08.2
+                        // Tchap: only display matrixID in debug mode  
+                        #if DEBUG
                         if let subtitle {
                             Text(subtitle)
                                 .font(.compound.bodySM)

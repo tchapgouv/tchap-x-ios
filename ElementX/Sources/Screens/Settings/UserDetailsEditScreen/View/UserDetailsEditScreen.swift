@@ -18,13 +18,9 @@ struct UserDetailsEditScreen: View {
             Section {
                 avatar
             } footer: {
-<<<<<<< HEAD
                 // Tchap: only display User ID of Edit Profile when in debug mode
                 #if DEBUG
-                Text(context.viewState.userID)
-=======
                 Text(context.viewState.currentUserProfile.id)
->>>>>>> release/26.08.2
                     .frame(maxWidth: .infinity)
                     .font(.compound.bodyLG)
                     .foregroundColor(.compound.textPrimary)

@@ -168,12 +168,9 @@ extension ClientProxyMock {
         liveLocationOwnInfoUpdatesPublisher = PassthroughSubject<LiveLocationOwnInfoUpdate, Never>().eraseToAnyPublisher()
         
         underlyingMaxMediaUploadSize = .success(configuration.maxMediaUploadSize)
-<<<<<<< HEAD
-=======
         
         storeSizesReturnValue = .success(.init(cryptoStore: 1, stateStore: 9, eventCacheStore: 8, mediaStore: 6))
         
         configurePresenceSendImmediatelyReturnValue = .success(())
->>>>>>> release/26.08.2
     }
 }

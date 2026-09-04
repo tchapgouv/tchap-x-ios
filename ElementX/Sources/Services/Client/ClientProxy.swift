@@ -456,28 +456,27 @@ class ClientProxy: ClientProxyProtocol {
         
         let offline = networkMonitor.reachabilityPublisher.value != .reachable
         
-<<<<<<< HEAD
-        MXLog.info("Starting sync")
+        await transitionServices(to: .running(offline: offline)).value
+
+        // TODO tchap
+        // MXLog.info("Starting sync")
         
-        Task {
-            if appSettings.clientPausingAndResumingEnabled {
-                do {
-                    try await client.resume()
-                } catch {
-                    MXLog.error("Failed resuming client with error: \(error)")
-                }
-            }
+        //Task {
+         //   if appSettings.clientPausingAndResumingEnabled {
+         //       do {
+         //          try await client.resume()
+         //       } catch {
+         //           MXLog.error("Failed resuming client with error: \(error)")
+         //       }
+         //   }
             
             // :tchap: expired account - syncService.start() throws error for expired account
 //            await syncService.start()
-            try await syncService.start() // :tchap:end
+         //   try await syncService.start() // :tchap:end
             
             // To avoid the cache being invalidated while the app is backgrounded, we cache at every sync start.
-            await cacheAccountURL()
+         //   await cacheAccountURL()
         }
-=======
-        await transitionServices(to: .running(offline: offline)).value
->>>>>>> release/26.08.2
     }
     
     /// A stored task for restarting the sync after a failure. This is stored so that we can cancel
@@ -500,7 +499,6 @@ class ClientProxy: ClientProxyProtocol {
             self?.restartTask = nil
         }
     }
-<<<<<<< HEAD
 
     // :tchap: expired account
 
@@ -511,18 +509,9 @@ class ClientProxy: ClientProxyProtocol {
     }
 
     // :tchap:end
-
-    func stopSync() {
-        stopSync(completion: nil)
-    }
-    
-    func stopSync(completion: (() -> Void)?) {
-        MXLog.info("Stopping sync")
-=======
     
     func pauseServices() async {
         MXLog.info("Pausing services")
->>>>>>> release/26.08.2
         
         if restartTask != nil {
             restartTask = nil
@@ -1367,37 +1356,16 @@ class ClientProxy: ClientProxyProtocol {
             }
         }
     }
-<<<<<<< HEAD
-
-=======
     
     /// The latest state reported by the sync service. Stored so reachability can be recomputed after a
     /// resume, where the store reopens but the service may not emit a fresh state.
     private var syncServiceState: SyncServiceState?
     
->>>>>>> release/26.08.2
     private func createSyncServiceStateObserver(_ syncService: SyncService) -> TaskHandle {
         syncService.state(listener: SDKListener.onMainActor { [weak self] state in
             guard let self else { return }
             
             MXLog.info("Received sync service update: \(state)")
-<<<<<<< HEAD
-
-            switch state {
-            case .running, .terminated, .idle:
-                homeserverReachabilitySubject.send(.reachable)
-
-                // Tchap: if we were in accountExpired state before, we need to leave it
-                if accountExpiredSubject.value {
-                    accountExpiredSubject.send(false)
-                }
-            case .offline:
-                homeserverReachabilitySubject.send(.unreachable)
-            case .error:
-                restartSync()
-            case .accountExpired: // Tchap: expired account
-                accountExpiredSubject.send(true)
-=======
             
             syncServiceState = state
             
@@ -1405,8 +1373,22 @@ class ClientProxy: ClientProxyProtocol {
                 restartServices()
             } else {
                 updateHomeserverReachability()
->>>>>>> release/26.08.2
-            }
+
+// todo tchap 
+            //switch state {
+            //case .running, .terminated, .idle:
+            //    homeserverReachabilitySubject.send(.reachable)
+
+                // Tchap: if we were in accountExpired state before, we need to leave it
+            //    if accountExpiredSubject.value {
+            //        accountExpiredSubject.send(false)
+            //    }
+           //case .offline:
+           //     homeserverReachabilitySubject.send(.unreachable)
+           //     restartSync()
+           // case .accountExpired: // Tchap: expired account
+           //     accountExpiredSubject.send(true)
+           // }
         })
     }
     

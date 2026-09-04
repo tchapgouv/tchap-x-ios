@@ -19,19 +19,6 @@ struct MentionSuggestionItemView: View {
                 .accessibilityHidden(true)
             
             VStack(alignment: .leading, spacing: 0) {
-<<<<<<< HEAD
-                Text(item.displayName)
-                    .font(.compound.bodyLG)
-                    .foregroundColor(.compound.textPrimary)
-                    .lineLimit(1)
-                // Tchap: only display User ID in Mention list when in debug mode.
-                #if DEBUG
-                Text(item.id)
-                    .font(.compound.bodySM)
-                    .foregroundColor(.compound.textSecondary)
-                    .lineLimit(1)
-                #endif
-=======
                 HStack(spacing: 2) {
                     Text(item.displayName)
                         .lineLimit(1)
@@ -51,7 +38,6 @@ struct MentionSuggestionItemView: View {
                         .lineLimit(1)
                         .padding(.vertical, 1) // Compensation for Figma line height.
                 }
->>>>>>> release/26.08.2
             }
         }
         .accessibilityElement(children: .combine)

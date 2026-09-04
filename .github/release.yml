@@ -28,15 +28,11 @@ changelog:
       labels:
         - pr-wip
 
-<<<<<<< HEAD
-    - title: Autres
-=======
     - title: 💼 Element Pro
       labels:
         - pr-element-pro
 
-    - title: Others
->>>>>>> release/26.08.2
+    - title: Autres
       labels:
         - pr-misc
         - "*"

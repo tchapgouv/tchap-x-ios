@@ -53,92 +53,14 @@ nonisolated enum AppBuildType {
 /// Store Element specific app settings.
 ///
 /// State is persisted in `UserDefaults`, which is thread-safe per Apple's documentation, hence `@unchecked`.
-<<<<<<< HEAD
-final class AppSettings: @unchecked Sendable {
-    fileprivate enum UserDefaultsKeys: String, PreferenceKeyable {
-        case lastVersionLaunched
-        case seenInvites
-        case hasSeenNewSoundBanner
-        case appLockNumberOfPINAttempts
-        case appLockNumberOfBiometricAttempts
-        case timelineStyle
-        
-        case analyticsConsentState
-        case hasRunNotificationPermissionsOnboarding
-        // Tchap: add welcome screen
-        case hasRunTchapWelcomeOnboarding
-        case hasRunIdentityConfirmationOnboarding
-        case hasRequestedLocationAlwaysLocationAuthorization
-        
-        case frequentlyUsedSystemEmojis
-        
-        case enableNotifications
-        case enableInAppNotifications
-        case pusherProfileTag
-        case lastNotificationBootTime
-        case selectedNotificationTone
-        case logLevel
-        case traceLogPacks
-        case viewSourceEnabled
-        case optimizeMediaUploads
-        case appAppearance
-        case sharePresence
-        
-        case elementCallBaseURLOverride
-        
-        case voiceMessagePlaybackSpeed
-        
-        // Live Location
-        case liveLocationSharingTimeoutDatesByRoomID
-        case liveLocationMinimumDistanceUpdate
-        case liveLocationDisclaimerDisplayed
-        
-        // Feature flags
-        case fuzzyRoomListSearchEnabled
-        case lowPriorityFilterEnabled
-        case enableOnlySignedDeviceIsolationMode
-        case knockingEnabled
-        case threadsEnabled
-        case roomThreadListEnabled
-        case linkPreviewsEnabled
-        case jumpToReadMarkerEnabled
-        case focusEventOnNotificationTap
-        case linkNewDeviceEnabled
-        case automaticBackPaginationEnabled
-        case clientPausingAndResumingEnabled
-        
-        // Doug's tweaks 🔧
-        case roomListActivityVisibility
-        case hideQuietNotificationAlerts
-        
-        case developerOptionsEnabled
-    }
-    
-=======
 final nonisolated class AppSettings: @unchecked Sendable {
->>>>>>> release/26.08.2
     static let suiteName: String = InfoPlistReader.main.appGroupIdentifier
     
     /// UserDefaults to be used on reads and writes.
     private let store: UserDefaultsProtocol
     
     static var appBuildType: AppBuildType {
-<<<<<<< HEAD
-        #if DEBUG
-        return .debug
-        #else
-        // Tchap: we only build debug and release versions (production, preprod and development are flavors, not build types).
-//        switch InfoPlistReader.main.baseBundleIdentifier {
-//        case "io.element.elementx.nightly":
-//            return .nightly
-//        default:
-//            return .release
-//        }
-        return .release
-        #endif
-=======
         AppBuildType.current
->>>>>>> release/26.08.2
     }
     
     func resetAllSettings() {
@@ -368,19 +290,9 @@ final nonisolated class AppSettings: @unchecked Sendable {
     #else
     /// The redirect URL used for OAuth. For the normal case we don't actually need the bundle ID as the web authentication session handles the redirect internally.
     /// However in the case where MAS sends the user to an external app, we need to make sure that the system will open the correct variant of the app (e.g. Nightly).
-<<<<<<< HEAD
-    private(set) var oAuthRedirectURL: URL! = URL(string: "https://element.io/oauth/ios/\(InfoPlistReader.main.bundleIdentifier)")
-    #endif
-
-    private(set) lazy var oAuthConfiguration = OAuthConfiguration(clientName: InfoPlistReader.main.bundleDisplayName,
-                                                                  redirectURI: oAuthRedirectURL,
-                                                                  clientURI: websiteURL,
-                                                                  logoURI: logoURL,
-                                                                  tosURI: acceptableUseURL,
-                                                                  policyURI: privacyURL,
-                                                                  staticRegistrations: oAuthStaticRegistrations.mapKeys { $0.absoluteString })
-=======
     private(set) nonisolated(unsafe) var oAuthRedirectURL: URL! = URL(string: "https://element.io/oauth/ios/\(InfoPlistReader.main.bundleIdentifier)")
+    #endif
+    
     /// A path that is appended to `websiteURL` to form the OAuth `clientURI`. MAS uses `clientURI` as the identifier for a specific app, allowing us to
     /// distinguish the various clients we have for Android, iOS and Web from each other.
     /// Intentionally a distinct property so it can be easily overridden without having to manipulate the website URL.
@@ -395,7 +307,6 @@ final nonisolated class AppSettings: @unchecked Sendable {
                            policyURI: privacyURL,
                            staticRegistrations: oAuthStaticRegistrations.mapKeys { $0.absoluteString })
     }
->>>>>>> release/26.08.2
     
     /// Whether or not the Create Account button is shown on the start screen.
     ///
@@ -475,12 +386,10 @@ final nonisolated class AppSettings: @unchecked Sendable {
     private(set) var bugReportApplicationID = "tchap-x-production-ios"
     #else
     private(set) var bugReportApplicationID = "element-x-ios"
-<<<<<<< HEAD
     #endif
     /// The maximum size of the upload request. Default value is just below CloudFlare's max request size.
     let bugReportMaxUploadSize = 10 * 1024 * 1024
 
-=======
     
     // MARK: - Content scanner
     
@@ -494,7 +403,6 @@ final nonisolated class AppSettings: @unchecked Sendable {
     /// enabling encryption on existing rooms is not offered.
     let forceDisableE2EE: RemotePreference<Bool> = .init(false)
     
->>>>>>> release/26.08.2
     // MARK: - Analytics
     
     /// The configuration to use for analytics. Set to `nil` to disable analytics.
@@ -526,14 +434,10 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(defaultValue: false)
     var hasRunNotificationPermissionsOnboarding: Bool
     
-<<<<<<< HEAD
-    @UserPreference
+    @UserPreference(defaultValue: false)
     var hasRunTchapWelcomeOnboarding: Bool // :tchap:
     
-    @UserPreference
-=======
     @UserPreference(defaultValue: false)
->>>>>>> release/26.08.2
     var hasRunIdentityConfirmationOnboarding: Bool
     
     @UserPreference(defaultValue: false)
@@ -596,7 +500,6 @@ final nonisolated class AppSettings: @unchecked Sendable {
     // MARK: - Maps
     
     /// The locally-bundled MapTiler configuration.
-<<<<<<< HEAD
     // Tchap: customize map tiler url for Tchap.
     #if IS_TCHAP_DEVELOPMENT || IS_TCHAP_PREPROD || IS_TCHAP_PRODUCTION
     private enum TchapMapProvider: String {
@@ -604,22 +507,16 @@ final nonisolated class AppSettings: @unchecked Sendable {
         case ign = "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"
     }
 
-    static let bundledMapTilerConfiguration = MapTilerSettings.Configuration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
+    static let bundledMapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
                                                                              apiKey: Secrets.mapLibreAPIKey,
                                                                              lightStyleID: "osm-bright",
                                                                              darkStyleID: "fiord-color")
     #else
-    static let bundledMapTilerConfiguration = MapTilerSettings.Configuration(baseURL: "https://api.maptiler.com/maps",
+    static let bundledMapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
                                                                              apiKey: Secrets.mapLibreAPIKey,
                                                                              lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
                                                                              darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
     #endif
-=======
-    static let bundledMapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
-                                                                    apiKey: Secrets.mapLibreAPIKey,
-                                                                    lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
-                                                                    darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
->>>>>>> release/26.08.2
     
     /// The MapTiler configuration used to build map URLs, which defaults to the bundled one.
     private(set) var mapTilerConfiguration = RemotePreference(AppSettings.bundledMapTilerConfiguration)
@@ -685,52 +582,6 @@ final nonisolated class AppSettings: @unchecked Sendable {
     
     init(store: UserDefaultsProtocol) {
         self.store = store
-<<<<<<< HEAD
-        
-        _lastVersionLaunched = UserPreference(key: .lastVersionLaunched, storage: store)
-        _seenInvites = UserPreference(key: .seenInvites, defaultValue: [], storage: store)
-        _hasSeenNewSoundBanner = UserPreference(key: .hasSeenNewSoundBanner, defaultValue: true, storage: store)
-        _appAppearance = UserPreference(key: .appAppearance, defaultValue: .system, storage: store)
-        _appLockNumberOfPINAttempts = UserPreference(key: .appLockNumberOfPINAttempts, defaultValue: 0, storage: store)
-        _enableNotifications = UserPreference(key: .enableNotifications, defaultValue: true, storage: store)
-        _enableInAppNotifications = UserPreference(key: .enableInAppNotifications, defaultValue: true, storage: store)
-        _hideQuietNotificationAlerts = UserPreference(key: .hideQuietNotificationAlerts, defaultValue: false, storage: store)
-        _pusherProfileTag = UserPreference(key: .pusherProfileTag, storage: store)
-        _lastNotificationBootTime = UserPreference(key: .lastNotificationBootTime, storage: store)
-        _selectedNotificationTone = UserPreference(key: .selectedNotificationTone, storage: store)
-        _logLevel = UserPreference(key: .logLevel, defaultValue: LogLevel.info, storage: store)
-        _traceLogPacks = UserPreference(key: .traceLogPacks, defaultValue: [], storage: store)
-        _analyticsConsentState = UserPreference(key: .analyticsConsentState, defaultValue: AnalyticsConsentState.unknown, storage: store)
-        _hasRunNotificationPermissionsOnboarding = UserPreference(key: .hasRunNotificationPermissionsOnboarding, defaultValue: false, storage: store)
-        _hasRunIdentityConfirmationOnboarding = UserPreference(key: .hasRunIdentityConfirmationOnboarding, defaultValue: false, storage: store)
-        _hasRequestedLocationAlwaysLocationAuthorization = UserPreference(key: .hasRequestedLocationAlwaysLocationAuthorization, defaultValue: false, storage: store)
-        _frequentlyUsedSystemEmojis = UserPreference(key: .frequentlyUsedSystemEmojis, defaultValue: [FrequentlyUsedEmoji](), storage: store)
-        _liveLocationSharingSessionsByRoomID = UserPreference(key: .liveLocationSharingTimeoutDatesByRoomID, defaultValue: [String: LiveLocationSession](), storage: store)
-        _liveLocationMinimumDistanceUpdate = UserPreference(key: .liveLocationMinimumDistanceUpdate, defaultValue: 10, storage: store)
-        _liveLocationDisclaimerDisplayed = UserPreference(key: .liveLocationDisclaimerDisplayed, defaultValue: false, storage: store)
-        _roomListActivityVisibility = UserPreference(key: .roomListActivityVisibility, defaultValue: .current, storage: store)
-        _viewSourceEnabled = UserPreference(key: .viewSourceEnabled, defaultValue: Self.appBuildType == .debug, storage: store)
-        _optimizeMediaUploads = UserPreference(key: .optimizeMediaUploads, defaultValue: true, storage: store)
-        _voiceMessagePlaybackSpeed = UserPreference(key: .voiceMessagePlaybackSpeed, defaultValue: AudioPlaybackSpeed.default, storage: store)
-        _elementCallBaseURLOverride = UserPreference(key: .elementCallBaseURLOverride, defaultValue: nil, storage: store)
-        _sharePresence = UserPreference(key: .sharePresence, defaultValue: true, storage: store)
-        _fuzzyRoomListSearchEnabled = UserPreference(key: .fuzzyRoomListSearchEnabled, defaultValue: false, storage: store)
-        _lowPriorityFilterEnabled = UserPreference(key: .lowPriorityFilterEnabled, defaultValue: false, storage: store)
-        _enableOnlySignedDeviceIsolationMode = UserPreference(key: .enableOnlySignedDeviceIsolationMode, defaultValue: false, storage: store)
-        _knockingEnabled = UserPreference(key: .knockingEnabled, defaultValue: false, storage: store)
-        _threadsEnabled = UserPreference(key: .threadsEnabled, defaultValue: false, storage: store)
-        _roomThreadListEnabled = UserPreference(key: .roomThreadListEnabled, defaultValue: false, storage: store)
-        _focusEventOnNotificationTap = UserPreference(key: .focusEventOnNotificationTap, defaultValue: false, storage: store)
-        _linkPreviewsEnabled = UserPreference(key: .linkPreviewsEnabled, defaultValue: false, storage: store)
-        _jumpToReadMarkerEnabled = UserPreference(key: .jumpToReadMarkerEnabled, defaultValue: false, storage: store)
-        _linkNewDeviceEnabled = UserPreference(key: .linkNewDeviceEnabled, defaultValue: false, storage: store)
-        _automaticBackPaginationEnabled = UserPreference(key: .automaticBackPaginationEnabled, defaultValue: false, storage: store)
-        _clientPausingAndResumingEnabled = UserPreference(key: .clientPausingAndResumingEnabled, defaultValue: false, storage: VolatileUserDefaults())
-        _developerOptionsEnabled = UserPreference(key: .developerOptionsEnabled, defaultValue: Self.appBuildType != .release, storage: store)
-        // :tchap: UserDefault for tchap settings
-        _hasRunTchapWelcomeOnboarding = UserPreference(key: .hasRunTchapWelcomeOnboarding, defaultValue: false, storage: store)
-=======
->>>>>>> release/26.08.2
     }
     
     static func volatile() -> AppSettings {

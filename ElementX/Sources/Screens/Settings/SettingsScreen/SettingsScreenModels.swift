@@ -54,10 +54,6 @@ struct SettingsScreenViewState: BindableState {
     
     var bindings = SettingsScreenViewStateBindings()
     
-<<<<<<< HEAD
-    // Tchap: FAQ URL
-    let tchapFaqURL: URL
-=======
     var userStatusRowMode: SettingsScreenUserStatusRow.Mode {
         if bindings.isShowingCustomStatusField {
             .customStatusInput(emoji: bindings.customStatusEmoji)
@@ -67,7 +63,9 @@ struct SettingsScreenViewState: BindableState {
             .pickStatusButton
         }
     }
->>>>>>> release/26.08.2
+    
+    // Tchap: FAQ URL
+    let tchapFaqURL: URL
 }
 
 struct SettingsScreenViewStateBindings {

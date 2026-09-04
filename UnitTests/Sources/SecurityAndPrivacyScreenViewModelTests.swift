@@ -462,13 +462,9 @@ final class SecurityAndPrivacyScreenViewModelTests {
     
     private func setupViewModel(joinedParentSpaces: [SpaceServiceRoom],
                                 topLevelSpaces: [SpaceServiceRoom] = [],
-<<<<<<< HEAD
                                 // Tchap: tchap target
-                                joinRule: TchapX_Production.JoinRule) {
-=======
-                                joinRule: ElementX.JoinRule,
+                                joinRule: TchapX_Production.JoinRule,
                                 forceDisableE2EE: Bool = false) {
->>>>>>> release/26.08.2
         let appSettings = AppSettings.volatile()
         appSettings.knockingEnabled = true
         appSettings.forceDisableE2EE.applyRemoteValue(forceDisableE2EE)
