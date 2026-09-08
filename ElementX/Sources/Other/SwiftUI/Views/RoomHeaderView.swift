@@ -55,19 +55,35 @@ struct RoomHeaderView: View {
             avatarImage
                 .accessibilityHidden(true)
 
-            // TODO: tchap badges
-            
-            VStack(alignment: .leading, spacing: 0) {
+            // :tchap: Customize for badges
+//            VStack(alignment: .leading, spacing: 0) {
+//                roomDetails
+//
+//                if let roomSubtitle {
+//                    Text(roomSubtitle)
+//                        .lineLimit(1)
+//                        .font(.compound.bodyXS)
+//                        .foregroundStyle(.compound.textSecondary)
+//                }
+//            }
+            VStack(alignment: .leading, spacing: 4) {
                 roomDetails
-                
-                if let roomSubtitle {
-                    Text(roomSubtitle)
-                        .lineLimit(1)
-                        .foregroundStyle(.compound.textSecondary)
-                        .font(.compound.bodyXS)
-                        .foregroundStyle(.compound.textSecondary)
+
+                HStack(spacing: 4) {
+                    if let roomSubtitle {
+                        Text(roomSubtitle)
+                            .lineLimit(1)
+                            .font(.compound.bodyXS)
+                            .foregroundStyle(.compound.textSecondary)
+                    }
+
+                    if let roomPropertiesBadgesView {
+                        roomPropertiesBadgesView
+                            .zIndex(-1)
+                        Spacer(minLength: 2.0)
+                    }
                 }
-            }
+            } // :tchap:end:
         }
     }
     
@@ -76,7 +92,9 @@ struct RoomHeaderView: View {
             HStack(spacing: 8) {
                 Text(roomName)
                     .lineLimit(1)
-                    .font(.compound.bodyMDSemibold)
+                    // Tchap: use Tchap custom font (Marianne font) in Room header view.
+//                    .font(.compound.bodyMDSemibold)
+                    .tchapNavigationBarTitleFont()
                     .foregroundStyle(.compound.textPrimary)
                     .accessibilityIdentifier(A11yIdentifiers.roomScreen.name)
                 
