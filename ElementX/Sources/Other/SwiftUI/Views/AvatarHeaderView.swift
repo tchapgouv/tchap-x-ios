@@ -77,7 +77,7 @@ struct AvatarHeaderView<Footer: View>: View {
         dmRecipientId = Binding(get: {
             if room.isDirect,
                case .heroes(let heroes) = room.avatar {
-                return heroes.first?.userID
+                return heroes.first?.id
             } else {
                 return nil
             }

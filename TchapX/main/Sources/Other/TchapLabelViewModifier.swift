@@ -44,7 +44,7 @@ public struct TchapLabelViewModifier: ViewModifier {
 
         var colors: (foregroundColor: Color, backgroundColor: Color) {
             switch self {
-            case .userIsExternal: (foregroundColor: .compound.textBadgeExternal, backgroundColor: .compound.bgBadgeExternal)
+            case .userIsExternal: (foregroundColor: .compound.textBadgeWarning, backgroundColor: .compound.bgBadgeWarning)
             case .inviteByEmail: (foregroundColor: .compound.textBadgeDefault, backgroundColor: .compound.bgBadgeDefault)
             }
         }

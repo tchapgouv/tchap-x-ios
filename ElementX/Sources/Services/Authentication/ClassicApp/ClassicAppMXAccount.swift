@@ -108,6 +108,7 @@ final class ClassicAppMXAccount: NSObject, NSCoding {
         static let accessToken = "accesstoken" // String?
         static let isDisabled = "disabled" // Bool
         static let isSoftLogout = "isSoftLogout" // Bool
+        static let threePIDs = "threePIDs" // :tchap: [MXThirdPartyIdentifier]?
     }
     
     required init?(coder: NSCoder) {

@@ -390,7 +390,6 @@ final nonisolated class AppSettings: @unchecked Sendable {
     /// The maximum size of the upload request. Default value is just below CloudFlare's max request size.
     let bugReportMaxUploadSize = 10 * 1024 * 1024
 
-    
     // MARK: - Content scanner
     
     /// The base URL of the content scanner server used to scan media before it is downloaded.
@@ -508,14 +507,14 @@ final nonisolated class AppSettings: @unchecked Sendable {
     }
 
     static let bundledMapTilerConfiguration = MapTilerConfiguration(baseURL: URL(string: TchapMapProvider.geoDataGouv.rawValue)!, // swiftlint:disable:this force_unwrapping
-                                                                             apiKey: Secrets.mapLibreAPIKey,
-                                                                             lightStyleID: "osm-bright",
-                                                                             darkStyleID: "fiord-color")
+                                                                    apiKey: Secrets.mapLibreAPIKey,
+                                                                    lightStyleID: "osm-bright",
+                                                                    darkStyleID: "fiord-color")
     #else
     static let bundledMapTilerConfiguration = MapTilerConfiguration(baseURL: "https://api.maptiler.com/maps",
-                                                                             apiKey: Secrets.mapLibreAPIKey,
-                                                                             lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
-                                                                             darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
+                                                                    apiKey: Secrets.mapLibreAPIKey,
+                                                                    lightStyleID: "9bc819c8-e627-474a-a348-ec144fe3d810",
+                                                                    darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
     #endif
     
     /// The MapTiler configuration used to build map URLs, which defaults to the bundled one.

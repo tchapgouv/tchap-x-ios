@@ -77,7 +77,7 @@ struct SettingsScreen: View {
                             
                             // Tchap: only display User ID of Settings when in debug mode
                             #if DEBUG
-                            Text(context.viewState.userID)
+                            Text(context.viewState.userProfile.id)
                                 .font(.compound.bodySM)
                                 .foregroundColor(.compound.textSecondary)
                             #endif

@@ -49,7 +49,7 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
     }
     
     var body: some View {
-        GeometryReader { geometry in
+        GeometryReader { _ in
             // Tchap: use MapTiler Snapshotter to request bitmap rendering of preview maps.
 //            if let url = mapURLBuilder.staticMapTileImageURL(for: colorScheme.mapStyle,
 //                                                             coordinates: coordinates,

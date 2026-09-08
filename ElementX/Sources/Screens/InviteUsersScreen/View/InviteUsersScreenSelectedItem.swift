@@ -24,20 +24,20 @@ struct InviteUsersScreenSelectedItem: View {
             //            Text(user.displayName ?? user.id)
             switch MatrixIdFromString(user.id).userType {
             case .external(needInviteByEmail: false):
-                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.id)
+                Text((user.displayName ?? MatrixIdFromString(user.id).userDisplayName?.displayName) ?? user.id)
                     .lineLimit(1)
                     .tchapExternalLabelView()
             case .external(needInviteByEmail: true):
-                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.id)
+                Text((user.displayName ?? MatrixIdFromString(user.id).userDisplayName?.displayName) ?? user.id)
                     .lineLimit(1)
                     .tchapInivteByEmailLabelView()
             case .agent(needInviteByEmail: false):
-                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.id)
+                Text((user.displayName ?? MatrixIdFromString(user.id).userDisplayName?.displayName) ?? user.id)
                     .font(.compound.bodyMD)
                     .foregroundColor(.compound.textPrimary)
                     .lineLimit(1)
             case .agent(needInviteByEmail: true):
-                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.id)
+                Text((user.displayName ?? MatrixIdFromString(user.id).userDisplayName?.displayName) ?? user.id)
                     .font(.compound.bodyMD)
                     .foregroundColor(.compound.textPrimary)
                     .lineLimit(1)

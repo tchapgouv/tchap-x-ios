@@ -2355,7 +2355,7 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         get { return underlyingAccountExpiredSubjectPublisher }
         set(value) { underlyingAccountExpiredSubjectPublisher = value }
     }
-    var underlyingAccountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never>!
+    nonisolated(unsafe) var underlyingAccountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never>!
     var liveLocationOwnInfoUpdatesPublisher: AnyPublisher<LiveLocationOwnInfoUpdate, Never> {
         get { return underlyingLiveLocationOwnInfoUpdatesPublisher }
         set(value) { underlyingLiveLocationOwnInfoUpdatesPublisher = value }
@@ -2453,9 +2453,9 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         await pauseServicesClosure?()
     }
     //MARK: - resyncAccount
-    private var resyncAccountUnderlyingCallsCount = 0
 
     private let resyncAccountCallsCountLock = NSLock()
+    private nonisolated(unsafe) var resyncAccountUnderlyingCallsCount = 0
     var resyncAccountCallsCount: Int {
         get { resyncAccountCallsCountLock.withLock { resyncAccountUnderlyingCallsCount } }
         set { resyncAccountCallsCountLock.withLock { resyncAccountUnderlyingCallsCount = newValue } }
@@ -2463,16 +2463,16 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     var resyncAccountCalled: Bool {
         return resyncAccountCallsCount > 0
     }
-    var resyncAccountClosure: (() async -> Void)?
+    nonisolated(unsafe) var resyncAccountClosure: (() async -> Void)?
 
-    func resyncAccount() async {
+    @concurrent func resyncAccount() async {
         resyncAccountCallsCountLock.withLock { resyncAccountUnderlyingCallsCount += 1 }
         await resyncAccountClosure?()
     }
     //MARK: - accountExpiredSendEmail
 
     private let accountExpiredSendEmailCallsCountLock = NSLock()
-    private var accountExpiredSendEmailUnderlyingCallsCount = 0
+    private nonisolated(unsafe) var accountExpiredSendEmailUnderlyingCallsCount = 0
     var accountExpiredSendEmailCallsCount: Int {
         get { accountExpiredSendEmailCallsCountLock.withLock { accountExpiredSendEmailUnderlyingCallsCount } }
         set { accountExpiredSendEmailCallsCountLock.withLock { accountExpiredSendEmailUnderlyingCallsCount = newValue } }
@@ -2480,9 +2480,9 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     var accountExpiredSendEmailCalled: Bool {
         return accountExpiredSendEmailCallsCount > 0
     }
-    var accountExpiredSendEmailClosure: (() async -> Void)?
+    nonisolated(unsafe) var accountExpiredSendEmailClosure: (() async -> Void)?
 
-    func accountExpiredSendEmail() async {
+    @concurrent func accountExpiredSendEmail() async {
         accountExpiredSendEmailCallsCountLock.withLock { accountExpiredSendEmailUnderlyingCallsCount += 1 }
         await accountExpiredSendEmailClosure?()
     }
@@ -2631,42 +2631,42 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     }
     //MARK: - createRoom
 
-    private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCountLock = NSLock()
-    private nonisolated(unsafe) var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = 0
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCount: Int {
-        get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCountLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount } }
-        set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCountLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount = newValue } }
+    private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCountLock = NSLock()
+    private nonisolated(unsafe) var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount = 0
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCount: Int {
+        get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCountLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount } }
+        set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCountLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount = newValue } }
     }
     var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCalled: Bool {
         return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCount > 0
     }
-    private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArgumentsLock = NSLock()
-    private nonisolated(unsafe) var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReceivedArguments: (name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)?
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments: (name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)? {
-        get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArgumentsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReceivedArguments } }
-        set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArgumentsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReceivedArguments = newValue } }
+    private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArgumentsLock = NSLock()
+    private nonisolated(unsafe) var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedArguments: (name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)?
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments: (name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)? {
+        get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArgumentsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedArguments } }
+        set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArgumentsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedArguments = newValue } }
     }
-    private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedInvocationsLock = NSLock()
-    private nonisolated(unsafe) var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReceivedInvocations: [(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)] = []
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedInvocations: [(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?)] {
-        get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedInvocationsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReceivedInvocations } }
-        set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedInvocationsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReceivedInvocations = newValue } }
+    private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocationsLock = NSLock()
+    private nonisolated(unsafe) var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedInvocations: [(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)] = []
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocations: [(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool)] {
+        get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocationsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedInvocations } }
+        set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocationsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedInvocations = newValue } }
     }
 
-    private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValueLock = NSLock()
-    private nonisolated(unsafe) var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue: Result<String, ClientProxyError>!
-    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValue: Result<String, ClientProxyError>! {
-        get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValueLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue } }
-        set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReturnValueLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReturnValue = newValue } }
+    private let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValueLock = NSLock()
+    private nonisolated(unsafe) var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReturnValue: Result<String, ClientProxyError>!
+    var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue: Result<String, ClientProxyError>! {
+        get { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValueLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReturnValue } }
+        set { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValueLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReturnValue = newValue } }
     }
-    nonisolated(unsafe) var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure: ((String?, String?, CreateRoomAccessType, Bool, [String], URL?, String?) async -> Result<String, ClientProxyError>)?
+    nonisolated(unsafe) var createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure: ((String?, String?, CreateRoomAccessType, Bool, [String], URL?, String?, Bool) async -> Result<String, ClientProxyError>)?
 
-    @concurrent func createRoom(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?) async -> Result<String, ClientProxyError> {
-        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartCallsCountLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingCallsCount += 1 }
-        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedArguments = (name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart)
-        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartReceivedInvocationsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartUnderlyingReceivedInvocations.append((name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart)) }
-        if let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure {
-            return await createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartClosure(name, topic, accessType, isSpace, userIDs, avatarURL, aliasLocalPart)
+    @concurrent func createRoom(name: String?, topic: String?, accessType: CreateRoomAccessType, isSpace: Bool, userIDs: [String], avatarURL: URL?, aliasLocalPart: String?, isAccessViaLinkEnabled: Bool) async -> Result<String, ClientProxyError> {
+        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledCallsCountLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingCallsCount += 1 }
+        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedArguments = (name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart, isAccessViaLinkEnabled: isAccessViaLinkEnabled)
+        createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReceivedInvocationsLock.withLock { createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledUnderlyingReceivedInvocations.append((name: name, topic: topic, accessType: accessType, isSpace: isSpace, userIDs: userIDs, avatarURL: avatarURL, aliasLocalPart: aliasLocalPart, isAccessViaLinkEnabled: isAccessViaLinkEnabled)) }
+        if let createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure = createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure {
+            return await createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledClosure(name, topic, accessType, isSpace, userIDs, avatarURL, aliasLocalPart, isAccessViaLinkEnabled)
         } else {
             return createRoomNameTopicAccessTypeIsSpaceUserIDsAvatarURLAliasLocalPartIsAccessViaLinkEnabledReturnValue
         }
@@ -7055,7 +7055,7 @@ nonisolated class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Senda
     //MARK: - accessRule
 
     private let accessRuleCallsCountLock = NSLock()
-    private var accessRuleUnderlyingCallsCount = 0
+    private nonisolated(unsafe) var accessRuleUnderlyingCallsCount = 0
     var accessRuleCallsCount: Int {
         get { accessRuleCallsCountLock.withLock { accessRuleUnderlyingCallsCount } }
         set { accessRuleCallsCountLock.withLock { accessRuleUnderlyingCallsCount = newValue } }
@@ -7065,14 +7065,14 @@ nonisolated class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Senda
     }
 
     private let accessRuleReturnValueLock = NSLock()
-    private var accessRuleUnderlyingReturnValue: Result<AccessRule?, RoomProxyError>!
+    private nonisolated(unsafe) var accessRuleUnderlyingReturnValue: Result<AccessRule?, RoomProxyError>!
     var accessRuleReturnValue: Result<AccessRule?, RoomProxyError>! {
         get { accessRuleReturnValueLock.withLock { accessRuleUnderlyingReturnValue } }
         set { accessRuleReturnValueLock.withLock { accessRuleUnderlyingReturnValue = newValue } }
     }
-    var accessRuleClosure: (() async -> Result<AccessRule?, RoomProxyError>)?
+    nonisolated(unsafe) var accessRuleClosure: (() async -> Result<AccessRule?, RoomProxyError>)?
 
-    func accessRule() async -> Result<AccessRule?, RoomProxyError> {
+    @concurrent func accessRule() async -> Result<AccessRule?, RoomProxyError> {
         accessRuleCallsCountLock.withLock { accessRuleUnderlyingCallsCount += 1 }
         if let accessRuleClosure = accessRuleClosure {
             return await accessRuleClosure()
@@ -7083,7 +7083,7 @@ nonisolated class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Senda
     //MARK: - applyAccessRulesChanges
 
     private let applyAccessRulesChangesCallsCountLock = NSLock()
-    private var applyAccessRulesChangesUnderlyingCallsCount = 0
+    private nonisolated(unsafe) var applyAccessRulesChangesUnderlyingCallsCount = 0
     var applyAccessRulesChangesCallsCount: Int {
         get { applyAccessRulesChangesCallsCountLock.withLock { applyAccessRulesChangesUnderlyingCallsCount } }
         set { applyAccessRulesChangesCallsCountLock.withLock { applyAccessRulesChangesUnderlyingCallsCount = newValue } }
@@ -7092,27 +7092,27 @@ nonisolated class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Senda
         return applyAccessRulesChangesCallsCount > 0
     }
     private let applyAccessRulesChangesReceivedChangesLock = NSLock()
-    private var applyAccessRulesChangesUnderlyingReceivedChanges: AccessRule?
+    private nonisolated(unsafe) var applyAccessRulesChangesUnderlyingReceivedChanges: AccessRule?
     var applyAccessRulesChangesReceivedChanges: AccessRule? {
         get { applyAccessRulesChangesReceivedChangesLock.withLock { applyAccessRulesChangesUnderlyingReceivedChanges } }
         set { applyAccessRulesChangesReceivedChangesLock.withLock { applyAccessRulesChangesUnderlyingReceivedChanges = newValue } }
     }
     private let applyAccessRulesChangesReceivedInvocationsLock = NSLock()
-    private var applyAccessRulesChangesUnderlyingReceivedInvocations: [AccessRule] = []
+    private nonisolated(unsafe) var applyAccessRulesChangesUnderlyingReceivedInvocations: [AccessRule] = []
     var applyAccessRulesChangesReceivedInvocations: [AccessRule] {
         get { applyAccessRulesChangesReceivedInvocationsLock.withLock { applyAccessRulesChangesUnderlyingReceivedInvocations } }
         set { applyAccessRulesChangesReceivedInvocationsLock.withLock { applyAccessRulesChangesUnderlyingReceivedInvocations = newValue } }
     }
 
     private let applyAccessRulesChangesReturnValueLock = NSLock()
-    private var applyAccessRulesChangesUnderlyingReturnValue: Result<Void, RoomProxyError>!
+    private nonisolated(unsafe) var applyAccessRulesChangesUnderlyingReturnValue: Result<Void, RoomProxyError>!
     var applyAccessRulesChangesReturnValue: Result<Void, RoomProxyError>! {
         get { applyAccessRulesChangesReturnValueLock.withLock { applyAccessRulesChangesUnderlyingReturnValue } }
         set { applyAccessRulesChangesReturnValueLock.withLock { applyAccessRulesChangesUnderlyingReturnValue = newValue } }
     }
-    var applyAccessRulesChangesClosure: ((AccessRule) async -> Result<Void, RoomProxyError>)?
+    nonisolated(unsafe) var applyAccessRulesChangesClosure: ((AccessRule) async -> Result<Void, RoomProxyError>)?
 
-    func applyAccessRulesChanges(_ changes: AccessRule) async -> Result<Void, RoomProxyError> {
+    @concurrent func applyAccessRulesChanges(_ changes: AccessRule) async -> Result<Void, RoomProxyError> {
         applyAccessRulesChangesCallsCountLock.withLock { applyAccessRulesChangesUnderlyingCallsCount += 1 }
         applyAccessRulesChangesReceivedChanges = changes
         applyAccessRulesChangesReceivedInvocationsLock.withLock { applyAccessRulesChangesUnderlyingReceivedInvocations.append(changes) }
@@ -7125,7 +7125,7 @@ nonisolated class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Senda
     //MARK: - accessRuleNeedToBeUpdated
 
     private let accessRuleNeedToBeUpdatedForCallsCountLock = NSLock()
-    private var accessRuleNeedToBeUpdatedForUnderlyingCallsCount = 0
+    private nonisolated(unsafe) var accessRuleNeedToBeUpdatedForUnderlyingCallsCount = 0
     var accessRuleNeedToBeUpdatedForCallsCount: Int {
         get { accessRuleNeedToBeUpdatedForCallsCountLock.withLock { accessRuleNeedToBeUpdatedForUnderlyingCallsCount } }
         set { accessRuleNeedToBeUpdatedForCallsCountLock.withLock { accessRuleNeedToBeUpdatedForUnderlyingCallsCount = newValue } }
@@ -7134,27 +7134,27 @@ nonisolated class JoinedRoomProxyMock: JoinedRoomProxyProtocol, @unchecked Senda
         return accessRuleNeedToBeUpdatedForCallsCount > 0
     }
     private let accessRuleNeedToBeUpdatedForReceivedInvitedUsersLock = NSLock()
-    private var accessRuleNeedToBeUpdatedForUnderlyingReceivedInvitedUsers: [String]?
+    private nonisolated(unsafe) var accessRuleNeedToBeUpdatedForUnderlyingReceivedInvitedUsers: [String]?
     var accessRuleNeedToBeUpdatedForReceivedInvitedUsers: [String]? {
         get { accessRuleNeedToBeUpdatedForReceivedInvitedUsersLock.withLock { accessRuleNeedToBeUpdatedForUnderlyingReceivedInvitedUsers } }
         set { accessRuleNeedToBeUpdatedForReceivedInvitedUsersLock.withLock { accessRuleNeedToBeUpdatedForUnderlyingReceivedInvitedUsers = newValue } }
     }
     private let accessRuleNeedToBeUpdatedForReceivedInvocationsLock = NSLock()
-    private var accessRuleNeedToBeUpdatedForUnderlyingReceivedInvocations: [[String]] = []
+    private nonisolated(unsafe) var accessRuleNeedToBeUpdatedForUnderlyingReceivedInvocations: [[String]] = []
     var accessRuleNeedToBeUpdatedForReceivedInvocations: [[String]] {
         get { accessRuleNeedToBeUpdatedForReceivedInvocationsLock.withLock { accessRuleNeedToBeUpdatedForUnderlyingReceivedInvocations } }
         set { accessRuleNeedToBeUpdatedForReceivedInvocationsLock.withLock { accessRuleNeedToBeUpdatedForUnderlyingReceivedInvocations = newValue } }
     }
 
     private let accessRuleNeedToBeUpdatedForReturnValueLock = NSLock()
-    private var accessRuleNeedToBeUpdatedForUnderlyingReturnValue: Bool!
+    private nonisolated(unsafe) var accessRuleNeedToBeUpdatedForUnderlyingReturnValue: Bool!
     var accessRuleNeedToBeUpdatedForReturnValue: Bool! {
         get { accessRuleNeedToBeUpdatedForReturnValueLock.withLock { accessRuleNeedToBeUpdatedForUnderlyingReturnValue } }
         set { accessRuleNeedToBeUpdatedForReturnValueLock.withLock { accessRuleNeedToBeUpdatedForUnderlyingReturnValue = newValue } }
     }
-    var accessRuleNeedToBeUpdatedForClosure: (([String]) async -> Bool)?
+    nonisolated(unsafe) var accessRuleNeedToBeUpdatedForClosure: (([String]) async -> Bool)?
 
-    func accessRuleNeedToBeUpdated(for invitedUsers: [String]) async -> Bool {
+    @concurrent func accessRuleNeedToBeUpdated(for invitedUsers: [String]) async -> Bool {
         accessRuleNeedToBeUpdatedForCallsCountLock.withLock { accessRuleNeedToBeUpdatedForUnderlyingCallsCount += 1 }
         accessRuleNeedToBeUpdatedForReceivedInvitedUsers = invitedUsers
         accessRuleNeedToBeUpdatedForReceivedInvocationsLock.withLock { accessRuleNeedToBeUpdatedForUnderlyingReceivedInvocations.append(invitedUsers) }
@@ -9943,8 +9943,8 @@ nonisolated class RoomInfoProxyMock: RoomInfoProxyProtocol, @unchecked Sendable 
     }
     nonisolated(unsafe) var underlyingHistoryVisibility: RoomHistoryVisibility!
     nonisolated(unsafe) var powerLevels: RoomPowerLevelsProxyProtocol?
-    var accessRule: AccessRule?
-    var visibility: RoomVisibility!
+    nonisolated(unsafe) var accessRule: AccessRule?
+    nonisolated(unsafe) var visibility: RoomVisibility!
     nonisolated(unsafe) var successor: SuccessorRoom?
     nonisolated(unsafe) var heroes: [RoomHero] = []
 

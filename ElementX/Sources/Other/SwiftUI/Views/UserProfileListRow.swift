@@ -60,7 +60,7 @@ struct UserProfileListRow: View {
                                    role: isUnknownProfile ? .error : nil),
                     kind: kind)
 
-            switch MatrixIdFromString(user.userID).userType {
+            switch MatrixIdFromString(user.id).userType {
             case .external(needInviteByEmail: false):
                 BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
                     .offset(x: tchapBadgesOffsetX, y: -8.0)

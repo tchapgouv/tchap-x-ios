@@ -55,7 +55,7 @@ struct RoomHeaderView: View {
             avatarImage
                 .accessibilityHidden(true)
 
-                //TODO: tchap badges 
+            // TODO: tchap badges
             
             VStack(alignment: .leading, spacing: 0) {
                 roomDetails
@@ -63,7 +63,7 @@ struct RoomHeaderView: View {
                 if let roomSubtitle {
                     Text(roomSubtitle)
                         .lineLimit(1)
-                        .foregroundStyle(.compound.textSecondary)  
+                        .foregroundStyle(.compound.textSecondary)
                         .font(.compound.bodyXS)
                         .foregroundStyle(.compound.textSecondary)
                 }

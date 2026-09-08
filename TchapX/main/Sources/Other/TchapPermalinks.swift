@@ -10,7 +10,7 @@ import Foundation
 /**
  * Mapping of an input URI to a matrix.to compliant URI.
  */
-enum TchapPermalinks {
+nonisolated enum TchapPermalinks {
     private static let MATRIX_TO_PERMALINK_BASE_URL = "https://matrix.to/#/"
     static let TCHAP_PERMALINK_BASE_URL = "https://tchap.gouv.fr/#/"
     private static let SUPPORTED_PATHS: [String] = ["/#/room/",

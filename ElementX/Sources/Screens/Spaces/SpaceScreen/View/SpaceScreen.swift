@@ -132,25 +132,25 @@ struct SpaceScreen: View {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     // :tchap: space-admin-limitations
-                    //if context.viewState.canEditChildren {
-                      //  Section {
-                       //     Button { context.send(viewAction: .createChildRoom) } label: {
-                        //        Label(L10n.actionCreateRoom, icon: \.plus)
-                        //            .accessibilityIdentifier(A11yIdentifiers.spaceScreen.createRoom)
-                        //    }
+                    // if context.viewState.canEditChildren {
+                    //  Section {
+                    //     Button { context.send(viewAction: .createChildRoom) } label: {
+                    //        Label(L10n.actionCreateRoom, icon: \.plus)
+                    //            .accessibilityIdentifier(A11yIdentifiers.spaceScreen.createRoom)
+                    //    }
                             
-                        //    Button { context.send(viewAction: .addExistingRooms) } label: {
-                        //        Label(L10n.actionAddExistingRooms, icon: \.room)
-                         //   }
-                         //   .accessibilityIdentifier(A11yIdentifiers.spaceScreen.addExistingRooms)
+                    //    Button { context.send(viewAction: .addExistingRooms) } label: {
+                    //        Label(L10n.actionAddExistingRooms, icon: \.room)
+                    //   }
+                    //   .accessibilityIdentifier(A11yIdentifiers.spaceScreen.addExistingRooms)
                             
-                        //    if !context.viewState.rooms.isEmpty {
-                        //        Button { context.send(viewAction: .manageChildren) } label: {
-                        //            Label(L10n.actionManageRooms, icon: \.edit)
-                        //        }
-                        //    }
-                        //}
-  //                  } :tchap:end
+                    //    if !context.viewState.rooms.isEmpty {
+                    //        Button { context.send(viewAction: .manageChildren) } label: {
+                    //            Label(L10n.actionManageRooms, icon: \.edit)
+                    //        }
+                    //    }
+                    // }
+                    //                  } :tchap:end
                     
                     Section {
                         if let roomProxy = context.viewState.roomProxy {

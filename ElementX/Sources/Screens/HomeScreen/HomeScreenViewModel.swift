@@ -44,9 +44,9 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         spaceFilterSubject = CurrentValueSubject<SpaceServiceFilter?, Never>(nil)
         
         roomSummaryProvider = userSession.clientProxy.roomSummaryProvider
-    // :tchap:    
-   //       super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
-   //                                         bindings: .init(filtersState: .init(appSettings: appSettings))),
+        // :tchap:
+        //       super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
+        //                                         bindings: .init(filtersState: .init(appSettings: appSettings))),
         super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
                                            bindings: .init(filtersState: .init(appSettings: appSettings)), tchapServiceStatusURL: appSettings.tchapServiceStatusURL),
                    mediaProvider: userSession.mediaProvider)

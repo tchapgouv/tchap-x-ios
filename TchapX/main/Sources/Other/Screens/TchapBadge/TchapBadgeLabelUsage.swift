@@ -34,12 +34,12 @@ public enum TchapBadgeLabelUsage {
 
     var titleColor: Color {
         switch self {
-        case .userIsExternal: .compound.textBadgeExternal
+        case .userIsExternal: .compound.textBadgeWarning
         case .inviteByEmail: .compound.textSecondary
         case .roomIsEncrypted: .compound.textBadgeAccent
         case .roomIsNotEncrypted: .compound.textBadgeDefault
         case .roomIsPublic: .compound.textBadgeDefault
-        case .roomIsAccessibleToExternals: .compound.textBadgeExternal
+        case .roomIsAccessibleToExternals: .compound.textBadgeWarning
         case .recommendedOption: .compound.textPrimary
         }
     }
@@ -58,12 +58,12 @@ public enum TchapBadgeLabelUsage {
 
     var backgroundColor: Color {
         switch self {
-        case .userIsExternal: .compound.bgBadgeExternal
+        case .userIsExternal: .compound.bgBadgeWarning
         case .inviteByEmail: .clear
         case .roomIsEncrypted: .compound.bgBadgeAccent
         case .roomIsNotEncrypted: .compound.bgBadgeDefault
         case .roomIsPublic: .compound.bgBadgeDefault
-        case .roomIsAccessibleToExternals: .compound.bgBadgeExternal
+        case .roomIsAccessibleToExternals: .compound.bgBadgeWarning
         case .recommendedOption: .compound.bgBadgeDefault
         }
     }

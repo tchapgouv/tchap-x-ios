@@ -33,16 +33,16 @@
 import Foundation
 import MatrixRustSDK
 
-enum TchapUserType {
+enum TchapUserType: Sendable {
     case external(needInviteByEmail: Bool)
     case agent(needInviteByEmail: Bool)
 }
 
-struct MatrixIdFromString {
+nonisolated struct MatrixIdFromString: Sendable {
     private static let MATRIXID_PARTS_SEPARATOR: Character = ":"
     private static let HOMESERVER_SPECIAL_SUFFIX_TCHAP_EMAIL_INVITATION = TchapConstants().inviteByEmailSuffixMarker()
 
-    private var mxIdString: String
+    private let mxIdString: String
 
     init(_ mxIdString: String) {
         self.mxIdString = mxIdString
@@ -214,7 +214,7 @@ struct MatrixIdFromString {
     }
 }
 
-struct HomeServerName {
+nonisolated struct HomeServerName: Sendable {
     private static let HOMESERVER_SPECIAL_SUFFIX_TCHAP = "tchap.gouv.fr"
     private static let HOMESERVER_SPECIAL_SUFFIX_TCHAP_EMAIL_INVITATION = TchapConstants().inviteByEmailSuffixMarker()
     private static let HOMESERVER_PARTS_SEPARATOR: Character = "."
@@ -226,10 +226,10 @@ struct HomeServerName {
     private static let HOMESERVER_EXTERN_PREFIX_LIST = ["agent.externe."]
     #endif
     
-    private var serverName: any StringProtocol
+    private let serverName: String
     
-    init(_ serverName: any StringProtocol) {
-        self.serverName = serverName
+    init(_ serverName: some StringProtocol) {
+        self.serverName = String(serverName)
     }
 
     // Get the Tchap display name of the homeserver mentioned in a matrix identifier.
@@ -288,7 +288,7 @@ extension String {
     ///
     /// - Returns: a random string.
     ///
-    static func randomAlphanumeric(length: Int) -> String {
+    nonisolated static func randomAlphanumeric(length: Int) -> String {
         let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
         return String((0..<length).map { _ in letters.randomElement()! })
     }

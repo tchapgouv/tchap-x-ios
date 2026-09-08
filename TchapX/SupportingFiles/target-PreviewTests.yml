@@ -54,4 +54,3 @@ targets:
       excludes:
         - "**/__Snapshots__/**"
     - path: ../SupportingFiles
-    - path: ../../ElementX/Sources/Other/Extensions/XCTestCase.swift

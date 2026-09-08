@@ -457,26 +457,6 @@ class ClientProxy: ClientProxyProtocol {
         let offline = networkMonitor.reachabilityPublisher.value != .reachable
         
         await transitionServices(to: .running(offline: offline)).value
-
-        // TODO tchap
-        // MXLog.info("Starting sync")
-        
-        //Task {
-         //   if appSettings.clientPausingAndResumingEnabled {
-         //       do {
-         //          try await client.resume()
-         //       } catch {
-         //           MXLog.error("Failed resuming client with error: \(error)")
-         //       }
-         //   }
-            
-            // :tchap: expired account - syncService.start() throws error for expired account
-//            await syncService.start()
-         //   try await syncService.start() // :tchap:end
-            
-            // To avoid the cache being invalidated while the app is backgrounded, we cache at every sync start.
-         //   await cacheAccountURL()
-        }
     }
     
     /// A stored task for restarting the sync after a failure. This is stored so that we can cancel
@@ -1272,8 +1252,12 @@ class ClientProxy: ClientProxyProtocol {
             }
             
             MXLog.info("Starting sync")
-            await syncService.start()
-            
+            // :tchap: expired account - syncService.start() throws error for expired account
+//            await syncService.start()
+            Task {
+                try await syncService.start() // TODO: catch ?
+            } // :tchap:end
+
             updateHomeserverReachability()
             
             // If we are using OAuth we want to cache the account management URL in volatile memory on the SDK side.
@@ -1373,22 +1357,23 @@ class ClientProxy: ClientProxyProtocol {
                 restartServices()
             } else {
                 updateHomeserverReachability()
+            }
 
-// todo tchap 
-            //switch state {
-            //case .running, .terminated, .idle:
+            // todo tchap
+            // switch state {
+            // case .running, .terminated, .idle:
             //    homeserverReachabilitySubject.send(.reachable)
 
-                // Tchap: if we were in accountExpired state before, we need to leave it
+            // Tchap: if we were in accountExpired state before, we need to leave it
             //    if accountExpiredSubject.value {
             //        accountExpiredSubject.send(false)
             //    }
-           //case .offline:
-           //     homeserverReachabilitySubject.send(.unreachable)
-           //     restartSync()
-           // case .accountExpired: // Tchap: expired account
-           //     accountExpiredSubject.send(true)
-           // }
+            // case .offline:
+            //     homeserverReachabilitySubject.send(.unreachable)
+            //     restartSync()
+            // case .accountExpired: // Tchap: expired account
+            //     accountExpiredSubject.send(true)
+            // }
         })
     }
     

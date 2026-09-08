@@ -39,7 +39,7 @@ struct RoomMembersListScreenMemberCell: View {
                         .font(.compound.bodyLG)
                         .foregroundColor(.compound.textPrimary)
                         
-                        // Tchap: only display matrixID in debug mode  
+                        // Tchap: only display matrixID in debug mode
                         #if DEBUG
                         if let subtitle {
                             Text(subtitle)
