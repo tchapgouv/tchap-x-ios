@@ -116,7 +116,7 @@ screen_home_offline_banner_description = "Vérifiez l’état du service pour vo
 screen_home_offline_banner_button = "Voir l’état du service";
 
 // Settings
-screen_settings_clear_cache = "Vider le cacher";
+screen_settings_clear_cache = "Vider le cache";
 
 // Account expired
 screen_account_expired_title = "Votre compte a expiré";
