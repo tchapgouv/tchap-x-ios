@@ -82,11 +82,19 @@ struct ContentScanningView<SafeContent: View, ScanningContent: View, UnsafeConte
     var body: some View {
         content
             .preference(key: ContentScanningFailurePreferenceKey.self, value: containerShowsFailure ? scanFailure : nil)
-            .task(id: mediaSources.map(\.url.absoluteString).joined(separator: "|")) {
+            // :tchap: fix to avoid premature scan failure
+//            .task(id: mediaSources.map(\.url.absoluteString).joined(separator: "|")) {
+            .task(id: scanTaskID) {
                 await scan()
             }
     }
-    
+
+    // :tchap: fix to avoid premature scan failure
+    private var scanTaskID: String {
+        let serviceState = contentScannerService == nil ? "disabled" : "enabled"
+        return ([serviceState] + mediaSources.map(\.url.absoluteString)).joined(separator: "|")
+    } // :tchap:end:
+
     @ViewBuilder
     private var content: some View {
         switch resolvedScanState {

@@ -15,7 +15,9 @@ struct StickerRoomTimelineView: View {
     
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {
-            ContentScanningView(contentScannerService: context?.contentScannerService,
+            // :tchap: fix to avoid premature scan failure
+//            ContentScanningView(contentScannerService: context?.contentScannerService,
+            ContentScanningView(contentScannerService: timelineItem.contentScannerServiceWhenSent(context?.contentScannerService),
                                 mediaSource: timelineItem.imageInfo.source) {
                 LoadableImage(mediaSource: timelineItem.imageInfo.source,
                               mediaType: .timelineItem(uniqueID: timelineItem.id.uniqueID),

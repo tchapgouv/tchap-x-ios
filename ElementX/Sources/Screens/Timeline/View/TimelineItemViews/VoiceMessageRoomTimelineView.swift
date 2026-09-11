@@ -30,7 +30,9 @@ struct VoiceMessageRoomTimelineContent: View {
     let playerState: AudioPlayerState
     
     var body: some View {
-        ContentScanningView(contentScannerService: context?.contentScannerService,
+        // :tchap: fix to avoid premature scan failure
+//        ContentScanningView(contentScannerService: context?.contentScannerService,
+        ContentScanningView(contentScannerService: timelineItem.contentScannerServiceWhenSent(context?.contentScannerService),
                             mediaSource: timelineItem.content.source) {
             VoiceMessageRoomPlaybackView(playerState: playerState,
                                          onPlayPause: onPlaybackPlayPause,

@@ -22,7 +22,9 @@ struct AudioRoomTimelineView: View {
                                          trailingReservedSize: timelineItem.trailingReservedSize,
                                          shouldBoost: timelineItem.shouldBoost,
                                          isAudioFile: true,
-                                         contentScannerService: context?.contentScannerService,
+                                         // :tchap: fix to avoid premature scan failure
+//                                         contentScannerService: context?.contentScannerService,
+                                         contentScannerService: timelineItem.contentScannerServiceWhenSent(context?.contentScannerService),
                                          mediaSource: timelineItem.content.source) {
                 context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
             }
