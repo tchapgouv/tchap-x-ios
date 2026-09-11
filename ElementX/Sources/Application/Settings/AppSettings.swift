@@ -394,6 +394,7 @@ final nonisolated class AppSettings: @unchecked Sendable {
     
     /// The base URL of the content scanner server used to scan media before it is downloaded.
     /// `nil` when content scanning is disabled.
+    // :tchap: See TchapRemoteSettingsHook for using homeserver as contentScannerURL
     let contentScannerURL: RemotePreference<URL?> = .init(nil)
     
     // MARK: - Encryption
