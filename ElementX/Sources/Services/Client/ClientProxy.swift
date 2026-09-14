@@ -1254,8 +1254,10 @@ class ClientProxy: ClientProxyProtocol {
             MXLog.info("Starting sync")
             // :tchap: expired account - syncService.start() throws error for expired account
 //            await syncService.start()
-            Task {
-                try await syncService.start() // TODO: catch ?
+            do {
+                try await syncService.start()
+            } catch {
+                MXLog.error("syncService start failed: \(error)")
             } // :tchap:end
 
             updateHomeserverReachability()
@@ -1359,21 +1361,16 @@ class ClientProxy: ClientProxyProtocol {
                 updateHomeserverReachability()
             }
 
-            // todo tchap
-            // switch state {
-            // case .running, .terminated, .idle:
-            //    homeserverReachabilitySubject.send(.reachable)
-
-            // Tchap: if we were in accountExpired state before, we need to leave it
-            //    if accountExpiredSubject.value {
-            //        accountExpiredSubject.send(false)
-            //    }
-            // case .offline:
-            //     homeserverReachabilitySubject.send(.unreachable)
-            //     restartSync()
-            // case .accountExpired: // Tchap: expired account
-            //     accountExpiredSubject.send(true)
-            // }
+            // :tchap: Handle expired account state
+            switch state {
+            case .accountExpired:
+                accountExpiredSubject.send(true)
+            case .running, .terminated, .idle:
+                if accountExpiredSubject.value {
+                    accountExpiredSubject.send(false)
+                }
+            case .offline, .error: break
+            } // :tchap:end:
         })
     }
     
