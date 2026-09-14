@@ -22,12 +22,13 @@ public enum TchapBadgeLabelUsage {
     // Tchap: evaluate our own icon size
     var iconSize: CompoundIcon.Size {
         switch self {
-        case .userIsExternal(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
-        case .inviteByEmail(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
-        case .roomIsEncrypted(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
-        case .roomIsNotEncrypted(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
-        case .roomIsPublic(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
-        case .roomIsAccessibleToExternals(let useSmallSize): useSmallSize ? .custom(9.0) : .xSmall
+        case .userIsExternal(let useSmallSize),
+             .inviteByEmail(let useSmallSize),
+             .roomIsEncrypted(let useSmallSize),
+             .roomIsNotEncrypted(let useSmallSize),
+             .roomIsPublic(let useSmallSize),
+             .roomIsAccessibleToExternals(let useSmallSize):
+            useSmallSize ? .custom(9.0) : .xSmall
         case .recommendedOption: .custom(9.0)
         }
     }
@@ -36,23 +37,23 @@ public enum TchapBadgeLabelUsage {
         switch self {
         case .userIsExternal: .compound.textBadgeWarning
         case .inviteByEmail: .compound.textSecondary
-        case .roomIsEncrypted: .compound.textBadgeAccent
-        case .roomIsNotEncrypted: .compound.textBadgeDefault
-        case .roomIsPublic: .compound.textBadgeDefault
+        case .roomIsEncrypted: .compound.textBadgeSuccess
+        case .roomIsNotEncrypted: .compound.textBadgeSecondary
+        case .roomIsPublic: .compound.textBadgeWarning
         case .roomIsAccessibleToExternals: .compound.textBadgeWarning
-        case .recommendedOption: .compound.textPrimary
+        case .recommendedOption: .compound.textSecondary
         }
     }
 
     var iconColor: Color {
         switch self {
-        case .userIsExternal: .compound.iconBadgeExternal
+        case .userIsExternal: .compound.iconBadgeWarning
         case .inviteByEmail: .compound.iconCriticalPrimary
-        case .roomIsEncrypted: .compound.iconBadgeAccent
-        case .roomIsNotEncrypted: .compound.iconBadgeDefault
-        case .roomIsPublic: .compound.iconBadgeDefault
-        case .roomIsAccessibleToExternals: .compound.iconBadgeExternal
-        case .recommendedOption: .compound.iconPrimary
+        case .roomIsEncrypted: .compound.iconBadgeSuccess
+        case .roomIsNotEncrypted: .compound.iconBadgeSecondary
+        case .roomIsPublic: .compound.iconBadgeWarning
+        case .roomIsAccessibleToExternals: .compound.iconBadgeWarning
+        case .recommendedOption: .compound.iconBadgeSecondary
         }
     }
 
@@ -60,27 +61,22 @@ public enum TchapBadgeLabelUsage {
         switch self {
         case .userIsExternal: .compound.bgBadgeWarning
         case .inviteByEmail: .clear
-        case .roomIsEncrypted: .compound.bgBadgeAccent
-        case .roomIsNotEncrypted: .compound.bgBadgeDefault
-        case .roomIsPublic: .compound.bgBadgeDefault
+        case .roomIsEncrypted: .compound.bgBadgeSuccess
+        case .roomIsNotEncrypted: .compound.bgBadgeSecondary
+        case .roomIsPublic: .compound.bgBadgeWarning
         case .roomIsAccessibleToExternals: .compound.bgBadgeWarning
-        case .recommendedOption: .compound.bgBadgeDefault
+        case .recommendedOption: .compound.bgBadgeSecondary
         }
     }
 
     var font: Font {
         switch self {
-        case .userIsExternal(let useSmallSize):
-            if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
-        case .inviteByEmail(let useSmallSize):
-            if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
-        case .roomIsEncrypted(let useSmallSize):
-            if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
-        case .roomIsNotEncrypted(let useSmallSize):
-            if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
-        case .roomIsPublic(let useSmallSize):
-            if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
-        case .roomIsAccessibleToExternals(let useSmallSize):
+        case .userIsExternal(let useSmallSize),
+             .inviteByEmail(let useSmallSize),
+             .roomIsEncrypted(let useSmallSize),
+             .roomIsNotEncrypted(let useSmallSize),
+             .roomIsPublic(let useSmallSize),
+             .roomIsAccessibleToExternals(let useSmallSize):
             if useSmallSize == true { .system(size: 9.0).bold() } else { .system(size: 12.0).bold() }
         case .recommendedOption:
             .system(size: 9.0).bold()
