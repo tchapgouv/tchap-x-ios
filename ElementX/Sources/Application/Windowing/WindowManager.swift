@@ -12,12 +12,10 @@ import SwiftUI
 class WindowManager: SecureWindowManagerProtocol {
     private let appDelegate: AppDelegate
     weak var mainScene: UIWindowScene?
-    weak var mainSession: UISceneSession?
     weak var delegate: SecureWindowManagerDelegate?
     
     private(set) var mainWindow: UIWindow!
     private(set) var overlayWindow: UIWindow!
-    private(set) var globalSearchWindow: UIWindow!
     private(set) var alternateWindow: UIWindow!
     
     private(set) var openWindowAction: OpenWindowAction!
@@ -32,10 +30,9 @@ class WindowManager: SecureWindowManagerProtocol {
     }
     
     var windows: [UIWindow] {
-        [mainWindow, overlayWindow, globalSearchWindow, alternateWindow]
+        [mainWindow, overlayWindow, alternateWindow]
     }
     
-    // periphery:ignore - auto cancels when reassigned
     /// The task used to switch windows, so that we don't get stuck in the wrong state with a quick switch.
     @CancellableTask private var switchTask: Task<Void, Error>?
     /// A duration that allows window switching to wait a couple of frames to avoid a transition through black.
@@ -63,7 +60,6 @@ class WindowManager: SecureWindowManagerProtocol {
         }
         
         mainScene = scene
-        mainSession = session
         
         // Restore the previous window size on macOS as this isn't automatic.
         if let previousSize = mainWindow?.frame.size {
@@ -80,11 +76,6 @@ class WindowManager: SecureWindowManagerProtocol {
         overlayWindow.backgroundColor = .clear
         overlayWindow.isHidden = false
         
-        globalSearchWindow = UIWindow(windowScene: scene)
-        globalSearchWindow.tintColor = .compound.textActionPrimary
-        globalSearchWindow.backgroundColor = .clear
-        globalSearchWindow.isHidden = true
-        
         alternateWindow = UIWindow(windowScene: scene)
         alternateWindow.tintColor = .compound.textActionPrimary
         
@@ -100,7 +91,6 @@ class WindowManager: SecureWindowManagerProtocol {
     func handleSceneDisconnection(_ scene: UIWindowScene) {
         if scene == mainScene {
             mainScene = nil
-            mainSession = nil
             // Leave the mainWindow so we can reapply it's size on macOS.
         }
     }
@@ -138,8 +128,6 @@ class WindowManager: SecureWindowManagerProtocol {
         // e.g. the keyboard being displayed on top of a call sheet.
         mainWindow.endEditing(true)
         
-        hideGlobalSearch()
-        
         // alternateWindow.isHidden = false cannot got inside the Task otherwise the timing
         // is poor when you lock the phone - you briefly see the main window for a few
         // frames after you've unlocked the phone and then the placeholder animates in.
@@ -149,39 +137,7 @@ class WindowManager: SecureWindowManagerProtocol {
             
             mainWindow.isHidden = true
             overlayWindow.isHidden = true
-            globalSearchWindow.isHidden = true
         }
-    }
-    
-    func showGlobalSearch() {
-        MXLog.info("Received global search presentation request.")
-        
-        guard alternateWindow.isHidden else {
-            MXLog.info("The alternate window is visible, ignoring.")
-            return
-        }
-        
-        if let mainSession {
-            let request = UISceneSessionActivationRequest(session: mainSession)
-            UIApplication.shared.activateSceneSession(for: request) { error in
-                MXLog.error("Failed to focus window with error: \(error)")
-            }
-        }
-        
-        globalSearchWindow.isHidden = false
-        globalSearchWindow.makeKeyAndVisible()
-    }
-    
-    func hideGlobalSearch() {
-        MXLog.info("Received global search dismissal request.")
-        
-        guard alternateWindow.isHidden else {
-            MXLog.info("The alternate window is visible, ignoring.")
-            return
-        }
-        
-        globalSearchWindow.isHidden = true
-        mainWindow.makeKey()
     }
     
     // MARK: - OrientationManager

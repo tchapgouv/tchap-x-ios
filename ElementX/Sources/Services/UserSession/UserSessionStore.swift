@@ -128,7 +128,7 @@ class UserSessionStore: UserSessionStoreProtocol {
         }
         
         let homeserverURL = credentials.restorationToken.session.homeserverUrl
-        await appHooks.remoteSettingsHook.loadCache(forHomeserver: homeserverURL, applyingTo: appSettings)
+        appHooks.remoteSettingsHook.loadCache(forHomeserver: homeserverURL, applyingTo: appSettings)
         
         let builder = ClientBuilder
             .baseBuilder(httpProxy: URL(string: homeserverURL)?.globalProxy,
@@ -140,6 +140,8 @@ class UserSessionStore: UserSessionStoreProtocol {
             .sqliteStore(config: .init(dataPath: credentials.restorationToken.sessionDirectories.dataPath,
                                        cachePath: credentials.restorationToken.sessionDirectories.cachePath)
                     .passphrase(passphrase: credentials.restorationToken.passphrase))
+            .withSearchIndexStore(path: credentials.restorationToken.sessionDirectories.dataPath,
+                                  password: credentials.restorationToken.passphrase)
             .username(username: credentials.userID)
             .homeserverUrl(url: homeserverURL)
         
@@ -150,7 +152,6 @@ class UserSessionStore: UserSessionStoreProtocol {
             MXLog.info("Set up session for user \(credentials.userID) at: \(credentials.restorationToken.sessionDirectories)")
             
             Task(priority: .low) { await appHooks.remoteSettingsHook.updateCache(using: client) }
-            Task(priority: .low) { await client.updateMapTilerSettings(in: appSettings) }
             
             return try await .success(setupProxyForClient(client))
         } catch UserSessionStoreError.failedSettingUpClientProxy(let error) {

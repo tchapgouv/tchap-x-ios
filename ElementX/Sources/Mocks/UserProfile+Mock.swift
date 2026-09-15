@@ -8,29 +8,54 @@
 
 import Foundation
 
-extension UserProfileProxy {
-    /// Mocks
-    static var mockAlice: UserProfileProxy {
+extension UserProfile {
+    static var mockAlice: UserProfile {
         .init(userID: "@alice:matrix.org", displayName: "Alice", avatarURL: "mxc://matrix.org/UcCimidcvpFvWkPzvjXMQPHA")
     }
     
-    static var mockBob: UserProfileProxy {
+    static var mockBob: UserProfile {
         .init(userID: "@bob:matrix.org", displayName: "Bob", avatarURL: nil)
     }
     
-    static var mockBobby: UserProfileProxy {
+    static var mockBobby: UserProfile {
         .init(userID: "@bobby:matrix.org", displayName: "Bobby", avatarURL: nil)
     }
     
-    static var mockCharlie: UserProfileProxy {
+    static var mockCharlie: UserProfile {
         .init(userID: "@charlie:matrix.org", displayName: "Charlie", avatarURL: nil)
     }
     
-    static var mockDan: UserProfileProxy {
+    static var mockDan: UserProfile {
         .init(userID: "@dan:matrix.org", displayName: "Dan", avatarURL: .mockMXCUserAvatar)
     }
     
-    static var mockVerbose: UserProfileProxy {
+    static var mockErin: UserProfile {
+        .init(userID: "@erin:matrix.org", displayName: "Erin", status: .mockFocussing)
+    }
+    
+    static var mockFrank: UserProfile {
+        .init(userID: "@frank:matrix.org", displayName: "Frank", status: .mockCall)
+    }
+    
+    static var mockVerbose: UserProfile {
         .init(userID: "@charlie:matrix.org", displayName: "Charlie is the best display name", avatarURL: nil)
+    }
+}
+
+nonisolated extension UserStatus {
+    static var mockCall: UserStatus {
+        .init(raw: nil, call: .init(joinedDate: nil))
+    }
+    
+    static var mockFocussing: UserStatus {
+        .init(raw: .init(text: "Focussing", emoji: "🧑‍💻"), call: nil)
+    }
+    
+    static var mockHoliday: UserStatus {
+        .init(raw: .init(text: "Holiday", emoji: "🏝️"), call: nil)
+    }
+    
+    static func mock(text: String, emoji: Character) -> UserStatus {
+        .init(raw: .init(text: text, emoji: emoji), call: nil)
     }
 }

@@ -17,7 +17,6 @@ class NotificationSettingsScreenViewModel: NotificationSettingsScreenViewModelTy
     private let userNotificationCenter: UserNotificationCenterProtocol
     private let notificationSettingsProxy: NotificationSettingsProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
-    // periphery:ignore - cancellable tasks get cancelled when reassigned
     @CancellableTask private var fetchSettingsTask: Task<Void, Error>?
     private let notificationTonePreviewer: AudioPlayerProtocol
     private let notificationToneManager: NotificationToneManagerProtocol
@@ -43,14 +42,16 @@ class NotificationSettingsScreenViewModel: NotificationSettingsScreenViewModelTy
         super.init(initialViewState: NotificationSettingsScreenViewState(bindings: bindings,
                                                                          isModallyPresented: isModallyPresented,
                                                                          selectedAlertTone: appSettings.selectedNotificationTone ?? NotificationToneManager.defaultElementXMessageTone,
-                                                                         availableCustomTones: notificationToneManager.customTones()))
+                                                                         availableCustomTones: notificationToneManager.customTones(),
+                                                                         // macos lacks default sounds and its sandbox Sounds directory is immutable
+                                                                         customToneSelectionEnabled: !ProcessInfo.processInfo.isiOSAppOnMac))
         
         // Listen for changes to AppSettings.
-        appSettings.$enableNotifications
+        appSettings.enableNotificationsPublisher
             .weakAssign(to: \.state.bindings.enableNotifications, on: self)
             .store(in: &cancellables)
         
-        appSettings.$selectedNotificationTone
+        appSettings.selectedNotificationTonePublisher
             .map { $0 ?? NotificationToneManager.defaultElementXMessageTone }
             .weakAssign(to: \.state.selectedAlertTone, on: self)
             .store(in: &cancellables)

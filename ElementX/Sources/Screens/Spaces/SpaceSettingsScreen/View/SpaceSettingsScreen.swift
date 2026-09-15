@@ -132,11 +132,11 @@ struct SpaceSettingsScreen_Previews: PreviewProvider, TestablePreview {
                                                                         canonicalAlias: "#space:matrix.org",
                                                                         members: members)),
                                    userSession: UserSessionMock(.init()),
+                                   appHooks: AppHooks(),
                                    analyticsService: AnalyticsServiceMock(.init()),
                                    userIndicatorController: UserIndicatorControllerMock(),
                                    notificationSettingsProxy: NotificationSettingsProxyMock(with: NotificationSettingsProxyMockConfiguration()),
-                                   attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()),
-                                   appSettings: .volatile())
+                                   attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()))
     }
     
     static var previews: some View {

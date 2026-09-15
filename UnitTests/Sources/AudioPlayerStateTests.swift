@@ -37,7 +37,6 @@ struct AudioPlayerStateTests {
         audioPlayerMock.state = .stopped
         audioPlayerMock.currentTime = 0.0
         audioPlayerMock.duration = 0.0
-        audioPlayerMock.playbackSpeed = 1.0
         audioPlayerMock.seekToClosure = { [audioPlayerSeekCallsSubject] progress in
             audioPlayerSeekCallsSubject?.send(progress)
         }

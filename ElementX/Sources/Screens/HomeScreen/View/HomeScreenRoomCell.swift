@@ -44,7 +44,7 @@ struct HomeScreenRoomCell: View {
         .accessibilityHidden(redactionReasons.contains(.placeholder) ? true : false)
     }
     
-    @ViewBuilder @MainActor
+    @ViewBuilder
     private var avatar: some View {
         if dynamicTypeSize < .accessibility3 {
             RoomAvatarImage(avatar: room.avatar,
@@ -74,11 +74,17 @@ struct HomeScreenRoomCell: View {
     
     private var header: some View {
         HStack(alignment: .top, spacing: 16) {
-            Text(room.name)
-                .font(headerFont)
-                .foregroundColor(.compound.textPrimary)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 4) {
+                Text(room.name)
+                    .lineLimit(1)
+                
+                if let statusEmoji = room.statusEmoji {
+                    Text(String(statusEmoji))
+                }
+            }
+            .font(headerFont)
+            .foregroundColor(.compound.textPrimary)
+            .frame(maxWidth: .infinity, alignment: .leading)
             
             if let timestamp = room.timestamp {
                 Text(timestamp)
@@ -211,12 +217,14 @@ import MatrixRustSDKMocks
 
 struct HomeScreenRoomCell_Previews: PreviewProvider, TestablePreview {
     static let summaryProviderGeneric = RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))
-    static let genericRooms = summaryProviderGeneric.roomListPublisher.value.compactMap(mockRoom)
+    static let genericRooms = summaryProviderGeneric.roomListPublisher.value.compactMap { mockRoom(summary: $0) }
     
     static let summaryProviderForNotificationsState = RoomSummaryProviderMock(.init(state: .loaded(.mockRoomsWithNotificationsState)))
-    static let notificationsStateRooms = summaryProviderForNotificationsState.roomListPublisher.value.compactMap(mockRoom)
+    static let notificationsStateRooms = summaryProviderForNotificationsState.roomListPublisher.value.compactMap { mockRoom(summary: $0) }
     
     static let lastMessageStateRooms = [makeRoom(lastMessageState: .sending), makeRoom(lastMessageState: .failed)]
+    
+    static let roomHeroRooms = [makeRoom(heroes: [.mockDan]), makeRoom(heroes: [.mockErin])]
     
     static var previews: some View {
         VStack(spacing: 0) {
@@ -244,32 +252,35 @@ struct HomeScreenRoomCell_Previews: PreviewProvider, TestablePreview {
         }
         .previewLayout(.sizeThatFits)
         .previewDisplayName("Last Message State")
+        
+        VStack(spacing: 0) {
+            ForEach(roomHeroRooms) { room in
+                HomeScreenRoomCell(room: room, isSelected: false, mediaProvider: MediaProviderMock(.init())) { _ in }
+            }
+        }
+        .previewLayout(.sizeThatFits)
+        .previewDisplayName("Room Heroes")
     }
     
     static func mockRoom(summary: RoomSummary) -> HomeScreenRoom? {
         HomeScreenRoom(summary: summary)
     }
     
-    static func makeViewModel(roomSummaryProvider: RoomSummaryProviderProtocol) -> HomeScreenViewModel {
-        let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "John Doe", roomSummaryProvider: roomSummaryProvider))))
-        
-        return HomeScreenViewModel(userSession: userSession,
-                                   selectedRoomPublisher: CurrentValueSubject<String?, Never>(nil).asCurrentValuePublisher(),
-                                   appSettings: .volatile(),
-                                   analyticsService: AnalyticsServiceMock(.init()),
-                                   notificationManager: NotificationManagerMock(),
-                                   userIndicatorController: UserIndicatorControllerMock())
-    }
-    
-    static func makeRoom(lastMessageState: RoomSummary.LastMessageState) -> HomeScreenRoom {
+    static func makeRoom(lastMessageState: RoomSummary.LastMessageState? = nil,
+                         heroes: [UserProfile] = []) -> HomeScreenRoom {
+        let name = if heroes.count == 1 {
+            heroes[0].displayName ?? heroes[0].id
+        } else {
+            "Foundation and Empire"
+        }
         let summary = RoomSummary(room: RoomSDKMock(),
                                   id: UUID().uuidString,
                                   joinRequestType: nil,
-                                  name: "Foundation and Empire",
-                                  isDirect: false,
+                                  name: name,
+                                  isDirect: heroes.count == 1,
                                   isSpace: false,
-                                  avatarURL: .mockMXCAvatar,
-                                  heroes: [],
+                                  avatarURL: heroes.count == 1 ? nil : .mockMXCAvatar,
+                                  heroes: heroes,
                                   activeMembersCount: 0,
                                   lastMessage: AttributedString("How do you see the Emperor then? You think he keeps office hours?"),
                                   lastMessageDate: .mock,

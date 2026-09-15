@@ -12,7 +12,7 @@ import OrderedCollections
 import SwiftUI
 
 enum TimelineViewModelAction {
-    case displayEmojiPicker(itemID: TimelineItemIdentifier, selectedEmojis: Set<String>)
+    case displayEmojiPicker(selectedEmojis: Set<String>, continuation: EmojiPickerScreenContinuation)
     case displayReportContent(itemID: TimelineItemIdentifier, senderID: String)
     case displayCameraPicker
     case displayMediaPicker
@@ -33,10 +33,11 @@ enum TimelineViewModelAction {
     case viewInRoomTimeline(eventID: String, threadRootEventID: String?)
     case displayRoom(roomID: String, via: [String])
     case displayMediaDetails(item: EventBasedMessageTimelineItemProtocol)
+    case presentCallScreen(isVoiceCall: Bool)
 }
 
 enum TimelineViewPollAction {
-    case selectOption(pollStartID: String, optionID: String)
+    case sendResponse(pollStartID: String, answerIDs: [String])
     case end(pollStartID: String)
     case edit(pollStartID: String, poll: Poll)
 }
@@ -52,6 +53,7 @@ enum TimelineViewAction {
     case itemDisappeared(itemID: TimelineItemIdentifier)
     
     case mediaTapped(itemID: TimelineItemIdentifier)
+    case galleryItemTapped(GalleryItemID)
     case itemSendInfoTapped(itemID: TimelineItemIdentifier)
     case toggleReaction(key: String, itemID: TimelineItemIdentifier)
     case sendReadReceiptIfNeeded(TimelineItemIdentifier)
@@ -89,6 +91,7 @@ enum TimelineViewAction {
     case hasScrolled(direction: ScrollDirection)
     
     case displayPredecessorRoom
+    case joinActiveCall(isVoiceCall: Bool)
 }
 
 enum TimelineComposerAction {
@@ -101,6 +104,8 @@ enum TimelineComposerAction {
 
 struct TimelineViewState: BindableState {
     let timelineKind: TimelineKind
+    /// The gallery attachments the timeline includes, or `nil` when it isn't filtered.
+    let allowedGalleryItemTypes: [TimelineAllowedGalleryItemType]?
     var roomID: String
     var members: [String: RoomMemberState] = [:]
     var typingMembers: [String] = []
@@ -146,7 +151,7 @@ struct TimelineViewState: BindableState {
     
     var linkMetadataProvider: LinkMetadataProviderProtocol?
     
-    var mapTilerSettings: MapTilerSettings
+    var mapTilerConfiguration: MapTilerConfiguration
     
     var stoppedLiveLocationIDs: Set<TimelineItemIdentifier> = []
     
@@ -228,6 +233,7 @@ enum TimelineAlertInfoType: Hashable {
 struct RoomMemberState {
     let displayName: String?
     let avatarURL: URL?
+    let status: UserStatus
 }
 
 /// Used as the state for the TimelineView, to avoid having the context continuously refresh the list of items on each small change.
@@ -286,7 +292,9 @@ struct TimelineState {
     /// value to ``itemsDictionary``.
     mutating func recomputeReadMarkerUniqueID() {
         readMarkerUniqueID = itemsDictionary.first { _, viewState in
-            if case .readMarker = viewState.type { return true }
+            if case .readMarker = viewState.type {
+                return true
+            }
             return false
         }?.key
     }

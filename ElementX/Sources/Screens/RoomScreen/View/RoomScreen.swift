@@ -81,10 +81,10 @@ struct RoomScreen: View {
                 TopBannerLayer(knockRequestsBanner, isVisible: context.viewState.shouldSeeKnockRequests)
             ], footer: dateBadge)
             .safeAreaInset(edge: .top) {
-                // When VoiceOver is enabled, the table view isn't reversed and the scroll gestures
-                // don't trigger meaning the banner never hides itself and so the .overlay layout
-                // above permanently obscures the top of the timeline. So whenever VoiceOver is
-                // enabled we use a safe area inset to vertically stack it above the timeline.
+                // When VoiceOver is enabled the scroll gestures don't trigger, so the banner never
+                // hides itself and the .overlay layout above would permanently obscure the top of
+                // the timeline. So whenever VoiceOver is enabled we use a safe area inset to
+                // vertically stack it above the timeline instead.
                 if context.viewState.shouldShowPinnedEventsBanner || context.viewState.isSharingLiveLocation, isVoiceOverEnabled {
                     VStack(spacing: 0) {
                         if context.viewState.shouldShowPinnedEventsBanner {
@@ -121,7 +121,9 @@ struct RoomScreen: View {
             .alert(item: $context.alertInfo)
             .timelineMediaPreview(viewModel: $context.mediaPreviewViewModel)
             .onChange(of: pillSourceButtonIsVisible) { _, isVisible in
-                if !isVisible { dismissMarkAsReadPill() }
+                if !isVisible {
+                    dismissMarkAsReadPill()
+                }
             }
             .track(screen: .Room)
             .sentryTrace("\(Self.self)")
@@ -290,7 +292,7 @@ struct RoomScreen: View {
         ToolbarItem(placement: .principal) {
             RoomHeaderView(roomName: context.viewState.roomTitle,
                            roomAvatar: context.viewState.roomAvatar,
-                           dmRecipientVerificationState: context.viewState.dmRecipientVerificationState,
+                           dmRecipientDetails: context.viewState.dmRecipientDetails,
                            roomHistorySharingState: context.viewState.roomHistorySharingState,
                            // Tchap: add badges
                            roomPropertiesBadgesView:

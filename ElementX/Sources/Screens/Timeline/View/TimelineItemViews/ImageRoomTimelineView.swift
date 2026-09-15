@@ -13,15 +13,21 @@ struct ImageRoomTimelineView: View {
     @Environment(\.timelineContext) private var context
     let timelineItem: ImageRoomTimelineItem
     
+    @State private var contentScanningFailure: ContentScanningFailure?
+    
     var hasMediaCaption: Bool {
         timelineItem.content.caption != nil
     }
     
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {
-            VStack(alignment: .leading, spacing: 4) {
-                // Tchap: BWI content-scanner - scanState Views on scanstates other than trusted,
-                if timelineItem.scanState == .trusted {
+            // The caption sits 8pts below the content scanner failure placeholder, 4pts below the media.
+            VStack(alignment: .leading, spacing: contentScanningFailure == nil ? 4 : 8) {
+                // :tchap: fix to avoid premature scan failure
+//                ContentScanningView(contentScannerService: context?.contentScannerService,
+                ContentScanningView(contentScannerService: timelineItem.contentScannerServiceWhenSent(context?.contentScannerService),
+                                    mediaSource: timelineItem.content.imageInfo.source,
+                                    thumbnailSource: timelineItem.content.thumbnailInfo?.source) {
                     loadableImage
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel(L10n.commonImage)
@@ -31,22 +37,30 @@ struct ImageRoomTimelineView: View {
                         .onTapGesture {
                             context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
                         }
-                } else {
-                    TimelineItemScanStatusImageView(scanState: timelineItem.scanState,
-                                                    imageInfo: timelineItem.content.thumbnailInfo,
-                                                    filename: timelineItem.content.filename)
+                } scanningContent: {
+                    placeholder
+                        .overlay { ProgressView() }
+                        .timelineMediaFrame(imageInfo: timelineItem.content.thumbnailInfo ?? timelineItem.content.imageInfo)
+                } unsafeContent: { failure in
+                    ContentScanningFailureView(failure: failure)
                 }
                 
-                if let attributedCaption = timelineItem.content.formattedCaption {
-                    FormattedBodyText(attributedString: attributedCaption,
-                                      trailingReservedSize: timelineItem.trailingReservedSize,
-                                      boostFontSize: timelineItem.shouldBoost)
-                } else if let caption = timelineItem.content.caption {
-                    FormattedBodyText(text: caption,
-                                      trailingReservedSize: timelineItem.trailingReservedSize,
-                                      boostFontSize: timelineItem.shouldBoost)
-                }
+                caption
             }
+            .onPreferenceChange(ContentScanningFailurePreferenceKey.self) { contentScanningFailure = $0 }
+        }
+    }
+    
+    @ViewBuilder
+    private var caption: some View {
+        if let attributedCaption = timelineItem.content.formattedCaption {
+            FormattedBodyText(attributedString: attributedCaption,
+                              trailingReservedSize: timelineItem.trailingReservedSize,
+                              boostFontSize: timelineItem.shouldBoost)
+        } else if let caption = timelineItem.content.caption {
+            FormattedBodyText(text: caption,
+                              trailingReservedSize: timelineItem.trailingReservedSize,
+                              boostFontSize: timelineItem.shouldBoost)
         }
     }
     
@@ -82,6 +96,8 @@ struct ImageRoomTimelineView: View {
 
 struct ImageRoomTimelineView_Previews: PreviewProvider, TestablePreview {
     static let viewModel = TimelineViewModel.mock
+    static let scanningViewModel = TimelineViewModel.mock(contentScannerService: ContentScannerServiceMock(.init(scanResult: nil)))
+    static let unsafeViewModel = TimelineViewModel.mock(contentScannerService: ContentScannerServiceMock(.init(scanResult: false)))
     
     static var previews: some View {
         ScrollView {
@@ -100,6 +116,17 @@ struct ImageRoomTimelineView_Previews: PreviewProvider, TestablePreview {
         .environment(\.timelineContext, viewModel.context)
         .previewLayout(.fixed(width: 390, height: 1200))
         .padding(.bottom, 20)
+        
+        VStack(spacing: 20.0) {
+            ImageRoomTimelineView(timelineItem: makeTimelineItem())
+                .environmentObject(scanningViewModel.context)
+                .environment(\.timelineContext, scanningViewModel.context)
+            ImageRoomTimelineView(timelineItem: makeTimelineItem(caption: "This is an unsafe image."))
+                .environmentObject(unsafeViewModel.context)
+                .environment(\.timelineContext, unsafeViewModel.context)
+        }
+        .environmentObject(viewModel.context)
+        .previewDisplayName("Content Scanner")
     }
     
     private static func makeTimelineItem(caption: String? = nil, isEdited: Bool = false) -> ImageRoomTimelineItem {

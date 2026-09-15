@@ -11,8 +11,6 @@ import SentrySwiftUI
 import SwiftUI
 
 struct HomeScreenContent: View {
-    @Environment(\.verticalSizeClass) private var verticalSizeClass
-    
     @ObservedObject var context: HomeScreenViewModel.Context
     let scrollViewAdapter: ScrollViewAdapter
     
@@ -57,15 +55,15 @@ struct HomeScreenContent: View {
                                     .frame(maxWidth: .infinity, minHeight: max(0, geometry.size.height - topSectionHeight))
                             } else {
                                 HomeScreenRoomList(context: context)
+                                    .accessibilityAddTraits(.updatesFrequently)
                             }
                         } header: {
                             topSection
                         }
                     }
-                    .isSearching($context.isSearchFieldFocused)
-                    .searchable(text: $context.searchQuery, placement: .navigationBarDrawer(displayMode: .always))
-                    .compoundSearchField()
-                    .disableAutocorrection(true)
+                    .roomListSearchable(isEnabled: context.viewState.isRoomListSearchEnabled,
+                                        isSearchFieldFocused: $context.isSearchFieldFocused,
+                                        searchQuery: $context.searchQuery)
                 }
             }
             .introspect(.scrollView, on: .supportedVersions) { scrollView in
@@ -148,11 +146,13 @@ struct HomeScreenContent: View {
         guard let scrollView = scrollViewAdapter.scrollView,
               scrollViewAdapter.isScrolling.value == false, // Ignore while scrolling
               context.searchQuery.isEmpty == true, // Ignore while filtering
-              context.viewState.visibleRooms.count > 0 else {
+              !context.viewState.visibleRooms.isEmpty else {
             return
         }
         
         guard scrollView.contentSize.height > scrollView.bounds.height else {
+            // This list never scrolls, publish the range manually.
+            context.send(viewAction: .updateVisibleItemRange(0..<context.viewState.visibleRooms.count))
             return
         }
         
@@ -164,5 +164,19 @@ struct HomeScreenContent: View {
         
         // This will be deduped and throttled on the view model layer
         context.send(viewAction: .updateVisibleItemRange(firstIndex..<lastIndex))
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func roomListSearchable(isEnabled: Bool, isSearchFieldFocused: Binding<Bool>, searchQuery: Binding<String>) -> some View {
+        if isEnabled {
+            isSearching(isSearchFieldFocused)
+                .searchable(text: searchQuery, placement: .navigationBarDrawer(displayMode: .always))
+                .compoundSearchField()
+                .disableAutocorrection(true)
+        } else {
+            self
+        }
     }
 }

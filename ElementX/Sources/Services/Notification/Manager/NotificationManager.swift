@@ -51,7 +51,7 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
         MXLog.info("App setting 'enableNotifications' is '\(notificationsEnabled)'")
         
         // Listen for changes to AppSettings.enableNotifications
-        appSettings.$enableNotifications
+        appSettings.enableNotificationsPublisher
             .sink { [weak self] newValue in
                 self?.enableNotifications(newValue)
             }
@@ -169,15 +169,15 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
                                                                           locArgs: [])),
                                              pusherNotificationClientIdentifier: clientProxy.pusherNotificationClientIdentifier)
             
-            let configuration = try await PusherConfiguration(identifiers: .init(pushkey: deviceToken.base64EncodedString(),
-                                                                                 appId: appSettings.pusherAppID),
-                                                              kind: .http(data: .init(url: appSettings.pushGatewayNotifyEndpoint.absoluteString,
-                                                                                      format: .eventIdOnly,
-                                                                                      defaultPayload: defaultPayload.toJsonString())),
-                                                              appDisplayName: "\(InfoPlistReader.main.bundleDisplayName) (iOS)",
-                                                              deviceDisplayName: UIDevice.current.name,
-                                                              profileTag: pusherProfileTag(),
-                                                              lang: Bundle.app.preferredLocalizations.first ?? "en")
+            let configuration = try PusherConfiguration(identifiers: .init(pushkey: deviceToken.base64EncodedString(),
+                                                                           appId: appSettings.pusherAppID),
+                                                        kind: .http(data: .init(url: appSettings.pushGatewayNotifyEndpoint.absoluteString,
+                                                                                format: .eventIdOnly,
+                                                                                defaultPayload: defaultPayload.toJsonString())),
+                                                        appDisplayName: "\(InfoPlistReader.main.bundleDisplayName) (iOS)",
+                                                        deviceDisplayName: UIDevice.current.name,
+                                                        profileTag: pusherProfileTag(),
+                                                        lang: Bundle.app.preferredLocalizations.first ?? "en")
             try await clientProxy.setPusher(with: configuration)
             MXLog.info("Set pusher succeeded")
             return true
@@ -232,7 +232,6 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
         return [.badge, .sound, .list, .banner]
     }
     
-    @MainActor
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse) async {
         switch response.actionIdentifier {

@@ -12,7 +12,7 @@ import LocalAuthentication
 /// It works as the actual context does and won't update the return values of `biometryType` and
 /// `evaluatedPolicyDomainStateValue` until either `canEvaluatePolicy` or
 /// `evaluatePolicy` have been called.
-class LAContextMock: LAContext {
+nonisolated class LAContextMock: LAContext {
     var biometryTypeValue: LABiometryType!
     private var internalBiometryTypeValue: LABiometryType!
     override var biometryType: LABiometryType {
@@ -25,15 +25,26 @@ class LAContextMock: LAContext {
         internalEvaluatedPolicyDomainStateValue
     }
     
+    var canEvaluatePolicyReturnValue: Bool?
     override func canEvaluatePolicy(_ policy: LAPolicy, error: NSErrorPointer) -> Bool {
-        let result = super.canEvaluatePolicy(policy, error: error)
+        let result = canEvaluatePolicyReturnValue ?? super.canEvaluatePolicy(policy, error: error)
         updateInternalValues()
         return result
     }
     
     var evaluatePolicyReturnValue: Bool!
+    var evaluatePolicyThrowableError: Error?
+    var evaluatePolicyCallsCount = 0
+    var evaluatePolicyCalled: Bool {
+        evaluatePolicyCallsCount > 0
+    }
+    
     override func evaluatePolicy(_ policy: LAPolicy, localizedReason: String) async throws -> Bool {
+        evaluatePolicyCallsCount += 1
         updateInternalValues()
+        if let evaluatePolicyThrowableError {
+            throw evaluatePolicyThrowableError
+        }
         return evaluatePolicyReturnValue
     }
     

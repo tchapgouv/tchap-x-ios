@@ -9,7 +9,21 @@ import Foundation
 
 // swiftlint:disable explicit_type_interface function_parameter_count identifier_name line_length
 // swiftlint:disable nesting type_body_length type_name vertical_whitespace_opening_braces
-internal enum UntranslatedL10n {
+internal nonisolated enum UntranslatedL10n {
+  /// Search
+  internal static var screenHomeTabSearch: String { return UntranslatedL10n.tr("Untranslated", "screen_home_tab_search") }
+  /// Search for chats and messages
+  internal static var screenSearchEmptyStateMessage: String { return UntranslatedL10n.tr("Untranslated", "screen_search_empty_state_message") }
+  /// Start searching...
+  internal static var screenSearchEmptyStateTitle: String { return UntranslatedL10n.tr("Untranslated", "screen_search_empty_state_title") }
+  /// There are no results for “%1$@.” Try a new search term.
+  internal static func screenSearchNoResultsMessage(_ p1: Any) -> String {
+    return UntranslatedL10n.tr("Untranslated", "screen_search_no_results_message", String(describing: p1))
+  }
+  /// Chats
+  internal static var screenSearchTabChats: String { return UntranslatedL10n.tr("Untranslated", "screen_search_tab_chats") }
+  /// Messages
+  internal static var screenSearchTabMessages: String { return UntranslatedL10n.tr("Untranslated", "screen_search_tab_messages") }
   /// Clear all data currently stored on this device?
   /// Sign in again to access your account data and messages.
   internal static var softLogoutClearDataDialogContent: String { return UntranslatedL10n.tr("Untranslated", "soft_logout_clear_data_dialog_content") }
@@ -43,7 +57,7 @@ internal enum UntranslatedL10n {
 
 // MARK: - Implementation Details
 
-extension UntranslatedL10n {
+nonisolated extension UntranslatedL10n {
   static func tr(_ table: String, _ key: String, _ args: CVarArg...) -> String {
     // No need to check languages, we always default to en for untranslated strings
     guard let bundle = Bundle.lprojBundle(for: "en") else { return key }

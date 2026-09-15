@@ -1,3 +1,445 @@
+## Changes in 26.08.1 (2026-08-04)
+
+### What's Changed
+
+✨ Features
+* Render replies to gallery items by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5942
+* Render gallery items in the media browser/gallery by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5955
+
+🙌 Improvements
+* Allow previews in the timeline to include filtered galleries by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5943
+* Set gallery sending limit to 60 when the gallery ff is on by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5960
+* Add a custom TabRail on iPad instead of the top tab bar. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5964
+* Small gallery tweaks by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5957
+* Add call icon next to members in call by @nankeen by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5968
+
+🐛 Bugfixes
+* Fix rageshake upload progress bar by @danderson-cont in https://github.com/element-hq/element-x-ios/pull/5950
+* Fix for pagination getting stuck loading when swiping media previews in the timeline by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5963
+* Manually publish room list range updates when the content isn't scrollable by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5956
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5965
+
+🦻 Accessibility
+* A11y for Galleries by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5969
+
+🚧 In development 🚧
+* Fix a couple of missing `UserStatus` values. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5944
+* Allow clearing your own call status. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5959
+
+Others
+* Fix for some flaky tests part 2 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5939
+* Update the Enterprise submodule. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5953
+* Update zizmorcore/zizmor-action action to v0.6.1 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5961
+* Update Project Dependencies by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5940
+* Update actions/stale action to v11 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5971
+* Accessibility tests fixes by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5976
+* Disable the store pausing feature as we encountered cases in which it doesn't work properly by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5977
+* Fix various UI test snapshots by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5975
+* Tweak the stalebot configuration by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5978
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/26.08.0...release/26.08.1
+
+## Changes in 26.08.0 (2026-07-28)
+
+### What's Changed
+
+✨ Features
+* Add support for active call item rendering in timeline by @BillCarsonFr in https://github.com/element-hq/element-x-ios/pull/5775
+* Add content scanner to the NSE Client by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5926
+* Render image and video in galleries as a grid by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5929
+* Render galleries with non-visual attachments as a list by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5932
+* Open a full-screen preview when tapping a gallery item by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5936
+
+🙌 Improvements
+* Report user presence on app lifecycle transitions by @lhjt in https://github.com/element-hq/element-x-ios/pull/5838
+* Content scanner also checks for thumbnails by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5911
+* Remove the requiresExtraAccountSetup badge. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5921
+* Implements push notifications for LLS via MSC4505 by @ara4n in https://github.com/element-hq/element-x-ios/pull/5872
+
+🐛 Bugfixes
+* Enable client pausing and resuming for all builds by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5904
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5901
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5931
+
+🧱 Build
+* Re-run xcodegen. by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5907
+* Bump the calendar version ready for the next release by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5937
+
+📄 Documentation
+* Group Element Pro changes into a dedicated release notes section by @manuroe in https://github.com/element-hq/element-x-ios/pull/5899
+
+🚧 In development 🚧
+* Add the UI for your own user status in the Settings screen. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5888
+* Support sending gallery messages behind a feature flag by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5909
+* Update the SDK and hook up the status from Room Heroes. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5905
+* Hook up the emoji picker to the custom status row. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5902
+* Search tab tweaks by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5910
+* Add support for showing the user's own status over their avatar on the app's Settings button. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5912
+* Add a warning to the Link New Device instructions. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5916
+* Add the gallery timeline item rendered as a placeholder by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5928
+* Gate user status behind server support as well as the feature flag. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5920
+
+Others
+* Update dependency pointfreeco/swift-snapshot-testing to v1.19.3 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5892
+* Update enterprise by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5894
+* Update dependency Sentry to v9.21.0 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5891
+* Update actions/stale action to v10.4.0 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5898
+* Several small, independent accessibility fixes (VoiceOver labels/traits, contrast) by @unclejay80 in https://github.com/element-hq/element-x-ios/pull/5890
+* Periphery cleanup by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5893
+* Various project warning fixes by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5908
+* Add signed in flag to the developer options screen hook by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5914
+* Update zizmorcore/zizmor-action action to v0.6.0 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5917
+* Update SDK to 26.07.22 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5919
+* Small tweaks to the Presence feature. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5918
+* Fix call timeline item snapshots. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5923
+* Bump the RustSDK to v26.07.23 by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5925
+* Update actions/checkout action to v7.0.1 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5935
+* Add an `oAuthClientURIPath` option to AppSettings. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5934
+* update sdk to 26-7-28 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5938
+
+### New Contributors
+* @unclejay80 made their first contribution in https://github.com/element-hq/element-x-ios/pull/5890
+* @lhjt made their first contribution in https://github.com/element-hq/element-x-ios/pull/5838
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/26.07.4...release/26.08.0
+
+## Changes in 26.07.4 (2026-07-15)
+
+### What's Changed
+
+✨ Features
+* Force Disable E2EE for Element Pro by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5866
+
+🙌 Improvements
+* Use dark theme for Element Call by @toger5 in https://github.com/element-hq/element-x-ios/pull/5860
+
+🐛 Bugfixes
+* Fix for NSE and ShareExtension individual builds by @mredig in https://github.com/element-hq/element-x-ios/pull/5856
+* Fix CurrentValuePublisher.map dropping updates when the mapped publisher is chained inline by @ara4n in https://github.com/element-hq/element-x-ios/pull/5870
+* Fix a bug where rooms couldn't be opened when returning to the foreground whilst offline. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5867
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5865
+
+🧱 Build
+* Fix UI tests by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5862
+* Add CurrentValuePublisherTests to the UnitTests target by @ara4n in https://github.com/element-hq/element-x-ios/pull/5884
+
+🚧 In development 🚧
+* Display other users' User Status. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5859
+
+Others
+* Update the SDK and Compound tokens. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5857
+* Use deferFulfillment in flow coordinator tests by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5861
+* Update the SDK and handle API breaks. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5871
+* Fix for flaky tests by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5869
+* Constrained tests tool implementation + skill by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5873
+* Update dependency Mantis to v3 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5887
+* Update Project Dependencies by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5886
+* Update the SDK. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5889
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/26.07.3...release/26.07.4
+
+## Changes in 26.07.3 (2026-07-09)
+
+### What's Changed
+
+✨ Features
+* Content Scanning View by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5831
+* Content scanning view for reply preview by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5842
+* Scanning states for the media events timeline screen by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5847
+* Media Preview content scanning by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5851
+
+🙌 Improvements
+* Don't keep re-prompting the user to migrate if they get spontaneously logged out. by @ara4n in https://github.com/element-hq/element-x-ios/pull/5844
+* New location request permission strings by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5854
+
+🐛 Bugfixes
+* Fix voice message recording crashes caused by an isolation assertion failure by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5820
+* Stop reserving space for the non-existant icon background in ListRowLabel on iOS 26. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5822
+* Fix for the media browser showing also images and videos in file mode by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5853
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5845
+
+🦻 Accessibility
+* Fix AccessibilityTests hang on previews expecting expired transient state by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5821
+* Remove the "unflip" of the timeline when in voice over mode by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5835
+
+🧱 Build
+* Remove Hyperion from the Compound Inspector app. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5828
+* Switch back to using the stable version of SwiftFormat. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5850
+* Introduce a build setting to detect Nightly builds. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5852
+
+🚧 In development 🚧
+* Make LinkNewDeviceScreen fall back to the App Lock PIN code when there's no passcode. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5794
+* Add the content scanner URL to the app settings by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5823
+* User Status preparation. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5825
+* Content Scanner Service by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5826
+* Add message support to the new search tab by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5829
+
+Others
+* Bump the RustSDK to a new "apple-release" profile build distribution by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5834
+* Update the readme to fix the unit tests shield and remove the SonarCloud ones by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5832
+* Fix various project warnings by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5833
+* Swift format enforce isEmpty rule by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5843
+* Update Project Dependencies by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5818
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/26.07.0...release/26.07.3
+
+## Changes in 26.07.1 (2026-07-03)
+
+### What's Changed
+
+🐛 Bugfixes
+* Fix voice message recording crashes caused by an isolation assertion failure by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5820
+* Stop reserving space for the non-existant icon background in ListRowLabel on iOS 26. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5822
+
+🦻 Accessibility
+* Fix AccessibilityTests hang on previews expecting expired transient state by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5821
+
+🧱 Build
+* Remove Hyperion from the Compound Inspector app. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5828
+
+🚧 In development 🚧
+* Make LinkNewDeviceScreen fall back to the App Lock PIN code when there's no passcode. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5794
+* Add the content scanner URL to the app settings by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5823
+* User Status preparation. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5825
+* Content Scanner Service by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5826
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/26.07.0...release/26.07.1
+
+## Changes in 26.07.0 (2026-06-30)
+
+### What's Changed
+
+✨ Features
+* Search tab by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5754
+* Add max selections support for polls by @svetoslav-sportinno in https://github.com/element-hq/element-x-ios/pull/5726
+
+🙌 Improvements
+* Fix the client sometimes staying suspended after returning from the background by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5738
+* Add a recovery key screen hook. by @mredig in https://github.com/element-hq/element-x-ios/pull/5684
+* Swift 6 Migration by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5733
+* Limit conversations a message can be forwarded to by @mredig in https://github.com/element-hq/element-x-ios/pull/5793
+
+🐛 Bugfixes
+* Fix crashes during logout. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5753
+* Fix libdispatch main-thread trap when logging Sentry crash events by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5765
+* Various crash fixes by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5769
+* Remove custom tones menu on macOS by @mredig in https://github.com/element-hq/element-x-ios/pull/5776
+* Fix a crash on macOS when using QuickLook. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5790
+* Fix MediaLoader EXC_BAD_ACCESS `ongoingRequests` crashes by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5805
+* Fix a bug where scanning a universal link as a QR code would open the app without handling the link. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5804
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5767
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5802
+
+🦻 Accessibility
+* Hide avatar in send invite confirmation view by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5745
+* Fix some issues with missing a11y labels by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5747
+* Various Quick Look a11y improvements by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5758
+* Associate the room address field helper text and error with the field by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5768
+* Add a programmatic label to the join room by address field by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5770
+
+🧱 Build
+* Bump the calendar version ready for the next release by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5777
+* Unit Tests migration to swift 6.2 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5781
+* Preview tests migration to swift 6.2 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5786
+* Migrating ui tests to swift 6.2 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5787
+* Migrated Accessibility Tests to swift 6.2 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5788
+* integration tests now use swift 6.2 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5789
+* Update AGENTS.md concurrency section for Swift 6.2 migration by @pixlwave with @Copilot in https://github.com/element-hq/element-x-ios/pull/5766
+* Replace the `@UserPreference` property wrapper with a new macro version. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5798
+* Bump the calendar version ready for the next release by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5810
+* Use iOS 26 Observation for Unit and Preview tests. by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5797
+
+📄 Documentation
+* Remove stale reference to fastlane and Gemfile in AGENTS.md by @hughns in https://github.com/element-hq/element-x-ios/pull/5761
+
+🚧 In development 🚧
+* Allow returning from global search with the escape key by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5774
+* Stop selecting search results automatically when dismissing the keyboard by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5784
+* Ensure that the current user is the device owner before linking a new device. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5773
+
+Others
+* Update Project Dependencies by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5750
+* Regenerate failing UI snapshots. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5752
+* Add support for defining the text entry type on CompoundTextFieldStyle. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5757
+* Fix iOS specific notification sound localizable keys. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5751
+* swiftformat now enforces newlines for ifs by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5759
+* Added a chevron to collapsed call buttons in the DM by @amshakal in https://github.com/element-hq/element-x-ios/pull/5755
+* Delete the composerAttachments UI test snapshot step by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5771
+* Migrated the max answers poll feature strings to localazy by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5772
+* Bump the RustSDK to 26.06.23 by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5780
+* Fix poll form UI test snapshots after allowing multiple votes by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5783
+* Fix media loading failures when retrying with a closed store by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5785
+* Update actions/checkout action to v7 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5791
+* Update zizmorcore/zizmor-action action to v0.5.7 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5801
+* Make the zip and file attaching bug report service steps concurrent by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5808
+* Various warning fixes by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5809
+* Update dependency swiftlang/swift-syntax to v603 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5803
+* Accessibility test fixes by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5811
+* Update sdk 26.06.30 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5812
+
+### New Contributors
+* @svetoslav-sportinno made their first contribution in https://github.com/element-hq/element-x-ios/pull/5726
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/26.06.1...release/26.07.0
+
+## Changes in 26.06.1 (2026-06-17)
+
+### What's Changed
+
+✨ Features
+* Add flip options to the MediaUploadPreview image edit screen by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5706
+* Automatically adjust the ElementCall PiP when changing orientations by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5701
+* Wrap selected text in a markdown link when pasting a URL over it by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5732
+
+🙌 Improvements
+* Hide user dot and track own user marker in Live Location mode. by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5707
+* Migrate the share extension to swift 6 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5713
+
+🐛 Bugfixes
+* Render user and room alias links in a room's topic view by @mredig in https://github.com/element-hq/element-x-ios/pull/5709
+* Correctly handle user profile dismissals in the RoomMembersFlowCoordinator by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5711
+* Report a phantom call to CallKit on PushKit early-return paths by @danderson-cont in https://github.com/element-hq/element-x-ios/pull/5682
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5717
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5736
+
+🦻 Accessibility
+* Add a11y labels to media upload preview screen by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5740
+* Create new room - remove wrong header trait by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5741
+* Set pin a11y improvements by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5742
+* Add ishHeader trait were required by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5744
+
+🧱 Build
+* Remove the .editorconfig file by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5703
+* Bring back the .editorconfig file without the trim rule. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5712
+* use swift 6.2 for  dev tools by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5720
+* Update codecov action by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5727
+
+Others
+* Update XcodeGen to v3.59.1 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5693
+* Various testing tweaks by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5697
+* Update XcodeGen to v9.15.0 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5700
+* Added a comments section to agents.md and use caveman by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5710
+* Client pausing and resuming timing fixes by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5705
+* Some more tweaks to compound for User Status. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5708
+* Bump the CI tests to OS26.5 by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5719
+* Update GitHub Actions to v6.0.3 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5722
+* bump rich text editor to 2.42.0 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5724
+* Updated user sessions flow ui tests by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5729
+* Setup proper logging for MapLibre and location views. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5730
+* Update Compound to v10.2.2 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5728
+* Update GitHub Actions to v7 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5734
+* Log Sentry crash events through MXLog by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5737
+* Update the SDK. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5743
+* Voiceover reads add avatar when there is no avatar yet by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5746
+* Update XcodeGen by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5748
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/26.06.0...release/26.06.1
+
+## Changes in 26.06.0 (2026-06-03)
+
+### What's Changed
+
+✨ Features
+* Invite the DM recipient to a new room by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5588
+* Custom Notification Tones by @mredig in https://github.com/element-hq/element-x-ios/pull/5527
+* Timeline: add a Jump to Unread button and a new-message badge on the scroll-to-bottom button. by @danderson-cont in https://github.com/element-hq/element-x-ios/pull/5506
+* Use the current composer text as the caption for a media upload or the topic for a new poll by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5622
+* Set map tiler URL from well known if available by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5633
+* Allow the user to forward the same message to multiple rooms at once by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5652
+
+🙌 Improvements
+* Use isDM from the SDK by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5583
+* Swift 6 migration for NSE by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5608
+* Update the section order in RoomDetailsScreen to match the latest Figma. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5653
+* Updates to File Info Bottom Sheet by @americanrefugee in https://github.com/element-hq/element-x-ios/pull/5667
+
+🐛 Bugfixes
+* Client pausing and resuming by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5587
+* Improve TopBanner sliding animation by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5597
+* Fixing Room List in Spaces View Not Rendering Some Rooms by @atridadl in https://github.com/element-hq/element-x-ios/pull/5595
+* Improve Application lifetime scheduling by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5626
+* Fix for overlapping timestamp when last block is not plainText by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5629
+* Recognise dragged iOS screenshots as images instead of raw data by @sandhose in https://github.com/element-hq/element-x-ios/pull/5628
+* Stop message bubbles from stealing dropped files by @sandhose in https://github.com/element-hq/element-x-ios/pull/5639
+* Fix for the timeline item not updating the content after an edit by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5649
+* Use the same icon in the TimelineReplyView as shown in the File timeline view. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5665
+* Restrict the dynamic range of avatars to prevent them from displaying HDR content. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5664
+* Fix empty state overlapping the banner by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5666
+* Clear incoming-call state on every path that ends a ringing call by @danderson-cont in https://github.com/element-hq/element-x-ios/pull/5683
+* Connect settings app route and action from logout screen by @mredig in https://github.com/element-hq/element-x-ios/pull/5689
+* Fix for the timestamp state change creating clipping by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5695
+* Re-order the call buttons to match the Figma and Element Web. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5696
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5604
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5632
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5677
+
+🧱 Build
+* Wait for the search field to be usable and remove unnecessary sleeps. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5592
+* Remove the focused ComposerToolbar accessibility test and preview by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5591
+* Add local dev script hooks by @mredig in https://github.com/element-hq/element-x-ios/pull/5598
+* Bump the calendar version ready for the next release by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/5637
+* Use SwiftFormat from `develop` and enable the new `indent-blank-lines` option. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5654
+* Tweak AGENTS.md to make sure SwiftLint/SwiftFormat warnings are discovered. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5680
+* Various mocking improvements by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5686
+
+🚧 In development 🚧
+* Add a developer option button for marking every single room as read by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5582
+
+Others
+* Bump the RustSDK to v26.05.13 by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5581
+* Replace the ServiceLocator with direct dependency injection by @mredig in https://github.com/element-hq/element-x-ios/pull/5548
+* Update sdk to 26.05.18 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5605
+* Make `AnalyticsService` mockable via `AnalyticsServiceProtocol by @mredig in https://github.com/element-hq/element-x-ios/pull/5599
+* Update XcodeGen by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5610
+* Fix preview tests following NotificationToneManager PR merge by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5615
+* Clean up untranslated strings by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5617
+* update SDK to 26.05.21 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5619
+* Compiler Warning Reductions by @mredig in https://github.com/element-hq/element-x-ios/pull/5609
+* Update zizmorcore/zizmor-action action to v0.5.4 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5621
+* AppSettings are Mockable by @mredig in https://github.com/element-hq/element-x-ios/pull/5589
+* Revert "Fixing Room List in Spaces View Not Rendering Some Rooms (#5595) by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5616
+* Remove the CertificateValidatorHook. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5624
+* Tidy up mock creation. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5627
+* Update zizmorcore/zizmor-action action to v0.5.6 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5631
+* Update codecov/codecov-action action to v6.0.1 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5635
+* Update dependency element-hq/compound-design-tokens to v10.2.0 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5634
+* Updated sdk to 26.05.26 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5640
+* Add an etiquette section to the contribution guide by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5625
+* Replace SF symbols with compound icons by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5638
+* Add message sending end editing steps to the user session flow UI test by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5651
+* Update actions/stale action to v10.3.0 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5656
+* Add Swift Concurrency Pro skill to the project. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5662
+* Various UI test improvements by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/5663
+* Update ListRowLabel with the correct icon spacing on iOS 26. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5687
+* Update XcodeGen by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/5690
+* Use the new crop icon from Compound. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5691
+* update sdk to 26.06.03 by @Velin92 in https://github.com/element-hq/element-x-ios/pull/5692
+
+### New Contributors
+* @atridadl made their first contribution in https://github.com/element-hq/element-x-ios/pull/5595
+* @sandhose made their first contribution in https://github.com/element-hq/element-x-ios/pull/5628
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/26.05.2...release/26.06.0
+
 ## Changes in 26.05.3 (2026-05-19)
 
 ### What's Changed
@@ -87,6 +529,9 @@ Others
 ## Changes in 26.05.0 (2026-05-06)
 
 ### What's Changed
+
+🔐 Security fixes
+* Remove support for handling SPA calls within the app by @pixlwave in https://github.com/element-hq/element-x-ios/pull/5515. Fixes [GHSA-54w7-rw44-49m7](https://github.com/element-hq/element-x-ios/security/advisories/GHSA-54w7-rw44-49m7).
 
 ✨ Features
 * Promote "history sharing on invite" out of developer options by @richvdh in https://github.com/element-hq/element-x-ios/pull/5480

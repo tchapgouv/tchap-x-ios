@@ -31,21 +31,16 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
     
     private let stateMachine: ChatsTabFlowCoordinatorStateMachine
     
-    // periphery:ignore - retaining purpose
     private var roomFlowCoordinator: RoomFlowCoordinator?
     // periphery:ignore - retaining purpose
     private var spaceFlowCoordinator: SpaceFlowCoordinator?
     
-    // periphery:ignore - retaining purpose
     private var bugReportFlowCoordinator: BugReportFlowCoordinator?
     // periphery:ignore - retaining purpose
     private var encryptionResetFlowCoordinator: EncryptionResetFlowCoordinator?
     // periphery:ignore - retaining purpose
     private var startChatFlowCoordinator: StartChatFlowCoordinator?
     
-    // periphery:ignore - retaining purpose
-    private var globalSearchScreenCoordinator: GlobalSearchScreenCoordinator?
-
     // Tchap: Space default action is now conversation filtering (select in HomeScreen)
     private var homeScreenCoordinator: HomeScreenCoordinator?
 
@@ -60,8 +55,7 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
         actionsSubject.eraseToAnyPublisher()
     }
     
-    init(isNewLogin: Bool,
-         navigationSplitCoordinator: NavigationSplitCoordinator,
+    init(navigationSplitCoordinator: NavigationSplitCoordinator,
          flowParameters: CommonFlowParameters) {
         stateMachine = flowParameters.stateMachineFactory.makeChatsTabFlowStateMachine()
         self.navigationSplitCoordinator = navigationSplitCoordinator
@@ -172,11 +166,9 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
             } else {
                 stateMachine.processEvent(.presentTransferOwnershipScreen(roomID: roomID))
             }
-        case .globalSearch:
-            presentGlobalSearch()
         case .chatBackupSettings:
             actionsSubject.send(.showChatBackupSettings)
-        case .accountProvisioningLink, .oAuthCallback, .settings, .call:
+        case .accountProvisioningLink, .oAuthCallback, .settings, .call, .search:
             break // These routes cannot be handled.
         }
     }
@@ -670,7 +662,8 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
                                                                             userIndicatorController: flowParameters.userIndicatorController,
                                                                             isModallyPresented: true)
         
-        let coordinator = SecureBackupRecoveryKeyScreenCoordinator(parameters: parameters)
+        let coordinator = flowParameters.appHooks.recoveryKeyScreenHook.makeCoordinator(parameters: parameters,
+                                                                                        homeserver: userSession.clientProxy.homeserver)
         coordinator.actions.sink { [weak self] action in
             guard let self else { return }
             switch action {
@@ -721,45 +714,6 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
         }
     }
     
-    // MARK: Global search
-    
-    private func presentGlobalSearch() {
-        let roomSummaryProvider = userSession.clientProxy.alternateRoomSummaryProvider
-        
-        let coordinator = GlobalSearchScreenCoordinator(parameters: .init(roomSummaryProvider: roomSummaryProvider,
-                                                                          mediaProvider: userSession.mediaProvider))
-        
-        globalSearchScreenCoordinator = coordinator
-        
-        coordinator.actions
-            .sink { [weak self] action in
-                guard let self else { return }
-                
-                switch action {
-                case .dismiss:
-                    dismissGlobalSearch()
-                case .select(let roomID):
-                    dismissGlobalSearch()
-                    handleAppRoute(.room(roomID: roomID, via: []), animated: true)
-                    actionsSubject.send(.switchToChatsTab)
-                }
-            }
-            .store(in: &cancellables)
-        
-        let hostingController = UIHostingController(rootView: coordinator.toPresentable())
-        hostingController.view.backgroundColor = .clear
-        flowParameters.windowManager.globalSearchWindow.rootViewController = hostingController
-        
-        flowParameters.windowManager.showGlobalSearch()
-    }
-    
-    private func dismissGlobalSearch() {
-        flowParameters.windowManager.globalSearchWindow.rootViewController = nil
-        flowParameters.windowManager.hideGlobalSearch()
-        
-        globalSearchScreenCoordinator = nil
-    }
-    
     // MARK: Room Directory Search
     
     private func presentRoomDirectorySearch() {
@@ -798,9 +752,9 @@ class ChatsTabFlowCoordinator: FlowCoordinatorProtocol {
         let parameters = UserProfileScreenCoordinatorParameters(userID: userID,
                                                                 isPresentedModally: true,
                                                                 userSession: userSession,
-                                                                userIndicatorController: flowParameters.userIndicatorController,
+                                                                appHooks: flowParameters.appHooks,
                                                                 analytics: flowParameters.analytics,
-                                                                appSettings: flowParameters.appSettings)
+                                                                userIndicatorController: flowParameters.userIndicatorController)
         let coordinator = UserProfileScreenCoordinator(parameters: parameters)
         coordinator.actionsPublisher.sink { [weak self] action in
             guard let self else { return }

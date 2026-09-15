@@ -21,16 +21,16 @@ struct UserProfileScreenViewModelTests {
     func initialState() async throws {
         let userIndicatorController = UserIndicatorControllerMock()
         
-        let profile = UserProfileProxy(userID: "@alice:matrix.org", displayName: "Alice", avatarURL: .mockMXCAvatar)
+        let profile = UserProfile(userID: "@alice:matrix.org", displayName: "Alice", avatarURL: .mockMXCAvatar)
         let clientProxy = ClientProxyMock(.init())
         clientProxy.profileForReturnValue = .success(profile)
         
-        let viewModel = UserProfileScreenViewModel(userID: profile.userID,
+        let viewModel = UserProfileScreenViewModel(userID: profile.id,
                                                    isPresentedModally: false,
                                                    userSession: UserSessionMock(.init(clientProxy: clientProxy)),
-                                                   userIndicatorController: userIndicatorController,
+                                                   appHooks: AppHooks(),
                                                    analytics: AnalyticsServiceMock(.init()),
-                                                   appSettings: .volatile())
+                                                   userIndicatorController: userIndicatorController)
         let context = viewModel.context
         
         let waitForMemberToLoad = deferFulfillment(context.observe(\.viewState.userProfile)) { $0 != nil }
@@ -45,16 +45,16 @@ struct UserProfileScreenViewModelTests {
     func initialStateAccountOwner() async throws {
         let userIndicatorController = UserIndicatorControllerMock()
         
-        let profile = UserProfileProxy(userID: RoomMemberProxyMock.mockMe.userID, displayName: "Me", avatarURL: .mockMXCAvatar)
+        let profile = UserProfile(userID: RoomMemberProxyMock.mockMe.userID, displayName: "Me", avatarURL: .mockMXCAvatar)
         let clientProxy = ClientProxyMock(.init())
         clientProxy.profileForReturnValue = .success(profile)
         
-        let viewModel = UserProfileScreenViewModel(userID: profile.userID,
+        let viewModel = UserProfileScreenViewModel(userID: profile.id,
                                                    isPresentedModally: false,
                                                    userSession: UserSessionMock(.init(clientProxy: clientProxy)),
-                                                   userIndicatorController: userIndicatorController,
+                                                   appHooks: AppHooks(),
                                                    analytics: AnalyticsServiceMock(.init()),
-                                                   appSettings: .volatile())
+                                                   userIndicatorController: userIndicatorController)
         let context = viewModel.context
         
         let waitForMemberToLoad = deferFulfillment(context.observe(\.viewState.userProfile)) { $0 != nil }
@@ -69,18 +69,18 @@ struct UserProfileScreenViewModelTests {
     func startingDmWithUnknownUserFetchesIdentity() async throws {
         let userIndicatorController = UserIndicatorControllerMock()
         
-        let profile = UserProfileProxy.mockAlice
+        let profile = UserProfile.mockAlice
         
         let clientProxy = ClientProxyMock(.init())
         clientProxy.directRoomForUserIDReturnValue = .success(nil)
         clientProxy.userIdentityForFallBackToServerReturnValue = .success(nil)
         
-        let viewModel = UserProfileScreenViewModel(userID: profile.userID,
+        let viewModel = UserProfileScreenViewModel(userID: profile.id,
                                                    isPresentedModally: false,
                                                    userSession: UserSessionMock(.init(clientProxy: clientProxy)),
-                                                   userIndicatorController: userIndicatorController,
+                                                   appHooks: AppHooks(),
                                                    analytics: AnalyticsServiceMock(.init()),
-                                                   appSettings: .volatile())
+                                                   userIndicatorController: userIndicatorController)
         
         let context = viewModel.context
         

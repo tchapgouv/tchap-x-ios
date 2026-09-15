@@ -9,7 +9,7 @@
 import MatrixRustSDK // Tchap
 import UIKit
 
-struct NoticeRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
+nonisolated struct NoticeRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
     let id: TimelineItemIdentifier
     let timestamp: Date
     let isOutgoing: Bool
@@ -29,7 +29,4 @@ struct NoticeRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .notice(content)
     }
-
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .trusted
 }

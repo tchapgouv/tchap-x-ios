@@ -10,7 +10,7 @@ import MatrixRustSDK // Tchap
 import UIKit
 import UniformTypeIdentifiers
 
-struct FileRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
+nonisolated struct FileRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     let id: TimelineItemIdentifier
     let timestamp: Date
     let isOutgoing: Bool
@@ -31,7 +31,4 @@ struct FileRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .file(content)
     }
-    
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .inProgress
 }

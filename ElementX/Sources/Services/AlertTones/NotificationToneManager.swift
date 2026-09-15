@@ -10,7 +10,7 @@ import Foundation
 import UniformTypeIdentifiers
 
 /// Manages notification tone selection, import, conversion, and deletion.
-struct NotificationToneManager: NotificationToneManagerProtocol {
+nonisolated struct NotificationToneManager: NotificationToneManagerProtocol {
     @globalActor
     actor ConversionActor {
         static let shared = ConversionActor()
@@ -23,8 +23,6 @@ struct NotificationToneManager: NotificationToneManagerProtocol {
         /// The source file could not be accessed due to sandbox restrictions.
         case couldNotAccessSandboxedResource
         
-        /// `AVAudioConverter` could not be initialised for the given format pair.
-        case converterSetupFailed
         /// A tone with the same filename already exists in the library.
         case fileAlreadyExists
         /// An `AVAudioPCMBuffer` could not be allocated.
@@ -44,7 +42,7 @@ struct NotificationToneManager: NotificationToneManagerProtocol {
     static let selectedToneFilename = "currentAlert.caf"
     
     /// Directory where user-imported custom tones are stored.
-    static let libraryLocation = URL.libraryDirectory.appending(components: "Sounds", "AvailableSounds", directoryHint: .isDirectory)
+    nonisolated static let libraryLocation = URL.libraryDirectory.appending(components: "Sounds", "AvailableSounds", directoryHint: .isDirectory)
     
     /// Creates the manager and ensures required library directories exist.
     init(appSettings: AppSettings) {
@@ -54,7 +52,10 @@ struct NotificationToneManager: NotificationToneManagerProtocol {
             try FileManager.default.createDirectory(at: NotificationToneManager.libraryLocation, withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: Self.selectedToneLocation.deletingLastPathComponent(), withIntermediateDirectories: true)
         } catch {
-            fatalError("Catastrophic error setting up tone manager: \(error)")
+            // Don't crash on a recoverable file system error. The underlying problem (directory creation
+            // failing on launch, e.g. a background launch before the container is writable) is acknowledged
+            // and will be treated separately.
+            MXLog.error("Failed setting up tone manager directories: \(error)")
         }
     }
     
@@ -176,74 +177,74 @@ struct NotificationToneManager: NotificationToneManagerProtocol {
     
     /// Pre-defined iOS system tones available for selection, sorted by name.
     private static let defaultSystemAlerts: [NotificationTone] = [
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemTriTone,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemTriToneIos,
                            filename: "sms-received1.caf"),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemChime,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemChimeIos,
                            filename: "sms-received2.caf"),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemGlass,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemGlassIos,
                            filename: "sms-received3.caf"),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemHorn,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemHornIos,
                            filename: "sms-received4.caf"),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemBell,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemBellIos,
                            filename: "sms-received5.caf"),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemElectronic,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemElectronicIos,
                            filename: "sms-received6.caf"),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemAlert,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemAlertIos,
                            filename: "alarm.caf"),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemBloom,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemBloomIos,
                            filename: "Bloom.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemCalypso,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemCalypsoIos,
                            filename: "Calypso.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemAnticipate,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemAnticipateIos,
                            filename: "Anticipate.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemChooChoo,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemChooChooIos,
                            filename: "Choo_Choo.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemDescent,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemDescentIos,
                            filename: "Descent.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemFanfare,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemFanfareIos,
                            filename: "Fanfare.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemLadder,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemLadderIos,
                            filename: "Ladder.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemMinuet,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemMinuetIos,
                            filename: "Minuet.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemNewsFlash,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemNewsFlashIos,
                            filename: "News_Flash.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemNoir,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemNoirIos,
                            filename: "Noir.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemSherwoodForest,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemSherwoodForestIos,
                            filename: "Sherwood_Forest.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemSpell,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemSpellIos,
                            filename: "Spell.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemSuspense,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemSuspenseIos,
                            filename: "Suspense.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemTelegraph,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemTelegraphIos,
                            filename: "Telegraph.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemTiptoes,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemTiptoesIos,
                            filename: "Tiptoes.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemTypewriters,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemTypewritersIos,
                            filename: "Typewriters.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemUpdate,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemUpdateIos,
                            filename: "Update.caf",
                            systemSoundsSubdirectory: ["New"]),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemSwish,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemSwishIos,
                            filename: "Swish.caf"),
-        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemTweet,
+        .createSystemSound(label: L10n.screenNotificationSettingsSoundSystemTweetIos,
                            filename: "tweet_sent.caf")
     ]
     .compactMap { (alertTone: NotificationTone) -> NotificationTone? in

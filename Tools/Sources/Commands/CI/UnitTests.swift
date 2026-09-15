@@ -8,7 +8,10 @@ struct UnitTests: AsyncParsableCommand {
     @Flag(help: "Skip preview tests")
     var skipPreviews = false
     
-    private static let osVersion = "26.4.1"
+    @Flag(help: "Run the unit tests on a saturated CPU to reproduce the flakiness of a busy CI runner.")
+    var constrained = false
+    
+    private static let osVersion = CI.defaultOSVersion
     private static let device = "iPhone 17"
     
     func run() async throws {
@@ -19,12 +22,18 @@ struct UnitTests: AsyncParsableCommand {
         // Run unit tests
         do {
             logger.info("\n🧪 Running unit tests…\n")
-            try await RunTests.parse([
+            
+            var arguments = [
                 "--scheme", "UnitTests",
                 "--device", Self.device,
                 "--os-version", Self.osVersion,
                 "--retries", "3"
-            ]).run()
+            ]
+            if constrained {
+                arguments.append("--constrained")
+            }
+            
+            try await RunTests.parse(arguments).run()
         } catch {
             failures.append("UnitTests")
             logger.error("\n❌ Unit tests failed. \(error)\n")
@@ -50,6 +59,7 @@ struct UnitTests: AsyncParsableCommand {
         if !failures.isEmpty {
             let failedSuites = "[\(failures.joined(separator: ","))]"
             logger.error("\n❌ \(failures.count) test suite(s) failed \(failedSuites)\n")
+            CI.annotateError(title: "\(failures.count) test suite(s) failed", "Failing suites: \(failedSuites). Download the artifacts for the xcresult bundles.")
             throw ExitCode.failure
         }
         

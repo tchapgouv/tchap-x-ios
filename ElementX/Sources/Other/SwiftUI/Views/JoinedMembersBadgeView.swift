@@ -10,7 +10,7 @@ import Compound
 import SwiftUI
 
 struct JoinedMembersBadgeView: View {
-    let heroes: [UserProfileProxy]
+    let heroes: [UserProfile]
     var shouldHideAvatars = false
     let joinedCount: Int
     
@@ -46,22 +46,15 @@ struct JoinedMembersBadgeView: View {
             ForEach(heroes.prefix(3).reversed()) { hero in
                 LoadableAvatarImage(url: shouldHideAvatars ? nil : hero.avatarURL,
                                     name: hero.displayName,
-                                    contentID: hero.userID,
+                                    contentID: hero.id,
                                     avatarSize: .user(on: .spaceHeader),
                                     mediaProvider: mediaProvider)
-                    .mask {
-                        Circle()
-                            .fill(Color.white)
-                            .overlay {
-                                if hero != heroes.first {
-                                    Circle()
-                                        .inset(by: -2)
-                                        .fill(Color.black)
-                                        .offset(x: 12)
-                                }
-                            }
-                            .compositingGroup()
-                            .luminanceToAlpha()
+                    .inverseMask {
+                        if hero != heroes.first {
+                            Circle()
+                                .inset(by: -2)
+                                .offset(x: 12)
+                        }
                     }
             }
         }

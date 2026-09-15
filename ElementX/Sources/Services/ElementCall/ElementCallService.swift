@@ -162,19 +162,25 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
     func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
         guard let roomID = payload.dictionaryPayload[ElementCallServiceNotificationKey.roomID.rawValue] as? String else {
             MXLog.error("Something went wrong, missing room identifier for incoming voip call: \(payload)")
-            completion()
+            assertionFailure("Incoming voip push is missing the room identifier")
+            reportImmediatelyEndedCall(reason: .failed, completion: completion)
             return
         }
         
         guard let rtcNotificationID = payload.dictionaryPayload[ElementCallServiceNotificationKey.rtcNotifyEventID.rawValue] as? String else {
             MXLog.error("Something went wrong, missing rtc notification event identifier for incoming voip call: \(payload)")
-            completion()
+            assertionFailure("Incoming voip push is missing the rtc notification event identifier")
+            reportImmediatelyEndedCall(reason: .failed, completion: completion)
             return
         }
         
+        let roomDisplayName = payload.dictionaryPayload[ElementCallServiceNotificationKey.roomDisplayName.rawValue] as? String
+        
         guard ongoingCallID?.roomID != roomID else {
-            MXLog.warning("Call already ongoing for room \(roomID), ignoring incoming push")
-            completion()
+            MXLog.warning("Call already ongoing for room \(roomID), reporting the duplicate push as handled")
+            reportImmediatelyEndedCall(reason: .answeredElsewhere,
+                                       callerInfo: (roomID: roomID, roomDisplayName: roomDisplayName),
+                                       completion: completion)
             return
         }
         
@@ -185,21 +191,24 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
         
         guard let expirationDate = (payload.dictionaryPayload[ElementCallServiceNotificationKey.expirationDate.rawValue] as? Date) else {
             MXLog.error("Something went wrong, missing expiration timestamp for incoming voip call: \(payload)")
-            completion()
+            assertionFailure("Incoming voip push is missing the expiration timestamp")
+            clearIncomingCallState()
+            reportImmediatelyEndedCall(reason: .failed, completion: completion)
             return
         }
         
         let nowDate = timeProvider.now()
         
         guard nowDate < expirationDate else {
-            MXLog.warning("Call expired for room \(roomID), ignoring incoming push")
-            completion()
+            MXLog.warning("Call expired for room \(roomID), reporting it as missed")
+            clearIncomingCallState()
+            reportImmediatelyEndedCall(reason: .unanswered,
+                                       callerInfo: (roomID: roomID, roomDisplayName: roomDisplayName),
+                                       completion: completion)
             return
         }
         
         let ringDuration: Duration = .seconds(min(expirationDate.timeIntervalSince1970 - nowDate.timeIntervalSince1970, 90))
-        
-        let roomDisplayName = payload.dictionaryPayload[ElementCallServiceNotificationKey.roomDisplayName.rawValue] as? String
         
         let update = CXCallUpdate()
         // Work Around: Always set video to true! https://github.com/element-hq/element-x-ios/issues/5335
@@ -211,14 +220,19 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
         // https://stackoverflow.com/a/41230020/730924
         update.remoteHandle = .init(type: .generic, value: roomID)
         
+        // The push registry uses the main queue so the completion is main actor bound,
+        // whereas CallKit invokes its completion on a background queue.
+        let mainActorCompletion = { @MainActor @Sendable in completion() }
         callProvider.reportNewIncomingCall(with: callID.callKitID, update: update) { [weak self] error in
             if let error {
                 MXLog.error("Failed reporting new incoming call with error: \(error)")
             }
             
-            self?.actionsSubject.send(.receivedIncomingCallRequest)
-            
-            completion()
+            Task { @MainActor in
+                self?.actionsSubject.send(.receivedIncomingCallRequest)
+                
+                mainActorCompletion()
+            }
         }
         
         endUnansweredCallTask = Task { [weak self] in
@@ -334,6 +348,39 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
         ongoingCallID = nil
     }
     
+    /// Every VoIP push must be reported to CallKit via `reportNewIncomingCall`, otherwise iOS
+    /// terminates the app with `NSInternalInconsistencyException`. On early-return paths we report
+    /// a call and immediately end it. `callerInfo` names the call after the room so the brief
+    /// system UI and the Recents entry show the room rather than "Unknown", and the entry can be
+    /// tapped to call back.
+    private func reportImmediatelyEndedCall(reason: CXCallEndedReason,
+                                            callerInfo: (roomID: String, roomDisplayName: String?)? = nil,
+                                            completion: @escaping () -> Void) {
+        let callID = UUID()
+        let update = CXCallUpdate()
+        // Never answered through CallKit, so the hasVideo workaround for #5335 isn't needed.
+        update.hasVideo = false
+        
+        if let callerInfo {
+            update.localizedCallerName = callerInfo.roomDisplayName
+            update.remoteHandle = .init(type: .generic, value: callerInfo.roomID)
+        }
+        
+        // CallKit invokes the completion on a background queue, so hop back to the main actor
+        // to report the ended call and to run the (main actor bound) completion.
+        let mainActorCompletion = { @MainActor @Sendable in completion() }
+        callProvider.reportNewIncomingCall(with: callID, update: update) { [weak self] error in
+            if let error {
+                MXLog.error("Failed reporting immediately ended call with error: \(error)")
+            }
+            
+            Task { @MainActor in
+                self?.callProvider.reportCall(with: callID, endedAt: nil, reason: reason)
+                mainActorCompletion()
+            }
+        }
+    }
+    
     private func sendDeclineCallEvent(_ incomingCallID: CallID) async {
         guard let rtcNotificationID = incomingCallID.rtcNotificationID else {
             MXLog.info("No rtc notification event to decline.")
@@ -403,7 +450,7 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
         
         MXLog.info("Observe decline events for notification \(rtcNotificationID)")
         
-        let listener: CallDeclineListener = SDKListener { [weak self] senderID in
+        let listener: CallDeclineListener = SDKListener.onMainActor { [weak self] senderID in
             guard let self else { return }
             
             MXLog.debug("Call declined event received from \(senderID)")

@@ -14,9 +14,8 @@ typealias RoomMemberDetailsScreenViewModelType = StateStoreViewModel<RoomMemberD
 class RoomMemberDetailsScreenViewModel: RoomMemberDetailsScreenViewModelType, RoomMemberDetailsScreenViewModelProtocol {
     private let roomProxy: JoinedRoomProxyProtocol
     private let userSession: UserSessionProtocol
-    private let userIndicatorController: UserIndicatorControllerProtocol
     private let analytics: AnalyticsServiceProtocol
-    private let appSettings: AppSettings
+    private let userIndicatorController: UserIndicatorControllerProtocol
     
     private var actionsSubject: PassthroughSubject<RoomMemberDetailsScreenViewModelAction, Never> = .init()
     
@@ -29,18 +28,18 @@ class RoomMemberDetailsScreenViewModel: RoomMemberDetailsScreenViewModelType, Ro
     init(userID: String,
          roomProxy: JoinedRoomProxyProtocol,
          userSession: UserSessionProtocol,
-         userIndicatorController: UserIndicatorControllerProtocol,
+         appHooks: AppHooks,
          analytics: AnalyticsServiceProtocol,
-         appSettings: AppSettings) {
+         userIndicatorController: UserIndicatorControllerProtocol) {
         self.roomProxy = roomProxy
         self.userSession = userSession
         self.userIndicatorController = userIndicatorController
         self.analytics = analytics
-        self.appSettings = appSettings
         
         let initialViewState = RoomMemberDetailsScreenViewState(userID: userID, bindings: .init())
         
-        super.init(initialViewState: initialViewState, mediaProvider: userSession.mediaProvider)
+        super.init(initialViewState: appHooks.roomMemberDetailsScreenHook.update(initialViewState),
+                   mediaProvider: userSession.mediaProvider)
         
         showMemberLoadingIndicator()
         
@@ -142,7 +141,6 @@ class RoomMemberDetailsScreenViewModel: RoomMemberDetailsScreenViewModelType, Ro
         }
     }
     
-    @MainActor
     private func unignoreUser() async {
         guard let roomMemberProxy else {
             fatalError()
@@ -164,7 +162,7 @@ class RoomMemberDetailsScreenViewModel: RoomMemberDetailsScreenViewModelType, Ro
     }
     
     private func updateMembers() {
-        Task.detached {
+        Task {
             await self.roomProxy.updateMembers()
         }
     }
@@ -178,11 +176,7 @@ class RoomMemberDetailsScreenViewModel: RoomMemberDetailsScreenViewModelType, Ro
         userIndicatorController.submitIndicator(UserIndicator(id: loadingIndicatorIdentifier, type: .modal, title: L10n.commonLoading, persistent: true))
         defer { userIndicatorController.retractIndicatorWithId(loadingIndicatorIdentifier) }
         
-        // We don't actually know the mime type here, assume it's an image.
-        if let mediaSource = try? MediaSourceProxy(url: url, mimeType: "image/jpeg"),
-           case let .success(file) = await userSession.mediaProvider.loadFileFromSource(mediaSource) {
-            state.bindings.mediaPreviewItem = MediaPreviewItem(file: file, title: roomMemberProxy.displayName)
-        }
+        state.bindings.mediaPreviewItem = await MediaPreviewItem.load(from: url, title: roomMemberProxy.displayName, using: userSession.mediaProvider)
     }
     
     private func openDirectChat() {
@@ -203,7 +197,7 @@ class RoomMemberDetailsScreenViewModel: RoomMemberDetailsScreenViewModelType, Ro
             } else if roomProxy.details.historySharingState != RoomHistorySharingState.hidden {
                 Task {
                     let identity = await self.userSession.clientProxy.userIdentity(for: roomMemberProxy.userID, fallBackToServer: false)
-                    let user: UserProfileProxy = .init(userID: roomMemberProxy.userID, displayName: roomMemberProxy.displayName, avatarURL: roomMemberProxy.avatarURL)
+                    let user: UserProfile = .init(userID: roomMemberProxy.userID, displayName: roomMemberProxy.displayName, avatarURL: roomMemberProxy.avatarURL)
                     let isUnknown = if case .success(let identity) = identity {
                         identity == nil
                     } else {

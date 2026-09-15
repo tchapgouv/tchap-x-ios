@@ -9,7 +9,7 @@ import Foundation
 
 // swiftlint:disable explicit_type_interface function_parameter_count identifier_name line_length
 // swiftlint:disable nesting type_body_length type_name vertical_whitespace_opening_braces
-internal enum TchapL10n {
+internal nonisolated enum TchapL10n {
   /// Email
   internal static var commonEmail: String { return TchapL10n.tr("TchapLocalizable", "common_email") }
   /// Frequently Asked Questions
@@ -198,7 +198,7 @@ internal enum TchapL10n {
 
 // MARK: - Implementation Details
 
-extension TchapL10n {
+nonisolated extension TchapL10n {
   static func tr(_ table: String, _ key: String, _ args: CVarArg...) -> String {
     // Use preferredLocalizations to get a language that is in the bundle and the user's preferred list of languages.
     let languages = Bundle.overrideLocalizations ?? Bundle.app.preferredLocalizations

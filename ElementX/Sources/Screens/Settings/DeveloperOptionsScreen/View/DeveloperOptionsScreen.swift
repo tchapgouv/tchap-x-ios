@@ -49,9 +49,18 @@ struct DeveloperOptionsScreen: View {
                     Text("Link new device with QR code")
                 }
                 
+                Toggle(isOn: $context.globalSearchEnabled) {
+                    Text("Global search")
+                    Text("Moves search to a separate tab")
+                }
+                
+                Toggle(isOn: $context.userStatusEnabled) {
+                    Text("User status")
+                }
+                
                 context.viewState.appHooks
                     .developerOptionsScreenHook
-                    .generalSectionRows()
+                    .generalSectionRows(isSignedIn: context.viewState.isSignedIn)
             }
             
             Section("Room List") {
@@ -86,6 +95,11 @@ struct DeveloperOptionsScreen: View {
                     Text("Follows the timeline media visibility settings.")
                     Text("Can leak the device IP address when loading link metadata.")
                         .foregroundStyle(.compound.textCriticalPrimary)
+                }
+                
+                Toggle(isOn: $context.galleryEnabled) {
+                    Text("Gallery messages")
+                    Text("Allows sending multiple media in a single message. Received galleries always render regardless of this setting.")
                 }
                 
                 Toggle(isOn: $context.jumpToReadMarkerEnabled) {
@@ -200,7 +214,7 @@ struct DeveloperOptionsScreen: View {
     
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
-        if context.viewState.isPresentedModally {
+        if !context.viewState.isSignedIn {
             ToolbarItem(placement: .primaryAction) {
                 if #available(iOS 26.0, *) {
                     Button(role: .close, action: dismiss.callAsFunction)
@@ -250,7 +264,6 @@ private extension Set<TraceLogPack> {
 
 struct DeveloperOptionsScreen_Previews: PreviewProvider {
     static let viewModel = DeveloperOptionsScreenViewModel(developerOptions: AppSettings.volatile(),
-                                                           elementCallBaseURL: AppSettings.volatile().elementCallBaseURL,
                                                            appHooks: AppHooks(),
                                                            clientProxy: ClientProxyMock(.init()))
     

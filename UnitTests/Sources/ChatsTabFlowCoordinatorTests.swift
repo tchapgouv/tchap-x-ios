@@ -27,8 +27,6 @@ struct ChatsTabFlowCoordinatorTests {
     var notificationManager: NotificationManagerMock!
     let stateMachineFactory = PublishedStateMachineFactory()
     
-    var cancellables = Set<AnyCancellable>()
-    
     var detailCoordinator: CoordinatorProtocol? {
         splitCoordinator.detailCoordinator
     }
@@ -60,8 +58,7 @@ struct ChatsTabFlowCoordinatorTests {
                                                   userIndicatorController: UserIndicatorControllerMock(),
                                                   notificationManager: notificationManager,
                                                   stateMachineFactory: stateMachineFactory)
-        chatsTabFlowCoordinator = ChatsTabFlowCoordinator(isNewLogin: false,
-                                                          navigationSplitCoordinator: splitCoordinator,
+        chatsTabFlowCoordinator = ChatsTabFlowCoordinator(navigationSplitCoordinator: splitCoordinator,
                                                           flowParameters: flowParameters)
         
         let deferred = deferFulfillment(stateMachineFactory.chatsTabFlowStatePublisher) { $0 == .roomList(detailState: nil) }
@@ -180,10 +177,12 @@ struct ChatsTabFlowCoordinatorTests {
         chatsTabFlowCoordinator.handleAppRoute(.roomDetails(roomID: "1"), animated: true)
         try await unexpectedFulfillment.fulfill()
         
-        #expect(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
-        #expect(detailNavigationStack?.stackCoordinators.count == 1)
-        #expect(detailNavigationStack?.stackCoordinators.first is RoomDetailsScreenCoordinator)
-        #expect(detailCoordinator != nil)
+        let detailStack = try #require(detailNavigationStack)
+        let deferredPush = deferFulfillment(detailStack.observe(\.stackCoordinators.count)) { $0 == 1 }
+        try await deferredPush.fulfill()
+        
+        #expect(detailStack.rootCoordinator is RoomScreenCoordinator)
+        #expect(detailStack.stackCoordinators.first is RoomDetailsScreenCoordinator)
     }
     
     @Test
@@ -214,19 +213,20 @@ struct ChatsTabFlowCoordinatorTests {
     mutating func roomClearsStack() async throws {
         try await process(route: .room(roomID: "1", via: []), expectedState: .roomList(detailState: .room(roomID: "1")))
         #expect(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
-        #expect(detailNavigationStack?.stackCoordinators.count == 0)
+        #expect(detailNavigationStack?.stackCoordinators.isEmpty == true)
         #expect(detailCoordinator != nil)
         
         chatsTabFlowCoordinator.handleAppRoute(.childRoom(roomID: "2", via: []), animated: true)
-        try await Task.sleep(for: .milliseconds(100))
-        #expect(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
-        #expect(detailNavigationStack?.stackCoordinators.count == 1)
-        #expect(detailNavigationStack?.stackCoordinators.first is RoomScreenCoordinator)
-        #expect(detailCoordinator != nil)
+        let detailStack = try #require(detailNavigationStack)
+        let deferredPush = deferFulfillment(detailStack.observe(\.stackCoordinators.count)) { $0 == 1 }
+        try await deferredPush.fulfill()
+        
+        #expect(detailStack.rootCoordinator is RoomScreenCoordinator)
+        #expect(detailStack.stackCoordinators.first is RoomScreenCoordinator)
         
         try await process(route: .room(roomID: "3", via: []), expectedState: .roomList(detailState: .room(roomID: "3")))
         #expect(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
-        #expect(detailNavigationStack?.stackCoordinators.count == 0)
+        #expect(detailNavigationStack?.stackCoordinators.isEmpty == true)
         #expect(detailCoordinator != nil)
     }
     
@@ -235,25 +235,27 @@ struct ChatsTabFlowCoordinatorTests {
         // A regular event route should set its room as the root of the stack and focus on the event.
         try await process(route: .event(eventID: "1", roomID: "1", via: []), expectedState: .roomList(detailState: .room(roomID: "1")))
         #expect(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
-        #expect(detailNavigationStack?.stackCoordinators.count == 0)
+        #expect(detailNavigationStack?.stackCoordinators.isEmpty == true)
         #expect(detailCoordinator != nil)
         #expect(timelineControllerFactory.buildTimelineControllerRoomProxyInitialFocussedEventIDTimelineItemFactoryMediaProviderCallsCount == 1)
         #expect(timelineControllerFactory.buildTimelineControllerRoomProxyInitialFocussedEventIDTimelineItemFactoryMediaProviderReceivedArguments?.initialFocussedEventID == "1")
         
         // A child event route should push a new room screen onto the stack and focus on the event.
         chatsTabFlowCoordinator.handleAppRoute(.childEvent(eventID: "2", roomID: "2", via: []), animated: true)
-        try await Task.sleep(for: .milliseconds(100))
-        #expect(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
-        #expect(detailNavigationStack?.stackCoordinators.count == 1)
-        #expect(detailNavigationStack?.stackCoordinators.first is RoomScreenCoordinator)
-        #expect(detailCoordinator != nil)
+        let detailStack = try #require(detailNavigationStack)
+        let deferredPush = deferFulfillment(detailStack.observe(\.stackCoordinators.count)) { $0 == 1 }
+        try await deferredPush.fulfill()
+        
+        #expect(detailStack.rootCoordinator is RoomScreenCoordinator)
+        #expect(detailStack.stackCoordinators.count == 1)
+        #expect(detailStack.stackCoordinators.first is RoomScreenCoordinator)
         #expect(timelineControllerFactory.buildTimelineControllerRoomProxyInitialFocussedEventIDTimelineItemFactoryMediaProviderCallsCount == 2)
         #expect(timelineControllerFactory.buildTimelineControllerRoomProxyInitialFocussedEventIDTimelineItemFactoryMediaProviderReceivedArguments?.initialFocussedEventID == "2")
         
         // A subsequent regular event route should clear the stack and set the new room as the root of the stack.
         try await process(route: .event(eventID: "3", roomID: "3", via: []), expectedState: .roomList(detailState: .room(roomID: "3")))
         #expect(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
-        #expect(detailNavigationStack?.stackCoordinators.count == 0)
+        #expect(detailNavigationStack?.stackCoordinators.isEmpty == true)
         #expect(detailCoordinator != nil)
         #expect(timelineControllerFactory.buildTimelineControllerRoomProxyInitialFocussedEventIDTimelineItemFactoryMediaProviderCallsCount == 3)
         #expect(timelineControllerFactory.buildTimelineControllerRoomProxyInitialFocussedEventIDTimelineItemFactoryMediaProviderReceivedArguments?.initialFocussedEventID == "3")
@@ -261,7 +263,7 @@ struct ChatsTabFlowCoordinatorTests {
         // A regular event route for the same room should set a new instance of the room as the root of the stack.
         try await process(route: .event(eventID: "4", roomID: "3", via: []), expectedState: .roomList(detailState: .room(roomID: "3")))
         #expect(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
-        #expect(detailNavigationStack?.stackCoordinators.count == 0)
+        #expect(detailNavigationStack?.stackCoordinators.isEmpty == true)
         #expect(detailCoordinator != nil)
         #expect(timelineControllerFactory.buildTimelineControllerRoomProxyInitialFocussedEventIDTimelineItemFactoryMediaProviderCallsCount == 4)
         #expect(timelineControllerFactory.buildTimelineControllerRoomProxyInitialFocussedEventIDTimelineItemFactoryMediaProviderReceivedArguments?.initialFocussedEventID == "4",
@@ -276,6 +278,9 @@ struct ChatsTabFlowCoordinatorTests {
         let sharePayload: ShareExtensionPayload = .mediaFiles(roomID: "2", mediaFiles: [.init(url: .picturesDirectory, suggestedName: nil)])
         try await process(route: .share(sharePayload),
                           expectedState: .roomList(detailState: .room(roomID: "2")))
+        
+        let deferredSheet = deferFulfillment(splitCoordinator.observe(\.sheetCoordinatorID)) { $0 != nil }
+        try await deferredSheet.fulfill()
         
         #expect(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
         #expect((splitCoordinator.sheetCoordinator as? NavigationStackCoordinator)?.rootCoordinator is MediaUploadPreviewScreenCoordinator)
@@ -296,12 +301,35 @@ struct ChatsTabFlowCoordinatorTests {
     
     // MARK: - Private
     
-    private mutating func process(route: AppRoute, expectedState: ChatsTabFlowCoordinatorStateMachine.State) async throws {
-        // Sometimes the state machine's state changes before the coordinators have updated the stack.
-        let delayedPublisher = stateMachineFactory.chatsTabFlowStatePublisher.delay(for: .milliseconds(100), scheduler: DispatchQueue.main)
+    private func process(route: AppRoute, expectedState: ChatsTabFlowCoordinatorStateMachine.State) async throws {
+        // Keep the previous root coordinator alive while waiting, otherwise a newly presented
+        // coordinator could be allocated at the same address and be mistaken for it below.
+        let previousDetailRootCoordinator = splitCoordinator.detailRootCoordinator
+        let previousDetailRootCoordinatorID = previousDetailRootCoordinator.map { ObjectIdentifier($0) }
         
-        let deferred = deferFulfillment(delayedPublisher) { $0 == expectedState }
+        let deferred = deferFulfillment(stateMachineFactory.chatsTabFlowStatePublisher) { $0 == expectedState }
         chatsTabFlowCoordinator.handleAppRoute(route, animated: true)
         try await deferred.fulfill()
+        
+        // The state machine's state changes before the coordinators have updated the stack,
+        // so also wait for the navigation side effect implied by the expected state.
+        switch expectedState {
+        case .roomList(detailState: .some(.room)):
+            let deferredDetail = deferFulfillment(splitCoordinator.observe(\.detailRootCoordinatorID)) { $0 != nil && $0 != previousDetailRootCoordinatorID }
+            try await deferredDetail.fulfill()
+        case .roomList(detailState: nil):
+            let deferredDetail = deferFulfillment(splitCoordinator.observe(\.detailCoordinatorID)) { $0 == nil }
+            try await deferredDetail.fulfill()
+        case .userProfileScreen:
+            let deferredDetail = deferFulfillment(splitCoordinator.observe(\.detailRootCoordinatorID)) { $0 == nil }
+            try await deferredDetail.fulfill()
+            
+            let deferredSheet = deferFulfillment(splitCoordinator.observe(\.sheetCoordinatorID)) { $0 != nil }
+            try await deferredSheet.fulfill()
+        default:
+            break
+        }
+        
+        withExtendedLifetime(previousDetailRootCoordinator) { }
     }
 }

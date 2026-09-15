@@ -55,11 +55,11 @@ struct RoomMemberDetailsScreen: View {
                     }
                     
                     otherUserFooter
+                        .padding(.top, 8)
                 }
-                .padding(.top, 24)
             }
         } else {
-            AvatarHeaderView(user: UserProfileProxy(userID: context.viewState.userID),
+            AvatarHeaderView(user: UserProfile(userID: context.viewState.userID),
                              isVerified: context.viewState.showVerifiedBadge,
                              avatarSize: .user(on: .memberDetails),
                              mediaProvider: context.mediaProvider) { }
@@ -101,7 +101,7 @@ struct RoomMemberDetailsScreen: View {
                 .accessibilityIdentifier(A11yIdentifiers.roomMemberDetailsScreen.directChat)
             }
             
-            if let roomID = context.viewState.dmRoomID {
+            if let roomID = context.viewState.dmRoomID, context.viewState.isCallingEnabled {
                 Button {
                     context.send(viewAction: .startCall(roomID: roomID, isVoiceCall: true))
                 } label: {
@@ -239,8 +239,8 @@ struct RoomMemberDetailsScreen_Previews: PreviewProvider, TestablePreview {
         return RoomMemberDetailsScreenViewModel(userID: member.userID,
                                                 roomProxy: roomProxyMock,
                                                 userSession: UserSessionMock(.init(clientProxy: clientProxyMock)),
-                                                userIndicatorController: UserIndicatorControllerMock(),
+                                                appHooks: AppHooks(),
                                                 analytics: AnalyticsServiceMock(.init()),
-                                                appSettings: .volatile())
+                                                userIndicatorController: UserIndicatorControllerMock())
     }
 }

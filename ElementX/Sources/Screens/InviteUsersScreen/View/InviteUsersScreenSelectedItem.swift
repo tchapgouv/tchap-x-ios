@@ -10,7 +10,7 @@ import Compound
 import SwiftUI
 
 struct InviteUsersScreenSelectedItem: View {
-    let user: UserProfileProxy
+    let user: UserProfile
     let mediaProvider: MediaProviderProtocol?
     var isLocked = false
     let dismissAction: () -> Void
@@ -21,23 +21,23 @@ struct InviteUsersScreenSelectedItem: View {
                 .accessibilityHidden(true)
             
             // Tchap: calculate displayname from userId if necessary and displays it in badge if user is external.
-            //            Text(user.displayName ?? user.userID)
-            switch MatrixIdFromString(user.userID).userType {
+            //            Text(user.displayName ?? user.id)
+            switch MatrixIdFromString(user.id).userType {
             case .external(needInviteByEmail: false):
-                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                Text((user.displayName ?? MatrixIdFromString(user.id).userDisplayName?.displayName) ?? user.id)
                     .lineLimit(1)
                     .tchapExternalLabelView()
             case .external(needInviteByEmail: true):
-                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                Text((user.displayName ?? MatrixIdFromString(user.id).userDisplayName?.displayName) ?? user.id)
                     .lineLimit(1)
                     .tchapInivteByEmailLabelView()
             case .agent(needInviteByEmail: false):
-                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                Text((user.displayName ?? MatrixIdFromString(user.id).userDisplayName?.displayName) ?? user.id)
                     .font(.compound.bodyMD)
                     .foregroundColor(.compound.textPrimary)
                     .lineLimit(1)
             case .agent(needInviteByEmail: true):
-                Text((user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName) ?? user.userID)
+                Text((user.displayName ?? MatrixIdFromString(user.id).userDisplayName?.displayName) ?? user.id)
                     .font(.compound.bodyMD)
                     .foregroundColor(.compound.textPrimary)
                     .lineLimit(1)
@@ -59,7 +59,7 @@ struct InviteUsersScreenSelectedItem: View {
     var avatar: some View {
         let avatarImage = LoadableAvatarImage(url: user.avatarURL,
                                               name: user.displayName,
-                                              contentID: user.userID,
+                                              contentID: user.id,
                                               avatarSize: .user(on: .inviteUsers),
                                               mediaProvider: mediaProvider)
         if isLocked {
@@ -68,22 +68,15 @@ struct InviteUsersScreenSelectedItem: View {
             avatarImage.overlayRemoveItemButton(action: dismissAction)
         }
     }
-    
-    var closeButtonLabel: some View {
-        CompoundIcon(\.close, size: .custom(12), relativeTo: .compound.bodySM)
-            .foregroundStyle(.compound.iconOnSolidPrimary)
-            .padding(2)
-            .background(.compound.iconPrimary, in: Circle())
-    }
 }
 
 struct InviteUsersScreenSelectedItem_Previews: PreviewProvider, TestablePreview {
-    static let people: [UserProfileProxy] = [.mockAlice, .mockVerbose]
+    static let people: [UserProfile] = [.mockAlice, .mockVerbose]
     
     static var previews: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
-                ForEach(people, id: \.userID) { user in
+                ForEach(people, id: \.id) { user in
                     InviteUsersScreenSelectedItem(user: user, mediaProvider: MediaProviderMock(.init())) { }
                         .frame(width: 80)
                 }

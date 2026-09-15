@@ -18,6 +18,14 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     let adjustedDeliveryStatus: TimelineItemDeliveryStatus?
     @ViewBuilder let content: () -> Content
     
+    /// Whether the item's media failed content scanning, in which case the whole bubble adopts
+    /// the critical styling. Reported by the item's `ContentScanningView` through the preference key.
+    @State private var contentScanningFailure: ContentScanningFailure?
+    
+    private var hasContentScanningFailure: Bool {
+        contentScanningFailure != nil
+    }
+    
     private var isDM: Bool {
         context.viewState.isDM
     }
@@ -46,7 +54,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     
     var body: some View {
         ZStack(alignment: .trailingFirstTextBaseline) {
-            VStack(alignment: alignment, spacing: -12) {
+            VStack(alignment: alignment, spacing: -8) {
                 if !timelineItem.isOutgoing, !isDM {
                     header
                         .zIndex(1)
@@ -78,6 +86,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
         }
         .padding(EdgeInsets(top: 1, leading: 8, bottom: 1, trailing: 8))
         .highlightedTimelineItem(isFocussed)
+        .onPreferenceChange(ContentScanningFailurePreferenceKey.self) { contentScanningFailure = $0 }
     }
     
     @ViewBuilder
@@ -85,19 +94,26 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
         if shouldShowSenderDetails {
             HStack(alignment: .top, spacing: 4) {
                 TimelineSenderAvatarView(timelineItem: timelineItem)
+                
                 HStack(alignment: .center, spacing: 4) {
                     Text(timelineItem.sender.displayName ?? timelineItem.sender.id)
-                        .font(.compound.bodySMSemibold)
-                        .foregroundColor(.compound.decorativeColor(for: timelineItem.sender.id).text)
+                        .font(.compound.bodyMDSemibold)
+                        .foregroundStyle(.compound.decorativeColor(for: timelineItem.sender.id).text)
+                    
+                    if let statusEmoji = timelineItem.sender.status.displayed?.emoji {
+                        Text(String(statusEmoji))
+                            .font(.compound.bodyMDSemibold)
+                            .foregroundStyle(.compound.textPrimary)
+                    }
                     
                     if timelineItem.sender.displayName != nil, timelineItem.sender.isDisplayNameAmbiguous {
                         Text(timelineItem.sender.id)
                             .font(.compound.bodyXS)
-                            .foregroundColor(.compound.textSecondary)
+                            .foregroundStyle(.compound.textSecondary)
                     }
                 }
                 .lineLimit(1)
-                .scaledPadding(.vertical, 3)
+                .scaledPadding(.top, 3)
             }
             // sender info are read inside the `TimelineAccessibilityModifier`
             .accessibilityHidden(true)
@@ -150,7 +166,9 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                 context.send(viewAction: .displayTimelineItemMenu(itemID: timelineItem.id))
             }
             .swipeRightAction {
-                SwipeToReplyView(timelineItem: timelineItem)
+                CompoundIcon(\.reply)
+                    .foregroundColor(.compound.iconPrimary)
+                    .accessibilityHidden(true)
             } shouldStartAction: {
                 timelineItem.canBeRepliedTo
             } action: {
@@ -164,7 +182,6 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                                                               canCurrentUserRedactOthers: context.viewState.canCurrentUserRedactOthers,
                                                               canCurrentUserPin: context.viewState.canCurrentUserPin,
                                                               pinnedEventIDs: context.viewState.pinnedEventIDs,
-                                                              isDM: context.viewState.isDM,
                                                               isViewSourceEnabled: context.viewState.isViewSourceEnabled,
                                                               areThreadsEnabled: context.viewState.areThreadsEnabled,
                                                               timelineKind: context.viewState.timelineKind,
@@ -179,10 +196,14 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     
     var messageBubble: some View {
         contentWithReply
-            .timelineItemSendInfo(timelineItem: timelineItem, adjustedDeliveryStatus: adjustedDeliveryStatus, context: context)
+            .timelineItemSendInfo(timelineItem: timelineItem,
+                                  adjustedDeliveryStatus: adjustedDeliveryStatus,
+                                  hasContentScanningFailure: hasContentScanningFailure,
+                                  context: context)
             .bubbleBackground(isOutgoing: timelineItem.isOutgoing,
-                              insets: timelineItem.bubbleInsets,
-                              color: timelineItem.bubbleBackgroundColor)
+                              insets: timelineItem.bubbleInsets(hasContentScanningFailure: hasContentScanningFailure),
+                              color: hasContentScanningFailure ? .compound.bgCriticalSubtle : timelineItem.bubbleBackgroundColor,
+                              borderColor: hasContentScanningFailure ? .compound.borderCriticalSubtle : nil)
     }
     
     var contentWithReply: some View {
@@ -231,7 +252,6 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     }
 }
 
-@MainActor
 private extension EventBasedTimelineItemProtocol {
     var bubbleBackgroundColor: Color? {
         let defaultColor: Color = isOutgoing ? .compound._bgBubbleOutgoing : .compound._bgBubbleIncoming
@@ -239,9 +259,7 @@ private extension EventBasedTimelineItemProtocol {
         switch self {
         case is ImageRoomTimelineItem, is VideoRoomTimelineItem:
             // In case a reply detail or a thread decorator is present we render the color and the padding
-            // TCHAP: BWI content-scanner - video and images have a bubble as long as the scan state is not trusted
-//                return self.replyDetails != nil || self.isThreaded || self.hasMediaCaption ? defaultColor : nil
-            return properties.replyDetails != nil || properties.isThreaded || hasMediaCaption || (self as? EventBasedMessageTimelineItemProtocol)?.scanState != .trusted ? defaultColor : nil
+            return properties.replyDetails != nil || properties.isThreaded || hasMediaCaption ? defaultColor : nil
         case is StickerRoomTimelineItem:
             return nil
         default:
@@ -251,8 +269,13 @@ private extension EventBasedTimelineItemProtocol {
     
     /// The insets for the full bubble content.
     /// Padding affecting just the "send info" should be added inside `TimelineItemSendInfoView`
-    var bubbleInsets: EdgeInsets {
+    func bubbleInsets(hasContentScanningFailure: Bool) -> EdgeInsets {
         let defaultInsets: EdgeInsets = .init(around: 8)
+        
+        // The content scanner failure placeholder is always rendered inset within the critical bubble.
+        if hasContentScanningFailure {
+            return defaultInsets
+        }
         
         switch self {
         case is StickerRoomTimelineItem:
@@ -373,6 +396,8 @@ struct TimelineItemBubbledStylerView_Previews: PreviewProvider, TestablePreview 
                                  timelineControllerFactory: TimelineControllerFactoryMock(.init()))
     }()
     
+    static let unsafeViewModel = TimelineViewModel.mock(contentScannerService: ContentScannerServiceMock(.init(scanResult: false)))
+    
     static var previews: some View {
         mockTimeline
             .previewDisplayName("Mock Timeline")
@@ -442,6 +467,66 @@ struct TimelineItemBubbledStylerView_Previews: PreviewProvider, TestablePreview 
                                                                              content: .init(body: "Short message"),
                                                                              properties: properties),
                                                   groupStyle: .single))
+            
+            RoomTimelineItemView(viewState: .init(item: FileRoomTimelineItem(id: .randomEvent,
+                                                                             timestamp: .mock,
+                                                                             isOutgoing: true,
+                                                                             isEditable: false,
+                                                                             canBeRepliedTo: true,
+                                                                             sender: .init(id: "whoever"),
+                                                                             content: .init(filename: "unsafe.pdf",
+                                                                                            caption: "Replying with an unsafe file.",
+                                                                                            formattedCaption: nil,
+                                                                                            source: try? MediaSourceProxy(url: .mockMXCFile, mimeType: nil),
+                                                                                            fileSize: 3 * 1024 * 1024,
+                                                                                            thumbnailSource: nil,
+                                                                                            contentType: nil),
+                                                                             properties: .init(replyDetails: .loaded(sender: .init(id: "", displayName: "Alice"),
+                                                                                                                     eventID: "123",
+                                                                                                                     eventContent: .message(.text(.init(body: "Short")))))),
+                                                  groupStyle: .single))
+                .environmentObject(unsafeViewModel.context)
+                .environment(\.timelineContext, unsafeViewModel.context)
+            
+            // A safe message replying to an unsafe image: only the reply preview shows the failure.
+            RoomTimelineItemView(viewState: .init(item: TextRoomTimelineItem(id: .randomEvent,
+                                                                             timestamp: .mock,
+                                                                             isOutgoing: true,
+                                                                             isEditable: false,
+                                                                             canBeRepliedTo: true,
+                                                                             sender: .init(id: "whoever"),
+                                                                             content: .init(body: "Replying to an unsafe image."),
+                                                                             properties: .init(replyDetails: .loaded(sender: .init(id: "", displayName: "Alice"),
+                                                                                                                     eventID: "123",
+                                                                                                                     eventContent: .message(.image(.init(filename: "amazing.jpeg",
+                                                                                                                                                         imageInfo: .mockImage,
+                                                                                                                                                         thumbnailInfo: .mockThumbnail)))))),
+                                                  groupStyle: .single))
+                .environmentObject(unsafeViewModel.context)
+                .environment(\.timelineContext, unsafeViewModel.context)
+            
+            // An unsafe file replying to an unsafe image: the whole bubble and the reply preview show the failure.
+            RoomTimelineItemView(viewState: .init(item: FileRoomTimelineItem(id: .randomEvent,
+                                                                             timestamp: .mock,
+                                                                             isOutgoing: true,
+                                                                             isEditable: false,
+                                                                             canBeRepliedTo: true,
+                                                                             sender: .init(id: "whoever"),
+                                                                             content: .init(filename: "unsafe.pdf",
+                                                                                            caption: "Replying with an unsafe file to an unsafe image.",
+                                                                                            formattedCaption: nil,
+                                                                                            source: try? MediaSourceProxy(url: .mockMXCFile, mimeType: nil),
+                                                                                            fileSize: 3 * 1024 * 1024,
+                                                                                            thumbnailSource: nil,
+                                                                                            contentType: nil),
+                                                                             properties: .init(replyDetails: .loaded(sender: .init(id: "", displayName: "Alice"),
+                                                                                                                     eventID: "123",
+                                                                                                                     eventContent: .message(.image(.init(filename: "amazing.jpeg",
+                                                                                                                                                         imageInfo: .mockImage,
+                                                                                                                                                         thumbnailInfo: .mockThumbnail)))))),
+                                                  groupStyle: .single))
+                .environmentObject(unsafeViewModel.context)
+                .environment(\.timelineContext, unsafeViewModel.context)
         }
         .environmentObject(viewModel.context)
         .environment(\.timelineContext, viewModel.context)

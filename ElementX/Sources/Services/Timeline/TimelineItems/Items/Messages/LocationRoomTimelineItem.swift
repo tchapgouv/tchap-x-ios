@@ -9,7 +9,7 @@
 import Foundation
 import MatrixRustSDK // Tchap
 
-struct LocationRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
+nonisolated struct LocationRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     let id: TimelineItemIdentifier
     let timestamp: Date
     let isOutgoing: Bool
@@ -29,7 +29,4 @@ struct LocationRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatabl
     var contentType: EventBasedMessageTimelineItemContentType {
         .location(content)
     }
-    
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .trusted
 }

@@ -18,6 +18,22 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
 	</dict>
+	<key>a11y_gallery_more_media</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Gallery, %1$d more media</string>
+			<key>other</key>
+			<string>Gallery, %1$d more medias</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
 	<key>a11y_polls_percent_of_total</key>
 	<dict>
 		<key>COUNT</key>
@@ -43,9 +59,41 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>Lest av %1$@ og %2$d andre</string>
+			<string>Forrige melding lest av %1$@ og %2$d annen</string>
 			<key>other</key>
-			<string>Lest av %1$@ og %2$d andre</string>
+			<string>Forrige melding lest av %1$@ og %2$d andre</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>common_gallery_reply_attachments</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d-vedlegg…</string>
+			<key>other</key>
+			<string>%1$d-vedlegg…</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>common_gallery_reply_media_items</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d-mediefil…</string>
+			<key>other</key>
+			<string>%1$d-mediefiler…</string>
 		</dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
@@ -208,6 +256,22 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
 	</dict>
+	<key>notification_gallery_body</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Shared %1$d attachment</string>
+			<key>other</key>
+			<string>Shared %1$d attachments</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
 	<key>notification_invitations</key>
 	<dict>
 		<key>COUNT</key>
@@ -272,6 +336,22 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
 	</dict>
+	<key>screen.room.timeline_redacted_messages</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d fjernet meldingen</string>
+			<key>other</key>
+			<string>%1$d fjernet meldinger</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
 	<key>screen_advanced_settings_live_location_update_distance</key>
 	<dict>
 		<key>COUNT</key>
@@ -281,9 +361,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>Every %1$d meter</string>
+			<string>Hver %1$d. meter</string>
 			<key>other</key>
-			<string>Every %1$d meters</string>
+			<string>Hver %1$d. meter</string>
 		</dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
@@ -320,6 +400,22 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
 	</dict>
+	<key>screen_custom_recovery_key_input_notice</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Minst %1$d tegn. Ikke bruk passordet til kontoen din</string>
+			<key>other</key>
+			<string>Minst %1$d tegn. Ikke bruk passordet til kontoen din</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
 	<key>screen_image_edition_a11y_rotation_state</key>
 	<dict>
 		<key>COUNT</key>
@@ -329,9 +425,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%1$d degree</string>
+			<string>%1$d grad</string>
 			<key>other</key>
-			<string>%1$d degrees</string>
+			<string>%1$d grader</string>
 		</dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
@@ -363,7 +459,7 @@
 			<key>one</key>
 			<string>%1$d person</string>
 			<key>other</key>
-			<string>%1$d people</string>
+			<string>%1$d personer</string>
 		</dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>
@@ -540,6 +636,22 @@
 			<string>Fjern %1$d rom fra %2$@</string>
 			<key>other</key>
 			<string>Fjern %1$d rommene fra %2$@</string>
+		</dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@COUNT@</string>
+	</dict>
+	<key>screen_timeline_active_call_joined_count</key>
+	<dict>
+		<key>COUNT</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%1$d ble med</string>
+			<key>other</key>
+			<string>%1$d ble med</string>
 		</dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@COUNT@</string>

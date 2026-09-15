@@ -41,7 +41,7 @@ enum RoomScreenCoordinatorAction {
     case presentPollForm(mode: PollFormMode)
     case presentLocationViewer(StaticLocationData)
     case presentLiveLocationViewer(sender: TimelineItemSender?, initialLiveLocationShare: LiveLocationShare?)
-    case presentEmojiPicker(itemID: TimelineItemIdentifier, selectedEmojis: Set<String>)
+    case presentEmojiPicker(selectedEmojis: Set<String>, continuation: EmojiPickerScreenContinuation)
     case presentRoomMemberDetails(userID: String)
     case presentMessageForwarding(forwardingItem: MessageForwardingItem)
     case presentCallScreen(isVoiceCall: Bool)
@@ -57,6 +57,7 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
     private var roomViewModel: RoomScreenViewModelProtocol
     private var timelineViewModel: TimelineViewModelProtocol
     private var composerViewModel: ComposerToolbarViewModelProtocol
+    private let appSettings: AppSettings
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -66,6 +67,8 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
     }
     
     init(parameters: RoomScreenCoordinatorParameters) {
+        appSettings = parameters.appSettings
+        
         var selectedPinnedEventID: String?
         if let focussedEvent = parameters.focussedEvent {
             selectedPinnedEventID = focussedEvent.shouldSetPin ? focussedEvent.eventID : nil
@@ -117,18 +120,18 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                 guard let self else { return }
                 
                 switch action {
-                case .displayEmojiPicker(let itemID, let selectedEmojis):
-                    actionsSubject.send(.presentEmojiPicker(itemID: itemID, selectedEmojis: selectedEmojis))
+                case .displayEmojiPicker(let selectedEmojis, let continuation):
+                    actionsSubject.send(.presentEmojiPicker(selectedEmojis: selectedEmojis, continuation: continuation))
                 case .displayReportContent(let itemID, let senderID):
                     actionsSubject.send(.presentReportContent(itemID: itemID, senderID: senderID))
                 case .displayCameraPicker:
-                    actionsSubject.send(.presentMediaUploadPicker(mode: .init(source: .camera, selectionType: .multiple),
+                    actionsSubject.send(.presentMediaUploadPicker(mode: .init(source: .camera, selectionType: .multiple(galleryEnabled: appSettings.galleryEnabled)),
                                                                   caption: composerViewModel.context.plainComposerText))
                 case .displayMediaPicker:
-                    actionsSubject.send(.presentMediaUploadPicker(mode: .init(source: .photoLibrary, selectionType: .multiple),
+                    actionsSubject.send(.presentMediaUploadPicker(mode: .init(source: .photoLibrary, selectionType: .multiple(galleryEnabled: appSettings.galleryEnabled)),
                                                                   caption: composerViewModel.context.plainComposerText))
                 case .displayDocumentPicker:
-                    actionsSubject.send(.presentMediaUploadPicker(mode: .init(source: .documents(), selectionType: .multiple),
+                    actionsSubject.send(.presentMediaUploadPicker(mode: .init(source: .documents(), selectionType: .multiple(galleryEnabled: appSettings.galleryEnabled)),
                                                                   caption: composerViewModel.context.plainComposerText))
                 case .displayMediaPreview(let mediaPreviewViewModel):
                     roomViewModel.displayMediaPreview(mediaPreviewViewModel)
@@ -162,6 +165,8 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
                     roomViewModel.timelineHasScrolled(direction: direction)
                 case .displayRoom(let roomID, let via):
                     actionsSubject.send(.presentRoom(roomID: roomID, via: via))
+                case .presentCallScreen(let isVoiceCall):
+                    actionsSubject.send(.presentCallScreen(isVoiceCall: isVoiceCall))
                 case .viewInRoomTimeline, .displayMediaDetails:
                     fatalError("The action: \(action) should not be sent to this coordinator")
                 }

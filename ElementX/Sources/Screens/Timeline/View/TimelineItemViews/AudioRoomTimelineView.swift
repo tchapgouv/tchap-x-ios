@@ -15,29 +15,28 @@ struct AudioRoomTimelineView: View {
     
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {
-            // Tchap: content-scanner - scanState Views on scanstates other than trusted,
-            if timelineItem.scanState == .trusted {
-                MediaFileRoomTimelineContent(filename: timelineItem.content.filename,
-                                             fileSize: timelineItem.content.fileSize,
-                                             caption: timelineItem.content.caption,
-                                             formattedCaption: timelineItem.content.formattedCaption,
-                                             trailingReservedSize: timelineItem.trailingReservedSize,
-                                             shouldBoost: timelineItem.shouldBoost,
-                                             isAudioFile: true) {
-                    context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
-                }
-                .accessibilityLabel(L10n.commonAudio)
-            } else {
-                TimelineItemScanStatusFileView(scanState: timelineItem.scanState,
-                                               filename: timelineItem.content.filename,
-                                               fileSize: timelineItem.content.fileSize)
+            MediaFileRoomTimelineContent(filename: timelineItem.content.filename,
+                                         fileSize: timelineItem.content.fileSize,
+                                         caption: timelineItem.content.caption,
+                                         formattedCaption: timelineItem.content.formattedCaption,
+                                         trailingReservedSize: timelineItem.trailingReservedSize,
+                                         shouldBoost: timelineItem.shouldBoost,
+                                         isAudioFile: true,
+                                         // :tchap: fix to avoid premature scan failure
+//                                         contentScannerService: context?.contentScannerService,
+                                         contentScannerService: timelineItem.contentScannerServiceWhenSent(context?.contentScannerService),
+                                         mediaSource: timelineItem.content.source) {
+                context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
             }
+            .accessibilityLabel(L10n.commonAudio)
         }
     }
 }
 
 struct AudioRoomTimelineView_Previews: PreviewProvider, TestablePreview {
     static let viewModel = TimelineViewModel.mock
+    static let scanningViewModel = TimelineViewModel.mock(contentScannerService: ContentScannerServiceMock(.init(scanResult: nil)))
+    static let unsafeViewModel = TimelineViewModel.mock(contentScannerService: ContentScannerServiceMock(.init(scanResult: false)))
     
     static var previews: some View {
         VStack(spacing: 20) {
@@ -49,6 +48,22 @@ struct AudioRoomTimelineView_Previews: PreviewProvider, TestablePreview {
                                                          caption: "This song rocks!"))
         }
         .environmentObject(viewModel.context)
+        
+        VStack(spacing: 20) {
+            AudioRoomTimelineView(timelineItem: makeItem(filename: "scanning.ogg",
+                                                         fileSize: 2 * 1024 * 1024,
+                                                         caption: "The audio is being scanned."))
+                .environmentObject(scanningViewModel.context)
+                .environment(\.timelineContext, scanningViewModel.context)
+            
+            AudioRoomTimelineView(timelineItem: makeItem(filename: "unsafe.ogg",
+                                                         fileSize: 2 * 1024 * 1024,
+                                                         caption: "The audio is not safe."))
+                .environmentObject(unsafeViewModel.context)
+                .environment(\.timelineContext, unsafeViewModel.context)
+        }
+        .environmentObject(viewModel.context)
+        .previewDisplayName("Content Scanner")
     }
     
     static func makeItem(filename: String, fileSize: UInt, caption: String? = nil) -> AudioRoomTimelineItem {
@@ -62,7 +77,7 @@ struct AudioRoomTimelineView_Previews: PreviewProvider, TestablePreview {
                              caption: caption,
                              duration: 300,
                              waveform: nil,
-                             source: nil,
+                             source: try? MediaSourceProxy(url: .mockMXCAudio, mimeType: nil),
                              fileSize: fileSize,
                              contentType: nil))
     }

@@ -39,7 +39,9 @@ struct NotificationSettingsScreen: View {
                         additionalSettingsSection
                     }
                     
-                    soundSelectionSection
+                    if context.viewState.customToneSelectionEnabled {
+                        soundSelectionSection
+                    }
                 }
             }
         }
@@ -262,6 +264,7 @@ struct NotificationSettingsScreen: View {
 
 // MARK: - Previews
 
+@available(iOS 26.0, *)
 struct NotificationSettingsScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModel: NotificationSettingsScreenViewModel = {
         let appSettings = AppSettings.volatile()

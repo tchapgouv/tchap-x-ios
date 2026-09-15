@@ -9,7 +9,7 @@
 import Foundation
 
 extension String {
-    var isEmailAddress: Bool {
+    nonisolated var isEmailAddress: Bool {
         // Email Regex comes from Element iOS.
         let emailRegex = try! Regex("^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+(?:\\.[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+)*@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$")
         let match = ranges(of: emailRegex)

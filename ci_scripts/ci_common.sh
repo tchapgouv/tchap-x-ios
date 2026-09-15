@@ -37,13 +37,6 @@ setup_github_actions_environment() {
 
 }
 
-install_swiftformat_head() {
-    if brew list --versions swiftformat &>/dev/null && ! brew list --versions swiftformat | grep -q HEAD; then
-        brew uninstall swiftformat
-    fi
-    brew install swiftformat --HEAD
-}
-
 setup_github_actions_translations_environment() {
     xcode_select_for_github_actions
     
@@ -57,7 +50,7 @@ setup_github_actions_translations_environment() {
 
 xcode_select_for_github_actions() {
     # We need to select it globally for other processes like xcresultparser and our custom tools to use the same Xcode version.
-    sudo xcode-select -s /Applications/Xcode_26.4.app
+    sudo xcode-select -s /Applications/Xcode_26.5.0.app
 }
 
 generate_what_to_test_notes() {

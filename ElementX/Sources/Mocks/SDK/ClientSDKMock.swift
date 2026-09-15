@@ -10,7 +10,7 @@ import Foundation
 import MatrixRustSDK
 import MatrixRustSDKMocks
 
-extension ClientSDKMock {
+nonisolated extension ClientSDKMock {
     struct Configuration {
         // MARK: Authentication
         
@@ -21,7 +21,6 @@ extension ClientSDKMock {
         var supportsOAuthCreatePrompt = true
         var supportsPasswordLogin = true
         var elementWellKnown: String?
-        var tileServerMapStyleURL: String?
         var validCredentials = (username: "alice", password: "12345678")
         
         // MARK: Session
@@ -69,11 +68,10 @@ extension ClientSDKMock {
                 throw MockError.generic
             }
         }
-        tileServerReturnValue = configuration.tileServerMapStyleURL.map { TileServerInfo(mapStyleUrl: $0) }
     }
 }
 
-extension HomeserverLoginDetailsSDKMock {
+nonisolated extension HomeserverLoginDetailsSDKMock {
     convenience init(configuration: ClientSDKMock.Configuration) {
         self.init()
         
@@ -89,7 +87,7 @@ extension HomeserverLoginDetailsSDKMock {
     }
 }
 
-extension OAuthAuthorizationDataSDKMock {
+nonisolated extension OAuthAuthorizationDataSDKMock {
     convenience init(configuration: ClientSDKMock.Configuration) {
         self.init()
         

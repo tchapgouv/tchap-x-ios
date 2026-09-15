@@ -10,7 +10,6 @@ import Foundation
 
 enum StartChatScreenErrorType: Error {
     case failedCreatingRoom
-    case unknown
 }
 
 enum StartChatScreenViewModelAction: Equatable {
@@ -50,8 +49,8 @@ struct StartChatScreenViewStateBindings {
 enum StartChatScreenViewAction {
     case close
     case createRoom
-    case createDM(user: UserProfileProxy)
-    case selectUser(UserProfileProxy)
+    case createDM(user: UserProfile)
+    case selectUser(UserProfile)
     case joinRoomByAddress
     case openRoomDirectorySearch
 }

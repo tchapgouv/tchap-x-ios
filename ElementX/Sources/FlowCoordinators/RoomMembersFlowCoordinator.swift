@@ -39,8 +39,6 @@ final class RoomMembersFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     enum Event: EventType {
-        case start
-        
         case presentRoomMembersList
         
         case presentRoomMemberDetails(userID: String)
@@ -123,7 +121,7 @@ final class RoomMembersFlowCoordinator: FlowCoordinatorProtocol {
         case .accountProvisioningLink, .oAuthCallback,
              .roomList, .room, .roomDetails, .event,
              .userProfile, .call, .settings, .chatBackupSettings,
-             .share, .transferOwnership, .thread, .globalSearch:
+             .share, .transferOwnership, .thread, .search:
             break
         }
     }
@@ -178,6 +176,9 @@ final class RoomMembersFlowCoordinator: FlowCoordinatorProtocol {
                 
             case (_, .presentRoomMemberDetails, .roomMemberDetails(let userID, _)):
                 presentRoomMemberDetails(userID: userID, animated: animated)
+                
+            case (.roomMemberDetails, .dismissedRoomMemberDetails, .initial):
+                actionsSubject.send(.finished)
             case (.roomMemberDetails, .dismissedRoomMemberDetails, .roomMembersList):
                 break
                 
@@ -188,6 +189,9 @@ final class RoomMembersFlowCoordinator: FlowCoordinatorProtocol {
                 
             case (.roomMemberDetails, .presentUserProfile, .userProfile(let userID, _)):
                 replaceRoomMemberDetailsWithUserProfile(userID: userID)
+                
+            case (.userProfile, .dismissedUserProfile, .initial):
+                actionsSubject.send(.finished)
             case (.userProfile, .dismissedUserProfile, _):
                 break
                 
@@ -227,9 +231,9 @@ final class RoomMembersFlowCoordinator: FlowCoordinatorProtocol {
         let params = RoomMemberDetailsScreenCoordinatorParameters(userID: userID,
                                                                   roomProxy: roomProxy,
                                                                   userSession: flowParameters.userSession,
-                                                                  userIndicatorController: flowParameters.userIndicatorController,
+                                                                  appHooks: flowParameters.appHooks,
                                                                   analytics: flowParameters.analytics,
-                                                                  appSettings: flowParameters.appSettings)
+                                                                  userIndicatorController: flowParameters.userIndicatorController)
         let coordinator = RoomMemberDetailsScreenCoordinator(parameters: params)
         
         coordinator.actions.sink { [weak self] action in
@@ -248,13 +252,7 @@ final class RoomMembersFlowCoordinator: FlowCoordinatorProtocol {
         .store(in: &cancellables)
         
         navigationStackCoordinator.push(coordinator, animated: animated) { [weak self] in
-            guard let self else { return }
-            if case let .roomMemberDetails(_, previousState) = stateMachine.state,
-               previousState == .initial {
-                actionsSubject.send(.finished)
-            } else {
-                stateMachine.tryEvent(.dismissedRoomMemberDetails)
-            }
+            self?.stateMachine.tryEvent(.dismissedRoomMemberDetails)
         }
     }
     
@@ -264,8 +262,7 @@ final class RoomMembersFlowCoordinator: FlowCoordinatorProtocol {
                                                                       roomType: .existingRoom(roomProxy: roomProxy),
                                                                       isSkippable: false,
                                                                       userDiscoveryService: UserDiscoveryService(clientProxy: flowParameters.userSession.clientProxy),
-                                                                      userIndicatorController: flowParameters.userIndicatorController,
-                                                                      appSettings: flowParameters.appSettings)
+                                                                      userIndicatorController: flowParameters.userIndicatorController)
         
         let coordinator = InviteUsersScreenCoordinator(parameters: inviteParameters)
         stackCoordinator.setRootCoordinator(coordinator)
@@ -291,9 +288,9 @@ final class RoomMembersFlowCoordinator: FlowCoordinatorProtocol {
         let parameters = UserProfileScreenCoordinatorParameters(userID: userID,
                                                                 isPresentedModally: false,
                                                                 userSession: flowParameters.userSession,
-                                                                userIndicatorController: flowParameters.userIndicatorController,
+                                                                appHooks: flowParameters.appHooks,
                                                                 analytics: flowParameters.analytics,
-                                                                appSettings: flowParameters.appSettings)
+                                                                userIndicatorController: flowParameters.userIndicatorController)
         let coordinator = UserProfileScreenCoordinator(parameters: parameters)
         coordinator.actionsPublisher.sink { [weak self] action in
             guard let self else { return }

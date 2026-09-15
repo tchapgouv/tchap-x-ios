@@ -12,15 +12,19 @@ import SwiftUI
 typealias LinkNewDeviceScreenViewModelType = StateStoreViewModelV2<LinkNewDeviceScreenViewState, LinkNewDeviceScreenViewAction>
 
 class LinkNewDeviceScreenViewModel: LinkNewDeviceScreenViewModelType, LinkNewDeviceScreenViewModelProtocol {
+    private enum Device { case mobileDevice, desktopComputer }
+    
     private let clientProxy: ClientProxyProtocol
+    private let appLockService: AppLockServiceProtocol
     
     private let actionsSubject: PassthroughSubject<LinkNewDeviceScreenViewModelAction, Never> = .init()
     var actionsPublisher: AnyPublisher<LinkNewDeviceScreenViewModelAction, Never> {
         actionsSubject.eraseToAnyPublisher()
     }
     
-    init(clientProxy: ClientProxyProtocol, initialState: LinkNewDeviceScreenViewState? = nil) {
+    init(clientProxy: ClientProxyProtocol, appLockService: AppLockServiceProtocol, initialState: LinkNewDeviceScreenViewState? = nil) {
         self.clientProxy = clientProxy
+        self.appLockService = appLockService
         
         if let initialState {
             super.init(initialViewState: initialState)
@@ -41,9 +45,9 @@ class LinkNewDeviceScreenViewModel: LinkNewDeviceScreenViewModelType, LinkNewDev
         
         switch viewAction {
         case .linkMobileDevice:
-            Task { await linkMobileDevice() }
+            Task { await verifyAndLink(.mobileDevice) }
         case .linkDesktopComputer:
-            actionsSubject.send(.linkDesktopComputer)
+            Task { await verifyAndLink(.desktopComputer) }
         case .errorAction(let action):
             handleErrorAction(action)
         case .dismiss:
@@ -55,30 +59,65 @@ class LinkNewDeviceScreenViewModel: LinkNewDeviceScreenViewModelType, LinkNewDev
     
     private func checkQRCodeLoginSupport() async {
         if await clientProxy.isLoginWithQRCodeSupported {
-            state.mode = .readyToLink(isGeneratingCode: false)
+            state.mode = .readyToLink(.idle)
         } else {
             state.mode = .error(.notSupported)
         }
     }
     
+    private func verifyAndLink(_ device: Device) async {
+        state.mode = .readyToLink(.verifyingDeviceOwner)
+        
+        switch await appLockService.verifyDeviceOwner(reason: L10n.screenLinkNewDeviceAuthenticationReasonIos) {
+        case .verified, .unavailable:
+            break
+        case .appLockPINRequired:
+            guard await verifyWithAppLockPIN() else {
+                state.mode = .readyToLink(.idle)
+                return
+            }
+        case .cancelled, .unverified:
+            state.mode = .readyToLink(.idle)
+            return
+        case .error:
+            // TODO: @pixlwave Failure UX is pending product confirmation; using the generic error state for now.
+            state.mode = .error(.unknown)
+            return
+        }
+        
+        switch device {
+        case .mobileDevice:
+            await linkMobileDevice() // Automatically sets the state.
+        case .desktopComputer:
+            actionsSubject.send(.linkDesktopComputer)
+            state.mode = .readyToLink(.idle)
+        }
+    }
+    
+    /// Asks the coordinator to verify the device owner with the App Lock PIN, suspending until it has a result.
+    private func verifyWithAppLockPIN() async -> Bool {
+        await withCheckedContinuation { continuation in
+            actionsSubject.send(.verifyWithAppLockPIN(continuation))
+        }
+    }
+    
     private func linkMobileDevice() async {
-        state.mode = .readyToLink(isGeneratingCode: true)
+        state.mode = .readyToLink(.generatingCode)
         
         let linkNewDeviceService = clientProxy.linkNewDeviceService()
         
         let progressPublisher = linkNewDeviceService.linkMobileDevice()
         
         do {
-            _ = try await progressPublisher.values
-                .first { progress in
-                    switch progress {
-                    case .qrReady: true
-                    default: false
-                    }
+            var iterator = progressPublisher.values.makeAsyncIterator()
+            while let progress = try await iterator.next(isolation: #isolation) {
+                if case .qrReady = progress {
+                    break
                 }
+            }
             
             actionsSubject.send(.linkMobileDevice(progressPublisher))
-            state.mode = .readyToLink(isGeneratingCode: false)
+            state.mode = .readyToLink(.idle)
         } catch {
             // This is hard to share a mapping from the QRCodeLoginError with the
             // QRCodeLoginScreen given that some of those are scan errors…
@@ -90,7 +129,7 @@ class LinkNewDeviceScreenViewModel: LinkNewDeviceScreenViewModelType, LinkNewDev
         switch action {
         case .startOver:
             // Reset to ready state to allow trying again.
-            state.mode = .readyToLink(isGeneratingCode: false)
+            state.mode = .readyToLink(.idle)
         case .openSettings, .signInManually:
             MXLog.error("Unexpected error action: \(action)")
             actionsSubject.send(.dismiss)

@@ -11,7 +11,7 @@ import MatrixRustSDK
 import SwiftUI
 
 struct UserProfileListRow: View {
-    let user: UserProfileProxy
+    let user: UserProfile
     let membership: MembershipState?
     let mediaProvider: MediaProviderProtocol?
     
@@ -29,7 +29,7 @@ struct UserProfileListRow: View {
         } else if user.displayName != nil {
             // Tchap: only display matrixID in debug mode.
             #if DEBUG
-            return user.userID
+            return user.id
             #else
             return nil
             #endif
@@ -48,19 +48,19 @@ struct UserProfileListRow: View {
         
     var body: some View {
         // Tchap: add external badge if necessary
-//        ListRow(label: .avatar(title: user.displayName ?? user.userID,
+//        ListRow(label: .avatar(title: user.displayName ?? user.id,
 //                               description: subtitle,
 //                               icon: avatar,
 //                               role: isUnknownProfile ? .error : nil),
 //                kind: kind)
         VStack(alignment: .leading, spacing: 0.0) {
-            ListRow(label: .avatar(title: user.displayName ?? user.userID,
+            ListRow(label: .avatar(title: user.displayName ?? user.id,
                                    description: subtitle,
                                    icon: avatar,
                                    role: isUnknownProfile ? .error : nil),
                     kind: kind)
 
-            switch MatrixIdFromString(user.userID).userType {
+            switch MatrixIdFromString(user.id).userType {
             case .external(needInviteByEmail: false):
                 BadgeLabel(title: TchapL10n.commonUserIsExternal, icon: \.public, style: .info, tchapUsage: .userIsExternal(useSmallSize: true))
                     .offset(x: tchapBadgesOffsetX, y: -8.0)
@@ -82,7 +82,7 @@ struct UserProfileListRow: View {
     var avatar: LoadableAvatarImage {
         LoadableAvatarImage(url: user.avatarURL,
                             name: user.displayName,
-                            contentID: user.userID,
+                            contentID: user.id,
                             avatarSize: .user(on: .startChat),
                             mediaProvider: mediaProvider)
     }

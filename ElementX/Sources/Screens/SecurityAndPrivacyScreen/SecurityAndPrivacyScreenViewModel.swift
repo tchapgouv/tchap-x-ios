@@ -32,8 +32,7 @@ class SecurityAndPrivacyScreenViewModel: SecurityAndPrivacyScreenViewModelType, 
         self.userIndicatorController = userIndicatorController
         self.appSettings = appSettings
         
-        super.init(initialViewState: SecurityAndPrivacyScreenViewState(serverName: clientProxy.userIDServerName ?? "",
-                                                                       accessType: roomProxy.infoPublisher.value.joinRule.toSecurityAndPrivacyRoomAccessType,
+        super.init(initialViewState: SecurityAndPrivacyScreenViewState(accessType: roomProxy.infoPublisher.value.joinRule.toSecurityAndPrivacyRoomAccessType,
                                                                        isEncryptionEnabled: roomProxy.infoPublisher.value.isEncrypted,
                                                                        historyVisibility: roomProxy.infoPublisher.value.historyVisibility.toSecurityAndPrivacyHistoryVisibility,
                                                                        isSpace: roomProxy.infoPublisher.value.isSpace,
@@ -105,6 +104,9 @@ class SecurityAndPrivacyScreenViewModel: SecurityAndPrivacyScreenViewModelType, 
             .drop { !$0.canEditAddress }
             .map(\.bindings.desiredSettings.accessType)
             .removeDuplicates()
+            // Only react to the user changing the access type, the room's initial
+            // state shouldn't reset the visibility it reports.
+            .dropFirst()
             // To allow the view to update properly
             .receive(on: DispatchQueue.main)
             .sink { [weak self] accessType in
@@ -149,7 +151,7 @@ class SecurityAndPrivacyScreenViewModel: SecurityAndPrivacyScreenViewModelType, 
             .weakAssign(to: \.state.isSpace, on: self)
             .store(in: &cancellables)
         
-        appSettings.$knockingEnabled
+        appSettings.knockingEnabledPublisher
             .weakAssign(to: \.state.isKnockingEnabled, on: self)
             .store(in: &cancellables)
     }
@@ -158,7 +160,7 @@ class SecurityAndPrivacyScreenViewModel: SecurityAndPrivacyScreenViewModelType, 
         state.canEditAddress = powerLevels.canOwnUser(sendStateEvent: .roomCanonicalAlias)
         state.canEditJoinRule = powerLevels.canOwnUser(sendStateEvent: .roomJoinRules)
         state.canEditHistoryVisibility = powerLevels.canOwnUser(sendStateEvent: .roomHistoryVisibility)
-        state.canEnableEncryption = powerLevels.canOwnUser(sendStateEvent: .roomEncryption)
+        state.canEnableEncryption = powerLevels.canOwnUser(sendStateEvent: .roomEncryption) && !appSettings.forceDisableE2EE.publisher.value
     }
     
     private func setupRoomDirectoryVisibility() {

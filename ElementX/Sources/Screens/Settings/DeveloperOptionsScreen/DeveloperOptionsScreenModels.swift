@@ -13,11 +13,10 @@ enum DeveloperOptionsScreenViewModelAction {
 }
 
 struct DeveloperOptionsScreenViewState: BindableState {
-    let elementCallBaseURL: URL
     let appHooks: AppHooks
     var storeSizes: [StoreSize]?
     let shouldShowClearCache: Bool
-    let isPresentedModally: Bool
+    let isSignedIn: Bool
     
     var bindings: DeveloperOptionsScreenViewStateBindings
     
@@ -31,7 +30,6 @@ struct DeveloperOptionsScreenViewState: BindableState {
     }
 }
 
-// periphery: ignore - subscripts are seen as false positive
 @dynamicMemberLookup
 struct DeveloperOptionsScreenViewStateBindings {
     private let developerOptions: DeveloperOptionsProtocol
@@ -69,11 +67,16 @@ protocol DeveloperOptionsProtocol: AnyObject {
     
     var linkPreviewsEnabled: Bool { get set }
     
+    var galleryEnabled: Bool { get set }
+    
     var jumpToReadMarkerEnabled: Bool { get set }
     
     var linkNewDeviceEnabled: Bool { get set }
+    var userStatusEnabled: Bool { get set }
     
     var roomThreadListEnabled: Bool { get set }
+    
+    var globalSearchEnabled: Bool { get set }
 }
 
 extension AppSettings: DeveloperOptionsProtocol { }

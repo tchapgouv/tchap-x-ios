@@ -46,7 +46,12 @@ class AuthenticationService: AuthenticationServiceProtocol {
         self.appHooks = appHooks
         
         do {
-            if let classicAppManager {
+            if appSettings.hasSignedInBefore {
+                // Element X has already been used on this device, so an account left behind by the
+                // Classic app is stale — don't offer to migrate it again after a logout.
+                MXLog.info("Already signed in to Element X before, skipping loadAccounts.")
+                classicAppAccount = nil
+            } else if let classicAppManager {
                 classicAppAccount = try classicAppManager.loadAccounts().first
             } else {
                 MXLog.info("Classic App not configured, skipping loadAccounts.")
@@ -59,7 +64,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
         }
         
         // When updating these, don't forget to update the reset method too.
-        homeserverSubject = .init(LoginHomeserver(address: appSettings.accountProviders[0], loginMode: .unknown))
+        homeserverSubject = .init(LoginHomeserver(address: appSettings.defaultServer, loginMode: .unknown))
         flow = .login
     }
     
@@ -199,8 +204,10 @@ class AuthenticationService: AuthenticationServiceProtocol {
         
         // n.b. We deliberatley don't check whether the received server is in our appSettings.accountProviders
         
-        let listener = SDKListener { progress in
-            guard let progress = QRLoginProgress(rustProgress: progress) else { return }
+        // The SDK calls the listener from arbitrary threads; onMainActor forwards the progress
+        // updates on the main actor in FIFO order.
+        let listener = SDKListener.onMainActor { rustProgress in
+            guard let progress = QRLoginProgress(rustProgress: rustProgress) else { return }
             progressSubject.send(progress)
         }
         
@@ -234,7 +241,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
     }
     
     func reset() {
-        homeserverSubject.send(LoginHomeserver(address: appSettings.accountProviders[0], loginMode: .unknown))
+        homeserverSubject.send(LoginHomeserver(address: appSettings.defaultServer, loginMode: .unknown))
         flow = .login
         client = nil
     }
@@ -253,7 +260,6 @@ class AuthenticationService: AuthenticationServiceProtocol {
                                                         appSettings: appSettings,
                                                         appHooks: appHooks)
         try await appHooks.remoteSettingsHook.initializeCache(using: client, applyingTo: appSettings).get()
-        await client.updateMapTilerSettings(in: appSettings)
         
         return client
     }
@@ -372,7 +378,7 @@ private extension HumanQrLoginError {
             .qrCodeError(.deviceNotSignedIn)
         case .UnsupportedQrCodeType:
             .qrCodeError(.invalidQRCode)
-        case .Unknown, .OAuthMetadataInvalid, .CheckCodeAlreadySent, .CheckCodeCannotBeSent:
+        case .Unknown, .OAuthMetadataInvalid, .CheckCodeAlreadySent, .CheckCodeCannotBeSent, .ContinuationAlreadySent, .ContinuationCannotBeSent:
             .qrCodeError(.unknown)
         }
     }

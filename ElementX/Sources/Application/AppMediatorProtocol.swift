@@ -10,16 +10,11 @@ import Foundation
 import UIKit
 
 // sourcery: AutoMockable
-@MainActor
 protocol AppMediatorProtocol {
     var windowManager: WindowManagerProtocol { get }
     var networkMonitor: NetworkMonitorProtocol { get }
     
     var appState: UIApplication.State { get }
-    
-    func beginBackgroundTask(expirationHandler handler: (() -> Void)?) -> UIBackgroundTaskIdentifier
-    
-    func endBackgroundTask(_ identifier: UIBackgroundTaskIdentifier)
     
     func open(_ url: URL)
     

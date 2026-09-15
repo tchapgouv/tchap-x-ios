@@ -20,7 +20,7 @@ struct UserDetailsEditScreen: View {
             } footer: {
                 // Tchap: only display User ID of Edit Profile when in debug mode
                 #if DEBUG
-                Text(context.viewState.userID)
+                Text(context.viewState.currentUserProfile.id)
                     .frame(maxWidth: .infinity)
                     .font(.compound.bodyLG)
                     .foregroundColor(.compound.textPrimary)
@@ -65,8 +65,8 @@ struct UserDetailsEditScreen: View {
         } label: {
             OverridableAvatarImage(overrideURL: context.viewState.localMedia?.thumbnailURL,
                                    url: context.viewState.selectedAvatarURL,
-                                   name: context.viewState.currentDisplayName,
-                                   contentID: context.viewState.userID,
+                                   name: context.viewState.currentUserProfile.displayName,
+                                   contentID: context.viewState.currentUserProfile.id,
                                    shape: .circle,
                                    avatarSize: .user(on: .editUserDetails),
                                    mediaProvider: context.mediaProvider)
@@ -76,6 +76,7 @@ struct UserDetailsEditScreen: View {
         }
         .buttonStyle(EditAvatarButtonStyle())
         .disabled(!context.viewState.canEditAvatar)
+        .accessibilityLabel(L10n.a11yEditAvatar)
         .frame(maxWidth: .infinity, alignment: .center)
         .listRowBackground(Color.clear)
     }
@@ -141,10 +142,13 @@ struct UserDetailsEditScreen_Previews: PreviewProvider, TestablePreview {
     }
     
     static func makeViewModel(canChangeProfile: Bool = true) -> UserDetailsEditScreenViewModel {
-        UserDetailsEditScreenViewModel(userSession: UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@stefan:matrix.org",
-                                                                                                             canChangeAvatar: canChangeProfile,
-                                                                                                             canChangeDisplayName: canChangeProfile)))),
-        mediaUploadingPreprocessor: .init(appSettings: .volatile()),
-        userIndicatorController: UserIndicatorControllerMock())
+        let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "@stefan:matrix.org",
+                                                                                   displayName: "Stefan",
+                                                                                   canChangeAvatar: canChangeProfile,
+                                                                                   canChangeDisplayName: canChangeProfile))))
+        
+        return UserDetailsEditScreenViewModel(userSession: userSession,
+                                              mediaUploadingPreprocessor: .init(appSettings: .volatile()),
+                                              userIndicatorController: UserIndicatorControllerMock())
     }
 }

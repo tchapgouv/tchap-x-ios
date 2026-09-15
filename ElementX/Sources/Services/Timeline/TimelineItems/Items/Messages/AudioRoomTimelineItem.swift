@@ -9,7 +9,7 @@
 import Foundation
 import MatrixRustSDK // Tchap
 
-struct AudioRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
+nonisolated struct AudioRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     let id: TimelineItemIdentifier
     let timestamp: Date
     let isOutgoing: Bool
@@ -30,7 +30,4 @@ struct AudioRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .audio(content)
     }
-    
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .inProgress
 }

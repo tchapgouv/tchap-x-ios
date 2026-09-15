@@ -18,9 +18,8 @@ enum MediaProviderError: Error {
 }
 
 // sourcery: AutoMockable
-protocol MediaProviderProtocol {
+nonisolated protocol MediaProviderProtocol: Sendable {
     func imageFromSource(_ source: MediaSourceProxy?, size: CGSize?) -> UIImage?
-    func loadImageFromSource(_ source: MediaSourceProxy, size: CGSize?) async -> Result<UIImage, MediaProviderError>
     func loadImageDataFromSource(_ source: MediaSourceProxy) async -> Result<Data, MediaProviderError>
     func loadImageRetryingOnReconnection(_ source: MediaSourceProxy, size: CGSize?) -> Task<UIImage, Error>
     

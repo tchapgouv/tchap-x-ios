@@ -19,14 +19,13 @@ struct ConfigureNightly: AsyncParsableCommand {
         try await CI.run(.name("swift"), ["run", "pipeline", "update-foss-secrets"])
         try await CI.run(.name("xcodegen"))
         
-        let releaseVersion = try CI.readMarketingVersion()
-        try await generateAppIconBanner(version: releaseVersion, buildNumber: buildNumber)
+        try await generateAppIconBanner(buildNumber: buildNumber)
     }
     
     /// Adds the Nightly variant include path to `project.yml` if it isn't already present.
     private func addNightlyVariant() throws {
         let projectURL = URL.projectDirectory.appending(component: "project.yml")
-        let projectString = try String(contentsOf: projectURL)
+        let projectString = try String(contentsOf: projectURL, encoding: .utf8)
         guard var projectConfig = try Yams.compose(yaml: projectString) else {
             throw ValidationError("Failed to parse project.yml.")
         }
@@ -41,9 +40,8 @@ struct ConfigureNightly: AsyncParsableCommand {
     }
     
     /// Generates the app icon banner with version and build number.
-    private func generateAppIconBanner(version: String, buildNumber: String) async throws {
-        let bannerText = "\(version) (\(buildNumber))"
+    private func generateAppIconBanner(buildNumber: String) async throws {
         let iconPath = "Variants/Nightly/Resources/NightlyAppIcon.icon/Assets/Version.png"
-        try await AppIconBanner.parse([iconPath, "--banner-text", bannerText]).run()
+        try await AppIconBanner.parse([iconPath, "--build-number", buildNumber]).run()
     }
 }

@@ -11,10 +11,15 @@ import Compound
 import SwiftUI
 
 struct RoomHeaderView: View {
+    struct DMRecipientDetails {
+        var statusEmoji: Character?
+        var verification: UserIdentityVerificationState?
+    }
+    
     let roomName: String
     var roomSubtitle: String?
     let roomAvatar: RoomAvatar
-    var dmRecipientVerificationState: UserIdentityVerificationState?
+    var dmRecipientDetails = DMRecipientDetails()
     var roomHistorySharingState: RoomHistorySharingState?
     // Tchap: optional badge reporting room configuration.
     let roomPropertiesBadgesView: TchapRoomHeaderViewRoomPropertiesBadgesView?
@@ -49,43 +54,64 @@ struct RoomHeaderView: View {
         HStack(spacing: 8) {
             avatarImage
                 .accessibilityHidden(true)
-            // Tchap: embedd in a VStack to add badges.
-            VStack(alignment: .leading, spacing: 4.0) {
+
+            // :tchap: Customize for badges
+//            VStack(alignment: .leading, spacing: 0) {
+//                roomDetails
+//
+//                if let roomSubtitle {
+//                    Text(roomSubtitle)
+//                        .lineLimit(1)
+//                        .font(.compound.bodyXS)
+//                        .foregroundStyle(.compound.textSecondary)
+//                }
+//            }
+            VStack(alignment: .leading, spacing: 4) {
+                roomDetails
+
                 HStack(spacing: 4) {
-                    Text(roomName)
-                        .lineLimit(1)
-                        // Tchap: use Tchap custom font (Marianne font) in Room header view.
-//                        .font(.compound.bodyMDSemibold)
-                        .tchapNavigationBarTitleFont()
-                        .accessibilityIdentifier(A11yIdentifiers.roomScreen.name)
                     if let roomSubtitle {
                         Text(roomSubtitle)
                             .lineLimit(1)
                             .font(.compound.bodyXS)
                             .foregroundStyle(.compound.textSecondary)
                     }
-                    
-                    if let dmRecipientVerificationState {
-                        VerificationBadge(verificationState: dmRecipientVerificationState, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
-                    }
-                    
-                    if let historySharingIcon {
-                        CompoundIcon(historySharingIcon, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
-                            .foregroundStyle(.compound.iconInfoPrimary)
+
+                    if let roomPropertiesBadgesView {
+                        roomPropertiesBadgesView
+                            .zIndex(-1)
+                        Spacer(minLength: 2.0)
                     }
                 }
+            } // :tchap:end:
+        }
+    }
+    
+    private var roomDetails: some View {
+        HStack(spacing: 4) {
+            HStack(spacing: 8) {
+                Text(roomName)
+                    .lineLimit(1)
+                    // Tchap: use Tchap custom font (Marianne font) in Room header view.
+//                    .font(.compound.bodyMDSemibold)
+                    .tchapNavigationBarTitleFont()
+                    .foregroundStyle(.compound.textPrimary)
+                    .accessibilityIdentifier(A11yIdentifiers.roomScreen.name)
                 
-                // Tchap: additional room info
-                if let roomPropertiesBadgesView {
-                    roomPropertiesBadgesView
-                        .zIndex(-1)
-                    Spacer(minLength: 2.0)
+                if let statusEmoji = dmRecipientDetails.statusEmoji {
+                    Text(String(statusEmoji))
+                        .font(.compound.bodyLG)
+                        .foregroundStyle(.compound.textPrimary)
                 }
             }
-            // Take up as much space as possible, with a leading alignment for use in the principal toolbar position.
-            // Tchap: allowing `idealWidth` to grow to `infinity` crash the rendering in some conditions (redraw triggered by bindings in roomPropertiesBadgesView).
-            //            .frame(idealWidth: .greatestFiniteMagnitude, maxWidth: .infinity, alignment: .leading)
-            .frame(idealWidth: 65535.0, maxWidth: .infinity, alignment: .leading)
+            if let verificationState = dmRecipientDetails.verification {
+                VerificationBadge(verificationState: verificationState, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
+            }
+            
+            if let historySharingIcon {
+                CompoundIcon(historySharingIcon, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
+                    .foregroundStyle(.compound.iconInfoPrimary)
+            }
         }
     }
     
@@ -128,35 +154,62 @@ private extension View {
 
 struct RoomHeaderView_Previews: PreviewProvider, TestablePreview {
     static var previews: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            makeHeader(avatarURL: nil, verificationState: .notVerified)
-            makeHeader(avatarURL: .mockMXCAvatar, verificationState: .notVerified)
-            makeHeader(avatarURL: .mockMXCAvatar, verificationState: .verified)
-            makeHeader(avatarURL: .mockMXCAvatar, verificationState: .verificationViolation)
-            makeHeader(avatarURL: .mockMXCAvatar,
-                       roomSubtitle: "Subtitle",
-                       verificationState: .verified)
-            makeHeader(avatarURL: .mockMXCAvatar, verificationState: .notVerified, historySharingState: .shared)
-            makeHeader(avatarURL: .mockMXCAvatar, verificationState: .notVerified, historySharingState: .worldReadable)
-            makeHeader(avatarURL: .mockMXCAvatar, verificationState: .verified, historySharingState: .shared)
-            makeHeader(avatarURL: .mockMXCAvatar, verificationState: .verificationViolation, historySharingState: .worldReadable)
+        VStack(alignment: .leading, spacing: 32) {
+            VStack(alignment: .leading, spacing: 16) {
+                makeHeader(avatarURL: nil)
+                makeHeader(avatarURL: .mockMXCAvatar)
+                
+                makeHeader(avatarURL: .mockMXCAvatar, historySharingState: .shared)
+                makeHeader(avatarURL: .mockMXCAvatar, historySharingState: .worldReadable)
+            }
+            
+            VStack(alignment: .leading, spacing: 16) {
+                makeHeader(avatarURL: .mockMXCUserAvatar, verificationState: .verified)
+                makeHeader(avatarURL: .mockMXCUserAvatar, verificationState: .verificationViolation)
+                
+                makeHeader(avatarURL: .mockMXCUserAvatar,
+                           userStatus: .mockHoliday,
+                           verificationState: .notVerified)
+                makeHeader(avatarURL: .mockMXCUserAvatar,
+                           userStatus: .mockCall,
+                           verificationState: .verificationViolation)
+                makeHeader(avatarURL: .mockMXCUserAvatar,
+                           roomSubtitle: "Subtitle",
+                           userStatus: .mockFocussing,
+                           verificationState: .verified)
+                
+                makeHeader(avatarURL: .mockMXCUserAvatar,
+                           roomSubtitle: "Subtitle",
+                           verificationState: .verified)
+                
+                makeHeader(avatarURL: .mockMXCUserAvatar,
+                           userStatus: .mockHoliday,
+                           verificationState: .verified,
+                           historySharingState: .shared)
+                makeHeader(avatarURL: .mockMXCUserAvatar,
+                           verificationState: .verificationViolation,
+                           historySharingState: .worldReadable)
+            }
         }
         .previewLayout(.sizeThatFits)
     }
     
+    @ViewBuilder
     static func makeHeader(avatarURL: URL?,
                            roomSubtitle: String? = nil,
-                           verificationState: UserIdentityVerificationState,
+                           userStatus: UserStatus? = nil,
+                           verificationState: UserIdentityVerificationState? = nil,
                            historySharingState: RoomHistorySharingState? = nil) -> some View {
-        RoomHeaderView(roomName: "Some Room name",
+        let roomName = verificationState == nil ? "Some Room Name" : "Some User Name"
+        RoomHeaderView(roomName: roomName,
                        roomSubtitle: roomSubtitle,
                        roomAvatar: .room(id: "1",
-                                         name: "Some Room Name",
+                                         name: roomName,
                                          avatarURL: avatarURL),
-                       dmRecipientVerificationState: verificationState,
+                       dmRecipientDetails: .init(statusEmoji: userStatus?.displayed?.emoji,
+                                                 verification: verificationState),
                        roomHistorySharingState: historySharingState,
                        roomPropertiesBadgesView: .sample, // Tchap addition
                        mediaProvider: MediaProviderMock(.init())) { }
-            .padding()
     }
 }

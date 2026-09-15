@@ -34,21 +34,21 @@ struct BlockedUsersScreen: View {
             Form {
                 ForEach(context.viewState.blockedUsers, id: \.self) { user in
                     // Tchap: calculate displayname from userId if necessary.
-//                    ListRow(label: .avatar(title: user.displayName ?? user.userID, icon: avatar(for: user)),
-//                            details: .isWaiting(context.viewState.processingUserID == user.userID),
+//                    ListRow(label: .avatar(title: user.displayName ?? user.id, icon: avatar(for: user)),
+//                            details: .isWaiting(context.viewState.processingUserID == user.id),
 //                            kind: .button(action: { context.send(viewAction: .unblockUser(user)) }))
-                    ListRow(label: .avatar(title: user.displayName ?? MatrixIdFromString(user.userID).userDisplayName?.displayName ?? user.userID, icon: avatar(for: user)),
-                            details: .isWaiting(context.viewState.processingUserID == user.userID),
+                    ListRow(label: .avatar(title: user.displayName ?? MatrixIdFromString(user.id).userDisplayName?.displayName ?? user.id, icon: avatar(for: user)),
+                            details: .isWaiting(context.viewState.processingUserID == user.id),
                             kind: .button { context.send(viewAction: .unblockUser(user)) })
                 }
             }
         }
     }
     
-    private func avatar(for user: UserProfileProxy) -> some View {
+    private func avatar(for user: UserProfile) -> some View {
         LoadableAvatarImage(url: user.avatarURL,
                             name: user.displayName,
-                            contentID: user.userID,
+                            contentID: user.id,
                             avatarSize: .user(on: .blockedUsers),
                             mediaProvider: context.mediaProvider)
             .accessibilityHidden(true)

@@ -13,15 +13,21 @@ struct VideoRoomTimelineView: View {
     @Environment(\.timelineContext) private var context
     let timelineItem: VideoRoomTimelineItem
     
+    @State private var contentScanningFailure: ContentScanningFailure?
+    
     private var hasMediaCaption: Bool {
         timelineItem.content.caption != nil
     }
     
     var body: some View {
         TimelineStyler(timelineItem: timelineItem) {
-            VStack(alignment: .leading, spacing: 4) {
-                // Tchap: BWI content-scanner - scanState Views on scanstates other than trusted,
-                if timelineItem.scanState == .trusted {
+            // The caption sits 8pts below the content scanner failure placeholder, 4pts below the media.
+            VStack(alignment: .leading, spacing: contentScanningFailure == nil ? 4 : 8) {
+                // :tchap: fix to avoid premature scan failure
+//                ContentScanningView(contentScannerService: context?.contentScannerService,
+                ContentScanningView(contentScannerService: timelineItem.contentScannerServiceWhenSent(context?.contentScannerService),
+                                    mediaSource: timelineItem.content.videoInfo.source,
+                                    thumbnailSource: timelineItem.content.thumbnailInfo?.source) {
                     thumbnail
                         .timelineMediaFrame(imageInfo: timelineItem.content.thumbnailInfo)
                         .accessibilityElement(children: .ignore)
@@ -32,12 +38,14 @@ struct VideoRoomTimelineView: View {
                         .onTapGesture {
                             context?.send(viewAction: .mediaTapped(itemID: timelineItem.id))
                         }
-                } else {
-                    TimelineItemScanStatusImageView(scanState: timelineItem.scanState,
-                                                    imageInfo: timelineItem.content.thumbnailInfo,
-                                                    filename: timelineItem.content.filename)
+                } scanningContent: {
+                    placeholder
+                        .overlay { ProgressView() }
+                        .timelineMediaFrame(imageInfo: timelineItem.content.thumbnailInfo)
+                } unsafeContent: { failure in
+                    ContentScanningFailureView(failure: failure)
                 }
-
+                
                 if let attributedCaption = timelineItem.content.formattedCaption {
                     FormattedBodyText(attributedString: attributedCaption,
                                       trailingReservedSize: timelineItem.trailingReservedSize,
@@ -48,6 +56,7 @@ struct VideoRoomTimelineView: View {
                                       boostFontSize: timelineItem.shouldBoost)
                 }
             }
+            .onPreferenceChange(ContentScanningFailurePreferenceKey.self) { contentScanningFailure = $0 }
         }
     }
     
@@ -90,6 +99,8 @@ struct VideoRoomTimelineView: View {
 
 struct VideoRoomTimelineView_Previews: PreviewProvider, TestablePreview {
     static let viewModel = TimelineViewModel.mock
+    static let scanningViewModel = TimelineViewModel.mock(contentScannerService: ContentScannerServiceMock(.init(scanResult: nil)))
+    static let unsafeViewModel = TimelineViewModel.mock(contentScannerService: ContentScannerServiceMock(.init(scanResult: false)))
     
     static var previews: some View {
         ScrollView {
@@ -108,6 +119,17 @@ struct VideoRoomTimelineView_Previews: PreviewProvider, TestablePreview {
         .environment(\.timelineContext, viewModel.context)
         .previewLayout(.fixed(width: 390, height: 975))
         .padding(.bottom, 20)
+        
+        VStack(spacing: 20.0) {
+            VideoRoomTimelineView(timelineItem: makeTimelineItem())
+                .environmentObject(scanningViewModel.context)
+                .environment(\.timelineContext, scanningViewModel.context)
+            VideoRoomTimelineView(timelineItem: makeTimelineItem(caption: "This is an unsafe video."))
+                .environmentObject(unsafeViewModel.context)
+                .environment(\.timelineContext, unsafeViewModel.context)
+        }
+        .environmentObject(viewModel.context)
+        .previewDisplayName("Content Scanner")
     }
     
     private static func makeTimelineItem(caption: String? = nil, isEdited: Bool = false) -> VideoRoomTimelineItem {

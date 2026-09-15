@@ -44,19 +44,20 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         spaceFilterSubject = CurrentValueSubject<SpaceServiceFilter?, Never>(nil)
         
         roomSummaryProvider = userSession.clientProxy.roomSummaryProvider
-        
-        super.init(initialViewState: .init(userID: userSession.clientProxy.userID,
+        // :tchap:
+        //       super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
+        //                                         bindings: .init(filtersState: .init(appSettings: appSettings))),
+        super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
                                            bindings: .init(filtersState: .init(appSettings: appSettings)), tchapServiceStatusURL: appSettings.tchapServiceStatusURL),
                    mediaProvider: userSession.mediaProvider)
         
-        userSession.clientProxy.userAvatarURLPublisher
-            .receive(on: DispatchQueue.main)
-            .weakAssign(to: \.state.userAvatarURL, on: self)
-            .store(in: &cancellables)
+        if appSettings.globalSearchEnabled, #available(iOS 26.0, *) {
+            state.isRoomListSearchEnabled = false
+        }
         
-        userSession.clientProxy.userDisplayNamePublisher
+        userSession.clientProxy.userProfilePublisher
             .receive(on: DispatchQueue.main)
-            .weakAssign(to: \.state.userDisplayName, on: self)
+            .weakAssign(to: \.state.userProfile, on: self)
             .store(in: &cancellables)
         
         userSession.sessionSecurityStatePublisher
@@ -66,16 +67,13 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                 
                 switch securityState.recoveryState {
                 case .disabled:
-                    state.requiresExtraAccountSetup = true
                     if !state.securityBannerMode.isDismissed {
                         state.securityBannerMode = .show(.setUpRecovery)
                     }
                 case .incomplete:
-                    state.requiresExtraAccountSetup = true
                     state.securityBannerMode = .show(.recoveryOutOfSync)
                 default:
                     state.securityBannerMode = .none
-                    state.requiresExtraAccountSetup = false
                 }
             }
             .store(in: &cancellables)
@@ -122,21 +120,21 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             .weakAssign(to: \.state.selectedRoomID, on: self)
             .store(in: &cancellables)
         
-        appSettings.$roomListActivityVisibility
+        appSettings.roomListActivityVisibilityPublisher
             .sink { [weak self] value in
                 self?.state.roomListActivityVisibility = value
                 self?.updateRooms()
             }
             .store(in: &cancellables)
         
-        appSettings.$seenInvites
+        appSettings.seenInvitesPublisher
             .removeDuplicates()
             .sink { [weak self] _ in
                 self?.updateRooms()
             }
             .store(in: &cancellables)
         
-        appSettings.$hasSeenNewSoundBanner
+        appSettings.hasSeenNewSoundBannerPublisher
             .sink { [weak self] hasSeenNewSoundBanner in
                 self?.state.shouldShowNewSoundBanner = !hasSeenNewSoundBanner
             }
@@ -362,8 +360,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         // Delay user profile detail loading until after the initial room list loads
         if roomListMode == .rooms {
             Task {
-                await self.userSession.clientProxy.loadUserAvatarURL()
-                await self.userSession.clientProxy.loadUserDisplayName()
+                await self.userSession.clientProxy.loadUserProfileIfNeeded()
             }
         }
     }

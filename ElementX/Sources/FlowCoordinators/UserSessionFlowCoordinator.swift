@@ -20,12 +20,14 @@ enum UserSessionFlowCoordinatorAction {
 }
 
 class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
-    enum HomeTab: Hashable { case chats, spaces }
+    enum HomeTab: Hashable { case chats, spaces, search }
     
     private let navigationRootCoordinator: NavigationRootCoordinator
     private let navigationTabCoordinator: NavigationTabCoordinator<HomeTab>
     private let appLockService: AppLockServiceProtocol
     private let flowParameters: CommonFlowParameters
+    // periphery:ignore - retaining purpose
+    private let presenceService: PresenceService
     
     private var userSession: UserSessionProtocol {
         flowParameters.userSession
@@ -38,7 +40,10 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
     private let spacesTabFlowCoordinator: SpacesTabFlowCoordinator
     private let spacesTabDetails: NavigationTabCoordinator<HomeTab>.TabDetails
     
-    // periphery:ignore - retaining purpose
+    private let searchScreenCoordinator: SearchScreenCoordinator?
+    private let searchTabNavigationStackCoordinator: NavigationStackCoordinator?
+    private let searchTabDetails: NavigationTabCoordinator<HomeTab>.TabDetails?
+    
     private var settingsFlowCoordinator: SettingsFlowCoordinator?
 
     // Tchap: expired account
@@ -78,13 +83,14 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         self.navigationRootCoordinator = navigationRootCoordinator
         self.appLockService = appLockService
         self.flowParameters = flowParameters
+        presenceService = PresenceService(clientProxy: flowParameters.userSession.clientProxy,
+                                          appSettings: flowParameters.appSettings)
         
         navigationTabCoordinator = NavigationTabCoordinator()
         navigationRootCoordinator.setRootCoordinator(navigationTabCoordinator)
         
         let chatsSplitCoordinator = NavigationSplitCoordinator(placeholderCoordinator: PlaceholderScreenCoordinator(hideBrandChrome: flowParameters.appSettings.hideBrandChrome))
-        chatsTabFlowCoordinator = ChatsTabFlowCoordinator(isNewLogin: isNewLogin,
-                                                          navigationSplitCoordinator: chatsSplitCoordinator,
+        chatsTabFlowCoordinator = ChatsTabFlowCoordinator(navigationSplitCoordinator: chatsSplitCoordinator,
                                                           flowParameters: flowParameters)
         chatsTabDetails = .init(tag: HomeTab.chats, title: L10n.screenHomeTabChats, icon: \.chat, selectedIcon: \.chatSolid)
         chatsTabDetails.navigationSplitCoordinator = chatsSplitCoordinator
@@ -95,16 +101,37 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         spacesTabDetails = .init(tag: HomeTab.spaces, title: L10n.screenHomeTabSpaces, icon: \.space, selectedIcon: \.spaceSolid)
         spacesTabDetails.navigationSplitCoordinator = spacesSplitCoordinator
         
+        if flowParameters.appSettings.globalSearchEnabled, #available(iOS 26.0, *) {
+            let searchCoordinator = SearchScreenCoordinator(parameters: .init(roomSummaryProvider: flowParameters.userSession.clientProxy.alternateRoomSummaryProvider,
+                                                                              clientProxy: flowParameters.userSession.clientProxy,
+                                                                              mediaProvider: flowParameters.userSession.mediaProvider,
+                                                                              userIndicatorController: flowParameters.userIndicatorController))
+            let searchStackCoordinator = NavigationStackCoordinator()
+            searchStackCoordinator.setRootCoordinator(searchCoordinator)
+            
+            searchScreenCoordinator = searchCoordinator
+            searchTabNavigationStackCoordinator = searchStackCoordinator
+            searchTabDetails = .init(tag: HomeTab.search, title: UntranslatedL10n.screenHomeTabSearch, icon: \.search, selectedIcon: \.search, isSearch: true)
+        } else {
+            searchScreenCoordinator = nil
+            searchTabNavigationStackCoordinator = nil
+            searchTabDetails = nil
+        }
+        
         onboardingStackCoordinator = NavigationStackCoordinator()
         onboardingFlowCoordinator = OnboardingFlowCoordinator(isNewLogin: isNewLogin,
                                                               appLockService: appLockService,
                                                               navigationStackCoordinator: onboardingStackCoordinator,
                                                               flowParameters: flowParameters)
         
-        navigationTabCoordinator.setTabs([
+        var tabs: [NavigationTabCoordinator<HomeTab>.Tab] = [
             .init(coordinator: chatsSplitCoordinator, details: chatsTabDetails),
             .init(coordinator: spacesSplitCoordinator, details: spacesTabDetails)
-        ])
+        ]
+        if let searchTabNavigationStackCoordinator, let searchTabDetails {
+            tabs.append(.init(coordinator: searchTabNavigationStackCoordinator, details: searchTabDetails))
+        }
+        navigationTabCoordinator.setTabs(tabs)
         
         stateMachine = flowParameters.stateMachineFactory.makeUserSessionFlowStateMachine(state: .initial)
         configureStateMachine()
@@ -140,11 +167,16 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         case .roomList, .room, .roomAlias, .childRoom, .childRoomAlias,
              .roomDetails, .roomMemberDetails, .userProfile,
              .event, .eventOnRoomAlias, .childEvent, .childEventOnRoomAlias,
-             .share, .transferOwnership, .thread, .globalSearch:
+             .share, .transferOwnership, .thread:
             clearPresentedSheets(animated: animated) // Make sure the presented route is visible.
             chatsTabFlowCoordinator.handleAppRoute(appRoute, animated: animated)
             if navigationTabCoordinator.selectedTab != .chats {
                 navigationTabCoordinator.selectedTab = .chats
+            }
+        case .search:
+            // Switch to the dedicated search tab when it's available (iOS 26 + flag), otherwise ignore.
+            if searchTabNavigationStackCoordinator != nil {
+                navigationTabCoordinator.selectedTab = .search
             }
         }
     }
@@ -197,6 +229,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         }
     }
     
+    // swiftlint:disable:next function_body_length
     private func setupObservers() {
         chatsTabFlowCoordinator.actionsPublisher
             .sink { [weak self] action in
@@ -273,16 +306,17 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
                 
                 guard let self else { return }
                 switch (networkReachability, homeserverReachability) {
-                case (.reachable, .reachable):
-                    flowParameters.userIndicatorController.retractIndicatorWithId(reachabilityNotificationID)
-                case (.reachable, .unreachable):
-                    flowParameters.userIndicatorController.submitIndicator(.init(id: reachabilityNotificationID,
-                                                                                 title: L10n.commonServerUnreachable,
-                                                                                 persistent: true))
                 case (.unreachable, _):
                     flowParameters.userIndicatorController.submitIndicator(.init(id: reachabilityNotificationID,
                                                                                  title: L10n.commonOffline,
                                                                                  persistent: true))
+                case (.reachable, .unreachable):
+                    flowParameters.userIndicatorController.submitIndicator(.init(id: reachabilityNotificationID,
+                                                                                 title: L10n.commonServerUnreachable,
+                                                                                 persistent: true))
+                // Don't alarm the user while we've intentionally suspended the client.
+                case (.reachable, .reachable), (.reachable, .suspended):
+                    flowParameters.userIndicatorController.retractIndicatorWithId(reachabilityNotificationID)
                 }
             }
             .store(in: &cancellables)
@@ -310,6 +344,23 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
                     self?.dismissCallScreenIfNeeded()
                 default:
                     break
+                }
+            }
+            .store(in: &cancellables)
+        
+        searchScreenCoordinator?.actionsPublisher
+            .sink { [weak self] action in
+                guard let self else { return }
+                switch action {
+                case .presentRoom(let roomID, let eventID):
+                    if let eventID {
+                        handleAppRoute(.event(eventID: eventID, roomID: roomID, via: []), animated: true)
+                    } else {
+                        handleAppRoute(.room(roomID: roomID, via: []), animated: true)
+                    }
+                case .cancel:
+                    // Return to the tab the user came from, but never back into search.
+                    navigationTabCoordinator.selectedTab = navigationTabCoordinator.previousTab == .search ? .chats : navigationTabCoordinator.previousTab ?? .chats
                 }
             }
             .store(in: &cancellables)
@@ -384,7 +435,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
                 
                 MXLog.info("Received session verification request")
                 
-                if details.senderProfile.userID == userSession.clientProxy.userID {
+                if details.senderProfile.id == userSession.clientProxy.userID {
                     presentSessionVerificationScreen(flow: .deviceResponder(requestDetails: details))
                 } else {
                     presentSessionVerificationScreen(flow: .userResponder(requestDetails: details))

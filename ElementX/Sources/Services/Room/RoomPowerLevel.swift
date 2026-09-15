@@ -8,7 +8,7 @@
 
 import MatrixRustSDK
 
-enum RoomPowerLevel: Hashable, Comparable {
+nonisolated enum RoomPowerLevel: Hashable, Comparable {
     case value(Int)
     case infinite
     
@@ -18,10 +18,6 @@ enum RoomPowerLevel: Hashable, Comparable {
     
     init(value: Int) {
         self = .value(value)
-    }
-    
-    init(value: Int64) {
-        self = .value(Int(value))
     }
     
     var rustPowerLevel: PowerLevel {
@@ -36,7 +32,7 @@ enum RoomPowerLevel: Hashable, Comparable {
     }
 }
 
-extension PowerLevel {
+nonisolated extension PowerLevel {
     var toRoomPowerLevel: RoomPowerLevel {
         switch self {
         case .infinite: .infinite

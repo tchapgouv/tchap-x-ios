@@ -10,7 +10,7 @@ import MatrixRustSDK // Tchap
 import UIKit
 import UniformTypeIdentifiers
 
-struct ImageRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
+nonisolated struct ImageRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     let id: TimelineItemIdentifier
     let timestamp: Date
     let isOutgoing: Bool
@@ -31,7 +31,4 @@ struct ImageRoomTimelineItem: EventBasedMessageTimelineItemProtocol, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .image(content)
     }
-    
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .inProgress
 }

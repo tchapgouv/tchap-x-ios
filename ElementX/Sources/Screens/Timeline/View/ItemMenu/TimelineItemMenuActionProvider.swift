@@ -8,7 +8,6 @@
 
 import Foundation
 
-@MainActor
 struct TimelineItemMenuActionProvider {
     let timelineItem: RoomTimelineItemProtocol
     let canCurrentUserSendMessage: Bool
@@ -16,7 +15,6 @@ struct TimelineItemMenuActionProvider {
     let canCurrentUserRedactOthers: Bool
     let canCurrentUserPin: Bool
     let pinnedEventIDs: Set<String>
-    let isDM: Bool
     let isViewSourceEnabled: Bool
     let areThreadsEnabled: Bool
     let timelineKind: TimelineKind
@@ -34,8 +32,8 @@ struct TimelineItemMenuActionProvider {
             return nil
         }
         
-        if let encryptedItem = timelineItem as? EncryptedRoomTimelineItem {
-            return makeEncryptedItemActions(encryptedItem)
+        if timelineItem is EncryptedRoomTimelineItem {
+            return makeEncryptedItemActions()
         }
         
         var actions: [TimelineItemMenuAction] = []
@@ -115,7 +113,11 @@ struct TimelineItemMenuActionProvider {
         }
         
         if canRedactItem(item) {
-            let isMedia = if case .media = timelineKind { true } else { false }
+            let isMedia = if case .media = timelineKind {
+                true
+            } else {
+                false
+            }
             secondaryActions.append(.redact(isMedia: isMedia))
         }
         
@@ -146,7 +148,7 @@ struct TimelineItemMenuActionProvider {
         return .init(isReactable: isReactable, actions: actions, secondaryActions: secondaryActions, emojiProvider: emojiProvider)
     }
     
-    private func makeEncryptedItemActions(_ encryptedItem: EncryptedRoomTimelineItem) -> TimelineItemMenuActions? {
+    private func makeEncryptedItemActions() -> TimelineItemMenuActions? {
         var actions: [TimelineItemMenuAction] = [.copyPermalink]
         
         if isViewSourceEnabled {

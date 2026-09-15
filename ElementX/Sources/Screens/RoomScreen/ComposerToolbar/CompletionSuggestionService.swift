@@ -72,7 +72,7 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
     // MARK: - Private
     
     private func updateRoomInfo(_ roomInfo: RoomInfoProxyProtocol) {
-        if let powerLevels = roomProxy.infoPublisher.value.powerLevels {
+        if let powerLevels = roomInfo.powerLevels {
             canMentionAllUsers = powerLevels.canOwnUserTriggerRoomNotification()
         }
     }
@@ -87,7 +87,8 @@ final class CompletionSuggestionService: CompletionSuggestionServiceProtocol {
                       Self.shouldIncludeMember(userID: member.userID, displayName: member.displayName, searchText: suggestionTrigger.text) else {
                     return nil
                 }
-                return .init(suggestionType: .user(.init(id: member.userID, displayName: member.displayName, avatarURL: member.avatarURL)), range: suggestionTrigger.range, rawSuggestionText: suggestionTrigger.text)
+                return .init(suggestionType: .user(.init(id: member.userID, displayName: member.displayName, avatarURL: member.avatarURL, status: member.status)),
+                             range: suggestionTrigger.range, rawSuggestionText: suggestionTrigger.text)
             }
         
         if canMentionAllUsers,

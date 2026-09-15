@@ -10,7 +10,7 @@ struct PreviewTests: AsyncParsableCommand {
     
     private static let scheme = "PreviewTests"
     private static let device = "iPhone SE (3rd generation)"
-    private static let osVersion = "26.4.1"
+    private static let osVersion = CI.defaultOSVersion
     private static let simulatorType = "com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation"
     private static let testPlanPath = "PreviewTests/SupportingFiles/PreviewTests.xctestplan"
     
@@ -39,11 +39,13 @@ struct PreviewTests: AsyncParsableCommand {
                     .appending(path: "\(CI.testOutputDirectory)/\(Self.scheme).xcresult")
                 guard FileManager.default.fileExists(atPath: resultBundleURL.path) else {
                     logger.error("\n❌ Preview tests could not run. Check for compilation or configuration errors.\n")
+                    CI.annotateError(title: "Preview tests could not run", "No result bundle was produced. Check for compilation or configuration errors.")
                     throw error
                 }
                 logger.info("\n📸 Snapshots recorded.\n")
             } else {
                 logger.error("\n❌ Preview tests failed.\n")
+                CI.annotateError(title: "Preview tests failed", "Snapshots don't match their references. Re-record them if the change is intentional.")
                 testsFailed = true
             }
         }

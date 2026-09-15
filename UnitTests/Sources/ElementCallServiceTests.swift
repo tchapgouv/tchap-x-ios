@@ -5,6 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import CallKit
 import Clocks
 
 // Tchap: specify target for unit tests
@@ -17,6 +18,8 @@ import Clocks
 import PushKit
 import Testing
 
+// The TestClock advances by yielding to background tasks which can be starved on a busy CI runner.
+@Suite(.timeLimit(.minutes(2)))
 @MainActor
 final class ElementCallServiceTests {
     private var callProvider: CXProviderMock!
@@ -36,7 +39,7 @@ final class ElementCallServiceTests {
         service = ElementCallService(callProvider: callProvider, timeProvider: TimeProvider(clock: testClock, now: dateProvider))
     }
     
-    deinit {
+    isolated deinit {
         callProvider = nil
         currentDate = nil
         testClock = nil
@@ -47,7 +50,7 @@ final class ElementCallServiceTests {
     func incomingCall() async {
         #expect(!callProvider.reportNewIncomingCallWithUpdateCompletionCalled)
         
-        await confirmation { confirmation in
+        await waitForConfirmation { confirmation in
             let pkPushPayloadMock = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 30)
             
             service.pushRegistry(pushRegistry, didReceiveIncomingPushWith: pkPushPayloadMock, for: .voIP) {
@@ -68,7 +71,7 @@ final class ElementCallServiceTests {
     func incomingVoiceCall() async {
         #expect(!callProvider.reportNewIncomingCallWithUpdateCompletionCalled)
         
-        await confirmation { confirmation in
+        await waitForConfirmation { confirmation in
             let pkPushPayloadMock = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 30)
                 .updateIsVoice(true)
             
@@ -117,43 +120,28 @@ final class ElementCallServiceTests {
     }
     
     @Test
-    func expiredRingLifetimeIsIgnored() {
+    func lifetimeIsCapped() async throws {
         #expect(!callProvider.reportNewIncomingCallWithUpdateCompletionCalled)
         
-        let pushPayload = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 20)
+        let (endedCalls, endedCallsContinuation) = AsyncStream<CXCallEndedReason>.makeStream()
+        callProvider.reportCallWithEndedAtReasonClosure = { _, _, reason in
+            endedCallsContinuation.yield(reason)
+        }
+        let deferredEndedCall = deferFulfillment(endedCalls, timeout: .seconds(30)) { _ in true }
         
-        currentDate = currentDate.addingTimeInterval(60)
+        let pushPayload = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 300)
         
         service.pushRegistry(pushRegistry,
                              didReceiveIncomingPushWith: pushPayload,
                              for: .voIP) { }
-        sleep(20)
         
-        #expect(!callProvider.reportNewIncomingCallWithUpdateCompletionCalled)
-    }
-    
-    @Test
-    func lifetimeIsCapped() async {
-        await confirmation { confirmation in
-            callProvider.reportCallWithEndedAtReasonClosure = { _, _, reason in
-                if reason == .unanswered {
-                    confirmation()
-                } else {
-                    Issue.record("Call should have ended as unanswered")
-                }
-            }
-            
-            #expect(!callProvider.reportNewIncomingCallWithUpdateCompletionCalled)
-            
-            let pushPayload = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 300)
-            
-            service.pushRegistry(pushRegistry,
-                                 didReceiveIncomingPushWith: pushPayload,
-                                 for: .voIP) { }
-            
-            // Advance past the max timeout but below the 300
-            await testClock.advance(by: .seconds(100))
-        }
+        await waitForScheduledSleep()
+        
+        // Advance past the max timeout but below the 300
+        await testClock.advance(by: .seconds(100))
+        
+        let reason = try await deferredEndedCall.fulfill()
+        #expect(reason == .unanswered, "Call should have ended as unanswered")
     }
     
     @Test
@@ -164,27 +152,27 @@ final class ElementCallServiceTests {
     }
     
     @Test
-    func timeoutClearsIncomingCallStateBeforeNextPush() async {
+    func timeoutClearsIncomingCallStateBeforeNextPush() async throws {
         // Drive push #1 to its 60s unanswered timeout
-        await confirmation { confirmation in
-            callProvider.reportCallWithEndedAtReasonClosure = { _, _, reason in
-                if reason == .unanswered {
-                    confirmation()
-                }
-            }
-            
-            let firstPayload = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 60)
-            service.pushRegistry(pushRegistry, didReceiveIncomingPushWith: firstPayload, for: .voIP) { }
-            
-            await testClock.advance(by: .seconds(70))
+        let (endedCalls, endedCallsContinuation) = AsyncStream<CXCallEndedReason>.makeStream()
+        callProvider.reportCallWithEndedAtReasonClosure = { _, _, reason in
+            endedCallsContinuation.yield(reason)
         }
+        let deferredEndedCall = deferFulfillment(endedCalls, timeout: .seconds(30)) { $0 == .unanswered }
+        
+        let firstPayload = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 60)
+        service.pushRegistry(pushRegistry, didReceiveIncomingPushWith: firstPayload, for: .voIP) { }
+        
+        await waitForScheduledSleep()
+        await testClock.advance(by: .seconds(70))
+        try await deferredEndedCall.fulfill()
         
         callProvider.reportCallWithEndedAtReasonClosure = nil
         let firstCallUUID = callProvider.reportNewIncomingCallWithUpdateCompletionReceivedArguments?.uuid
         
         // Send push #2 for the same room; the previous incoming state must be cleared,
         // so the second push gets a fresh CallID.
-        await confirmation { confirmation in
+        await waitForConfirmation { confirmation in
             let secondPayload = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 60)
             service.pushRegistry(pushRegistry, didReceiveIncomingPushWith: secondPayload, for: .voIP) {
                 confirmation()
@@ -204,12 +192,15 @@ final class ElementCallServiceTests {
     @Test
     func setupCallSessionCancelsPendingUnansweredTimeout() async {
         // Schedule the 60s unanswered timer via an incoming push
-        await confirmation { confirmation in
+        await waitForConfirmation { confirmation in
             let payload = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 60)
             service.pushRegistry(pushRegistry, didReceiveIncomingPushWith: payload, for: .voIP) {
                 confirmation()
             }
         }
+        
+        // Make sure the cancellation below exercises a scheduled timer rather than one that never started.
+        await waitForScheduledSleep()
         
         // Simulate the answer flow handing off to setupCallSession, which must cancel
         // the pending endUnansweredCallTask as part of clearing the incoming state.
@@ -230,9 +221,64 @@ final class ElementCallServiceTests {
         
         #expect(!unansweredFired, "endUnansweredCallTask should have been cancelled by setupCallSession")
     }
+    
+    @Test
+    func expiredPushReportsMissedCall() async {
+        // An expired push is a real call we missed, so it should show up in Recents as one.
+        let pushPayload = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 20)
+        currentDate = currentDate.addingTimeInterval(60)
+        await expectImmediatelyEndedCallReported(forPayload: pushPayload, expectedReason: .unanswered)
+        
+        let update = callProvider.reportNewIncomingCallWithUpdateCompletionReceivedArguments?.update
+        #expect(update?.localizedCallerName == "welcome")
+        #expect(update?.remoteHandle?.value == "!room:example.com")
+    }
+    
+    @Test
+    func duplicateRoomPushReportsCallAsHandled() async {
+        // A duplicate push for an ongoing call is reported as handled, leaving the ongoing call alone.
+        await service.setupCallSession(roomID: "!room:example.com", roomDisplayName: "welcome")
+        let pushPayload = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 30)
+        await expectImmediatelyEndedCallReported(forPayload: pushPayload, expectedReason: .answeredElsewhere)
+        
+        // The call should be named so neither the brief system UI nor the Recents entry shows "Unknown".
+        let update = callProvider.reportNewIncomingCallWithUpdateCompletionReceivedArguments?.update
+        #expect(update?.localizedCallerName == "welcome")
+        
+        #expect(service.ongoingCallRoomIDPublisher.value == "!room:example.com")
+    }
+    
+    /// Waits until the unanswered-call timer is sleeping on the test clock — it runs in an
+    /// unstructured task, so advancing the clock before that would never wake it.
+    /// Note: `checkSuspension()` throws when a sleep is scheduled, which is the state we want.
+    private func waitForScheduledSleep() async {
+        while await (try? testClock.checkSuspension()) != nil {
+            await Task.yield()
+        }
+    }
+    
+    private func expectImmediatelyEndedCallReported(forPayload payload: PKPushPayloadMock,
+                                                    expectedReason: CXCallEndedReason) async {
+        let baselineNewIncomingCount = callProvider.reportNewIncomingCallWithUpdateCompletionCallsCount
+        let baselineEndedCount = callProvider.reportCallWithEndedAtReasonCallsCount
+        
+        await waitForConfirmation { confirmation in
+            service.pushRegistry(pushRegistry, didReceiveIncomingPushWith: payload, for: .voIP) {
+                confirmation()
+            }
+        }
+        
+        #expect(callProvider.reportNewIncomingCallWithUpdateCompletionCallsCount == baselineNewIncomingCount + 1)
+        #expect(callProvider.reportCallWithEndedAtReasonCallsCount == baselineEndedCount + 1)
+        
+        let reportedCall = callProvider.reportNewIncomingCallWithUpdateCompletionReceivedArguments
+        let endedCall = callProvider.reportCallWithEndedAtReasonReceivedArguments
+        #expect(reportedCall?.uuid == endedCall?.uuid)
+        #expect(endedCall?.reason == expectedReason)
+    }
 }
 
-private class PKPushPayloadMock: PKPushPayload {
+private nonisolated class PKPushPayloadMock: PKPushPayload {
     var dict: [AnyHashable: Any] = [:]
     
     override init() {

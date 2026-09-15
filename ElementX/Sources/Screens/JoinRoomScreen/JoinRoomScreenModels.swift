@@ -43,11 +43,12 @@ struct JoinRoomScreenRoomDetails {
     let canonicalAlias: String?
     let avatar: RoomAvatar?
     let memberCount: Int?
-    let heroes: [UserProfileProxy]
+    let heroes: [UserProfile]
     let inviter: RoomInviterDetails?
     let isDirect: Bool?
     
     let isSpace: Bool?
+    // periphery:ignore - might be useful to have
     let childrenCount: Int?
     let spaceVisibility: SpaceServiceRoomVisibility?
 }

@@ -84,7 +84,7 @@ struct InviteUsersScreen: View {
     private var usersSection: some View {
         if !context.viewState.usersSection.users.isEmpty {
             Section {
-                ForEach(context.viewState.usersSection.users, id: \.userID) { user in
+                ForEach(context.viewState.usersSection.users, id: \.id) { user in
                     UserProfileListRow(user: user,
                                        membership: context.viewState.membershipState(user),
                                        mediaProvider: context.mediaProvider,
@@ -110,7 +110,7 @@ struct InviteUsersScreen: View {
     private var selectedUsersSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(alignment: .top, spacing: 16) { // Tchap: align items at top
-                ForEach(context.viewState.selectedUsers, id: \.userID) { user in
+                ForEach(context.viewState.selectedUsers, id: \.id) { user in
                     InviteUsersScreenSelectedItem(user: user,
                                                   mediaProvider: context.mediaProvider,
                                                   isLocked: context.viewState.isInviteeMandatory(user)) {
@@ -151,7 +151,7 @@ struct InviteUsersScreen: View {
         }
     }
     
-    private func deselect(_ user: UserProfileProxy) {
+    private func deselect(_ user: UserProfile) {
         context.send(viewAction: .toggleUser(user))
     }
 }
@@ -213,8 +213,7 @@ struct InviteUsersScreen_Previews: PreviewProvider, TestablePreview {
                                                    roomType: roomType ?? .existingRoom(roomProxy: JoinedRoomProxyMock(.init(members: []))),
                                                    isSkippable: isSkippable,
                                                    userDiscoveryService: userDiscoveryService,
-                                                   userIndicatorController: UserIndicatorControllerMock(),
-                                                   appSettings: .volatile())
+                                                   userIndicatorController: UserIndicatorControllerMock())
         
         if let searchQuery {
             viewModel.context.searchQuery = searchQuery

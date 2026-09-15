@@ -23,7 +23,7 @@ class BlockedUsersScreenViewModel: BlockedUsersScreenViewModelType, BlockedUsers
         clientProxy = userSession.clientProxy
         self.userIndicatorController = userIndicatorController
         
-        let ignoredUsers = clientProxy.ignoredUsersPublisher.value?.map { UserProfileProxy(userID: $0) }
+        let ignoredUsers = clientProxy.ignoredUsersPublisher.value?.map { UserProfile(userID: $0) }
         
         super.init(initialViewState: BlockedUsersScreenViewState(blockedUsers: ignoredUsers ?? []),
                    mediaProvider: userSession.mediaProvider)
@@ -64,31 +64,39 @@ class BlockedUsersScreenViewModel: BlockedUsersScreenViewModelType, BlockedUsers
         defer { hideLoadingIndicator() }
         
         if hideProfiles {
-            state.blockedUsers = blockedUsers.map { UserProfileProxy(userID: $0) }
+            state.blockedUsers = blockedUsers.map { UserProfile(userID: $0) }
         } else {
-            state.blockedUsers = await withTaskGroup(of: UserProfileProxy.self) { group in
+            state.blockedUsers = await withTaskGroup(of: UserProfile.self) { group in
                 for userID in blockedUsers {
                     group.addTask {
-                        switch await self.clientProxy.profile(for: userID) {
-                        case .success(let profile): profile
-                        case .failure: UserProfileProxy(userID: userID)
-                        }
+                        await self.profile(for: userID)
                     }
                 }
                 
-                return await group.reduce(into: []) { partialResult, profile in
-                    partialResult.append(profile)
+                var profiles = [UserProfile]()
+                for await profile in group {
+                    profiles.append(profile)
                 }
+                return profiles
             }
         }
     }
     
-    private func unblockUser(_ user: UserProfileProxy) {
+    /// The client proxy isn't Sendable, fetch through this helper so that it
+    /// never leaves the main actor when running calls in parallel.
+    private func profile(for userID: String) async -> UserProfile {
+        switch await clientProxy.profile(for: userID) {
+        case .success(let profile): profile
+        case .failure: UserProfile(userID: userID)
+        }
+    }
+    
+    private func unblockUser(_ user: UserProfile) {
         showLoadingIndicator()
-        state.processingUserID = user.userID
+        state.processingUserID = user.id
         
         Task {
-            if case .failure = await clientProxy.unignoreUser(user.userID) {
+            if case .failure = await clientProxy.unignoreUser(user.id) {
                 state.bindings.alertInfo = .init(id: .error)
             }
             

@@ -18,7 +18,6 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     private let analyticsService: AnalyticsServiceProtocol
     private let eventStringBuilder: RoomEventStringBuilder
     
-    // periphery:ignore - required for instance retention in the rust codebase
     private var roomInfoObservationToken: TaskHandle?
     // periphery:ignore - required for instance retention in the rust codebase
     private var typingNotificationObservationToken: TaskHandle?
@@ -42,12 +41,6 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     /// The predecessor is set on room creation and never changes, so we lazily store it.
     lazy var predecessorRoom = room.predecessorRoom()
-    
-    /// The successor may change over time, so we access it dynamically.
-    /// It's suggested to observe it through the `infoPublisher`
-    var successorRoom: SuccessorRoom? {
-        room.successorRoom()
-    }
     
     let timeline: TimelineProxyProtocol
     
@@ -146,7 +139,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             return
         }
         
-        roomInfoObservationToken = room.subscribeToRoomInfoUpdates(listener: SDKListener { [weak self] roomInfo in
+        roomInfoObservationToken = room.subscribeToRoomInfoUpdates(listener: SDKListener.onMainActor { [weak self] roomInfo in
             MXLog.info("Received room info update")
             self?.infoSubject.send(RoomInfoProxy(roomInfo: roomInfo))
         })
@@ -234,6 +227,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
                 case .file: .file
                 case .image: .image
                 case .video: .video
+                case .gallery: .gallery
                 }
             }
             
@@ -301,16 +295,6 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
         }
     }
     
-    func redact(_ eventID: String) async -> Result<Void, RoomProxyError> {
-        do {
-            try await room.redact(eventId: eventID, reason: nil)
-            return .success(())
-        } catch {
-            MXLog.error("Failed redacting eventID: \(eventID) with error: \(error)")
-            return .failure(.sdkError(error))
-        }
-    }
-    
     func reportContent(_ eventID: String, reason: String?) async -> Result<Void, RoomProxyError> {
         do {
             try await room.reportContent(eventId: eventID, reason: reason)
@@ -355,7 +339,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     }
     
     func getMember(userID: String) async -> Result<RoomMemberProxyProtocol, RoomProxyError> {
-        if let member = membersPublisher.value.filter({ $0.userID == userID }).first {
+        if let member = membersPublisher.value.first(where: { $0.userID == userID }) {
             return .success(member)
         }
         
@@ -453,16 +437,6 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             .failure(.sdkError(error))
         case .failure(let error):
             .failure(.timelineError(error))
-        }
-    }
-    
-    func edit(eventID: String, newContent: RoomMessageEventContentWithoutRelation) async -> Result<Void, RoomProxyError> {
-        do {
-            try await room.edit(eventId: eventID, newContent: newContent)
-            return .success(())
-        } catch {
-            MXLog.error("Failed editing event id \(eventID), in room \(id) with error: \(error)")
-            return .failure(.sdkError(error))
         }
     }
     
@@ -595,15 +569,6 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     // MARK: - Power Levels
     
-    func powerLevels() async -> Result<RoomPowerLevelsProxyProtocol?, RoomProxyError> {
-        do {
-            return try await .success(RoomPowerLevelsProxy(room.getPowerLevels()))
-        } catch {
-            MXLog.error("Failed building the current power level settings: \(error)")
-            return .failure(.sdkError(error))
-        }
-    }
-    
     func applyPowerLevelChanges(_ changes: RoomPowerLevelChanges) async -> Result<Void, RoomProxyError> {
         do {
             return try await .success(room.applyPowerLevelChanges(changes: changes))
@@ -619,15 +584,6 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             return .success(())
         } catch {
             MXLog.error("Failed resetting the power levels: \(error)")
-            return .failure(.sdkError(error))
-        }
-    }
-    
-    func suggestedRole(for userID: String) async -> Result<RoomMemberRole, RoomProxyError> {
-        do {
-            return try await .success(room.suggestedRoleForUser(userId: userID))
-        } catch {
-            MXLog.error("Failed getting a user's role: \(error)")
             return .failure(.sdkError(error))
         }
     }
@@ -839,13 +795,13 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     // MARK: - Private
     
     private func subscribeToTypingNotifications() {
-        typingNotificationObservationToken = room.subscribeToTypingNotifications(listener: SDKListener { [weak self] typingUserIDs in
+        typingNotificationObservationToken = room.subscribeToTypingNotifications(listener: SDKListener.onMainActor { [weak self] typingUserIDs in
             guard let self else { return }
             
             MXLog.info("Received typing notification update, typingUsers: \(typingUserIDs)")
             
             let typingMembers = typingUserIDs.compactMap { userID in
-                if let member = self.membersPublisher.value.filter({ $0.userID == userID }).first {
+                if let member = self.membersPublisher.value.first(where: { $0.userID == userID }) {
                     return member.displayName ?? member.userID
                 } else {
                     return userID
@@ -858,7 +814,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     private func subscribeToIdentityStatusChanges() async {
         do {
-            identityStatusChangesObservationToken = try await room.subscribeToIdentityStatusChanges(listener: SDKListener { [weak self] changes in
+            identityStatusChangesObservationToken = try await room.subscribeToIdentityStatusChanges(listener: SDKListener.onMainActor { [weak self] changes in
                 guard let self else { return }
                 
                 MXLog.info("Received identity status changes: \(changes)")
@@ -872,7 +828,7 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     private func subscribeToKnockRequests() async {
         do {
-            knockRequestsChangesObservationToken = try await room.subscribeToKnockRequests(listener: SDKListener { [weak self] requests in
+            knockRequestsChangesObservationToken = try await room.subscribeToKnockRequests(listener: SDKListener.onMainActor { [weak self] requests in
                 guard let self else { return }
                 
                 MXLog.info("Received requests to join update, requests id: \(requests.map(\.eventId))")

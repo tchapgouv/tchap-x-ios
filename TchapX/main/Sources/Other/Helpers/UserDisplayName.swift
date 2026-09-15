@@ -32,11 +32,11 @@
 
 import Foundation
 
-struct UserDisplayName {
+nonisolated struct UserDisplayName: Sendable {
     private static let DOMAIN_PREFIX: Character = "["
     private static let DOMAIN_SUFFIX: Character = "]" // Not used at the moment.
 
-    private var _displayName: String
+    private let _displayName: String
 
     // Must be initiated from a user's disaplynName as "Jean Martin `[Modernisation]`".
 

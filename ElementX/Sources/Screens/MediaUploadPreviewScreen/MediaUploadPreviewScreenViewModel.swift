@@ -22,6 +22,7 @@ class MediaUploadPreviewScreenViewModel: MediaUploadPreviewScreenViewModelType, 
     private var processingTask: Task<Result<[MediaInfo], MediaUploadingPreprocessorError>, Never>
     private var requestHandle: SendAttachmentJoinHandleProtocol?
     private let clientProxy: ClientProxyProtocol
+    private let galleryEnabled: Bool
     
     private var actionsSubject: PassthroughSubject<MediaUploadPreviewScreenViewModelAction, Never> = .init()
     
@@ -32,8 +33,8 @@ class MediaUploadPreviewScreenViewModel: MediaUploadPreviewScreenViewModelType, 
     init(mediaURLs: [URL],
          caption: NSAttributedString?,
          title: String?,
-         isRoomEncrypted: Bool,
          shouldShowCaptionWarning: Bool,
+         galleryEnabled: Bool,
          mediaUploadingPreprocessor: MediaUploadingPreprocessor,
          timelineController: TimelineControllerProtocol,
          clientProxy: ClientProxyProtocol,
@@ -43,6 +44,7 @@ class MediaUploadPreviewScreenViewModel: MediaUploadPreviewScreenViewModelType, 
         self.timelineController = timelineController
         self.clientProxy = clientProxy
         self.userIndicatorController = userIndicatorController
+        self.galleryEnabled = galleryEnabled
         
         // Start processing the media whilst the user is reviewing it/adding a caption.
         processingTask = Self.processMedia(at: mediaURLs, preprocessor: mediaUploadingPreprocessor, clientProxy: clientProxy)
@@ -50,13 +52,12 @@ class MediaUploadPreviewScreenViewModel: MediaUploadPreviewScreenViewModelType, 
         super.init(initialViewState: MediaUploadPreviewScreenViewState(mediaURLs: mediaURLs,
                                                                        title: title,
                                                                        shouldShowCaptionWarning: shouldShowCaptionWarning,
-                                                                       isRoomEncrypted: isRoomEncrypted,
                                                                        bindings: .init(caption: caption ?? NSAttributedString())))
     }
     
     override func process(viewAction: MediaUploadPreviewScreenViewAction) {
         // Get the current caption before all the processing starts.
-        var caption = state.bindings.caption.nonBlankString
+        let caption = state.bindings.caption.nonBlankString
         
         switch viewAction {
         case .send:
@@ -67,13 +68,24 @@ class MediaUploadPreviewScreenViewModel: MediaUploadPreviewScreenViewModelType, 
                 
                 switch await processingTask.value {
                 case .success(let mediaInfos):
-                    for mediaInfo in mediaInfos {
-                        switch await sendAttachment(mediaInfo: mediaInfo, caption: caption) {
+                    if galleryEnabled, mediaInfos.count > 1 {
+                        switch await sendGallery(mediaInfos: mediaInfos, caption: caption) {
                         case .success:
-                            caption = nil // Set the caption only on the first uploaded file.
+                            break
                         case .failure(let error):
-                            MXLog.error("Failed sending media with error: \(error)")
+                            MXLog.error("Failed sending gallery with error: \(error)")
                             showError(label: L10n.screenMediaUploadPreviewErrorFailedSending)
+                        }
+                    } else {
+                        var perItemCaption = caption
+                        for mediaInfo in mediaInfos {
+                            switch await sendAttachment(mediaInfo: mediaInfo, caption: perItemCaption) {
+                            case .success:
+                                perItemCaption = nil // Set the caption only on the first uploaded file.
+                            case .failure(let error):
+                                MXLog.error("Failed sending media with error: \(error)")
+                                showError(label: L10n.screenMediaUploadPreviewErrorFailedSending)
+                            }
                         }
                     }
                     
@@ -109,6 +121,39 @@ class MediaUploadPreviewScreenViewModel: MediaUploadPreviewScreenViewModelType, 
         }
     }
     
+    private func sendGallery(mediaInfos: [MediaInfo], caption: String?) async -> Result<Void, TimelineControllerError> {
+        let itemInfos: [GalleryItemInfo] = mediaInfos.map { mediaInfo in
+            switch mediaInfo {
+            case let .image(imageURL, thumbnailURL, imageInfo):
+                .image(imageInfo: imageInfo,
+                       source: .file(filename: imageURL.path(percentEncoded: false)),
+                       caption: nil,
+                       formattedCaption: nil,
+                       thumbnailSource: .file(filename: thumbnailURL.path(percentEncoded: false)))
+            case let .video(videoURL, thumbnailURL, videoInfo):
+                .video(videoInfo: videoInfo,
+                       source: .file(filename: videoURL.path(percentEncoded: false)),
+                       caption: nil,
+                       formattedCaption: nil,
+                       thumbnailSource: .file(filename: thumbnailURL.path(percentEncoded: false)))
+            case let .audio(audioURL, audioInfo):
+                .audio(audioInfo: audioInfo,
+                       source: .file(filename: audioURL.path(percentEncoded: false)),
+                       caption: nil,
+                       formattedCaption: nil)
+            case let .file(fileURL, fileInfo):
+                .file(fileInfo: fileInfo,
+                      source: .file(filename: fileURL.path(percentEncoded: false)),
+                      caption: nil,
+                      formattedCaption: nil)
+            }
+        }
+        
+        return await timelineController.sendGallery(itemInfos: itemInfos,
+                                                    caption: caption,
+                                                    inReplyToEventID: nil)
+    }
+    
     func stopProcessing() {
         processingTask.cancel()
     }
@@ -125,7 +170,7 @@ class MediaUploadPreviewScreenViewModel: MediaUploadPreviewScreenViewModelType, 
     }
     
     private func sendAttachment(mediaInfo: MediaInfo, caption: String?) async -> Result<Void, TimelineControllerError> {
-        let requestHandle: ((SendAttachmentJoinHandleProtocol) -> Void) = { [weak self] handle in
+        let requestHandle: (@MainActor @Sendable (SendAttachmentJoinHandleProtocol) -> Void) = { [weak self] handle in
             self?.requestHandle = handle
         }
         

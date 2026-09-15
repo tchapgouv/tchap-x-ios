@@ -32,13 +32,13 @@ struct FormattingToolbar: View {
                     .disabled(item.state == .disabled)
                     .accessibilityIdentifier(item.accessibilityIdentifier)
                     .accessibilityLabel(item.accessibilityLabel)
+                    .accessibilityAddTraits(item.state == .reversed ? [.isToggle, .isSelected] : .isToggle)
                 }
             }
         }
     }
 }
 
-@MainActor
 private extension FormatItem {
     var foregroundColor: Color {
         switch state {

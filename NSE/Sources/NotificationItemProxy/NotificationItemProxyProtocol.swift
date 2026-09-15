@@ -11,7 +11,7 @@ import MatrixRustSDK
 import UserNotifications
 
 // sourcery: AutoMockable
-protocol NotificationItemProxyProtocol {
+nonisolated protocol NotificationItemProxyProtocol: Sendable {
     var event: NotificationEvent? { get }
     
     var senderID: String { get }
@@ -28,11 +28,7 @@ protocol NotificationItemProxyProtocol {
     
     var roomAvatarMediaSource: MediaSourceProxy? { get }
     
-    var roomJoinedMembers: Int { get }
-    
     var isRoomSpace: Bool { get }
-    
-    var isRoomDirect: Bool { get }
     
     var isRoomPrivate: Bool { get }
     

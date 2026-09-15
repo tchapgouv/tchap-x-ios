@@ -49,35 +49,34 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
     }
     
     var body: some View {
-        GeometryReader { geometry in
+        GeometryReader { _ in
             // Tchap: use MapTiler Snapshotter to request bitmap rendering of preview maps.
-            //            if let url = mapURLBuilder.staticMapTileImageURL(for: colorScheme.mapStyle,
-            //                                                             coordinates: coordinates,
-            //                                                             zoomLevel: zoomLevel,
-            //                                                             size: mapSize, // temporary using a fixed size since the refresh doesn't work properly on the UITableView based timeline
-            //                                                             attribution: mapTilerAttributionPlacement) {
-            //                AsyncImage(url: url) { phase in
-            //                    switch phase {
-            //                    case .empty:
-            //                        placeholderImage
-            //                    case .success(let image):
-            //                        ZStack {
-            //                            image
-            //                                .resizable()
-            //                                .aspectRatio(contentMode: .fill)
-            //                            pinAnnotationView
-            //                        }
-            //                    case .failure:
-            //                        errorView
-            //                    @unknown default:
-            //                        EmptyView()
-            //                    }
-            //                }
-            //                .position(x: geometry.frame(in: .local).midX, y: geometry.frame(in: .local).midY)
-            //                .id(fetchAttempt)
-            //            } else {
-            //                placeholderImage
-            //            }
+//            if let url = mapURLBuilder.staticMapTileImageURL(for: colorScheme.mapStyle,
+//                                                             coordinates: coordinates,
+//                                                             zoomLevel: zoomLevel,
+//                                                             size: mapSize, // temporary using a fixed size since the refresh doesn't work properly on the UITableView based timeline
+//                                                             attribution: mapTilerAttributionPlacement) {
+//                AsyncImage(url: url) { phase in
+//                    switch phase {
+//                    case .empty:
+//                        placeholderImage
+//                    case .success(let image):
+//                        ZStack {
+//                            image
+//                                .resizable()
+//                                .aspectRatio(contentMode: .fill)
+//                            pinAnnotationView
+//                        }
+//                    case .failure(let error):
+//                        let _ = MXLog.error("Failed retrieving tile with error: \(error.localizedDescription)")
+//                        errorView
+//                    @unknown default:
+//                        EmptyView()
+//                    }
+//                }
+//                .position(x: geometry.frame(in: .local).midX, y: geometry.frame(in: .local).midY)
+//                .id(fetchAttempt)
+
             let mapLoader = TchapStaticMapLoader.buildMapLoader(mapUrlBuilder: mapURLBuilder,
                                                                 style: colorScheme.mapStyle,
                                                                 location: coordinates,
@@ -94,8 +93,6 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
                                placeholderView: placeholderImage,
                                pinAnnotationView: pinAnnotationView,
                                errorView: errorView)
-                .position(x: geometry.frame(in: .local).midX, y: geometry.frame(in: .local).midY)
-                .id(fetchAttempt)
         }
     }
     

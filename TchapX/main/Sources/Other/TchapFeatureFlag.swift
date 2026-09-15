@@ -32,10 +32,10 @@
 
 import Foundation
 
-struct TchapFeatureFlag {
+struct TchapFeatureFlag: Sendable {
     let allowedInstances: [Instance]
     
-    func isActivated(for homeServer: TchapFeatureFlag.Instance) -> Bool {
+    nonisolated func isActivated(for homeServer: TchapFeatureFlag.Instance) -> Bool {
         // Return false if no instance suppports the feature.
         if allowedInstances.isEmpty {
             return false
@@ -113,21 +113,21 @@ extension TchapFeatureFlag {
         #if IS_TCHAP_PRODUCTION
         // CertificatePinning feature flag can only be activated for .all or none because it is used before any activated session.
         // See `TchapX/target.yml` file to know how to generate certificate pinning.
-        static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
+        nonisolated static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
 
         /// enableMAS feature flag can only be activated for .all or none because it is used before any activated session.
         static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
         #elseif IS_TCHAP_PREPROD
         // CertificatePinning feature flag can only be activated for .all or none because it is used before any activated session.
         // See `TchapX/target.yml` file to know how to generate certificate pinning.
-        static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
+        nonisolated static let certificatePinning = TchapFeatureFlag(allowedInstances: [.all])
 
         /// enableMAS feature flag can only be activated for .all or none because it is used before any activated session.
         static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])
         #elseif IS_TCHAP_DEVELOPMENT
         // CertificatePinning feature flag pinning is disabled in Development version (which uses Let's Encrypt certificates).
         // See `TchapX/target.yml` file to know how to generate certificate pinning.
-        static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
+        nonisolated static let certificatePinning = TchapFeatureFlag(allowedInstances: [])
 
         /// enableMAS feature flag can only be activated for .all or none because it is used before any activated session.
         static let enableMAS = TchapFeatureFlag(allowedInstances: [.all])

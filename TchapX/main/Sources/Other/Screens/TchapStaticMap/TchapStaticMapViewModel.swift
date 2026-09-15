@@ -79,22 +79,31 @@ import SwiftUI
         
         // Start Snapshotter on background queue to avoid blocking UI.
         // It seems to be faster and more reliable too.
-        snapshotter?.start(with: backgroundQueue) { snapshot, error in
-            guard error == nil else {
-                self.state = .failure(error!) // swiftlint:disable:this force_unwrapping
-                Self.removeRunningMapLoader(mapLoader: self)
-                return
-            }
+        snapshotter?.start(with: backgroundQueue) { [weak self] snapshot, error in
+            let image = snapshot?.image
+            let pngData = image?.dataForPNGRepresentation()
             
-            if let snapshot {
-                if let cacheKey = self.cacheKey,
-                   let pngData = snapshot.image.dataForPNGRepresentation() {
-                    try? self.cache?.store(data: pngData, for: cacheKey)
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
                 }
-                self.state = .success(snapshot.image)
+                
+                if let error {
+                    state = .failure(error)
+                    Self.removeRunningMapLoader(mapLoader: self)
+                    return
+                }
+                
+                if let image {
+                    if let cacheKey,
+                       let pngData {
+                        try? cache?.store(data: pngData, for: cacheKey)
+                    }
+                    state = .success(image)
+                }
+                
+                Self.removeRunningMapLoader(mapLoader: self)
             }
-            
-            Self.removeRunningMapLoader(mapLoader: self)
         }
     }
 }

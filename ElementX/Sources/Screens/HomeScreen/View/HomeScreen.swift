@@ -58,7 +58,7 @@ struct HomeScreen: View {
         }
         
         // Tchap: display `new room` button only if user is NOT external.
-        if case .agent = MatrixIdFromString(context.viewState.userID).userType {
+        if case .agent = MatrixIdFromString(context.viewState.userProfile.id).userType {
             ToolbarItem(placement: .primaryAction) {
                 if #available(iOS 26, *) {
                     newRoomButton
@@ -91,17 +91,11 @@ struct HomeScreen: View {
         Button {
             context.send(viewAction: .showSettings)
         } label: {
-            LoadableAvatarImage(url: context.viewState.userAvatarURL,
-                                name: context.viewState.userDisplayName,
-                                contentID: context.viewState.userID,
-                                avatarSize: .user(on: .chats),
-                                mediaProvider: context.mediaProvider)
-                .accessibilityIdentifier(A11yIdentifiers.homeScreen.userAvatar)
-                .clipShape(.circle)
-                .overlayBadge(10, isBadged: context.viewState.requiresExtraAccountSetup)
-                .compositingGroup()
+            AvatarSettingsButtonLabel(userProfile: context.viewState.userProfile,
+                                      mediaProvider: context.mediaProvider)
         }
         .accessibilityLabel(L10n.commonSettings)
+        .accessibilityIdentifier(A11yIdentifiers.homeScreen.userAvatar)
     }
     
     @ViewBuilder

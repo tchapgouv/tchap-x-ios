@@ -12,7 +12,7 @@ import UIKit
 enum TimelineInteractionHandlerAction {
     case composer(action: TimelineComposerAction)
     
-    case displayEmojiPicker(itemID: TimelineItemIdentifier, selectedEmojis: Set<String>)
+    case displayEmojiPicker(selectedEmojis: Set<String>, continuation: EmojiPickerScreenContinuation)
     case displayReportContent(itemID: TimelineItemIdentifier, senderID: String)
     case displayMessageForwarding(itemID: TimelineItemIdentifier)
     case displayMediaUploadPreviewScreen(mediaURLs: [URL])
@@ -31,7 +31,6 @@ enum TimelineInteractionHandlerAction {
 
 /// The interaction handler groups logic for dealing with various actions the user can take on a timeline's
 /// view that would've normally been part of the ``TimelineViewModel``
-@MainActor
 class TimelineInteractionHandler {
     private let roomProxy: JoinedRoomProxyProtocol
     private let timelineController: TimelineControllerProtocol
@@ -59,6 +58,8 @@ class TimelineInteractionHandler {
     }
     
     private var resumeVoiceMessagePlaybackAfterScrubbing = false
+    
+    private var emojiPickerCancellable: AnyCancellable?
     
     init(roomProxy: JoinedRoomProxyProtocol,
          timelineController: TimelineControllerProtocol,
@@ -106,6 +107,14 @@ class TimelineInteractionHandler {
     
     // swiftlint:disable:next cyclomatic_complexity
     func handleTimelineItemMenuAction(_ action: TimelineItemMenuAction, itemID: TimelineItemIdentifier) {
+        // Redacting needs the event alone, so it works even when the item isn't part of this timeline,
+        // such as one held by a media preview that was built from a different one.
+        if case .redact = action {
+            guard case let .event(_, eventOrTransactionID) = itemID else { fatalError() }
+            Task { await timelineController.redact(eventOrTransactionID) }
+            return
+        }
+        
         guard let timelineItem = timelineController.timelineItems.firstUsingStableID(itemID),
               let eventTimelineItem = timelineItem as? EventBasedTimelineItemProtocol else {
             return
@@ -155,8 +164,7 @@ class TimelineInteractionHandler {
                 UIPasteboard.general.url = permalinkURL
             }
         case .redact:
-            guard case let .event(_, eventOrTransactionID) = itemID else { fatalError() }
-            Task { await timelineController.redact(eventOrTransactionID) }
+            break // Handled above, before the timeline item is looked up.
         case .reply:
             guard let eventID = eventTimelineItem.id.eventID else { return }
             
@@ -238,6 +246,10 @@ class TimelineInteractionHandler {
             text = content.caption ?? ""
             htmlText = content.formattedCaptionHTMLString
             editType = text.isEmpty ? .addCaption : .editCaption
+        case .gallery(let content):
+            text = content.caption ?? ""
+            htmlText = content.formattedCaptionHTMLString
+            editType = text.isEmpty ? .addCaption : .editCaption
         default:
             text = messageTimelineItem.body
         }
@@ -249,9 +261,9 @@ class TimelineInteractionHandler {
     
     // MARK: Polls
     
-    func sendPollResponse(pollStartID: String, optionID: String) {
+    func sendPollResponse(pollStartID: String, answerIDs: [String]) {
         Task {
-            let sendPollResponseResult = await pollInteractionHandler.sendPollResponse(pollStartID: pollStartID, optionID: optionID)
+            let sendPollResponseResult = await pollInteractionHandler.sendPollResponse(pollStartID: pollStartID, answerIDs: answerIDs)
             
             switch sendPollResponseResult {
             case .success:
@@ -509,7 +521,7 @@ class TimelineInteractionHandler {
                                            duration: voiceMessageRoomTimelineItem.content.duration,
                                            waveform: voiceMessageRoomTimelineItem.content.waveform,
                                            playbackSpeed: appSettings.voiceMessagePlaybackSpeed,
-                                           playbackSpeedPublisher: appSettings.$voiceMessagePlaybackSpeed)
+                                           playbackSpeedPublisher: appSettings.voiceMessagePlaybackSpeedPublisher)
         mediaPlayerProvider.register(audioPlayerState: playerState)
         return playerState
     }
@@ -519,11 +531,21 @@ class TimelineInteractionHandler {
     func displayEmojiPicker(for itemID: TimelineItemIdentifier) {
         guard let timelineItem = timelineController.timelineItems.firstUsingStableID(itemID),
               timelineItem.isReactable,
-              let eventTimelineItem = timelineItem as? EventBasedTimelineItemProtocol else {
+              let eventTimelineItem = timelineItem as? EventBasedTimelineItemProtocol,
+              case let .event(_, eventOrTransactionID) = itemID else {
             return
         }
         let selectedEmojis = Set(eventTimelineItem.properties.reactions.compactMap { $0.isHighlighted ? $0.key : nil })
-        actionsSubject.send(.displayEmojiPicker(itemID: itemID, selectedEmojis: selectedEmojis))
+        
+        let (stream, continuation) = AsyncStream<String>.makeStream()
+        actionsSubject.send(.displayEmojiPicker(selectedEmojis: selectedEmojis, continuation: continuation))
+        
+        emojiPickerCancellable = Task { [weak self] in
+            for await emoji in stream {
+                await self?.timelineController.toggleReaction(emoji, to: eventOrTransactionID)
+            }
+        }
+        .asCancellable()
     }
     
     func processItemTap(_ itemID: TimelineItemIdentifier) async -> TimelineControllerAction {
@@ -545,14 +567,18 @@ class TimelineInteractionHandler {
                                                              timestamp: item.timestamp,
                                                              timeoutDate: item.content.timeoutDate)
             return .displayLiveLocation(sender: item.sender, initialLiveLocationShare: initialLiveLocationShare)
+        // Galleries are included so that their attachments can be browsed as individual media.
         case let item as ImageRoomTimelineItem:
-            return await mediaPreviewAction(for: item, messageTypes: [.image, .video])
+            return await mediaPreviewAction(for: item, messageTypes: [.image, .video, .gallery])
         case let item as VideoRoomTimelineItem:
-            return await mediaPreviewAction(for: item, messageTypes: [.image, .video])
+            return await mediaPreviewAction(for: item, messageTypes: [.image, .video, .gallery])
         case let item as AudioRoomTimelineItem:
-            return await mediaPreviewAction(for: item, messageTypes: [.audio, .file])
+            return await mediaPreviewAction(for: item, messageTypes: [.audio, .file, .gallery])
         case let item as FileRoomTimelineItem:
-            return await mediaPreviewAction(for: item, messageTypes: [.audio, .file])
+            return await mediaPreviewAction(for: item, messageTypes: [.audio, .file, .gallery])
+        case let item as GalleryRoomTimelineItem:
+            // Only galleries are needed as the preview is scoped to the attachments of the tapped one.
+            return await mediaPreviewAction(for: item, messageTypes: [.gallery])
         default:
             return .none
         }
@@ -588,7 +614,10 @@ class TimelineInteractionHandler {
         case .pinned:
             newTimelineFocus = .pinned
             newTimelinePresentation = .pinnedEventsScreen
-        case .media, .thread:
+        case .thread(let rootEventID):
+            newTimelineFocus = .thread(eventID: rootEventID)
+            newTimelinePresentation = .roomScreenThread
+        case .media:
             break // We don't need to create a new timeline as it is already filtered.
         }
         
@@ -619,10 +648,20 @@ class TimelineInteractionHandler {
                                                       linkMetadataProvider: linkMetadataProvider,
                                                       timelineControllerFactory: timelineControllerFactory)
             
-            return .displayMediaPreview(item: item, timelineViewModel: .new(timelineViewModel))
+            return previewAction(for: item, timelineViewModel: .new(timelineViewModel))
         } else {
-            return .displayMediaPreview(item: item, timelineViewModel: .active)
+            return previewAction(for: item, timelineViewModel: .active)
         }
+    }
+    
+    /// A gallery is previewed scoped to its own attachments rather than the wider timeline's media.
+    private func previewAction(for item: EventBasedMessageTimelineItemProtocol,
+                               timelineViewModel: TimelineControllerAction.TimelineViewModelKind) -> TimelineControllerAction {
+        guard let galleryItem = item as? GalleryRoomTimelineItem else {
+            return .displayMediaPreview(item: item, timelineViewModel: timelineViewModel)
+        }
+        
+        return .displayGalleryPreview(galleryItem: galleryItem, timelineViewModel: timelineViewModel)
     }
 }
 

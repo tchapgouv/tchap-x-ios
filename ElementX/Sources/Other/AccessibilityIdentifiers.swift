@@ -57,6 +57,7 @@ enum A11yIdentifiers {
     }
     
     struct AppLockScreen {
+        let cancel = "app_lock-cancel"
         func numpad(_ digit: Int) -> String {
             "app_lock-numpad_\(digit)"
         }
@@ -194,7 +195,6 @@ enum A11yIdentifiers {
     struct RoomDetailsScreen {
         let addTopic = "room_details-add_topic"
         let avatar = "room_details-avatar"
-        let dmAvatar = "room_details-dm_avatar"
         let people = "room_details-people"
         let notifications = "room_details-notifications"
         let pollsHistory = "room_details-polls_history"
@@ -295,6 +295,9 @@ enum A11yIdentifiers {
     
     struct PollFormScreen {
         let addOption = "poll_form-add_option"
+        let maxSelections = "poll_form-max_selections"
+        let maxSelectionsDecrement = "poll_form-max_selections-decrement"
+        let maxSelectionsIncrement = "poll_form-max_selections-increment"
         let pollKind = "poll_form-kind"
         let question = "poll_form-question"
         let submit = "poll_form-submit"
@@ -322,6 +325,11 @@ enum A11yIdentifiers {
     
     struct RoomMembersListScreen {
         let invite = "room_members_list_screen-invite"
+        
+        let roomMemberPrefix = "room_members_list_screen-member"
+        func member(_ userID: String) -> String {
+            "\(roomMemberPrefix):\(userID)"
+        }
     }
     
     struct ManageRoomMemberSheet {
@@ -329,8 +337,6 @@ enum A11yIdentifiers {
     }
     
     struct SpacesScreen {
-        let userAvatar = "spaces_screen-user_avatar"
-        
         let roomNamePrefix = "spaces_screen-room_name"
         func spaceRoomName(_ name: String) -> String {
             "\(roomNamePrefix):\(name)"

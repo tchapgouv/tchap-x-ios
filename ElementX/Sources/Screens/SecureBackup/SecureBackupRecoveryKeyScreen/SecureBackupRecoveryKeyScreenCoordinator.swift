@@ -21,7 +21,7 @@ enum SecureBackupRecoveryKeyScreenCoordinatorAction {
     case identityConfirmation // Tchap: open other verification methods
 }
 
-final class SecureBackupRecoveryKeyScreenCoordinator: CoordinatorProtocol {
+final class SecureBackupRecoveryKeyScreenCoordinator: SecureBackupRecoveryKeyCoordinatorProtocol {
     private let parameters: SecureBackupRecoveryKeyScreenCoordinatorParameters
     private var viewModel: SecureBackupRecoveryKeyScreenViewModelProtocol
     

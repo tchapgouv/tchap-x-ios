@@ -19,11 +19,14 @@ struct SessionSecurityState: Equatable {
 }
 
 // sourcery: AutoMockable
-protocol UserSessionProtocol {
+protocol UserSessionProtocol: Sendable {
     var clientProxy: ClientProxyProtocol { get }
     var mediaProvider: MediaProviderProtocol { get }
     var voiceMessageMediaManager: VoiceMessageMediaManagerProtocol { get }
     var liveLocationManager: LiveLocationManagerProtocol { get }
+    
+    /// Scans media content, `nil` when no content scanner is configured for the server.
+    var contentScannerService: ContentScannerServiceProtocol? { get }
     
     var sessionSecurityStatePublisher: CurrentValuePublisher<SessionSecurityState, Never> { get }
     

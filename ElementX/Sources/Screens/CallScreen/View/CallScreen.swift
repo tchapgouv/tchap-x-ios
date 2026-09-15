@@ -26,6 +26,9 @@ struct CallScreen: View {
                 .toolbar { toolbar }
         }
         .alert(item: $context.alertInfo)
+        // Force dark mode for calls. Don't use .preferredColorScheme
+        // otherwise the whole app changes, visible when using the PiP.
+        .environment(\.colorScheme, .dark)
     }
     
     @ViewBuilder
@@ -50,7 +53,7 @@ struct CallScreen: View {
     }
 }
 
-private struct CallView: UIViewRepresentable {
+struct CallView: UIViewRepresentable {
     /// The top-level view this representable displays. It wraps the web view when picture in picture isn't running.
     typealias WebViewWrapper = UIView
     
@@ -62,7 +65,13 @@ private struct CallView: UIViewRepresentable {
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(viewModelContext: viewModelContext)
+        if let existing = viewModelContext.viewState.swiftUICallViewCoordinator {
+            return existing
+        }
+        // When the screen is rotated, the pro max models regenerate the swiftui view tree, destroying and
+        // rebuilding this view. For that reason, we need to create and store the coordinator in the view model
+        // (and by extension the UIView) to persist between rotations to retain state
+        fatalError("CallView.Coordinator must be initialized in the context view state")
     }
     
     func updateUIView(_ callWebView: WebViewWrapper, context: Context) {
@@ -71,7 +80,6 @@ private struct CallView: UIViewRepresentable {
         }
     }
     
-    @MainActor
     class Coordinator: NSObject, WKUIDelegate, WKNavigationDelegate, AVPictureInPictureControllerDelegate {
         private weak var viewModelContext: CallScreenViewModel.Context?
         
@@ -88,7 +96,7 @@ private struct CallView: UIViewRepresentable {
         init(viewModelContext: CallScreenViewModel.Context) {
             self.viewModelContext = viewModelContext
             pictureInPictureViewController = AVPictureInPictureVideoCallViewController()
-            pictureInPictureViewController.preferredContentSize = CGSize(width: 1920, height: 1080)
+            pictureInPictureViewController.preferredContentSize = PiPSize.portrait.size
             
             super.init()
             
@@ -109,6 +117,7 @@ private struct CallView: UIViewRepresentable {
             configuration.userContentController = userContentController
             configuration.allowsInlineMediaPlayback = true
             configuration.allowsPictureInPictureMediaPlayback = true
+            configuration.applicationNameForUserAgent = InfoPlistReader.main.bundleDisplayName
             
             if let script = viewModelContext.viewState.script {
                 let userScript = WKUserScript(source: script, injectionTime: .atDocumentEnd, forMainFrameOnly: false)
@@ -120,8 +129,6 @@ private struct CallView: UIViewRepresentable {
             webView.navigationDelegate = self
             webView.isInspectable = true
             webView.scrollView.contentInsetAdjustmentBehavior = .never // Let Element Call manage the safe areas within the web view.
-            
-            webView.customUserAgent = UserAgentBuilder.makeASCIIUserAgent()
             
             // https://stackoverflow.com/a/77963877/730924
             webView.allowsLinkPreview = true
@@ -149,6 +156,7 @@ private struct CallView: UIViewRepresentable {
         }
         
         func load(_ url: URL) {
+            guard self.url != url else { return }
             self.url = url
             // The only file URL we allow is the one coming from our own local ElementCall bundle, so it's okay to allow read permission only to our local EC bundle
             if url.isFileURL {
@@ -168,12 +176,16 @@ private struct CallView: UIViewRepresentable {
                     if let error {
                         continuaton.resume(throwing: error)
                     } else {
+                        // The completion is called on the main thread which the continuation
+                        // also resumes on, so the result never actually crosses threads.
+                        nonisolated(unsafe) let result = result
                         continuaton.resume(returning: result)
                     }
                 }
             }
         }
         
+        // periphery:ignore:parameters userContentController - delegate convention
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             guard let handlerID = CallScreenJavaScriptMessageName(rawValue: message.name) else {
                 return
@@ -192,6 +204,16 @@ private struct CallView: UIViewRepresentable {
                 viewModelContext?.send(viewAction: .outputDeviceSelected(deviceID: deviceID))
             case .onBackButtonPressed:
                 viewModelContext?.send(viewAction: .navigateBack)
+            case .onPipMediaOrientationUpdate:
+                guard let orientation = message.body as? String else { return }
+                switch orientation {
+                case "portrait":
+                    pictureInPictureViewController.preferredContentSize = PiPSize.portrait.size
+                case "landscape":
+                    pictureInPictureViewController.preferredContentSize = PiPSize.landscape.size
+                default:
+                    break
+                }
             case .forwardLogs:
                 guard let body = message.body as? [String: String],
                       let level = body["level"],
@@ -275,10 +297,6 @@ private struct CallView: UIViewRepresentable {
             return .success(())
         }
         
-        func stopPictureInPicture() {
-            pictureInPictureController?.stopPictureInPicture()
-        }
-        
         nonisolated func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
             Task { @MainActor in
                 // We move the view via the delegate so it works when you background the app without calling requestPictureInPicture
@@ -338,6 +356,20 @@ private struct CallView: UIViewRepresentable {
         
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             coordinator?.userContentController(userContentController, didReceive: message)
+        }
+    }
+    
+    private enum PiPSize {
+        case portrait
+        case landscape
+        
+        var size: CGSize {
+            switch self {
+            case .portrait:
+                .init(width: 1080, height: 1920)
+            case .landscape:
+                .init(width: 1920, height: 1080)
+            }
         }
     }
 }

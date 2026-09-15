@@ -21,8 +21,6 @@ class VoiceMessageRecorder: VoiceMessageRecorderProtocol {
         actionsSubject.eraseToAnyPublisher()
     }
     
-    private let mp4accMimeType = "audio/m4a"
-    
     var isRecording: Bool {
         audioRecorder.isRecording
     }
@@ -51,7 +49,7 @@ class VoiceMessageRecorder: VoiceMessageRecorderProtocol {
         addObservers()
     }
     
-    deinit {
+    isolated deinit {
         removeObservers()
     }
     
@@ -98,8 +96,8 @@ class VoiceMessageRecorder: VoiceMessageRecorderProtocol {
             return .failure(.previewNotAvailable)
         }
         
-        if await !previewAudioPlayerState.isAttached {
-            await previewAudioPlayerState.attachAudioPlayer(audioPlayer)
+        if !previewAudioPlayerState.isAttached {
+            previewAudioPlayerState.attachAudioPlayer(audioPlayer)
         }
         
         if audioPlayer.playbackURL == url {
@@ -119,7 +117,7 @@ class VoiceMessageRecorder: VoiceMessageRecorderProtocol {
         guard let previewAudioPlayerState else {
             return
         }
-        await previewAudioPlayerState.detachAudioPlayer()
+        previewAudioPlayerState.detachAudioPlayer()
         previewAudioPlayer?.stop()
     }
     
@@ -194,6 +192,7 @@ class VoiceMessageRecorder: VoiceMessageRecorderProtocol {
     
     private func addObservers() {
         audioRecorder.actions
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] action in
                 guard let self else { return }
                 self.handleAudioRecorderAction(action)
@@ -222,7 +221,7 @@ class VoiceMessageRecorder: VoiceMessageRecorderProtocol {
                         actionsSubject.send(.didFailWithError(error: VoiceMessageRecorderError.previewNotAvailable))
                         return
                     }
-                    await mediaPlayerProvider.register(audioPlayerState: previewAudioPlayerState)
+                    mediaPlayerProvider.register(audioPlayerState: previewAudioPlayerState)
                     actionsSubject.send(.didStopRecording(previewState: previewAudioPlayerState, url: recordingURL))
                 }
             }
@@ -239,10 +238,10 @@ class VoiceMessageRecorder: VoiceMessageRecorderProtocol {
         }
         
         // Build the preview audio player state
-        previewAudioPlayerState = await AudioPlayerState(id: .recorderPreview, title: L10n.commonVoiceMessage, duration: recordingDuration, waveform: EstimatedWaveform(data: []))
+        previewAudioPlayerState = AudioPlayerState(id: .recorderPreview, title: L10n.commonVoiceMessage, duration: recordingDuration, waveform: EstimatedWaveform(data: []))
         
         // Build the preview audio player
-        let audioPlayer = await mediaPlayerProvider.player
+        let audioPlayer = mediaPlayerProvider.player
         previewAudioPlayer = audioPlayer
         
         return .success(())

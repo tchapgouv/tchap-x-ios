@@ -8,9 +8,10 @@
 
 import UIKit
 
-struct EmoteRoomTimelineItemContent: Hashable {
+nonisolated struct EmoteRoomTimelineItemContent: Hashable {
     let body: String
     var formattedBody: AttributedString?
+    // periphery:ignore - used via the synthesized Hashable conformance
     /// The original textual representation of the formatted body directly from the event (usually HTML code)
     var formattedBodyHTMLString: String?
 }

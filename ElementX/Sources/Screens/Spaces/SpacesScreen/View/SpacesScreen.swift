@@ -151,16 +151,12 @@ struct SpacesScreen: View {
             Button {
                 context.send(viewAction: .showSettings)
             } label: {
-                LoadableAvatarImage(url: context.viewState.userAvatarURL,
-                                    name: context.viewState.userDisplayName,
-                                    contentID: context.viewState.userID,
-                                    avatarSize: .user(on: .spaces),
-                                    mediaProvider: context.mediaProvider)
-                    .accessibilityIdentifier(A11yIdentifiers.homeScreen.userAvatar)
-                    .compositingGroup()
+                AvatarSettingsButtonLabel(userProfile: context.viewState.userProfile,
+                                          mediaProvider: context.mediaProvider)
             }
             .buttonStyle(.borderless)
             .accessibilityLabel(L10n.commonSettings)
+            .accessibilityIdentifier(A11yIdentifiers.homeScreen.userAvatar)
         }
         
         ToolbarItem(placement: .principal) {
@@ -200,14 +196,11 @@ struct SpacesScreen_Previews: PreviewProvider, TestablePreview {
     }
     
     static func makeViewModel(isEmpty: Bool = false) -> SpacesScreenViewModel {
-        let appSettings = AppSettings.volatile()
-        
         let clientProxy = ClientProxyMock(.init())
         clientProxy.spaceService = SpaceServiceProxyMock(.init(topLevelSpaces: isEmpty ? [] : .mockJoinedSpaces))
         
         return SpacesScreenViewModel(userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                      selectedSpacePublisher: .init(nil),
-                                     appSettings: appSettings,
                                      userIndicatorController: UserIndicatorControllerMock())
     }
 }

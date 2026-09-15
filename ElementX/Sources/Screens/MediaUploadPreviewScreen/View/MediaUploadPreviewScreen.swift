@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import AVFoundation
 import Combine
 import Compound
 import GameController
@@ -35,17 +36,7 @@ struct MediaUploadPreviewScreen: View {
         mainContent
             .id(context.viewState.mediaURLs)
             .ignoresSafeArea(edges: [.horizontal])
-            .safeAreaInset(edge: .top) {
-                if context.viewState.mediaURLs.count > 1 {
-                    Text(L10n.screenMediaUploadPreviewItemCount(currentIndex + 1, context.viewState.mediaURLs.count))
-                        .font(.compound.bodyMD)
-                        .foregroundColor(.compound.textPrimary)
-                        .padding(.vertical, 4)
-                        .padding(.horizontal, 8)
-                        .background(.compound.bgBadgeDefault)
-                        .clipShape(.capsule)
-                }
-            }
+            .overlay(alignment: .top) { galleryBadge }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 composer
                     .padding(.horizontal, 12)
@@ -72,6 +63,19 @@ struct MediaUploadPreviewScreen: View {
                 // Make sure out of bound error alerts are shown even if the sheet is presented
                 .alert(item: $context.alertInfo)
             }
+    }
+    
+    @ViewBuilder
+    private var galleryBadge: some View {
+        if context.viewState.mediaURLs.count > 1 {
+            Text(L10n.screenMediaUploadPreviewItemCount(currentIndex + 1, context.viewState.mediaURLs.count))
+                .font(.compound.bodySMSemibold)
+                .foregroundStyle(.compound.textPrimary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(.compound.bgCanvasDefault.opacity(0.85), in: .capsule)
+                .padding(.top, 12)
+        }
     }
     
     @ViewBuilder
@@ -109,6 +113,7 @@ struct MediaUploadPreviewScreen: View {
             SendButton {
                 context.send(viewAction: .send)
             }
+            .accessibilityLabel(L10n.actionSend)
         }
     }
     
@@ -118,6 +123,7 @@ struct MediaUploadPreviewScreen: View {
         } label: {
             CompoundIcon(\.infoSolid, size: .xSmall, relativeTo: .compound.bodyLG)
         }
+        .accessibilityLabel(L10n.a11yInfo)
         .tint(.compound.iconCriticalPrimary)
         .popover(isPresented: $context.isPresentingMediaCaptionWarning, arrowEdge: .bottom) {
             captionWarningContent
@@ -262,7 +268,20 @@ private struct PreviewView: UIViewControllerRepresentable {
         }
         
         func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
-            PreviewItem(previewItemURL: view.mediaURLs[index], previewItemTitle: view.title)
+            let url = view.mediaURLs[index]
+            // Use a descriptive title instead of the file name so VoiceOver doesn't read a cryptic name.
+            return PreviewItem(previewItemURL: url, previewItemTitle: previewItemTitle(for: url))
+        }
+        
+        private func previewItemTitle(for url: URL) -> String? {
+            guard let type = UTType(filenameExtension: url.pathExtension) else { return view.title }
+            if type.conforms(to: .image) {
+                return L10n.a11yPhotoPreview
+            }
+            if type.conforms(to: .movie) || type.conforms(to: .video) {
+                return L10n.a11yVideoPreview
+            }
+            return view.title
         }
         
         // MARK: - QLPreviewControllerDelegate
@@ -274,8 +293,8 @@ private struct PreviewView: UIViewControllerRepresentable {
 }
 
 private class PreviewItem: NSObject, QLPreviewItem {
-    var previewItemURL: URL?
-    var previewItemTitle: String?
+    nonisolated let previewItemURL: URL? // nonisolated as QuickLook can call from any thread (macOS 26).
+    nonisolated let previewItemTitle: String? // nonisolated as QuickLook can call from any thread (macOS 26).
     
     init(previewItemURL: URL?, previewItemTitle: String?) {
         self.previewItemURL = previewItemURL
@@ -314,6 +333,11 @@ private class PreviewViewController: QLPreviewController {
         
         // Hide toolbar share button
         toolbarItems?.first?.isHidden = true
+        
+        // The chrome is hidden visually but its buttons remain in VoiceOver's focus order,
+        // so keep the navigation bar and toolbar out of the accessibility tree too.
+        navigationController?.navigationBar.accessibilityElementsHidden = true
+        navigationController?.toolbar?.accessibilityElementsHidden = true
     }
 }
 
@@ -327,7 +351,11 @@ private struct ImageEditorView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> CropViewController {
         let image = UIImage(contentsOfFile: imageURL.path) ?? UIImage()
         
-        let cropViewController = Mantis.cropViewController(image: image)
+        var config = Mantis.Config()
+        let toolbarOptions: ToolbarButtonOptions = [.default, .horizontallyFlip, .verticallyFlip]
+        config.cropToolbarConfig.toolbarButtonOptions = toolbarOptions
+        
+        let cropViewController = Mantis.cropViewController(image: image, config: config)
         cropViewController.delegate = context.coordinator
         return cropViewController
     }
@@ -364,13 +392,12 @@ private struct ImageEditorView: UIViewControllerRepresentable {
 
 struct MediaUploadPreviewScreen_Previews: PreviewProvider, TestablePreview {
     static let snapshotURL = URL.picturesDirectory
-    static let testURL = Bundle.main.url(forResource: "AppIcon60x60@2x", withExtension: "png")
     
     static let viewModel = MediaUploadPreviewScreenViewModel(mediaURLs: [snapshotURL],
                                                              caption: nil,
                                                              title: "App Icon.png",
-                                                             isRoomEncrypted: true,
                                                              shouldShowCaptionWarning: true,
+                                                             galleryEnabled: true,
                                                              mediaUploadingPreprocessor: MediaUploadingPreprocessor(appSettings: .volatile()),
                                                              timelineController: TimelineControllerMock(.init()),
                                                              clientProxy: ClientProxyMock(.init()),

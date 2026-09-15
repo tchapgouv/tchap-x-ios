@@ -115,7 +115,7 @@ struct StartChatScreen: View {
     private var usersSection: some View {
         if !context.viewState.usersSection.users.isEmpty {
             Section {
-                ForEach(context.viewState.usersSection.users, id: \.userID) { user in
+                ForEach(context.viewState.usersSection.users, id: \.id) { user in
                     UserProfileListRow(user: user,
                                        membership: nil,
                                        mediaProvider: context.mediaProvider,
@@ -164,8 +164,7 @@ struct StartChatScreen_Previews: PreviewProvider, TestablePreview {
         return StartChatScreenViewModel(userSession: userSession,
                                         analytics: AnalyticsServiceMock(.init()),
                                         userIndicatorController: UserIndicatorControllerMock(),
-                                        userDiscoveryService: userDiscoveryService,
-                                        appSettings: appSettings)
+                                        userDiscoveryService: userDiscoveryService)
     }()
     
     static var previews: some View {

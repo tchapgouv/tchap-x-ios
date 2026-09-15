@@ -9,7 +9,7 @@
 import MatrixRustSDK // Tchap
 import UIKit
 
-struct EmoteRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
+nonisolated struct EmoteRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
     let id: TimelineItemIdentifier
     let timestamp: Date
     let isOutgoing: Bool
@@ -29,7 +29,4 @@ struct EmoteRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
     var contentType: EventBasedMessageTimelineItemContentType {
         .emote(content)
     }
-    
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .trusted
 }

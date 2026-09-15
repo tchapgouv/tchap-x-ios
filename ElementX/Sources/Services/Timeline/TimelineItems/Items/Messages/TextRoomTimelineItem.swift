@@ -10,7 +10,7 @@ import Algorithms
 import MatrixRustSDK // Tchap
 import UIKit
 
-struct TextRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
+nonisolated struct TextRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
     let id: TimelineItemIdentifier
     let timestamp: Date
     let isOutgoing: Bool
@@ -55,7 +55,4 @@ struct TextRoomTimelineItem: TextBasedRoomTimelineItem, Equatable {
         
         return Array(links.uniqued())
     }
-
-    // Tchap: BWI content-scanner scan state
-    var scanState: BwiScanState = .trusted
 }

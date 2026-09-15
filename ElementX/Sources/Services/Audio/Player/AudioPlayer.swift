@@ -42,7 +42,6 @@ class AudioPlayer: NSObject, AudioPlayerProtocol {
     
     private let audioSession = AVAudioSession.sharedInstance()
     
-    // periphery:ignore - when set to nil is automatically cancelled
     @CancellableTask private var releaseAudioSessionTask: Task<Void, Never>?
     
     private let releaseAudioSessionTimeoutInterval = 5.0
@@ -82,7 +81,7 @@ class AudioPlayer: NSObject, AudioPlayerProtocol {
     
     private var isStopped = true
     
-    deinit {
+    isolated deinit {
         deinitInProgress = true
         stop()
         unloadContent()
@@ -184,31 +183,40 @@ class AudioPlayer: NSObject, AudioPlayerProtocol {
             return
         }
         
-        statusObserver = playerItem.observe(\.status, options: [.old, .new]) { [weak self] _, _ in
-            guard let self else { return }
-            
-            switch playerItem.status {
-            case .failed:
-                setInternalState(.error(playerItem.error ?? AudioPlayerError.genericError))
-            case .readyToPlay:
-                guard state == .loading else { return }
-                setInternalState(.readyToPlay)
-            default:
-                break
+        statusObserver = playerItem.observe(\.status, options: [.old, .new]) { [weak self] item, _ in
+            // KVO fires on an arbitrary thread, hop to the main actor with the values we need.
+            let status = item.status
+            let error = item.error
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                
+                switch status {
+                case .failed:
+                    setInternalState(.error(error ?? AudioPlayerError.genericError))
+                case .readyToPlay:
+                    guard state == .loading else { return }
+                    setInternalState(.readyToPlay)
+                default:
+                    break
+                }
             }
         }
         
-        rateObserver = internalAudioPlayer.observe(\.rate, options: [.old, .new]) { [weak self] _, _ in
-            guard let self else { return }
-            
-            if internalAudioPlayer.rate == 0 {
-                if isStopped {
-                    setInternalState(.stopped)
+        rateObserver = internalAudioPlayer.observe(\.rate, options: [.old, .new]) { [weak self] player, _ in
+            // KVO fires on an arbitrary thread, hop to the main actor with the values we need.
+            let rate = player.rate
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                
+                if rate == 0 {
+                    if isStopped {
+                        setInternalState(.stopped)
+                    } else {
+                        setInternalState(.paused)
+                    }
                 } else {
-                    setInternalState(.paused)
+                    setInternalState(.playing)
                 }
-            } else {
-                setInternalState(.playing)
             }
         }
         

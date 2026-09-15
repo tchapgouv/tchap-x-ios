@@ -47,6 +47,9 @@ targetTemplates:
       - package: Collections
       - package: Compound
       - package: KeychainAccess
+      - package: BuildExtensions
+        product: Macros
+
 
     info:
       properties:
@@ -65,9 +68,9 @@ targetTemplates:
               INSendMessageIntent,
             ]
             NSExtensionActivationRule:
-              NSExtensionActivationSupportsFileWithMaxCount: 10
-              NSExtensionActivationSupportsImageWithMaxCount: 10
-              NSExtensionActivationSupportsMovieWithMaxCount: 10
+              NSExtensionActivationSupportsFileWithMaxCount: 60
+              NSExtensionActivationSupportsImageWithMaxCount: 60
+              NSExtensionActivationSupportsMovieWithMaxCount: 60
               NSExtensionActivationSupportsText: true
               NSExtensionActivationSupportsWebURLWithMaxCount: 10
 
@@ -86,6 +89,9 @@ targetTemplates:
       MARKETING_VERSION: $(MARKETING_VERSION)
       CURRENT_PROJECT_VERSION: $(CURRENT_PROJECT_VERSION)
       DEVELOPMENT_TEAM: $(DEVELOPMENT_TEAM)
+      SWIFT_VERSION: 6.2
+      SWIFT_APPROACHABLE_CONCURRENCY: YES
+
 
     sources:
     - path: ../ShareExtension/Sources

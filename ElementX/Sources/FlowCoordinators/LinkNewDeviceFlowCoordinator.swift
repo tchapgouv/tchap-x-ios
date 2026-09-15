@@ -10,11 +10,14 @@ import Foundation
 
 enum LinkNewDeviceFlowCoordinatorAction {
     case requestOAuthAuthorisation(URL, OAuthAccountSettingsPresenter.Continuation)
+    /// The user failed to remember their App Lock PIN.
+    case forceLogout
     case dismiss
 }
 
 class LinkNewDeviceFlowCoordinator: FlowCoordinatorProtocol {
     private let navigationStackCoordinator: NavigationStackCoordinator
+    private let appLockService: AppLockServiceProtocol
     private let flowParameters: CommonFlowParameters
     
     private var cancellables = Set<AnyCancellable>()
@@ -25,8 +28,10 @@ class LinkNewDeviceFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     init(navigationStackCoordinator: NavigationStackCoordinator,
+         appLockService: AppLockServiceProtocol,
          flowParameters: CommonFlowParameters) {
         self.navigationStackCoordinator = navigationStackCoordinator
+        self.appLockService = appLockService
         self.flowParameters = flowParameters
     }
     
@@ -44,6 +49,7 @@ class LinkNewDeviceFlowCoordinator: FlowCoordinatorProtocol {
     
     private func presentLinkNewDeviceScreen() {
         let coordinator = LinkNewDeviceScreenCoordinator(parameters: .init(clientProxy: flowParameters.userSession.clientProxy,
+                                                                           appLockService: appLockService,
                                                                            orientationManager: flowParameters.appMediator.windowManager))
         coordinator.actionsPublisher
             .sink { [weak self] action in
@@ -51,9 +57,11 @@ class LinkNewDeviceFlowCoordinator: FlowCoordinatorProtocol {
                 
                 switch action {
                 case .linkMobileDevice(let progressPublisher):
-                    presentQRCodeScreen(mode: .linkMobile(progressPublisher, flowParameters.userSession.clientProxy))
+                    presentQRCodeScreen(mode: .linkMobile(progressPublisher))
                 case .linkDesktopComputer:
                     presentQRCodeScreen(mode: .linkDesktop(flowParameters.userSession.clientProxy.linkNewDeviceService()))
+                case .verifyWithAppLockPIN(let continuation):
+                    presentAppLockScreen(continuation: continuation)
                 case .dismiss:
                     actionsSubject.send(.dismiss)
                 }
@@ -61,6 +69,33 @@ class LinkNewDeviceFlowCoordinator: FlowCoordinatorProtocol {
             .store(in: &cancellables)
         
         navigationStackCoordinator.setRootCoordinator(coordinator)
+    }
+    
+    private func presentAppLockScreen(continuation: CheckedContinuation<Bool, Never>) {
+        // We can use the AppLockScreen as a fallback here. It might seem weird but in the end it only calls
+        // AppLockService.unlock which is a no-op when the app is already unlocked.
+        let stackCoordinator = NavigationStackCoordinator()
+        let coordinator = AppLockScreenCoordinator(parameters: .init(appLockService: appLockService, mode: .verifyDeviceOwner))
+        
+        coordinator.actions
+            .sink { [weak self] action in
+                guard let self else { return }
+                
+                switch action {
+                case .appUnlocked:
+                    continuation.resume(returning: true)
+                    navigationStackCoordinator.setFullScreenCoverCoordinator(nil)
+                case .cancelVerifyDeviceOwner:
+                    continuation.resume(returning: false)
+                    navigationStackCoordinator.setFullScreenCoverCoordinator(nil)
+                case .forceLogout:
+                    actionsSubject.send(.forceLogout)
+                }
+            }
+            .store(in: &cancellables)
+        
+        stackCoordinator.setRootCoordinator(coordinator)
+        navigationStackCoordinator.setFullScreenCoverCoordinator(stackCoordinator)
     }
     
     private func presentQRCodeScreen(mode: QRCodeLoginScreenMode) {

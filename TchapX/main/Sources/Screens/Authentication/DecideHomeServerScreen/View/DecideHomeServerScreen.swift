@@ -72,7 +72,7 @@ struct DecideHomeServerScreen: View {
                 Text(TchapL10n.commonEmail).foregroundColor(.compound.textSecondary)
             }
             .focused($isUsernameFocused)
-            .textFieldStyle(.element(accessibilityIdentifier: A11yIdentifiers.loginScreen.emailUsername))
+            .textFieldStyle(.compound(accessibilityIdentifier: A11yIdentifiers.loginScreen.emailUsername))
             .disableAutocorrection(true)
             .textContentType(.username)
             .autocapitalization(.none)
@@ -135,8 +135,7 @@ struct DecideHomeServerScreen_Previews: PreviewProvider, TestablePreview {
                                                         loginHint: nil,
                                                         accountProviders: appSettings.accountProviders,
                                                         userIndicatorController: UserIndicatorControllerMock(),
-                                                        appSettings: appSettings,
-                                                        analytics: AnalyticsServiceMock())
+                                                        appSettings: appSettings)
         
         if withCredentials {
             viewModel.context.username = "alice"
