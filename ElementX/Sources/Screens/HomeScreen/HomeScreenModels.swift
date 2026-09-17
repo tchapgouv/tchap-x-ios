@@ -148,7 +148,7 @@ struct HomeScreenViewState: BindableState {
     var shouldShowBanner: Bool {
         // Tchap: Display banner when homeserver is unreachable
 //        securityBannerMode.isShown || shouldShowNewSoundBanner
-        securityBannerMode.isShown || shouldShowNewSoundBanner || shouldShowOfflineBanner
+        securityBannerMode.isShown || shouldShowOfflineBanner
     }
 
     // Tchap: Service Status url
