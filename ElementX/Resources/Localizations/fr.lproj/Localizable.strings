@@ -760,7 +760,7 @@
 "screen_create_poll_remove_accessibility_label" = "Supprimer %1$@";
 "screen_create_poll_settings_section_title" = "Paramètres";
 "screen_create_poll_title" = "Créer un sondage";
-"screen_create_poll_votes_allowed_per_person" = "Votes allowed per person";
+"screen_create_poll_votes_allowed_per_person" = "Nombre de votes autorisés par personne"; // Tchap
 "screen_create_room_action_create_room" = "Nouveau salon";
 "screen_create_room_add_people_title" = "Inviter des amis";
 "screen_create_room_error_creating_room" = "Une erreur s’est produite lors de la création du salon";
