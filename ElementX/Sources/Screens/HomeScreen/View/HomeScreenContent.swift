@@ -126,8 +126,9 @@ struct HomeScreenContent: View {
                     TchapOfflineScreenBanner { openURL(context.viewState.tchapServiceStatusURL) }
                 } else if case let .show(state) = context.viewState.securityBannerMode {
                     HomeScreenRecoveryKeyConfirmationBanner(state: state, context: context)
-                } else if context.viewState.shouldShowNewSoundBanner {
-                    HomeScreenNewSoundBanner { context.send(viewAction: .dismissNewSoundBanner) }
+                    // :tchap: Don't show this banner
+//                } else if context.viewState.shouldShowNewSoundBanner {
+//                    HomeScreenNewSoundBanner { context.send(viewAction: .dismissNewSoundBanner) }
                 }
             }
             .background(Color.compound.bgCanvasDefault)
