@@ -292,11 +292,15 @@ struct AvatarHeaderView<Footer: View>: View {
                 case .historySharingState(.hidden):
                     BadgeLabel(title: L10n.cryptoHistorySharingRoomInfoHiddenBadgeContent,
                                icon: \.visibilityOff,
-                               style: .info)
+                               // :tchap: custom badge color for history sharing
+//                               style: .info)
+                               style: .default) // :tchap:end:
                 case .historySharingState(.shared):
                     BadgeLabel(title: L10n.cryptoHistorySharingRoomInfoSharedBadgeContent,
                                icon: \.history,
-                               style: .info)
+                               // :tchap: custom badge color for history sharing
+//                               style: .info)
+                               style: .default) // :tchap:end:
                 case .historySharingState(.worldReadable):
                     BadgeLabel(title: L10n.cryptoHistorySharingRoomInfoWorldReadableBadgeContent,
                                icon: \.userProfileSolid,

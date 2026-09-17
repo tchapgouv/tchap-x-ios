@@ -434,8 +434,8 @@
 "crypto_event_authenticity_unverified_identity" = "Chiffré par un membre non vérifié."; // Tchap
 "crypto_event_key_forwarded_known_profile_dialog_content" = "%1$@ (%2$@) a partagé ce message avec vous car vous n’étiez pas dans le salon lors de son envoi.";
 "crypto_event_key_forwarded_unknown_profile_dialog_content" = "%1$@ a partagé ce message avec vous car vous n’étiez pas dans le salon lors de son envoi.";
-"crypto_history_sharing_room_info_hidden_badge_content" = "Les nouveaux membres ne voient pas l'historique.";
-"crypto_history_sharing_room_info_shared_badge_content" = "Les nouveaux membres voient l'historique";
+"crypto_history_sharing_room_info_hidden_badge_content" = "Historique inaccessible aux nouveaux membres"; // Tchap
+"crypto_history_sharing_room_info_shared_badge_content" = "Historique accessible"; // Tchap
 "crypto_history_sharing_room_info_world_readable_badge_content" = "Tout le monde voit l'historique";
 "crypto_history_visible" = "Ce salon a été configuré pour que les nouveaux membres puissent lire l'historique. %1$@";
 "crypto_identity_change_pin_violation" = "L'identité numérique de %1$@ a été réinitialisée. %2$@";
