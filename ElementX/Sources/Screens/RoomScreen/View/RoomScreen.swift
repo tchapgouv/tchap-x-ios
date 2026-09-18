@@ -98,7 +98,9 @@ struct RoomScreen: View {
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 VStack(spacing: 0) {
-                    RoomScreenFooterView(details: context.viewState.footerDetails,
+                    // :tchap: Hide reset identity info footer
+//                    RoomScreenFooterView(details: context.viewState.footerDetails,
+                    RoomScreenFooterView(details: tchapFooterDetails, // :tchap:end:
                                          mediaProvider: context.mediaProvider) { action in
                         context.send(viewAction: .footerViewAction(action))
                     }
@@ -128,7 +130,15 @@ struct RoomScreen: View {
             .track(screen: .Room)
             .sentryTrace("\(Self.self)")
     }
-    
+
+    // :tchap: Hide reset identity info footer
+    private var tchapFooterDetails: RoomScreenFooterViewDetails? {
+        if case .pinViolation = context.viewState.footerDetails {
+            return nil
+        }
+        return context.viewState.footerDetails
+    } // :tchap:end:
+
     private var liveLocationBanner: some View {
         LiveLocationSharingBannerView {
             context.send(viewAction: .tappedOpenLiveLocation)
