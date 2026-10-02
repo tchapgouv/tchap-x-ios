@@ -226,7 +226,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
 //            self?.showLoginScreen(loginHint: loginHint, fromState: context.fromState)
             if let homeserver = self?.authenticationService.homeserver.value {
                 Task {
-                    _ = await self?.authenticationService.configure(for: homeserver.address, flow: .login)
+                    _ = await self?.authenticationService.configure(for: homeserver.accountProvider.serverNameOrBaseURL, flow: .login)
                     self?.showLoginScreen(loginHint: loginHint, fromState: context.fromState)
                 }
             }
@@ -553,7 +553,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     private func userHasSignedIn(userSession: UserSessionProtocol) {
         delegate?.authenticationFlowCoordinator(didLoginWithSession: userSession)
         
-        let newServer = authenticationService.homeserver.value.address
-        homeserverHistoryManager.addServerToList(newServer)
+        let newAccountProvider = authenticationService.homeserver.value.accountProvider
+        homeserverHistoryManager.addServerToList(newAccountProvider.serverNameOrBaseURL)
     }
 }

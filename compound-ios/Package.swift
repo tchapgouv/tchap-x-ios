@@ -4,17 +4,17 @@ import PackageDescription
 
 let package = Package(
     name: "Compound",
-    platforms: [.iOS(.v17)],
+    platforms: [.iOS(.v18)],
     products: [
         .library(name: "Compound", targets: ["Compound"])
     ],
     dependencies: [
 // Use the Github hosted version of Tchap Compound-design--tokens
-//      .package(url: "https://github.com/element-hq/compound-design-tokens", exact: "10.2.3"),
-        .package(url: "https://github.com/tchapgouv/compound-design-tokens", revision: "a19aa264c6f3e063d265213f06804c2dfe2a7884"),
+//      .package(url: "https://github.com/element-hq/compound-design-tokens", exact: "11.0.0"),
+        .package(url: "https://github.com/tchapgouv/compound-design-tokens", revision: "83df0f5f2f5d62a832f39422ae3d4dfac02b3a00"),
 // Use the local version of Tchap Compound-design--tokens
 //        .package(path: "../../tchap-x-compound/compound-design-tokens"),
-        .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "26.0.1"),
+        .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "27.0.0"),
         .package(url: "https://github.com/SFSafeSymbols/SFSafeSymbols", from: "7.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.19.4")
     ],

@@ -6,6 +6,8 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
+import Combine
+
 // Tchap: specify target for unit tests
 // @testable import ElementX
 #if IS_TCHAP_UNIT_TESTS
@@ -22,11 +24,15 @@ final class JoinRoomScreenViewModelTests {
         case knocked
         case invited
         case banned
+        case alreadyJoined
     }
     
     var viewModel: JoinRoomScreenViewModelProtocol!
     
     var clientProxy: ClientProxyMock!
+    
+    /// Backs the client's static room summary provider so tests can push membership changes.
+    var roomListSubject: CurrentValueSubject<[RoomSummary], Never>!
     
     var context: JoinRoomScreenViewModelType.Context {
         viewModel.context
@@ -41,6 +47,7 @@ final class JoinRoomScreenViewModelTests {
     isolated deinit {
         viewModel = nil
         clientProxy = nil
+        roomListSubject = nil
     }
     
     @Test
@@ -121,6 +128,26 @@ final class JoinRoomScreenViewModelTests {
     }
     
     @Test
+    func alreadyJoinedRoomAdvancesTheScreen() async throws {
+        setupViewModel(mode: .alreadyJoined)
+        
+        let deferred = deferFulfillment(viewModel.actionsPublisher) { $0 == .joined(.roomID("1")) }
+        try await deferred.fulfill()
+    }
+    
+    @Test
+    func membershipChangeWhileInvitedAdvancesTheScreen() async throws {
+        setupViewModel(mode: .invited)
+        try await deferFulfillment(viewModel.context.$viewState) { $0.mode == .invited(isDM: false) }.fulfill()
+        
+        // Simulate the server-side join arriving through the room list.
+        clientProxy.roomForIdentifierClosure = { .joined(JoinedRoomProxyMock(.init(id: $0))) }
+        let deferred = deferFulfillment(viewModel.actionsPublisher) { $0 == .joined(.roomID("1")) }
+        roomListSubject.send([.mock(id: "1", name: "Test")])
+        try await deferred.fulfill()
+    }
+    
+    @Test
     func declineAndBlockInviteLegacyInteraction() async throws {
         setupViewModel(mode: .invited)
         clientProxy.underlyingIsReportRoomSupported = false
@@ -175,6 +202,11 @@ final class JoinRoomScreenViewModelTests {
     private func setupViewModel(throwing: Bool = false, mode: TestMode = .joined) {
         clientProxy = ClientProxyMock(.init())
         
+        roomListSubject = .init([])
+        let summaryProvider = RoomSummaryProviderMock(.init())
+        summaryProvider.roomListPublisher = roomListSubject.asCurrentValuePublisher()
+        clientProxy.staticRoomSummaryProvider = summaryProvider
+        
         clientProxy.joinRoomViaReturnValue = throwing ? .failure(.sdkError(ClientProxyMockError.generic)) : .success(())
         clientProxy.joinRoomAliasReturnValue = clientProxy.joinRoomViaReturnValue
         
@@ -203,6 +235,11 @@ final class JoinRoomScreenViewModelTests {
                 let roomProxy = BannedRoomProxyMock(.init())
                 roomProxy.forgetRoomReturnValue = .success(())
                 return .banned(roomProxy)
+            }
+        case .alreadyJoined:
+            clientProxy.roomPreviewForIdentifierViaReturnValue = .success(RoomPreviewProxyMock.joinable)
+            clientProxy.roomForIdentifierClosure = { roomID in
+                .joined(JoinedRoomProxyMock(.init(id: roomID)))
             }
         }
         

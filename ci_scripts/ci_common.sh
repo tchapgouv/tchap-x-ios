@@ -22,7 +22,7 @@ setup_github_actions_environment() {
     # corriger les erreurs de formatage, puis committer le tout.
     SWIFTFORMAT_VERSION="0.59.1"
 
-    brew update && brew install xcodegen swiftlint git-lfs pkl a7ex/homebrew-formulae/xcresultparser
+    brew update && brew install xcodegen swiftlint git-lfs pkl
     # :tchap: Installe swiftformat à la version exacte depuis les releases GitHub
     # install_swiftformat_head
 
@@ -49,7 +49,7 @@ setup_github_actions_translations_environment() {
 }
 
 xcode_select_for_github_actions() {
-    # We need to select it globally for other processes like xcresultparser and our custom tools to use the same Xcode version.
+    # We need to select it globally for our custom tools to use the same Xcode version.
     sudo xcode-select -s /Applications/Xcode_26.5.0.app
 }
 

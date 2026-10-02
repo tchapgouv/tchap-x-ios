@@ -64,7 +64,7 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
 //                        ZStack {
 //                            image
 //                                .resizable()
-//                                .aspectRatio(contentMode: .fill)
+//                                .scaledToFill()
 //                            pinAnnotationView
 //                        }
 //                    case .failure(let error):
@@ -83,12 +83,6 @@ struct MapLibreStaticMapView<PinAnnotation: View>: View {
                                                                 zoom: zoomLevel,
                                                                 size: mapSize,
                                                                 attribution: mapTilerAttributionPlacement)
-//            TchapStaticMapLoader(mapUrlBuilder: mapURLBuilder,
-//                                                 style: colorScheme.mapStyle,
-//                                                 location: coordinates,
-//                                                 zoom: zoomLevel,
-//                                                 size: mapSize,
-//                                                 attribution: mapTilerAttributionPlacement)
             TchapStaticMapView(mapLoader: mapLoader,
                                placeholderView: placeholderImage,
                                pinAnnotationView: pinAnnotationView,

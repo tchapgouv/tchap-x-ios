@@ -19,6 +19,7 @@ import SwiftUI
 nonisolated protocol CommonSettingsProtocol: AnyObject, Sendable {
     var lastNotificationBootTime: TimeInterval? { get set }
     var selectedNotificationTone: NotificationTone? { get set }
+    var lastKnownBadgeCount: Int { get set }
     
     var logLevel: LogLevel { get }
     var traceLogPacks: Set<TraceLogPack> { get }
@@ -30,6 +31,7 @@ nonisolated protocol CommonSettingsProtocol: AnyObject, Sendable {
     var enableOnlySignedDeviceIsolationMode: Bool { get }
     var threadsEnabled: Bool { get }
     var hideQuietNotificationAlerts: Bool { get }
+    var roomListNotificationCountEnabled: Bool { get }
 }
 
 nonisolated enum AppBuildType {
@@ -73,12 +75,13 @@ final nonisolated class AppSettings: @unchecked Sendable {
     func resetSessionSpecificSettings() {
         MXLog.warning("Resetting the user session specific AppSettings.")
         resetHasRunIdentityConfirmationOnboarding()
+        resetSearchBreadcrumbs()
     }
     
     // MARK: - Hooks
     
     // swiftlint:disable:next function_parameter_count
-    func override(accountProviders: [String],
+    func override(accountProviders: [AccountProvider],
                   allowOtherAccountProviders: Bool,
                   hideBrandChrome: Bool,
                   pushGatewayBaseURL: URL,
@@ -139,42 +142,47 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(defaultValue: true)
     var hasSeenNewSoundBanner: Bool
     
+    // TODO: accountProviders
     // The initial set of account providers shown to the user in the authentication flow.
     //
     // Account provider is the friendly term for the server name. It should not contain an `https` prefix and should
     // match the last part of the user ID. For example `example.com` and not `https://matrix.example.com`.
     #if IS_TCHAP_DEVELOPMENT
-    private(set) var accountProviders = [
-        "dev01.tchap.incubateur.net",
-        "dev02.tchap.incubateur.net",
-        "ext01.tchap.incubateur.net"
+    private(set) var accountProviders: [AccountProvider] = [
+        .generic("dev01.tchap.incubateur.net"),
+        .generic("dev02.tchap.incubateur.net"),
+        .generic("ext01.tchap.incubateur.net")
     ]
     #elseif IS_TCHAP_PREPROD
-    private(set) var accountProviders = ["i.tchap.gouv.fr",
-                                         "a.tchap.gouv.fr",
-                                         "e.tchap.gouv.fr"]
+    private(set) var accountProviders: [AccountProvider] = [
+        .generic("i.tchap.gouv.fr"),
+        .generic("a.tchap.gouv.fr"),
+        .generic("e.tchap.gouv.fr")
+    ]
     #elseif IS_TCHAP_PRODUCTION
-    private(set) var accountProviders = ["agent.externe.tchap.gouv.fr",
-                                         "agent.collectivites.tchap.gouv.fr",
-                                         "agent.tchap.gouv.fr",
-                                         "agent.elysee.tchap.gouv.fr",
-                                         "agent.pm.tchap.gouv.fr",
-                                         "agent.ssi.tchap.gouv.fr",
-                                         "agent.finances.tchap.gouv.fr",
-                                         "agent.social.tchap.gouv.fr",
-                                         "agent.interieur.tchap.gouv.fr",
-                                         "agent.agriculture.tchap.gouv.fr",
-                                         "agent.justice.tchap.gouv.fr",
-                                         "agent.diplomatie.tchap.gouv.fr",
-                                         "agent.intradef.tchap.gouv.fr",
-                                         "agent.dinum.tchap.gouv.fr",
-                                         "agent.culture.tchap.gouv.fr",
-                                         "agent.dev-durable.tchap.gouv.fr",
-                                         "agent.education.tchap.gouv.fr"]
+    private(set) var accountProviders: [AccountProvider] = [
+        .generic("agent.externe.tchap.gouv.fr"),
+        .generic("agent.collectivites.tchap.gouv.fr"),
+        .generic("agent.tchap.gouv.fr"),
+        .generic("agent.elysee.tchap.gouv.fr"),
+        .generic("agent.pm.tchap.gouv.fr"),
+        .generic("agent.ssi.tchap.gouv.fr"),
+        .generic("agent.finances.tchap.gouv.fr"),
+        .generic("agent.social.tchap.gouv.fr"),
+        .generic("agent.interieur.tchap.gouv.fr"),
+        .generic("agent.agriculture.tchap.gouv.fr"),
+        .generic("agent.justice.tchap.gouv.fr"),
+        .generic("agent.diplomatie.tchap.gouv.fr"),
+        .generic("agent.intradef.tchap.gouv.fr"),
+        .generic("agent.dinum.tchap.gouv.fr"),
+        .generic("agent.culture.tchap.gouv.fr"),
+        .generic("agent.dev-durable.tchap.gouv.fr"),
+        .generic("agent.education.tchap.gouv.fr")
+    ]
     #elseif IS_TCHAP_UNIT_TESTS
     private(set) var accountProviders = ["agent.dinum.tchap.gouv.fr"]
     #else
-    private(set) var accountProviders = ["matrix.org"]
+    private(set) var accountProviders: [AccountProvider] = [.managed(serverName: "matrix.org", baseURL: "https://matrix-client.matrix.org")]
     #endif
     /// Whether or not the user is allowed to manually enter their own account provider or must select from one of `defaultAccountProviders`.
     private(set) var allowOtherAccountProviders = true
@@ -256,8 +264,12 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(key: "previousServers", defaultValue: [])
     var previousServers: [String]
     
-    var defaultServer: String {
-        previousServers.first ?? accountProviders[0]
+    var defaultAccountProvider: AccountProvider {
+        if allowOtherAccountProviders {
+            previousServers.first.map { .generic($0) } ?? accountProviders[0]
+        } else {
+            accountProviders[0]
+        }
     }
     
     // MARK: - Security
@@ -358,6 +370,10 @@ final nonisolated class AppSettings: @unchecked Sendable {
     /// The device's last boot time as recorded by the NSE.
     @UserPreference
     var lastNotificationBootTime: TimeInterval?
+    
+    /// The app icon badge value the app last computed from the SDK's unread notification counts.
+    @UserPreference(defaultValue: 0)
+    var lastKnownBadgeCount: Int
     
     /// The sound played when delivering noisy notifications. If nil, use the ElementX default
     @UserPreference
@@ -464,6 +480,15 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(defaultValue: RoomListActivityVisibility.current)
     var roomListActivityVisibility: RoomListActivityVisibility
     
+    @UserPreference(defaultValue: false)
+    var roomListNotificationCountEnabled: Bool
+    
+    // MARK: - Search Screen
+    
+    /// The queries the user searched for and the rooms they opened from the results, most recent first.
+    @UserPreference(defaultValue: [SearchBreadcrumb]())
+    var searchBreadcrumbs: [SearchBreadcrumb]
+    
     // MARK: - Room Screen
     
     @UserPreference(defaultValue: AppBuildType.current == .debug)
@@ -537,6 +562,9 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(defaultValue: false)
     var lowPriorityFilterEnabled: Bool
     
+    @UserPreference(defaultValue: false)
+    var mentionsFilterEnabled: Bool
+    
     /// Configuration to enable only signed device isolation mode for  crypto. In this mode only devices signed by their owner will be considered in e2ee rooms.
     @UserPreference(defaultValue: false)
     var enableOnlySignedDeviceIsolationMode: Bool
@@ -548,7 +576,7 @@ final nonisolated class AppSettings: @unchecked Sendable {
     var threadsEnabled: Bool
     
     @UserPreference(defaultValue: false)
-    var roomThreadListEnabled: Bool
+    var messageMultiSelectEnabled: Bool
     
     @UserPreference(defaultValue: ProcessInfo().isiOSAppOnMac)
     var globalSearchEnabled: Bool
@@ -576,11 +604,12 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(key: "clientPausingAndResumingEnabledV2", defaultValue: false, volatile: true)
     var clientPausingAndResumingEnabled: Bool
     
-    @UserPreference(defaultValue: false)
-    var userStatusEnabled: Bool
-    
     @UserPreference(defaultValue: AppBuildType.current != .release)
     var developerOptionsEnabled: Bool
+    
+    /// Runs calls through the native matrix-rust-rtc stack instead of the Element Call web view.
+    @UserPreference(defaultValue: false)
+    var nativeCallEnabled: Bool
     
     init(store: UserDefaultsProtocol) {
         self.store = store
