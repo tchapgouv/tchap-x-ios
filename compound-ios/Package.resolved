@@ -4,10 +4,9 @@
     {
       "identity" : "compound-design-tokens",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/element-hq/compound-design-tokens",
+      "location" : "https://github.com/tchapgouv/compound-design-tokens",
       "state" : {
-        "revision" : "86c15ef71798581d1e0cc39a7f99e598ad572419",
-        "version" : "11.0.0"
+        "revision" : "83df0f5f2f5d62a832f39422ae3d4dfac02b3a00"
       }
     },
     {
