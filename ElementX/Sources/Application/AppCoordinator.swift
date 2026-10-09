@@ -482,7 +482,15 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             Tracing.migrateLogFiles()
             MXLog.info("Migrating to version 25.07.4, log files have been moved.")
         }
-        
+
+        // :tchap: Enable roomListNotificationCount and threads settings for tchap
+        if oldVersion < Version(26, 10, 0) {
+            MXLog.info("Migrating to version 26.10.0, forcing room list notification count on.")
+            appSettings.roomListNotificationCountEnabled = true
+            MXLog.info("Migrating to version 26.10.0, forcing threads on.")
+            appSettings.threadsEnabled = true
+        } // :tchap:end:
+
         // Store the old version to run additional migrations on the user session once it has been set up.
         userSessionMigrationsOldVersion = oldVersion
     }

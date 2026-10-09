@@ -479,8 +479,10 @@ final nonisolated class AppSettings: @unchecked Sendable {
     
     @UserPreference(defaultValue: RoomListActivityVisibility.current)
     var roomListActivityVisibility: RoomListActivityVisibility
-    
-    @UserPreference(defaultValue: false)
+
+    // :tchap: Set roomListNotificationCountEnabled option to true by default
+//    @UserPreference(defaultValue: false)
+    @UserPreference(defaultValue: true) // :tchap:end:
     var roomListNotificationCountEnabled: Bool
     
     // MARK: - Search Screen
@@ -572,7 +574,9 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(defaultValue: false)
     var knockingEnabled: Bool
     
-    @UserPreference(defaultValue: false)
+    // :tchap: Set threadsEnabled option to true by default
+//    @UserPreference(defaultValue: false)
+    @UserPreference(defaultValue: true) // :tchap:end:
     var threadsEnabled: Bool
     
     @UserPreference(defaultValue: false)
