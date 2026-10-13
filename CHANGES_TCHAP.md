@@ -1,3 +1,17 @@
+Tchap iOS v26.10.0
+=============================
+
+## Qu'est-ce qui a changé ?
+
+### 🙌 Améliorations
+* Activation des options compteur de notifications non-lues et fils de discussions par défaut by @Sianay in https://github.com/tchapgouv/tchap-x-ios/pull/416
+### Autres
+* Merge Element X 26.09.2 by @Sianay in https://github.com/tchapgouv/tchap-x-ios/pull/414
+
+**Full Changelog**: https://github.com/tchapgouv/tchap-x-ios/compare/tchap_v26.09.0...tchap_v26.10.0
+
+## Changes in 26.09.1 (2026-09-10)
+
 Tchap iOS v26.09.0
 =============================
 
