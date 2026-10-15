@@ -9,9 +9,11 @@
 import Foundation
 
 extension String {
+    /// `true` when the whole string is an email address with a dotted domain (e.g. `alice@example.fr`).
+    /// Surrounding whitespace is not tolerated: trim before calling if needed.
     nonisolated var isEmailAddress: Bool {
-        // Email Regex comes from Element iOS.
-        let emailRegex = try! Regex("^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+(?:\\.[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+)*@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$")
+        // Email Regex comes from Element iOS, aligned with Tchap Android: the domain must contain at least one dot.
+        let emailRegex = try! Regex("^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+(?:\\.[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+)*@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)+$")
         let match = ranges(of: emailRegex)
         guard match.count == 1,
               let uniqueMatch = match.first,
