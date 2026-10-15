@@ -49,6 +49,11 @@ targets:
         APP_DISPLAY_NAME: TchapX # The name used in the application.
         PRODUCT_NAME: TchapX-UnitTests
         PRODUCT_BUNDLE_IDENTIFIER: ${BASE_BUNDLE_IDENTIFIER}.unit.tests
+        # Mirror UnitTests/SupportingFiles/target.yml: shared test sources assume MainActor isolation and iOS 26 APIs.
+        IPHONEOS_DEPLOYMENT_TARGET: '26.0'
+        SWIFT_VERSION: 6.2
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         OTHER_SWIFT_FLAGS:
         - "-DIS_MAIN_APP -DIS_TCHAP_UNIT_TESTS"
       debug:
