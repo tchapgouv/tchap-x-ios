@@ -67,4 +67,6 @@ enum DecideHomeServerScreenErrorType: Error, Hashable {
     case homeserverDoesntSupportOAuthLoginFlow
     /// An error while trying to instantiate the Authentication service after getting the homeserver domain.
     case authenticationServiceError
+    /// Not an error: asks the user to confirm login on an external homeserver.
+    case externalHomeserverConfirmation
 }

@@ -108,6 +108,10 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
                     if Task.isCancelled {
                         return
                     }
+                    if HomeServerName(homeserverDomain).isExternalTchapServer {
+                        showExternalHomeserverConfirmation(for: homeserverDomain, loginHint: username)
+                        return
+                    }
                     await initAuthenticationService(for: homeserverDomain, loginHint: username)
                     // exit method now that AuthenticationService is inited.
                     return
@@ -154,6 +158,30 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
         return URL(string: homeserverURLString)?.globalProxy
     }
     
+    /// Asks the user to confirm their email before logging in on an external homeserver.
+    private func showExternalHomeserverConfirmation(for homeserverDomain: String, loginHint: String) {
+        MXLog.info("[DecideHomeServerScreen] Homeserver \(homeserverDomain) is external, asking for confirmation.")
+        state.bindings.alertInfo = AlertInfo(id: .externalHomeserverConfirmation,
+                                             title: TchapL10n.screenDecideHomeserverExternalEmailTitle,
+                                             message: TchapL10n.screenDecideHomeserverExternalEmailMessage(loginHint),
+                                             primaryButton: .init(title: L10n.actionCancel, role: .cancel) { [weak self] in
+                                                 self?.resetLoadingState()
+                                             },
+                                             secondaryButton: .init(title: L10n.actionContinue) { [weak self] in
+                                                 self?.continueWithExternalHomeserver(homeserverDomain, loginHint: loginHint)
+                                             })
+    }
+
+    private func continueWithExternalHomeserver(_ homeserverDomain: String, loginHint: String) {
+        startLoading(isInteractionBlocking: true)
+        requestServerDomainsTask = Task {
+            defer {
+                stopLoading()
+            }
+            await initAuthenticationService(for: homeserverDomain, loginHint: loginHint)
+        }
+    }
+
     /// Initialize the Authentication service with the returned homeServer.
     private func initAuthenticationService(for homeserverDomain: String, loginHint: String) async {
         // Try to configure the Authentication Service to use the selected Homeserver.
@@ -232,6 +260,8 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
                                                  message: TchapL10n.screenDecideHomeserverErrorHomeserverDoesntSupportOidcLoginFlowMessage)
         case .authenticationServiceError:
             state.bindings.alertInfo = AlertInfo(id: .authenticationServiceError)
+        case .externalHomeserverConfirmation:
+            break // Presented by showExternalHomeserverConfirmation.
         }
     }
 }
