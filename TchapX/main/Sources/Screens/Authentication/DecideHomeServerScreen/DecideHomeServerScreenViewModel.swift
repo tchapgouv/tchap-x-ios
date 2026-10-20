@@ -94,7 +94,8 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
             
             // Trim option numerical suffix (if account was closed and recreated multiple times).
             // Else, the returned domain will be domain for external users, and the user won't be able to login if not external.
-            let usernameIdWithoutNumericalSuffix = String(self.context.username.trimmingSuffix { $0.isNumber })
+            let username = state.trimmedUsername
+            let usernameIdWithoutNumericalSuffix = String(username.trimmingSuffix { $0.isNumber })
             
             for domain in requestServerDomains {
                 if Task.isCancelled {
@@ -107,7 +108,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
                     if Task.isCancelled {
                         return
                     }
-                    await initAuthenticationService(for: homeserverDomain, loginHint: self.context.username)
+                    await initAuthenticationService(for: homeserverDomain, loginHint: username)
                     // exit method now that AuthenticationService is inited.
                     return
                 case .failure(let error):
@@ -119,7 +120,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
                 return
             }
             // No homeserver returned a domain for the email specified. Throw error.
-            MXLog.error("[DecideHomeServerScreen] No homeserver returned a domain for the email \(self.context.username).")
+            MXLog.error("[DecideHomeServerScreen] No homeserver returned a domain for the email \(username).")
             handleError(.tchapGetInstanceError)
         }
     }
@@ -187,7 +188,7 @@ class DecideHomeServerScreenViewModel: DecideHomeServerScreenViewModelType, Deci
         guard let window = state.window else {
             return .failure(.authenticationServiceError)
         }
-        switch await authenticationService.urlForOAuthLogin(loginHint: context.username) {
+        switch await authenticationService.urlForOAuthLogin(loginHint: state.trimmedUsername) {
         case .success(let oAuthData):
             MXLog.info("[DecideHomeServerScreen] prepareOAuth succeed.")
             return .success((oAuthData, window))

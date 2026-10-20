@@ -24,9 +24,14 @@ struct DecideHomeServerScreenViewState: BindableState {
     /// The presentation anchor used for OAuth authentication.
     var window: UIWindow?
     
+    /// The username without surrounding whitespace.
+    var trimmedUsername: String {
+        bindings.username.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// `true` when valid credentials have been entered and a homeserver has been loaded.
     var canSubmit: Bool {
-        !blockUserInteraction && !isLoading && bindings.username.isEmailAddress
+        !blockUserInteraction && !isLoading && trimmedUsername.isEmailAddress
     }
 
     /// The  authentication flow: .login or .register.
