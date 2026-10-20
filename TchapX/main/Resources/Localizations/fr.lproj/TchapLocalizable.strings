@@ -43,6 +43,8 @@ screen_decide_homeserver_error_homeserver_configuration_unreachable_title = "Err
 screen_decide_homeserver_error_homeserver_configuration_unreachable_message = "Impossible d'accéder à la configuration de votre serveur de rattachement.";
 screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_title = "Erreur";
 screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_message = "Votre serveur de rattachement ne supporte pas l'authentification OIDC.";
+screen_decide_homeserver_external_email_title = "Êtes-vous un(e) invité(e) externe ?";
+screen_decide_homeserver_external_email_message = "Si ce n'est pas le cas, vérifier que votre adresse email \"%1$@\" ne contient pas d'erreur.";
 
 // Create room
 screen_create_room_selected_users_label = "Membres";

@@ -43,6 +43,8 @@ screen_decide_homeserver_error_homeserver_configuration_unreachable_title = "Err
 screen_decide_homeserver_error_homeserver_configuration_unreachable_message = "Unable to read the configuration of your attachment server.";
 screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_title = "Erreur";
 screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_message = "Your attachment server doesn't support OIDC authentication.";
+screen_decide_homeserver_external_email_title = "Are you an external user?";
+screen_decide_homeserver_external_email_message = "If it is not the case, check that the email address \"%1$@\" does not contain errors.";
 
 // Create room
 screen_create_room_selected_users_label = "Members";

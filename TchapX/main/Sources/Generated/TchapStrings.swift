@@ -125,6 +125,12 @@ internal nonisolated enum TchapL10n {
   internal static var screenDecideHomeserverErrorHomeserverDoesntSupportOidcLoginFlowMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_message") }
   /// Erreur
   internal static var screenDecideHomeserverErrorHomeserverDoesntSupportOidcLoginFlowTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_error_homeserver_doesnt_support_oidc_login_flow_title") }
+  /// If it is not the case, check that the email address "%1$@" does not contain errors.
+  internal static func screenDecideHomeserverExternalEmailMessage(_ p1: Any) -> String {
+    return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_external_email_message", String(describing: p1))
+  }
+  /// Are you an external user?
+  internal static var screenDecideHomeserverExternalEmailTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_external_email_title") }
   /// View service status
   internal static var screenHomeOfflineBannerButton: String { return TchapL10n.tr("TchapLocalizable", "screen_home_offline_banner_button") }
   /// Check the service status to ensure the problem is not related to your device.
