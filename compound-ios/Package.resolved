@@ -6,12 +6,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tchapgouv/compound-design-tokens",
       "state" : {
-<<<<<<< HEAD
         "revision" : "83df0f5f2f5d62a832f39422ae3d4dfac02b3a00"
-=======
-        "revision" : "28b921601ac0ff49a572b6f18526d97bd14e5d91",
-        "version" : "11.3.1"
->>>>>>> release/26.10.8
       }
     },
     {

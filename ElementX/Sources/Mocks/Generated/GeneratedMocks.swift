@@ -2580,19 +2580,16 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     }
     nonisolated(unsafe) var underlyingMaxMediaUploadSize: Result<UInt, ClientProxyError>!
     nonisolated(unsafe) var maxMediaUploadSizeClosure: (() async -> Result<UInt, ClientProxyError>)?
-<<<<<<< HEAD
-    var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> {
-        get { return underlyingAccountExpiredSubjectPublisher }
-        set(value) { underlyingAccountExpiredSubjectPublisher = value }
-    }
-    nonisolated(unsafe) var underlyingAccountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never>!
-=======
     var isSearchBackfillRunning: Bool {
         get { return underlyingIsSearchBackfillRunning }
         set(value) { underlyingIsSearchBackfillRunning = value }
     }
     nonisolated(unsafe) var underlyingIsSearchBackfillRunning: Bool!
->>>>>>> release/26.10.8
+    var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> {
+        get { return underlyingAccountExpiredSubjectPublisher }
+        set(value) { underlyingAccountExpiredSubjectPublisher = value }
+    }
+    nonisolated(unsafe) var underlyingAccountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never>!
     var liveLocationOwnInfoUpdatesPublisher: AnyPublisher<LiveLocationOwnInfoUpdate, Never> {
         get { return underlyingLiveLocationOwnInfoUpdatesPublisher }
         set(value) { underlyingLiveLocationOwnInfoUpdatesPublisher = value }
@@ -2717,41 +2714,6 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
         pauseServicesCallsCountLock.withLock { pauseServicesUnderlyingCallsCount += 1 }
         await pauseServicesClosure?()
     }
-<<<<<<< HEAD
-    //MARK: - resyncAccount
-
-    private let resyncAccountCallsCountLock = NSLock()
-    private nonisolated(unsafe) var resyncAccountUnderlyingCallsCount = 0
-    var resyncAccountCallsCount: Int {
-        get { resyncAccountCallsCountLock.withLock { resyncAccountUnderlyingCallsCount } }
-        set { resyncAccountCallsCountLock.withLock { resyncAccountUnderlyingCallsCount = newValue } }
-    }
-    var resyncAccountCalled: Bool {
-        return resyncAccountCallsCount > 0
-    }
-    nonisolated(unsafe) var resyncAccountClosure: (() async -> Void)?
-
-    @concurrent func resyncAccount() async {
-        resyncAccountCallsCountLock.withLock { resyncAccountUnderlyingCallsCount += 1 }
-        await resyncAccountClosure?()
-    }
-    //MARK: - accountExpiredSendEmail
-
-    private let accountExpiredSendEmailCallsCountLock = NSLock()
-    private nonisolated(unsafe) var accountExpiredSendEmailUnderlyingCallsCount = 0
-    var accountExpiredSendEmailCallsCount: Int {
-        get { accountExpiredSendEmailCallsCountLock.withLock { accountExpiredSendEmailUnderlyingCallsCount } }
-        set { accountExpiredSendEmailCallsCountLock.withLock { accountExpiredSendEmailUnderlyingCallsCount = newValue } }
-    }
-    var accountExpiredSendEmailCalled: Bool {
-        return accountExpiredSendEmailCallsCount > 0
-    }
-    nonisolated(unsafe) var accountExpiredSendEmailClosure: (() async -> Void)?
-
-    @concurrent func accountExpiredSendEmail() async {
-        accountExpiredSendEmailCallsCountLock.withLock { accountExpiredSendEmailUnderlyingCallsCount += 1 }
-        await accountExpiredSendEmailClosure?()
-=======
     //MARK: - startSearchBackfill
 
     private let startSearchBackfillStrategyCallsCountLock = NSLock()
@@ -2799,7 +2761,40 @@ nonisolated class ClientProxyMock: ClientProxyProtocol, @unchecked Sendable {
     func stopSearchBackfill() {
         stopSearchBackfillCallsCountLock.withLock { stopSearchBackfillUnderlyingCallsCount += 1 }
         stopSearchBackfillClosure?()
->>>>>>> release/26.10.8
+    }
+    //MARK: - resyncAccount
+
+    private let resyncAccountCallsCountLock = NSLock()
+    private nonisolated(unsafe) var resyncAccountUnderlyingCallsCount = 0
+    var resyncAccountCallsCount: Int {
+        get { resyncAccountCallsCountLock.withLock { resyncAccountUnderlyingCallsCount } }
+        set { resyncAccountCallsCountLock.withLock { resyncAccountUnderlyingCallsCount = newValue } }
+    }
+    var resyncAccountCalled: Bool {
+        return resyncAccountCallsCount > 0
+    }
+    nonisolated(unsafe) var resyncAccountClosure: (() async -> Void)?
+
+    @concurrent func resyncAccount() async {
+        resyncAccountCallsCountLock.withLock { resyncAccountUnderlyingCallsCount += 1 }
+        await resyncAccountClosure?()
+    }
+    //MARK: - accountExpiredSendEmail
+
+    private let accountExpiredSendEmailCallsCountLock = NSLock()
+    private nonisolated(unsafe) var accountExpiredSendEmailUnderlyingCallsCount = 0
+    var accountExpiredSendEmailCallsCount: Int {
+        get { accountExpiredSendEmailCallsCountLock.withLock { accountExpiredSendEmailUnderlyingCallsCount } }
+        set { accountExpiredSendEmailCallsCountLock.withLock { accountExpiredSendEmailUnderlyingCallsCount = newValue } }
+    }
+    var accountExpiredSendEmailCalled: Bool {
+        return accountExpiredSendEmailCallsCount > 0
+    }
+    nonisolated(unsafe) var accountExpiredSendEmailClosure: (() async -> Void)?
+
+    @concurrent func accountExpiredSendEmail() async {
+        accountExpiredSendEmailCallsCountLock.withLock { accountExpiredSendEmailUnderlyingCallsCount += 1 }
+        await accountExpiredSendEmailClosure?()
     }
     //MARK: - expireSyncSessions
 

@@ -80,42 +80,24 @@ struct ThreadTimelineScreen: View {
         // as the latter disables interaction in the action button for rooms with long names
         ToolbarItem(placement: .principal) {
             RoomHeaderView(roomName: L10n.commonThread,
-                           roomSubtitle: context.viewState.roomTitle,
+//                           roomSubtitle: context.viewState.roomTitle, :tchap: remove subtitle (not enough space)
                            roomAvatar: context.viewState.roomAvatar,
                            dmRecipientDetails: context.viewState.dmRecipientDetails,
                            roomHistorySharingState: context.viewState.roomHistorySharingState,
+                           roomPropertiesBadgesView:
+                        // :tchap: add tchap badges
+                              TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: $context.isEncrypted,
+                                                                          isPublic: $context.canDisplayPublicBadge,
+                                                                          accessRule: $context.accessRule,
+                                                                          avatar: $context.roomAvatar), // tchap:end:
                            mediaProvider: context.mediaProvider) {
                 // There is no action but the iOS 26 designs have it looking like a button.
             }
-<<<<<<< HEAD
-        } else {
-            // .principal + .primaryAction works better than .navigation leading + trailing
-            // as the latter disables interaction in the action button for rooms with long names
-            ToolbarItem(placement: .principal) {
-                RoomHeaderView(roomName: L10n.commonThread,
-                               // Tchap: remove subtitle (not enough space)
-                               //                           roomSubtitle: context.viewState.roomTitle,
-                               roomSubtitle: nil,
-                               roomAvatar: context.viewState.roomAvatar,
-                               dmRecipientDetails: context.viewState.dmRecipientDetails,
-                               roomHistorySharingState: context.viewState.roomHistorySharingState,
-                               roomPropertiesBadgesView:
-                               // Tchap: add badges
-                               TchapRoomHeaderViewRoomPropertiesBadgesView(isEncrypted: $context.isEncrypted,
-                                                                           isPublic: $context.canDisplayPublicBadge,
-                                                                           // Tchap: added parameters to display or not "external" badge.
-                                                                           accessRule: $context.accessRule,
-                                                                           avatar: $context.roomAvatar),
-                               mediaProvider: context.mediaProvider) {
-                    // There is no action but the iOS 26 designs have it looking like a button.
-                }
-=======
         }
         
         if isMessageSelectionActive {
             TimelineMessageSelectionToolbar {
                 timelineContext.send(viewAction: .clearMessageSelection)
->>>>>>> release/26.10.8
             }
         }
     }

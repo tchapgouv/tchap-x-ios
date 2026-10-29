@@ -134,35 +134,12 @@ struct SettingsScreen: View {
             default:
                 EmptyView()
             }
-<<<<<<< HEAD
-        }
-    }
-    
-    private var generalSection: some View {
-        Section {
-            // Tchap: Add FAQ item
-            ListRow(label: .default(title: TchapL10n.commonFaq,
-                                    icon: \.info),
-                    kind: .button {
-                        openURL(context.viewState.tchapFaqURL)
-                    })
-                    .accessibilityIdentifier(A11yIdentifiers.settingsScreen.about)
-            // Tchap: Customize "About" menu into "Legal" menu
-//            ListRow(label: .default(title: L10n.commonAbout,
-            ListRow(label: .default(title: TchapL10n.commonLegal,
-                                    icon: \.listBulleted),
-                    kind: .navigationLink {
-                        context.send(viewAction: .about)
-                    })
-                    .accessibilityIdentifier(TchapA11yIdentifiers.settingsScreen.faq)
-=======
             
             ListRow(label: .default(title: L10n.commonModerationAndSafety,
                                     icon: \.admin),
                     kind: .navigationLink {
                         context.send(viewAction: .moderationAndSafety)
                     })
->>>>>>> release/26.10.8
             
             if context.viewState.isBugReportServiceEnabled {
                 ListRow(label: .default(title: L10n.commonReportAProblem,
@@ -172,34 +149,9 @@ struct SettingsScreen: View {
                         })
                         .accessibilityIdentifier(A11yIdentifiers.settingsScreen.reportBug)
             }
-<<<<<<< HEAD
-            
-            if context.viewState.showAnalyticsSettings {
-                ListRow(label: .default(title: L10n.commonAnalytics,
-                                        icon: \.chart),
-                        kind: .navigationLink {
-                            context.send(viewAction: .analytics)
-                        })
-                        .accessibilityIdentifier(A11yIdentifiers.settingsScreen.analytics)
-            }
-
-            ListRow(label: .default(title: L10n.commonAdvancedSettings,
-                                    icon: \.settings),
-                    kind: .navigationLink {
-                        context.send(viewAction: .advancedSettings)
-                    })
-                    .accessibilityIdentifier(A11yIdentifiers.settingsScreen.advancedSettings)
-            
-            ListRow(label: .default(title: L10n.screenAdvancedSettingsLabs,
-                                    icon: \.labs),
-                    kind: .navigationLink {
-                        context.send(viewAction: .labs)
-                    })
-=======
         } header: {
             Text(L10n.commonAccountSettings)
                 .compoundListSectionHeader()
->>>>>>> release/26.10.8
         }
     }
     

@@ -1,4 +1,4 @@
-//
+  //
 // Copyright 2025 Element Creations Ltd.
 // Copyright 2022-2025 New Vector Ltd.
 //
@@ -61,17 +61,7 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
                                                          selectedAccessType: selectedAccessType,
                                                          selectedSpace: selectedSpace)
         
-<<<<<<< HEAD
-        super.init(initialViewState: CreateRoomScreenViewState(isSpace: isSpace,
-                                                               shouldShowCancelButton: shouldShowCancelButton,
-                                                               roomName: "",
-                                                               serverName: userSession.clientProxy.userIDServerName ?? "",
-                                                               isKnockingFeatureEnabled: appSettings.knockingEnabled,
-                                                               canSelectSpace: canSelectSpace,
-                                                               aliasLocalPart: roomAliasNameFromRoomDisplayName(roomName: ""),
-                                                               bindings: bindings,
-                                                               tchapCreateSpaceFaqURL: appSettings.tchapCreateSpaceFaqURL),
-=======
+                   
         let viewState = CreateRoomScreenViewState(isSpace: isSpace,
                                                   shouldShowCancelButton: shouldShowCancelButton,
                                                   roomName: "",
@@ -79,12 +69,12 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
                                                   isKnockingFeatureEnabled: userSession.userSettings.app.knockingEnabled,
                                                   canSelectSpace: canSelectSpace,
                                                   aliasLocalPart: roomAliasNameFromRoomDisplayName(roomName: ""),
-                                                  bindings: bindings)
+                                                  bindings: bindings,
+                                                  tchapCreateSpaceFaqURL: appSettings.tchapCreateSpaceFaqURL),
         
         super.init(initialViewState: userSession.userHooks.createRoomScreenHook.update(viewState),
->>>>>>> release/26.10.8
                    mediaProvider: userSession.mediaProvider)
-        
+
         setupBindings()
         
         if canSelectSpace {

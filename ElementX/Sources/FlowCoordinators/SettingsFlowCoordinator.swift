@@ -282,39 +282,21 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
         navigationStackCoordinator.push(coordinator)
     }
     
-<<<<<<< HEAD
-    private func presentAdvancedSettings() {
-        let coordinator = AdvancedSettingsScreenCoordinator(parameters: .init(appSettings: flowParameters.appSettings,
-                                                                              analytics: flowParameters.analytics,
-                                                                              clientProxy: flowParameters.userSession.clientProxy,
-                                                                              userIndicatorController: flowParameters.userIndicatorController))
-        // :tchap: clear cache option
-        coordinator.actions
-=======
     private func presentModerationAndSafetySettings() {
         let parameters = ModerationAndSafetySettingsScreenCoordinatorParameters(userSession: flowParameters.userSession,
                                                                                 userIndicatorController: flowParameters.userIndicatorController)
         let coordinator = ModerationAndSafetySettingsScreenCoordinator(parameters: parameters)
         coordinator.actionsPublisher
->>>>>>> release/26.10.8
             .sink { [weak self] action in
                 guard let self else { return }
                 
                 switch action {
-<<<<<<< HEAD
-                case .clearCache:
-                    actionsSubject.send(.clearCache)
-=======
                 case .blockedUsers:
                     presentBlockedUsersScreen()
->>>>>>> release/26.10.8
                 }
             }
             .store(in: &cancellables)
         
-<<<<<<< HEAD
-        navigationStackCoordinator.push(coordinator) // :tchap:end
-=======
         navigationStackCoordinator.push(coordinator)
     }
     
@@ -329,7 +311,6 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
         let parameters = LocationSharingSettingsScreenCoordinatorParameters(userSettings: userSettings)
         let coordinator = LocationSharingSettingsScreenCoordinator(parameters: parameters)
         navigationStackCoordinator.push(coordinator)
->>>>>>> release/26.10.8
     }
     
     private func presentDeveloperOptions() {

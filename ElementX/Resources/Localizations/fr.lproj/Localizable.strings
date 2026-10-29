@@ -230,12 +230,8 @@
 "common_an_image" = "une image";
 "common_analytics" = "Statistiques d’utilisation";
 "common_android_shortcuts_remove_reason_left_room" = "Vous avez quitté le salon";
-<<<<<<< HEAD
 "common_android_shortcuts_remove_reason_session_logged_out" = "Vous avez été déconnecté de cet appareil"; // Tchap
-=======
-"common_android_shortcuts_remove_reason_session_logged_out" = "Vous avez été déconnecté de la session";
 "common_app_settings" = "Paramètres de l'application";
->>>>>>> release/26.10.8
 "common_appearance" = "Apparence";
 "common_audio" = "Audio";
 "common_beta" = "Bêta";
@@ -436,16 +432,10 @@
 "common_waiting_live_location" = "En attente de la position en temps réel…";
 "common_world_readable_history" = "Tout le monde peut voir les anciens messages";
 "common_you" = "Vous";
-<<<<<<< HEAD
+"common_your_account" = "Votre compte";
 "confirm_recovery_key_banner_message" = "Confirmez votre code de vérification pour conserver l’accès à votre stockage de clés et à l’historique des messages."; // Tchap
 "confirm_recovery_key_banner_primary_button_title" = "Saisissez votre code de vérification"; // Tchap
 "confirm_recovery_key_banner_secondary_button_title" = "Code de vérification oublié ?"; // Tchap
-=======
-"common_your_account" = "Votre compte";
-"confirm_recovery_key_banner_message" = "Confirmez votre clé de récupération pour conserver l’accès à votre stockage de clés et à l’historique des messages.";
-"confirm_recovery_key_banner_primary_button_title" = "Saisissez votre clé de récupération";
-"confirm_recovery_key_banner_secondary_button_title" = "Clé de récupération oubliée ?";
->>>>>>> release/26.10.8
 "confirm_recovery_key_banner_title" = "Le stockage de vos clés n'est pas synchronisé";
 "content_scanner_not_found" = "Téléchargement indisponible.";
 "content_scanner_not_found_title" = "Une erreur est survenue";
@@ -882,31 +872,21 @@
 "screen_encryption_reset_action_continue_reset" = "Continuer";
 "screen_encryption_reset_bullet_1" = "Les détails de votre compte, vos contacts, vos préférences et votre liste de discussions seront conservés";
 "screen_encryption_reset_bullet_2" = "Vous perdrez l’historique de vos messages";
-<<<<<<< HEAD
-"screen_encryption_reset_bullet_3" = "Vous devrez vérifier à nouveau tous vos appareils et tous vos contacts";
-"screen_encryption_reset_footer" = "Ne réinitialisez votre identité que si vous n'avez plus accès à aucun autre appareil et que vous avez perdu votre code de vérification."; // Tchap
-=======
 "screen_encryption_reset_bullet_3" = "Les autres utilisateurs verront que votre identité numérique a été réinitialisée.";
 "screen_encryption_reset_bullet_4" = "Tous les appareils sur lesquels vous êtes connecté devront être vérifiés à nouveau.";
-"screen_encryption_reset_footer" = "Ne réinitialisez votre identité numérique que si vous n'avez plus accès à aucun autre appareil et que vous avez perdu votre clé de récupération.";
+"screen_encryption_reset_footer" = "Ne réinitialisez votre identité que si vous n'avez plus accès à aucun autre appareil et que vous avez perdu votre code de vérification."; // Tchap
 "screen_encryption_reset_no_chats_message" = "Il semble que vous n'ayez pas encore de conversations. Si c'est bien le cas, vous pouvez procéder en toute sécurité à la réinitialisation de votre identité numérique.";
-"screen_encryption_reset_no_options_subtitle" = "Vous n’avez accès à aucun autre appareil vérifié ni à une clé de récupération ; vous devrez donc réinitialiser votre identité numérique pour continuer à utiliser l’application.";
+"screen_encryption_reset_no_options_subtitle" = "Vous n’avez accès à aucun autre appareil vérifié ni à un code de vérification ; vous devrez donc réinitialiser votre identité numérique pour continuer à utiliser l’application."; // Tchap
 "screen_encryption_reset_no_options_title" = "Vous devez réinitialiser votre identité numérique";
-"screen_encryption_reset_subtitle" = "Si vous n’avez accès à aucun autre appareil vérifié et que vous ne possédez pas votre clé de récupération, vous devrez réinitialiser votre identité numérique pour continuer à utiliser l’application.";
->>>>>>> release/26.10.8
+"screen_encryption_reset_subtitle" = "Si vous n’avez accès à aucun autre appareil vérifié et que vous ne possédez pas votre code de récupération, vous devrez réinitialiser votre identité numérique pour continuer à utiliser l’application."; // Tchap
 "screen_encryption_reset_title" = "Vous ne pouvez pas confirmer ? Vous devez réinitialiser votre identité numérique.";
 "screen_home_tab_chats" = "Conversations";
 "screen_home_tab_search" = "Recherche";
 "screen_home_tab_spaces" = "Espaces";
 "screen_identity_confirmation_cannot_confirm" = "Confirmation impossible ?";
-<<<<<<< HEAD
 "screen_identity_confirmation_create_new_recovery_key" = "Créer un nouveau code de vérification"; // Tchap
-"screen_identity_confirmation_subtitle" = "Choisissez une méthode pour vérifier votre appareil et accéder à votre compte Tchap."; //Tchap
-=======
-"screen_identity_confirmation_create_new_recovery_key" = "Créer une nouvelle clé de récupération";
 "screen_identity_confirmation_sign_out" = "Se déconnecter";
-"screen_identity_confirmation_subtitle" = "Choisissez comment vérifier afin de configurer votre messagerie sécurisée.";
->>>>>>> release/26.10.8
+"screen_identity_confirmation_subtitle" = "Choisissez une méthode pour vérifier votre appareil et accéder à votre compte Tchap."; //Tchap
 "screen_identity_confirmation_title" = "Confirmez votre identité numérique";
 "screen_identity_confirmation_use_another_device" = "Utiliser un autre appareil"; // Tchap
 "screen_identity_confirmation_use_recovery_key" = "Utiliser le code de vérification"; // Tchap
@@ -1103,17 +1083,13 @@
 "screen_missing_key_backup_step_3_ios" = "Dans Sauvegarde Automatique des messages, sélectionnez Activer (ou Récupérer les messages)"; // Tchap
 "screen_missing_key_backup_step_4" = "Suivez les instructions pour activer votre sauvegarde automatique des messages (ou récupérer vos messages)"; // Tchap
 "screen_missing_key_backup_step_5" = "Revenez à %1$@";
-<<<<<<< HEAD
 "screen_missing_key_backup_title" = "Activez la sauvegarde automatique avant de continuer avec %1$@"; // Tchap
-=======
-"screen_missing_key_backup_title" = "Activez le stockage de vos clés avant de continuer avec %1$@";
 "screen_moderation_and_safety_invites_heading" = "Invitations";
 "screen_moderation_and_safety_other_users_heading" = "Autres utilisateurs";
 "screen_moderation_and_safety_share_presence_heading" = "Votre apparence";
 "screen_multi_account_announcement_action" = "Ajouter un compte";
 "screen_multi_account_announcement_description" = "Naviguer vers %1$@ pour vous connecter à un autre compte. Vous pourrez ensuite facilement passer de l'un à l'autre.";
 "screen_multi_account_announcement_title" = "Vous pouvez désormais ajouter plusieurs comptes";
->>>>>>> release/26.10.8
 "screen_notification_optin_subtitle" = "Vous pourrez modifier vos paramètres ultérieurement.";
 "screen_notification_optin_title" = "Autorisez les notifications et ne manquez aucun message";
 "screen_notification_settings_activity_section_title" = "Activité";
@@ -1604,16 +1580,10 @@
 "screen_session_verification_unavailable_title" = "La vérification avec cet appareil est actuellement indisponible.";
 "screen_session_verification_use_another_device_subtitle" = "Assurez-vous que l'application est ouverte sur un autre appareil avant de commencer la vérification.";
 "screen_session_verification_use_another_device_title" = "Ouvrez l'application sur un autre appareil vérifié";
-<<<<<<< HEAD
 "screen_session_verification_user_initiator_subtitle" = "Pour plus de sécurité, vérifiez ce membre en comparant des émojis sur vos appareils. Pour ce faire, utilisez un moyen de communication fiable."; // Tchap
 "screen_session_verification_user_initiator_title" = "Vérifier ce membre ?"; // Tchap
+"screen_session_verification_user_requesting_verification" = "Membre demandant une vérification:"; // Tchap
 "screen_session_verification_user_responder_subtitle" = "Pour plus de sécurité, cet autre membre souhaite vérifier votre identité. Des émojis à comparer vous seront présentés."; // Tchap
-=======
-"screen_session_verification_user_initiator_subtitle" = "Pour plus de sécurité, vérifiez cet utilisateur en comparant des émojis sur vos appareils. Pour ce faire, utilisez un moyen de communication fiable.";
-"screen_session_verification_user_initiator_title" = "Vérifier cet utilisateur ?";
-"screen_session_verification_user_requesting_verification" = "Utilisateur demandant une vérification:";
-"screen_session_verification_user_responder_subtitle" = "Pour plus de sécurité, cet autre utilisateur souhaite vérifier votre identité numérique. Des émojis à comparer vous seront présentés.";
->>>>>>> release/26.10.8
 "screen_session_verification_waiting_another_device_subtitle" = "Vous devriez voir une alerte sur l'autre appareil. Démarrez la vérification à partir de là dès maintenant.";
 "screen_session_verification_waiting_another_device_title" = "Démarrer la vérification sur l’autre appareil";
 "screen_session_verification_waiting_other_device_title" = "Démarrer la vérification sur l’autre appareil";
@@ -1640,15 +1610,9 @@
 "screen_share_open_osm_maps" = "Ouvrir dans OpenStreetMap";
 "screen_share_this_location_action" = "Partager la position sélectionnée";
 "screen_sharing_location_option_sheet_title" = "Options de partage";
-<<<<<<< HEAD
-"screen_signed_out_reason_1" = "Le mot de passe de votre compte a été modifié sur un autre appareil";
-"screen_signed_out_reason_2" = "Cet appareil a été supprimé depuis un autre appareil"; // Tchap
-"screen_signed_out_reason_3" = "L’administrateur de votre serveur a révoqué votre accès.";
-=======
 "screen_signed_out_reason_1" = "Vous avez supprimé cet appareil de votre compte.";
 "screen_signed_out_reason_2" = "Vous avez modifié votre mot de passe sur un autre appareil";
 "screen_signed_out_reason_3" = "Votre session a expiré ou l’administrateur de votre serveur a révoqué votre accès.";
->>>>>>> release/26.10.8
 "screen_signed_out_subtitle" = "La déconnexion peut être due à une des raisons ci-dessous. Veuillez vous connecter à nouveau pour continuer à utiliser %@.";
 "screen_signed_out_subtitle_v2" = "Cet appareil a été supprimé pour l'une des raisons indiquées ci-dessous. Vous devez vous reconnecter pour associer cet appareil à votre compte.";
 "screen_signed_out_title" = "Appareil supprimé";
@@ -1667,14 +1631,9 @@
 "screen_signout_preference_item" = "Supprimer cet appareil";
 "screen_signout_recovery_disabled_subtitle" = "Il s'agit de votre seul appareil. Si vous le supprimez, vous aurez besoin d'un code de vérification pour confirmer votre identité numérique et restaurer vos conversations chiffrées lors de votre prochaine connexion."; // Tchap
 "screen_signout_recovery_disabled_title" = "Vous êtes sur le point de perdre l'accès à vos conversations chiffrées.";
-<<<<<<< HEAD
+"screen_signout_save_recovery_key_action_continue" = "Continuez la suppression de cet appareil";
 "screen_signout_save_recovery_key_subtitle" = "Il s'agit de votre seul appareil. Si vous le supprimez, vous aurez besoin d'un code de vérification pour confirmer votre identité numérique et restaurer vos conversations chiffrées lors de votre prochaine connexion."; // Tchap
 "screen_signout_save_recovery_key_title" = "Assurez-vous d'avoir accès à votre code de vérification avant de supprimer cet appareil."; // Tchap
-=======
-"screen_signout_save_recovery_key_action_continue" = "Continuez la suppression de cet appareil";
-"screen_signout_save_recovery_key_subtitle" = "Il s'agit de votre seul appareil. Si vous le supprimer, vous aurez besoin d'une clé de récupération pour confirmer votre identité numérique et restaurer vos conversations chiffrées lors de votre prochaine connexion.";
-"screen_signout_save_recovery_key_title" = "Assurez-vous d'avoir accès à votre clé de récupération avant de supprimer cet appareil.";
->>>>>>> release/26.10.8
 "screen_space_add_room_action" = "Salon";
 "screen_space_add_rooms_room_access_description" = "Ajouter un salon ne changera pas l'accès au salon. Pour modifier l'accès, aller dans les paramètres du salon puis dans Sécurité & confidentialité.";
 "screen_space_empty_state_title" = "Aucun salon dans cet espace"; // Tchap

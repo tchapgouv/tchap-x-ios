@@ -112,8 +112,10 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(defaultValue: true)
     var hasSeenNewSoundBanner: Bool
     
-<<<<<<< HEAD
-    // TODO: accountProviders
+    /// Defaults to `true` so new users never see it. Developer options arms it for now, an upgrade migration will at launch.
+    @UserPreference(defaultValue: true)
+    var hasSeenMultiAccountAnnouncement: Bool
+    
     // The initial set of account providers shown to the user in the authentication flow.
     //
     // Account provider is the friendly term for the server name. It should not contain an `https` prefix and should
@@ -153,16 +155,6 @@ final nonisolated class AppSettings: @unchecked Sendable {
     #elseif IS_TCHAP_UNIT_TESTS
     private(set) var accountProviders = ["agent.dinum.tchap.gouv.fr"]
     #else
-=======
-    /// Defaults to `true` so new users never see it. Developer options arms it for now, an upgrade migration will at launch.
-    @UserPreference(defaultValue: true)
-    var hasSeenMultiAccountAnnouncement: Bool
-    
-    /// The initial set of account providers shown to the user in the authentication flow.
-    ///
-    /// Account provider is the friendly term for the server name. It should not contain an `https` prefix and should
-    /// match the last part of the user ID. For example `example.com` and not `https://matrix.example.com`.
->>>>>>> release/26.10.8
     private(set) var accountProviders: [AccountProvider] = [.managed(serverName: "matrix.org", baseURL: "https://matrix-client.matrix.org")]
     #endif
     /// Whether or not the user is allowed to manually enter their own account provider or must select from one of `defaultAccountProviders`.
@@ -172,15 +164,11 @@ final nonisolated class AppSettings: @unchecked Sendable {
     
     /// The task identifier used for background app refresh. Also used in main target's the Info.plist
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
-<<<<<<< HEAD
-
-    // Tchap: adapt website URL for OAuth / MAS
-    //    private(set) var websiteURL: URL = "https://element.io"
-=======
     /// The task identifier used for the search index backfill. Also used in main target's the Info.plist
     let searchBackfillTaskIdentifier = "io.element.elementx.background.search-backfill"
     
->>>>>>> release/26.10.8
+    // Tchap: adapt website URL for OAuth / MAS
+    //    private(set) var websiteURL: URL = "https://element.io"
     /// A URL where users can go read more about the app.
     #if IS_TCHAP_PRODUCTION
     private(set) var websiteURL: URL = "https://tchap.gouv.fr"
@@ -430,15 +418,9 @@ final nonisolated class AppSettings: @unchecked Sendable {
     var hasRunNotificationPermissionsOnboarding: Bool
     
     @UserPreference(defaultValue: false)
-<<<<<<< HEAD
     var hasRunTchapWelcomeOnboarding: Bool // :tchap:
     
     @UserPreference(defaultValue: false)
-    var hasRunIdentityConfirmationOnboarding: Bool
-    
-    @UserPreference(defaultValue: false)
-=======
->>>>>>> release/26.10.8
     var hasRequestedLocationAlwaysLocationAuthorization: Bool
     
     @UserPreference(defaultValue: [FrequentlyUsedEmoji]())
@@ -452,25 +434,11 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(defaultValue: false)
     var liveLocationDisclaimerDisplayed: Bool
     
-<<<<<<< HEAD
-    // MARK: - Home Screen
-    
-    @UserPreference(defaultValue: RoomListActivityVisibility.current)
-    var roomListActivityVisibility: RoomListActivityVisibility
-
     // :tchap: Set roomListNotificationCountEnabled option to true by default
 //    @UserPreference(defaultValue: false)
     @UserPreference(defaultValue: true) // :tchap:end:
     var roomListNotificationCountEnabled: Bool
     
-    // MARK: - Search Screen
-    
-    /// The queries the user searched for and the rooms they opened from the results, most recent first.
-    @UserPreference(defaultValue: [SearchBreadcrumb]())
-    var searchBreadcrumbs: [SearchBreadcrumb]
-    
-=======
->>>>>>> release/26.10.8
     // MARK: - Room Screen
     
     @UserPreference(defaultValue: AppBuildType.current == .debug)

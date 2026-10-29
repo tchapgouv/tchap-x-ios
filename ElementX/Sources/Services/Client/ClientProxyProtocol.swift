@@ -204,21 +204,18 @@ protocol ClientProxyProtocol: AnyObject {
     
     func pauseServices() async
     
-<<<<<<< HEAD
-    var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> { get } // :tchap: expired account
-
-    func resyncAccount() async throws // :tchap: expired account
-
-    func accountExpiredSendEmail() async throws // :tchap: expired account
-
-=======
     func startSearchBackfill(strategy: SearchBackfillStrategy)
     
     func stopSearchBackfill()
     
     var isSearchBackfillRunning: Bool { get }
     
->>>>>>> release/26.10.8
+    var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> { get } // :tchap: expired account
+
+    func resyncAccount() async throws // :tchap: expired account
+
+    func accountExpiredSendEmail() async throws // :tchap: expired account
+
     func expireSyncSessions() async
     
     func accountURL(action: AccountManagementAction) async -> URL?

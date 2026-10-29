@@ -43,28 +43,10 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     /// Restores the signed in accounts. Cancelled when signing out or clearing the cache.
     private var restorationTask: Task<Void, Never>?
     private var userSession: UserSessionProtocol? {
-<<<<<<< HEAD
-        didSet {
-            userSessionObserver?.cancel()
-            if let userSession {
-                configureElementCallService()
-                configureNotificationManager()
-                observeUserSessionChanges()
-                Task {
-                    await resumeClientServices()
-                    await appHooks.configure(with: userSession)
-                }
-                // Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
-                let homeServerBaseURL = URL(string: userSession.clientProxy.homeserver)! // swiftlint:disable:this force_unwrapping
-                appSettings.bugReportRageshakeURL.applyRemoteValue(.url(homeServerBaseURL.appendingPathComponent("bugreports").appendingPathComponent("submit")))
-            } else {
-                // Tchap: disable BugReportService baseURL after user is logged out.
-                appSettings.bugReportRageshakeURL.applyRemoteValue(.disabled)
-            }
-        }
-=======
         userSessionManager.activeSession
->>>>>>> release/26.10.8
+                // TODO Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
+                //let homeServerBaseURL = URL(string: userSession.clientProxy.homeserver)! // swiftlint:disable:this force_unwrapping
+               //appSettings.bugReportRageshakeURL.applyRemoteValue(.url(homeServerBaseURL.appendingPathComponent("bugreports").appendingPathComponent("submit")))
     }
     
     private var authenticationFlowCoordinator: AuthenticationFlowCoordinator?
@@ -509,7 +491,6 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             Tracing.migrateLogFiles()
             MXLog.info("Migrating to version 25.07.4, log files have been moved.")
         }
-<<<<<<< HEAD
 
         // :tchap: Enable roomListNotificationCount and threads settings for tchap
         if oldVersion < Version(26, 10, 0) {
@@ -519,7 +500,6 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             appSettings.threadsEnabled = true
         } // :tchap:end:
 
-=======
         
         if oldVersion < Version(26, 10, 2) {
             MXLog.info("Migrating to version 26.10.2, moving notification sounds.")
@@ -538,7 +518,6 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             }
         }
         
->>>>>>> release/26.10.8
         // Store the old version to run additional migrations on the user session once it has been set up.
         userSessionMigrationsOldVersion = oldVersion
     }

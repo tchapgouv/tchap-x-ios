@@ -10,19 +10,7 @@ import SwiftUI
 
 typealias ModerationAndSafetySettingsScreenViewModelType = StateStoreViewModelV2<ModerationAndSafetySettingsScreenViewState, ModerationAndSafetySettingsScreenViewAction>
 
-<<<<<<< HEAD:ElementX/Sources/Screens/Settings/AdvancedSettingsScreen/AdvancedSettingsScreenViewModel.swift
-class AdvancedSettingsScreenViewModel: AdvancedSettingsScreenViewModelType, AdvancedSettingsScreenViewModelProtocol {
-    // :tchap: clear cache option
-    private var actionsSubject: PassthroughSubject<AdvancedSettingsScreenViewModelAction, Never> = .init()
-    
-    var actions: AnyPublisher<AdvancedSettingsScreenViewModelAction, Never> {
-        actionsSubject.eraseToAnyPublisher()
-    } // :tchap:end
-
-    private let analytics: AnalyticsServiceProtocol
-=======
 class ModerationAndSafetySettingsScreenViewModel: ModerationAndSafetySettingsScreenViewModelType, ModerationAndSafetySettingsScreenViewModelProtocol {
->>>>>>> release/26.10.8:ElementX/Sources/Screens/Settings/ModerationAndSafetySettingsScreen/ModerationAndSafetySettingsScreenViewModel.swift
     private let clientProxy: ClientProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     
@@ -69,14 +57,8 @@ class ModerationAndSafetySettingsScreenViewModel: ModerationAndSafetySettingsScr
             hideInviteAvatarsTask = Task { [weak self] in await self?.updateHideInviteAvatars(value) }
         case let .updateTimelineMediaVisibility(value):
             timelineMediaVisibilityTask = Task { [weak self] in await self?.updateTimelineMediaVisibility(value) }
-<<<<<<< HEAD:ElementX/Sources/Screens/Settings/AdvancedSettingsScreen/AdvancedSettingsScreenViewModel.swift
-        // :tchap: clear cache option
-        case .clearCache:
-            actionsSubject.send(.clearCache) // :tchap:end
-=======
         case .blockedUsers:
             actionsSubject.send(.blockedUsers)
->>>>>>> release/26.10.8:ElementX/Sources/Screens/Settings/ModerationAndSafetySettingsScreen/ModerationAndSafetySettingsScreenViewModel.swift
         }
     }
     

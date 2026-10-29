@@ -36,11 +36,8 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
                                            showAnalyticsSettings: userSettings.app.canPromptForAnalytics,
                                            isBugReportServiceEnabled: isBugReportServiceEnabled,
                                            navigationBarVisibility: isInSecondaryWindow ? .hidden : .automatic,
-<<<<<<< HEAD
+                                           bindings: .init(userSettings: userSettings),
                                            tchapFaqURL: appSettings.tchapFaqURL),
-=======
-                                           bindings: .init(userSettings: userSettings)),
->>>>>>> release/26.10.8
                    mediaProvider: userSession.mediaProvider)
         
         userSettings.app.developerOptionsEnabledPublisher

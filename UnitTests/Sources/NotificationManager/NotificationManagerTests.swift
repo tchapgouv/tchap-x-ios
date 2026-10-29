@@ -14,11 +14,8 @@ import Combine
 @testable import TchapX_Production
 #else
 @testable import ElementX
-<<<<<<< HEAD
 #endif
-=======
 import MatrixRustSDKMocks
->>>>>>> release/26.10.8
 import NotificationCenter
 import Testing
 

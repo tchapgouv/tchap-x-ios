@@ -432,16 +432,10 @@
 "common_waiting_live_location" = "Waiting for live location…";
 "common_world_readable_history" = "Anyone can see history";
 "common_you" = "You";
-<<<<<<< HEAD
+"common_your_account" = "Your account";
 "confirm_recovery_key_banner_message" = "Confirm your verification code to maintain access to your key storage and message history."; // Tchap
 "confirm_recovery_key_banner_primary_button_title" = "Enter your verification code"; // Tchap
 "confirm_recovery_key_banner_secondary_button_title" = "Forgot your verification code?"; // Tchap
-=======
-"common_your_account" = "Your account";
-"confirm_recovery_key_banner_message" = "Confirm your recovery key to maintain access to your key storage and message history.";
-"confirm_recovery_key_banner_primary_button_title" = "Enter your recovery key";
-"confirm_recovery_key_banner_secondary_button_title" = "Forgot your recovery key?";
->>>>>>> release/26.10.8
 "confirm_recovery_key_banner_title" = "Your key storage is out of sync";
 "content_scanner_not_found" = "Download not available.";
 "content_scanner_not_found_title" = "Something went wrong";
@@ -878,32 +872,21 @@
 "screen_encryption_reset_action_continue_reset" = "Continue";
 "screen_encryption_reset_bullet_1" = "Your account details, contacts, preferences, and chat list will be kept";
 "screen_encryption_reset_bullet_2" = "You will lose any message history that’s stored only on the server";
-<<<<<<< HEAD
-"screen_encryption_reset_bullet_3" = "You will need to verify all your existing devices and contacts again";
-"screen_encryption_reset_footer" = "Only reset your identity if you don’t have access to another signed-in device and you’ve lost your verification code."; // Tchap
-"screen_encryption_reset_title" = "Can't confirm? You’ll need to reset your identity.";
-=======
 "screen_encryption_reset_bullet_3" = "Other users will see that your digital identity has been reset";
 "screen_encryption_reset_bullet_4" = "Any devices you’re signed in to will need to be reconfirmed";
-"screen_encryption_reset_footer" = "Only reset your digital identity if you don't have access to another verified device and you don't have your recovery key.";
+"screen_encryption_reset_footer" = "Only reset your identity if you don’t have access to another signed-in device and you’ve lost your verification code."; // Tchap
 "screen_encryption_reset_no_chats_message" = "It looks like you don’t have any chats yet. If this is correct, you can safely proceed with resetting your digital identity";
 "screen_encryption_reset_no_options_subtitle" = "You don’t have access to any other verified devices or a recovery key, so you’ll need to reset your digital identity to continue using the app.";
 "screen_encryption_reset_no_options_title" = "You need to reset your digital identity";
 "screen_encryption_reset_subtitle" = "If you don’t have access to any other verified devices and you don’t have your recovery key, then you’ll need to reset your digital identity to continue using the app.";
 "screen_encryption_reset_title" = "Can't confirm? You’ll need to reset your digital identity.";
->>>>>>> release/26.10.8
 "screen_home_tab_chats" = "Chats";
 "screen_home_tab_search" = "Search";
 "screen_home_tab_spaces" = "Spaces";
 "screen_identity_confirmation_cannot_confirm" = "Can't confirm?";
-<<<<<<< HEAD
 "screen_identity_confirmation_create_new_recovery_key" = "Create a new verification code"; // Tchap
-"screen_identity_confirmation_subtitle" = "Choose a method to verify your device and access your Tchap account."; // Tchap
-=======
-"screen_identity_confirmation_create_new_recovery_key" = "Create a new recovery key";
 "screen_identity_confirmation_sign_out" = "Sign out";
-"screen_identity_confirmation_subtitle" = "Choose how to verify to set up secure messaging.";
->>>>>>> release/26.10.8
+"screen_identity_confirmation_subtitle" = "Choose a method to verify your device and access your Tchap account."; // Tchap
 "screen_identity_confirmation_title" = "Confirm your digital identity";
 "screen_identity_confirmation_use_another_device" = "Use another device";
 "screen_identity_confirmation_use_recovery_key" = "Use verification code"; // Tchap

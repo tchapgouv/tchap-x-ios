@@ -9,22 +9,14 @@ let package = Package(
         .library(name: "Compound", targets: ["Compound"])
     ],
     dependencies: [
-<<<<<<< HEAD
 // Use the Github hosted version of Tchap Compound-design--tokens
-//      .package(url: "https://github.com/element-hq/compound-design-tokens", exact: "11.0.0"),
+//      .package(url: "https://github.com/element-hq/compound-design-tokens", exact: "11.3.1"),
         .package(url: "https://github.com/tchapgouv/compound-design-tokens", revision: "83df0f5f2f5d62a832f39422ae3d4dfac02b3a00"),
 // Use the local version of Tchap Compound-design--tokens
 //        .package(path: "../../tchap-x-compound/compound-design-tokens"),
-        .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "27.0.0"),
+        .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "27.1.0"),
         .package(url: "https://github.com/SFSafeSymbols/SFSafeSymbols", from: "7.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.19.4")
-=======
-        .package(url: "https://github.com/element-hq/compound-design-tokens", exact: "11.3.1"),
-        // .package(path: "../../compound-design-tokens"),
-        .package(url: "https://github.com/siteline/SwiftUI-Introspect", exact: "27.1.0"),
-        .package(url: "https://github.com/SFSafeSymbols/SFSafeSymbols", exact: "7.0.0"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.19.6")
->>>>>>> release/26.10.8
     ],
     targets: [
         .target(

@@ -48,13 +48,9 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         roomSummaryProvider = userSession.clientProxy.roomSummaryProvider
         // :tchap:
         //       super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
-        //                                         bindings: .init(filtersState: .init(appSettings: appSettings))),
+        //                                         bindings: .init(filtersState: .init(userSettings: userSession.userSettings))),
         super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
-<<<<<<< HEAD
-                                           bindings: .init(filtersState: .init(appSettings: appSettings)), tchapServiceStatusURL: appSettings.tchapServiceStatusURL),
-=======
-                                           bindings: .init(filtersState: .init(userSettings: userSession.userSettings))),
->>>>>>> release/26.10.8
+                                           bindings: .init(filtersState: .init(userSettings: userSession.userSettings)), tchapServiceStatusURL: appSettings.tchapServiceStatusURL),
                    mediaProvider: userSession.mediaProvider)
         
         if userSettings.app.globalSearchEnabled {
