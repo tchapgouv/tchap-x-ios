@@ -16,7 +16,7 @@ let package = Package(
 //        .package(path: "../../tchap-x-compound/compound-design-tokens"),
         .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "27.1.0"),
         .package(url: "https://github.com/SFSafeSymbols/SFSafeSymbols", from: "7.0.0"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.19.4")
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.19.6")
     ],
     targets: [
         .target(

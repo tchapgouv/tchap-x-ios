@@ -78,7 +78,9 @@ struct CreateRoomScreenViewState: BindableState {
         availableAccessTypes.append(.private)
         
         if !isPublicAccessAllowed {
-            availableAccessTypes.removeAll { $0 == .public }
+            // :tchap: remove all `public` cases whatever their `federated` associated value.
+//            availableAccessTypes.removeAll { $0 == .public }
+            availableAccessTypes.removeAll { if case .public = $0 { true } else { false } } // :tchap:end:
         }
         
         return availableAccessTypes

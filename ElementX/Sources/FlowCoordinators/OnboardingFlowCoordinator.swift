@@ -138,7 +138,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
     
     private var requiresAnalyticsSetup: Bool {
         // Tchap: force analytics opt-in on Analytics registration check.
-        if appSettings.analyticsConsentState == .unknown {
+        if userSettings.app.analyticsConsentState == .unknown {
             analyticsService.optIn()
         }
         
@@ -154,7 +154,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
     
     // Tchap: add welcome screen
     private var requiresTchapWelcomeScreen: Bool {
-        !appSettings.hasRunTchapWelcomeOnboarding
+        !userSettings.app.hasRunTchapWelcomeOnboarding
     }
     
     // Tchap: disable SwiftLint body length error.
@@ -468,7 +468,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
                 guard let self else { return }
                 switch action {
                 case .done:
-                    appSettings.hasRunTchapWelcomeOnboarding = true
+                    userSettings.app.hasRunTchapWelcomeOnboarding = true
                     stateMachine.tryEvent(.next)
                 }
             }

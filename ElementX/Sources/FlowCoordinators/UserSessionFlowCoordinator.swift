@@ -721,7 +721,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
 
     private func presentAccountExpiredScreen() {
         let navigationStackCoordinator = NavigationStackCoordinator()
-        let coordinator = AccountExpiredScreenCoordinator(parameters: .init(appSettings: flowParameters.appSettings, clientProxy: userSession.clientProxy))
+        let coordinator = AccountExpiredScreenCoordinator(parameters: .init(appSettings: userSession.userSettings.app, clientProxy: userSession.clientProxy))
 
         coordinator.start()
         navigationStackCoordinator.setRootCoordinator(coordinator)

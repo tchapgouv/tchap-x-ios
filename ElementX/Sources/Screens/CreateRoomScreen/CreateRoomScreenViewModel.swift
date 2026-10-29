@@ -1,4 +1,4 @@
-  //
+//
 // Copyright 2025 Element Creations Ltd.
 // Copyright 2022-2025 New Vector Ltd.
 //
@@ -60,8 +60,7 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
         let bindings = CreateRoomScreenViewStateBindings(roomTopic: "",
                                                          selectedAccessType: selectedAccessType,
                                                          selectedSpace: selectedSpace)
-        
-                   
+
         let viewState = CreateRoomScreenViewState(isSpace: isSpace,
                                                   shouldShowCancelButton: shouldShowCancelButton,
                                                   roomName: "",
@@ -70,8 +69,8 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
                                                   canSelectSpace: canSelectSpace,
                                                   aliasLocalPart: roomAliasNameFromRoomDisplayName(roomName: ""),
                                                   bindings: bindings,
-                                                  tchapCreateSpaceFaqURL: appSettings.tchapCreateSpaceFaqURL),
-        
+                                                  tchapCreateSpaceFaqURL: userSession.userSettings.app.tchapCreateSpaceFaqURL)
+
         super.init(initialViewState: userSession.userHooks.createRoomScreenHook.update(viewState),
                    mediaProvider: userSession.mediaProvider)
 

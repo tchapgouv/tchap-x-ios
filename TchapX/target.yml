@@ -162,7 +162,7 @@ targetTemplates:
       SWIFT_OBJC_BRIDGING_HEADER: ElementX/SupportingFiles/ElementX-Bridging-Header.h
       SWIFT_OBJC_INTERFACE_HEADER_NAME: GeneratedInterface-Swift.h
       PILLS_UT_TYPE_IDENTIFIER: $(BASE_BUNDLE_IDENTIFIER).pills
-      SWIFT_VERSION: 6.2
+      SWIFT_VERSION: 6
       SWIFT_APPROACHABLE_CONCURRENCY: YES
       SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
 
@@ -290,7 +290,8 @@ targets:
       path: production/SupportingFiles/Info.plist
       properties:
         BGTaskSchedulerPermittedIdentifiers: [
-          $(BASE_BUNDLE_IDENTIFIER).background.refresh
+          $(BASE_BUNDLE_IDENTIFIER).background.refresh,
+          $(BASE_BUNDLE_IDENTIFIER).background.search-backfill
         ]
         NSAppTransportSecurity: {
           NSPinnedDomains: {
@@ -389,7 +390,8 @@ targets:
       path: preprod/SupportingFiles/Info.plist
       properties:
         BGTaskSchedulerPermittedIdentifiers: [
-          $(BASE_BUNDLE_IDENTIFIER).background.refresh
+          $(BASE_BUNDLE_IDENTIFIER).background.refresh,
+          $(BASE_BUNDLE_IDENTIFIER).background.search-backfill
         ]
         NSAppTransportSecurity: {
           NSPinnedDomains: {
@@ -488,7 +490,8 @@ targets:
       path: development/SupportingFiles/Info.plist
       properties:
         BGTaskSchedulerPermittedIdentifiers: [
-          $(BASE_BUNDLE_IDENTIFIER).background.refresh
+          $(BASE_BUNDLE_IDENTIFIER).background.refresh,
+          $(BASE_BUNDLE_IDENTIFIER).background.search-backfill
         ]
         # No certificate pinning in Development environment.
         NSAppTransportSecurity: {

@@ -50,7 +50,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         //       super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
         //                                         bindings: .init(filtersState: .init(userSettings: userSession.userSettings))),
         super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
-                                           bindings: .init(filtersState: .init(userSettings: userSession.userSettings)), tchapServiceStatusURL: appSettings.tchapServiceStatusURL),
+                                           bindings: .init(filtersState: .init(userSettings: userSession.userSettings)), tchapServiceStatusURL: userSettings.app.tchapServiceStatusURL),
                    mediaProvider: userSession.mediaProvider)
         
         if userSettings.app.globalSearchEnabled {

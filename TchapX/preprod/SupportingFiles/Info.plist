@@ -5,6 +5,7 @@
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>$(BASE_BUNDLE_IDENTIFIER).background.refresh</string>
+		<string>$(BASE_BUNDLE_IDENTIFIER).background.search-backfill</string>
 	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>

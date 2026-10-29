@@ -2064,7 +2064,7 @@ internal nonisolated enum L10n {
   internal static var screenEncryptionResetNoOptionsTitle: String { return L10n.tr("Localizable", "screen_encryption_reset_no_options_title") }
   /// If you don’t have access to any other verified devices and you don’t have your recovery key, then you’ll need to reset your digital identity to continue using the app.
   internal static var screenEncryptionResetSubtitle: String { return L10n.tr("Localizable", "screen_encryption_reset_subtitle") }
-  /// Can't confirm? You’ll need to reset your identity.
+  /// Can't confirm? You’ll need to reset your digital identity.
   internal static var screenEncryptionResetTitle: String { return L10n.tr("Localizable", "screen_encryption_reset_title") }
   /// Chats
   internal static var screenHomeTabChats: String { return L10n.tr("Localizable", "screen_home_tab_chats") }

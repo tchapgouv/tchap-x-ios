@@ -44,9 +44,9 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private var restorationTask: Task<Void, Never>?
     private var userSession: UserSessionProtocol? {
         userSessionManager.activeSession
-                // TODO Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
-                //let homeServerBaseURL = URL(string: userSession.clientProxy.homeserver)! // swiftlint:disable:this force_unwrapping
-               //appSettings.bugReportRageshakeURL.applyRemoteValue(.url(homeServerBaseURL.appendingPathComponent("bugreports").appendingPathComponent("submit")))
+        // TODO: Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
+        // let homeServerBaseURL = URL(string: userSession.clientProxy.homeserver)! // swiftlint:disable:this force_unwrapping
+        // appSettings.bugReportRageshakeURL.applyRemoteValue(.url(homeServerBaseURL.appendingPathComponent("bugreports").appendingPathComponent("submit")))
     }
     
     private var authenticationFlowCoordinator: AuthenticationFlowCoordinator?
@@ -500,7 +500,6 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             appSettings.threadsEnabled = true
         } // :tchap:end:
 
-        
         if oldVersion < Version(26, 10, 2) {
             MXLog.info("Migrating to version 26.10.2, moving notification sounds.")
             let soundsDirectory = URL.libraryDirectory.appending(component: "Sounds", directoryHint: .isDirectory)

@@ -37,7 +37,7 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
                                            isBugReportServiceEnabled: isBugReportServiceEnabled,
                                            navigationBarVisibility: isInSecondaryWindow ? .hidden : .automatic,
                                            bindings: .init(userSettings: userSettings),
-                                           tchapFaqURL: appSettings.tchapFaqURL),
+                                           tchapFaqURL: userSettings.app.tchapFaqURL),
                    mediaProvider: userSession.mediaProvider)
         
         userSettings.app.developerOptionsEnabledPublisher

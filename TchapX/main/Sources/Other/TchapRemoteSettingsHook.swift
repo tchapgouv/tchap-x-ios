@@ -12,7 +12,7 @@ struct TchapRemoteSettingsHook: RemoteSettingsHookProtocol {
     private let defaultHook = DefaultRemoteSettingsHook()
     
     #if IS_MAIN_APP
-    func initializeCache(using client: ClientProtocol, applyingTo appSettings: CommonSettingsProtocol) async -> Result<Void, RemoteSettingsError> {
+    func initializeCache(using client: ClientProtocol, applyingTo appSettings: AppSettings) async -> Result<Void, RemoteSettingsError> {
         let result = await defaultHook.initializeCache(using: client, applyingTo: appSettings)
         
         guard case .success = result else {
@@ -27,18 +27,18 @@ struct TchapRemoteSettingsHook: RemoteSettingsHookProtocol {
         await defaultHook.updateCache(using: client)
     }
     
-    func reset(_ appSettings: CommonSettingsProtocol) {
+    func reset(_ appSettings: AppSettings) {
         defaultHook.reset(appSettings)
         appSettings.contentScannerURL.reset()
     }
     #endif
     
-    func loadCache(forHomeserver homeserver: String, applyingTo appSettings: CommonSettingsProtocol) {
+    func loadCache(forHomeserver homeserver: String, applyingTo appSettings: AppSettings) {
         defaultHook.loadCache(forHomeserver: homeserver, applyingTo: appSettings)
         applyContentScannerURL(homeserver, to: appSettings)
     }
     
-    private func applyContentScannerURL(_ homeserver: String, to appSettings: CommonSettingsProtocol) {
+    private func applyContentScannerURL(_ homeserver: String, to appSettings: AppSettings) {
         guard let contentScannerURL = URL(string: homeserver) else {
             appSettings.contentScannerURL.reset()
             return
