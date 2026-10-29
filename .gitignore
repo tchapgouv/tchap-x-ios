@@ -39,4 +39,10 @@ test_output
 # Only commit Pkl packages (there may be other caches in here).
 Components/Secrets/vendor/*
 !Components/Secrets/vendor/package-2
+<<<<<<< HEAD
 Secrets/Secrets.swift
+=======
+
+# Local SDK development override
+matrix-rust-components-swift
+>>>>>>> release/26.10.8

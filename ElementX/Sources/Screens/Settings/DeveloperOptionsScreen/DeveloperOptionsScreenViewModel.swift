@@ -20,12 +20,18 @@ class DeveloperOptionsScreenViewModel: DeveloperOptionsScreenViewModelType, Deve
     
     private let clientProxy: ClientProxyProtocol?
     
-    init(developerOptions: DeveloperOptionsProtocol, appHooks: AppHooks, clientProxy: ClientProxyProtocol?) {
+    init(developerOptions: DeveloperOptionsProtocol, screenHook: DeveloperOptionsScreenHookProtocol, clientProxy: ClientProxyProtocol?) {
         self.clientProxy = clientProxy
-        super.init(initialViewState: .init(appHooks: appHooks,
-                                           shouldShowClearCache: clientProxy != nil,
+        super.init(initialViewState: .init(screenHook: screenHook,
                                            isSignedIn: clientProxy != nil,
                                            bindings: .init(developerOptions: developerOptions)))
+        
+        developerOptions.multiAccountEnabledPublisher
+            .removeDuplicates()
+            .dropFirst() // The publisher replays the current value, so only an actual toggle arms the announcement.
+            .filter { $0 }
+            .sink { _ in developerOptions.hasSeenMultiAccountAnnouncement = false }
+            .store(in: &cancellables)
         
         Task {
             if case let .success(sizes) = await clientProxy?.storeSizes() {
@@ -43,6 +49,9 @@ class DeveloperOptionsScreenViewModel: DeveloperOptionsScreenViewModelType, Deve
                 }
                 if let mediaStore = sizes.mediaStore {
                     components.append(.init(name: "MediaStore", size: formatter.format(Int64(mediaStore))))
+                }
+                if let searchIndex = sizes.searchIndex {
+                    components.append(.init(name: "SearchIndex", size: formatter.format(Int64(searchIndex))))
                 }
                 if let logsSize = try? FileManager.default.sizeForDirectory(at: .appGroupLogsDirectory) {
                     components.append(.init(name: "Log Files", size: formatter.format(Int64(logsSize))))

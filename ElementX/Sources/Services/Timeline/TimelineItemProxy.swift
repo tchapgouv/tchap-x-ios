@@ -84,11 +84,11 @@ final nonisolated class EventTimelineItemProxy: Sendable {
     }
     
     var deliveryStatus: TimelineItemDeliveryStatus? {
-        guard let localSendState = item.localSendState else {
+        guard let pendingSend else {
             return nil
         }
         
-        switch localSendState {
+        switch pendingSend.state {
         case .sendingFailed(let error, _):
             switch error {
             case .identityViolations(let users):
@@ -105,6 +105,33 @@ final nonisolated class EventTimelineItemProxy: Sendable {
         case .sent:
             return .sent
         }
+    }
+    
+    /// The item's own pending send or, when it has already gone out, our pending edit, redaction or failed reaction on it.
+    var pendingSend: (target: SendTarget, state: EventSendState)? {
+        if let state = item.localSendState {
+            (.event, state)
+        } else if let state = item.editSendState {
+            (.edit, state)
+        } else if let state = item.redactionSendState {
+            (.redaction, state)
+        } else if let (key, state) = failedReaction {
+            (.reaction(key: key), state)
+        } else {
+            nil
+        }
+    }
+    
+    /// Only failed reactions are surfaced as they block the send queue, in-flight ones would flash a sending indicator on every tap.
+    private var failedReaction: (key: String, state: EventSendState)? {
+        for reaction in item.reactions {
+            for sender in reaction.senders {
+                if let state = sender.sendState, case .sendingFailed = state {
+                    return (reaction.key, state)
+                }
+            }
+        }
+        return nil
     }
     
     var canBeRepliedTo: Bool {

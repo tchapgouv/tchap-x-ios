@@ -15,7 +15,6 @@ import Version
 
 nonisolated struct NotificationContentBuilder {
     let messageEventStringBuilder: RoomMessageEventStringBuilder
-    let notificationSoundName: UNNotificationSoundName
     let userSession: NSEUserSessionProtocol
     
     /// Process the given notification item proxy
@@ -33,6 +32,7 @@ nonisolated struct NotificationContentBuilder {
         switch notificationItem.event {
         case .timeline(let event):
             notificationContent.eventID = event.eventId()
+            notificationContent.eventDate = Date(timeIntervalSince1970: TimeInterval(event.timestamp()) / 1000)
         case .invite, .none:
             notificationContent.eventID = nil
         }
@@ -49,7 +49,7 @@ nonisolated struct NotificationContentBuilder {
         notificationContent.threadIdentifier = threadIdentifier.replacingOccurrences(of: "@", with: "")
         
         MXLog.info("isNoisy: \(notificationItem.isNoisy)")
-        notificationContent.sound = notificationItem.isNoisy ? .init(named: notificationSoundName) : nil
+        notificationContent.sound = notificationItem.isNoisy ? userSession.userSettings.account.notificationSound : nil
         
         switch notificationItem.event {
         case .none:

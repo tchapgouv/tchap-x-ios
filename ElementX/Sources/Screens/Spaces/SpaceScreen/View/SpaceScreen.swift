@@ -131,6 +131,7 @@ struct SpaceScreen: View {
             // controller attempts to anchor itself to the button that is no longer visible.
             ToolbarItem(placement: .primaryAction) {
                 Menu {
+<<<<<<< HEAD
                     // :tchap: space-admin-limitations
                     // if context.viewState.canEditChildren {
                     //  Section {
@@ -143,6 +144,17 @@ struct SpaceScreen: View {
                     //        Label(L10n.actionAddExistingRooms, icon: \.room)
                     //   }
                     //   .accessibilityIdentifier(A11yIdentifiers.spaceScreen.addExistingRooms)
+=======
+                    if context.viewState.canEditChildren {
+                        Section {
+                            Button { context.send(viewAction: .createChildRoom) } label: {
+                                Label(L10n.actionCreateRoom, icon: \.plus)
+                            }
+                            
+                            Button { context.send(viewAction: .addExistingRooms) } label: {
+                                Label(L10n.actionAddExistingRooms, icon: \.room)
+                            }
+>>>>>>> release/26.10.8
                             
                     //    if !context.viewState.rooms.isEmpty {
                     //        Button { context.send(viewAction: .manageChildren) } label: {
@@ -157,7 +169,6 @@ struct SpaceScreen: View {
                             Button { context.send(viewAction: .displayMembers(roomProxy: roomProxy)) } label: {
                                 Label(L10n.screenSpaceMenuActionMembers, icon: \.user)
                             }
-                            .accessibilityIdentifier(A11yIdentifiers.spaceScreen.viewMembers)
                         }
                         
                         if let permalink = context.viewState.permalink {
@@ -165,6 +176,7 @@ struct SpaceScreen: View {
                                 Label(L10n.actionShare, icon: \.shareIos)
                             }
                         }
+<<<<<<< HEAD
                         // :tchap: space-admin-limitations
 //                        if context.viewState.isSpaceManagementEnabled,
 //                           let roomProxy = context.viewState.roomProxy {
@@ -173,6 +185,15 @@ struct SpaceScreen: View {
 //                            }
 //                            .accessibilityIdentifier(A11yIdentifiers.spaceScreen.settings)
 //                        } :tchap:end
+=======
+                        
+                        if context.viewState.isSpaceManagementEnabled,
+                           let roomProxy = context.viewState.roomProxy {
+                            Button { context.send(viewAction: .spaceSettings(roomProxy: roomProxy)) } label: {
+                                Label(L10n.commonSettings, icon: \.settings)
+                            }
+                        }
+>>>>>>> release/26.10.8
                     }
                     
                     Section {

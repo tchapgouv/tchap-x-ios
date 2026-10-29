@@ -53,6 +53,8 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
     }
     
     private var endUnansweredCallTask: Task<Void, Never>?
+    /// The ringing call was answered for the web view, which has yet to set its call session up.
+    private var isIncomingCallAnswered = false
     
     /// A call answered for the native stack, until the stack takes it over.
     private var answeredNativeCallID: CallID?
@@ -241,7 +243,29 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
             return
         }
         
+        // Otherwise it would count as a call in progress, and every call after it would be missed.
+        if isIncomingCallAnswered, incomingCallID?.roomID == roomID {
+            MXLog.warning("Dropping an answered call that never opened")
+            clearIncomingCallState()
+            return
+        }
+        
         MXLog.info("Not tearing down the call session, no call for room \(roomID)")
+    }
+    
+    func reportCallSessionEnded(roomID: String, reason: CXCallEndedReason) {
+        guard let ongoingCallID, ongoingCallID.roomID == roomID else {
+            MXLog.info("Not reporting the end of a call for \(roomID), it isn't the ongoing call")
+            return
+        }
+        
+        // A web view call is not tracked by CallKit, as in `reportCallSessionConnected`.
+        if ongoingCallID.isNative {
+            MXLog.info("Reporting the call as ended without us: \(reason.rawValue)")
+            callProvider.reportCall(with: ongoingCallID.callKitID, endedAt: nil, reason: reason)
+        }
+        
+        self.ongoingCallID = nil
     }
     
     func setAudioEnabled(_ enabled: Bool, roomID: String) {
@@ -338,6 +362,24 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
         guard ongoingCallID?.roomID != roomID else {
             MXLog.warning("Call already ongoing for room \(roomID), reporting the duplicate push as handled")
             reportImmediatelyEndedCall(reason: .answeredElsewhere,
+                                       callerInfo: (roomID: roomID, roomDisplayName: roomDisplayName),
+                                       completion: completion)
+            return
+        }
+        
+        guard incomingCallID?.rtcNotificationID != rtcNotificationID else {
+            MXLog.info("Already ringing for this call, reporting the duplicate push as handled")
+            reportImmediatelyEndedCall(reason: .answeredElsewhere,
+                                       callerInfo: (roomID: roomID, roomDisplayName: roomDisplayName),
+                                       completion: completion)
+            return
+        }
+        
+        // An ongoing native call is tracked by CallKit, which offers its own call waiting.
+        let isBusy = (incomingCallID != nil && answeredNativeCallID == nil) || ongoingCallID?.isNative == false
+        guard !isBusy else {
+            MXLog.info("Another call is ringing or ongoing, reporting the call for room \(roomID) as missed")
+            reportImmediatelyEndedCall(reason: .unanswered,
                                        callerInfo: (roomID: roomID, roomDisplayName: roomDisplayName),
                                        completion: completion)
             return
@@ -464,6 +506,10 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
             return
         }
         
+        // Cancelled now rather than after the delay, by when it may belong to a call that rang since.
+        endUnansweredCallTask?.cancel()
+        isIncomingCallAnswered = true
+        
         // And delay ending the call so that the app has enough time
         // to get deeplinked into
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
@@ -471,7 +517,6 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
             provider.reportCall(with: incomingCallID.callKitID, endedAt: nil, reason: .remoteEnded)
             
             self.actionsSubject.send(.startCall(roomID: incomingCallID.roomID, isVoiceCall: incomingCallID.isVoiceCall))
-            self.endUnansweredCallTask?.cancel()
         }
     }
     
@@ -714,6 +759,7 @@ class ElementCallService: NSObject, ElementCallServiceProtocol, PKPushRegistryDe
         endPendingCallTask?.cancel()
         endPendingCallTask = nil
         answeredNativeCallID = nil
+        isIncomingCallAnswered = false
         declineListenerHandle?.cancel()
         declineListenerHandle = nil
         incomingCallRoomInfoCancellable = nil

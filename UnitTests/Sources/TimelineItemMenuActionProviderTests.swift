@@ -57,41 +57,23 @@ struct TimelineItemMenuActionProviderTests {
         #expect(hasForward)
     }
     
-    // MARK: - Select
-    
     @Test
-    func selectIsShownForRemoteMessageWhenEnabled() throws {
-        let actions = try #require(makeActions(for: makeTextItem(), isMultiSelectEnabled: true))
-        #expect(actions.actions.contains(.selectMessages))
+    func redactedMessageIsNotForwardable() throws {
+        let item = RedactedRoomTimelineItem(id: .randomEvent,
+                                            body: "Message removed",
+                                            timestamp: .mock,
+                                            isOutgoing: false,
+                                            isEditable: false,
+                                            canBeRepliedTo: false,
+                                            sender: .init(id: "@alice:matrix.org"))
+        let actions = try #require(makeActions(for: item))
+        
+        let hasForward = actions.actions.contains(where: \.isForward)
+        #expect(!hasForward)
     }
     
     @Test
-    func selectIsHiddenWhenDisabled() throws {
-        let actions = try #require(makeActions(for: makeTextItem()))
-        #expect(!actions.actions.contains(.selectMessages))
-    }
-    
-    @Test
-    func selectIsHiddenInPinnedTimeline() throws {
-        let actions = try #require(makeActions(for: makeTextItem(), isMultiSelectEnabled: true, timelineKind: .pinned))
-        #expect(!actions.actions.contains(.selectMessages))
-    }
-    
-    @Test
-    func selectIsHiddenForLocalEcho() throws {
-        let item = makeTextItem(id: .event(uniqueID: .init("local"), eventOrTransactionID: .transactionID("txn")))
-        let actions = try #require(makeActions(for: item, isMultiSelectEnabled: true))
-        #expect(!actions.actions.contains(.selectMessages))
-    }
-    
-    @Test
-    func selectIsHiddenForLiveLocationShare() throws {
-        let actions = try #require(makeActions(for: makeLiveLocationItem(isLive: true), isMultiSelectEnabled: true))
-        #expect(!actions.actions.contains(.selectMessages))
-    }
-    
-    @Test
-    func selectIsHiddenForEncryptedItem() throws {
+    func encryptedMessageIsNotForwardable() throws {
         let item = EncryptedRoomTimelineItem(id: .randomEvent,
                                              body: "",
                                              encryptionType: .unknown,
@@ -100,8 +82,19 @@ struct TimelineItemMenuActionProviderTests {
                                              isEditable: false,
                                              canBeRepliedTo: false,
                                              sender: .init(id: "@alice:matrix.org"))
-        let actions = try #require(makeActions(for: item, isMultiSelectEnabled: true))
-        #expect(!actions.actions.contains(.selectMessages))
+        let actions = try #require(makeActions(for: item))
+        
+        let hasForward = actions.actions.contains(where: \.isForward)
+        #expect(!hasForward)
+    }
+    
+    @Test
+    func localEchoIsNotForwardable() throws {
+        let item = makeTextItem(id: .event(uniqueID: .init("local"), eventOrTransactionID: .transactionID("txn")))
+        let actions = try #require(makeActions(for: item))
+        
+        let hasForward = actions.actions.contains(where: \.isForward)
+        #expect(!hasForward)
     }
     
     // MARK: - Helpers
@@ -126,9 +119,7 @@ struct TimelineItemMenuActionProviderTests {
               content: .init(isLive: isLive, timeoutDate: .mock, lastGeoURI: nil))
     }
     
-    private func makeActions(for item: RoomTimelineItemProtocol,
-                             isMultiSelectEnabled: Bool = false,
-                             timelineKind: TimelineKind = .live) -> TimelineItemMenuActions? {
+    private func makeActions(for item: RoomTimelineItemProtocol, timelineKind: TimelineKind = .live) -> TimelineItemMenuActions? {
         TimelineItemMenuActionProvider(timelineItem: item,
                                        canCurrentUserSendMessage: true,
                                        canCurrentUserRedactSelf: true,
@@ -137,9 +128,8 @@ struct TimelineItemMenuActionProviderTests {
                                        pinnedEventIDs: [],
                                        isViewSourceEnabled: true,
                                        areThreadsEnabled: true,
-                                       isMultiSelectEnabled: isMultiSelectEnabled,
                                        timelineKind: timelineKind,
-                                       emojiProvider: EmojiProvider(appSettings: .volatile()))
+                                       emojiProvider: EmojiProvider(userSettings: .mock()))
             .makeActions()
     }
 }

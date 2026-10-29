@@ -1,12 +1,17 @@
 {
-  "originHash" : "7a6117b3894e217e5bc0fe7497b0b868c49d51f41e0d8be554dc766cb9566ec9",
+  "originHash" : "43fad9d39aa61aa7add5e5768908e9ed7948ca1b8e8b61cf9b7b585f4e8fd1a7",
   "pins" : [
     {
       "identity" : "compound-design-tokens",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tchapgouv/compound-design-tokens",
       "state" : {
+<<<<<<< HEAD
         "revision" : "83df0f5f2f5d62a832f39422ae3d4dfac02b3a00"
+=======
+        "revision" : "28b921601ac0ff49a572b6f18526d97bd14e5d91",
+        "version" : "11.3.1"
+>>>>>>> release/26.10.8
       }
     },
     {
@@ -32,8 +37,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-snapshot-testing",
       "state" : {
-        "revision" : "59a99c458de4d2dee580529b61b4f78dca7b7fa6",
-        "version" : "1.19.4"
+        "revision" : "28e5de025e3fd98991791bfbf83023ab3708da03",
+        "version" : "1.19.6"
       }
     },
     {
@@ -41,8 +46,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
-        "revision" : "79e4b74a295b6eb74a8b585e3a39d29e70c1dbd1",
-        "version" : "603.0.2"
+        "revision" : "050f1a346fbbac0ca2cfb15a95274f7bd1cf0ccf",
+        "version" : "604.0.0"
       }
     },
     {
@@ -50,8 +55,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/siteline/SwiftUI-Introspect",
       "state" : {
-        "revision" : "a37eca1db7bebc9437ee89508e7b4433ff34adb4",
-        "version" : "27.0.0"
+        "revision" : "7f76fe19415a60ce28493c5ec67b8da629f27a44",
+        "version" : "27.1.0"
       }
     },
     {

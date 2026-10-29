@@ -15,7 +15,6 @@ struct PinnedEventsTimelineScreenCoordinatorParameters {
     let userSession: UserSessionProtocol
     let mediaPlayerProvider: MediaPlayerProviderProtocol
     let appMediator: AppMediatorProtocol
-    let appSettings: AppSettings
     let analytics: AnalyticsServiceProtocol
     let emojiProvider: EmojiProviderProtocol
     let linkMetadataProvider: LinkMetadataProviderProtocol
@@ -28,7 +27,7 @@ enum PinnedEventsTimelineScreenCoordinatorAction {
     case displayUser(userID: String)
     case presentLocationViewer(StaticLocationData)
     case presentLiveLocationViewer(sender: TimelineItemSender, initialLiveLocationShare: LiveLocationShare)
-    case displayMessageForwarding(forwardingItem: MessageForwardingItem)
+    case displayMessageForwarding(forwardingPayload: MessageForwardingPayload)
     case displayRoomScreenWithFocussedPin(eventID: String, threadRootEventID: String?)
 }
 
@@ -46,7 +45,7 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
     init(parameters: PinnedEventsTimelineScreenCoordinatorParameters) {
         viewModel = PinnedEventsTimelineScreenViewModel(roomProxy: parameters.roomProxy,
                                                         userIndicatorController: parameters.userIndicatorController,
-                                                        appSettings: parameters.appSettings,
+                                                        userSettings: parameters.userSession.userSettings,
                                                         analyticsService: parameters.analytics)
         timelineViewModel = TimelineViewModel(roomProxy: parameters.roomProxy,
                                               timelineController: parameters.timelineController,
@@ -54,7 +53,6 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
                                               mediaPlayerProvider: parameters.mediaPlayerProvider,
                                               userIndicatorController: parameters.userIndicatorController,
                                               appMediator: parameters.appMediator,
-                                              appSettings: parameters.appSettings,
                                               analyticsService: parameters.analytics,
                                               emojiProvider: parameters.emojiProvider,
                                               linkMetadataProvider: parameters.linkMetadataProvider,
@@ -67,8 +65,8 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
             
             guard let self else { return }
             switch action {
-            case .displayMessageForwarding(let forwardingItem):
-                actionsSubject.send(.displayMessageForwarding(forwardingItem: forwardingItem))
+            case .displayMessageForwarding(let forwardingPayload):
+                actionsSubject.send(.displayMessageForwarding(forwardingPayload: forwardingPayload))
             case .viewInRoomTimeline(let eventID, let threadRootEventID):
                 actionsSubject.send(.displayRoomScreenWithFocussedPin(eventID: eventID, threadRootEventID: threadRootEventID))
             case .dismiss:
@@ -84,8 +82,8 @@ final class PinnedEventsTimelineScreenCoordinator: CoordinatorProtocol {
             switch action {
             case .displaySenderDetails(let userID):
                 actionsSubject.send(.displayUser(userID: userID))
-            case .displayMessageForwarding(let forwardingItem):
-                actionsSubject.send(.displayMessageForwarding(forwardingItem: forwardingItem))
+            case .displayMessageForwarding(let forwardingPayload):
+                actionsSubject.send(.displayMessageForwarding(forwardingPayload: forwardingPayload))
             case .displayMediaPreview(let mediaPreviewViewModel):
                 viewModel.displayMediaPreview(mediaPreviewViewModel)
             case .displayLocation(let location):

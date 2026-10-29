@@ -44,8 +44,7 @@ class AppLockService: AppLockServiceProtocol {
     }
     
     var biometryType: LABiometryType {
-        updateBiometrics()
-        guard context.evaluatedPolicyDomainState != nil else { return .none }
+        guard context.biometricStateHash != nil else { return .none }
         return context.biometryType
     }
     
@@ -55,8 +54,7 @@ class AppLockService: AppLockServiceProtocol {
     
     var biometricUnlockTrusted: Bool {
         guard let state = keychainController.pinCodeBiometricState() else { return false }
-        updateBiometrics()
-        return state == context.evaluatedPolicyDomainState
+        return state == context.biometricStateHash
     }
     
     var numberOfPINAttempts: AnyPublisher<Int, Never> {
@@ -68,8 +66,6 @@ class AppLockService: AppLockServiceProtocol {
         self.appSettings = appSettings
         self.context = context
         timer = AppLockTimer(gracePeriod: appSettings.appLockGracePeriod)
-        
-        updateBiometrics()
     }
     
     func setupPINCode(_ pinCode: String) -> Result<Void, AppLockServiceError> {
@@ -94,7 +90,7 @@ class AppLockService: AppLockServiceProtocol {
     
     func enableBiometricUnlock() -> Result<Void, AppLockServiceError> {
         guard isEnabled else { return .failure(.pinNotSet) }
-        guard let state = context.evaluatedPolicyDomainState else { return .failure(.biometricUnlockNotSupported) }
+        guard let state = context.biometricStateHash else { return .failure(.biometricUnlockNotSupported) }
         
         do {
             try keychainController.setPINCodeBiometricState(state)
@@ -133,7 +129,6 @@ class AppLockService: AppLockServiceProtocol {
         
         if biometricUnlockEnabled, !biometricUnlockTrusted {
             MXLog.info("Fixing trust for biometric unlock.")
-            updateBiometrics()
             _ = enableBiometricUnlock()
         }
         
@@ -195,16 +190,6 @@ class AppLockService: AppLockServiceProtocol {
     
     // MARK: - Private
     
-    /// Queries the context for supported biometrics and enrolment state.
-    private func updateBiometrics() {
-        var error: NSError?
-        context.canEvaluatePolicy(unlockPolicy, error: &error)
-        
-        if let error {
-            MXLog.error("Biometrics error: \(error)")
-        }
-    }
-    
     /// Creates a context specifically for unlocking the app. The titles are customised,
     /// and the fresh context ensures that the user is promoted to unlock based on
     /// `timer.gracePeriod` rather than any system to defined grace period.
@@ -227,5 +212,13 @@ class AppLockService: AppLockServiceProtocol {
     private func completeUnlock() {
         timer.registerUnlock()
         appSettings.appLockNumberOfPINAttempts = 0
+    }
+}
+
+nonisolated extension LAContext {
+    /// A hash of the enrolled biometric data that changes whenever biometrics are added or removed.
+    /// Unlike the deprecated `evaluatedPolicyDomainState`, this doesn't need `canEvaluatePolicy` to be called first.
+    @objc var biometricStateHash: Data? {
+        domainState.biometry.stateHash
     }
 }

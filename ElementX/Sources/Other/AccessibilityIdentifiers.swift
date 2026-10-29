@@ -20,6 +20,7 @@ enum A11yIdentifiers {
     static let encryptionResetScreen = EncryptionResetScreen()
     static let encryptionResetPasswordScreen = EncryptionResetPasswordScreen()
     static let homeScreen = HomeScreen()
+    static let homeTabs = HomeTabs()
     static let loginScreen = LoginScreen()
     static let authenticationStartScreen = AuthenticationStartScreen()
     static let reportContent = ReportContent()
@@ -48,6 +49,7 @@ enum A11yIdentifiers {
     static let spacesScreen = SpacesScreen()
     static let spaceScreen = SpaceScreen()
     static let spaceAddRoomsScreen = SpaceAddRoomsScreen()
+    static let searchScreen = SearchScreen()
     static let spaceSettingsScreen = SpaceSettingsScreen()
     static let linkNewDeviceScreen = LinkNewDeviceScreen()
     
@@ -118,6 +120,12 @@ enum A11yIdentifiers {
         func roomName(_ name: String) -> String {
             "\(roomNamePrefix):\(name)"
         }
+    }
+    
+    struct HomeTabs {
+        let chats = "home_tabs-chats"
+        let spaces = "home_tabs-spaces"
+        let search = "home_tabs-search"
     }
     
     struct InviteUsersScreen {
@@ -254,6 +262,7 @@ enum A11yIdentifiers {
     struct SettingsScreen {
         let done = "settings-done"
         let account = "settings-account"
+        let addAccount = "settings-add_account"
         let secureBackup = "settings-secure_backup"
         let notifications = "settings-notifications"
         let analytics = "settings-analytics"
@@ -346,14 +355,17 @@ enum A11yIdentifiers {
     
     struct SpaceScreen {
         let moreMenu = "space_screen-more_menu"
-        let createRoom = "space_screen-create_room"
-        let addExistingRooms = "space_screen-add_existing_rooms"
-        let viewMembers = "space_screen-view_members"
-        let settings = "space_screen-settings"
     }
     
     struct SpaceAddRoomsScreen {
         let cancel = "space_add_rooms_screen-cancel"
+    }
+    
+    struct SearchScreen {
+        let roomNamePrefix = "search_screen-room_name"
+        func roomName(_ name: String) -> String {
+            "\(roomNamePrefix):\(name)"
+        }
     }
     
     struct SpaceSettingsScreen {

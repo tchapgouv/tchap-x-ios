@@ -231,7 +231,6 @@ final class RoomMembersFlowCoordinator: FlowCoordinatorProtocol {
         let params = RoomMemberDetailsScreenCoordinatorParameters(userID: userID,
                                                                   roomProxy: roomProxy,
                                                                   userSession: flowParameters.userSession,
-                                                                  appHooks: flowParameters.appHooks,
                                                                   analytics: flowParameters.analytics,
                                                                   userIndicatorController: flowParameters.userIndicatorController)
         let coordinator = RoomMemberDetailsScreenCoordinator(parameters: params)
@@ -288,7 +287,6 @@ final class RoomMembersFlowCoordinator: FlowCoordinatorProtocol {
         let parameters = UserProfileScreenCoordinatorParameters(userID: userID,
                                                                 isPresentedModally: false,
                                                                 userSession: flowParameters.userSession,
-                                                                appHooks: flowParameters.appHooks,
                                                                 analytics: flowParameters.analytics,
                                                                 userIndicatorController: flowParameters.userIndicatorController)
         let coordinator = UserProfileScreenCoordinator(parameters: parameters)
@@ -308,9 +306,9 @@ final class RoomMembersFlowCoordinator: FlowCoordinatorProtocol {
         
         // Replace the RoomMemberDetailsScreen without any animation.
         // If this pop and push happens before the previous navigation is completed it might break screen presentation logic
-        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
-            self.navigationStackCoordinator.pop(animated: false)
-            self.navigationStackCoordinator.push(coordinator, animated: false) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) { [self] in
+            navigationStackCoordinator.pop(animated: false)
+            navigationStackCoordinator.push(coordinator, animated: false) { [weak self] in
                 self?.stateMachine.tryEvent(.dismissedUserProfile)
             }
         }

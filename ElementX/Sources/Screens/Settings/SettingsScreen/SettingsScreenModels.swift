@@ -10,22 +10,30 @@ import SwiftUI
 
 enum SettingsScreenViewModelAction {
     case close
+    
     case userDetails
     case userStatusEmojiPicker(EmojiPickerScreenContinuation)
-    case linkNewDevice
+    
+    case addAccount
+    
     case manageAccount(url: URL)
-    case analytics
-    case appLock
-    case reportBug
-    case about
-    case blockedUsers
-    case secureBackup
+    case linkNewDevice
     case notifications
-    case advancedSettings
-    case labs
-    case developerOptions
+    case secureBackup
+    case moderationAndSafety
+    case reportBug
+    
     case logout
     case deactivateAccount
+    
+    case mediaUploadQuality
+    case appLock
+    case locationSharing
+    case analytics
+    case labs
+    case about
+    
+    case developerOptions
 }
 
 enum SettingsScreenSecuritySectionMode {
@@ -38,6 +46,7 @@ struct SettingsScreenViewState: BindableState {
     var userProfile: UserProfile
     var showUserStatusInput = false
     var showLinkNewDeviceButton: Bool
+    var showAddAccountButton: Bool
     var accountProfileURL: URL?
     var showAccountDeactivation: Bool
     var showDeveloperOptions: Bool
@@ -45,14 +54,13 @@ struct SettingsScreenViewState: BindableState {
     var securitySectionMode = SettingsScreenSecuritySectionMode.none
     var showSecuritySectionBadge = false
     
-    var showBlockedUsers = false
     let showAnalyticsSettings: Bool
     
     let isBugReportServiceEnabled: Bool
     
     let navigationBarVisibility: Visibility
     
-    var bindings = SettingsScreenViewStateBindings()
+    var bindings: SettingsScreenViewStateBindings
     
     var userStatusRowMode: SettingsScreenUserStatusRow.Mode {
         if bindings.isShowingCustomStatusField {
@@ -69,6 +77,8 @@ struct SettingsScreenViewState: BindableState {
 }
 
 struct SettingsScreenViewStateBindings {
+    private let userSettings: UserSettings
+    
     var isPresentingStatusPicker = false
     var customStatusEmoji: Character = "😄"
     var isShowingCustomStatusField = false {
@@ -80,27 +90,44 @@ struct SettingsScreenViewStateBindings {
     }
     
     var isPresentingAccountDeactivationConfirmation = false
+    
+    var appAppearance: AppAppearance {
+        get { userSettings.app.appAppearance }
+        set { userSettings.app.appAppearance = newValue }
+    }
+    
+    init(userSettings: UserSettings) {
+        self.userSettings = userSettings
+    }
 }
 
 enum SettingsScreenViewAction {
     case close
+    
     case userDetails
     case userStatus(UserStatusAction)
-    case analytics
-    case appLock
-    case reportBug
-    case about
-    case blockedUsers
-    case secureBackup
-    case linkNewDevice
+    
+    case addAccount
+    
     case manageAccount(url: URL)
+    case linkNewDevice
     case notifications
-    case enableDeveloperOptions
-    case developerOptions
-    case advancedSettings
-    case labs
+    case secureBackup
+    case moderationAndSafety
+    case reportBug
+    
     case logout
     case deactivateAccount
+    
+    case mediaUploadQuality
+    case appLock
+    case locationSharing
+    case analytics
+    case labs
+    case about
+    
+    case enableDeveloperOptions
+    case developerOptions
     
     enum UserStatusAction {
         /// Show status picker sheet to select a preset status.

@@ -21,14 +21,14 @@ import UIKit
 @MainActor
 struct PresenceServiceTests {
     let clientProxy: ClientProxyMock
-    let appSettings: AppSettings
+    let userSettings: UserSettings
     let notificationCenter: NotificationCenter
     
     let sendsSubject = PassthroughSubject<(presence: ClientProxyPresence, sendImmediately: Bool), Never>()
     
     init() {
         clientProxy = ClientProxyMock(.init())
-        appSettings = AppSettings.volatile()
+        userSettings = UserSettings.mock()
         notificationCenter = NotificationCenter()
         
         clientProxy.configurePresenceSendImmediatelyClosure = { [sendsSubject] presence, sendImmediately in
@@ -39,14 +39,14 @@ struct PresenceServiceTests {
     
     private func makeService(initialApplicationState: UIApplication.State) -> PresenceService {
         PresenceService(clientProxy: clientProxy,
-                        appSettings: appSettings,
+                        userSettings: userSettings,
                         notificationCenter: notificationCenter,
                         initialApplicationState: initialApplicationState)
     }
     
     @Test
     func serviceSeededActiveWhileSharingReportsOnline() async throws {
-        appSettings.sharePresence = true
+        userSettings.account.sharePresence = true
         
         let deferred = deferFulfillment(sendsSubject) { $0.presence == .online }
         let service = makeService(initialApplicationState: .active)
@@ -60,7 +60,7 @@ struct PresenceServiceTests {
     
     @Test
     func serviceSeededBackgroundedWhileSharingReportsUnavailable() async throws {
-        appSettings.sharePresence = true
+        userSettings.account.sharePresence = true
         
         let deferred = deferFulfillment(sendsSubject) { $0.presence == .unavailable }
         let service = makeService(initialApplicationState: .background)
@@ -73,7 +73,7 @@ struct PresenceServiceTests {
     
     @Test
     func serviceSeededActiveWhileNotSharingReportsOffline() async throws {
-        appSettings.sharePresence = false
+        userSettings.account.sharePresence = false
         
         let deferred = deferFulfillment(sendsSubject) { $0.presence == .offline }
         let service = makeService(initialApplicationState: .active)
@@ -86,7 +86,7 @@ struct PresenceServiceTests {
     
     @Test
     func becomingActiveNotificationWhileSharingReportsOnlineImmediately() async throws {
-        appSettings.sharePresence = true
+        userSettings.account.sharePresence = true
         let service = makeService(initialApplicationState: .inactive)
         
         let deferred = deferFulfillment(sendsSubject) { $0.presence == .online }
@@ -100,7 +100,7 @@ struct PresenceServiceTests {
     
     @Test
     func resigningActiveNotificationWhileSharingReportsUnavailableImmediately() async throws {
-        appSettings.sharePresence = true
+        userSettings.account.sharePresence = true
         let initialDeferred = deferFulfillment(sendsSubject) { $0.presence == .online }
         let service = makeService(initialApplicationState: .active)
         _ = try await initialDeferred.fulfill()
@@ -116,19 +116,19 @@ struct PresenceServiceTests {
     
     @Test
     func togglingSharingWhileActiveDrivesOnlineAndOffline() async throws {
-        appSettings.sharePresence = false
+        userSettings.account.sharePresence = false
         let initialDeferred = deferFulfillment(sendsSubject) { $0.presence == .offline }
         let service = makeService(initialApplicationState: .active)
         _ = try await initialDeferred.fulfill()
         
         let onlineDeferred = deferFulfillment(sendsSubject) { $0.presence == .online }
-        appSettings.sharePresence = true
+        userSettings.account.sharePresence = true
         let online = try await onlineDeferred.fulfill()
         #expect(online.presence == .online)
         #expect(online.sendImmediately)
         
         let offlineDeferred = deferFulfillment(sendsSubject) { $0.presence == .offline }
-        appSettings.sharePresence = false
+        userSettings.account.sharePresence = false
         let offline = try await offlineDeferred.fulfill()
         #expect(offline.presence == .offline)
         #expect(offline.sendImmediately)
@@ -138,7 +138,7 @@ struct PresenceServiceTests {
     
     @Test
     func repeatingTheSameStateSendsOnlyOnce() async throws {
-        appSettings.sharePresence = true
+        userSettings.account.sharePresence = true
         
         let initialDeferred = deferFulfillment(sendsSubject) { $0.presence == .online }
         let service = makeService(initialApplicationState: .active)
@@ -155,7 +155,7 @@ struct PresenceServiceTests {
     
     @Test
     func failedImmediateSendIsNotRetriedUntilTheDesiredPresenceChanges() async throws {
-        appSettings.sharePresence = true
+        userSettings.account.sharePresence = true
         clientProxy.configurePresenceSendImmediatelyClosure = { [sendsSubject] presence, sendImmediately in
             sendsSubject.send((presence, sendImmediately))
             return presence == .online ? .failure(.forbiddenAccess) : .success(())
@@ -180,7 +180,7 @@ struct PresenceServiceTests {
     
     @Test
     func newerTransitionWinsWhenAnEarlierSendIsInFlight() async throws {
-        appSettings.sharePresence = true
+        userSettings.account.sharePresence = true
         
         let (onlineStartedStream, onlineStartedContinuation) = AsyncStream<Void>.makeStream()
         let (resumeOnlineSendStream, resumeOnlineSendContinuation) = AsyncStream<Void>.makeStream()
@@ -213,7 +213,7 @@ struct PresenceServiceTests {
     
     @Test
     func deinitCancelsPendingSend() async throws {
-        appSettings.sharePresence = true
+        userSettings.account.sharePresence = true
         
         let (onlineStartedStream, onlineStartedContinuation) = AsyncStream.makeStream(of: Void.self)
         let (onlineFinishedStream, onlineFinishedContinuation) = AsyncStream.makeStream(of: Void.self)

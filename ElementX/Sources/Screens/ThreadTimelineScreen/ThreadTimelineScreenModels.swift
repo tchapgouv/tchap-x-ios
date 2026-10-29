@@ -12,7 +12,7 @@ import Foundation
 import MatrixRustSDK
 
 enum ThreadTimelineScreenViewModelAction {
-    case displayMessageForwarding(MessageForwardingItem)
+    case displayMessageForwarding(MessageForwardingPayload)
 }
 
 struct ThreadTimelineScreenViewState: BindableState {

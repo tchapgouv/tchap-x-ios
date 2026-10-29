@@ -17,7 +17,7 @@ import OrderedCollections
 class ClientProxy: ClientProxyProtocol {
     private let client: ClientProtocol
     private let networkMonitor: NetworkMonitorProtocol
-    private let appSettings: AppSettings
+    private let userSettings: UserSettings
     private let analyticsService: AnalyticsServiceProtocol
     
     let mediaLoader: MediaLoaderProtocol
@@ -55,6 +55,8 @@ class ClientProxy: ClientProxyProtocol {
     private var liveLocationOwnInfoUpdatesListenerTaskHandle: TaskHandle?
     
     private var delegateHandle: TaskHandle?
+    
+    private var searchBackfillTaskHandle: TaskHandle?
     
     // These following summary providers both operate on the same allRooms() list but
     // can apply their own filtering and pagination
@@ -225,11 +227,11 @@ class ClientProxy: ClientProxyProtocol {
     
     init(client: ClientProtocol,
          networkMonitor: NetworkMonitorProtocol,
-         appSettings: AppSettings,
+         userSettings: UserSettings,
          analyticsService: AnalyticsServiceProtocol) async throws {
         self.client = client
         self.networkMonitor = networkMonitor
-        self.appSettings = appSettings
+        self.userSettings = userSettings
         self.analyticsService = analyticsService
         
         userProfileSubject = .init(UserProfile(userID: (try? client.userId()) ?? ""))
@@ -238,7 +240,7 @@ class ClientProxy: ClientProxyProtocol {
         
         // Route media downloads through a content scanner when one has been configured for the server,
         // and expose a proxy for the active scanning of content in the timeline.
-        if let contentScannerURL = appSettings.contentScannerURL.publisher.value, let client = client as? Client {
+        if let contentScannerURL = userSettings.app.contentScannerURL.publisher.value, let client = client as? Client {
             let scanner = ContentScanner(scannerUrl: contentScannerURL.absoluteString)
             await client.setContentScanner(contentScanner: scanner)
             contentScanner = ContentScannerProxy(contentScanner: scanner, client: client)
@@ -263,7 +265,7 @@ class ClientProxy: ClientProxyProtocol {
         
         let configuredAppService = try await ClientProxyServices(client: client,
                                                                  notificationSettings: notificationSettings,
-                                                                 appSettings: appSettings)
+                                                                 userSettings: userSettings)
         
         syncService = configuredAppService.syncService
         roomListService = configuredAppService.roomListService
@@ -502,6 +504,25 @@ class ClientProxy: ClientProxyProtocol {
         await transitionServices(to: .suspended).value
     }
     
+    func startSearchBackfill(strategy: SearchBackfillStrategy) {
+        if strategy == .foreground, isSearchBackfillRunning {
+            return
+        }
+        
+        MXLog.info("Starting search backfill with strategy: \(strategy)")
+        searchBackfillTaskHandle?.cancel()
+        searchBackfillTaskHandle = client.runSearchBackfill(strategy: strategy)
+    }
+    
+    func stopSearchBackfill() {
+        searchBackfillTaskHandle?.cancel()
+        searchBackfillTaskHandle = nil
+    }
+    
+    var isSearchBackfillRunning: Bool {
+        searchBackfillTaskHandle?.isFinished() == false
+    }
+    
     func expireSyncSessions() async {
         await syncService.expireSessions()
     }
@@ -539,7 +560,7 @@ class ClientProxy: ClientProxyProtocol {
         do {
             let parameters = CreateRoomParameters(name: nil,
                                                   topic: nil,
-                                                  isEncrypted: !appSettings.forceDisableE2EE.publisher.value,
+                                                  isEncrypted: !userSettings.app.forceDisableE2EE.publisher.value,
                                                   isDirect: true,
                                                   visibility: .private,
                                                   isRoomFederated: nil, // Tchap: BWI-specific Rust side
@@ -597,7 +618,7 @@ class ClientProxy: ClientProxyProtocol {
             
             let parameters = CreateRoomParameters(name: name,
                                                   topic: topic,
-                                                  isEncrypted: !appSettings.forceDisableE2EE.publisher.value && accessType.isEncrypted,
+                                                  isEncrypted: !userSettings.app.forceDisableE2EE.publisher.value && accessType.isEncrypted,
                                                   isDirect: false,
                                                   visibility: accessType.visibility,
                                                   isRoomFederated: accessType.isFederated, // Tchap: BWI-specific Rust side
@@ -882,10 +903,9 @@ class ClientProxy: ClientProxyProtocol {
         LinkNewDeviceService(handler: client.newGrantLoginWithQrCodeHandler())
     }
     
-    func deactivateAccount(password: String?, eraseData: Bool) async -> Result<Void, ClientProxyError> {
+    func deactivateAccount(password: String, eraseData: Bool) async -> Result<Void, ClientProxyError> {
         do {
-            try await client.deactivateAccount(authData: password.map { .password(passwordDetails: .init(identifier: userID, password: $0)) },
-                                               eraseData: eraseData)
+            try await client.deactivateAccount(password: password, eraseData: eraseData)
             return .success(())
         } catch {
             return .failure(.sdkError(error))
@@ -907,7 +927,11 @@ class ClientProxy: ClientProxyProtocol {
                                    deviceDisplayName: configuration.deviceDisplayName,
                                    profileTag: configuration.profileTag,
                                    lang: configuration.lang,
-                                   append: false)
+                                   append: configuration.append)
+    }
+    
+    func deletePusher(with identifiers: PusherIdentifiers) async throws {
+        try await client.deletePusher(identifiers: identifiers)
     }
     
     func searchUsers(searchTerm: String, limit: UInt) async -> Result<SearchUsersResults, ClientProxyError> {
@@ -1041,7 +1065,17 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
     
-    func recentlyVisitedRooms(filter: @Sendable (JoinedRoomProxyProtocol) -> Bool) async -> [JoinedRoomProxyProtocol] {
+    func recentlyVisitedRoomIDs() async -> Result<[String], ClientProxyError> {
+        do {
+            let result = try await client.getRecentlyVisitedRooms()
+            return .success(result)
+        } catch {
+            MXLog.error("Failed retrieving recently visited rooms with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func recentlyVisitedRooms(filter: @Sendable (JoinedRoomProxyProtocol) async -> Bool) async -> [JoinedRoomProxyProtocol] {
         let maxResultsToReturn = 5
         
         guard case let .success(roomIdentifiers) = await recentlyVisitedRoomIDs() else {
@@ -1052,7 +1086,7 @@ class ClientProxy: ClientProxyProtocol {
         
         for roomID in roomIdentifiers {
             guard case let .joined(roomProxy) = await roomForIdentifier(roomID),
-                  filter(roomProxy) else {
+                  await filter(roomProxy) else {
                 continue
             }
             
@@ -1093,16 +1127,6 @@ class ClientProxy: ClientProxyProtocol {
         }
         
         return users.elements
-    }
-    
-    private func recentlyVisitedRoomIDs() async -> Result<[String], ClientProxyError> {
-        do {
-            let result = try await client.getRecentlyVisitedRooms()
-            return .success(result)
-        } catch {
-            MXLog.error("Failed retrieving recently visited rooms with error: \(error)")
-            return .failure(.sdkError(error))
-        }
     }
     
     // MARK: Moderation & Safety
@@ -1239,7 +1263,7 @@ class ClientProxy: ClientProxyProtocol {
     private func reconcileServiceState() async {
         switch desiredServiceState {
         case .running(let offline):
-            if appSettings.clientPausingAndResumingEnabled {
+            if userSettings.app.clientPausingAndResumingEnabled {
                 do {
                     MXLog.info("Resuming client")
                     try await client.resume()
@@ -1275,11 +1299,13 @@ class ClientProxy: ClientProxyProtocol {
         case .suspended:
             updateHomeserverReachability()
             
+            stopSearchBackfill()
+            
             MXLog.info("Stopping sync")
             await syncService.stop()
             MXLog.info("Sync stopped")
             
-            if appSettings.clientPausingAndResumingEnabled {
+            if userSettings.app.clientPausingAndResumingEnabled {
                 do {
                     MXLog.info("Pausing client")
                     try await client.pause()
@@ -1479,7 +1505,7 @@ class ClientProxy: ClientProxyProtocol {
             case .joined:
                 let roomProxy = try await JoinedRoomProxy(roomListService: roomListService,
                                                           room: room,
-                                                          appSettings: appSettings,
+                                                          userSettings: userSettings,
                                                           analyticsService: analyticsService,
                                                           eventStringBuilder: eventStringBuilder)
                 
@@ -1635,7 +1661,7 @@ private struct ClientProxyServices {
     
     init(client: ClientProtocol,
          notificationSettings: NotificationSettingsProxyProtocol,
-         appSettings: AppSettings) async throws {
+         userSettings: UserSettings) async throws {
         let syncService = try await client
             .syncService()
             .withOfflineMode()
@@ -1657,21 +1683,22 @@ private struct ClientProxyServices {
                                                   name: "AllRooms",
                                                   shouldUpdateVisibleRange: true,
                                                   notificationSettings: notificationSettings,
-                                                  appSettings: appSettings)
+                                                  userSettings: userSettings)
         try await roomSummaryProvider.setRoomList(roomListService.allRooms())
         
         alternateRoomSummaryProvider = RoomSummaryProvider(roomListService: roomListService,
                                                            eventStringBuilder: eventStringBuilder,
                                                            name: "AlternateAllRooms",
+                                                           includesOnlyJoinedRooms: true,
                                                            notificationSettings: notificationSettings,
-                                                           appSettings: appSettings)
+                                                           userSettings: userSettings)
         
         staticRoomSummaryProvider = RoomSummaryProvider(roomListService: roomListService,
                                                         eventStringBuilder: eventStringBuilder,
                                                         name: "StaticAllRooms",
                                                         roomListPageSize: .max,
                                                         notificationSettings: notificationSettings,
-                                                        appSettings: appSettings)
+                                                        userSettings: userSettings)
         
         // Setting a provider's room list will create summaries for every room so
         // wait until the app is fully running for the alternate and static providers.

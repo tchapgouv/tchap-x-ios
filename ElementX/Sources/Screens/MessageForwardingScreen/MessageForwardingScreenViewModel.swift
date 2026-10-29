@@ -12,7 +12,9 @@ import SwiftUI
 typealias MessageForwardingScreenViewModelType = StateStoreViewModel<MessageForwardingScreenViewState, MessageForwardingScreenViewAction>
 
 class MessageForwardingScreenViewModel: MessageForwardingScreenViewModelType, MessageForwardingScreenViewModelProtocol {
-    private let forwardingItem: MessageForwardingItem
+    private static let maxSuggestedRoomCount = 5
+    
+    private let forwardingPayload: MessageForwardingPayload
     private let clientProxy: ClientProxyProtocol
     private let roomSummaryProvider: RoomSummaryProviderProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
@@ -23,11 +25,11 @@ class MessageForwardingScreenViewModel: MessageForwardingScreenViewModelType, Me
         actionsSubject.eraseToAnyPublisher()
     }
     
-    init(forwardingItem: MessageForwardingItem,
+    init(forwardingPayload: MessageForwardingPayload,
          userSession: UserSessionProtocol,
          roomSummaryProvider: RoomSummaryProviderProtocol,
          userIndicatorController: UserIndicatorControllerProtocol) {
-        self.forwardingItem = forwardingItem
+        self.forwardingPayload = forwardingPayload
         clientProxy = userSession.clientProxy
         self.roomSummaryProvider = roomSummaryProvider
         self.userIndicatorController = userIndicatorController
@@ -54,6 +56,8 @@ class MessageForwardingScreenViewModel: MessageForwardingScreenViewModelType, Me
             .store(in: &cancellables)
         
         updateRooms()
+        
+        Task { await loadSuggestedRooms() }
     }
     
     override func process(viewAction: MessageForwardingScreenViewAction) {
@@ -83,20 +87,21 @@ class MessageForwardingScreenViewModel: MessageForwardingScreenViewModelType, Me
     // MARK: - Private
     
     private func updateRooms() {
-        var rooms = [MessageForwardingRoom]()
+        state.rooms = roomSummaryProvider.roomListPublisher.value
+            .filter { $0.id != forwardingPayload.roomID && !$0.isTombstoned }
+            .map(MessageForwardingRoom.init(summary:))
+    }
+    
+    /// Built from the room summaries: building room proxies is slow and would shift the list down when the section appears.
+    private func loadSuggestedRooms() async {
+        guard case let .success(roomIDs) = await clientProxy.recentlyVisitedRoomIDs() else { return }
         
-        for summary in roomSummaryProvider.roomListPublisher.value {
-            if summary.id == forwardingItem.roomID {
-                continue
-            }
-            
-            rooms.append(.init(id: summary.id,
-                               title: summary.name,
-                               description: summary.roomListDescription,
-                               avatar: summary.avatar))
-        }
-        
-        state.rooms = rooms
+        state.suggestedRooms = roomIDs
+            .filter { $0 != forwardingPayload.roomID }
+            .compactMap(clientProxy.roomSummaryForIdentifier)
+            .filter { $0.isJoined && !$0.isSpace && !$0.isTombstoned }
+            .prefix(Self.maxSuggestedRoomCount)
+            .map(MessageForwardingRoom.init(summary:))
     }
     
     /// The actual range values don't matter as long as they contain the lower
@@ -123,21 +128,31 @@ class MessageForwardingScreenViewModel: MessageForwardingScreenViewModelType, Me
         }
         
         var succeededRoomIdentifiers = [String]()
+        var hasFailures = false
         
         for roomID in state.selectedRoomIDs {
             guard case let .joined(targetRoomProxy) = await clientProxy.roomForIdentifier(roomID) else {
                 MXLog.error("Failed retrieving room to forward to with id: \(roomID)")
-                userIndicatorController.submitIndicator(UserIndicator(title: L10n.errorUnknown))
+                hasFailures = true
                 continue
             }
             
-            if case .failure(let error) = await targetRoomProxy.timeline.sendMessageEventContent(forwardingItem.content) {
-                MXLog.error("Failed forwarding message with error: \(error)")
-                userIndicatorController.submitIndicator(UserIndicator(title: L10n.errorUnknown))
-                continue
+            // The contents are already in timeline order and the send queue preserves it.
+            for content in forwardingPayload.contents {
+                if case .failure(let error) = await targetRoomProxy.timeline.sendMessageEventContent(content) {
+                    MXLog.error("Failed forwarding message with error: \(error)")
+                    hasFailures = true
+                }
             }
             
             succeededRoomIdentifiers.append(roomID)
+        }
+        
+        if hasFailures {
+            userIndicatorController.submitIndicator(UserIndicator(title: L10n.errorUnknown))
+        } else if succeededRoomIdentifiers.count > 1 {
+            // The flow opens the room when there is a single one, otherwise the user stays here and needs to know it worked.
+            userIndicatorController.submitIndicator(UserIndicator(title: L10n.screenRoomMessagesForwarded(forwardingPayload.contents.count)))
         }
         
         if !succeededRoomIdentifiers.isEmpty {

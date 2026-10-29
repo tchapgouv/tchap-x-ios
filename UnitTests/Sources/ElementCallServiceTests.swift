@@ -302,6 +302,26 @@ final class ElementCallServiceTests {
         #expect(service.ongoingCallRoomIDPublisher.value == nil)
     }
     
+    /// A declined or unanswered call is the system's to log as such: reported with its reason, and
+    /// never as an end call action, which would log it as one we hung up.
+    @Test
+    func aCallThatEndedWithoutUsIsReportedRatherThanEnded() async throws {
+        enableNativeCalls()
+        await service.setupCallSession(roomID: "!room:example.com", roomDisplayName: "welcome", isVideo: true)
+        let callID = try #require(callProvider.reportCallWithUpdatedReceivedArguments?.uuid)
+        let requestsBeforeTheEnd = callController.requestCompletionCallsCount
+        
+        service.reportCallSessionEnded(roomID: "!other:example.com", reason: .unanswered)
+        #expect(!callProvider.reportCallWithEndedAtReasonCalled, "Another room's end is not this call's")
+        
+        service.reportCallSessionEnded(roomID: "!room:example.com", reason: .unanswered)
+        
+        #expect(callProvider.reportCallWithEndedAtReasonReceivedArguments?.uuid == callID)
+        #expect(callProvider.reportCallWithEndedAtReasonReceivedArguments?.reason == .unanswered)
+        #expect(callController.requestCompletionCallsCount == requestsBeforeTheEnd)
+        #expect(service.ongoingCallRoomIDPublisher.value == nil)
+    }
+    
     @Test
     func tearingDownAnotherRoomLeavesTheOngoingCallUp() async {
         // A call screen that is dismissed after another room's call replaced it must not take the
@@ -313,6 +333,91 @@ final class ElementCallServiceTests {
         
         service.tearDownCallSession(roomID: "!room:example.com")
         #expect(service.ongoingCallRoomIDPublisher.value == nil)
+    }
+    
+    // MARK: - Busy
+    
+    @Test
+    func aCallWhileAnotherRingsIsReportedAsMissed() async throws {
+        await reportIncomingPush(isVoiceCall: false)
+        let ringingUUID = try #require(callProvider.reportNewIncomingCallWithUpdateCompletionReceivedArguments?.uuid)
+        
+        let otherCall = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 60)
+            .updatingRoomID("!other:example.com")
+            .updatingRTCNotificationID("$111")
+        await expectImmediatelyEndedCallReported(forPayload: otherCall, expectedReason: .unanswered)
+        
+        #expect(callProvider.reportNewIncomingCallWithUpdateCompletionReceivedArguments?.update.remoteHandle?.value == "!other:example.com")
+        #expect(!callProvider.reportCallWithEndedAtReasonReceivedInvocations.contains { $0.uuid == ringingUUID })
+    }
+    
+    @Test
+    func aCallDuringAWebViewCallIsReportedAsMissed() async {
+        await service.setupCallSession(roomID: "!room:example.com", roomDisplayName: "welcome", isVideo: true)
+        
+        let otherCall = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 60)
+            .updatingRoomID("!other:example.com")
+        await expectImmediatelyEndedCallReported(forPayload: otherCall, expectedReason: .unanswered)
+    }
+    
+    @Test
+    func aCallDuringANativeCallStillRings() async {
+        // An ongoing native call is tracked by CallKit, which offers its own call waiting.
+        enableNativeCalls()
+        await service.setupCallSession(roomID: "!room:example.com", roomDisplayName: "welcome", isVideo: true)
+        
+        await reportIncomingPush(isVoiceCall: false, roomID: "!other:example.com")
+        
+        #expect(callProvider.reportNewIncomingCallWithUpdateCompletionReceivedArguments?.update.remoteHandle?.value == "!other:example.com")
+        #expect(!callProvider.reportCallWithEndedAtReasonCalled)
+    }
+    
+    @Test
+    func theSameRingPushedTwiceIsReportedAsHandled() async throws {
+        await reportIncomingPush(isVoiceCall: false)
+        let ringingUUID = try #require(callProvider.reportNewIncomingCallWithUpdateCompletionReceivedArguments?.uuid)
+        
+        await expectImmediatelyEndedCallReported(forPayload: PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 60),
+                                                 expectedReason: .answeredElsewhere)
+        
+        #expect(!callProvider.reportCallWithEndedAtReasonReceivedInvocations.contains { $0.uuid == ringingUUID })
+    }
+    
+    @Test
+    func anAnsweredCallThatNeverOpensStopsBlockingNewCalls() async throws {
+        await reportIncomingPush(isVoiceCall: false)
+        try await answerReportedCall()
+        
+        // The call screen couldn't open, e.g. because the room isn't joined.
+        service.tearDownCallSession(roomID: "!room:example.com")
+        
+        await reportIncomingPush(isVoiceCall: false, roomID: "!other:example.com")
+        
+        #expect(callProvider.reportNewIncomingCallWithUpdateCompletionReceivedArguments?.update.remoteHandle?.value == "!other:example.com")
+        #expect(!callProvider.reportCallWithEndedAtReasonReceivedInvocations.contains { $0.reason == .unanswered })
+    }
+    
+    @Test
+    func aCallAfterADroppedAnsweredCallStillTimesOut() async throws {
+        await reportIncomingPush(isVoiceCall: false)
+        try await answerReportedCall()
+        service.tearDownCallSession(roomID: "!room:example.com")
+        
+        await reportIncomingPush(isVoiceCall: false, roomID: "!other:example.com")
+        let newCallUUID = try #require(callProvider.reportNewIncomingCallWithUpdateCompletionReceivedArguments?.uuid)
+        await clock.waitForScheduledSleep()
+        
+        let (endedCalls, endedCallsContinuation) = AsyncStream<(UUID, CXCallEndedReason)>.makeStream()
+        callProvider.reportCallWithEndedAtReasonClosure = { uuid, _, reason in
+            endedCallsContinuation.yield((uuid, reason))
+        }
+        let deferredTimeout = deferFulfillment(endedCalls) { $0 == newCallUUID && $1 == .unanswered }
+        
+        // The answer hands over to the web view a second later, which must leave the new call's timeout alone.
+        try await Task.sleep(for: .seconds(1.5))
+        clock.advance(by: .seconds(70))
+        
+        try await deferredTimeout.fulfill()
     }
     
     // MARK: - Native calls
@@ -480,10 +585,11 @@ final class ElementCallServiceTests {
     }
     
     /// Delivers a VoIP push and waits for it to be reported, returning once the call is ringing.
-    private func reportIncomingPush(isVoiceCall: Bool) async {
+    private func reportIncomingPush(isVoiceCall: Bool, roomID: String = "!room:example.com") async {
         await waitForConfirmation { confirmation in
             let payload = PKPushPayloadMock().updatingExpiration(currentDate, lifetime: 60)
                 .updateIsVoice(isVoiceCall)
+                .updatingRoomID(roomID)
             
             service.pushRegistry(pushRegistry, didReceiveIncomingPushWith: payload, for: .voIP) {
                 confirmation()
@@ -544,6 +650,16 @@ private nonisolated class PKPushPayloadMock: PKPushPayload {
     
     func updateIsVoice(_ isVoice: Bool) -> Self {
         dict[ElementCallServiceNotificationKey.isVoiceCall.rawValue] = isVoice
+        return self
+    }
+    
+    func updatingRoomID(_ roomID: String) -> Self {
+        dict[ElementCallServiceNotificationKey.roomID.rawValue] = roomID
+        return self
+    }
+    
+    func updatingRTCNotificationID(_ rtcNotificationID: String) -> Self {
+        dict[ElementCallServiceNotificationKey.rtcNotifyEventID.rawValue] = rtcNotificationID
         return self
     }
 }

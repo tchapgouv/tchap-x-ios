@@ -9,7 +9,7 @@
 import MatrixRustSDK
 import SwiftUI
 
-final class MessageTextView: UITextView, PillAttachmentViewProviderDelegate, UIGestureRecognizerDelegate {
+final class MessageTextView: UITextView, PillAttachmentViewProviderDelegate, UIGestureRecognizerDelegate, NSLayoutManagerDelegate {
     var timelineContext: TimelineViewModel.Context?
     var updateClosure: (() -> Void)?
     private var pillViews = NSHashTable<UIView>.weakObjects()
@@ -40,6 +40,18 @@ final class MessageTextView: UITextView, PillAttachmentViewProviderDelegate, UIG
             self.layoutManager.invalidateDisplay(forCharacterRange: range)
             updateClosure?()
         }
+    }
+    
+    /// Stops TextKit from hyphenating code when a word doesn't fit on a line, wrapping it by
+    /// character instead. Code is meant to be verbatim, so an inserted hyphen would corrupt it.
+    nonisolated func layoutManager(_ layoutManager: NSLayoutManager, shouldBreakLineByHyphenatingBeforeCharacterAt charIndex: Int) -> Bool {
+        guard let textStorage = layoutManager.textStorage, charIndex < textStorage.length else {
+            return true
+        }
+        
+        let isCode = textStorage.attribute(.InlineCode, at: charIndex, effectiveRange: nil) != nil
+            || textStorage.attribute(.CodeBlock, at: charIndex, effectiveRange: nil) != nil
+        return !isCode
     }
     
     func registerPillView(_ pillView: UIView) {
@@ -194,6 +206,7 @@ struct MessageText: UIViewRepresentable {
         textView.textContainerInset = .zero
         textView.textContainer.lineFragmentPadding = 0
         textView.layoutManager.usesFontLeading = false
+        textView.layoutManager.delegate = textView
         textView.backgroundColor = .clear
         if let attributedText = makeAttributedText() {
             textView.attributedText = attributedText

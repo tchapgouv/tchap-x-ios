@@ -11,13 +11,14 @@ import MatrixRustSDK
 
 // sourcery: AutoMockable
 nonisolated protocol NSEUserSessionProtocol {
+    var userSettings: UserSettings { get }
     var inviteAvatarsVisibility: InviteAvatars { get async }
     var mediaPreviewVisibility: MediaPreviews { get async }
     var threadsEnabled: Bool { get }
 }
 
 final nonisolated class NSEUserSession: NSEUserSessionProtocol {
-    private let appSettings: CommonSettingsProtocol
+    let userSettings: UserSettings
     private let baseClient: ClientProtocol
     private let notificationClient: NotificationClient
     private let userID: String
@@ -49,22 +50,23 @@ final nonisolated class NSEUserSession: NSEUserSessionProtocol {
     }
     
     var threadsEnabled: Bool {
-        appSettings.threadsEnabled
+        userSettings.app.threadsEnabled
     }
     
     init(credentials: KeychainCredentials,
          roomID: String,
          clientSessionDelegate: ClientSessionDelegate,
          clientFactory: ClientFactoryProtocol = ClientFactory(),
-         appSettings: CommonSettingsProtocol,
+         appSettings: AppSettings,
          appHooks: AppHooks) async throws {
         userID = credentials.userID
-        self.appSettings = appSettings
+        userSettings = appHooks.userSessionHook.configure(appSettings.userSettings(for: credentials.userID),
+                                                          forHomeserver: credentials.restorationToken.session.homeserverUrl)
         
         baseClient = try await clientFactory.makeNSEClient(credentials: credentials,
                                                            roomID: roomID,
                                                            clientSessionDelegate: clientSessionDelegate,
-                                                           appSettings: appSettings,
+                                                           userSettings: userSettings,
                                                            appHooks: appHooks)
         
         do {
@@ -75,7 +77,7 @@ final nonisolated class NSEUserSession: NSEUserSessionProtocol {
         delegateHandle = try baseClient.setDelegate(delegate: ClientDelegateWrapper())
         
         // Inject the content scanner so the SDK gates the media it downloads whilst building the notification.
-        if let contentScannerURL = appSettings.contentScannerURL.publisher.value {
+        if let contentScannerURL = userSettings.app.contentScannerURL.publisher.value {
             let contentScanner = ContentScanner(scannerUrl: contentScannerURL.absoluteString)
             await baseClient.setContentScanner(contentScanner: contentScanner)
         }

@@ -316,7 +316,7 @@ final class AuthenticationStartScreenViewModelTests {
         notificationCenter = NotificationCenter()
         
         clientFactory = ClientFactoryMock(configuration)
-        authenticationService = AuthenticationService(userSessionStore: UserSessionStoreMock(.init()),
+        authenticationService = AuthenticationService(userSessionManager: UserSessionManagerMock(.init()),
                                                       encryptionKeyProvider: EncryptionKeyProvider(),
                                                       classicAppManager: classicAppManager,
                                                       clientFactory: clientFactory,
@@ -335,7 +335,11 @@ final class AuthenticationStartScreenViewModelTests {
                                                        userIndicatorController: UserIndicatorControllerMock())
         
         // Add a fake window in order for the OAuth flow to continue
-        viewModel.context.send(viewAction: .updateWindow(UIWindow()))
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+            Issue.record("The test host is missing a window scene.")
+            return
+        }
+        viewModel.context.send(viewAction: .updateWindow(UIWindow(windowScene: scene)))
     }
     
     private func makeClassicAppAccount(serverName: String = "company.com",

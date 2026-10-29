@@ -17,14 +17,14 @@ import Testing
 
 @MainActor
 final class RoomListFiltersStateTests {
-    var appSettings: AppSettings
+    var userSettings: UserSettings
     var state: RoomListFiltersState
     /// The filters that aren't hidden behind a feature flag.
     let defaultFilters = RoomListFilter.allCases.filter { $0 != .mentions && $0 != .lowPriority }
     
     init() {
-        appSettings = AppSettings.volatile()
-        state = RoomListFiltersState(appSettings: appSettings)
+        userSettings = UserSettings.mock()
+        state = RoomListFiltersState(userSettings: userSettings)
     }
     
     @Test
@@ -154,12 +154,12 @@ final class RoomListFiltersStateTests {
     // MARK: - Helpers
     
     private func enableLowPriorityFeature() {
-        appSettings.lowPriorityFilterEnabled = true
-        state = RoomListFiltersState(appSettings: appSettings)
+        userSettings.app.lowPriorityFilterEnabled = true
+        state = RoomListFiltersState(userSettings: userSettings)
     }
     
     private func enableMentionsFeature() {
-        appSettings.mentionsFilterEnabled = true
-        state = RoomListFiltersState(appSettings: appSettings)
+        userSettings.app.mentionsFilterEnabled = true
+        state = RoomListFiltersState(userSettings: userSettings)
     }
 }

@@ -39,14 +39,14 @@ enum QRCodeLoginScreenMode {
     /// Configures the screen to link another device by scanning a QR code.
     case linkDesktop(LinkNewDeviceServiceProtocol)
     /// Configures the screen to link another device by showing it a QR code.
-    case linkMobile(LinkNewDeviceService.LinkMobileProgressPublisher)
+    case linkMobile(LinkNewDeviceService.LinkMobileOperation)
 }
 
 struct QRCodeLoginScreenViewState: BindableState {
     var state: QRCodeLoginState
     let mode: QRCodeLoginScreenMode
     /// Whether or not it is possible for the screen to start the manual sign in flow. This was added to avoid
-    /// having to handle server configuration when ``AppSettings.allowOtherAccountProviders`` is false.
+    /// having to handle server configuration when ``UserSettings.allowOtherAccountProviders`` is false.
     let canSignInManually: Bool
     
     let instructions = QRCodeLoginScreenInstructions()

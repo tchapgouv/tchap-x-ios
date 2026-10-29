@@ -45,7 +45,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
     
     init(roomProxy: JoinedRoomProxyProtocol,
          userSession: UserSessionProtocol,
-         appHooks: AppHooks,
          analyticsService: AnalyticsServiceProtocol,
          userIndicatorController: UserIndicatorControllerProtocol,
          notificationSettingsProxy: NotificationSettingsProxyProtocol,
@@ -66,8 +65,9 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
                                                    topicSummary: topic?.unattributedStringByReplacingNewlinesWithSpaces(),
                                                    joinedMembersCount: roomProxy.infoPublisher.value.joinedMembersCount,
                                                    notificationSettingsState: .loading,
+                                                   isNativeCallingEnabled: userSession.userSettings.app.nativeCallEnabled,
                                                    bindings: .init())
-        super.init(initialViewState: appHooks.roomDetailsScreenHook.update(viewState),
+        super.init(initialViewState: userSession.userHooks.roomDetailsScreenHook.update(viewState),
                    mediaProvider: userSession.mediaProvider)
         
         Task {
@@ -362,19 +362,17 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         }
         
         if roomProxy.infoPublisher.value.isDM {
-            if var dmRecipientInfo = state.dmRecipientInfo {
-                if case let .success(userIdentity) = await userSession.clientProxy.userIdentity(for: dmRecipientInfo.member.id, fallBackToServer: true) {
-                    dmRecipientInfo.verificationState = userIdentity?.verificationState
-                    state.dmRecipientInfo = dmRecipientInfo
-                }
+            if var dmRecipientInfo = state.dmRecipientInfo,
+               case let .success(userIdentity) = await userSession.clientProxy.userIdentity(for: dmRecipientInfo.member.id, fallBackToServer: true) {
+                dmRecipientInfo.verificationState = userIdentity?.verificationState
+                state.dmRecipientInfo = dmRecipientInfo
             }
         } else {
             for member in roomProxy.membersPublisher.value {
-                if case let .success(userIdentity) = await userSession.clientProxy.userIdentity(for: member.userID, fallBackToServer: false) {
-                    if userIdentity?.verificationState == .verificationViolation {
-                        state.hasMemberIdentityVerificationStateViolations = true
-                        return
-                    }
+                if case let .success(userIdentity) = await userSession.clientProxy.userIdentity(for: member.userID, fallBackToServer: false),
+                   userIdentity?.verificationState == .verificationViolation {
+                    state.hasMemberIdentityVerificationStateViolations = true
+                    return
                 }
             }
             

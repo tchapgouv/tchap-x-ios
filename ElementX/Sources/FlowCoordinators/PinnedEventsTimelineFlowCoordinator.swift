@@ -69,7 +69,6 @@ class PinnedEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
                                                                                   userSession: userSession,
                                                                                   mediaPlayerProvider: MediaPlayerProvider(),
                                                                                   appMediator: flowParameters.appMediator,
-                                                                                  appSettings: flowParameters.appSettings,
                                                                                   analytics: flowParameters.analytics,
                                                                                   emojiProvider: flowParameters.emojiProvider,
                                                                                   linkMetadataProvider: flowParameters.linkMetadataProvider,
@@ -91,8 +90,8 @@ class PinnedEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
                 case .presentLiveLocationViewer(let sender, let initialLiveLocationShare):
                     presentMapNavigator(interactionMode: .viewLive(sender: sender, initialLiveLocationShare: initialLiveLocationShare),
                                         timelineController: timelineController)
-                case .displayMessageForwarding(let forwardingItem):
-                    presentMessageForwarding(with: forwardingItem)
+                case .displayMessageForwarding(let forwardingPayload):
+                    presentMessageForwarding(with: forwardingPayload)
                 case .displayRoomScreenWithFocussedPin(let eventID, let threadRootEventID):
                     actionsSubject.send(.displayRoomScreenWithFocussedPin(eventID: eventID, threadRootEventID: threadRootEventID))
                 }
@@ -107,15 +106,13 @@ class PinnedEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
         let stackCoordinator = NavigationStackCoordinator()
         
         let params = LocationSharingScreenCoordinatorParameters(interactionMode: interactionMode,
-                                                                mapURLBuilder: flowParameters.appSettings.mapTilerConfiguration.publisher.value,
+                                                                mapURLBuilder: userSession.userSettings.app.mapTilerConfiguration.publisher.value,
                                                                 roomProxy: roomProxy,
                                                                 timelineController: timelineController,
-                                                                liveLocationManager: flowParameters.userSession.liveLocationManager,
-                                                                appSettings: flowParameters.appSettings,
+                                                                userSession: userSession,
                                                                 appMediator: flowParameters.appMediator,
                                                                 analytics: flowParameters.analytics,
-                                                                userIndicatorController: flowParameters.userIndicatorController,
-                                                                mediaProvider: flowParameters.userSession.mediaProvider)
+                                                                userIndicatorController: flowParameters.userIndicatorController)
         let coordinator = LocationSharingScreenCoordinator(parameters: params)
         
         coordinator.actions.sink { [weak self] action in
@@ -132,12 +129,12 @@ class PinnedEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
         navigationStackCoordinator.setSheetCoordinator(stackCoordinator)
     }
     
-    private func presentMessageForwarding(with forwardingItem: MessageForwardingItem) {
+    private func presentMessageForwarding(with forwardingPayload: MessageForwardingPayload) {
         let roomSummaryProvider = userSession.clientProxy.alternateRoomSummaryProvider
         
         let stackCoordinator = NavigationStackCoordinator()
         
-        let parameters = MessageForwardingScreenCoordinatorParameters(forwardingItem: forwardingItem,
+        let parameters = MessageForwardingScreenCoordinatorParameters(forwardingPayload: forwardingPayload,
                                                                       userSession: userSession,
                                                                       roomSummaryProvider: roomSummaryProvider,
                                                                       userIndicatorController: flowParameters.userIndicatorController)

@@ -15,13 +15,15 @@ class UserSession: UserSessionProtocol {
     private var authErrorCancellable: AnyCancellable?
     
     let clientProxy: ClientProxyProtocol
+    let userSettings: UserSettings
+    let userHooks: UserHooks
+    
     let mediaProvider: MediaProviderProtocol
-    
     let voiceMessageMediaManager: VoiceMessageMediaManagerProtocol
-    let liveLocationManager: LiveLocationManagerProtocol
-    
+    let liveLocationService: LiveLocationServiceProtocol
     /// Scans media content, `nil` when no content scanner is configured for the server.
     let contentScannerService: ContentScannerServiceProtocol?
+    let notificationService: NotificationServiceProtocol
     
     let callbacks = PassthroughSubject<UserSessionCallback, Never>()
     
@@ -30,11 +32,21 @@ class UserSession: UserSessionProtocol {
         sessionSecurityStateSubject.asCurrentValuePublisher()
     }
     
-    init(clientProxy: ClientProxyProtocol, mediaProvider: MediaProviderProtocol, voiceMessageMediaManager: VoiceMessageMediaManagerProtocol, liveLocationManager: LiveLocationManagerProtocol) {
+    init(clientProxy: ClientProxyProtocol,
+         userSettings: UserSettings,
+         userHooks: UserHooks,
+         mediaProvider: MediaProviderProtocol,
+         voiceMessageMediaManager: VoiceMessageMediaManagerProtocol,
+         liveLocationService: LiveLocationServiceProtocol,
+         notificationService: NotificationServiceProtocol) {
         self.clientProxy = clientProxy
+        self.userSettings = userSettings
+        self.userHooks = userHooks
+        
         self.mediaProvider = mediaProvider
         self.voiceMessageMediaManager = voiceMessageMediaManager
-        self.liveLocationManager = liveLocationManager
+        self.liveLocationService = liveLocationService
+        self.notificationService = notificationService
         contentScannerService = clientProxy.contentScanner.map(ContentScannerService.init)
         
         authErrorCancellable = clientProxy.actionsPublisher

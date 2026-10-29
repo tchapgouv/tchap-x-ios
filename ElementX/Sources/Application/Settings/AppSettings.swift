@@ -15,25 +15,6 @@ import Foundation
 import Macros
 import SwiftUI
 
-/// Common settings between app and NSE
-nonisolated protocol CommonSettingsProtocol: AnyObject, Sendable {
-    var lastNotificationBootTime: TimeInterval? { get set }
-    var selectedNotificationTone: NotificationTone? { get set }
-    var lastKnownBadgeCount: Int { get set }
-    
-    var logLevel: LogLevel { get }
-    var traceLogPacks: Set<TraceLogPack> { get }
-    var bugReportRageshakeURL: RemotePreference<RageshakeConfiguration> { get }
-    var contentScannerURL: RemotePreference<URL?> { get }
-    var forceDisableE2EE: RemotePreference<Bool> { get }
-    var mapTilerConfiguration: RemotePreference<MapTilerConfiguration> { get }
-    
-    var enableOnlySignedDeviceIsolationMode: Bool { get }
-    var threadsEnabled: Bool { get }
-    var hideQuietNotificationAlerts: Bool { get }
-    var roomListNotificationCountEnabled: Bool { get }
-}
-
 nonisolated enum AppBuildType {
     case debug
     case nightly
@@ -70,12 +51,6 @@ final nonisolated class AppSettings: @unchecked Sendable {
     func resetAllSettings() {
         MXLog.warning("Resetting the AppSettings.")
         store.reset()
-    }
-    
-    func resetSessionSpecificSettings() {
-        MXLog.warning("Resetting the user session specific AppSettings.")
-        resetHasRunIdentityConfirmationOnboarding()
-        resetSearchBreadcrumbs()
     }
     
     // MARK: - Hooks
@@ -133,15 +108,11 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference
     var lastVersionLaunched: String?
     
-    /// The Set of room identifiers of invites that the user already saw in the invites list.
-    /// This Set is being used to implement badges for unread invites.
-    @UserPreference(defaultValue: Set<String>())
-    var seenInvites: Set<String>
-    
     /// Defaults to `true` for new users, and we use a migration to set it to `false` for existing users.
     @UserPreference(defaultValue: true)
     var hasSeenNewSoundBanner: Bool
     
+<<<<<<< HEAD
     // TODO: accountProviders
     // The initial set of account providers shown to the user in the authentication flow.
     //
@@ -182,6 +153,16 @@ final nonisolated class AppSettings: @unchecked Sendable {
     #elseif IS_TCHAP_UNIT_TESTS
     private(set) var accountProviders = ["agent.dinum.tchap.gouv.fr"]
     #else
+=======
+    /// Defaults to `true` so new users never see it. Developer options arms it for now, an upgrade migration will at launch.
+    @UserPreference(defaultValue: true)
+    var hasSeenMultiAccountAnnouncement: Bool
+    
+    /// The initial set of account providers shown to the user in the authentication flow.
+    ///
+    /// Account provider is the friendly term for the server name. It should not contain an `https` prefix and should
+    /// match the last part of the user ID. For example `example.com` and not `https://matrix.example.com`.
+>>>>>>> release/26.10.8
     private(set) var accountProviders: [AccountProvider] = [.managed(serverName: "matrix.org", baseURL: "https://matrix-client.matrix.org")]
     #endif
     /// Whether or not the user is allowed to manually enter their own account provider or must select from one of `defaultAccountProviders`.
@@ -191,9 +172,15 @@ final nonisolated class AppSettings: @unchecked Sendable {
     
     /// The task identifier used for background app refresh. Also used in main target's the Info.plist
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
+<<<<<<< HEAD
 
     // Tchap: adapt website URL for OAuth / MAS
     //    private(set) var websiteURL: URL = "https://element.io"
+=======
+    /// The task identifier used for the search index backfill. Also used in main target's the Info.plist
+    let searchBackfillTaskIdentifier = "io.element.elementx.background.search-backfill"
+    
+>>>>>>> release/26.10.8
     /// A URL where users can go read more about the app.
     #if IS_TCHAP_PRODUCTION
     private(set) var websiteURL: URL = "https://tchap.gouv.fr"
@@ -354,12 +341,6 @@ final nonisolated class AppSettings: @unchecked Sendable {
         pushGatewayBaseURL.appending(path: "_matrix/push/v1/notify")
     }
     
-    @UserPreference(defaultValue: true)
-    var enableNotifications: Bool
-    
-    @UserPreference(defaultValue: true)
-    var enableInAppNotifications: Bool
-    
     @UserPreference(defaultValue: false)
     var hideQuietNotificationAlerts: Bool
     
@@ -374,10 +355,6 @@ final nonisolated class AppSettings: @unchecked Sendable {
     /// The app icon badge value the app last computed from the SDK's unread notification counts.
     @UserPreference(defaultValue: 0)
     var lastKnownBadgeCount: Int
-    
-    /// The sound played when delivering noisy notifications. If nil, use the ElementX default
-    @UserPreference
-    var selectedNotificationTone: NotificationTone?
     
     // MARK: - Logging
     
@@ -453,12 +430,15 @@ final nonisolated class AppSettings: @unchecked Sendable {
     var hasRunNotificationPermissionsOnboarding: Bool
     
     @UserPreference(defaultValue: false)
+<<<<<<< HEAD
     var hasRunTchapWelcomeOnboarding: Bool // :tchap:
     
     @UserPreference(defaultValue: false)
     var hasRunIdentityConfirmationOnboarding: Bool
     
     @UserPreference(defaultValue: false)
+=======
+>>>>>>> release/26.10.8
     var hasRequestedLocationAlwaysLocationAuthorization: Bool
     
     @UserPreference(defaultValue: [FrequentlyUsedEmoji]())
@@ -466,15 +446,13 @@ final nonisolated class AppSettings: @unchecked Sendable {
     
     // MARK: - Live Location
     
-    @UserPreference(key: "liveLocationSharingTimeoutDatesByRoomID", defaultValue: [String: LiveLocationSession]())
-    var liveLocationSharingSessionsByRoomID: [String: LiveLocationSession]
-    
     @UserPreference(defaultValue: 10)
     var liveLocationMinimumDistanceUpdate: Int
     
     @UserPreference(defaultValue: false)
     var liveLocationDisclaimerDisplayed: Bool
     
+<<<<<<< HEAD
     // MARK: - Home Screen
     
     @UserPreference(defaultValue: RoomListActivityVisibility.current)
@@ -491,6 +469,8 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(defaultValue: [SearchBreadcrumb]())
     var searchBreadcrumbs: [SearchBreadcrumb]
     
+=======
+>>>>>>> release/26.10.8
     // MARK: - Room Screen
     
     @UserPreference(defaultValue: AppBuildType.current == .debug)
@@ -550,11 +530,6 @@ final nonisolated class AppSettings: @unchecked Sendable {
     /// The MapTiler configuration used to build map URLs, which defaults to the bundled one.
     private(set) var mapTilerConfiguration = RemotePreference(AppSettings.bundledMapTilerConfiguration)
     
-    // MARK: - Presence
-    
-    @UserPreference(defaultValue: true)
-    var sharePresence: Bool
-    
     // MARK: - Feature Flags
     
     /// Others
@@ -579,10 +554,7 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(defaultValue: true) // :tchap:end:
     var threadsEnabled: Bool
     
-    @UserPreference(defaultValue: false)
-    var messageMultiSelectEnabled: Bool
-    
-    @UserPreference(defaultValue: ProcessInfo().isiOSAppOnMac)
+    @UserPreference(key: "globalSearchEnabledV2", defaultValue: true)
     var globalSearchEnabled: Bool
     
     @UserPreference(defaultValue: false)
@@ -602,9 +574,6 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(defaultValue: false)
     var linkNewDeviceEnabled: Bool
     
-    @UserPreference(defaultValue: false)
-    var automaticBackPaginationEnabled: Bool
-    
     @UserPreference(key: "clientPausingAndResumingEnabledV2", defaultValue: false, volatile: true)
     var clientPausingAndResumingEnabled: Bool
     
@@ -615,13 +584,22 @@ final nonisolated class AppSettings: @unchecked Sendable {
     @UserPreference(defaultValue: false)
     var nativeCallEnabled: Bool
     
+    @UserPreference(defaultValue: false)
+    var multiAccountEnabled: Bool
+    
+    /// Lets the add account flow start once `multiAccountEnabled` shows its entry points. Not a user preference, so testers
+    /// can't add a second account while signing out of one isn't safe yet. Only set it to `true` locally, for development.
+    let addAccountFlowEnabled = false
+    
     init(store: UserDefaultsProtocol) {
         self.store = store
+    }
+    
+    func userSettings(for userID: String) -> UserSettings {
+        UserSettings(appSettings: self, accountSettings: .init(userID: userID, store: store))
     }
     
     static func volatile() -> AppSettings {
         AppSettings(store: VolatileUserDefaults())
     }
 }
-
-nonisolated extension AppSettings: CommonSettingsProtocol { }

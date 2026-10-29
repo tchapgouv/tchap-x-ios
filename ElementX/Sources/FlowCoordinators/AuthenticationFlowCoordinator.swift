@@ -461,7 +461,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
                                                      redirectURL: appSettings.oAuthRedirectURL,
                                                      presentationAnchor: presentationAnchor,
                                                      appMediator: appMediator,
-                                                     appHooks: appHooks,
+                                                     presenterHook: appHooks.oAuthAuthenticationPresenterHook,
                                                      userIndicatorController: userIndicatorController)
         oAuthPresenter = presenter
         
@@ -531,7 +531,7 @@ class AuthenticationFlowCoordinator: FlowCoordinatorProtocol {
     private func showDeveloperOptionsScreen() {
         let stackCoordinator = NavigationStackCoordinator()
         let coordinator = DeveloperOptionsScreenCoordinator(appSettings: appSettings,
-                                                            appHooks: appHooks,
+                                                            screenHook: appHooks.developerOptionsScreenHook,
                                                             clientProxy: nil)
         coordinator.actions
             .sink { action in

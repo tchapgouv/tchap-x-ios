@@ -90,13 +90,15 @@ extension CreateRoomAccessType: Hashable { }
 /// This struct represents the configuration that we are using to register the application through Pusher to Sygnal
 /// using the Matrix Rust SDK, more info here:
 /// https://github.com/matrix-org/sygnal
-struct PusherConfiguration {
+struct PusherConfiguration: Equatable {
     let identifiers: PusherIdentifiers
     let kind: PusherKind
     let appDisplayName: String
     let deviceDisplayName: String
     let profileTag: String?
     let lang: String
+    /// Whether to keep the pushers of the other accounts using the same pushkey on this device.
+    let append: Bool
 }
 
 enum SessionVerificationState {
@@ -164,7 +166,7 @@ protocol ClientProxyProtocol: AnyObject {
     
     /// Used for listing rooms that shouldn't be affected by the main `roomSummaryProvider` filtering
     /// But can still be filtered by queries, since this may be shared across multiple views, remember to reset
-    /// The filtering state when you are done with it
+    /// The filtering state when you are done with it. Only lists joined rooms.
     var alternateRoomSummaryProvider: RoomSummaryProviderProtocol { get }
     
     /// Used for listing rooms, can't be filtered nor its state observed
@@ -202,12 +204,21 @@ protocol ClientProxyProtocol: AnyObject {
     
     func pauseServices() async
     
+<<<<<<< HEAD
     var accountExpiredSubjectPublisher: CurrentValuePublisher<Bool, Never> { get } // :tchap: expired account
 
     func resyncAccount() async throws // :tchap: expired account
 
     func accountExpiredSendEmail() async throws // :tchap: expired account
 
+=======
+    func startSearchBackfill(strategy: SearchBackfillStrategy)
+    
+    func stopSearchBackfill()
+    
+    var isSearchBackfillRunning: Bool { get }
+    
+>>>>>>> release/26.10.8
     func expireSyncSessions() async
     
     func accountURL(action: AccountManagementAction) async -> URL?
@@ -264,11 +275,13 @@ protocol ClientProxyProtocol: AnyObject {
     
     func linkNewDeviceService() -> LinkNewDeviceServiceProtocol
     
-    func deactivateAccount(password: String?, eraseData: Bool) async -> Result<Void, ClientProxyError>
+    func deactivateAccount(password: String, eraseData: Bool) async -> Result<Void, ClientProxyError>
     
     func logout() async
     
     func setPusher(with configuration: PusherConfiguration) async throws
+    
+    func deletePusher(with identifiers: PusherIdentifiers) async throws
     
     func searchUsers(searchTerm: String, limit: UInt) async -> Result<SearchUsersResults, ClientProxyError>
     
@@ -300,7 +313,9 @@ protocol ClientProxyProtocol: AnyObject {
     
     func trackRecentlyVisitedRoom(_ roomID: String) async -> Result<Void, ClientProxyError>
     
-    func recentlyVisitedRooms(filter: @Sendable (JoinedRoomProxyProtocol) -> Bool) async -> [JoinedRoomProxyProtocol]
+    /// The identifiers of the rooms the user visited most recently, newest first.
+    func recentlyVisitedRoomIDs() async -> Result<[String], ClientProxyError>
+    func recentlyVisitedRooms(filter: @Sendable (JoinedRoomProxyProtocol) async -> Bool) async -> [JoinedRoomProxyProtocol]
     func recentConversationCounterparts() async -> [UserProfile]
     
     // MARK: - Crypto

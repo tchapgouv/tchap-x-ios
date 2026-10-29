@@ -16,7 +16,7 @@ nonisolated struct ClientFactory: ClientFactoryProtocol {
     #if IS_MAIN_APP
     func makeAuthenticationClient(serverNameOrBaseURL: String,
                                   sessionDirectories: SessionDirectories,
-                                  passphrase: String,
+                                  passphrase: Data,
                                   clientSessionDelegate: ClientSessionDelegate,
                                   appSettings: AppSettings,
                                   appHooks: AppHooks) async throws -> ClientProtocol {
@@ -26,9 +26,11 @@ nonisolated struct ClientFactory: ClientFactoryProtocol {
                                       appHooks: appHooks,
                                       enableOnlySignedDeviceIsolationMode: appSettings.enableOnlySignedDeviceIsolationMode,
                                       threadsEnabled: appSettings.threadsEnabled)
-            .enableAutomaticBackPagination(enableAutomaticBackPagination: appSettings.automaticBackPaginationEnabled)
+            .enableAutomaticBackPagination(enableAutomaticBackPagination: true)
             .sqliteStore(config: .init(dataPath: sessionDirectories.dataPath, cachePath: sessionDirectories.cachePath)
-                .passphrase(passphrase: passphrase))
+                .highEntropyPassphrase(passphrase: passphrase, base64Variant: .padded))
+            .withSearchIndexStore(path: sessionDirectories.dataPath,
+                                  key: passphrase.base64EncodedString())
             .serverNameOrHomeserverUrl(serverNameOrUrl: serverNameOrBaseURL)
         
         return try await build(builder, for: .authentication, appHooks: appHooks)
@@ -64,12 +66,12 @@ nonisolated struct ClientFactory: ClientFactoryProtocol {
                                       appHooks: appHooks,
                                       enableOnlySignedDeviceIsolationMode: appSettings.enableOnlySignedDeviceIsolationMode,
                                       threadsEnabled: appSettings.threadsEnabled)
-            .enableAutomaticBackPagination(enableAutomaticBackPagination: appSettings.automaticBackPaginationEnabled)
+            .enableAutomaticBackPagination(enableAutomaticBackPagination: true)
             .sqliteStore(config: .init(dataPath: credentials.restorationToken.sessionDirectories.dataPath,
                                        cachePath: credentials.restorationToken.sessionDirectories.cachePath)
-                    .passphrase(passphrase: credentials.restorationToken.passphrase))
+                    .highEntropyPassphrase(passphrase: credentials.restorationToken.passphrase, base64Variant: .padded))
             .withSearchIndexStore(path: credentials.restorationToken.sessionDirectories.dataPath,
-                                  password: credentials.restorationToken.passphrase)
+                                  key: credentials.restorationToken.passphrase.base64EncodedString())
             .homeserverUrl(url: homeserverURL)
         
         return try await build(builder, for: .restoration(credentials.restorationToken.session, .all), appHooks: appHooks)
@@ -79,7 +81,7 @@ nonisolated struct ClientFactory: ClientFactoryProtocol {
     func makeNSEClient(credentials: KeychainCredentials,
                        roomID: String,
                        clientSessionDelegate: ClientSessionDelegate,
-                       appSettings: CommonSettingsProtocol,
+                       userSettings: UserSettings,
                        appHooks: AppHooks) async throws -> ClientProtocol {
         let homeserverURL = credentials.restorationToken.session.homeserverUrl
         
@@ -88,14 +90,14 @@ nonisolated struct ClientFactory: ClientFactoryProtocol {
                                       discoverSlidingSync: false,
                                       sessionDelegate: clientSessionDelegate,
                                       appHooks: appHooks,
-                                      enableOnlySignedDeviceIsolationMode: appSettings.enableOnlySignedDeviceIsolationMode,
+                                      enableOnlySignedDeviceIsolationMode: userSettings.app.enableOnlySignedDeviceIsolationMode,
                                       requestTimeout: 15000,
                                       maxRequestRetryTime: 5000,
-                                      threadsEnabled: appSettings.threadsEnabled)
+                                      threadsEnabled: userSettings.app.threadsEnabled)
             .systemIsMemoryConstrained()
             .sqliteStore(config: .init(dataPath: credentials.restorationToken.sessionDirectories.dataPath,
                                        cachePath: credentials.restorationToken.sessionDirectories.cachePath)
-                    .passphrase(passphrase: credentials.restorationToken.passphrase))
+                    .highEntropyPassphrase(passphrase: credentials.restorationToken.passphrase, base64Variant: .padded))
             .homeserverUrl(url: homeserverURL)
         
         return try await build(builder, for: .restoration(credentials.restorationToken.session, .one(roomId: roomID)), appHooks: appHooks)

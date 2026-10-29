@@ -20,8 +20,8 @@ permissions: {}
 
 jobs:
   tests:
-    runs-on: macos-26
-    timeout-minutes: 15
+    runs-on: xcode-27
+    timeout-minutes: 25
 
     concurrency:
       # When running on develop, use the sha to allow all runs of this workflow to run concurrently.
@@ -34,8 +34,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Configure Xcode 26
-        run: sudo xcode-select -s /Applications/Xcode_26.5.app
+      - name: Configure Xcode 27
+        run: sudo xcode-select -s /Applications/Xcode_27.app
 
       - name: Install sourcery
         run: brew install sourcery
@@ -45,11 +45,11 @@ jobs:
         run: sourcery --config Tools/Sourcery/PreviewTestsConfig.yml
 
       - name: Create simulator
-        run: xcrun simctl create "Snapshots" "iPhone SE (3rd generation)" "com.apple.CoreSimulator.SimRuntime.iOS-26-5"
+        run: xcrun simctl create "Snapshots" "iPhone SE (3rd generation)" "com.apple.CoreSimulator.SimRuntime.iOS-27-0"
 
       - name: Run tests
         working-directory: compound-ios
-        run: set -o pipefail && xcodebuild test -scheme 'Compound' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=Snapshots,OS=26.5' -skipPackagePluginValidation -resultBundlePath Logs/CompoundTests.xcresult | xcbeautify --renderer github-actions
+        run: set -o pipefail && xcodebuild test -scheme 'Compound' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=Snapshots,OS=27.0' -skipPackagePluginValidation -resultBundlePath Logs/CompoundTests.xcresult | xcbeautify --renderer github-actions
 
       - name: Zip artifacts
         if: failure() # We only care about artefacts if the tests fail
@@ -57,7 +57,7 @@ jobs:
         run: zip -r Logs/CompoundTests.xcresult.zip Logs/CompoundTests.xcresult/
 
       - name: Archive artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure() # We only care about artefacts if the tests fail
         with:
           name: test-results
@@ -66,7 +66,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4 # v7.1.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}

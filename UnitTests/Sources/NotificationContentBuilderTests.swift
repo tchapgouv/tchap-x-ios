@@ -30,7 +30,6 @@ nonisolated struct NotificationContentBuilderTests {
                                                           style: .plain)
         mediaProvider = MediaProviderMock(.init())
         notificationContentBuilder = await NotificationContentBuilder(messageEventStringBuilder: stringBuilder,
-                                                                      notificationSoundName: UNNotificationSoundName("message.caf"),
                                                                       userSession: NSEUserSessionMock(.init()))
     }
     
@@ -233,6 +232,7 @@ nonisolated struct NotificationContentBuilderTests {
     mutating func liveLocationStartNotification() async {
         let event = TimelineEventSDKMock()
         event.eventIdReturnValue = UUID().uuidString
+        event.timestampReturnValue = 0
         event.contentReturnValue = .state(content: .beaconInfo)
         
         let notificationItem = NotificationItemProxyMock(.init(event: .timeline(event: event),
@@ -260,6 +260,7 @@ nonisolated struct NotificationContentBuilderTests {
     mutating func otherStateEventNotification() async {
         let event = TimelineEventSDKMock()
         event.eventIdReturnValue = UUID().uuidString
+        event.timestampReturnValue = 0
         event.contentReturnValue = .state(content: .roomName)
         
         let notificationItem = NotificationItemProxyMock(.init(event: .timeline(event: event),

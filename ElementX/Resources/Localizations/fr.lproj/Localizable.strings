@@ -86,6 +86,7 @@
 "action_choose_file" = "Choisir un fichier";
 "action_choose_photo" = "Choisir une photo";
 "action_clear" = "Effacer";
+"action_clear_all" = "Tout effacer";
 "action_close" = "Fermer";
 "action_complete_verification" = "Terminer la vérification";
 "action_confirm" = "Confirmer";
@@ -96,6 +97,7 @@
 "action_copy_link" = "Copier le lien";
 "action_copy_link_to_message" = "Copier le lien vers le message";
 "action_copy_text" = "Copier le texte";
+"action_copy_to_clipboard" = "Copier dans le presse-papiers";
 "action_create" = "Créer";
 "action_create_room" = "Créer un salon";
 "action_create_space" = "Créer un espace";
@@ -174,7 +176,6 @@
 "action_retry_decryption" = "Réessayer le déchiffrement";
 "action_save" = "Enregistrer";
 "action_search" = "Rechercher";
-"action_select" = "Select";
 "action_select_all" = "Tout sélectionner";
 "action_send" = "Envoyer";
 "action_send_edited_message" = "Envoyer les modifications";
@@ -216,9 +217,12 @@
 "banner_set_up_recovery_content" = "Vos discussions sont automatiquement sauvegardées. Pour restaurer l’historique de vos messages en cas de perte d’accès à tous vos appareils, vous aurez besoin de votre code de vérification."; // Tchap
 "banner_set_up_recovery_submit" = "Obtenir un code de vérification"; // Tchap
 "banner_set_up_recovery_title" = "Sauvegarder vos discussions";
+"banner_swipe_avatar_content" = "Faites glisser votre avatar vers le haut ou vers le bas pour passer d'un compte à l'autre sans passer par les paramètres.";
+"banner_swipe_avatar_title" = "Faites glisser votre avatar pour changer de compte";
 "call_invalid_audio_device_bluetooth_devices_disabled" = "Element Call ne prend pas en charge l'utilisation d'accessoires Bluetooth dans cette version d'Android. Sélectionnez une autre sortie audio.";
 "common_about" = "À propos";
 "common_acceptable_use_policy" = "Politique d’utilisation acceptable";
+"common_account_settings" = "Paramètres du compte";
 "common_add_account" = "Ajouter un compte";
 "common_add_another_account" = "Ajouter un autre compte";
 "common_adding_caption" = "Ajout d'une légende";
@@ -226,7 +230,12 @@
 "common_an_image" = "une image";
 "common_analytics" = "Statistiques d’utilisation";
 "common_android_shortcuts_remove_reason_left_room" = "Vous avez quitté le salon";
+<<<<<<< HEAD
 "common_android_shortcuts_remove_reason_session_logged_out" = "Vous avez été déconnecté de cet appareil"; // Tchap
+=======
+"common_android_shortcuts_remove_reason_session_logged_out" = "Vous avez été déconnecté de la session";
+"common_app_settings" = "Paramètres de l'application";
+>>>>>>> release/26.10.8
 "common_appearance" = "Apparence";
 "common_audio" = "Audio";
 "common_beta" = "Bêta";
@@ -237,6 +246,8 @@
 "common_call_started" = "Appel démarré";
 "common_call_you_declined" = "Vous avez rejeté un appel";
 "common_chat_backup" = "Sauvegarde des discussions";
+"common_chats" = "Conversations";
+"common_code_block" = "Bloc de code";
 "common_copied_to_clipboard" = "Copié dans le presse-papiers";
 "common_copyright" = "Droits d’auteur";
 "common_creating_room" = "Création du salon…";
@@ -274,10 +285,12 @@
 "common_file_deleted" = "Fichier supprimé";
 "common_file_saved" = "Fichier enregistré";
 "common_forward_message" = "Transférer le message";
+"common_forward_to" = "Transférer à";
 "common_frequently_used" = "Fréquemment utilisé";
 "common_gallery" = "Galerie";
 "common_gif" = "GIF";
 "common_group_call_in_progress" = "Appel de groupe en cours";
+"common_header_rooms" = "Salons";
 "common_image" = "Image";
 "common_in_reply_to" = "En réponse à %1$@";
 "common_invite_unknown_profile" = "Cet identifiant Matrix est introuvable, il est donc possible que l’invitation ne soit pas reçue.";
@@ -290,16 +303,20 @@
 "common_live_location_ended" = "Fin de localisation en direct";
 "common_loading" = "Chargement…";
 "common_loading_more" = "Chargement…";
+"common_location_sharing" = "Partage de position";
+"common_media_upload_quality" = "Qualité d'envoi des médias";
 "common_message" = "Message";
 "common_message_actions" = "Actions sur le message";
 "common_message_failed_to_send" = "Échec de l'envoi du message";
 "common_message_layout" = "Mode d’affichage des messages";
 "common_message_removed" = "Message supprimé";
+"common_moderation_and_safety" = "Modération & sécurité";
 "common_modern" = "Moderne";
 "common_mute" = "Sourdine"; // Tchap
 "common_name" = "Nom";
 "common_name_and_id" = "%1$@ (%2$@)";
 "common_no_results" = "Aucun résultat";
+"common_no_results_for" = "Aucun résultat pour « %1$@ ». Essayez un autre terme de recherche.";
 "common_no_room_name" = "Salon sans nom";
 "common_no_space_name" = "Espace sans nom";
 "common_not_encrypted" = "Non chiffré";
@@ -338,6 +355,7 @@
 "common_replying_to" = "En réponse à %1$@";
 "common_report_a_problem" = "Remonter un problème";
 "common_report_submitted" = "Rapport soumis";
+"common_results_for" = "Résultats pour « %1$@ »";
 "common_rich_text_editor" = "Éditeur de texte enrichi";
 "common_role" = "Rôle";
 "common_room" = "Salon";
@@ -365,6 +383,7 @@
 "common_shared_live_location" = "Position en direct partagée";
 "common_shared_location" = "Position partagée";
 "common_shared_space" = "Espace partagé";
+"common_signed_in" = "Connecté";
 "common_signing_out" = "Suppression de l'appareil";
 "common_something_went_wrong" = "Une erreur s'est produite";
 "common_something_went_wrong_message" = "Nous avons rencontré un problème. Veuillez réessayer.";
@@ -376,7 +395,7 @@
 "common_success" = "Succès";
 "common_suggested" = "Recommandé";
 "common_suggestions" = "Suggestions";
-"common_switch_accounts" = "Switch accounts";
+"common_switch_accounts" = "Changer de compte";
 "common_syncing" = "Synchronisation";
 "common_text" = "Texte";
 "common_third_party_notices" = "Avis de tiers";
@@ -417,9 +436,16 @@
 "common_waiting_live_location" = "En attente de la position en temps réel…";
 "common_world_readable_history" = "Tout le monde peut voir les anciens messages";
 "common_you" = "Vous";
+<<<<<<< HEAD
 "confirm_recovery_key_banner_message" = "Confirmez votre code de vérification pour conserver l’accès à votre stockage de clés et à l’historique des messages."; // Tchap
 "confirm_recovery_key_banner_primary_button_title" = "Saisissez votre code de vérification"; // Tchap
 "confirm_recovery_key_banner_secondary_button_title" = "Code de vérification oublié ?"; // Tchap
+=======
+"common_your_account" = "Votre compte";
+"confirm_recovery_key_banner_message" = "Confirmez votre clé de récupération pour conserver l’accès à votre stockage de clés et à l’historique des messages.";
+"confirm_recovery_key_banner_primary_button_title" = "Saisissez votre clé de récupération";
+"confirm_recovery_key_banner_secondary_button_title" = "Clé de récupération oubliée ?";
+>>>>>>> release/26.10.8
 "confirm_recovery_key_banner_title" = "Le stockage de vos clés n'est pas synchronisé";
 "content_scanner_not_found" = "Téléchargement indisponible.";
 "content_scanner_not_found_title" = "Une erreur est survenue";
@@ -485,7 +511,9 @@
 "emoji_picker_category_recent" = "Emojis récents";
 "emoji_picker_category_symbols" = "Symboles";
 "emoji_picker_search_placeholder" = "Chercher des emojis";
+"error_account_already_logged_in_title" = "Connexion en double";
 "error_account_creation_not_possible" = "Votre fournisseur de compte doit être mis à jour pour prendre en charge le protocole MAS (Matrix Authentication Service) et la création de compte.";
+"error_camera_unavailable" = "The camera is not available";
 "error_failed_creating_the_permalink" = "Échec de la création du permalien";
 "error_failed_loading_map" = "%1$@ n’a pas pu charger la carte. Veuillez réessayer ultérieurement.";
 "error_failed_loading_messages" = "Échec du chargement des messages";
@@ -504,7 +532,7 @@
 "error_sending_failure_unknown" = "Erreur inconnue";
 "error_some_messages_have_not_been_sent" = "Certains messages n’ont pas été envoyés";
 "error_unknown" = "Désolé, une erreur s’est produite";
-"error.account_already_logged_in" = "Vous êtes déjà connecté sur cet appareil en tant que %1$@.";
+"error.account_already_logged_in" = "Vous êtes déjà connecté en tant que %1$@.";
 "full_screen_intent_banner_message" = "Afin de ne jamais manquer un appel important, veuillez modifier vos paramètres pour autoriser les notifications en plein écran lorsque votre appareil est verrouillé.";
 "full_screen_intent_banner_title" = "Améliorez votre expérience d'appel";
 "invite_friends_rich_title" = "🔐️ Rejoignez-moi sur %1$@";
@@ -620,8 +648,8 @@
 "screen_advanced_settings_share_presence_description" = "Si cette option est désactivée, vous ne pourrez ni envoyer ni recevoir de confirmations de lecture ni de notifications de saisie.";
 "screen_advanced_settings_show_media_timeline_always_hide" = "Toujours cacher";
 "screen_advanced_settings_show_media_timeline_always_show" = "Toujours montrer";
-"screen_advanced_settings_show_media_timeline_private_rooms" = "Dans les salons privés";
-"screen_advanced_settings_show_media_timeline_subtitle" = "Un média caché peut toujours être affiché en cliquant dessus";
+"screen_advanced_settings_show_media_timeline_private_rooms" = "Show in private rooms";
+"screen_advanced_settings_show_media_timeline_subtitle" = "Hidden media can always be shown by tapping on it.";
 "screen_advanced_settings_show_media_timeline_title" = "Afficher les médias dans les discussions.";
 "screen_advanced_settings_view_source_description" = "Activer cette option pour pouvoir voir la source des messages dans la discussion.";
 "screen_analytics_prompt_data_usage" = "Nous n’enregistrerons ni ne profilerons aucune donnée personnelle";
@@ -851,17 +879,34 @@
 "screen_edit_profile_updating_details" = "Mise à jour du profil…";
 "screen_edit_room_address_room_address_section_footer" = "Vous aurez besoin d'une adresse pour le rendre visible dans l'annuaire public.";
 "screen_edit_room_address_title" = "Modifier l'adresse";
-"screen_encryption_reset_action_continue_reset" = "Continuer la réinitialisation";
+"screen_encryption_reset_action_continue_reset" = "Continuer";
 "screen_encryption_reset_bullet_1" = "Les détails de votre compte, vos contacts, vos préférences et votre liste de discussions seront conservés";
 "screen_encryption_reset_bullet_2" = "Vous perdrez l’historique de vos messages";
+<<<<<<< HEAD
 "screen_encryption_reset_bullet_3" = "Vous devrez vérifier à nouveau tous vos appareils et tous vos contacts";
 "screen_encryption_reset_footer" = "Ne réinitialisez votre identité que si vous n'avez plus accès à aucun autre appareil et que vous avez perdu votre code de vérification."; // Tchap
+=======
+"screen_encryption_reset_bullet_3" = "Les autres utilisateurs verront que votre identité numérique a été réinitialisée.";
+"screen_encryption_reset_bullet_4" = "Tous les appareils sur lesquels vous êtes connecté devront être vérifiés à nouveau.";
+"screen_encryption_reset_footer" = "Ne réinitialisez votre identité numérique que si vous n'avez plus accès à aucun autre appareil et que vous avez perdu votre clé de récupération.";
+"screen_encryption_reset_no_chats_message" = "Il semble que vous n'ayez pas encore de conversations. Si c'est bien le cas, vous pouvez procéder en toute sécurité à la réinitialisation de votre identité numérique.";
+"screen_encryption_reset_no_options_subtitle" = "Vous n’avez accès à aucun autre appareil vérifié ni à une clé de récupération ; vous devrez donc réinitialiser votre identité numérique pour continuer à utiliser l’application.";
+"screen_encryption_reset_no_options_title" = "Vous devez réinitialiser votre identité numérique";
+"screen_encryption_reset_subtitle" = "Si vous n’avez accès à aucun autre appareil vérifié et que vous ne possédez pas votre clé de récupération, vous devrez réinitialiser votre identité numérique pour continuer à utiliser l’application.";
+>>>>>>> release/26.10.8
 "screen_encryption_reset_title" = "Vous ne pouvez pas confirmer ? Vous devez réinitialiser votre identité numérique.";
 "screen_home_tab_chats" = "Conversations";
+"screen_home_tab_search" = "Recherche";
 "screen_home_tab_spaces" = "Espaces";
 "screen_identity_confirmation_cannot_confirm" = "Confirmation impossible ?";
+<<<<<<< HEAD
 "screen_identity_confirmation_create_new_recovery_key" = "Créer un nouveau code de vérification"; // Tchap
 "screen_identity_confirmation_subtitle" = "Choisissez une méthode pour vérifier votre appareil et accéder à votre compte Tchap."; //Tchap
+=======
+"screen_identity_confirmation_create_new_recovery_key" = "Créer une nouvelle clé de récupération";
+"screen_identity_confirmation_sign_out" = "Se déconnecter";
+"screen_identity_confirmation_subtitle" = "Choisissez comment vérifier afin de configurer votre messagerie sécurisée.";
+>>>>>>> release/26.10.8
 "screen_identity_confirmation_title" = "Confirmez votre identité numérique";
 "screen_identity_confirmation_use_another_device" = "Utiliser un autre appareil"; // Tchap
 "screen_identity_confirmation_use_recovery_key" = "Utiliser le code de vérification"; // Tchap
@@ -952,10 +997,10 @@
 "screen_knock_requests_list_empty_state_title" = "Personne ne demande à rejoindre le salon";
 "screen_knock_requests_list_initial_loading_title" = "Chargement...";
 "screen_knock_requests_list_title" = "Demandes en attente";
-"screen_labs_enable_gallery" = "Gallery messages";
-"screen_labs_enable_gallery_description" = "Send multiple images or videos in one go. Stable on mobile, but not yet supported by web.";
+"screen_labs_enable_gallery" = "Gallerie d'images";
+"screen_labs_enable_gallery_description" = "Envoyez plusieurs images ou vidéos en un seul message. Fonctionne parfaitement sur mobile, mais pas encore supporté sur le web.";
 "screen_labs_enable_knocking" = "Ask to join";
-"screen_labs_enable_knocking_description" = "Users can request access to a room that is not open for anyone to join. Stable on mobile, web implementation exists but is experimental.";
+"screen_labs_enable_knocking_description" = "Les utilisateurs peuvent demander l'accès à un salon privé. Stable sur mobile, une version web existe mais est encore expérimentale.";
 "screen_labs_enable_threads" = "Activez les fils de discussion.";
 "screen_labs_enable_threads_description" = "Un changement entraînera le redémarrage de l'application.";
 "screen_labs_header_description" = "Découvrez nos dernières idées en cours de développement. Ces fonctionnalités ne sont pas encore finalisées; elles peuvent être instables et évoluer.";
@@ -1058,9 +1103,20 @@
 "screen_missing_key_backup_step_3_ios" = "Dans Sauvegarde Automatique des messages, sélectionnez Activer (ou Récupérer les messages)"; // Tchap
 "screen_missing_key_backup_step_4" = "Suivez les instructions pour activer votre sauvegarde automatique des messages (ou récupérer vos messages)"; // Tchap
 "screen_missing_key_backup_step_5" = "Revenez à %1$@";
+<<<<<<< HEAD
 "screen_missing_key_backup_title" = "Activez la sauvegarde automatique avant de continuer avec %1$@"; // Tchap
+=======
+"screen_missing_key_backup_title" = "Activez le stockage de vos clés avant de continuer avec %1$@";
+"screen_moderation_and_safety_invites_heading" = "Invitations";
+"screen_moderation_and_safety_other_users_heading" = "Autres utilisateurs";
+"screen_moderation_and_safety_share_presence_heading" = "Votre apparence";
+"screen_multi_account_announcement_action" = "Ajouter un compte";
+"screen_multi_account_announcement_description" = "Naviguer vers %1$@ pour vous connecter à un autre compte. Vous pourrez ensuite facilement passer de l'un à l'autre.";
+"screen_multi_account_announcement_title" = "Vous pouvez désormais ajouter plusieurs comptes";
+>>>>>>> release/26.10.8
 "screen_notification_optin_subtitle" = "Vous pourrez modifier vos paramètres ultérieurement.";
 "screen_notification_optin_title" = "Autorisez les notifications et ne manquez aucun message";
+"screen_notification_settings_activity_section_title" = "Activité";
 "screen_notification_settings_additional_settings_section_title" = "Réglages supplémentaires";
 "screen_notification_settings_call_ringtone_label" = "Sonnerie d'appel";
 "screen_notification_settings_calls_label" = "Appels audio et vidéo";
@@ -1087,6 +1143,8 @@
 "screen_notification_settings_mode_mentions" = "Mentions";
 "screen_notification_settings_notification_section_title" = "Prévenez-moi pour";
 "screen_notification_settings_room_mention_label" = "Un message qui contient @room";
+"screen_notification_settings_show_all_activity_subtitle" = "Puce ou nombre de messages non lus";
+"screen_notification_settings_show_all_activity_title" = "Afficher toutes les activités dans la liste des salons";
 "screen_notification_settings_sound_custom_fallback" = "Personnalisé";
 "screen_notification_settings_sound_custom_sound_button_title" = "Son personnalisé...";
 "screen_notification_settings_sound_delete_sound_error_title" = "Erreur lors de la suppression du fichier";
@@ -1129,6 +1187,8 @@
 "screen_notification_settings_system_notifications_action_required_content_link" = "paramètres du système";
 "screen_notification_settings_system_notifications_turned_off" = "Les notifications du système sont désactivées";
 "screen_notification_settings_title" = "Notifications";
+"screen_onboarding_add_account_subtitle" = "Vous pouvez ajouter plusieurs comptes à l'application et passer facilement de l'un à l'autre.";
+"screen_onboarding_add_account_title" = "Se connecter à un autre compte";
 "screen_onboarding_app_version" = "Version %1$@";
 "screen_onboarding_checking_account" = "Vérification du compte";
 "screen_onboarding_sign_in_manually" = "Se connecter"; // Tchap
@@ -1290,12 +1350,14 @@
 "screen_room_change_role_section_users" = "Membres";
 "screen_room_change_role_unsaved_changes_description" = "Vous avez des modifications non-enregistrées.";
 "screen_room_change_role_unsaved_changes_title" = "Enregistrer les changements ?";
-"screen_room_confirm_removal_message" = "Are you sure you wish to remove this message?";
-"screen_room_confirm_removal_reason_label" = "Reason (optional)";
-"screen_room_confirm_removal_reason_placeholder" = "Enter…";
-"screen_room_confirm_removal_reason_supporting_text" = "(Optional)";
-"screen_room_confirm_removal_title" = "Confirm removal";
+"screen_room_confirm_removal_reason_label" = "Raison (facultatif)";
+"screen_room_confirm_removal_reason_placeholder" = "Saisissez la raison…";
+"screen_room_confirm_removal_reason_supporting_text" = "(Facultatif)";
+"screen_room_confirm_removal_title" = "Supprimer le message ?";
 "screen_room_details_add_topic_title" = "Ajouter un sujet";
+"screen_room_details_audio_push_to_talk" = "Appuyer pour parler";
+"screen_room_details_audio_title" = "Audio du salon";
+"screen_room_details_audio_video_calls" = "Appels vidéo";
 "screen_room_details_badge_encrypted" = "Chiffré";
 "screen_room_details_badge_not_encrypted" = "Non chiffré";
 "screen_room_details_badge_public" = "Salon public";
@@ -1340,7 +1402,7 @@
 "screen_room_invite_again_alert_message" = "Souhaitez-vous inviter l’ancien membre à revenir ?";
 "screen_room_invite_again_alert_title" = "Vous êtes seul dans cette discussion";
 "screen_room_live_location_banner" = "Partage de la position en direct";
-"screen_room_maximum_messages_selected" = "Maximum messages selected";
+"screen_room_maximum_messages_selected" = "Nombre maximal de messages sélectionnés";
 "screen_room_member_details_block_alert_action" = "Bloquer";
 "screen_room_member_details_block_alert_description" = "Les membres bloqués ne pourront pas vous envoyer de messages et tous leurs messages seront masqués. Vous pouvez les débloquer à tout moment."; // Tchap
 "screen_room_member_details_block_user" = "Bloquer le membre"; // Tchap
@@ -1407,6 +1469,7 @@
 "screen_room_roles_and_permissions_room_details" = "Détails du salon";
 "screen_room_roles_and_permissions_space_details" = "Détails de l'espace";
 "screen_room_roles_and_permissions_title" = "Rôles & autorisations";
+"screen_room_select_error_cannot_load_rooms" = "Les salons de ce compte ne peuvent pas être chargés.";
 "screen_room_single_knock_request_accept_button_title" = "Accepter";
 "screen_room_single_knock_request_title" = "%1$@ souhaite rejoindre ce salon";
 "screen_room_single_knock_request_view_button_title" = "Voir";
@@ -1459,6 +1522,12 @@
 "screen_roomlist_mark_as_unread" = "Marquer comme non lu";
 "screen_roomlist_tombstoned_room_description" = "Ce salon a été mis à niveau.";
 "screen_roomlist_your_spaces" = "Vos espaces";
+"screen_search_empty_state_message" = "Rechercher des discussions et des messages";
+"screen_search_empty_state_title" = "Commencez la recherche";
+"screen_search_no_results_message" = "Aucun résultat pour « %1$@ ». Essayez un autre terme de recherche.";
+"screen_search_recent_searches" = "Recherches récentes";
+"screen_search_tab_chats" = "Salons";
+"screen_search_tab_messages" = "Messages";
 "screen_security_and_privacy_add_room_address_action" = "Ajouter une adresse";
 "screen_security_and_privacy_ask_to_join_multiple_spaces_members_option_description" = "Toute personne se trouvant dans un espace autorisé peut participer, mais toutes les autres doivent demander l'accès.";
 "screen_security_and_privacy_ask_to_join_option_description" = "Tout le monde doit demander un accès.";
@@ -1531,13 +1600,20 @@
 "screen_session_verification_request_title" = "Vérification demandée";
 "screen_session_verification_they_dont_match" = "Ils ne correspondent pas";
 "screen_session_verification_they_match" = "Ils correspondent";
-"screen_session_verification_unavailable_subtitle" = "Please use another device or recovery key.";
-"screen_session_verification_unavailable_title" = "Verification with this device is currently unavailable";
+"screen_session_verification_unavailable_subtitle" = "Veuillez utiliser un autre appareil ou la clé de récupération.";
+"screen_session_verification_unavailable_title" = "La vérification avec cet appareil est actuellement indisponible.";
 "screen_session_verification_use_another_device_subtitle" = "Assurez-vous que l'application est ouverte sur un autre appareil avant de commencer la vérification.";
 "screen_session_verification_use_another_device_title" = "Ouvrez l'application sur un autre appareil vérifié";
+<<<<<<< HEAD
 "screen_session_verification_user_initiator_subtitle" = "Pour plus de sécurité, vérifiez ce membre en comparant des émojis sur vos appareils. Pour ce faire, utilisez un moyen de communication fiable."; // Tchap
 "screen_session_verification_user_initiator_title" = "Vérifier ce membre ?"; // Tchap
 "screen_session_verification_user_responder_subtitle" = "Pour plus de sécurité, cet autre membre souhaite vérifier votre identité. Des émojis à comparer vous seront présentés."; // Tchap
+=======
+"screen_session_verification_user_initiator_subtitle" = "Pour plus de sécurité, vérifiez cet utilisateur en comparant des émojis sur vos appareils. Pour ce faire, utilisez un moyen de communication fiable.";
+"screen_session_verification_user_initiator_title" = "Vérifier cet utilisateur ?";
+"screen_session_verification_user_requesting_verification" = "Utilisateur demandant une vérification:";
+"screen_session_verification_user_responder_subtitle" = "Pour plus de sécurité, cet autre utilisateur souhaite vérifier votre identité numérique. Des émojis à comparer vous seront présentés.";
+>>>>>>> release/26.10.8
 "screen_session_verification_waiting_another_device_subtitle" = "Vous devriez voir une alerte sur l'autre appareil. Démarrez la vérification à partir de là dès maintenant.";
 "screen_session_verification_waiting_another_device_title" = "Démarrer la vérification sur l’autre appareil";
 "screen_session_verification_waiting_other_device_title" = "Démarrer la vérification sur l’autre appareil";
@@ -1545,6 +1621,7 @@
 "screen_session_verification_waiting_subtitle" = "Une fois acceptée, vous pourrez poursuivre la vérification.";
 "screen_session_verification_waiting_to_accept_subtitle" = "Pour continuer, acceptez la demande de lancement de la procédure de vérification sur votre autre appareil."; // Tchap
 "screen_session_verification_waiting_to_accept_title" = "En attente d’acceptation de la demande";
+"screen_settings_add_account" = "Ajouter un compte";
 "screen_settings_user_status_away" = "Absent";
 "screen_settings_user_status_be_right_back" = "Je reviens tout de suite";
 "screen_settings_user_status_custom" = "Personnalisé…";
@@ -1563,11 +1640,18 @@
 "screen_share_open_osm_maps" = "Ouvrir dans OpenStreetMap";
 "screen_share_this_location_action" = "Partager la position sélectionnée";
 "screen_sharing_location_option_sheet_title" = "Options de partage";
+<<<<<<< HEAD
 "screen_signed_out_reason_1" = "Le mot de passe de votre compte a été modifié sur un autre appareil";
 "screen_signed_out_reason_2" = "Cet appareil a été supprimé depuis un autre appareil"; // Tchap
 "screen_signed_out_reason_3" = "L’administrateur de votre serveur a révoqué votre accès.";
+=======
+"screen_signed_out_reason_1" = "Vous avez supprimé cet appareil de votre compte.";
+"screen_signed_out_reason_2" = "Vous avez modifié votre mot de passe sur un autre appareil";
+"screen_signed_out_reason_3" = "Votre session a expiré ou l’administrateur de votre serveur a révoqué votre accès.";
+>>>>>>> release/26.10.8
 "screen_signed_out_subtitle" = "La déconnexion peut être due à une des raisons ci-dessous. Veuillez vous connecter à nouveau pour continuer à utiliser %@.";
-"screen_signed_out_title" = "Vous avez été déconnecté";
+"screen_signed_out_subtitle_v2" = "Cet appareil a été supprimé pour l'une des raisons indiquées ci-dessous. Vous devez vous reconnecter pour associer cet appareil à votre compte.";
+"screen_signed_out_title" = "Appareil supprimé";
 "screen_signout_confirmation_dialog_content" = "Êtes-vous sûr de vouloir supprimer cet appareil ?";
 "screen_signout_confirmation_dialog_submit" = "Supprimer cet appareil";
 "screen_signout_confirmation_dialog_title" = "Supprimer cet appareil";
@@ -1578,11 +1662,19 @@
 "screen_signout_key_backup_offline_title" = "Vos clés sont en cours de sauvegarde";
 "screen_signout_key_backup_ongoing_subtitle" = "Veuillez attendre que cela se termine avant de supprimer cet appareil.";
 "screen_signout_key_backup_ongoing_title" = "Vos clés sont en cours de sauvegarde";
+"screen_signout_other_verified_device_dialog_content" = "Assurez-vous de toujours avoir accès à un autre appareil vérifié ou à votre clé de récupération afin d'éviter de perdre l'historique de vos discussions chiffrées.";
+"screen_signout_other_verified_device_dialog_title" = "Êtes-vous sûr de vouloir supprimer cet appareil ?";
 "screen_signout_preference_item" = "Supprimer cet appareil";
 "screen_signout_recovery_disabled_subtitle" = "Il s'agit de votre seul appareil. Si vous le supprimez, vous aurez besoin d'un code de vérification pour confirmer votre identité numérique et restaurer vos conversations chiffrées lors de votre prochaine connexion."; // Tchap
 "screen_signout_recovery_disabled_title" = "Vous êtes sur le point de perdre l'accès à vos conversations chiffrées.";
+<<<<<<< HEAD
 "screen_signout_save_recovery_key_subtitle" = "Il s'agit de votre seul appareil. Si vous le supprimez, vous aurez besoin d'un code de vérification pour confirmer votre identité numérique et restaurer vos conversations chiffrées lors de votre prochaine connexion."; // Tchap
 "screen_signout_save_recovery_key_title" = "Assurez-vous d'avoir accès à votre code de vérification avant de supprimer cet appareil."; // Tchap
+=======
+"screen_signout_save_recovery_key_action_continue" = "Continuez la suppression de cet appareil";
+"screen_signout_save_recovery_key_subtitle" = "Il s'agit de votre seul appareil. Si vous le supprimer, vous aurez besoin d'une clé de récupération pour confirmer votre identité numérique et restaurer vos conversations chiffrées lors de votre prochaine connexion.";
+"screen_signout_save_recovery_key_title" = "Assurez-vous d'avoir accès à votre clé de récupération avant de supprimer cet appareil.";
+>>>>>>> release/26.10.8
 "screen_space_add_room_action" = "Salon";
 "screen_space_add_rooms_room_access_description" = "Ajouter un salon ne changera pas l'accès au salon. Pour modifier l'accès, aller dans les paramètres du salon puis dans Sécurité & confidentialité.";
 "screen_space_empty_state_title" = "Aucun salon dans cet espace"; // Tchap

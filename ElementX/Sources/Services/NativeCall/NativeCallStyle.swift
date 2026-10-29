@@ -106,10 +106,13 @@ struct NativeCallIcons: ElementCallIconRenderingProtocol {
         case .micOff: \.micOffSolid
         case .videoCall: \.videoCallSolid
         case .videoCallOff: \.videoCallOffSolid
+        case .voiceCall: \.voiceCallSolid
         case .switchCamera: \.switchCameraSolid
         case .shareScreen: \.shareScreenSolid
         case .volumeOn: \.volumeOnSolid
         case .volumeOff: \.volumeOffSolid
+        case .headphones: \.headphonesSolid
+        case .bluetooth: \.bluetoothOutput
         case .raisedHand: \.raisedHandSolid
         case .userProfile: \.userProfileSolid
         case .overflow: \.overflowHorizontal
@@ -146,7 +149,7 @@ struct NativeCallAvatars: ElementCallAvatarRenderingProtocol {
         AnyView(LoadableAvatarImage(url: avatarURL,
                                     name: displayName,
                                     contentID: userID,
-                                    avatarSize: size == .thumbnail ? .user(on: .roomDetails) : .user(on: .memberDetails),
+                                    avatarSize: size == .thumbnail ? .user(on: .roomDetails) : .user(on: .call),
                                     mediaProvider: mediaProvider))
     }
 }

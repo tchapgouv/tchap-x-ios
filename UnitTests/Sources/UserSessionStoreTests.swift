@@ -52,8 +52,8 @@ struct UserSessionStoreTests {
     // MARK: - Restoration
     
     @Test
-    func restoreWithoutCredentials() async {
-        guard case .failure(.missingCredentials) = await store.restoreUserSession() else {
+    func restoreUnknownAccount() async {
+        guard case .failure(.unknownAccount) = await store.restoreUserSession(userID: "@alice:matrix.org") else {
             Issue.record("Restoration should fail when there are no credentials.")
             return
         }
@@ -66,7 +66,7 @@ struct UserSessionStoreTests {
         keychainController.restorationTokensReturnValue = [credentials]
         
         // When restoring the session.
-        guard case .failure(.failedRestoringLogin) = await store.restoreUserSession() else {
+        guard case .failure(.failedRestoringLogin) = await store.restoreUserSession(userID: credentials.userID) else {
             Issue.record("Restoration should fail when the non-transient user data is missing.")
             return
         }
@@ -79,13 +79,13 @@ struct UserSessionStoreTests {
     func restoreWhenClientCreationFails() async throws {
         // Given valid session data but a client factory that fails.
         let sessionDirectories = try makeValidSessionDirectories()
-        defer { sessionDirectories.delete() }
+        defer { try? sessionDirectories.delete() }
         let credentials = makeCredentials(sessionDirectories: sessionDirectories)
         keychainController.restorationTokensReturnValue = [credentials]
         clientFactory.makeAppClientCredentialsClientSessionDelegateAppSettingsAppHooksThrowableError = TestError.generic
         
         // When restoring the session.
-        guard case .failure(.failedRestoringLogin) = await store.restoreUserSession() else {
+        guard case .failure(.failedRestoringLogin) = await store.restoreUserSession(userID: credentials.userID) else {
             Issue.record("Restoration should fail when the client can't be created.")
             return
         }
@@ -96,18 +96,19 @@ struct UserSessionStoreTests {
     
     @Test
     func restoreSucceeds() async throws {
-        // Given valid session data and a client factory that returns a client.
+        // Given valid session data for Alice, stored after another account.
         let sessionDirectories = try makeValidSessionDirectories()
-        defer { sessionDirectories.delete() }
-        keychainController.restorationTokensReturnValue = [makeCredentials(sessionDirectories: sessionDirectories)]
+        defer { try? sessionDirectories.delete() }
+        keychainController.restorationTokensReturnValue = [makeCredentials(sessionDirectories: .init(), userID: "@bob:matrix.org"),
+                                                           makeCredentials(sessionDirectories: sessionDirectories)]
         
-        // When restoring the session.
-        guard case .success(let userSession) = await store.restoreUserSession() else {
+        // When restoring Alice's session.
+        guard case .success(let userSession) = await store.restoreUserSession(userID: "@alice:matrix.org") else {
             Issue.record("Restoration should succeed.")
             return
         }
         
-        // Then a user session should be built for the restored client.
+        // Then a user session should be built for Alice's client.
         #expect(userSession.clientProxy.userID == "@alice:matrix.org")
     }
     
@@ -120,7 +121,7 @@ struct UserSessionStoreTests {
         let sessionDirectories = SessionDirectories()
         
         // When creating a user session for it.
-        guard case .success(let userSession) = await store.userSession(for: client, sessionDirectories: sessionDirectories, passphrase: "passphrase") else {
+        guard case .success(let userSession) = await store.userSession(for: client, sessionDirectories: sessionDirectories, passphrase: RestorationTokenFixtures.passphrase) else {
             Issue.record("Creating the session should succeed.")
             return
         }
@@ -128,7 +129,7 @@ struct UserSessionStoreTests {
         // Then the session should be built and its restoration token persisted.
         #expect(userSession.clientProxy.userID == "@alice:matrix.org")
         #expect(keychainController.setRestorationTokenForUsernameReceivedArguments?.forUsername == "@alice:matrix.org")
-        #expect(keychainController.setRestorationTokenForUsernameReceivedArguments?.restorationToken.passphrase == "passphrase")
+        #expect(keychainController.setRestorationTokenForUsernameReceivedArguments?.restorationToken.passphrase == RestorationTokenFixtures.passphrase)
     }
     
     @Test
@@ -138,7 +139,7 @@ struct UserSessionStoreTests {
         client.sessionThrowableError = TestError.generic
         
         // When creating a user session for it.
-        guard case .failure(.failedSettingUpSession) = await store.userSession(for: client, sessionDirectories: .init(), passphrase: "passphrase") else {
+        guard case .failure(.failedSettingUpSession) = await store.userSession(for: client, sessionDirectories: .init(), passphrase: RestorationTokenFixtures.passphrase) else {
             Issue.record("Creating the session should fail.")
             return
         }
@@ -183,7 +184,7 @@ struct UserSessionStoreTests {
                               slidingSyncVersion: .native)
         let restorationToken = RestorationToken(session: session,
                                                 sessionDirectories: sessionDirectories,
-                                                passphrase: "passphrase",
+                                                passphrase: RestorationTokenFixtures.passphrase,
                                                 pusherNotificationClientIdentifier: nil)
         return KeychainCredentials(userID: userID, restorationToken: restorationToken)
     }

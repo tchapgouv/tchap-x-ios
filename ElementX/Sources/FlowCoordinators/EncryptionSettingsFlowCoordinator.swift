@@ -17,16 +17,13 @@ enum EncryptionSettingsFlowCoordinatorAction: Equatable {
 
 struct EncryptionSettingsFlowCoordinatorParameters {
     let userSession: UserSessionProtocol
-    let appSettings: AppSettings
-    let appHooks: AppHooks
     let userIndicatorController: UserIndicatorControllerProtocol
     let navigationStackCoordinator: NavigationStackCoordinator
 }
 
 class EncryptionSettingsFlowCoordinator: FlowCoordinatorProtocol {
     private let userSession: UserSessionProtocol
-    private let appSettings: AppSettings
-    private let appHooks: AppHooks
+    private let userSettings: UserSettings
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let navigationStackCoordinator: NavigationStackCoordinator
     
@@ -66,8 +63,7 @@ class EncryptionSettingsFlowCoordinator: FlowCoordinatorProtocol {
     
     init(parameters: EncryptionSettingsFlowCoordinatorParameters) {
         userSession = parameters.userSession
-        appSettings = parameters.appSettings
-        appHooks = parameters.appHooks
+        userSettings = parameters.userSession.userSettings
         userIndicatorController = parameters.userIndicatorController
         navigationStackCoordinator = parameters.navigationStackCoordinator
         
@@ -139,7 +135,7 @@ class EncryptionSettingsFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private func presentSecureBackupScreen(animated: Bool = true) {
-        let coordinator = SecureBackupScreenCoordinator(parameters: .init(appSettings: appSettings,
+        let coordinator = SecureBackupScreenCoordinator(parameters: .init(userSettings: userSettings,
                                                                           clientProxy: userSession.clientProxy,
                                                                           userIndicatorController: userIndicatorController))
         coordinator.actions.sink { [weak self] action in
@@ -164,8 +160,7 @@ class EncryptionSettingsFlowCoordinator: FlowCoordinatorProtocol {
         let parameters = SecureBackupRecoveryKeyScreenCoordinatorParameters(secureBackupController: userSession.clientProxy.secureBackupController,
                                                                             userIndicatorController: userIndicatorController,
                                                                             isModallyPresented: true)
-        let coordinator = appHooks.recoveryKeyScreenHook.makeCoordinator(parameters: parameters,
-                                                                         homeserver: userSession.clientProxy.homeserver)
+        let coordinator = userSession.userHooks.recoveryKeyScreenHook.makeCoordinator(parameters: parameters)
         
         coordinator.actions.sink { [weak self] action in
             guard let self else { return }

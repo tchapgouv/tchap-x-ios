@@ -61,7 +61,7 @@ struct SessionDirectoriesTests {
         #expect(fileManager.directoryExists(at: sessionDirectories.cacheDirectory))
         
         // When deleting the directories.
-        sessionDirectories.delete()
+        try? sessionDirectories.delete()
         
         // Then neither directory should exist on disk.
         #expect(!fileManager.directoryExists(at: sessionDirectories.dataDirectory))
@@ -85,7 +85,7 @@ struct SessionDirectoriesTests {
         #expect(try fileManager.numberOfItems(at: sessionDirectories.cacheDirectory) == 3)
         
         // When deleting transient user data.
-        sessionDirectories.deleteTransientUserData()
+        try? sessionDirectories.deleteTransientUserData()
         
         // Then the data directory should only contain the crypto store and the cache directory should remain but be empty.
         #expect(fileManager.directoryExists(at: sessionDirectories.dataDirectory))
@@ -98,6 +98,6 @@ struct SessionDirectoriesTests {
         #expect(!fileManager.fileExists(atPath: sessionDirectories.mockEventCachePath))
         
         // The tests are done, tidy up these useless directories 🧹
-        sessionDirectories.delete()
+        try? sessionDirectories.delete()
     }
 }

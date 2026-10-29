@@ -13,7 +13,6 @@ struct JoinRoomScreenCoordinatorParameters {
     let source: JoinRoomScreenSource
     let userSession: UserSessionProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
-    let appSettings: AppSettings
 }
 
 enum JoinRoomScreenSource {
@@ -53,7 +52,6 @@ final class JoinRoomScreenCoordinator: CoordinatorProtocol {
     
     init(parameters: JoinRoomScreenCoordinatorParameters) {
         viewModel = JoinRoomScreenViewModel(source: parameters.source,
-                                            appSettings: parameters.appSettings,
                                             userSession: parameters.userSession,
                                             userIndicatorController: parameters.userIndicatorController)
     }

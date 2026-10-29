@@ -15,11 +15,11 @@ typealias HomeScreenViewModelType = StateStoreViewModel<HomeScreenViewState, Hom
 
 class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol {
     private let userSession: UserSessionProtocol
+    private let availableSessionsPublisher: CurrentValuePublisher<[UserSessionDetails], Never>
     private let spaceFilterSubject: CurrentValueSubject<SpaceServiceFilter?, Never>
     private let analyticsService: AnalyticsServiceProtocol
     private let bugReportService: BugReportServiceProtocol
-    private let appSettings: AppSettings
-    private let notificationManager: NotificationManagerProtocol
+    private let userSettings: UserSettings
     private let userIndicatorController: UserIndicatorControllerProtocol
     
     private let roomSummaryProvider: RoomSummaryProviderProtocol?
@@ -31,17 +31,16 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
     
     // swiftlint:disable:next function_body_length
     init(userSession: UserSessionProtocol,
+         availableSessionsPublisher: CurrentValuePublisher<[UserSessionDetails], Never>,
          selectedRoomPublisher: CurrentValuePublisher<String?, Never>,
-         appSettings: AppSettings,
          analyticsService: AnalyticsServiceProtocol,
          bugReportService: BugReportServiceProtocol,
-         notificationManager: NotificationManagerProtocol,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.userSession = userSession
+        self.availableSessionsPublisher = availableSessionsPublisher
         self.analyticsService = analyticsService
         self.bugReportService = bugReportService
-        self.appSettings = appSettings
-        self.notificationManager = notificationManager
+        userSettings = userSession.userSettings
         self.userIndicatorController = userIndicatorController
         
         spaceFilterSubject = CurrentValueSubject<SpaceServiceFilter?, Never>(nil)
@@ -51,10 +50,14 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         //       super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
         //                                         bindings: .init(filtersState: .init(appSettings: appSettings))),
         super.init(initialViewState: .init(userProfile: userSession.clientProxy.userProfilePublisher.value,
+<<<<<<< HEAD
                                            bindings: .init(filtersState: .init(appSettings: appSettings)), tchapServiceStatusURL: appSettings.tchapServiceStatusURL),
+=======
+                                           bindings: .init(filtersState: .init(userSettings: userSession.userSettings))),
+>>>>>>> release/26.10.8
                    mediaProvider: userSession.mediaProvider)
         
-        if appSettings.globalSearchEnabled, #available(iOS 26.0, *) {
+        if userSettings.app.globalSearchEnabled {
             state.isRoomListSearchEnabled = false
         }
         
@@ -123,25 +126,21 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             .weakAssign(to: \.state.selectedRoomID, on: self)
             .store(in: &cancellables)
         
-        appSettings.roomListActivityVisibilityPublisher
-            .sink { [weak self] value in
-                self?.state.roomListActivityVisibility = value
-                self?.updateRooms()
-            }
-            .store(in: &cancellables)
-        
-        appSettings.roomListNotificationCountEnabledPublisher
-            .weakAssign(to: \.state.roomListNotificationCountEnabled, on: self)
-            .store(in: &cancellables)
-        
-        appSettings.seenInvitesPublisher
+        userSettings.account.showAllRoomListActivityPublisher
             .removeDuplicates()
             .sink { [weak self] _ in
                 self?.updateRooms()
             }
             .store(in: &cancellables)
         
-        appSettings.hasSeenNewSoundBannerPublisher
+        userSettings.account.seenInvitesPublisher
+            .removeDuplicates()
+            .sink { [weak self] _ in
+                self?.updateRooms()
+            }
+            .store(in: &cancellables)
+        
+        userSettings.app.hasSeenNewSoundBannerPublisher
             .sink { [weak self] hasSeenNewSoundBanner in
                 self?.state.shouldShowNewSoundBanner = !hasSeenNewSoundBanner
             }
@@ -195,6 +194,13 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             updateRoomListMode(with: roomSummaryProvider.statePublisher.value,
                                hasRooms: !roomSummaryProvider.roomListPublisher.value.isEmpty)
         }
+        
+        // Fall back to the skeletons if the cached rooms take too long to publish.
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(500))
+            guard let self, state.roomListMode == .awaitingCachedRooms else { return }
+            state.roomListMode = .skeletons
+        }
     }
     
     // MARK: - Public
@@ -229,7 +235,15 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         case .skipRecoveryKeyConfirmation:
             state.securityBannerMode = .dismissed
         case .dismissNewSoundBanner:
-            appSettings.hasSeenNewSoundBanner = true
+            userSettings.app.hasSeenNewSoundBanner = true
+        case .screenAppeared:
+            // Use a task otherwise the presentation isn't animated.
+            Task { presentMultiAccountAnnouncementIfNeeded() }
+        case .multiAccountAnnouncementAppeared:
+            MXLog.info("The multi-account announcement has been seen.")
+            userSettings.app.hasSeenMultiAccountAnnouncement = true
+        case .dismissMultiAccountAnnouncement, .addAccount: // There is no add account flow to start yet.
+            state.bindings.isPresentingMultiAccountAnnouncement = false
         case .updateVisibleItemRange(let range):
             roomSummaryProvider?.updateVisibleRange(range)
         case .startChat:
@@ -279,7 +293,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                 case .success:
                     analyticsService.trackInteraction(name: .MobileRoomListRoomContextMenuUnreadToggle)
                     
-                    if case .failure(let error) = await roomProxy.markAsRead(receiptType: appSettings.sharePresence ? .read : .readPrivate) {
+                    if case .failure(let error) = await roomProxy.markAsRead(receiptType: userSettings.account.sharePresence ? .read : .readPrivate) {
                         MXLog.error("Failed marking room \(roomIdentifier) as read with error: \(error)")
                     }
                 case .failure(let error):
@@ -302,13 +316,13 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
     // perphery: ignore - used in release mode
     func presentCrashedLastRunAlert() {
         // Delay setting the alert otherwise it automatically gets dismissed. Same as the force logout one.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.state.bindings.alertInfo = AlertInfo(id: UUID(),
-                                                      title: L10n.crashDetectionDialogContent(InfoPlistReader.main.bundleDisplayName),
-                                                      primaryButton: .init(title: L10n.actionNo, action: nil),
-                                                      secondaryButton: .init(title: L10n.actionYes) { [weak self] in
-                                                          self?.actionsSubject.send(.presentFeedbackScreen)
-                                                      })
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [self] in
+            state.bindings.alertInfo = AlertInfo(id: UUID(),
+                                                 title: L10n.crashDetectionDialogContent(InfoPlistReader.main.bundleDisplayName),
+                                                 primaryButton: .init(title: L10n.actionNo, action: nil),
+                                                 secondaryButton: .init(title: L10n.actionYes) { [weak self] in
+                                                     self?.actionsSubject.send(.presentFeedbackScreen)
+                                                 })
         }
     }
     
@@ -353,14 +367,16 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
     }
     
     private func updateRoomListMode(with roomSummaryProviderState: RoomSummaryProviderState, hasRooms: Bool) {
+        let isFiltering = state.bindings.filtersState.isFiltering || state.selectedSpaceFilter != nil || state.bindings.isSearchFieldFocused
+        
         let roomListMode: HomeScreenRoomListMode = if !roomSummaryProviderState.isLoaded {
             .skeletons // Still loading.
         } else if roomSummaryProviderState.totalNumberOfRooms == 0 {
             .empty // Loaded, there are no rooms at all.
-        } else if hasRooms {
-            .rooms // Loaded and the summaries have published.
-        } else if state.roomListMode == .skeletons {
-            .skeletons // Loaded but nothing published yet, flipping to .rooms would flash an empty list.
+        } else if hasRooms || isFiltering {
+            .rooms // Loaded and the summaries have published (or filtered down to nothing).
+        } else if state.roomListMode == .skeletons || state.roomListMode == .awaitingCachedRooms {
+            state.roomListMode // Loaded but nothing published yet, flipping to .rooms would flash an empty list.
         } else {
             .rooms
         }
@@ -369,7 +385,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             return
         }
         
-        if roomListMode == .rooms, state.roomListMode == .skeletons {
+        if roomListMode == .rooms, state.roomListMode == .skeletons || state.roomListMode == .awaitingCachedRooms {
             analyticsService.signpost.finishTransaction(.cachedRoomList)
         }
         
@@ -391,11 +407,11 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         }
         
         var rooms = [HomeScreenRoom]()
-        let seenInvites = appSettings.seenInvites
+        let seenInvites = userSettings.account.seenInvites
         
         for summary in roomSummaryProvider.roomListPublisher.value {
             let room = HomeScreenRoom(summary: summary,
-                                      roomListActivityVisibility: appSettings.roomListActivityVisibility,
+                                      showAllActivity: userSettings.account.showAllRoomListActivity,
                                       seenInvites: seenInvites)
             rooms.append(room)
         }
@@ -420,7 +436,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
     private static let leaveRoomLoadingID = "LeaveRoomLoading"
     
     private func startLeaveRoomProcess(roomID: String) {
-        Task {
+        Task { [self] in
             defer {
                 userIndicatorController.retractIndicatorWithId(Self.leaveRoomLoadingID)
             }
@@ -486,6 +502,27 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         actionsSubject.send(.roomLeft(roomIdentifier: roomID))
     }
     
+    // MARK: Multi-account announcement
+    
+    private func presentMultiAccountAnnouncementIfNeeded() {
+        // Never announce it to someone who already uses several accounts, even once they've removed some.
+        if availableSessionsPublisher.value.count > 1, !userSettings.app.hasSeenMultiAccountAnnouncement {
+            MXLog.info("Several accounts are signed in, marking the multi-account announcement as seen.")
+            userSettings.app.hasSeenMultiAccountAnnouncement = true
+        }
+        
+        // An unverified session gets the identity confirmation cover first, the room list appears again once it's dismissed.
+        guard userSettings.app.multiAccountEnabled,
+              !userSettings.app.hasSeenMultiAccountAnnouncement,
+              userSession.sessionSecurityStatePublisher.value.verificationState == .verified,
+              !state.bindings.isPresentingMultiAccountAnnouncement else {
+            return
+        }
+        
+        MXLog.info("Presenting the multi-account announcement.")
+        state.bindings.isPresentingMultiAccountAnnouncement = true
+    }
+    
     // MARK: Invites
     
     private func acceptInvite(roomID: String) async {
@@ -532,7 +569,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         analyticsService.trackJoinedRoom(isDM: roomProxy.info.isDirect,
                                          isSpace: roomProxy.info.isSpace,
                                          activeMemberCount: UInt(roomProxy.info.activeMembersCount))
-        appSettings.seenInvites.remove(roomProxy.id)
+        userSettings.account.seenInvites.remove(roomProxy.id)
     }
     
     private func showDeclineInviteConfirmationAlert(roomID: String) async {
@@ -581,8 +618,8 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         
         switch result {
         case .success:
-            await notificationManager.removeDeliveredMessageNotifications(for: roomID) // Normally handled by the room flow, but that's never presented in this case.
-            appSettings.seenInvites.remove(roomID)
+            userSession.notificationService.removeDeliveredMessageNotifications(for: roomID) // Normally handled by the room flow, but that's never presented in this case.
+            userSettings.account.seenInvites.remove(roomID)
         case .failure:
             displayError()
         }

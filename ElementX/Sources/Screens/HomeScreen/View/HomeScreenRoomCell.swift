@@ -8,6 +8,7 @@
 
 import Combine
 import Compound
+import MatrixRustSDKMocks
 import SwiftUI
 
 struct HomeScreenRoomCell: View {
@@ -15,8 +16,6 @@ struct HomeScreenRoomCell: View {
     @Environment(\.redactionReasons) private var redactionReasons
     
     let room: HomeScreenRoom
-    var roomListActivityVisibility: RoomListActivityVisibility = .current
-    var roomListNotificationCountEnabled = false
     let isSelected: Bool
     let mediaProvider: MediaProviderProtocol!
     let action: (HomeScreenViewAction) -> Void
@@ -83,7 +82,7 @@ struct HomeScreenRoomCell: View {
                     Text(String(statusEmoji))
                 }
             }
-            .font(headerFont)
+            .font(.compound.bodyLGSemibold)
             .foregroundColor(.compound.textPrimary)
             .frame(maxWidth: .infinity, alignment: .leading)
             
@@ -92,17 +91,6 @@ struct HomeScreenRoomCell: View {
                     .font(room.isHighlighted ? .compound.bodySMSemibold : .compound.bodySM)
                     .foregroundColor(room.isHighlighted ? .compound.textActionAccent : .compound.textSecondary)
             }
-        }
-    }
-    
-    private var headerFont: Font {
-        switch roomListActivityVisibility {
-        case .current:
-            .compound.bodyLGSemibold
-        case .show:
-            room.hasUnreads ? .compound.bodyLGSemibold : .compound.bodyLG
-        case .hide:
-            room.isHighlighted ? .compound.bodyLGSemibold : .compound.bodyLG
         }
     }
     
@@ -158,14 +146,8 @@ struct HomeScreenRoomCell: View {
                 }
                 
                 if room.badges.isDotShown {
-                    if roomListNotificationCountEnabled, room.isHighlighted, room.badges.notificationCount > 0 {
-                        Text(formattedNotificationCount)
-                            .font(.compound.bodySMSemibold)
-                            .foregroundColor(.compound.textOnSolidPrimary)
-                            .lineLimit(1)
-                            .padding(.horizontal, 6)
-                            .frame(minWidth: 20, minHeight: 20)
-                            .background(.compound.iconAccentTertiary, in: .capsule)
+                    if room.isHighlighted, room.badges.notificationCount > 0 {
+                        NotificationCountBadge(count: Int(room.badges.notificationCount))
                             .accessibilityLabel(L10n.a11yNotificationsNewMessages)
                     } else {
                         Circle()
@@ -174,7 +156,7 @@ struct HomeScreenRoomCell: View {
                     }
                 }
             }
-            .foregroundColor(room.isHighlighted ? .compound.iconAccentTertiary : .compound.iconQuaternary)
+            .foregroundColor(room.isHighlighted ? .compound.iconAccentPrimary : .compound.iconQuaternary)
         }
     }
     
@@ -183,27 +165,12 @@ struct HomeScreenRoomCell: View {
             .accessibilityLabel(L10n.a11yNotificationsNewMentions)
     }
     
-    private var formattedNotificationCount: String {
-        room.badges.notificationCount > 99 ? "99+" : "\(room.badges.notificationCount)"
-    }
-    
     @ViewBuilder
     private var lastMessage: some View {
         if let displayedLastMessage = room.displayedLastMessage {
             Text(displayedLastMessage)
-                .font(lastMessageFont)
+                .font(.compound.bodyMD)
                 .lastMessageFormatting(hasFailed: room.lastMessageState == .failed)
-        }
-    }
-    
-    private var lastMessageFont: Font {
-        switch roomListActivityVisibility {
-        case .current:
-            .compound.bodyMD
-        case .show:
-            room.hasUnreads ? .compound.bodyMDSemibold : .compound.bodyMD
-        case .hide:
-            room.isHighlighted ? .compound.bodyMDSemibold : .compound.bodyMD
         }
     }
 }
@@ -229,8 +196,6 @@ private extension View {
 
 // MARK: - Previews
 
-import MatrixRustSDKMocks
-
 struct HomeScreenRoomCell_Previews: PreviewProvider, TestablePreview {
     static let summaryProviderGeneric = RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))
     static let genericRooms = summaryProviderGeneric.roomListPublisher.value.compactMap { mockRoom(summary: $0) }
@@ -255,7 +220,7 @@ struct HomeScreenRoomCell_Previews: PreviewProvider, TestablePreview {
         
         VStack(spacing: 0) {
             ForEach(notificationsStateRooms) { room in
-                HomeScreenRoomCell(room: room, roomListNotificationCountEnabled: true, isSelected: false, mediaProvider: MediaProviderMock(.init())) { _ in }
+                HomeScreenRoomCell(room: room, isSelected: false, mediaProvider: MediaProviderMock(.init())) { _ in }
             }
         }
         .previewLayout(.sizeThatFits)
@@ -292,6 +257,7 @@ struct HomeScreenRoomCell_Previews: PreviewProvider, TestablePreview {
         let summary = RoomSummary(room: RoomSDKMock(),
                                   id: UUID().uuidString,
                                   joinRequestType: nil,
+                                  isJoined: true,
                                   name: name,
                                   isDirect: heroes.count == 1,
                                   isSpace: false,

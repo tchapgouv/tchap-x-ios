@@ -28,7 +28,7 @@ struct HomeScreenContent: View {
         GeometryReader { geometry in
             ScrollView {
                 switch context.viewState.roomListMode {
-                case .skeletons:
+                case .awaitingCachedRooms, .skeletons:
                     LazyVStack(spacing: 0) {
                         ForEach(context.viewState.visibleRooms) { room in
                             HomeScreenRoomCell(room: room, isSelected: false, mediaProvider: context.mediaProvider, action: context.send)
@@ -37,6 +37,8 @@ struct HomeScreenContent: View {
                         }
                     }
                     .disabled(true)
+                    // Laid out but hidden while awaiting so the rooms replace it without a growing animation.
+                    .opacity(context.viewState.roomListMode == .awaitingCachedRooms ? 0 : 1)
                     .accessibilityRepresentation {
                         Text(L10n.commonLoading)
                     }
@@ -106,7 +108,7 @@ struct HomeScreenContent: View {
                 }
             }
             .scrollDismissesKeyboard(.immediately)
-            .scrollDisabled(context.viewState.roomListMode == .skeletons)
+            .scrollDisabled(context.viewState.roomListMode == .skeletons || context.viewState.roomListMode == .awaitingCachedRooms)
             .scrollBounceBehavior(context.viewState.roomListMode == .empty ? .basedOnSize : .automatic)
             .animation(.elementDefault, value: context.viewState.roomListMode)
             .animation(.none, value: context.viewState.visibleRooms)

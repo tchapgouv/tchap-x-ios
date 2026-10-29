@@ -21,7 +21,7 @@ final class MediaUploadPreviewScreenViewModelTests {
     var timelineProxy: TimelineProxyMock!
     var clientProxy: ClientProxyMock!
     var userIndicatorController: UserIndicatorControllerMock
-    private let appSettings: AppSettings
+    private let userSettings: UserSettings
     
     var viewModel: MediaUploadPreviewScreenViewModel!
     var context: MediaUploadPreviewScreenViewModel.Context {
@@ -34,10 +34,39 @@ final class MediaUploadPreviewScreenViewModelTests {
     }
     
     init() {
-        appSettings = AppSettings.volatile()
-        appSettings.optimizeMediaUploads = false
+        userSettings = UserSettings.mock()
+        userSettings.app.optimizeMediaUploads = false
         
         userIndicatorController = UserIndicatorControllerMock()
+    }
+    
+    @Test
+    func cancelWhileSendWaitsForPreparation() async throws {
+        // Given a screen whose media preparation is still running.
+        let (startedStream, startedContinuation) = AsyncStream<Void>.makeStream()
+        let (resumeStream, resumeContinuation) = AsyncStream<Void>.makeStream()
+        defer { resumeContinuation.finish() }
+        
+        let preparationStarted = deferFulfillment(startedStream) { _ in true }
+        setUpViewModel(urls: [imageURL], expectedCaption: nil) {
+            startedContinuation.yield()
+            var iterator = resumeStream.makeAsyncIterator()
+            _ = await iterator.next() // Only returns once the preparation is cancelled.
+            return .success(100 * 1024 * 1024)
+        }
+        try await preparationStarted.fulfill()
+        
+        // When sending and then dismissing the screen before the preparation finishes.
+        context.send(viewAction: .send)
+        let loadingFinished = deferFulfillment(context.observe(\.viewState.shouldDisableInteraction)) { !$0 }
+        context.send(viewAction: .cancel)
+        viewModel.stopProcessing() // Called by the coordinator when the screen is dismissed.
+        try await loadingFinished.fulfill()
+        
+        // Then nothing is sent and no error is shown.
+        #expect(timelineProxy.sendImageUrlThumbnailURLImageInfoCaptionRequestHandleCallsCount == 0)
+        #expect(userIndicatorController.submitIndicatorDelayCallsCount == 1, "Only the loading indicator should be shown")
+        #expect(context.viewState.bindings.alertInfo == nil)
     }
     
     @Test
@@ -299,7 +328,8 @@ final class MediaUploadPreviewScreenViewModelTests {
                                 expectedCaption: String?,
                                 maxUploadSizeResult: Result<UInt, ClientProxyError>? = nil,
                                 simulateGallerySendFailure: Bool = false,
-                                galleryEnabled: Bool = true) {
+                                galleryEnabled: Bool = true,
+                                maxUploadSizeClosure: (() async -> Result<UInt, ClientProxyError>)? = nil) {
         timelineProxy = TimelineProxyMock(.init())
         timelineProxy.sendAudioUrlAudioInfoCaptionRequestHandleClosure = { [weak self] _, _, caption, _ in
             self?.verifyCaption(caption, expectedCaption: expectedCaption) ?? .failure(.sdkError(TestError.unknown))
@@ -322,13 +352,14 @@ final class MediaUploadPreviewScreenViewModelTests {
         if let maxUploadSizeResult {
             clientProxy.underlyingMaxMediaUploadSize = maxUploadSizeResult
         }
+        clientProxy.maxMediaUploadSizeClosure = maxUploadSizeClosure
         
         viewModel = MediaUploadPreviewScreenViewModel(mediaURLs: urls,
                                                       caption: nil,
                                                       title: "Some File",
                                                       shouldShowCaptionWarning: true,
                                                       galleryEnabled: galleryEnabled,
-                                                      mediaUploadingPreprocessor: MediaUploadingPreprocessor(appSettings: appSettings),
+                                                      mediaUploadingPreprocessor: MediaUploadingPreprocessor(userSettings: userSettings),
                                                       timelineController: TimelineControllerMock(.init(timelineProxy: timelineProxy)),
                                                       clientProxy: clientProxy,
                                                       userIndicatorController: userIndicatorController)

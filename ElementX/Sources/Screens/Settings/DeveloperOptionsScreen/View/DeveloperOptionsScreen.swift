@@ -54,24 +54,17 @@ struct DeveloperOptionsScreen: View {
                     Text("Moves search to a separate tab")
                 }
                 
-                context.viewState.appHooks
-                    .developerOptionsScreenHook
-                    .generalSectionRows(isSignedIn: context.viewState.isSignedIn)
+                context.viewState.screenHook.generalSectionRows()
+            }
+            
+            Section("Accounts") {
+                Toggle(isOn: $context.multiAccountEnabled) {
+                    Text("Multi-account")
+                    Text("Switching it on shows the announcement again.")
+                }
             }
             
             Section("Room List") {
-                Picker("Room list activity visibility", selection: $context.roomListActivityVisibility) {
-                    ForEach(RoomListActivityVisibility.allCases, id: \.self) { visibility in
-                        Text(visibility.rawValue.capitalized)
-                            .tag(visibility)
-                    }
-                }
-                
-                Toggle(isOn: $context.roomListNotificationCountEnabled) {
-                    Text("Show unread notification count")
-                    Text("Also makes the app icon badge use the SDK's own unread notification count")
-                }
-                
                 Toggle(isOn: $context.fuzzyRoomListSearchEnabled) {
                     Text("Fuzzy searching")
                 }
@@ -82,11 +75,6 @@ struct DeveloperOptionsScreen: View {
                 
                 Toggle(isOn: $context.mentionsFilterEnabled) {
                     Text("Mentions filter")
-                }
-                
-                Toggle(isOn: $context.automaticBackPaginationEnabled) {
-                    Text("Automatic back pagination")
-                    Text("Requires app reboot")
                 }
             }
             
@@ -101,11 +89,6 @@ struct DeveloperOptionsScreen: View {
                 Toggle(isOn: $context.jumpToReadMarkerEnabled) {
                     Text("Jump to unread")
                     Text("Adds a button to jump to the read marker, plus a presence dot on the scroll-to-bottom button when new messages arrive while scrolled away.")
-                }
-                
-                Toggle(isOn: $context.messageMultiSelectEnabled) {
-                    Text("Multi-select messages")
-                    Text("Adds a Select action to the message menu to pick several messages at once.")
                 }
             }
             
@@ -183,7 +166,7 @@ struct DeveloperOptionsScreen: View {
                 }
             }
             
-            if context.viewState.shouldShowClearCache {
+            if context.viewState.isSignedIn {
                 Section {
                     Button(role: .destructive) {
                         context.send(viewAction: .clearCache)
@@ -267,7 +250,7 @@ private extension Set<TraceLogPack> {
 
 struct DeveloperOptionsScreen_Previews: PreviewProvider {
     static let viewModel = DeveloperOptionsScreenViewModel(developerOptions: AppSettings.volatile(),
-                                                           appHooks: AppHooks(),
+                                                           screenHook: DefaultDeveloperOptionsScreenHook(),
                                                            clientProxy: ClientProxyMock(.init()))
     
     static var previews: some View {

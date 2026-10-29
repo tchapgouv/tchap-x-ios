@@ -17,7 +17,7 @@ class TimelineController: TimelineControllerProtocol {
     private let liveTimelineItemProvider: TimelineItemProviderProtocol
     private let timelineItemFactory: RoomTimelineItemFactoryProtocol
     private let mediaProvider: MediaProviderProtocol
-    private let appSettings: AppSettings
+    private let userSettings: UserSettings
     
     let callbacks = PassthroughSubject<TimelineControllerCallback, Never>()
     
@@ -51,19 +51,20 @@ class TimelineController: TimelineControllerProtocol {
          initialFocussedEventID: String?,
          timelineItemFactory: RoomTimelineItemFactoryProtocol,
          mediaProvider: MediaProviderProtocol,
-         appSettings: AppSettings,
+         userSettings: UserSettings,
          allowedGalleryItemTypes: [TimelineAllowedGalleryItemType]? = nil) {
         self.allowedGalleryItemTypes = allowedGalleryItemTypes
         self.roomProxy = roomProxy
         liveTimelineItemProvider = timelineProxy.timelineItemProvider
         self.timelineItemFactory = timelineItemFactory
         self.mediaProvider = mediaProvider
-        self.appSettings = appSettings
+        self.userSettings = userSettings
         
         activeTimeline = timelineProxy
         activeTimelineItemProvider = liveTimelineItemProvider
         
-        guard let initialFocussedEventID else {
+        // No need for a detached timeline when the live one has already loaded the event.
+        guard let initialFocussedEventID, !liveTimelineItemProvider.containsEvent(initialFocussedEventID) else {
             configureActiveTimelineItemProvider()
             return
         }
@@ -127,7 +128,7 @@ class TimelineController: TimelineControllerProtocol {
     }
     
     func sendReadReceipt(for itemID: TimelineItemIdentifier) async {
-        let receiptType: MatrixRustSDK.ReceiptType = appSettings.sharePresence ? .read : .readPrivate
+        let receiptType: MatrixRustSDK.ReceiptType = userSettings.account.sharePresence ? .read : .readPrivate
         
         guard let eventID = itemID.eventID else {
             return
@@ -286,6 +287,53 @@ class TimelineController: TimelineControllerProtocol {
         }
         
         return nil
+    }
+    
+    func pendingSendTarget(for itemID: TimelineItemIdentifier) -> SendTarget? {
+        for timelineItemProxy in activeTimelineItemProvider.itemProxies {
+            switch timelineItemProxy {
+            case .event(let item):
+                if item.id == itemID {
+                    return item.pendingSend?.target
+                }
+            default:
+                continue
+            }
+        }
+        
+        return nil
+    }
+    
+    func retrySend(_ itemID: TimelineItemIdentifier, target: SendTarget) async {
+        guard let eventOrTransactionID = itemID.eventOrTransactionID else {
+            MXLog.error("Cannot retry sending on \(itemID).")
+            return
+        }
+        
+        MXLog.info("Retry \(target) send in \(roomID)")
+        
+        switch await activeTimeline.retrySend(eventOrTransactionID, target: target) {
+        case .success(let hadPendingSend):
+            MXLog.info("Finished retrying send, had one pending: \(hadPendingSend)")
+        case .failure(let error):
+            MXLog.error("Failed retrying send with error: \(error)")
+        }
+    }
+    
+    func abortSend(_ itemID: TimelineItemIdentifier, target: SendTarget) async {
+        guard let eventOrTransactionID = itemID.eventOrTransactionID else {
+            MXLog.error("Cannot abort sending on \(itemID).")
+            return
+        }
+        
+        MXLog.info("Abort \(target) send in \(roomID)")
+        
+        switch await activeTimeline.abortSend(eventOrTransactionID, target: target) {
+        case .success(let hadPendingSend):
+            MXLog.info("Finished aborting send, had one pending: \(hadPendingSend)")
+        case .failure(let error):
+            MXLog.error("Failed aborting send with error: \(error)")
+        }
     }
     
     // MARK: - Sending
@@ -716,5 +764,14 @@ private nonisolated extension TimelineItemProxy {
         }
         
         return false
+    }
+}
+
+private extension TimelineItemProviderProtocol {
+    func containsEvent(_ eventID: String) -> Bool {
+        itemProxies.contains { item in
+            guard case let .event(eventItem) = item else { return false }
+            return eventItem.id.eventID == eventID
+        }
     }
 }

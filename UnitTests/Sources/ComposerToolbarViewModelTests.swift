@@ -94,14 +94,14 @@ final class ComposerToolbarViewModelTests {
                                              .init(suggestionType: .user(.init(id: "@user_mention_2:matrix.org", displayName: "User 2", avatarURL: nil)), range: .init(), rawSuggestionText: "")]
         let mockCompletionSuggestionService = CompletionSuggestionServiceMock(configuration: .init(suggestions: suggestions))
         
-        let appSettings = AppSettings.volatile()
+        let userSettings = UserSettings.mock()
         
         viewModel = ComposerToolbarViewModel(roomProxy: JoinedRoomProxyMock(.init()),
                                              wysiwygViewModel: wysiwygViewModel,
                                              completionSuggestionService: mockCompletionSuggestionService,
                                              mediaProvider: MediaProviderMock(.init()),
                                              mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
-                                             appSettings: appSettings,
+                                             userSettings: userSettings,
                                              analyticsService: AnalyticsServiceMock(.init()),
                                              composerDraftService: draftServiceMock)
         
@@ -817,14 +817,14 @@ final class ComposerToolbarViewModelTests {
         let mockSubject = CurrentValueSubject<[IdentityStatusChange], Never>([])
         roomProxyMock.identityStatusChangesPublisher = mockSubject.asCurrentValuePublisher()
         
-        let appSettings = AppSettings.volatile()
+        let userSettings = UserSettings.mock()
         
         viewModel = ComposerToolbarViewModel(roomProxy: roomProxyMock,
                                              wysiwygViewModel: wysiwygViewModel,
                                              completionSuggestionService: mockCompletionSuggestionService,
                                              mediaProvider: MediaProviderMock(.init()),
                                              mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
-                                             appSettings: appSettings,
+                                             userSettings: userSettings,
                                              analyticsService: AnalyticsServiceMock(.init()),
                                              composerDraftService: draftServiceMock)
         
@@ -860,14 +860,14 @@ final class ComposerToolbarViewModelTests {
         
         roomProxyMock.identityStatusChangesPublisher = mockSubject.asCurrentValuePublisher()
         
-        let appSettings = AppSettings.volatile()
+        let userSettings = UserSettings.mock()
         
         viewModel = ComposerToolbarViewModel(roomProxy: roomProxyMock,
                                              wysiwygViewModel: wysiwygViewModel,
                                              completionSuggestionService: mockCompletionSuggestionService,
                                              mediaProvider: MediaProviderMock(.init()),
                                              mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
-                                             appSettings: appSettings,
+                                             userSettings: userSettings,
                                              analyticsService: AnalyticsServiceMock(.init()),
                                              composerDraftService: draftServiceMock)
         
@@ -900,14 +900,14 @@ final class ComposerToolbarViewModelTests {
         }
         
         roomProxyMock.identityStatusChangesPublisher = CurrentValueSubject([IdentityStatusChange(userId: "@alice:localhost", changedTo: .pinViolation)]).asCurrentValuePublisher()
-        let appSettings = AppSettings.volatile()
+        let userSettings = UserSettings.mock()
         
         viewModel = ComposerToolbarViewModel(roomProxy: roomProxyMock,
                                              wysiwygViewModel: wysiwygViewModel,
                                              completionSuggestionService: mockCompletionSuggestionService,
                                              mediaProvider: MediaProviderMock(.init()),
                                              mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
-                                             appSettings: appSettings,
+                                             userSettings: userSettings,
                                              analyticsService: AnalyticsServiceMock(.init()),
                                              composerDraftService: draftServiceMock)
         
@@ -937,7 +937,7 @@ final class ComposerToolbarViewModelTests {
             draftServiceMock.loadDraftClosure = loadDraftClosure
         }
         
-        let appSettings = AppSettings.volatile()
+        let userSettings = UserSettings.mock()
         
         viewModel = ComposerToolbarViewModel(initialText: initialText,
                                              roomProxy: JoinedRoomProxyMock(.init()),
@@ -945,7 +945,7 @@ final class ComposerToolbarViewModelTests {
                                              completionSuggestionService: completionSuggestionServiceMock,
                                              mediaProvider: MediaProviderMock(.init()),
                                              mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
-                                             appSettings: appSettings,
+                                             userSettings: userSettings,
                                              analyticsService: AnalyticsServiceMock(.init()),
                                              composerDraftService: draftServiceMock)
         viewModel.context.composerFormattingEnabled = true

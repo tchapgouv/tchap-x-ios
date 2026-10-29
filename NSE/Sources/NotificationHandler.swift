@@ -13,7 +13,6 @@ import UserNotifications
 
 nonisolated class NotificationHandler {
     private let userSession: NSEUserSession
-    private let settings: CommonSettingsProtocol
     private let contentHandler: (UNNotificationContent) -> Void
     private var notificationContent: UNMutableNotificationContent
     private let tag: String
@@ -23,13 +22,15 @@ nonisolated class NotificationHandler {
     /// Whether this handler has already counted its notification towards the app icon badge.
     private var hasCountedTowardsBadge = false
     
+    private var userSettings: UserSettings {
+        userSession.userSettings
+    }
+    
     init(userSession: NSEUserSession,
-         settings: CommonSettingsProtocol,
          contentHandler: @escaping (UNNotificationContent) -> Void,
          notificationContent: UNMutableNotificationContent,
          tag: String) {
         self.userSession = userSession
-        self.settings = settings
         self.contentHandler = contentHandler
         self.notificationContent = notificationContent
         self.tag = tag
@@ -38,17 +39,17 @@ nonisolated class NotificationHandler {
                                                                style: .plain)
         
         notificationContentBuilder = NotificationContentBuilder(messageEventStringBuilder: eventStringBuilder,
-                                                                notificationSoundName: settings.notificationSoundName,
                                                                 userSession: userSession)
     }
     
     func processEvent(_ eventID: String, roomID: String) async {
         MXLog.info("\(tag) Processing event: \(eventID) in room: \(roomID)")
         
-        if !settings.roomListNotificationCountEnabled {
-            // Copy over the unread information provided by the push payload to the notification badge.
-            notificationContent.badge = notificationContent.unreadCount as NSNumber?
-            MXLog.info("\(tag) New badge value: \(notificationContent.badge?.stringValue ?? "nil")")
+        // The pusher of an account with its notifications off can outlive a failed deletion.
+        guard userSettings.account.enableNotifications else {
+            MXLog.error("\(tag) Received a push for an account with notifications off, discarding.")
+            discardNotification()
+            return
         }
         
         guard let notificationItemProxy = await userSession.notificationItemProxy(roomID: roomID, eventID: eventID) else {
@@ -61,7 +62,7 @@ nonisolated class NotificationHandler {
         case .processedShouldDiscard, .unsupportedShouldDiscard:
             discardNotification()
         case .shouldDisplay:
-            if settings.hideQuietNotificationAlerts, !notificationItemProxy.isNoisy {
+            if userSettings.app.hideQuietNotificationAlerts, !notificationItemProxy.isNoisy {
                 discardNotification()
                 return
             }
@@ -84,37 +85,29 @@ nonisolated class NotificationHandler {
     // MARK: - Private
     
     private func deliverNotification() {
-        if settings.roomListNotificationCountEnabled {
-            notificationContent.badge = NSNumber(value: incrementBadgeCount())
-            MXLog.info("\(tag) Delivering notification, new badge value: \(settings.lastKnownBadgeCount)")
-        } else {
-            MXLog.info("\(tag) Delivering notification")
-        }
+        notificationContent.badge = NSNumber(value: incrementBadgeCount())
+        MXLog.info("\(tag) Delivering notification, new badge value: \(userSettings.app.lastKnownBadgeCount)")
         contentHandler(notificationContent)
     }
     
     private func incrementBadgeCount() -> Int {
         // `handleTimeExpiration` can deliver a notification this handler already delivered.
         guard !hasCountedTowardsBadge else {
-            return settings.lastKnownBadgeCount
+            return userSettings.app.lastKnownBadgeCount
         }
         
         hasCountedTowardsBadge = true
-        settings.lastKnownBadgeCount += 1
+        userSettings.app.lastKnownBadgeCount += 1
         
-        return settings.lastKnownBadgeCount
+        return userSettings.app.lastKnownBadgeCount
     }
     
     private func discardNotification() {
         MXLog.info("\(tag) Discarding notification")
         
         let content = UNMutableNotificationContent()
-        if settings.roomListNotificationCountEnabled {
-            // Nothing new is shown to the user, so leave the badge where the app last put it.
-            content.badge = NSNumber(value: settings.lastKnownBadgeCount)
-        } else {
-            content.badge = notificationContent.unreadCount as NSNumber?
-        }
+        // Nothing new is shown to the user, so leave the badge where the app last put it.
+        content.badge = NSNumber(value: userSettings.app.lastKnownBadgeCount)
         MXLog.info("\(tag) New badge value: \(content.badge?.stringValue ?? "nil")")
         
         contentHandler(content)
@@ -149,9 +142,7 @@ nonisolated class NotificationHandler {
                 
                 if let targetNotification = deliveredNotifications.first(where: { $0.request.content.eventID == redactedEventID }) {
                     UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [targetNotification.request.identifier])
-                    if settings.roomListNotificationCountEnabled {
-                        settings.lastKnownBadgeCount = max(0, settings.lastKnownBadgeCount - 1)
-                    }
+                    userSettings.app.lastKnownBadgeCount = max(0, userSettings.app.lastKnownBadgeCount - 1)
                 }
                 
                 return .processedShouldDiscard

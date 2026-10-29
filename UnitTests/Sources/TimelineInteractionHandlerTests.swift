@@ -217,8 +217,6 @@ struct TimelineInteractionHandlerTests {
         let userSession = UserSessionMock(.init())
         userSession.voiceMessageMediaManager = voiceMessageMediaManager
         
-        let appSettings = AppSettings.volatile()
-        
         return TimelineInteractionHandler(roomProxy: JoinedRoomProxyMock(.init()),
                                           timelineController: TimelineControllerMock(.init(timelineItems: timelineItems)),
                                           userSession: userSession,
@@ -226,9 +224,8 @@ struct TimelineInteractionHandlerTests {
                                           voiceMessageRecorder: voiceMessageRecorder,
                                           userIndicatorController: UserIndicatorControllerMock(),
                                           appMediator: AppMediatorMock(.init()),
-                                          appSettings: appSettings,
                                           analyticsService: AnalyticsServiceMock(.init()),
-                                          emojiProvider: EmojiProvider(appSettings: appSettings),
+                                          emojiProvider: EmojiProvider(userSettings: .mock()),
                                           linkMetadataProvider: LinkMetadataProvider(),
                                           timelineControllerFactory: TimelineControllerFactoryMock(.init()))
     }

@@ -179,12 +179,37 @@ struct SettingsScreenViewModelTests {
         try await deferred.fulfill()
     }
     
+    // MARK: - Add account
+    
+    @Test
+    mutating func addAccountButtonFollowsTheFeatureFlag() async throws {
+        let userSettings = UserSettings.mock()
+        setupViewModel(userSettings: userSettings)
+        #expect(!context.viewState.showAddAccountButton)
+        
+        var deferred = deferFulfillment(context.observe(\.viewState.showAddAccountButton)) { $0 }
+        userSettings.app.multiAccountEnabled = true
+        try await deferred.fulfill()
+        
+        deferred = deferFulfillment(context.observe(\.viewState.showAddAccountButton)) { !$0 }
+        userSettings.app.multiAccountEnabled = false
+        try await deferred.fulfill()
+    }
+    
+    @Test
+    mutating func addAccount() async throws {
+        setupViewModel()
+        
+        let deferred = deferFulfillment(viewModel.actions) { $0.isAddAccount }
+        context.send(viewAction: .addAccount)
+        try await deferred.fulfill()
+    }
+    
     // MARK: - Helpers
     
-    private mutating func setupViewModel(status: UserStatus = .init()) {
+    private mutating func setupViewModel(status: UserStatus = .init(), userSettings: UserSettings = .mock()) {
         clientProxy = ClientProxyMock(.init(userID: "", status: status))
-        viewModel = SettingsScreenViewModel(userSession: UserSessionMock(.init(clientProxy: clientProxy)),
-                                            appSettings: AppSettings.volatile(),
+        viewModel = SettingsScreenViewModel(userSession: UserSessionMock(.init(clientProxy: clientProxy, userSettings: userSettings)),
                                             isBugReportServiceEnabled: true,
                                             isInSecondaryWindow: false,
                                             userIndicatorController: UserIndicatorControllerMock())
@@ -230,6 +255,13 @@ private extension SettingsScreenViewModelAction {
     var isLogout: Bool {
         switch self {
         case .logout: true
+        default: false
+        }
+    }
+    
+    var isAddAccount: Bool {
+        switch self {
+        case .addAccount: true
         default: false
         }
     }

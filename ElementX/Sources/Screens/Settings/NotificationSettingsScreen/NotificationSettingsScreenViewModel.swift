@@ -13,7 +13,7 @@ typealias NotificationSettingsScreenViewModelType = StateStoreViewModelV2<Notifi
 
 class NotificationSettingsScreenViewModel: NotificationSettingsScreenViewModelType, NotificationSettingsScreenViewModelProtocol {
     private var actionsSubject: PassthroughSubject<NotificationSettingsScreenViewModelAction, Never> = .init()
-    private let appSettings: AppSettings
+    private let userSettings: UserSettings
     private let userNotificationCenter: UserNotificationCenterProtocol
     private let notificationSettingsProxy: NotificationSettingsProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
@@ -25,34 +25,35 @@ class NotificationSettingsScreenViewModel: NotificationSettingsScreenViewModelTy
         actionsSubject.eraseToAnyPublisher()
     }
     
-    init(appSettings: AppSettings,
+    init(userSettings: UserSettings,
          userNotificationCenter: UserNotificationCenterProtocol,
          notificationToneManager: NotificationToneManagerProtocol,
          notificationSettingsProxy: NotificationSettingsProxyProtocol,
          userIndicatorController: UserIndicatorControllerProtocol,
          isModallyPresented: Bool) {
-        self.appSettings = appSettings
+        self.userSettings = userSettings
         self.userNotificationCenter = userNotificationCenter
         self.notificationSettingsProxy = notificationSettingsProxy
         self.userIndicatorController = userIndicatorController
         notificationTonePreviewer = AudioPlayer()
         self.notificationToneManager = notificationToneManager
         
-        let bindings = NotificationSettingsScreenViewStateBindings(enableNotifications: appSettings.enableNotifications)
+        let bindings = NotificationSettingsScreenViewStateBindings(enableNotifications: userSettings.account.enableNotifications,
+                                                                   showAllRoomListActivity: userSettings.account.showAllRoomListActivity)
         super.init(initialViewState: NotificationSettingsScreenViewState(bindings: bindings,
                                                                          isModallyPresented: isModallyPresented,
-                                                                         selectedAlertTone: appSettings.selectedNotificationTone ?? NotificationToneManager.defaultElementXMessageTone,
+                                                                         selectedAlertTone: userSettings.account.selectedNotificationTone ?? userSettings.account.defaultNotificationTone.publisher.value,
                                                                          availableCustomTones: notificationToneManager.customTones(),
                                                                          // macos lacks default sounds and its sandbox Sounds directory is immutable
                                                                          customToneSelectionEnabled: !ProcessInfo.processInfo.isiOSAppOnMac))
         
-        // Listen for changes to AppSettings.
-        appSettings.enableNotificationsPublisher
+        // Listen for changes to UserSettings.
+        userSettings.account.enableNotificationsPublisher
             .weakAssign(to: \.state.bindings.enableNotifications, on: self)
             .store(in: &cancellables)
         
-        appSettings.selectedNotificationTonePublisher
-            .map { $0 ?? NotificationToneManager.defaultElementXMessageTone }
+        userSettings.account.selectedNotificationTonePublisher
+            .map { $0 ?? userSettings.account.defaultNotificationTone.publisher.value }
             .weakAssign(to: \.state.selectedAlertTone, on: self)
             .store(in: &cancellables)
         
@@ -102,6 +103,8 @@ class NotificationSettingsScreenViewModel: NotificationSettingsScreenViewModelTy
                 return
             }
             Task { await enableInvitations(state.bindings.invitationsEnabled) }
+        case .showAllRoomListActivityChanged:
+            userSettings.account.showAllRoomListActivity = state.bindings.showAllRoomListActivity
         case .close:
             actionsSubject.send(.close)
         case .fixConfigurationMismatchTapped:
@@ -124,7 +127,7 @@ class NotificationSettingsScreenViewModel: NotificationSettingsScreenViewModelTy
     }
     
     func toggleNotifications() {
-        appSettings.enableNotifications.toggle()
+        userSettings.account.enableNotifications.toggle()
     }
     
     private func setupDidBecomeActiveSubscription() {
@@ -299,7 +302,7 @@ class NotificationSettingsScreenViewModel: NotificationSettingsScreenViewModelTy
                 try notificationToneManager.deleteCustomTone(tone)
                 
                 if tone == state.selectedAlertTone {
-                    appSettings.selectedNotificationTone = nil
+                    userSettings.account.selectedNotificationTone = nil
                 }
             } catch {
                 MXLog.error("Error deleting alert tone \(tone.label): \(error)")

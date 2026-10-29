@@ -15,6 +15,7 @@ typealias CreateRoomScreenViewModelType = StateStoreViewModel<CreateRoomScreenVi
 class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreenViewModelProtocol {
     private let userSession: UserSessionProtocol
     private let mediaUploadingPreprocessor: MediaUploadingPreprocessor
+    private let appMediator: AppMediatorProtocol
     private let analytics: AnalyticsServiceProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     
@@ -31,13 +32,14 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
          spaceSelectionMode: CreateRoomScreenSpaceSelectionMode,
          shouldShowCancelButton: Bool,
          userSession: UserSessionProtocol,
+         appMediator: AppMediatorProtocol,
          analytics: AnalyticsServiceProtocol,
-         userIndicatorController: UserIndicatorControllerProtocol,
-         appSettings: AppSettings) {
+         userIndicatorController: UserIndicatorControllerProtocol) {
         self.userSession = userSession
-        mediaUploadingPreprocessor = MediaUploadingPreprocessor(appSettings: appSettings)
+        mediaUploadingPreprocessor = MediaUploadingPreprocessor(userSettings: userSession.userSettings)
         self.analytics = analytics
         self.userIndicatorController = userIndicatorController
+        self.appMediator = appMediator
         
         var selectedSpace: SpaceServiceRoom?
         let canSelectSpace: Bool
@@ -59,6 +61,7 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
                                                          selectedAccessType: selectedAccessType,
                                                          selectedSpace: selectedSpace)
         
+<<<<<<< HEAD
         super.init(initialViewState: CreateRoomScreenViewState(isSpace: isSpace,
                                                                shouldShowCancelButton: shouldShowCancelButton,
                                                                roomName: "",
@@ -68,6 +71,18 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
                                                                aliasLocalPart: roomAliasNameFromRoomDisplayName(roomName: ""),
                                                                bindings: bindings,
                                                                tchapCreateSpaceFaqURL: appSettings.tchapCreateSpaceFaqURL),
+=======
+        let viewState = CreateRoomScreenViewState(isSpace: isSpace,
+                                                  shouldShowCancelButton: shouldShowCancelButton,
+                                                  roomName: "",
+                                                  serverName: userSession.clientProxy.userIDServerName ?? "",
+                                                  isKnockingFeatureEnabled: userSession.userSettings.app.knockingEnabled,
+                                                  canSelectSpace: canSelectSpace,
+                                                  aliasLocalPart: roomAliasNameFromRoomDisplayName(roomName: ""),
+                                                  bindings: bindings)
+        
+        super.init(initialViewState: userSession.userHooks.createRoomScreenHook.update(viewState),
+>>>>>>> release/26.10.8
                    mediaProvider: userSession.mediaProvider)
         
         setupBindings()
@@ -88,6 +103,11 @@ class CreateRoomScreenViewModel: CreateRoomScreenViewModelType, CreateRoomScreen
         case .createRoom:
             Task { await createRoom() }
         case .displayCameraPicker:
+            guard appMediator.isCameraAvailable else {
+                MXLog.info("Camera unavailable, not presenting the picker.")
+                userIndicatorController.submitIndicator(UserIndicator(title: L10n.errorCameraUnavailable))
+                return
+            }
             actionsSubject.send(.displayCameraPicker)
         case .displayMediaPicker:
             actionsSubject.send(.displayMediaPicker)

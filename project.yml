@@ -51,7 +51,7 @@ settings:
   ENABLE_BITCODE: false
   APP_NAME: ElementX
   KEYCHAIN_ACCESS_GROUP_IDENTIFIER: "$(DEVELOPMENT_TEAM).$(BASE_BUNDLE_IDENTIFIER)"
-  MARKETING_VERSION: 26.09.2
+  MARKETING_VERSION: 26.10.8
   CURRENT_PROJECT_VERSION: 1
   SUPPORTS_MACCATALYST: false
   ARCHS: arm64
@@ -74,6 +74,7 @@ include:
 packages:
   # Element/Matrix dependencies
   MatrixRustSDK:
+<<<<<<< HEAD
 #    url: https://github.com/element-hq/matrix-rust-components-swift
 #    exactVersion: 26.09.22
 #
@@ -84,21 +85,26 @@ packages:
     exactVersion: 26.09.2
 # Use the local version of Tchap Matrix-rust-SDK
 #    path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
+=======
+    url: https://github.com/element-hq/matrix-rust-components-swift
+    exactVersion: 26.10.24
+    # path: ../matrix-rust-sdk
+>>>>>>> release/26.10.8
   Compound:
     path: compound-ios
   ElementCall:
     url: https://github.com/element-hq/element-call-ios
-    exactVersion: 0.1.0-rc.8
+    exactVersion: 0.1.0-rc.11
     # path: ../element-call-ios
   BuildExtensions:
     path: Components/BuildExtensions
   AnalyticsEvents:
     url: https://github.com/matrix-org/matrix-analytics-events
-    exactVersion: 0.37.0
+    exactVersion: 0.38.0
     # path: ../matrix-analytics-events
   EmbeddedElementCall:
     url: https://github.com/element-hq/element-call-swift
-    exactVersion: 0.25.0
+    exactVersion: 0.26.1
   Emojibase:
     url: https://github.com/matrix-org/emojibase-bindings
     revision: 60bc01f2e3b31445dc723f5af1a777b63d18e6c2 # pinned due to https://github.com/matrix-org/emojibase-bindings/issues/59
@@ -110,7 +116,7 @@ packages:
     # path: ../swift-ogg
   WysiwygComposer:
     url: https://github.com/element-hq/matrix-rich-text-editor-swift
-    exactVersion: 2.42.0
+    exactVersion: 2.42.1
     # path: ../matrix-rich-text-editor/platforms/ios/lib/WysiwygComposer
   
   # External dependencies
@@ -119,13 +125,13 @@ packages:
     exactVersion: 1.2.1
   AsyncAlgorithms:
     url: https://github.com/apple/swift-async-algorithms
-    exactVersion: 1.1.5
+    exactVersion: 1.1.6
   Collections:
     url: https://github.com/apple/swift-collections
-    exactVersion: 1.6.0
+    exactVersion: 1.7.1
   DeviceKit:
     url: https://github.com/devicekit/DeviceKit
-    exactVersion: 5.8.0
+    exactVersion: 5.9.0
   DSWaveformImage:
     url: https://github.com/dmrschmidt/DSWaveformImage
     exactVersion: 14.5.0
@@ -140,7 +146,7 @@ packages:
     exactVersion: 4.2.2
   Kingfisher:
     url: https://github.com/onevcat/Kingfisher
-    exactVersion: 8.12.0
+    exactVersion: 8.13.0
   KZFileWatchers:
     url: https://github.com/krzysztofzablocki/KZFileWatchers
     exactVersion: 1.2.0
@@ -155,16 +161,16 @@ packages:
     exactVersion: 3.1.0
   MapLibre:
     url: https://github.com/maplibre/maplibre-gl-native-distribution
-    exactVersion: 6.29.0
+    exactVersion: 6.31.0
   PostHog:
     url: https://github.com/PostHog/posthog-ios
-    exactVersion: 3.71.0
+    exactVersion: 3.85.3
   Sentry:
     url: https://github.com/getsentry/sentry-cocoa
-    exactVersion: 9.26.1
+    exactVersion: 9.29.2
   SnapshotTesting:
     url: https://github.com/pointfreeco/swift-snapshot-testing
-    exactVersion: 1.19.4
+    exactVersion: 1.19.6
   SwiftFlow:
     url: https://github.com/tevelee/SwiftUI-Flow.git
     exactVersion: 3.5.1

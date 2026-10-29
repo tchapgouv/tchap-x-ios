@@ -42,12 +42,17 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
         return context.viewState.pinnedEventIDs.contains(eventID)
     }
     
-    private var isSelectionActive: Bool {
-        context.viewState.selection.isActive
+    private var isMessageSelectionActive: Bool {
+        context.viewState.messageSelection.isActive
     }
     
     private var isSelected: Bool {
-        context.viewState.selection.contains(timelineItem.id.eventID)
+        context.viewState.messageSelection.contains(timelineItem.id.eventID)
+    }
+    
+    private var accessibilitySelection: TimelineItemAccessibilityMessageSelection {
+        guard isMessageSelectionActive else { return .none }
+        return .selecting(isSelected: isSelected, selectedCount: context.viewState.messageSelection.count)
     }
     
     /// The base padding applied to bubbles on either side.
@@ -61,18 +66,17 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     }
     
     var body: some View {
-        HStack(spacing: 0) {
-            if isSelectionActive {
+        HStack(spacing: 10) {
+            if isMessageSelectionActive {
                 selectionIndicator
             }
             
             bubble
         }
         .padding(EdgeInsets(top: 1, leading: 8, bottom: 1, trailing: 8))
-        .background(isSelected ? Color.compound.bgAccentSelected : .clear)
         .highlightedTimelineItem(isFocussed)
         .overlay { selectionOverlay }
-        .animation(.elementDefault.disabledDuringTests(), value: isSelectionActive)
+        .animation(.elementDefault.disabledDuringTests(), value: isMessageSelectionActive)
         .onPreferenceChange(ContentScanningFailurePreferenceKey.self) { contentScanningFailure = $0 }
     }
     
@@ -80,7 +84,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
         // The ZStack keeps the transition on the indicator's appearance rather than its checked state.
         ZStack {
             ListRowAccessory.multiSelection(isSelected)
-                .opacity(timelineItem.isBulkSelectable ? 1 : 0) // Keeps the bubbles aligned.
+                .opacity(timelineItem.isForwardable ? 1 : 0) // Keeps the bubbles aligned.
         }
         .padding(.leading, 8)
         .transition(.move(edge: .leading).combined(with: .opacity))
@@ -90,7 +94,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     /// Captures every touch while selecting so the content's own gestures can't fire.
     @ViewBuilder
     private var selectionOverlay: some View {
-        if isSelectionActive {
+        if isMessageSelectionActive {
             Color.clear
                 .contentShape(Rectangle())
                 .onTapGesture { toggleSelection() }
@@ -172,8 +176,8 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
         // Figma overlaps reactions by 3
         VStack(alignment: alignment, spacing: -3) {
             messageBubbleWithActions
-                .timelineItemAccessibility(timelineItem, selection: isSelectionActive ? .selecting(isSelected: isSelected) : .none) {
-                    if isSelectionActive {
+                .timelineItemAccessibility(timelineItem, selection: accessibilitySelection) {
+                    if isMessageSelectionActive {
                         toggleSelection()
                     } else {
                         context.send(viewAction: .displayTimelineItemMenu(itemID: timelineItem.id))
@@ -189,7 +193,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                                       isLayoutRTL: timelineItem.isOutgoing)
                     // Workaround to stop the message long press stealing the touch from the reaction buttons
                     .onTapGesture { }
-                    .accessibilityHidden(isSelectionActive)
+                    .accessibilityHidden(isMessageSelectionActive)
             }
             
             if context.viewState.areThreadsEnabled,
@@ -199,7 +203,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                     context.send(viewAction: .displayThread(itemID: timelineItem.id))
                 }
                 .padding(5)
-                .accessibilityHidden(isSelectionActive)
+                .accessibilityHidden(isMessageSelectionActive)
             }
         }
     }
@@ -213,7 +217,7 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                 // specific taps within the timeline views themselves.
             }
             // The UIKit recogniser would still receive touches through the selection overlay.
-            .longPressWithFeedback(isEnabled: !isSelectionActive) {
+            .longPressWithFeedback(isEnabled: !isMessageSelectionActive) {
                 context.send(viewAction: .displayTimelineItemMenu(itemID: timelineItem.id))
             }
             .swipeRightAction {
@@ -221,13 +225,13 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                     .foregroundColor(.compound.iconPrimary)
                     .accessibilityHidden(true)
             } shouldStartAction: {
-                !isSelectionActive && timelineItem.canBeRepliedTo
+                !isMessageSelectionActive && timelineItem.canBeRepliedTo
             } action: {
                 context.send(viewAction: .handleTimelineItemMenuAction(itemID: timelineItem.id,
                                                                        action: .reply(isThread: timelineItem.properties.isThreaded)))
             }
             .contextMenu {
-                if !isSelectionActive {
+                if !isMessageSelectionActive {
                     macContextMenu
                 }
             }
@@ -245,7 +249,6 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
                                                       pinnedEventIDs: context.viewState.pinnedEventIDs,
                                                       isViewSourceEnabled: context.viewState.isViewSourceEnabled,
                                                       areThreadsEnabled: context.viewState.areThreadsEnabled,
-                                                      isMultiSelectEnabled: context.viewState.canSelectMessages,
                                                       timelineKind: context.viewState.timelineKind,
                                                       emojiProvider: context.viewState.emojiProvider)
         TimelineItemMacContextMenu(item: timelineItem, actionProvider: provider) { action in
@@ -298,8 +301,8 @@ struct TimelineItemBubbledStylerView<Content: View>: View {
     }
     
     private func toggleSelection() {
-        guard timelineItem.isBulkSelectable else { return }
-        context.send(viewAction: .toggleSelection(itemID: timelineItem.id))
+        guard timelineItem.isForwardable else { return }
+        context.send(viewAction: .toggleMessageSelection(itemID: timelineItem.id))
     }
     
     private var messageBubbleTopPadding: CGFloat {
@@ -423,39 +426,39 @@ private extension TimelineItemKeyForwarder {
 
 struct TimelineItemBubbledStylerView_Previews: PreviewProvider, TestablePreview {
     static let viewModel: TimelineViewModel = {
-        let appSettings = AppSettings.volatile()
-        appSettings.threadsEnabled = true
+        let userSettings = UserSettings.mock()
+        userSettings.app.threadsEnabled = true
+        let userSession = UserSessionMock(.init(userSettings: userSettings))
         
         let roomProxy = JoinedRoomProxyMock(.init())
         return TimelineViewModel(roomProxy: roomProxy,
                                  focussedEventID: nil,
                                  timelineController: TimelineControllerMock(.init()),
-                                 userSession: UserSessionMock(.init()),
+                                 userSession: userSession,
                                  mediaPlayerProvider: MediaPlayerProviderMock(),
                                  userIndicatorController: UserIndicatorControllerMock(),
                                  appMediator: AppMediatorMock(.init()),
-                                 appSettings: appSettings,
                                  analyticsService: AnalyticsServiceMock(.init()),
-                                 emojiProvider: EmojiProvider(appSettings: appSettings),
+                                 emojiProvider: EmojiProvider(userSettings: userSettings),
                                  linkMetadataProvider: LinkMetadataProvider(),
                                  timelineControllerFactory: TimelineControllerFactoryMock(.init()))
     }()
     
     static let viewModelWithPins: TimelineViewModel = {
-        let appSettings = AppSettings.volatile()
-        appSettings.threadsEnabled = true
+        let userSettings = UserSettings.mock()
+        userSettings.app.threadsEnabled = true
+        let userSession = UserSessionMock(.init(userSettings: userSettings))
         
         let roomProxy = JoinedRoomProxyMock(.init(name: "Preview Room", pinnedEventIDs: ["pinned"]))
         return TimelineViewModel(roomProxy: roomProxy,
                                  focussedEventID: nil,
                                  timelineController: TimelineControllerMock(.init()),
-                                 userSession: UserSessionMock(.init()),
+                                 userSession: userSession,
                                  mediaPlayerProvider: MediaPlayerProviderMock(),
                                  userIndicatorController: UserIndicatorControllerMock(),
                                  appMediator: AppMediatorMock(.init()),
-                                 appSettings: appSettings,
                                  analyticsService: AnalyticsServiceMock(.init()),
-                                 emojiProvider: EmojiProvider(appSettings: appSettings),
+                                 emojiProvider: EmojiProvider(userSettings: userSettings),
                                  linkMetadataProvider: LinkMetadataProvider(),
                                  timelineControllerFactory: TimelineControllerFactoryMock(.init()))
     }()
@@ -463,9 +466,6 @@ struct TimelineItemBubbledStylerView_Previews: PreviewProvider, TestablePreview 
     static let unsafeViewModel = TimelineViewModel.mock(contentScannerService: ContentScannerServiceMock(.init(scanResult: false)))
     
     static let selectingViewModel: TimelineViewModel = {
-        let appSettings = AppSettings.volatile()
-        appSettings.messageMultiSelectEnabled = true
-        
         let viewModel = TimelineViewModel(roomProxy: JoinedRoomProxyMock(.init()),
                                           focussedEventID: nil,
                                           timelineController: TimelineControllerMock(.init()),
@@ -473,12 +473,12 @@ struct TimelineItemBubbledStylerView_Previews: PreviewProvider, TestablePreview 
                                           mediaPlayerProvider: MediaPlayerProviderMock(),
                                           userIndicatorController: UserIndicatorControllerMock(),
                                           appMediator: AppMediatorMock(.init()),
-                                          appSettings: appSettings,
                                           analyticsService: AnalyticsServiceMock(.init()),
-                                          emojiProvider: EmojiProvider(appSettings: appSettings),
+                                          emojiProvider: EmojiProvider(userSettings: .mock()),
                                           linkMetadataProvider: LinkMetadataProvider(),
                                           timelineControllerFactory: TimelineControllerFactoryMock(.init()))
-        viewModel.state.selection.selectedEventIDs = ["selected"]
+        viewModel.state.messageSelection.isActive = true
+        viewModel.state.messageSelection.selectedEventIDs = ["selected"]
         return viewModel
     }()
     

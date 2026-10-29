@@ -85,35 +85,47 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         self.appLockService = appLockService
         self.flowParameters = flowParameters
         presenceService = PresenceService(clientProxy: flowParameters.userSession.clientProxy,
-                                          appSettings: flowParameters.appSettings)
+                                          userSettings: flowParameters.userSession.userSettings)
         
         navigationTabCoordinator = NavigationTabCoordinator()
         navigationRootCoordinator.setRootCoordinator(navigationTabCoordinator)
         
-        let chatsSplitCoordinator = NavigationSplitCoordinator(placeholderCoordinator: PlaceholderScreenCoordinator(hideBrandChrome: flowParameters.appSettings.hideBrandChrome))
+        let chatsSplitCoordinator = NavigationSplitCoordinator(placeholderCoordinator: PlaceholderScreenCoordinator(hideBrandChrome: flowParameters.userSession.userSettings.app.hideBrandChrome))
         chatsTabFlowCoordinator = ChatsTabFlowCoordinator(navigationSplitCoordinator: chatsSplitCoordinator,
                                                           flowParameters: flowParameters)
-        chatsTabDetails = .init(tag: HomeTab.chats, title: L10n.screenHomeTabChats, icon: \.chat, selectedIcon: \.chatSolid)
+        chatsTabDetails = .init(tag: HomeTab.chats,
+                                title: L10n.screenHomeTabChats,
+                                icon: \.chat,
+                                selectedIcon: \.chatSolid,
+                                accessibilityIdentifier: A11yIdentifiers.homeTabs.chats)
+        
         chatsTabDetails.navigationSplitCoordinator = chatsSplitCoordinator
         
-        let spacesSplitCoordinator = NavigationSplitCoordinator(placeholderCoordinator: PlaceholderScreenCoordinator(hideBrandChrome: flowParameters.appSettings.hideBrandChrome))
+        let spacesSplitCoordinator = NavigationSplitCoordinator(placeholderCoordinator: PlaceholderScreenCoordinator(hideBrandChrome: flowParameters.userSession.userSettings.app.hideBrandChrome))
         spacesTabFlowCoordinator = SpacesTabFlowCoordinator(navigationSplitCoordinator: spacesSplitCoordinator,
                                                             flowParameters: flowParameters)
-        spacesTabDetails = .init(tag: HomeTab.spaces, title: L10n.screenHomeTabSpaces, icon: \.space, selectedIcon: \.spaceSolid)
+        spacesTabDetails = .init(tag: HomeTab.spaces,
+                                 title: L10n.screenHomeTabSpaces,
+                                 icon: \.space,
+                                 selectedIcon: \.spaceSolid,
+                                 accessibilityIdentifier: A11yIdentifiers.homeTabs.spaces)
+        
         spacesTabDetails.navigationSplitCoordinator = spacesSplitCoordinator
         
-        if flowParameters.appSettings.globalSearchEnabled, #available(iOS 26.0, *) {
+        if flowParameters.userSession.userSettings.app.globalSearchEnabled {
             let searchCoordinator = SearchScreenCoordinator(parameters: .init(roomSummaryProvider: flowParameters.userSession.clientProxy.alternateRoomSummaryProvider,
-                                                                              clientProxy: flowParameters.userSession.clientProxy,
-                                                                              mediaProvider: flowParameters.userSession.mediaProvider,
-                                                                              userIndicatorController: flowParameters.userIndicatorController,
-                                                                              appSettings: flowParameters.appSettings))
+                                                                              userSession: flowParameters.userSession,
+                                                                              userIndicatorController: flowParameters.userIndicatorController))
             let searchStackCoordinator = NavigationStackCoordinator()
             searchStackCoordinator.setRootCoordinator(searchCoordinator)
             
             searchScreenCoordinator = searchCoordinator
             searchTabNavigationStackCoordinator = searchStackCoordinator
-            searchTabDetails = .init(tag: HomeTab.search, title: UntranslatedL10n.screenHomeTabSearch, icon: \.search, selectedIcon: \.search, isSearch: true)
+            searchTabDetails = .init(tag: HomeTab.search, title: L10n.screenHomeTabSearch,
+                                     icon: \.search,
+                                     selectedIcon: \.search,
+                                     isSearch: true,
+                                     accessibilityIdentifier: A11yIdentifiers.homeTabs.search)
         } else {
             searchScreenCoordinator = nil
             searchTabNavigationStackCoordinator = nil
@@ -130,9 +142,11 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             .init(coordinator: chatsSplitCoordinator, details: chatsTabDetails),
             .init(coordinator: spacesSplitCoordinator, details: spacesTabDetails)
         ]
+        
         if let searchTabNavigationStackCoordinator, let searchTabDetails {
             tabs.append(.init(coordinator: searchTabNavigationStackCoordinator, details: searchTabDetails))
         }
+        
         navigationTabCoordinator.setTabs(tabs)
         
         stateMachine = flowParameters.stateMachineFactory.makeUserSessionFlowStateMachine(state: .initial)
@@ -176,7 +190,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
                 navigationTabCoordinator.selectedTab = .chats
             }
         case .search:
-            // Switch to the dedicated search tab when it's available (iOS 26 + flag), otherwise ignore.
+            // Switch to the dedicated search tab when it's available (flag enabled), otherwise ignore.
             if searchTabNavigationStackCoordinator != nil {
                 navigationTabCoordinator.selectedTab = .search
             }
@@ -338,6 +352,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
             .store(in: &cancellables)
         
         setupCallObservers()
+        setupUnreadNotificationsObserver()
         
         searchScreenCoordinator?.actionsPublisher
             .sink { [weak self] action in
@@ -392,7 +407,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
                     self.navigationTabCoordinator.setSheetCoordinator(nil)
                     
                     // The sheet needs to be dismissed before the alert can be shown
-                    try await Task.sleep(for: .milliseconds(100))
+                    try? await Task.sleep(for: .milliseconds(100))
                     await self.runLogoutFlow()
                 }
             case .forceLogout:
@@ -446,8 +461,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         
         let parameters = SessionVerificationScreenCoordinatorParameters(sessionVerificationControllerProxy: sessionVerificationController,
                                                                         flow: flow,
-                                                                        appSettings: flowParameters.appSettings,
-                                                                        mediaProvider: userSession.mediaProvider)
+                                                                        userSession: userSession)
         
         let coordinator = SessionVerificationScreenCoordinator(parameters: parameters)
         
@@ -484,8 +498,8 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         presentCallScreen(configuration: .init(roomProxy: roomProxy,
                                                clientProxy: userSession.clientProxy,
                                                clientID: InfoPlistReader.main.bundleIdentifier,
-                                               elementCallBaseURL: flowParameters.appSettings.elementCallBaseURL,
-                                               elementCallBaseURLOverride: flowParameters.appSettings.elementCallBaseURLOverride,
+                                               elementCallBaseURL: userSession.userSettings.app.elementCallBaseURL,
+                                               elementCallBaseURLOverride: userSession.userSettings.app.elementCallBaseURLOverride,
                                                voiceOnly: voiceOnly,
                                                colorScheme: colorScheme))
     }
@@ -507,7 +521,7 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         let callScreenCoordinator = CallScreenCoordinator(parameters: .init(elementCallService: flowParameters.elementCallService,
                                                                             configuration: configuration,
                                                                             allowPictureInPicture: true,
-                                                                            appSettings: flowParameters.appSettings,
+                                                                            userSettings: userSession.userSettings,
                                                                             analytics: flowParameters.analytics))
         
         callScreenCoordinator.actions
@@ -549,6 +563,13 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         MXLog.info("Starting picture in picture to hide the call screen overlay.")
         callScreenPictureInPictureController.startPictureInPicture()
         navigationTabCoordinator.setOverlayPresentationMode(.minimized)
+    }
+    
+    private func setupUnreadNotificationsObserver() {
+        userSession.notificationService.badgeCountPublisher
+            .removeDuplicates()
+            .weakAssign(to: \.badgeCount, on: chatsTabDetails)
+            .store(in: &cancellables)
     }
     
     // MARK: - Native calls
@@ -599,8 +620,13 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
         }
         
         let coordinator = NativeCallScreenCoordinator(parameters: .init(controller: controller))
-        navigationTabCoordinator.setOverlayCoordinator(coordinator, animated: true)
-        flowParameters.analytics.track(screen: .RoomCall)
+        
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            flowParameters.appMediator.windowManager.registerCoordinator(coordinator, flowCoordinator: nil, forWindowType: .call)
+        } else {
+            navigationTabCoordinator.setOverlayCoordinator(coordinator, animated: true)
+            flowParameters.analytics.track(screen: .RoomCall)
+        }
     }
     
     private func restoreNativeCallScreen() {
@@ -609,12 +635,16 @@ class UserSessionFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private func dismissCallScreenIfNeeded() {
-        guard navigationTabCoordinator.overlayCoordinator is CallScreenCoordinator
-            || navigationTabCoordinator.overlayCoordinator is NativeCallScreenCoordinator else {
-            return
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            flowParameters.appMediator.windowManager.closeSecondaryWindow(forType: .call)
+        } else {
+            guard navigationTabCoordinator.overlayCoordinator is CallScreenCoordinator
+                || navigationTabCoordinator.overlayCoordinator is NativeCallScreenCoordinator else {
+                return
+            }
+            
+            navigationTabCoordinator.setOverlayCoordinator(nil)
         }
-        
-        navigationTabCoordinator.setOverlayCoordinator(nil)
     }
     
     // MARK: - Logout

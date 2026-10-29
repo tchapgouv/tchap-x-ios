@@ -16,8 +16,8 @@ typealias LocationSharingScreenViewModelType = StateStoreViewModelV2<LocationSha
 class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, LocationSharingScreenViewModelProtocol {
     private let roomProxy: JoinedRoomProxyProtocol
     private let timelineController: TimelineControllerProtocol
-    private let liveLocationManager: LiveLocationManagerProtocol
-    private let appSettings: AppSettings
+    private let liveLocationService: LiveLocationServiceProtocol
+    private let userSettings: UserSettings
     private let analytics: AnalyticsServiceProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let notificationCenter: NotificationCenter
@@ -29,23 +29,21 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
     
     private var authorizationStatusSubscription: AnyCancellable?
     // periphery:ignore - keep alive to keep receiving updates.
-    private var liveLocationService: RoomLiveLocationServiceProtocol?
+    private var roomLiveLocationService: RoomLiveLocationServiceProtocol?
     private var needsCenteringOnFirstLiveLocationUpdate = false
     
     init(interactionMode: LocationSharingInteractionMode,
          mapURLBuilder: MapTilerURLBuilderProtocol,
          roomProxy: JoinedRoomProxyProtocol,
          timelineController: TimelineControllerProtocol,
-         liveLocationManager: LiveLocationManagerProtocol,
-         appSettings: AppSettings,
+         userSession: UserSessionProtocol,
          analytics: AnalyticsServiceProtocol,
          userIndicatorController: UserIndicatorControllerProtocol,
-         mediaProvider: MediaProviderProtocol,
          notificationCenter: NotificationCenter = .default) {
         self.roomProxy = roomProxy
         self.timelineController = timelineController
-        self.liveLocationManager = liveLocationManager
-        self.appSettings = appSettings
+        liveLocationService = userSession.liveLocationService
+        userSettings = userSession.userSettings
         self.analytics = analytics
         self.userIndicatorController = userIndicatorController
         self.notificationCenter = notificationCenter
@@ -53,7 +51,7 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
         super.init(initialViewState: .init(interactionMode: interactionMode,
                                            mapURLBuilder: mapURLBuilder,
                                            ownUserID: roomProxy.ownUserID),
-                   mediaProvider: mediaProvider)
+                   mediaProvider: userSession.mediaProvider)
         
         updateUserProfiles(members: roomProxy.membersPublisher.value)
         setupSubscriptions()
@@ -105,7 +103,7 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
             state.liveLocationShares.remove(at: index)
         }
         updateUserLocationDotVisibility()
-        Task { await liveLocationManager.stopLiveLocation(roomID: roomProxy.id) }
+        Task { await liveLocationService.stopLiveLocation(roomID: roomProxy.id) }
     }
     
     /// Hides the user location dot while the own user is sharing their live location from this
@@ -132,10 +130,10 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
     }
     
     private func setupLiveLocationSubscription() async {
-        let liveLocationService = await roomProxy.makeLiveLocationService()
-        self.liveLocationService = liveLocationService
+        let roomLiveLocationService = await roomProxy.makeLiveLocationService()
+        self.roomLiveLocationService = roomLiveLocationService
         
-        liveLocationService.liveLocationsPublisher
+        roomLiveLocationService.liveLocationsPublisher
             .sink { [weak self] liveLocationsShares in
                 guard let self else { return }
                 MXLog.info("Received live location shares update: \(liveLocationsShares.count) share(s)")
@@ -173,7 +171,7 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
         }
         .store(in: &cancellables)
         
-        appSettings.liveLocationSharingSessionsByRoomIDPublisher
+        userSettings.account.liveLocationSharingSessionsByRoomIDPublisher
             .map { [roomID = roomProxy.id] sessions in sessions[roomID] != nil }
             .removeDuplicates()
             .sink { [weak self] isSharingLiveLocationOnThisDevice in
@@ -227,14 +225,14 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
     
     private func checkAlwaysShareLocationPermission() {
         authorizationStatusSubscription = nil
-        let authorizationStatus = liveLocationManager.authorizationStatus.value
+        let authorizationStatus = liveLocationService.authorizationStatus.value
         switch authorizationStatus {
         case .authorizedAlways:
             showLiveLocationFlow()
         case .notDetermined:
             // This is to solve a race condition with map libre which always tries first
             // to request the when in use permission, we wait for it and then try again
-            authorizationStatusSubscription = liveLocationManager.authorizationStatus
+            authorizationStatusSubscription = liveLocationService.authorizationStatus
                 .filter { $0 != authorizationStatus } // skip current status
                 .first() // this publisher only fires when there is an actual change, and if the user is done with permissions
                 .sink { [weak self] newValue in
@@ -242,13 +240,13 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
                     self?.checkAlwaysShareLocationPermission()
                 }
         case .authorizedWhenInUse:
-            guard liveLocationManager.requestAlwaysAuthorizationIfPossible() else {
+            guard liveLocationService.requestAlwaysAuthorizationIfPossible() else {
                 // Already requested before — iOS won't show the prompt again.
                 showMissingAlwaysAuthorizedAlert()
                 break
             }
             
-            authorizationStatusSubscription = liveLocationManager.authorizationStatus
+            authorizationStatusSubscription = liveLocationService.authorizationStatus
                 .filter { $0 != authorizationStatus } // skip current status
                 .first() // this publisher only fires when there is an actual change, and if the user is done with permissions
                 .sink { [weak self] newValue in
@@ -261,14 +259,14 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
     }
     
     private func showLiveLocationFlow() {
-        if appSettings.liveLocationDisclaimerDisplayed {
+        if userSettings.app.liveLocationDisclaimerDisplayed {
             showLiveLocationDurationPicker()
         } else {
             state.bindings.alertInfo = .init(alertID: .liveLocationDisclaimer,
                                              primaryButton: .init(title: L10n.actionDecline, role: .cancel, action: nil),
                                              secondaryButton: .init(title: L10n.actionAccept) { [weak self] in
                                                  guard let self else { return }
-                                                 appSettings.liveLocationDisclaimerDisplayed = true
+                                                 userSettings.app.liveLocationDisclaimerDisplayed = true
                                                  // Delay so SwiftUI finishes dismissing the current alert
                                                  // before presenting the next one.
                                                  DispatchQueue.main.async {
@@ -310,7 +308,7 @@ class LocationSharingScreenViewModel: LocationSharingScreenViewModelType, Locati
             hideLoader()
         }
         
-        let result = await liveLocationManager.startLiveLocation(roomID: roomProxy.id,
+        let result = await liveLocationService.startLiveLocation(roomID: roomProxy.id,
                                                                  duration: duration)
         
         switch result {
@@ -428,20 +426,18 @@ extension LocationSharingScreenViewModel {
             []
         }
         
-        let liveLocationServiceMock = RoomLiveLocationServiceMock(.init(shares: liveLocationShares))
+        let roomLiveLocationServiceMock = RoomLiveLocationServiceMock(.init(shares: liveLocationShares))
         let roomProxy = JoinedRoomProxyMock(.init(members: .allMembers, ownUserID: RoomMemberProxyMock.mockMe.userID))
-        roomProxy.makeLiveLocationServiceReturnValue = liveLocationServiceMock
+        roomProxy.makeLiveLocationServiceReturnValue = roomLiveLocationServiceMock
         
-        let appSettings = AppSettings.volatile()
+        let userSession = UserSessionMock(.init())
         
         return LocationSharingScreenViewModel(interactionMode: interactionMode,
-                                              mapURLBuilder: appSettings.mapTilerConfiguration.publisher.value,
+                                              mapURLBuilder: userSession.userSettings.app.mapTilerConfiguration.publisher.value,
                                               roomProxy: roomProxy,
                                               timelineController: TimelineControllerMock(.init()),
-                                              liveLocationManager: LiveLocationManagerMock(),
-                                              appSettings: appSettings,
+                                              userSession: userSession,
                                               analytics: AnalyticsServiceMock(.init()),
-                                              userIndicatorController: UserIndicatorControllerMock(),
-                                              mediaProvider: MediaProviderMock(.init()))
+                                              userIndicatorController: UserIndicatorControllerMock())
     }
 }

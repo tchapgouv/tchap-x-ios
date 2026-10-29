@@ -16,7 +16,7 @@ class SecurityAndPrivacyScreenViewModel: SecurityAndPrivacyScreenViewModelType, 
     private let roomProxy: JoinedRoomProxyProtocol
     private let clientProxy: ClientProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
-    private let appSettings: AppSettings
+    private let userSettings: UserSettings
     
     private let actionsSubject: PassthroughSubject<SecurityAndPrivacyScreenViewModelAction, Never> = .init()
     var actionsPublisher: AnyPublisher<SecurityAndPrivacyScreenViewModelAction, Never> {
@@ -24,20 +24,21 @@ class SecurityAndPrivacyScreenViewModel: SecurityAndPrivacyScreenViewModelType, 
     }
     
     init(roomProxy: JoinedRoomProxyProtocol,
-         clientProxy: ClientProxyProtocol,
-         userIndicatorController: UserIndicatorControllerProtocol,
-         appSettings: AppSettings) {
+         userSession: UserSessionProtocol,
+         userIndicatorController: UserIndicatorControllerProtocol) {
         self.roomProxy = roomProxy
-        self.clientProxy = clientProxy
+        clientProxy = userSession.clientProxy
         self.userIndicatorController = userIndicatorController
-        self.appSettings = appSettings
+        userSettings = userSession.userSettings
         
-        super.init(initialViewState: SecurityAndPrivacyScreenViewState(accessType: roomProxy.infoPublisher.value.joinRule.toSecurityAndPrivacyRoomAccessType,
-                                                                       isEncryptionEnabled: roomProxy.infoPublisher.value.isEncrypted,
-                                                                       historyVisibility: roomProxy.infoPublisher.value.historyVisibility.toSecurityAndPrivacyHistoryVisibility,
-                                                                       isSpace: roomProxy.infoPublisher.value.isSpace,
-                                                                       isKnockingEnabled: appSettings.knockingEnabled,
-                                                                       historySharingDetailsURL: appSettings.historySharingDetailsURL))
+        let viewState = SecurityAndPrivacyScreenViewState(accessType: roomProxy.infoPublisher.value.joinRule.toSecurityAndPrivacyRoomAccessType,
+                                                          isEncryptionEnabled: roomProxy.infoPublisher.value.isEncrypted,
+                                                          historyVisibility: roomProxy.infoPublisher.value.historyVisibility.toSecurityAndPrivacyHistoryVisibility,
+                                                          isSpace: roomProxy.infoPublisher.value.isSpace,
+                                                          isKnockingEnabled: userSettings.app.knockingEnabled,
+                                                          historySharingDetailsURL: userSettings.app.historySharingDetailsURL)
+        
+        super.init(initialViewState: userSession.userHooks.securityAndPrivacyScreenHook.update(viewState))
         
         if let powerLevels = roomProxy.infoPublisher.value.powerLevels {
             setupPermissions(powerLevels: powerLevels)
@@ -151,7 +152,7 @@ class SecurityAndPrivacyScreenViewModel: SecurityAndPrivacyScreenViewModelType, 
             .weakAssign(to: \.state.isSpace, on: self)
             .store(in: &cancellables)
         
-        appSettings.knockingEnabledPublisher
+        userSettings.app.knockingEnabledPublisher
             .weakAssign(to: \.state.isKnockingEnabled, on: self)
             .store(in: &cancellables)
     }
@@ -160,7 +161,7 @@ class SecurityAndPrivacyScreenViewModel: SecurityAndPrivacyScreenViewModelType, 
         state.canEditAddress = powerLevels.canOwnUser(sendStateEvent: .roomCanonicalAlias)
         state.canEditJoinRule = powerLevels.canOwnUser(sendStateEvent: .roomJoinRules)
         state.canEditHistoryVisibility = powerLevels.canOwnUser(sendStateEvent: .roomHistoryVisibility)
-        state.canEnableEncryption = powerLevels.canOwnUser(sendStateEvent: .roomEncryption) && !appSettings.forceDisableE2EE.publisher.value
+        state.canEnableEncryption = powerLevels.canOwnUser(sendStateEvent: .roomEncryption) && !userSettings.app.forceDisableE2EE.publisher.value
     }
     
     private func setupRoomDirectoryVisibility() {

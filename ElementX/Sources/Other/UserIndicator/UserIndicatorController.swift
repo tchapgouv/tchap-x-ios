@@ -44,12 +44,13 @@ class UserIndicatorController: ObservableObject, UserIndicatorControllerProtocol
         if let index = indicatorQueue.firstIndex(where: { $0.id == indicator.id }) {
             indicatorQueue[index] = indicator
             displayTimes[indicator.id] = .now
+            announceIfNeeded(indicator)
         } else {
             if let delay {
                 delayedIndicators.insert(indicator.id)
                 
                 Task {
-                    try await Task.sleep(for: .seconds(delay.seconds))
+                    try? await Task.sleep(for: .seconds(delay.seconds))
                     
                     guard delayedIndicators.contains(indicator.id) else {
                         return
@@ -90,5 +91,16 @@ class UserIndicatorController: ObservableObject, UserIndicatorControllerProtocol
         retractIndicatorWithId(indicator.id)
         indicatorQueue.append(indicator)
         displayTimes[indicator.id] = .now
+        announceIfNeeded(indicator)
+    }
+    
+    private func announceIfNeeded(_ indicator: UserIndicator) {
+        guard case .toast = indicator.type else {
+            return
+        }
+        
+        var announcement = AttributedString(indicator.title)
+        announcement.accessibilitySpeechAnnouncementPriority = .high
+        AccessibilityNotification.Announcement(announcement).post()
     }
 }

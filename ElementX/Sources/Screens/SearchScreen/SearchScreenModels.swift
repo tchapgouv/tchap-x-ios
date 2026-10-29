@@ -22,8 +22,8 @@ enum SearchScreenMode: CaseIterable, Identifiable {
     
     var title: String {
         switch self {
-        case .rooms: UntranslatedL10n.screenSearchTabChats
-        case .messages: UntranslatedL10n.screenSearchTabMessages
+        case .rooms: L10n.screenSearchTabChats
+        case .messages: L10n.screenSearchTabMessages
         }
     }
 }
@@ -46,13 +46,30 @@ struct SearchScreenViewStateBindings {
     var searchMode: SearchScreenMode = .rooms
 }
 
-enum SearchScreenViewAction {
+enum SearchScreenViewAction: CustomStringConvertible {
     case appeared
+    case submitQuery
     case selectRoom(roomID: String)
     case selectMessage(roomID: String, eventID: String)
+    case removeBreadcrumb(SearchScreenBreadcrumb)
+    case clearBreadcrumbs
     case reachedTop
     case reachedBottom
     case cancel
+    
+    var description: String {
+        switch self {
+        case .appeared: "appeared"
+        case .submitQuery: "submitQuery"
+        case .selectRoom(let roomID): "selectRoom(\(roomID))"
+        case .selectMessage(let roomID, let eventID): "selectMessage(\(roomID), \(eventID))"
+        case .removeBreadcrumb: "removeBreadcrumb"
+        case .clearBreadcrumbs: "clearBreadcrumbs"
+        case .reachedTop: "reachedTop"
+        case .reachedBottom: "reachedBottom"
+        case .cancel: "cancel"
+        }
+    }
 }
 
 struct SearchScreenRoom: Identifiable, Equatable {
@@ -107,34 +124,34 @@ struct SearchScreenMessage: Identifiable, Equatable {
         timestamp = result.timestamp
     }
     
-    var preview: AttributedString? {
+    var preview: String? {
         guard let messageBody else { return nil }
-        return AttributedString("\(senderName): ") + messageBody
+        return "\(senderName): \(messageBody)"
     }
     
-    private var messageBody: AttributedString? {
+    private var messageBody: String? {
         switch content {
         case .message(let content):
             switch content {
             case .text(let content):
-                content.formattedBody ?? AttributedString(content.body)
+                content.body
             case .notice(let content):
-                content.formattedBody ?? AttributedString(content.body)
+                content.body
             case .emote(let content):
-                content.formattedBody ?? AttributedString(content.body)
+                content.body
             case .audio, .file, .image, .video, .gallery:
                 nil
             case .voice:
-                AttributedString(L10n.commonVoiceMessage)
+                L10n.commonVoiceMessage
             case .location:
-                AttributedString(L10n.commonSharedLocation)
+                L10n.commonSharedLocation
             }
         case .poll(let question):
-            AttributedString(question)
+            question
         case .liveLocation:
-            AttributedString(L10n.commonSharedLiveLocation)
+            L10n.commonSharedLiveLocation
         case .redacted:
-            AttributedString(L10n.commonMessageRemoved)
+            L10n.commonMessageRemoved
         }
     }
     

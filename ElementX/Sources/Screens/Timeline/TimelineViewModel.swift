@@ -29,7 +29,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     private let mediaPlayerProvider: MediaPlayerProviderProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let appMediator: AppMediatorProtocol
-    private let appSettings: AppSettings
+    private let userSettings: UserSettings
     private let analyticsService: AnalyticsServiceProtocol
     private let emojiProvider: EmojiProviderProtocol
     
@@ -54,7 +54,6 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
          mediaPlayerProvider: MediaPlayerProviderProtocol,
          userIndicatorController: UserIndicatorControllerProtocol,
          appMediator: AppMediatorProtocol,
-         appSettings: AppSettings,
          analyticsService: AnalyticsServiceProtocol,
          emojiProvider: EmojiProviderProtocol,
          linkMetadataProvider: LinkMetadataProviderProtocol,
@@ -63,7 +62,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         self.timelineController = timelineController
         self.userSession = userSession
         self.mediaPlayerProvider = mediaPlayerProvider
-        self.appSettings = appSettings
+        userSettings = userSession.userSettings
         self.analyticsService = analyticsService
         self.userIndicatorController = userIndicatorController
         self.appMediator = appMediator
@@ -78,7 +77,6 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                                                                 voiceMessageRecorder: voiceMessageRecorder,
                                                                 userIndicatorController: userIndicatorController,
                                                                 appMediator: appMediator,
-                                                                appSettings: appSettings,
                                                                 analyticsService: analyticsService,
                                                                 emojiProvider: emojiProvider,
                                                                 linkMetadataProvider: linkMetadataProvider,
@@ -99,16 +97,15 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                                                        timelineState: TimelineState(focussedEvent: focussedEventID.map { .init(eventID: $0, appearance: .immediate) }),
                                                        ownUserID: roomProxy.ownUserID,
                                                        hideTimelineMedia: hideTimelineMedia,
-                                                       isViewSourceEnabled: appSettings.viewSourceEnabled,
-                                                       areThreadsEnabled: appSettings.threadsEnabled,
-                                                       linkPreviewsEnabled: appSettings.linkPreviewsEnabled,
-                                                       jumpToReadMarkerEnabled: appSettings.jumpToReadMarkerEnabled,
-                                                       selection: .init(isEnabled: appSettings.messageMultiSelectEnabled),
+                                                       isViewSourceEnabled: userSettings.app.viewSourceEnabled,
+                                                       areThreadsEnabled: userSettings.app.threadsEnabled,
+                                                       linkPreviewsEnabled: userSettings.app.linkPreviewsEnabled,
+                                                       jumpToReadMarkerEnabled: userSettings.app.jumpToReadMarkerEnabled,
                                                        hasPredecessor: roomProxy.predecessorRoom != nil,
                                                        pinnedEventIDs: roomProxy.infoPublisher.value.pinnedEventIDs,
                                                        emojiProvider: emojiProvider,
                                                        linkMetadataProvider: hideTimelineMedia ? nil : linkMetadataProvider,
-                                                       mapTilerConfiguration: appSettings.mapTilerConfiguration.publisher.value,
+                                                       mapTilerConfiguration: userSettings.app.mapTilerConfiguration.publisher.value,
                                                        bindings: .init(reactionsCollapsed: [:])),
                    mediaProvider: userSession.mediaProvider,
                    contentScannerService: userSession.contentScannerService)
@@ -198,7 +195,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             }
         case .displayTimelineItemMenu(let itemID):
             timelineInteractionHandler.displayTimelineItemActionMenu(for: itemID)
-        case .handleTimelineItemMenuAction(let itemID, .selectMessages):
+        case .handleTimelineItemMenuAction(let itemID, .forward) where state.canSelectMessages:
             startSelection(itemID: itemID)
         case .handleTimelineItemMenuAction(let itemID, let action):
             timelineInteractionHandler.handleTimelineItemMenuAction(action, itemID: itemID)
@@ -206,12 +203,12 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             state.bindings.redactConfirmationInfo = nil
             // A blank reason is no reason at all, so don't send one.
             timelineInteractionHandler.redact(itemID, reason: reason?.isBlank == false ? reason : nil)
-        case .startSelection(let itemID):
-            startSelection(itemID: itemID)
-        case .toggleSelection(let itemID):
+        case .toggleMessageSelection(let itemID):
             toggleSelection(itemID: itemID)
-        case .clearSelection:
-            state.selection.selectedEventIDs.removeAll()
+        case .clearMessageSelection:
+            clearMessageSelection()
+        case .forwardMessageSelection:
+            forwardSelection()
         case .tappedOnSenderDetails(let sender):
             handleTappedOnSenderDetails(sender: sender)
         case .displayEmojiPicker(let itemID):
@@ -274,7 +271,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         case .voiceMessage(let voiceMessageAction):
             processVoiceMessageAction(voiceMessageAction)
         case .contentChanged(let isEmpty):
-            guard appSettings.sharePresence else {
+            guard userSettings.account.sharePresence else {
                 return
             }
             
@@ -310,12 +307,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     }
     
     func stopLiveLocationSharing() async {
-        await userSession.liveLocationManager.stopLiveLocation(roomID: roomProxy.id)
-    }
-    
-    func makeForwardingItem(for itemID: TimelineItemIdentifier) async -> MessageForwardingItem? {
-        guard let content = await timelineController.messageEventContent(for: itemID) else { return nil }
-        return .init(id: itemID, roomID: roomProxy.id, content: content)
+        await userSession.liveLocationService.stopLiveLocation(roomID: roomProxy.id)
     }
     
     // MARK: - Private
@@ -380,6 +372,11 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     private func attach(_ attachment: ComposerAttachmentType) {
         switch attachment {
         case .camera:
+            guard appMediator.isCameraAvailable else {
+                MXLog.info("Camera unavailable, not presenting the picker.")
+                displayErrorToast(L10n.errorCameraUnavailable)
+                return
+            }
             actionsSubject.send(.displayCameraPicker)
         case .photoLibrary:
             actionsSubject.send(.displayMediaPicker)
@@ -506,7 +503,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
             }
             .store(in: &cancellables)
         
-        setupAppSettingsSubscriptions()
+        setupUserSettingsSubscriptions()
         
         roomProxy.membersPublisher
             .receive(on: DispatchQueue.main)
@@ -515,7 +512,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         
         roomProxy.typingMembersPublisher
             .receive(on: DispatchQueue.main)
-            .filter { [weak self] _ in self?.appSettings.sharePresence ?? false }
+            .filter { [weak self] _ in self?.userSettings.account.sharePresence ?? false }
             .weakAssign(to: \.state.typingMembers, on: self)
             .store(in: &cancellables)
         
@@ -567,7 +564,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     func viewInRoomTimeline(eventID: String) async {
         switch await roomProxy.loadOrFetchEventDetails(for: eventID) {
         case .success(let event):
-            let threadRootEventID: String? = if appSettings.threadsEnabled {
+            let threadRootEventID: String? = if userSettings.app.threadsEnabled {
                 event.threadRootEventId()
             } else {
                 nil
@@ -578,24 +575,22 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         }
     }
     
-    private func setupAppSettingsSubscriptions() {
-        appSettings.sharePresencePublisher
+    private func setupUserSettingsSubscriptions() {
+        userSettings.account.sharePresencePublisher
             .weakAssign(to: \.state.showReadReceipts, on: self)
             .store(in: &cancellables)
         
-        appSettings.viewSourceEnabledPublisher
+        userSettings.app.viewSourceEnabledPublisher
             .weakAssign(to: \.state.isViewSourceEnabled, on: self)
             .store(in: &cancellables)
         
-        appSettings.threadsEnabledPublisher
+        userSettings.app.threadsEnabledPublisher
             .weakAssign(to: \.state.areThreadsEnabled, on: self)
             .store(in: &cancellables)
         
-        appSettings.jumpToReadMarkerEnabledPublisher
+        userSettings.app.jumpToReadMarkerEnabledPublisher
             .weakAssign(to: \.state.jumpToReadMarkerEnabled, on: self)
             .store(in: &cancellables)
-        
-        setupSelectionSubscriptions()
         
         userSession.clientProxy.timelineMediaVisibilityPublisher
             .removeDuplicates()
@@ -765,8 +760,8 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         }
         
         if case let .sendingFailed(.unknown(reason)) = eventTimelineItem.properties.deliveryStatus {
-            // A missing send handle only costs the retry/remove actions, the reason is still worth showing.
-            displayAlert(.sendingFailed(reason: reason, sendHandle: timelineController.sendHandle(for: itemID)))
+            // A missing target only costs the retry/remove actions, the reason is still worth showing.
+            displayAlert(.sendingFailed(reason: reason, itemID: itemID, target: timelineController.pendingSendTarget(for: itemID)))
         } else if case let .sendingFailed(.verifiedUser(failure)) = eventTimelineItem.properties.deliveryStatus {
             guard let sendHandle = timelineController.sendHandle(for: itemID) else {
                 MXLog.error("Cannot find send handle for \(itemID).")
@@ -783,13 +778,12 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         }
     }
     
-    private func retrySending(_ sendHandle: SendHandleProxy) {
-        Task {
-            if case .failure(let error) = await sendHandle.resend() {
-                MXLog.error("Failed retrying to send \(sendHandle.itemID): \(error)")
-                displayErrorToast(L10n.errorUnknown)
-            }
-        }
+    private func retrySending(_ itemID: TimelineItemIdentifier, target: SendTarget) {
+        Task { await timelineController.retrySend(itemID, target: target) }
+    }
+    
+    private func abortSending(_ itemID: TimelineItemIdentifier, target: SendTarget) {
+        Task { await timelineController.abortSend(itemID, target: target) }
     }
     
     private func slashCommand(message: String) -> SlashCommand? {
@@ -1059,13 +1053,6 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
         state.bindings.readReceiptsSummaryInfo = .init(orderedReceipts: eventTimelineItem.properties.orderedReadReceipts, id: eventTimelineItem.id)
     }
     
-    // MARK: - Message forwarding
-    
-    private func forwardMessage(itemID: TimelineItemIdentifier) async {
-        guard let forwardingItem = await makeForwardingItem(for: itemID) else { return }
-        actionsSubject.send(.displayMessageForwarding(forwardingItem: forwardingItem))
-    }
-    
     // MARK: Pills
     
     private func pillContextUpdater(_ pillContext: PillContext) {
@@ -1139,15 +1126,15 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                                              message: L10n.commonPollEndConfirmation,
                                              primaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil),
                                              secondaryButton: .init(title: L10n.actionOk) { self.timelineInteractionHandler.endPoll(pollStartID: pollStartID) })
-        case .sendingFailed(let reason, let sendHandle):
+        case .sendingFailed(let reason, let itemID, let target):
             state.bindings.alertInfo = .init(id: type,
                                              title: L10n.commonSendingFailed,
                                              message: reason,
-                                             primaryButton: .init(title: sendHandle == nil ? L10n.actionOk : L10n.actionCancel, role: .cancel, action: nil),
-                                             verticalButtons: sendHandle.map { sendHandle in
-                                                 [.init(title: L10n.actionRetry) { [weak self] in self?.retrySending(sendHandle) },
-                                                  .init(title: L10n.actionRemoveMessage, role: .destructive) { [weak self] in
-                                                      self?.timelineInteractionHandler.redact(sendHandle.itemID, reason: nil)
+                                             primaryButton: .init(title: target == nil ? L10n.actionOk : L10n.actionCancel, role: .cancel, action: nil),
+                                             verticalButtons: target.map { target in
+                                                 [.init(title: L10n.actionRetry) { [weak self] in self?.retrySending(itemID, target: target) },
+                                                  .init(title: target == .event ? L10n.actionRemoveMessage : L10n.actionDiscard, role: .destructive) { [weak self] in
+                                                      self?.abortSending(itemID, target: target)
                                                   }]
                                              })
         case .encryptionAuthenticity(let message):
@@ -1160,7 +1147,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                                              primaryButton: .init(title: L10n.actionOk, action: nil),
                                              secondaryButton: .init(title: L10n.actionLearnMore) { [weak self] in
                                                  guard let self else { return }
-                                                 appMediator.open(appSettings.historySharingDetailsURL)
+                                                 appMediator.open(userSettings.app.historySharingDetailsURL)
                                              })
         case .inviteAgain:
             state.bindings.alertInfo = .init(id: .inviteAgain,
@@ -1185,68 +1172,96 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     }
 }
 
+// MARK: - Message forwarding
+
+extension TimelineViewModel {
+    func makeForwardingPayload(for itemIDs: [TimelineItemIdentifier]) async -> MessageForwardingPayload? {
+        var ids = [TimelineItemIdentifier]()
+        var contents = [RoomMessageEventContentWithoutRelation]()
+        for itemID in itemIDs {
+            guard let content = await timelineController.messageEventContent(for: itemID) else { continue }
+            ids.append(itemID)
+            contents.append(content)
+        }
+        
+        guard !contents.isEmpty else { return nil }
+        return .init(ids: ids, roomID: roomProxy.id, contents: contents)
+    }
+    
+    private func forwardMessage(itemID: TimelineItemIdentifier) async {
+        guard let forwardingPayload = await makeForwardingPayload(for: [itemID]) else { return }
+        actionsSubject.send(.displayMessageForwarding(forwardingPayload: forwardingPayload))
+    }
+}
+
 // MARK: - Selection
 
 extension TimelineViewModel {
-    private func setupSelectionSubscriptions() {
-        appSettings.messageMultiSelectEnabledPublisher
-            .sink { [weak self] isEnabled in
-                self?.state.selection.isEnabled = isEnabled
-                if !isEnabled {
-                    self?.state.selection.selectedEventIDs.removeAll()
-                }
-            }
-            .store(in: &cancellables)
-    }
-    
     private func startSelection(itemID: TimelineItemIdentifier) {
-        guard state.canSelectMessages, let eventID = selectableEventID(for: itemID) else { return }
+        guard let eventID = selectableEventID(for: itemID) else { return }
         
         // The composer is collapsed while selecting, so don't leave the microphone open behind it.
         Task { await timelineInteractionHandler.stopRecordingVoiceMessageIfNeeded() }
         actionsSubject.send(.composer(action: .removeFocus))
         
-        guard !state.selection.isAtLimit || state.selection.selectedEventIDs.contains(eventID) else {
+        guard !state.messageSelection.isAtLimit || state.messageSelection.selectedEventIDs.contains(eventID) else {
             showSelectionLimitToast()
             return
         }
         
-        state.selection.selectedEventIDs.insert(eventID)
+        state.messageSelection.isActive = true
+        state.messageSelection.selectedEventIDs.insert(eventID)
     }
     
     private func toggleSelection(itemID: TimelineItemIdentifier) {
-        guard state.selection.isActive, let eventID = selectableEventID(for: itemID) else { return }
+        guard state.messageSelection.isActive, let eventID = selectableEventID(for: itemID) else { return }
         
-        if state.selection.selectedEventIDs.contains(eventID) {
-            state.selection.selectedEventIDs.remove(eventID)
-        } else if state.selection.isAtLimit {
+        if state.messageSelection.selectedEventIDs.contains(eventID) {
+            state.messageSelection.selectedEventIDs.remove(eventID)
+        } else if state.messageSelection.isAtLimit {
             showSelectionLimitToast()
         } else {
-            state.selection.selectedEventIDs.insert(eventID)
+            state.messageSelection.selectedEventIDs.insert(eventID)
         }
     }
     
     /// Drops selected items that are no longer selectable (e.g. redacted), or the whole selection
     /// when the timeline is swapped, so the selection always refers to items that are on screen.
     private func reconcileSelection(with timelineItems: [RoomTimelineItemProtocol], isSwitchingTimelines: Bool) {
-        guard state.selection.isActive else { return }
+        guard state.messageSelection.isActive else { return }
         
         if isSwitchingTimelines {
-            state.selection.selectedEventIDs.removeAll()
+            state.messageSelection.end()
             return
         }
         
-        let selectableEventIDs = timelineItems.compactMap { item -> String? in
-            guard let item = item as? EventBasedTimelineItemProtocol, item.isBulkSelectable else { return nil }
-            return item.id.eventID
-        }
-        state.selection.selectedEventIDs.formIntersection(selectableEventIDs)
+        let forwardableEventIDs = timelineItems.forwardableItems.compactMap(\.id.eventID)
+        state.messageSelection.selectedEventIDs.formIntersection(forwardableEventIDs)
     }
     
-    /// The event ID of the item, when it is part of this timeline and can be bulk selected.
+    /// Ends the selection, either from the close button or once the selected messages have been forwarded.
+    func clearMessageSelection() {
+        state.messageSelection.end()
+    }
+    
+    /// Forwards the selection in timeline order, which is unrelated to the order the messages were selected in.
+    /// The selection is kept until the forwarding completes, so cancelling the picker returns to it.
+    private func forwardSelection() {
+        let itemIDs = timelineController.timelineItems.selectedItems(state.messageSelection.selectedEventIDs).map(\.id)
+        
+        Task {
+            guard let forwardingPayload = await makeForwardingPayload(for: itemIDs) else {
+                displayErrorToast(L10n.errorUnknown)
+                return
+            }
+            actionsSubject.send(.displayMessageForwarding(forwardingPayload: forwardingPayload))
+        }
+    }
+    
+    /// The event ID of the item, when it is part of this timeline and can be forwarded.
     private func selectableEventID(for itemID: TimelineItemIdentifier) -> String? {
         guard let item = timelineController.timelineItems.firstUsingStableID(itemID) as? EventBasedTimelineItemProtocol,
-              item.isBulkSelectable else {
+              item.isForwardable else {
             return nil
         }
         return item.id.eventID
@@ -1274,8 +1289,6 @@ extension TimelineViewModel {
         clientProxyMock.roomSummaryForIdentifierReturnValue = .mock(id: "!room:matrix.org", name: "Room", canonicalAlias: "#room:matrix.org")
         let roomProxy = JoinedRoomProxyMock(.init(name: "Preview room", predecessor: hasPredecessor ? .init(roomId: UUID().uuidString) : nil))
         
-        let appSettings = AppSettings.volatile()
-        
         return TimelineViewModel(roomProxy: roomProxy,
                                  focussedEventID: nil,
                                  timelineController: timelineController ?? TimelineControllerMock(.init(timelineKind: timelineKind)),
@@ -1283,9 +1296,8 @@ extension TimelineViewModel {
                                  mediaPlayerProvider: MediaPlayerProviderMock(),
                                  userIndicatorController: UserIndicatorControllerMock(),
                                  appMediator: AppMediatorMock(.init()),
-                                 appSettings: appSettings,
                                  analyticsService: AnalyticsServiceMock(.init()),
-                                 emojiProvider: EmojiProvider(appSettings: appSettings),
+                                 emojiProvider: EmojiProvider(userSettings: .mock()),
                                  linkMetadataProvider: LinkMetadataProvider(),
                                  timelineControllerFactory: TimelineControllerFactoryMock(.init()))
     }

@@ -24,7 +24,7 @@ struct ChatsTabFlowCoordinatorTests {
     var timelineControllerFactory: TimelineControllerFactoryMock!
     var chatsTabFlowCoordinator: ChatsTabFlowCoordinator!
     var splitCoordinator: NavigationSplitCoordinator!
-    var notificationManager: NotificationManagerMock!
+    var notificationService: NotificationServiceMock!
     let stateMachineFactory = PublishedStateMachineFactory()
     
     var detailCoordinator: CoordinatorProtocol? {
@@ -36,27 +36,24 @@ struct ChatsTabFlowCoordinatorTests {
     }
     
     init() async throws {
-        let appSettings = AppSettings.volatile()
-        
         clientProxy = ClientProxyMock(.init(userID: "hi@bob", roomSummaryProvider: RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))))
         timelineControllerFactory = TimelineControllerFactoryMock(.init())
         
         splitCoordinator = NavigationSplitCoordinator(placeholderCoordinator: PlaceholderScreenCoordinator(hideBrandChrome: false))
         
-        notificationManager = NotificationManagerMock()
+        notificationService = NotificationServiceMock(.init())
         
-        let flowParameters = CommonFlowParameters(userSession: UserSessionMock(.init(clientProxy: clientProxy)),
+        let userSession = UserSessionMock(.init(clientProxy: clientProxy, notificationService: notificationService))
+        let flowParameters = CommonFlowParameters(userSession: userSession,
+                                                  availableSessionsPublisher: .init([.init(userSession: userSession)]),
                                                   bugReportService: BugReportServiceMock(.init()),
                                                   elementCallService: ElementCallServiceMock(.init()),
                                                   timelineControllerFactory: timelineControllerFactory,
-                                                  emojiProvider: EmojiProvider(appSettings: appSettings),
+                                                  emojiProvider: EmojiProvider(userSettings: userSession.userSettings),
                                                   linkMetadataProvider: LinkMetadataProvider(),
                                                   appMediator: AppMediatorMock(.init()),
-                                                  appSettings: appSettings,
-                                                  appHooks: AppHooks(),
                                                   analytics: AnalyticsServiceMock(.init()),
                                                   userIndicatorController: UserIndicatorControllerMock(),
-                                                  notificationManager: notificationManager,
                                                   stateMachineFactory: stateMachineFactory)
         chatsTabFlowCoordinator = ChatsTabFlowCoordinator(navigationSplitCoordinator: splitCoordinator,
                                                           flowParameters: flowParameters)
@@ -88,7 +85,7 @@ struct ChatsTabFlowCoordinatorTests {
         #expect(detailNavigationStack?.rootCoordinator == nil)
         #expect(detailCoordinator == nil)
         
-        #expect(notificationManager.removeDeliveredMessageNotificationsForReceivedInvocations == ["1", "1", "2"])
+        #expect(notificationService.removeDeliveredMessageNotificationsForReceivedInvocations == ["1", "1", "2"])
     }
     
     @Test
@@ -117,7 +114,7 @@ struct ChatsTabFlowCoordinatorTests {
         #expect(detailNavigationStack?.rootCoordinator == nil)
         #expect(detailCoordinator == nil)
         
-        #expect(notificationManager.removeDeliveredMessageNotificationsForReceivedInvocations == ["1", "1", "2"])
+        #expect(notificationService.removeDeliveredMessageNotificationsForReceivedInvocations == ["1", "1", "2"])
     }
     
     @Test

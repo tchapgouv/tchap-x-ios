@@ -26,7 +26,11 @@ struct NotificationSettingsScreen: View {
                 
                 if context.enableNotifications {
                     roomsNotificationSection
-                    
+                }
+                
+                roomListActivitySection
+                
+                if context.enableNotifications {
                     if context.viewState.showCallsSettings, context.viewState.settings?.callsEnabled != nil {
                         callsSection
                     }
@@ -139,6 +143,17 @@ struct NotificationSettingsScreen: View {
         }
     }
     
+    private var roomListActivitySection: some View {
+        Section {
+            ListRow(label: .plain(title: L10n.screenNotificationSettingsShowAllActivityTitle,
+                                  description: L10n.screenNotificationSettingsShowAllActivitySubtitle),
+                    kind: .toggle($context.showAllRoomListActivity))
+                .onChange(of: context.showAllRoomListActivity) {
+                    context.send(viewAction: .showAllRoomListActivityChanged)
+                }
+        }
+    }
+    
     private var callsSection: some View {
         Section {
             ListRow(label: .plain(title: L10n.screenNotificationSettingsCallsLabel),
@@ -247,7 +262,7 @@ struct NotificationSettingsScreen: View {
 @available(iOS 26.0, *)
 struct NotificationSettingsScreen_Previews: PreviewProvider, TestablePreview {
     static let viewModel: NotificationSettingsScreenViewModel = {
-        let appSettings = AppSettings.volatile()
+        let userSettings = UserSettings.mock()
         let notificationCenter = UserNotificationCenterMock()
         notificationCenter.authorizationStatusReturnValue = .notDetermined
         let notificationSettingsProxy = NotificationSettingsProxyMock(with: .init())
@@ -264,7 +279,7 @@ struct NotificationSettingsScreen_Previews: PreviewProvider, TestablePreview {
         
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "John Doe"))))
         
-        var viewModel = NotificationSettingsScreenViewModel(appSettings: appSettings,
+        var viewModel = NotificationSettingsScreenViewModel(userSettings: userSettings,
                                                             userNotificationCenter: notificationCenter,
                                                             notificationToneManager: NotificationToneManagerMock(.init()),
                                                             notificationSettingsProxy: notificationSettingsProxy,
@@ -275,7 +290,7 @@ struct NotificationSettingsScreen_Previews: PreviewProvider, TestablePreview {
     }()
     
     static let viewModelConfigurationMismatch: NotificationSettingsScreenViewModel = {
-        let appSettings = AppSettings.volatile()
+        let userSettings = UserSettings.mock()
         let notificationCenter = UserNotificationCenterMock()
         notificationCenter.authorizationStatusReturnValue = .notDetermined
         let notificationSettingsProxy = NotificationSettingsProxyMock(with: .init())
@@ -294,7 +309,7 @@ struct NotificationSettingsScreen_Previews: PreviewProvider, TestablePreview {
         
         let userSession = UserSessionMock(.init(clientProxy: ClientProxyMock(.init(userID: "John Doe"))))
         
-        var viewModel = NotificationSettingsScreenViewModel(appSettings: appSettings,
+        var viewModel = NotificationSettingsScreenViewModel(userSettings: userSettings,
                                                             userNotificationCenter: notificationCenter,
                                                             notificationToneManager: NotificationToneManagerMock(.init()),
                                                             notificationSettingsProxy: notificationSettingsProxy,

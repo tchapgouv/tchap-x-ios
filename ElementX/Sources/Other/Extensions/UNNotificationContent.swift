@@ -22,16 +22,16 @@ nonisolated extension UNNotificationContent {
         userInfo[NotificationConstants.UserInfoKey.eventIdentifier] as? String
     }
     
+    @objc var eventDate: Date? {
+        userInfo[NotificationConstants.UserInfoKey.eventDate] as? Date
+    }
+    
     @objc var pusherNotificationClientIdentifier: String? {
         userInfo[NotificationConstants.UserInfoKey.pusherNotificationClientIdentifier] as? String
     }
     
     @objc var threadRootEventID: String? {
         userInfo[NotificationConstants.UserInfoKey.threadRootEventIdentifier] as? String
-    }
-    
-    var unreadCount: Int? {
-        userInfo[NotificationConstants.UserInfoKey.unreadCount] as? Int
     }
 }
 
@@ -60,6 +60,15 @@ nonisolated extension UNMutableNotificationContent {
         }
         set {
             userInfo[NotificationConstants.UserInfoKey.eventIdentifier] = newValue
+        }
+    }
+    
+    override var eventDate: Date? {
+        get {
+            userInfo[NotificationConstants.UserInfoKey.eventDate] as? Date
+        }
+        set {
+            userInfo[NotificationConstants.UserInfoKey.eventDate] = newValue
         }
     }
     

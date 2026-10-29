@@ -42,7 +42,7 @@ struct KeychainControllerTests {
                                                                oauthData: "oauthData",
                                                                slidingSyncVersion: .native),
                                                 sessionDirectories: .init(),
-                                                passphrase: "passphrase",
+                                                passphrase: RestorationTokenFixtures.passphrase,
                                                 pusherNotificationClientIdentifier: "pusherClientID")
         keychain.setRestorationToken(restorationToken, forUsername: username)
         
@@ -62,7 +62,7 @@ struct KeychainControllerTests {
                                                                oauthData: "oauthData",
                                                                slidingSyncVersion: .native),
                                                 sessionDirectories: .init(),
-                                                passphrase: "passphrase",
+                                                passphrase: RestorationTokenFixtures.passphrase,
                                                 pusherNotificationClientIdentifier: "pusherClientID")
         keychain.setRestorationToken(restorationToken, forUsername: username)
         #expect(keychain.restorationTokens().count == 1, "The keychain should have 1 restoration token.")
@@ -88,7 +88,7 @@ struct KeychainControllerTests {
                                                                    oauthData: "oauthData",
                                                                    slidingSyncVersion: .native),
                                                     sessionDirectories: .init(),
-                                                    passphrase: "passphrase",
+                                                    passphrase: RestorationTokenFixtures.passphrase,
                                                     pusherNotificationClientIdentifier: "pusherClientID")
             keychain.setRestorationToken(restorationToken, forUsername: "@test\(index):example.com")
         }
@@ -113,7 +113,7 @@ struct KeychainControllerTests {
                                                                    oauthData: "oauthData",
                                                                    slidingSyncVersion: .native),
                                                     sessionDirectories: .init(),
-                                                    passphrase: "passphrase",
+                                                    passphrase: RestorationTokenFixtures.passphrase,
                                                     pusherNotificationClientIdentifier: "pusherClientID")
             keychain.setRestorationToken(restorationToken, forUsername: "@test\(index):example.com")
         }
@@ -147,7 +147,7 @@ struct KeychainControllerTests {
                                                                      oidcData: nil,
                                                                      slidingSyncVersion: .proxy(url: "https://sync.example.com")),
                                                   sessionDirectory: .sessionsBaseDirectory.appending(component: UUID().uuidString),
-                                                  passphrase: "passphrase",
+                                                  passphrase: RestorationTokenFixtures.base64Passphrase,
                                                   pusherNotificationClientIdentifier: "pusherClientID")
         let tokenData = try JSONEncoder().encode(unsupportedToken)
         try underlyingKeychain.set(tokenData, key: "@test:example.com")

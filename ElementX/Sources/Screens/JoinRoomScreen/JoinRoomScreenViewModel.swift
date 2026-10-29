@@ -14,7 +14,7 @@ typealias JoinRoomScreenViewModelType = StateStoreViewModel<JoinRoomScreenViewSt
 
 class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewModelProtocol {
     private let source: JoinRoomScreenSource
-    private let appSettings: AppSettings
+    private let userSettings: UserSettings
     private let clientProxy: ClientProxyProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     
@@ -30,11 +30,10 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
     }
     
     init(source: JoinRoomScreenSource,
-         appSettings: AppSettings,
          userSession: UserSessionProtocol,
          userIndicatorController: UserIndicatorControllerProtocol) {
         self.source = source
-        self.appSettings = appSettings
+        userSettings = userSession.userSettings
         clientProxy = userSession.clientProxy
         self.userIndicatorController = userIndicatorController
         
@@ -49,10 +48,10 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
         
         context.$viewState.map(\.mode)
             .removeDuplicates()
-            .sink { mode in
+            .sink { [userSettings = self.userSettings] mode in
                 switch mode {
                 case .invited:
-                    appSettings.seenInvites.insert(roomID)
+                    userSettings.account.seenInvites.insert(roomID)
                 default:
                     break
                 }
@@ -350,7 +349,7 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
         guard !hasSentJoinAction else { return }
         
         let roomID = state.roomID
-        appSettings.seenInvites.remove(roomID)
+        userSettings.account.seenInvites.remove(roomID)
         
         guard state.roomDetails?.isSpace == true else {
             hasSentJoinAction = true
@@ -464,7 +463,7 @@ class JoinRoomScreenViewModel: JoinRoomScreenViewModelType, JoinRoomScreenViewMo
             return false
         }
         
-        appSettings.seenInvites.remove(roomID)
+        userSettings.account.seenInvites.remove(roomID)
         
         actionsSubject.send(.dismiss)
         return true

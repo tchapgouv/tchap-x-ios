@@ -187,7 +187,7 @@ final class AppLockServiceTests {
         // Given a service with the PIN code already set.
         let context = LAContextMock()
         context.biometryTypeValue = .touchID
-        context.evaluatedPolicyDomainStateValue = Data("👆".utf8)
+        context.biometricStateHashValue = Data("👆".utf8)
         service = AppLockService(keychainController: keychainController, appSettings: appSettings, context: context)
         guard case .success = service.setupPINCode("2023") else {
             Issue.record("The PIN should be valid.")
@@ -220,7 +220,7 @@ final class AppLockServiceTests {
         // Given a service with the PIN code already set.
         let context = LAContextMock()
         context.biometryTypeValue = .touchID
-        context.evaluatedPolicyDomainStateValue = Data("👆".utf8)
+        context.biometricStateHashValue = Data("👆".utf8)
         service = AppLockService(keychainController: keychainController, appSettings: appSettings, context: context)
         let pinCode = "2023"
         guard case .success = service.setupPINCode(pinCode) else {
@@ -237,7 +237,7 @@ final class AppLockServiceTests {
         #expect(service.biometricUnlockTrusted, "Biometric unlock should be trusted.")
         
         // When the user changes biometric data.
-        context.evaluatedPolicyDomainStateValue = Data("👈".utf8)
+        context.biometricStateHashValue = Data("👈".utf8)
         
         // Then biometric lock should remain enabled but untrusted.
         #expect(service.isEnabled, "The service should remain enabled.")
@@ -260,7 +260,7 @@ final class AppLockServiceTests {
         // Given a service with the PIN code already set.
         let context = LAContextMock()
         context.biometryTypeValue = .touchID
-        context.evaluatedPolicyDomainStateValue = Data("👆".utf8)
+        context.biometricStateHashValue = Data("👆".utf8)
         service = AppLockService(keychainController: keychainController, appSettings: appSettings, context: context)
         guard case .success = service.setupPINCode("2023") else {
             Issue.record("The PIN should be valid.")
@@ -290,7 +290,7 @@ final class AppLockServiceTests {
         // Given a service with the PIN code already set.
         let context = LAContextMock()
         context.biometryTypeValue = .touchID
-        context.evaluatedPolicyDomainStateValue = Data("👆".utf8)
+        context.biometricStateHashValue = Data("👆".utf8)
         service = AppLockService(keychainController: keychainController, appSettings: appSettings, context: context)
         guard case .success = service.setupPINCode("2023") else {
             Issue.record("The PIN should be valid.")

@@ -15,10 +15,24 @@ enum MessageForwardingScreenViewModelAction {
 }
 
 struct MessageForwardingScreenViewState: BindableState {
+    /// The recently visited rooms, never filtered by the search query.
+    var suggestedRooms: [MessageForwardingRoom] = []
     var rooms: [MessageForwardingRoom] = []
     var selectedRoomIDs: Set<String> = []
-    let maxRoomSelectionCount = 10
+    let maxRoomSelectionCount = 5
     var bindings = MessageForwardingScreenViewStateBindings()
+    
+    var showsSuggestions: Bool {
+        bindings.searchQuery.isEmpty && !suggestedRooms.isEmpty
+    }
+    
+    /// Every room appears once: the suggested ones are left out unless searching.
+    var chats: [MessageForwardingRoom] {
+        guard showsSuggestions else { return rooms }
+        
+        let suggestedRoomIDs = Set(suggestedRooms.map(\.id))
+        return rooms.filter { !suggestedRoomIDs.contains($0.id) }
+    }
     
     var isAtRoomSelectionLimit: Bool {
         selectedRoomIDs.count >= maxRoomSelectionCount
@@ -44,20 +58,29 @@ struct MessageForwardingRoom: Identifiable, Equatable {
     let avatar: RoomAvatar
 }
 
-struct MessageForwardingItem: Hashable {
-    /// The source item's timeline ID. Only necessary for a rough Hashable conformance.
-    let id: TimelineItemIdentifier
-    /// The source item's room ID.
+extension MessageForwardingRoom {
+    init(summary: RoomSummary) {
+        self.init(id: summary.id,
+                  title: summary.name,
+                  description: summary.roomListDescription,
+                  avatar: summary.avatar)
+    }
+}
+
+struct MessageForwardingPayload: Hashable {
+    /// The source items' timeline IDs. Only necessary for a rough Hashable conformance.
+    let ids: [TimelineItemIdentifier]
+    /// The source items' room ID.
     let roomID: String
-    /// The item's content to be forwarded.
-    let content: RoomMessageEventContentWithoutRelation
+    /// The contents to be forwarded, in timeline order.
+    let contents: [RoomMessageEventContentWithoutRelation]
     
-    static func == (lhs: MessageForwardingItem, rhs: MessageForwardingItem) -> Bool {
-        lhs.id == rhs.id && lhs.roomID == rhs.roomID
+    static func == (lhs: MessageForwardingPayload, rhs: MessageForwardingPayload) -> Bool {
+        lhs.ids == rhs.ids && lhs.roomID == rhs.roomID
     }
     
     func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
+        hasher.combine(ids)
         hasher.combine(roomID)
     }
 }
