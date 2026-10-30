@@ -140,7 +140,14 @@ struct SettingsScreen: View {
                     kind: .navigationLink {
                         context.send(viewAction: .moderationAndSafety)
                     })
-            
+            // :tchap: Add FAQ item
+            ListRow(label: .default(title: TchapL10n.commonFaq,
+                                    icon: \.info),
+                    kind: .button {
+                        openURL(context.viewState.tchapFaqURL)
+                    })
+                    .accessibilityIdentifier(TchapA11yIdentifiers.settingsScreen.faq) // :tchap:end:
+
             if context.viewState.isBugReportServiceEnabled {
                 ListRow(label: .default(title: L10n.commonReportAProblem,
                                         icon: \.chatProblem),
@@ -216,9 +223,12 @@ struct SettingsScreen: View {
                     kind: .navigationLink {
                         context.send(viewAction: .labs)
                     })
-            
-            ListRow(label: .default(title: L10n.commonAbout,
-                                    icon: \.info),
+
+            // :tchap: Customize "About" menu into "Legal" menu
+//            ListRow(label: .default(title: L10n.commonAbout,
+//                                    icon: \.info),
+            ListRow(label: .default(title: TchapL10n.commonLegal,
+                                    icon: \.listBulleted), // :tchap:end:
                     kind: .navigationLink {
                         context.send(viewAction: .about)
                     })
