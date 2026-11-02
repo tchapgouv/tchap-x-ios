@@ -44,9 +44,6 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
     private var restorationTask: Task<Void, Never>?
     private var userSession: UserSessionProtocol? {
         userSessionManager.activeSession
-        // TODO: Tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
-        // let homeServerBaseURL = URL(string: userSession.clientProxy.homeserver)! // swiftlint:disable:this force_unwrapping
-        // appSettings.bugReportRageshakeURL.applyRemoteValue(.url(homeServerBaseURL.appendingPathComponent("bugreports").appendingPathComponent("submit")))
     }
     
     private var authenticationFlowCoordinator: AuthenticationFlowCoordinator?
@@ -980,7 +977,9 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
             
             userSession.userSettings.account.reset()
             appHooks.remoteSettingsHook.reset(appSettings)
-            
+            // :tchap: disable BugReportService baseURL after user is logged out.
+            appSettings.bugReportRageshakeURL.applyRemoteValue(.disabled) // :tchap:end:
+
             // Reset analytics
             analyticsService.optOut()
             analyticsService.resetConsentState()
@@ -1024,6 +1023,12 @@ class AppCoordinator: AppCoordinatorProtocol, AuthenticationFlowCoordinatorDeleg
         
         // TODO: Calls only follow the active account, ElementCallService must change to hold every account's session.
         elementCallService.setUserSession(userSession)
+
+        // :tchap: set up Bug Report service after user is logged because baseUrl is dependant on user's HomeServer.
+        if let homeServerBaseURL = URL(string: userSession.clientProxy.homeserver) {
+            appSettings.bugReportRageshakeURL.applyRemoteValue(.url(homeServerBaseURL.appendingPathComponent("bugreports").appendingPathComponent("submit")))
+        }
+
         Task {
             await resumeClientServices()
         }
