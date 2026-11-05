@@ -81,15 +81,18 @@ packages:
 #
 # Use the Github hosted version of Tchap Matrix-rust-SDK
     url: https://github.com/tchapgouv/matrix-rust-components-swift
-    exactVersion: 26.09.2
+    exactVersion: 26.10.8-main-ios
 # Use the local version of Tchap Matrix-rust-SDK
 #    path: ../matrix-rust-sdk-tchap/matrix-rust-components-swift
   Compound:
     path: compound-ios
   ElementCall:
-    url: https://github.com/element-hq/element-call-ios
-    exactVersion: 0.1.0-rc.11
-    # path: ../element-call-ios
+#    url: https://github.com/element-hq/element-call-ios
+#    exactVersion: 0.1.0-rc.11
+    url: https://github.com/tchapgouv/element-call-ios
+    revision: 0a365ab587ece17e16cf0b24c791391b190fe182
+# Use the local version of Tchap element-call-ios
+#     path: ../element-call-ios
   BuildExtensions:
     path: Components/BuildExtensions
   AnalyticsEvents:
