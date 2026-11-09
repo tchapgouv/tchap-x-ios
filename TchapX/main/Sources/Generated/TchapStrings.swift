@@ -185,6 +185,8 @@ internal nonisolated enum TchapL10n {
   internal static var screenRoomDirectorySearchTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_room_directory_search_title") }
   /// Clear cache
   internal static var screenSettingsClearCache: String { return TchapL10n.tr("TchapLocalizable", "screen_settings_clear_cache") }
+  /// The app will restart and resynchronise your data. This may take a few moments.
+  internal static var screenSettingsClearCacheConfirmationMessage: String { return TchapL10n.tr("TchapLocalizable", "screen_settings_clear_cache_confirmation_message") }
   /// On mobile, view your spaces and accept invitations.
   /// Creation and management are done on a computer.
   internal static var screenSpacesEmptyViewDescription: String { return TchapL10n.tr("TchapLocalizable", "screen_spaces_empty_view_description") }

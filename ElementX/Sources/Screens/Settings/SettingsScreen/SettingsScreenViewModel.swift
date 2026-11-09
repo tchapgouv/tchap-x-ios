@@ -125,6 +125,9 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
             actionsSubject.send(.moderationAndSafety)
         case .reportBug:
             actionsSubject.send(.reportBug)
+        // :tchap: Clear cache item
+        case .clearCache:
+            showClearCacheConfirmation() // :tchap:end:
             
         case .logout:
             actionsSubject.send(.logout)
@@ -153,6 +156,17 @@ class SettingsScreenViewModel: SettingsScreenViewModelType, SettingsScreenViewMo
     
     // MARK: - Private
     
+    // :tchap: Clear cache confirmation
+    private func showClearCacheConfirmation() {
+        state.bindings.alertInfo = .init(id: .clearCacheConfirmation,
+                                         title: TchapL10n.screenSettingsClearCache,
+                                         message: TchapL10n.screenSettingsClearCacheConfirmationMessage,
+                                         primaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil),
+                                         secondaryButton: .init(title: L10n.actionConfirm, role: .destructive) { [weak self] in
+                                             self?.actionsSubject.send(.clearCache)
+                                         })
+    } // :tchap:end:
+
     private var pickCustomEmojiCancellable: AnyCancellable?
     private func pickCustomEmoji() {
         let (stream, continuation) = AsyncStream<String>.makeStream()

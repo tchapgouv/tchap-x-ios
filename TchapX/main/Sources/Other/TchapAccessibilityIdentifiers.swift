@@ -38,6 +38,7 @@ enum TchapA11yIdentifiers {
     
     struct SettingsScreen {
         let faq = "settings-faq"
+        let clearCache = "settings-clear_cache"
     }
     
     struct RoomDetailsScreen {

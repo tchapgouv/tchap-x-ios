@@ -113,6 +113,9 @@ class SettingsFlowCoordinator: FlowCoordinatorProtocol {
                                                                                           bugReportService: flowParameters.bugReportService,
                                                                                           userSession: flowParameters.userSession))
                     bugReportFlowCoordinator?.start()
+                // :tchap: Clear cache item
+                case .clearCache:
+                    actionsSubject.send(.clearCache) // :tchap:end:
                     
                 case .logout:
                     actionsSubject.send(.runLogoutFlow)
