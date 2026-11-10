@@ -34,6 +34,7 @@ struct SettingsScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarVisibility(context.viewState.navigationBarVisibility, for: .navigationBar)
         .toolbar { toolbar }
+        .alert(item: $context.alertInfo) // :tchap: Clear cache confirmation
         .sheet(isPresented: $context.isPresentingStatusPicker) {
             SettingsScreenUserStatusPickerView { action in
                 context.send(viewAction: .userStatus(action))
@@ -156,6 +157,14 @@ struct SettingsScreen: View {
                         })
                         .accessibilityIdentifier(A11yIdentifiers.settingsScreen.reportBug)
             }
+
+            // :tchap: Clear cache item
+            ListRow(label: .default(title: TchapL10n.screenSettingsClearCache,
+                                    icon: \.delete),
+                    kind: .button {
+                        context.send(viewAction: .clearCache)
+                    })
+                    .accessibilityIdentifier(TchapA11yIdentifiers.settingsScreen.clearCache) // :tchap:end:
         } header: {
             Text(L10n.commonAccountSettings)
                 .compoundListSectionHeader()

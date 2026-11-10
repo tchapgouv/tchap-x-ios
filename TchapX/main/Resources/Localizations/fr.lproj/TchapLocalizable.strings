@@ -119,6 +119,7 @@ screen_home_offline_banner_button = "Voir l’état du service";
 
 // Settings
 screen_settings_clear_cache = "Vider le cache";
+screen_settings_clear_cache_confirmation_message = "L'application va redémarrer et resynchroniser vos données. Cela peut prendre quelques instants.";
 
 // Account expired
 screen_account_expired_title = "Votre compte a expiré";

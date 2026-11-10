@@ -30,6 +30,7 @@ enum SettingsScreenCoordinatorAction {
     case secureBackup
     case moderationAndSafety
     case bugReport
+    case clearCache // :tchap: Clear cache item
     
     case logout
     case deactivateAccount
@@ -90,6 +91,9 @@ final class SettingsScreenCoordinator: CoordinatorProtocol {
                     actionsSubject.send(.moderationAndSafety)
                 case .reportBug:
                     actionsSubject.send(.bugReport)
+                // :tchap: Clear cache item
+                case .clearCache:
+                    actionsSubject.send(.clearCache) // :tchap:end:
                     
                 case .logout:
                     actionsSubject.send(.logout)

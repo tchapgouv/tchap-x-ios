@@ -22,6 +22,7 @@ enum SettingsScreenViewModelAction {
     case secureBackup
     case moderationAndSafety
     case reportBug
+    case clearCache // :tchap: Clear cache item
     
     case logout
     case deactivateAccount
@@ -90,6 +91,8 @@ struct SettingsScreenViewStateBindings {
     }
     
     var isPresentingAccountDeactivationConfirmation = false
+
+    var alertInfo: AlertInfo<SettingsScreenAlert>? // :tchap: Clear cache confirmation
     
     var appAppearance: AppAppearance {
         get { userSettings.app.appAppearance }
@@ -100,6 +103,11 @@ struct SettingsScreenViewStateBindings {
         self.userSettings = userSettings
     }
 }
+
+// :tchap: Clear cache confirmation
+enum SettingsScreenAlert {
+    case clearCacheConfirmation
+} // :tchap:end:
 
 enum SettingsScreenViewAction {
     case close
@@ -115,6 +123,7 @@ enum SettingsScreenViewAction {
     case secureBackup
     case moderationAndSafety
     case reportBug
+    case clearCache // :tchap: Clear cache item
     
     case logout
     case deactivateAccount
