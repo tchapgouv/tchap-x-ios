@@ -80,8 +80,14 @@ struct RoomHeaderView: View {
                     if let roomPropertiesBadgesView {
                         roomPropertiesBadgesView
                             .zIndex(-1)
-                        Spacer(minLength: 2.0)
                     }
+
+                    if let historySharingIcon {
+                        CompoundIcon(historySharingIcon, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
+                            .foregroundStyle(.compound.iconInfoPrimary)
+                    }
+
+                    Spacer(minLength: 2.0)
                 }
             } // :tchap:end:
         }
@@ -107,11 +113,13 @@ struct RoomHeaderView: View {
             if let verificationState = dmRecipientDetails.verification {
                 VerificationBadge(verificationState: verificationState, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
             }
-            
-            if let historySharingIcon {
-                CompoundIcon(historySharingIcon, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
-                    .foregroundStyle(.compound.iconInfoPrimary)
-            }
+
+            // :tchap: history sharing icon moved next to room properties badges
+//            if let historySharingIcon {
+//                CompoundIcon(historySharingIcon, size: .xSmall, relativeTo: .compound.bodyMDSemibold)
+//                    .foregroundStyle(.compound.iconInfoPrimary)
+//            }
+            // :tchap:end:
         }
     }
     
