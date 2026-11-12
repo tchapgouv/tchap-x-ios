@@ -17,7 +17,10 @@ enum UserDetailsEditScreenViewModelAction {
 
 struct UserDetailsEditScreenViewState: BindableState {
     var currentUserProfile: UserProfile
-    
+    // :tchap: link to the avatar generator web tool.
+    let tchapAvatarGeneratorURL: URL
+    // :tchap:end:
+
     var canEditAvatar = true
     var canEditDisplayName = true
     

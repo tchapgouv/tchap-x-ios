@@ -33,6 +33,7 @@ class UserDetailsEditScreenViewModel: UserDetailsEditScreenViewModelType, UserDe
         
         let profile = clientProxy.userProfilePublisher.value
         super.init(initialViewState: UserDetailsEditScreenViewState(currentUserProfile: profile,
+                                                                    tchapAvatarGeneratorURL: userSession.userSettings.app.tchapAvatarGeneratorURL, // :tchap:
                                                                     selectedAvatarURL: profile.avatarURL,
                                                                     bindings: .init(name: profile.displayName ?? "")),
                    mediaProvider: userSession.mediaProvider)
