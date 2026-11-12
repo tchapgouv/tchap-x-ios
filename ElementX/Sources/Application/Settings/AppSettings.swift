@@ -202,6 +202,7 @@ final nonisolated class AppSettings: @unchecked Sendable {
     let tchapExternalFaqURL: URL = "https://aide.tchap.numerique.gouv.fr/fr/article/comment-inviter-un-externe-sur-tchap-iphone-110q735" // Tchap
     let tchapCreateSpaceFaqURL: URL = "https://aide.tchap.numerique.gouv.fr/fr/article/comment-creer-un-espace-sur-tchap-web-1wmlenx"
     let tchapServiceStatusURL: URL = "https://status.tchap.numerique.gouv.fr"
+    let tchapAvatarGeneratorURL: URL = "https://outils.tchap.numerique.gouv.fr/avatar/"
     let tchapAccountExpiredFaqURL: URL = "https://aide.tchap.numerique.gouv.fr/fr/article/renouvellement-de-votre-compte-tchap-expiration-1g4e6xh/"
     /// An email address that should be used for support requests.
     private(set) var supportEmailAddress = "support@element.io"

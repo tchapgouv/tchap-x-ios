@@ -121,6 +121,7 @@ screen_home_offline_banner_button = "View service status";
 
 // Settings
 screen_settings_clear_cache = "Clear cache";
+screen_edit_profile_generate_status = "Generate a status";
 screen_settings_clear_cache_confirmation_message = "The app will restart and resynchronise your data. This may take a few moments.";
 
 // Account expired

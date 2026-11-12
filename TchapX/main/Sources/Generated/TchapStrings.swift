@@ -131,6 +131,8 @@ internal nonisolated enum TchapL10n {
   }
   /// Are you an external user?
   internal static var screenDecideHomeserverExternalEmailTitle: String { return TchapL10n.tr("TchapLocalizable", "screen_decide_homeserver_external_email_title") }
+  /// Generate a status
+  internal static var screenEditProfileGenerateStatus: String { return TchapL10n.tr("TchapLocalizable", "screen_edit_profile_generate_status") }
   /// View service status
   internal static var screenHomeOfflineBannerButton: String { return TchapL10n.tr("TchapLocalizable", "screen_home_offline_banner_button") }
   /// Check the service status to ensure the problem is not related to your device.

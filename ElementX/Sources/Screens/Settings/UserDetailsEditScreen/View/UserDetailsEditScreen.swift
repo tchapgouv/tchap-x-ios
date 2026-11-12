@@ -12,7 +12,10 @@ import SwiftUI
 struct UserDetailsEditScreen: View {
     @Bindable var context: UserDetailsEditScreenViewModel.Context
     @FocusState private var focus: Bool
-    
+    // :tchap: needed to open the avatar generator.
+    @Environment(\.openURL) private var openURL
+    // :tchap:end:
+
     var body: some View {
         Form {
             Section {
@@ -112,7 +115,15 @@ struct UserDetailsEditScreen: View {
         } label: {
             Text(L10n.actionChooseFile)
         }
-        
+
+        // :tchap: link to the avatar generator web tool.
+        Button {
+            openURL(context.viewState.tchapAvatarGeneratorURL)
+        } label: {
+            Text(TchapL10n.screenEditProfileGenerateStatus)
+        }
+        // :tchap:end:
+
         if context.viewState.showDeleteImageAction {
             Button(role: .destructive) {
                 context.send(viewAction: .removeImage)
