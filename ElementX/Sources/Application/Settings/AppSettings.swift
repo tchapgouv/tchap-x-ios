@@ -197,10 +197,7 @@ final nonisolated class AppSettings: @unchecked Sendable {
     // Tchap: FAQ url.
     /// A URL that leads to Tchap FAQ page.
     let tchapFaqURL: URL = "https://aide.tchap.numerique.gouv.fr/" // Tchap
-    // Tchap: external members FAQ url.
-    /// A URL that leads to Tchap FAQ page.
-    let tchapExternalFaqURL: URL = "https://aide.tchap.numerique.gouv.fr/fr/article/comment-inviter-un-externe-sur-tchap-iphone-110q735" // Tchap
-    let tchapCreateSpaceFaqURL: URL = "https://aide.tchap.numerique.gouv.fr/fr/article/comment-creer-un-espace-sur-tchap-web-1wmlenx"
+    let tchapCreateSpaceFaqURL: URL = "https://docs.numerique.gouv.fr/docs/e812cda4-27a1-410e-bb8e-4b62d705450e/"
     let tchapServiceStatusURL: URL = "https://status.tchap.numerique.gouv.fr"
     let tchapAvatarGeneratorURL: URL = "https://outils.tchap.numerique.gouv.fr/avatar/"
     let tchapAccountExpiredFaqURL: URL = "https://aide.tchap.numerique.gouv.fr/fr/article/renouvellement-de-votre-compte-tchap-expiration-1g4e6xh/"
@@ -209,9 +206,9 @@ final nonisolated class AppSettings: @unchecked Sendable {
     /// A URL where users can go read more about encryption in general.
     private(set) var encryptionURL: URL = "https://element.io/help#encryption"
     /// A URL where users can go read more about device verification..
-    private(set) var deviceVerificationURL: URL = "https://element.io/help#encryption-device-verification"
+    private(set) var deviceVerificationURL: URL = "https://docs.numerique.gouv.fr/docs/ae1972c9-ec2d-40ba-9125-3571cb4f30be/" // :tchap: tchap documentation
     /// A URL where users can go read more about the chat backup.
-    private(set) var chatBackupDetailsURL: URL = "https://element.io/help#encryption5"
+    private(set) var chatBackupDetailsURL: URL = "https://docs.numerique.gouv.fr/docs/8f5443b7-a3a9-4fcb-b816-aadb2de26f46/" // :tchap: tchap documentation
     /// A URL where users can go read more about identity pinning violations
     private(set) var identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
     /// A URL describing how history sharing works
